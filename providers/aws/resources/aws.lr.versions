@@ -805,6 +805,7 @@ aws.backup.scanJob.statusMessage 13.28.1
 aws.backup.scanJob.vault 13.28.1
 aws.backup.scanJobs 13.28.1
 aws.backup.vault 11.15.2
+aws.backup.vault.accessPolicy 13.32.2
 aws.backup.vault.arn 11.15.2
 aws.backup.vault.createdAt 11.15.2
 aws.backup.vault.encryptionKey 13.12.1
@@ -814,6 +815,7 @@ aws.backup.vault.lockedAt 11.15.2
 aws.backup.vault.maxRetentionDays 11.15.2
 aws.backup.vault.minRetentionDays 11.15.2
 aws.backup.vault.name 11.15.2
+aws.backup.vault.policyStatements 13.32.2
 aws.backup.vault.recoveryPoints 11.15.2
 aws.backup.vault.region 11.15.2
 aws.backup.vaultRecoveryPoint 11.15.2
@@ -3432,6 +3434,7 @@ aws.ecr.repository.lifecyclePolicy 11.15.2
 aws.ecr.repository.name 11.15.2
 aws.ecr.repository.operatingSystems 11.16.1
 aws.ecr.repository.policy 13.5.0
+aws.ecr.repository.policyStatements 13.32.2
 aws.ecr.repository.public 11.15.2
 aws.ecr.repository.region 11.15.2
 aws.ecr.repository.registryId 11.15.2
@@ -3757,6 +3760,7 @@ aws.efs.filesystem.lifecycleState 13.12.1
 aws.efs.filesystem.mountTargets 11.15.2
 aws.efs.filesystem.name 11.15.2
 aws.efs.filesystem.performanceMode 13.12.1
+aws.efs.filesystem.policyStatements 13.32.2
 aws.efs.filesystem.region 11.15.2
 aws.efs.filesystem.replicationConfiguration 13.12.1
 aws.efs.filesystem.replicationConfiguration.creationTime 13.12.1
@@ -5183,17 +5187,30 @@ aws.iam.policy.isAttachable 11.15.2
 aws.iam.policy.name 11.15.2
 aws.iam.policy.policyId 11.15.2
 aws.iam.policy.scope 11.15.2
+aws.iam.policy.statements 13.32.2
 aws.iam.policy.updatedAt 11.15.2
 aws.iam.policy.versions 11.15.2
+aws.iam.policyStatement 13.32.2
+aws.iam.policyStatement.actions 13.32.2
+aws.iam.policyStatement.conditions 13.32.2
+aws.iam.policyStatement.effect 13.32.2
+aws.iam.policyStatement.notActions 13.32.2
+aws.iam.policyStatement.notPrincipals 13.32.2
+aws.iam.policyStatement.notResources 13.32.2
+aws.iam.policyStatement.principals 13.32.2
+aws.iam.policyStatement.resources 13.32.2
+aws.iam.policyStatement.sid 13.32.2
 aws.iam.policyversion 11.15.2
 aws.iam.policyversion.arn 11.15.2
 aws.iam.policyversion.createdAt 11.15.2
 aws.iam.policyversion.document 11.15.2
 aws.iam.policyversion.isDefaultVersion 11.15.2
+aws.iam.policyversion.statements 13.32.2
 aws.iam.policyversion.versionId 11.15.2
 aws.iam.role 11.15.2
 aws.iam.role.arn 11.15.2
 aws.iam.role.assumeRolePolicyDocument 11.15.2
+aws.iam.role.assumeRolePolicyStatements 13.32.2
 aws.iam.role.attachedPolicies 13.6.3
 aws.iam.role.createdAt 11.15.2
 aws.iam.role.description 11.15.2
@@ -5219,6 +5236,15 @@ aws.iam.samlProvider.validUntil 11.15.2
 aws.iam.samlProviders 11.15.2
 aws.iam.serverCertificates 11.15.2
 aws.iam.user 11.15.2
+aws.iam.user.accessKey 13.32.2
+aws.iam.user.accessKey.accessKeyId 13.32.2
+aws.iam.user.accessKey.createdAt 13.32.2
+aws.iam.user.accessKey.lastUsedDate 13.32.2
+aws.iam.user.accessKey.lastUsedRegion 13.32.2
+aws.iam.user.accessKey.lastUsedService 13.32.2
+aws.iam.user.accessKey.status 13.32.2
+aws.iam.user.accessKey.username 13.32.2
+aws.iam.user.accessKeyDetails 13.32.2
 aws.iam.user.accessKeys 11.15.2
 aws.iam.user.arn 11.15.2
 aws.iam.user.attachedPolicies 11.15.2
@@ -5643,6 +5669,7 @@ aws.kms.key.nextRotationAt 13.12.1
 aws.kms.key.onDemandRotationStartedAt 13.12.1
 aws.kms.key.origin 13.6.3
 aws.kms.key.policy 13.2.7
+aws.kms.key.policyStatements 13.32.2
 aws.kms.key.region 11.15.2
 aws.kms.key.rotationPeriodInDays 13.12.1
 aws.kms.key.signingAlgorithms 13.12.1
@@ -5757,6 +5784,7 @@ aws.lambda.function.memorySize 11.15.2
 aws.lambda.function.name 11.15.2
 aws.lambda.function.packageType 11.15.2
 aws.lambda.function.policy 11.15.2
+aws.lambda.function.policyStatements 13.32.2
 aws.lambda.function.provisionedConcurrencyConfig 11.15.2
 aws.lambda.function.provisionedConcurrencyConfig.allocatedConcurrentExecutions 11.15.2
 aws.lambda.function.provisionedConcurrencyConfig.availableConcurrentExecutions 11.15.2
@@ -6762,7 +6790,17 @@ aws.organization.organizationalUnit.arn 13.6.3
 aws.organization.organizationalUnit.id 13.6.3
 aws.organization.organizationalUnit.name 13.6.3
 aws.organization.organizationalUnit.path 13.6.3
+aws.organization.organizationalUnit.serviceControlPolicies 13.32.2
 aws.organization.organizationalUnits 13.6.3
+aws.organization.serviceControlPolicies 13.32.2
+aws.organization.serviceControlPolicy 13.32.2
+aws.organization.serviceControlPolicy.arn 13.32.2
+aws.organization.serviceControlPolicy.awsManaged 13.32.2
+aws.organization.serviceControlPolicy.content 13.32.2
+aws.organization.serviceControlPolicy.description 13.32.2
+aws.organization.serviceControlPolicy.id 13.32.2
+aws.organization.serviceControlPolicy.name 13.32.2
+aws.organization.serviceControlPolicy.statements 13.32.2
 aws.privateca 13.10.0
 aws.privateca.certificateAuthorities 13.10.0
 aws.privateca.certificateAuthority 13.10.0
@@ -7554,6 +7592,8 @@ aws.s3.bucket.accessPoints 13.26.2
 aws.s3.bucket.acl 11.15.2
 aws.s3.bucket.analyticsConfigurations 13.29.1
 aws.s3.bucket.arn 11.15.2
+aws.s3.bucket.blockPublicAcls 13.32.2
+aws.s3.bucket.blockPublicPolicy 13.32.2
 aws.s3.bucket.cors 11.15.2
 aws.s3.bucket.corsrule 11.15.2
 aws.s3.bucket.corsrule.allowedHeaders 11.15.2
@@ -7586,6 +7626,7 @@ aws.s3.bucket.grant.grantee 11.15.2
 aws.s3.bucket.grant.id 11.15.2
 aws.s3.bucket.grant.name 11.15.2
 aws.s3.bucket.grant.permission 11.15.2
+aws.s3.bucket.ignorePublicAcls 13.32.2
 aws.s3.bucket.intelligentTieringConfigurations 13.29.1
 aws.s3.bucket.inventoryConfigurations 13.29.1
 aws.s3.bucket.lifecycleRule 13.6.3
@@ -7618,6 +7659,7 @@ aws.s3.bucket.policy.document 11.15.2
 aws.s3.bucket.policy.name 11.15.2
 aws.s3.bucket.policy.statements 11.15.2
 aws.s3.bucket.policy.version 11.15.2
+aws.s3.bucket.policyStatements 13.32.2
 aws.s3.bucket.public 11.15.2
 aws.s3.bucket.publicAccessBlock 11.15.2
 aws.s3.bucket.replication 11.15.2
@@ -7633,6 +7675,7 @@ aws.s3.bucket.replicationRule.resourceId 11.15.2
 aws.s3.bucket.replicationRule.status 11.15.2
 aws.s3.bucket.replicationRules 11.15.2
 aws.s3.bucket.requestPayment 13.29.1
+aws.s3.bucket.restrictPublicBuckets 13.32.2
 aws.s3.bucket.staticWebsiteHosting 11.15.2
 aws.s3.bucket.tags 11.15.2
 aws.s3.bucket.transferAcceleration 13.29.1
@@ -8636,6 +8679,7 @@ aws.secretsmanager.secret.lastRotatedDate 11.15.2
 aws.secretsmanager.secret.name 11.15.2
 aws.secretsmanager.secret.nextRotationDate 11.15.2
 aws.secretsmanager.secret.owningService 11.15.2
+aws.secretsmanager.secret.policyStatements 13.32.2
 aws.secretsmanager.secret.primaryRegion 11.15.2
 aws.secretsmanager.secret.replicaRegion 13.6.3
 aws.secretsmanager.secret.replicaRegion.id 13.6.3
@@ -8911,6 +8955,7 @@ aws.sns.topic.displayName 13.12.1
 aws.sns.topic.fifoTopic 13.12.1
 aws.sns.topic.kmsMasterKey 11.15.2
 aws.sns.topic.policy 13.6.3
+aws.sns.topic.policyStatements 13.32.2
 aws.sns.topic.region 11.15.2
 aws.sns.topic.signatureVersion 11.15.2
 aws.sns.topic.subscriptions 11.15.2
@@ -8932,6 +8977,7 @@ aws.sqs.queue.maxReceiveCount 11.15.2
 aws.sqs.queue.maximumMessageSize 11.15.2
 aws.sqs.queue.messageRetentionPeriodSeconds 11.15.2
 aws.sqs.queue.policy 13.3.0
+aws.sqs.queue.policyStatements 13.32.2
 aws.sqs.queue.queueType 11.15.2
 aws.sqs.queue.receiveMessageWaitTimeSeconds 11.15.2
 aws.sqs.queue.redriveAllowPolicy 13.12.1
@@ -9374,6 +9420,7 @@ aws.vpc.endpoint.ipAddressType 13.6.3
 aws.vpc.endpoint.networkInterfaces 13.6.3
 aws.vpc.endpoint.ownerId 13.6.3
 aws.vpc.endpoint.policyDocument 11.15.2
+aws.vpc.endpoint.policyStatements 13.32.2
 aws.vpc.endpoint.privateDnsEnabled 11.15.2
 aws.vpc.endpoint.region 11.15.2
 aws.vpc.endpoint.requesterManaged 13.6.3

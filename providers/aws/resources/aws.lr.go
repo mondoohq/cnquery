@@ -22,6 +22,7 @@ const (
 	ResourceAwsBilling                                                          string = "aws.billing"
 	ResourceAwsBillingBudget                                                    string = "aws.billing.budget"
 	ResourceAwsOrganization                                                     string = "aws.organization"
+	ResourceAwsOrganizationServiceControlPolicy                                 string = "aws.organization.serviceControlPolicy"
 	ResourceAwsOrganizationDelegatedAdministrator                               string = "aws.organization.delegatedAdministrator"
 	ResourceAwsOrganizationDelegatedService                                     string = "aws.organization.delegatedService"
 	ResourceAwsOrganizationOrganizationalUnit                                   string = "aws.organization.organizationalUnit"
@@ -94,8 +95,10 @@ const (
 	ResourceAwsIam                                                              string = "aws.iam"
 	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
 	ResourceAwsIamUser                                                          string = "aws.iam.user"
+	ResourceAwsIamUserAccessKey                                                 string = "aws.iam.user.accessKey"
 	ResourceAwsIamInstanceProfile                                               string = "aws.iam.instanceProfile"
 	ResourceAwsIamLoginProfile                                                  string = "aws.iam.loginProfile"
+	ResourceAwsIamPolicyStatement                                               string = "aws.iam.policyStatement"
 	ResourceAwsIamPolicy                                                        string = "aws.iam.policy"
 	ResourceAwsIamPolicyversion                                                 string = "aws.iam.policyversion"
 	ResourceAwsIamRole                                                          string = "aws.iam.role"
@@ -934,6 +937,10 @@ func init() {
 			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganization,
 		},
+		"aws.organization.serviceControlPolicy": {
+			// to override args, implement: initAwsOrganizationServiceControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOrganizationServiceControlPolicy,
+		},
 		"aws.organization.delegatedAdministrator": {
 			// to override args, implement: initAwsOrganizationDelegatedAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganizationDelegatedAdministrator,
@@ -1222,6 +1229,10 @@ func init() {
 			Init:   initAwsIamUser,
 			Create: createAwsIamUser,
 		},
+		"aws.iam.user.accessKey": {
+			// to override args, implement: initAwsIamUserAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamUserAccessKey,
+		},
 		"aws.iam.instanceProfile": {
 			Init:   initAwsIamInstanceProfile,
 			Create: createAwsIamInstanceProfile,
@@ -1229,6 +1240,10 @@ func init() {
 		"aws.iam.loginProfile": {
 			// to override args, implement: initAwsIamLoginProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamLoginProfile,
+		},
+		"aws.iam.policyStatement": {
+			// to override args, implement: initAwsIamPolicyStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamPolicyStatement,
 		},
 		"aws.iam.policy": {
 			// to override args, implement: initAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4695,6 +4710,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.organization.organizationalUnits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetOrganizationalUnits()).ToDataRes(types.Array(types.Resource("aws.organization.organizationalUnit")))
 	},
+	"aws.organization.serviceControlPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetServiceControlPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.serviceControlPolicy")))
+	},
+	"aws.organization.serviceControlPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.organization.serviceControlPolicy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.organization.serviceControlPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.organization.serviceControlPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.organization.serviceControlPolicy.awsManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetAwsManaged()).ToDataRes(types.Bool)
+	},
+	"aws.organization.serviceControlPolicy.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetContent()).ToDataRes(types.String)
+	},
+	"aws.organization.serviceControlPolicy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationServiceControlPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.organization.delegatedAdministrator.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationDelegatedAdministrator).GetArn()).ToDataRes(types.String)
 	},
@@ -4742,6 +4781,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.organization.organizationalUnit.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetPath()).ToDataRes(types.String)
+	},
+	"aws.organization.organizationalUnit.serviceControlPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetServiceControlPolicies()).ToDataRes(types.Array(types.Resource("aws.organization.serviceControlPolicy")))
 	},
 	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
@@ -4994,6 +5036,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.endpoint.policyDocument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetPolicyDocument()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetSubnets()).ToDataRes(types.Array(types.String))
@@ -5937,6 +5982,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetFileSystemPolicy()).ToDataRes(types.String)
 	},
+	"aws.efs.filesystem.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.efs.filesystem.performanceMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetPerformanceMode()).ToDataRes(types.String)
 	},
@@ -6306,6 +6354,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetPolicy()).ToDataRes(types.String)
 	},
+	"aws.kms.key.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetKeySpec()).ToDataRes(types.String)
 	},
@@ -6576,6 +6627,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.accessKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.iam.user.accessKeyDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetAccessKeyDetails()).ToDataRes(types.Array(types.Resource("aws.iam.user.accessKey")))
+	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
 	},
@@ -6584,6 +6638,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.user.mfaDevices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetMfaDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.iam.user.accessKey.accessKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetAccessKeyId()).ToDataRes(types.String)
+	},
+	"aws.iam.user.accessKey.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetUsername()).ToDataRes(types.String)
+	},
+	"aws.iam.user.accessKey.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.iam.user.accessKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.accessKey.lastUsedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetLastUsedDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.accessKey.lastUsedRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetLastUsedRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.user.accessKey.lastUsedService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserAccessKey).GetLastUsedService()).ToDataRes(types.String)
 	},
 	"aws.iam.instanceProfile.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInstanceProfile).GetArn()).ToDataRes(types.String)
@@ -6608,6 +6683,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.loginProfile.passwordResetRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamLoginProfile).GetPasswordResetRequired()).ToDataRes(types.Bool)
+	},
+	"aws.iam.policyStatement.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetSid()).ToDataRes(types.String)
+	},
+	"aws.iam.policyStatement.effect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetEffect()).ToDataRes(types.String)
+	},
+	"aws.iam.policyStatement.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.policyStatement.notActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetNotActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.policyStatement.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.policyStatement.notResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetNotResources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.policyStatement.principals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetPrincipals()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"aws.iam.policyStatement.notPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetNotPrincipals()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"aws.iam.policyStatement.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetConditions()).ToDataRes(types.Dict)
 	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
@@ -6642,6 +6744,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.defaultVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetDefaultVersion()).ToDataRes(types.Resource("aws.iam.policyversion"))
 	},
+	"aws.iam.policy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetAttachedUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -6662,6 +6767,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.policyversion.document": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetDocument()).ToDataRes(types.Dict)
+	},
+	"aws.iam.policyversion.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyversion).GetCreatedAt()).ToDataRes(types.Time)
@@ -6686,6 +6794,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetAssumeRolePolicyDocument()).ToDataRes(types.Dict)
+	},
+	"aws.iam.role.assumeRolePolicyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetAssumeRolePolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.iam.role.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetLastUsedAt()).ToDataRes(types.Time)
@@ -9612,6 +9723,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sns.topic.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.sns.topic.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetFifoTopic()).ToDataRes(types.Bool)
 	},
@@ -12023,6 +12137,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetReplicaRegions()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret.replicaRegion")))
@@ -15300,6 +15417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetPolicy()).ToDataRes(types.Resource("aws.s3.bucket.policy"))
 	},
+	"aws.s3.bucket.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.s3.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -15347,6 +15467,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.blockPublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetBlockPublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.blockPublicPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetBlockPublicPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.ignorePublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetIgnorePublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.restrictPublicBuckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetRestrictPublicBuckets()).ToDataRes(types.Bool)
 	},
 	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetObjectLockEnabled()).ToDataRes(types.Bool)
@@ -16101,6 +16233,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vault.minRetentionDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetMinRetentionDays()).ToDataRes(types.Int)
 	},
+	"aws.backup.vault.accessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetAccessPolicy()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
 	},
@@ -16565,6 +16703,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sqs.queue.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.sqs.queue.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.sqs.queue.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -18738,6 +18879,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.ecr.repository.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetLifecyclePolicy()).ToDataRes(types.Resource("aws.ecr.lifecyclePolicy"))
 	},
@@ -19709,6 +19853,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.lambda.function.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetVpcConfig()).ToDataRes(types.Dict)
@@ -32238,6 +32385,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOrganization).OrganizationalUnits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.organization.serviceControlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).ServiceControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.organization.serviceControlPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.awsManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).AwsManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.serviceControlPolicy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationServiceControlPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.organization.delegatedAdministrator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationDelegatedAdministrator).__id, ok = v.Value.(string)
 		return
@@ -32312,6 +32495,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.organization.organizationalUnit.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationOrganizationalUnit).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.serviceControlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).ServiceControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32672,6 +32859,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.endpoint.policyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcEndpoint).PolicyDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34110,6 +34301,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).FileSystemPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.performanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).PerformanceMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34650,6 +34845,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).KeySpec, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -35034,6 +35233,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.user.accessKeyDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).AccessKeyDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).LoginProfile, ok = plugin.RawToTValue[*mqlAwsIamLoginProfile](v.Value, v.Error)
 		return
@@ -35044,6 +35247,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.user.mfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).MfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.user.accessKey.accessKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).AccessKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.lastUsedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).LastUsedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.lastUsedRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).LastUsedRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKey.lastUsedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserAccessKey).LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.iam.instanceProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35084,6 +35319,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.loginProfile.passwordResetRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamLoginProfile).PasswordResetRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.policyStatement.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.effect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Effect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.notActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).NotActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.notResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).NotResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.principals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Principals, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.notPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).NotPrincipals, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35134,6 +35409,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamPolicy).DefaultVersion, ok = plugin.RawToTValue[*mqlAwsIamPolicyversion](v.Value, v.Error)
 		return
 	},
+	"aws.iam.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).AttachedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -35164,6 +35443,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.policyversion.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicyversion).Document, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policyversion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35200,6 +35483,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).AssumeRolePolicyDocument, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.assumeRolePolicyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).AssumeRolePolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39506,6 +39793,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSnsTopic).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sns.topic.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSnsTopic).FifoTopic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -43000,6 +43291,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47906,6 +48201,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).Policy, ok = plugin.RawToTValue[*mqlAwsS3BucketPolicy](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -47968,6 +48267,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.blockPublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).BlockPublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.blockPublicPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).BlockPublicPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.ignorePublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).IgnorePublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.restrictPublicBuckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).RestrictPublicBuckets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49082,6 +49397,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackupVault).MinRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.backup.vault.accessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).AccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVaultRecoveryPoint).__id, ok = v.Value.(string)
 		return
@@ -49760,6 +50083,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sqs.queue.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSqsQueue).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sqs.queue.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52862,6 +53189,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrRepository).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.repository.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).LifecyclePolicy, ok = plugin.RawToTValue[*mqlAwsEcrLifecyclePolicy](v.Value, v.Error)
 		return
@@ -54280,6 +54611,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72758,6 +73093,7 @@ type mqlAwsOrganization struct {
 	Id                      plugin.TValue[string]
 	DelegatedAdministrators plugin.TValue[[]any]
 	OrganizationalUnits     plugin.TValue[[]any]
+	ServiceControlPolicies  plugin.TValue[[]any]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -72857,6 +73193,110 @@ func (c *mqlAwsOrganization) GetOrganizationalUnits() *plugin.TValue[[]any] {
 		}
 
 		return c.organizationalUnits()
+	})
+}
+
+func (c *mqlAwsOrganization) GetServiceControlPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceControlPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization", c.__id, "serviceControlPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceControlPolicies()
+	})
+}
+
+// mqlAwsOrganizationServiceControlPolicy for the aws.organization.serviceControlPolicy resource
+type mqlAwsOrganizationServiceControlPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsOrganizationServiceControlPolicyInternal it will be used here
+	Id          plugin.TValue[string]
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	AwsManaged  plugin.TValue[bool]
+	Content     plugin.TValue[string]
+	Statements  plugin.TValue[[]any]
+}
+
+// createAwsOrganizationServiceControlPolicy creates a new instance of this resource
+func createAwsOrganizationServiceControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOrganizationServiceControlPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.organization.serviceControlPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) MqlName() string {
+	return "aws.organization.serviceControlPolicy"
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetAwsManaged() *plugin.TValue[bool] {
+	return &c.AwsManaged
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlAwsOrganizationServiceControlPolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization.serviceControlPolicy", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
 	})
 }
 
@@ -73037,10 +73477,11 @@ type mqlAwsOrganizationOrganizationalUnit struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsOrganizationOrganizationalUnitInternal it will be used here
-	Arn  plugin.TValue[string]
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
-	Path plugin.TValue[string]
+	Arn                    plugin.TValue[string]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Path                   plugin.TValue[string]
+	ServiceControlPolicies plugin.TValue[[]any]
 }
 
 // createAwsOrganizationOrganizationalUnit creates a new instance of this resource
@@ -73094,6 +73535,22 @@ func (c *mqlAwsOrganizationOrganizationalUnit) GetName() *plugin.TValue[string] 
 
 func (c *mqlAwsOrganizationOrganizationalUnit) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetServiceControlPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceControlPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization.organizationalUnit", c.__id, "serviceControlPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceControlPolicies()
+	})
 }
 
 // mqlAwsVpc for the aws.vpc resource
@@ -73974,6 +74431,7 @@ type mqlAwsVpcEndpoint struct {
 	Region            plugin.TValue[string]
 	ServiceName       plugin.TValue[string]
 	PolicyDocument    plugin.TValue[string]
+	PolicyStatements  plugin.TValue[[]any]
 	Subnets           plugin.TValue[[]any]
 	PrivateDnsEnabled plugin.TValue[bool]
 	State             plugin.TValue[string]
@@ -74047,6 +74505,22 @@ func (c *mqlAwsVpcEndpoint) GetServiceName() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcEndpoint) GetPolicyDocument() *plugin.TValue[string] {
 	return &c.PolicyDocument
+}
+
+func (c *mqlAwsVpcEndpoint) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.endpoint", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
 }
 
 func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]any] {
@@ -77866,6 +78340,7 @@ type mqlAwsEfsFilesystem struct {
 	MountTargets             plugin.TValue[[]any]
 	AccessPoints             plugin.TValue[[]any]
 	FileSystemPolicy         plugin.TValue[string]
+	PolicyStatements         plugin.TValue[[]any]
 	PerformanceMode          plugin.TValue[string]
 	ThroughputMode           plugin.TValue[string]
 	SizeInBytes              plugin.TValue[int64]
@@ -78001,6 +78476,22 @@ func (c *mqlAwsEfsFilesystem) GetAccessPoints() *plugin.TValue[[]any] {
 func (c *mqlAwsEfsFilesystem) GetFileSystemPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.FileSystemPolicy, func() (string, error) {
 		return c.fileSystemPolicy()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -79227,6 +79718,7 @@ type mqlAwsKmsKey struct {
 	Grants                    plugin.TValue[[]any]
 	KeyManager                plugin.TValue[string]
 	Policy                    plugin.TValue[string]
+	PolicyStatements          plugin.TValue[[]any]
 	KeySpec                   plugin.TValue[string]
 	KeyUsage                  plugin.TValue[string]
 	MultiRegion               plugin.TValue[bool]
@@ -79374,6 +79866,22 @@ func (c *mqlAwsKmsKey) GetKeyManager() *plugin.TValue[string] {
 func (c *mqlAwsKmsKey) GetPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -80257,6 +80765,7 @@ type mqlAwsIamUser struct {
 	AttachedPolicies plugin.TValue[[]any]
 	Groups           plugin.TValue[[]any]
 	AccessKeys       plugin.TValue[[]any]
+	AccessKeyDetails plugin.TValue[[]any]
 	LoginProfile     plugin.TValue[*mqlAwsIamLoginProfile]
 	Path             plugin.TValue[string]
 	MfaDevices       plugin.TValue[[]any]
@@ -80357,6 +80866,22 @@ func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsIamUser) GetAccessKeyDetails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessKeyDetails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "accessKeyDetails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessKeyDetails()
+	})
+}
+
 func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile] {
 	return plugin.GetOrCompute[*mqlAwsIamLoginProfile](&c.LoginProfile, func() (*mqlAwsIamLoginProfile, error) {
 		if c.MqlRuntime.HasRecording {
@@ -80381,6 +80906,80 @@ func (c *mqlAwsIamUser) GetMfaDevices() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.MfaDevices, func() ([]any, error) {
 		return c.mfaDevices()
 	})
+}
+
+// mqlAwsIamUserAccessKey for the aws.iam.user.accessKey resource
+type mqlAwsIamUserAccessKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamUserAccessKeyInternal it will be used here
+	AccessKeyId     plugin.TValue[string]
+	Username        plugin.TValue[string]
+	Status          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	LastUsedDate    plugin.TValue[*time.Time]
+	LastUsedRegion  plugin.TValue[string]
+	LastUsedService plugin.TValue[string]
+}
+
+// createAwsIamUserAccessKey creates a new instance of this resource
+func createAwsIamUserAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUserAccessKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.user.accessKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUserAccessKey) MqlName() string {
+	return "aws.iam.user.accessKey"
+}
+
+func (c *mqlAwsIamUserAccessKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUserAccessKey) GetAccessKeyId() *plugin.TValue[string] {
+	return &c.AccessKeyId
+}
+
+func (c *mqlAwsIamUserAccessKey) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlAwsIamUserAccessKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIamUserAccessKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamUserAccessKey) GetLastUsedDate() *plugin.TValue[*time.Time] {
+	return &c.LastUsedDate
+}
+
+func (c *mqlAwsIamUserAccessKey) GetLastUsedRegion() *plugin.TValue[string] {
+	return &c.LastUsedRegion
+}
+
+func (c *mqlAwsIamUserAccessKey) GetLastUsedService() *plugin.TValue[string] {
+	return &c.LastUsedService
 }
 
 // mqlAwsIamInstanceProfile for the aws.iam.instanceProfile resource
@@ -80518,6 +81117,90 @@ func (c *mqlAwsIamLoginProfile) GetPasswordResetRequired() *plugin.TValue[bool] 
 	return &c.PasswordResetRequired
 }
 
+// mqlAwsIamPolicyStatement for the aws.iam.policyStatement resource
+type mqlAwsIamPolicyStatement struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamPolicyStatementInternal it will be used here
+	Sid           plugin.TValue[string]
+	Effect        plugin.TValue[string]
+	Actions       plugin.TValue[[]any]
+	NotActions    plugin.TValue[[]any]
+	Resources     plugin.TValue[[]any]
+	NotResources  plugin.TValue[[]any]
+	Principals    plugin.TValue[map[string]any]
+	NotPrincipals plugin.TValue[map[string]any]
+	Conditions    plugin.TValue[any]
+}
+
+// createAwsIamPolicyStatement creates a new instance of this resource
+func createAwsIamPolicyStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamPolicyStatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.policyStatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamPolicyStatement) MqlName() string {
+	return "aws.iam.policyStatement"
+}
+
+func (c *mqlAwsIamPolicyStatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamPolicyStatement) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlAwsIamPolicyStatement) GetEffect() *plugin.TValue[string] {
+	return &c.Effect
+}
+
+func (c *mqlAwsIamPolicyStatement) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlAwsIamPolicyStatement) GetNotActions() *plugin.TValue[[]any] {
+	return &c.NotActions
+}
+
+func (c *mqlAwsIamPolicyStatement) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+func (c *mqlAwsIamPolicyStatement) GetNotResources() *plugin.TValue[[]any] {
+	return &c.NotResources
+}
+
+func (c *mqlAwsIamPolicyStatement) GetPrincipals() *plugin.TValue[map[string]any] {
+	return &c.Principals
+}
+
+func (c *mqlAwsIamPolicyStatement) GetNotPrincipals() *plugin.TValue[map[string]any] {
+	return &c.NotPrincipals
+}
+
+func (c *mqlAwsIamPolicyStatement) GetConditions() *plugin.TValue[any] {
+	return &c.Conditions
+}
+
 // mqlAwsIamPolicy for the aws.iam.policy resource
 type mqlAwsIamPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -80534,6 +81217,7 @@ type mqlAwsIamPolicy struct {
 	Scope           plugin.TValue[string]
 	Versions        plugin.TValue[[]any]
 	DefaultVersion  plugin.TValue[*mqlAwsIamPolicyversion]
+	Statements      plugin.TValue[[]any]
 	AttachedUsers   plugin.TValue[[]any]
 	AttachedRoles   plugin.TValue[[]any]
 	AttachedGroups  plugin.TValue[[]any]
@@ -80655,6 +81339,22 @@ func (c *mqlAwsIamPolicy) GetDefaultVersion() *plugin.TValue[*mqlAwsIamPolicyver
 	})
 }
 
+func (c *mqlAwsIamPolicy) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
 func (c *mqlAwsIamPolicy) GetAttachedUsers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AttachedUsers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -80712,6 +81412,7 @@ type mqlAwsIamPolicyversion struct {
 	VersionId        plugin.TValue[string]
 	IsDefaultVersion plugin.TValue[bool]
 	Document         plugin.TValue[any]
+	Statements       plugin.TValue[[]any]
 	CreatedAt        plugin.TValue[*time.Time]
 }
 
@@ -80770,6 +81471,22 @@ func (c *mqlAwsIamPolicyversion) GetDocument() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsIamPolicyversion) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policyversion", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
 func (c *mqlAwsIamPolicyversion) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -80779,22 +81496,23 @@ type mqlAwsIamRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamRoleInternal it will be used here
-	Arn                      plugin.TValue[string]
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Description              plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	CreatedAt                plugin.TValue[*time.Time]
-	AssumeRolePolicyDocument plugin.TValue[any]
-	LastUsedAt               plugin.TValue[*time.Time]
-	LastUsedRegion           plugin.TValue[string]
-	MaxSessionDuration       plugin.TValue[int64]
-	PermissionsBoundaryArn   plugin.TValue[string]
-	PermissionsBoundary      plugin.TValue[*mqlAwsIamPolicy]
-	Path                     plugin.TValue[string]
-	IsServiceLinked          plugin.TValue[bool]
-	AttachedPolicies         plugin.TValue[[]any]
-	InlinePolicies           plugin.TValue[[]any]
+	Arn                        plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	AssumeRolePolicyDocument   plugin.TValue[any]
+	AssumeRolePolicyStatements plugin.TValue[[]any]
+	LastUsedAt                 plugin.TValue[*time.Time]
+	LastUsedRegion             plugin.TValue[string]
+	MaxSessionDuration         plugin.TValue[int64]
+	PermissionsBoundaryArn     plugin.TValue[string]
+	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
+	Path                       plugin.TValue[string]
+	IsServiceLinked            plugin.TValue[bool]
+	AttachedPolicies           plugin.TValue[[]any]
+	InlinePolicies             plugin.TValue[[]any]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -80860,6 +81578,22 @@ func (c *mqlAwsIamRole) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsIamRole) GetAssumeRolePolicyDocument() *plugin.TValue[any] {
 	return &c.AssumeRolePolicyDocument
+}
+
+func (c *mqlAwsIamRole) GetAssumeRolePolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssumeRolePolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "assumeRolePolicyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assumeRolePolicyStatements()
+	})
 }
 
 func (c *mqlAwsIamRole) GetLastUsedAt() *plugin.TValue[*time.Time] {
@@ -92811,6 +93545,7 @@ type mqlAwsSnsTopic struct {
 	SignatureVersion          plugin.TValue[string]
 	KmsMasterKey              plugin.TValue[*mqlAwsKmsKey]
 	Policy                    plugin.TValue[any]
+	PolicyStatements          plugin.TValue[[]any]
 	FifoTopic                 plugin.TValue[bool]
 	ContentBasedDeduplication plugin.TValue[bool]
 	DataProtectionPolicy      plugin.TValue[any]
@@ -92917,6 +93652,22 @@ func (c *mqlAwsSnsTopic) GetKmsMasterKey() *plugin.TValue[*mqlAwsKmsKey] {
 func (c *mqlAwsSnsTopic) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns.topic", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -101240,6 +101991,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	RotationRules    plugin.TValue[*mqlAwsSecretsmanagerSecretRotationRules]
 	Tags             plugin.TValue[map[string]any]
 	ResourcePolicy   plugin.TValue[string]
+	PolicyStatements plugin.TValue[[]any]
 	ReplicaRegions   plugin.TValue[[]any]
 	Type             plugin.TValue[string]
 	Versions         plugin.TValue[[]any]
@@ -101358,6 +102110,22 @@ func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]any] {
 func (c *mqlAwsSecretsmanagerSecret) GetResourcePolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
 		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -115068,6 +115836,7 @@ type mqlAwsS3Bucket struct {
 	Arn                              plugin.TValue[string]
 	Name                             plugin.TValue[string]
 	Policy                           plugin.TValue[*mqlAwsS3BucketPolicy]
+	PolicyStatements                 plugin.TValue[[]any]
 	Tags                             plugin.TValue[map[string]any]
 	Acl                              plugin.TValue[[]any]
 	Owner                            plugin.TValue[map[string]any]
@@ -115084,6 +115853,10 @@ type mqlAwsS3Bucket struct {
 	EncryptionRules                  plugin.TValue[[]any]
 	ReplicationRules                 plugin.TValue[[]any]
 	PublicAccessBlock                plugin.TValue[any]
+	BlockPublicAcls                  plugin.TValue[bool]
+	BlockPublicPolicy                plugin.TValue[bool]
+	IgnorePublicAcls                 plugin.TValue[bool]
+	RestrictPublicBuckets            plugin.TValue[bool]
 	ObjectLockEnabled                plugin.TValue[bool]
 	MetricsConfigurations            plugin.TValue[[]any]
 	Exists                           plugin.TValue[bool]
@@ -115159,6 +115932,22 @@ func (c *mqlAwsS3Bucket) GetPolicy() *plugin.TValue[*mqlAwsS3BucketPolicy] {
 		}
 
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -115305,6 +116094,30 @@ func (c *mqlAwsS3Bucket) GetReplicationRules() *plugin.TValue[[]any] {
 func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.PublicAccessBlock, func() (any, error) {
 		return c.publicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetBlockPublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPublicAcls, func() (bool, error) {
+		return c.blockPublicAcls()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetBlockPublicPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPublicPolicy, func() (bool, error) {
+		return c.blockPublicPolicy()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetIgnorePublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IgnorePublicAcls, func() (bool, error) {
+		return c.ignorePublicAcls()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetRestrictPublicBuckets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestrictPublicBuckets, func() (bool, error) {
+		return c.restrictPublicBuckets()
 	})
 }
 
@@ -118031,6 +118844,8 @@ type mqlAwsBackupVault struct {
 	EncryptionKeyArn plugin.TValue[string]
 	MaxRetentionDays plugin.TValue[int64]
 	MinRetentionDays plugin.TValue[int64]
+	AccessPolicy     plugin.TValue[string]
+	PolicyStatements plugin.TValue[[]any]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -118136,6 +118951,28 @@ func (c *mqlAwsBackupVault) GetMaxRetentionDays() *plugin.TValue[int64] {
 
 func (c *mqlAwsBackupVault) GetMinRetentionDays() *plugin.TValue[int64] {
 	return &c.MinRetentionDays
+}
+
+func (c *mqlAwsBackupVault) GetAccessPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessPolicy, func() (string, error) {
+		return c.accessPolicy()
+	})
+}
+
+func (c *mqlAwsBackupVault) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.vault", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
 }
 
 // mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource
@@ -119766,6 +120603,7 @@ type mqlAwsSqsQueue struct {
 	DeduplicationScope            plugin.TValue[string]
 	FifoThroughputLimit           plugin.TValue[string]
 	Policy                        plugin.TValue[any]
+	PolicyStatements              plugin.TValue[[]any]
 	Tags                          plugin.TValue[map[string]any]
 	ContentBasedDeduplication     plugin.TValue[bool]
 	RedriveAllowPolicy            plugin.TValue[any]
@@ -119929,6 +120767,22 @@ func (c *mqlAwsSqsQueue) GetFifoThroughputLimit() *plugin.TValue[string] {
 func (c *mqlAwsSqsQueue) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sqs.queue", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -127013,6 +127867,7 @@ type mqlAwsEcrRepository struct {
 	CreatedAt          plugin.TValue[*time.Time]
 	ScanningFrequency  plugin.TValue[string]
 	Policy             plugin.TValue[any]
+	PolicyStatements   plugin.TValue[[]any]
 	LifecyclePolicy    plugin.TValue[*mqlAwsEcrLifecyclePolicy]
 	AboutText          plugin.TValue[string]
 	UsageText          plugin.TValue[string]
@@ -127124,6 +127979,22 @@ func (c *mqlAwsEcrRepository) GetScanningFrequency() *plugin.TValue[string] {
 func (c *mqlAwsEcrRepository) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsEcrRepository) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.repository", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 
@@ -130566,6 +131437,7 @@ type mqlAwsLambdaFunction struct {
 	DlqTargetArn                  plugin.TValue[string]
 	RecursiveLoop                 plugin.TValue[string]
 	Policy                        plugin.TValue[any]
+	PolicyStatements              plugin.TValue[[]any]
 	VpcConfig                     plugin.TValue[any]
 	Vpc                           plugin.TValue[*mqlAwsVpc]
 	Subnets                       plugin.TValue[[]any]
@@ -130678,6 +131550,22 @@ func (c *mqlAwsLambdaFunction) GetRecursiveLoop() *plugin.TValue[string] {
 func (c *mqlAwsLambdaFunction) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
 	})
 }
 

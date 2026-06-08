@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.32.1",
-  "generated_at": "2026-06-05T10:50:35-07:00",
+  "generated_at": "2026-06-07T13:33:02-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -60,6 +60,7 @@
     "autoscaling:DescribeAutoScalingGroups",
     "autoscaling:DescribeLaunchConfigurations",
     "backup:GetBackupPlan",
+    "backup:GetBackupVaultAccessPolicy",
     "backup:ListBackupPlans",
     "backup:ListBackupSelections",
     "backup:ListBackupVaults",
@@ -445,6 +446,7 @@
     "guardduty:ListPublishingDestinations",
     "guardduty:ListThreatIntelSets",
     "iam:GenerateCredentialReport",
+    "iam:GetAccessKeyLastUsed",
     "iam:GetAccountPasswordPolicy",
     "iam:GetAccountSummary",
     "iam:GetCredentialReport",
@@ -585,10 +587,13 @@
     "network-firewall:ListTLSInspectionConfigurations",
     "organizations:DescribeAccount",
     "organizations:DescribeOrganization",
+    "organizations:DescribePolicy",
     "organizations:ListAccounts",
     "organizations:ListDelegatedAdministrators",
     "organizations:ListDelegatedServicesForAccount",
     "organizations:ListOrganizationalUnitsForParent",
+    "organizations:ListPolicies",
+    "organizations:ListPoliciesForTarget",
     "organizations:ListRoots",
     "organizations:ListTagsForResource",
     "pipes:DescribePipe",
@@ -1253,6 +1258,12 @@
       "permission": "backup:GetBackupPlan",
       "service": "backup",
       "action": "GetBackupPlan",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:GetBackupVaultAccessPolicy",
+      "service": "backup",
+      "action": "GetBackupVaultAccessPolicy",
       "source_file": "aws_backups.go"
     },
     {
@@ -3614,6 +3625,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:GetAccessKeyLastUsed",
+      "service": "iam",
+      "action": "GetAccessKeyLastUsed",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:GetAccountPasswordPolicy",
       "service": "iam",
       "action": "GetAccountPasswordPolicy",
@@ -4466,6 +4483,12 @@
       "source_file": "aws_account.go"
     },
     {
+      "permission": "organizations:DescribePolicy",
+      "service": "organizations",
+      "action": "DescribePolicy",
+      "source_file": "aws_account.go"
+    },
+    {
       "permission": "organizations:ListAccounts",
       "service": "organizations",
       "action": "ListAccounts",
@@ -4487,6 +4510,18 @@
       "permission": "organizations:ListOrganizationalUnitsForParent",
       "service": "organizations",
       "action": "ListOrganizationalUnitsForParent",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListPolicies",
+      "service": "organizations",
+      "action": "ListPolicies",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListPoliciesForTarget",
+      "service": "organizations",
+      "action": "ListPoliciesForTarget",
       "source_file": "aws_account.go"
     },
     {

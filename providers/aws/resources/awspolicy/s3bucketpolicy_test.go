@@ -51,3 +51,25 @@ func TestPolicyPrincipal(t *testing.T) {
 		"AWS": {"*"},
 	}, policy.Statements[0].Principal.Data())
 }
+
+// TestPolicyPrincipalArray guards against a regression where an array-valued
+// principal (e.g. {"Service": ["a", "b"]}) was rendered as a single bracketed
+// string instead of a slice of the individual values.
+func TestPolicyPrincipalArray(t *testing.T) {
+	doc := `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": {"Service": ["lambda.amazonaws.com", "logs.amazonaws.com"]},
+			"Action": "sts:AssumeRole"
+		}]
+	}`
+
+	var policy S3BucketPolicy
+	err := json.Unmarshal([]byte(doc), &policy)
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string][]string{
+		"Service": {"lambda.amazonaws.com", "logs.amazonaws.com"},
+	}, policy.Statements[0].Principal.Data())
+}

@@ -920,6 +920,65 @@ func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	username := a.Name.Data
+
+	res := []any{}
+	paginator := iam.NewListAccessKeysPaginator(svc, &iam.ListAccessKeysInput{
+		UserName: &username,
+	})
+	for paginator.HasMorePages() {
+		keysResp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range keysResp.AccessKeyMetadata {
+			key := keysResp.AccessKeyMetadata[i]
+
+			// AWS returns "N/A" for region and service and a nil date when the
+			// key has never been used.
+			lastUsedRegion := ""
+			lastUsedService := ""
+			var lastUsedDate *time.Time
+			if key.AccessKeyId != nil {
+				lastUsed, err := svc.GetAccessKeyLastUsed(ctx, &iam.GetAccessKeyLastUsedInput{
+					AccessKeyId: key.AccessKeyId,
+				})
+				if err != nil {
+					return nil, err
+				}
+				if lastUsed.AccessKeyLastUsed != nil {
+					lastUsedDate = lastUsed.AccessKeyLastUsed.LastUsedDate
+					lastUsedRegion = convert.ToValue(lastUsed.AccessKeyLastUsed.Region)
+					lastUsedService = convert.ToValue(lastUsed.AccessKeyLastUsed.ServiceName)
+				}
+			}
+
+			mqlKey, err := CreateResource(a.MqlRuntime, "aws.iam.user.accessKey",
+				map[string]*llx.RawData{
+					"__id":            llx.StringDataPtr(key.AccessKeyId),
+					"accessKeyId":     llx.StringDataPtr(key.AccessKeyId),
+					"username":        llx.StringDataPtr(key.UserName),
+					"status":          llx.StringData(string(key.Status)),
+					"createdAt":       llx.TimeDataPtr(key.CreateDate),
+					"lastUsedDate":    llx.TimeDataPtr(lastUsedDate),
+					"lastUsedRegion":  llx.StringData(lastUsedRegion),
+					"lastUsedService": llx.StringData(lastUsedService),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlKey)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAwsIamUser) policies() ([]any, error) {
 	if a.policiesFetched.Load() {
 		return a.policiesCache, nil
@@ -1328,7 +1387,9 @@ func (a *mqlAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
-func (a *mqlAwsIamPolicyversion) document() (any, error) {
+// rawDocument fetches the policy version document as it is returned by the IAM
+// API: a URL-encoded JSON string. Callers decode and parse it as needed.
+func (a *mqlAwsIamPolicyversion) rawDocument() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1348,7 +1409,15 @@ func (a *mqlAwsIamPolicyversion) document() (any, error) {
 	if policyVersion.PolicyVersion.Document == nil {
 		return "", errors.New("could not retrieve the policy document")
 	}
-	decodedValue, err := url.QueryUnescape(*policyVersion.PolicyVersion.Document)
+	return *policyVersion.PolicyVersion.Document, nil
+}
+
+func (a *mqlAwsIamPolicyversion) document() (any, error) {
+	rawDoc, err := a.rawDocument()
+	if err != nil {
+		return "", err
+	}
+	decodedValue, err := url.QueryUnescape(rawDoc)
 	if err != nil {
 		return "", err
 	}

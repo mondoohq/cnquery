@@ -99,7 +99,7 @@ func (v *Principal) UnmarshalJSON(b []byte) error {
 				p[key] = []string{fmt.Sprintf("%v", subv)}
 			case []any:
 				var items []string
-				for _, item := range v {
+				for _, item := range subv {
 					items = append(items, fmt.Sprintf("%v", item))
 				}
 				p[key] = items

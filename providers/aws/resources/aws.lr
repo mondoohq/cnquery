@@ -223,6 +223,33 @@ aws.organization @defaults("id masterAccountEmail") {
   delegatedAdministrators() []aws.organization.delegatedAdministrator
   // List of organizational units in the organization
   organizationalUnits() []aws.organization.organizationalUnit
+  // Service control policies defined in the organization, if available to the caller
+  serviceControlPolicies() []aws.organization.serviceControlPolicy
+}
+
+// AWS Organizations service control policy
+//
+// Examine a service control policy (SCP) and the maximum permissions it
+// defines for the accounts, organizational units, and roots it is attached
+// to. The parsed statements expose the allowed or denied actions and the
+// conditions that bound them, so you can audit the organization-wide
+// guardrails that constrain every member account. The policy is selected by
+// its id, for example p-0123456789abcdef.
+private aws.organization.serviceControlPolicy @defaults("name id") {
+  // Unique identifier of the policy
+  id string
+  // ARN of the policy
+  arn string
+  // Friendly name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Whether the policy is managed by AWS rather than the customer
+  awsManaged bool
+  // Raw policy content document (JSON)
+  content() string
+  // Parsed statements from the policy content
+  statements() []aws.iam.policyStatement
 }
 
 // AWS Organization delegated administrator
@@ -267,6 +294,8 @@ private aws.organization.organizationalUnit @defaults("id name path") {
   name string
   // Path in the organization where this OU exists
   path string
+  // Service control policies attached directly to this organizational unit
+  serviceControlPolicies() []aws.organization.serviceControlPolicy
 }
 
 // Amazon Virtual Private Cloud (VPC)
@@ -472,6 +501,8 @@ private aws.vpc.endpoint @defaults("id type region") {
   serviceName string
   // Policy document associated with the endpoint, if applicable
   policyDocument string
+  // Parsed statements from the endpoint policy
+  policyStatements() []aws.iam.policyStatement
   // Subnets for the (interface) endpoint
   subnets []string
   // Whether to associate a private hosted zone with the specified VPC
@@ -1342,6 +1373,8 @@ private aws.efs.filesystem @defaults("name id region") {
   accessPoints() []aws.efs.accessPoint
   // Resource-based policy document (JSON)
   fileSystemPolicy() string
+  // Parsed statements from the file system policy
+  policyStatements() []aws.iam.policyStatement
   // Performance mode: generalPurpose or maxIO
   performanceMode string
   // Throughput mode: bursting, provisioned, or elastic
@@ -1667,6 +1700,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   keyManager() string
   // Key policy document in JSON format
   policy() string
+  // Parsed statements from the key policy
+  policyStatements() []aws.iam.policyStatement
   // Describes the type of key material in the key
   //
   // One of: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, ECC_SECG_P256K1, HMAC_224, HMAC_256, HMAC_384, HMAC_512, SM2.
@@ -1924,13 +1959,42 @@ private aws.iam.user @defaults("arn name createdAt") {
   // List of group ARNs that the user belongs to
   groups() []string
   // List of access keys metadata associated with the user
-  accessKeys() []dict
+  //
+  // Deprecated in favor of accessKeyDetails, which resolves each key to a
+  // typed aws.iam.user.accessKey exposing status and last-used data.
+  accessKeys() @maturity("deprecated") []dict
+  // Access keys associated with the user, including last-used data
+  accessKeyDetails() []aws.iam.user.accessKey
   // Login profile for the user
   loginProfile() aws.iam.loginProfile
   // Path to the user
   path string
   // List of MFA devices (virtual and hardware) assigned to the user
   mfaDevices() []dict
+}
+
+// IAM user access key
+//
+// Examine an access key belonging to an IAM user, including its activation
+// status and when it was last used. The createdAt and lastUsedDate fields
+// support auditing for unrotated keys (CIS access-key rotation) and unused
+// active keys that should be deactivated. The key is selected by its
+// accessKeyId, for example AKIAIOSFODNN7EXAMPLE.
+private aws.iam.user.accessKey @defaults("accessKeyId status lastUsedDate") {
+  // Access key ID
+  accessKeyId string
+  // Name of the user the access key belongs to
+  username string
+  // Status of the access key: Active or Inactive
+  status string
+  // Time when the access key was created
+  createdAt time
+  // Time when the access key was last used, null if never used
+  lastUsedDate time
+  // Region in which the access key was last used, "N/A" if never used
+  lastUsedRegion string
+  // AWS service most recently accessed with the key, "N/A" if never used
+  lastUsedService string
 }
 
 // AWS IAM instance profile
@@ -1957,6 +2021,36 @@ private aws.iam.loginProfile @defaults("createdAt") {
   passwordResetRequired bool
 }
 
+// Statement from an IAM or resource-based policy
+//
+// Examine a single statement parsed from a policy document. Each statement
+// pairs an effect (Allow or Deny) with the actions, resources, principals,
+// and conditions it covers, so you can audit wildcard actions, anonymous or
+// cross-account principals, and missing condition keys without parsing the
+// raw JSON yourself. The same statement shape is reused across IAM policies,
+// role trust policies, and resource-based policies on KMS keys, S3 buckets,
+// SNS topics, SQS queues, and other services.
+private aws.iam.policyStatement @defaults("effect") {
+  // Statement ID, empty if the statement has none
+  sid string
+  // Effect of the statement: Allow or Deny
+  effect string
+  // Actions the statement applies to
+  actions []string
+  // Actions excluded from the statement (NotAction)
+  notActions []string
+  // Resources the statement applies to
+  resources []string
+  // Resources excluded from the statement (NotResource)
+  notResources []string
+  // Principals the statement applies to, keyed by principal type (AWS, Service, Federated, CanonicalUser)
+  principals map[string][]string
+  // Principals excluded from the statement (NotPrincipal), keyed by principal type
+  notPrincipals map[string][]string
+  // Conditions under which the statement is in effect, keyed by condition operator then condition key
+  conditions dict
+}
+
 // AWS IAM policy
 private aws.iam.policy @defaults("arn name") {
   // ARN of the policy
@@ -1981,6 +2075,8 @@ private aws.iam.policy @defaults("arn name") {
   versions() []aws.iam.policyversion
   // Default version of the policy
   defaultVersion() aws.iam.policyversion
+  // Parsed statements from the policy default version
+  statements() []aws.iam.policyStatement
 
   // List of users attached to the policy
   attachedUsers() []aws.iam.user
@@ -2000,6 +2096,8 @@ private aws.iam.policyversion @defaults("arn isDefaultVersion createdAt") {
   isDefaultVersion bool
   // JSON statements for this policy version
   document() dict
+  // Parsed statements for this policy version
+  statements() []aws.iam.policyStatement
   // Time when this policy version was created
   createdAt time
 }
@@ -2020,6 +2118,8 @@ private aws.iam.role @defaults("arn name") {
   createdAt time
   // Policy document that grants an entity permission to assume the role
   assumeRolePolicyDocument dict
+  // Parsed statements from the role trust policy
+  assumeRolePolicyStatements() []aws.iam.policyStatement
   // Time when the role was last used to make an AWS request
   lastUsedAt time
   // Region in which the role was last used
@@ -4443,6 +4543,8 @@ private aws.sns.topic @defaults("arn") {
   kmsMasterKey() aws.kms.key
   // Access policy for the topic (parsed JSON)
   policy() dict
+  // Parsed statements from the topic access policy
+  policyStatements() []aws.iam.policyStatement
   // Whether the topic is a FIFO topic
   fifoTopic() bool
   // Whether content-based deduplication is enabled (FIFO topics only)
@@ -6590,6 +6692,8 @@ aws.secretsmanager.secret @defaults("arn name") {
   tags map[string]string
   // Resource-based policy attached to the secret (JSON string, empty if none)
   resourcePolicy() string
+  // Parsed statements from the resource-based policy
+  policyStatements() []aws.iam.policyStatement
   // Regions where the secret is replicated
   replicaRegions() []aws.secretsmanager.secret.replicaRegion
   // Secret type: USER (user-created) or MANAGED_EXTERNAL (managed by another service)
@@ -9762,6 +9866,8 @@ private aws.s3.bucket @defaults("name location public") {
   name string
   // Policy associated with the bucket
   policy() aws.s3.bucket.policy
+  // Parsed statements from the bucket policy
+  policyStatements() []aws.iam.policyStatement
   // Tags for the bucket
   tags() map[string]string
   // List of access control grants associated with the bucket
@@ -9796,6 +9902,14 @@ private aws.s3.bucket @defaults("name location public") {
   replicationRules() []aws.s3.bucket.replicationRule
   // Public access block configuration for the bucket
   publicAccessBlock() dict
+  // Whether new public ACLs on the bucket and its objects are blocked
+  blockPublicAcls() bool
+  // Whether new public bucket policies are blocked
+  blockPublicPolicy() bool
+  // Whether existing public ACLs on the bucket and its objects are ignored
+  ignorePublicAcls() bool
+  // Whether cross-account access to the bucket through public policies is restricted
+  restrictPublicBuckets() bool
   // Whether Object Lock is enabled on the bucket (prevents deletion/overwrite for ransomware protection)
   objectLockEnabled() bool
   // Bucket metrics configurations for request metrics
@@ -10002,7 +10116,10 @@ private aws.s3.bucket.policy @defaults("bucketName version") {
   // Version of the policy
   version() string
   // List of statements for the policy
-  statements() []dict
+  //
+  // Deprecated in favor of aws.s3.bucket.policyStatements, which resolves each
+  // statement to a typed aws.iam.policyStatement.
+  statements() @maturity("deprecated") []dict
 }
 
 // Amazon S3 bucket static-website hosting configuration
@@ -10487,6 +10604,10 @@ private aws.backup.vault @defaults("name region") {
   maxRetentionDays int
   // The minimum retention period that the vault retains its recovery points
   minRetentionDays int
+  // Resource-based access policy attached to the vault (JSON string, empty if none)
+  accessPolicy() string
+  // Parsed statements from the vault access policy
+  policyStatements() []aws.iam.policyStatement
 }
 
 // AWS Backup vault recovery point
@@ -10898,6 +11019,8 @@ private aws.sqs.queue {
   fifoThroughputLimit() string
   // Access policy for the queue (parsed JSON)
   policy() dict
+  // Parsed statements from the queue access policy
+  policyStatements() []aws.iam.policyStatement
   // Resource tags for the queue
   tags() map[string]string
   // Whether content-based deduplication is enabled (FIFO queues only)
@@ -12867,6 +12990,8 @@ private aws.ecr.repository @defaults("uri region") {
   scanningFrequency() string
   // Access policy for the repository (parsed JSON; private repositories only)
   policy() dict
+  // Parsed statements from the repository access policy
+  policyStatements() []aws.iam.policyStatement
   // Lifecycle policy for the repository
   lifecyclePolicy() aws.ecr.lifecyclePolicy
   // About text from catalog data (public repositories only)
@@ -13765,6 +13890,8 @@ private aws.lambda.function @defaults("arn") {
   recursiveLoop() string
   // Policy for the function
   policy() dict
+  // Parsed statements from the function resource policy
+  policyStatements() []aws.iam.policyStatement
   // Raw VPC configuration for the Lambda function
   //
   // Deprecated in favor of `vpc()`, `subnets()`, and `securityGroups()`.

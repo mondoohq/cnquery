@@ -532,6 +532,99 @@ func (a *mqlAwsOrganizationOrganizationalUnit) id() (string, error) {
 	return a.Arn.Data, a.Arn.Error
 }
 
+func newServiceControlPolicyResource(runtime *plugin.Runtime, p orgtypes.PolicySummary) (plugin.Resource, error) {
+	return CreateResource(runtime, "aws.organization.serviceControlPolicy",
+		map[string]*llx.RawData{
+			"__id":        llx.StringDataPtr(p.Id),
+			"id":          llx.StringDataPtr(p.Id),
+			"arn":         llx.StringDataPtr(p.Arn),
+			"name":        llx.StringDataPtr(p.Name),
+			"description": llx.StringDataPtr(p.Description),
+			"awsManaged":  llx.BoolData(p.AwsManaged),
+		})
+}
+
+func (a *mqlAwsOrganization) serviceControlPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := organizations.NewListPoliciesPaginator(client, &organizations.ListPoliciesInput{
+		Filter: orgtypes.PolicyTypeServiceControlPolicy,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for i := range page.Policies {
+			mqlPolicy, err := newServiceControlPolicyResource(a.MqlRuntime, page.Policies[i])
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPolicy)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsOrganizationOrganizationalUnit) serviceControlPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	targetId := a.Id.Data
+	res := []any{}
+	paginator := organizations.NewListPoliciesForTargetPaginator(client, &organizations.ListPoliciesForTargetInput{
+		TargetId: &targetId,
+		Filter:   orgtypes.PolicyTypeServiceControlPolicy,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for i := range page.Policies {
+			mqlPolicy, err := newServiceControlPolicyResource(a.MqlRuntime, page.Policies[i])
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPolicy)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsOrganizationServiceControlPolicy) content() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	id := a.Id.Data
+	resp, err := client.DescribePolicy(ctx, &organizations.DescribePolicyInput{PolicyId: &id})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.Policy == nil || resp.Policy.Content == nil {
+		return "", nil
+	}
+	return *resp.Policy.Content, nil
+}
+
+func (a *mqlAwsOrganizationServiceControlPolicy) statements() ([]any, error) {
+	return policyStatementsFromString(a.MqlRuntime, a.Arn.Data, a.GetContent())
+}
+
 func (a *mqlAwsOrganizationDelegatedAdministrator) account() (*mqlAwsAccount, error) {
 	mqlAccount, err := NewResource(a.MqlRuntime, "aws.account",
 		map[string]*llx.RawData{

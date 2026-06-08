@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -144,6 +145,39 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAwsBackupVault) accessPolicy() (string, error) {
+	vArn := a.Arn.Data
+	parsedArn, err := arn.Parse(vArn)
+	if err != nil {
+		return "", err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Backup(parsedArn.Region)
+	ctx := context.Background()
+
+	name := strings.TrimPrefix(parsedArn.Resource, "backup-vault:")
+	resp, err := svc.GetBackupVaultAccessPolicy(ctx, &backup.GetBackupVaultAccessPolicyInput{
+		BackupVaultName: &name,
+	})
+	if err != nil {
+		// vaults without an access policy return ResourceNotFoundException
+		var rnf *backuptypes.ResourceNotFoundException
+		if errors.As(err, &rnf) {
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.Policy == nil {
+		return "", nil
+	}
+	return *resp.Policy, nil
+}
+
+func (a *mqlAwsBackupVault) policyStatements() ([]any, error) {
+	return policyStatementsFromString(a.MqlRuntime, a.Arn.Data, a.GetAccessPolicy())
 }
 
 // ========================

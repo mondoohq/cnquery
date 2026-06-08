@@ -581,6 +581,36 @@ func (a *mqlAwsS3Bucket) fetchPublicAccessBlock() (*s3types.PublicAccessBlockCon
 	return a.publicAccessConfig, a.publicAccessErr
 }
 
+// s3PublicAccessBlockFlag resolves one block-public-access setting. When no
+// public access block configuration exists on the bucket, the protection is
+// not in effect, so each flag reports false.
+func (a *mqlAwsS3Bucket) s3PublicAccessBlockFlag(get func(*s3types.PublicAccessBlockConfiguration) *bool) (bool, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
+		return false, err
+	}
+	if config == nil {
+		return false, nil
+	}
+	return convert.ToValue(get(config)), nil
+}
+
+func (a *mqlAwsS3Bucket) blockPublicAcls() (bool, error) {
+	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.BlockPublicAcls })
+}
+
+func (a *mqlAwsS3Bucket) blockPublicPolicy() (bool, error) {
+	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.BlockPublicPolicy })
+}
+
+func (a *mqlAwsS3Bucket) ignorePublicAcls() (bool, error) {
+	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.IgnorePublicAcls })
+}
+
+func (a *mqlAwsS3Bucket) restrictPublicBuckets() (bool, error) {
+	return a.s3PublicAccessBlockFlag(func(c *s3types.PublicAccessBlockConfiguration) *bool { return c.RestrictPublicBuckets })
+}
+
 func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {
 	config, err := a.fetchPublicAccessBlock()
 	if err != nil {
