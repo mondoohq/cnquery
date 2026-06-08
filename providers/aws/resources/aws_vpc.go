@@ -517,58 +517,70 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 	pcs := []any{}
-	filterKeyVal := "requester-vpc-info.vpc-id"
-	filterKeyVal2 := "accepter-vpc-info.vpc-id"
+	seen := map[string]struct{}{}
 
-	params := &ec2.DescribeVpcPeeringConnectionsInput{Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}, {Name: &filterKeyVal2, Values: []string{vpc}}}}
-	paginator := ec2.NewDescribeVpcPeeringConnectionsPaginator(svc, params)
-	for paginator.HasMorePages() {
-		res, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, peerconn := range res.VpcPeeringConnections {
-			status := ""
-			if peerconn.Status != nil {
-				status = *peerconn.Status.Message
-			}
-			// Determine DNS resolution status from peering options
-			dnsResolution := false
-			if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
-				peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-				dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-			}
-			if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
-				peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-				dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-			}
-
-			var requesterAccountId, accepterAccountId string
-			if peerconn.RequesterVpcInfo != nil {
-				requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
-			}
-			if peerconn.AccepterVpcInfo != nil {
-				accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
-			}
-
-			mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
-				map[string]*llx.RawData{
-					"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
-					"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
-					"status":               llx.StringData(status),
-					"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
-					"requesterAccountId":   llx.StringData(requesterAccountId),
-					"accepterAccountId":    llx.StringData(accepterAccountId),
-					"dnsResolutionEnabled": llx.BoolData(dnsResolution),
-				},
-			)
+	// A peering connection records this VPC in exactly one of requester-vpc-info
+	// or accepter-vpc-info, never both. AWS ANDs multiple Filters entries, so a
+	// single request filtering on both keys would require this VPC to be both
+	// ends of the same connection (impossible) and always returns nothing.
+	// Query each side separately and union the results, de-duplicating by id.
+	for _, filterKey := range []string{"requester-vpc-info.vpc-id", "accepter-vpc-info.vpc-id"} {
+		params := &ec2.DescribeVpcPeeringConnectionsInput{Filters: []vpctypes.Filter{{Name: &filterKey, Values: []string{vpc}}}}
+		paginator := ec2.NewDescribeVpcPeeringConnectionsPaginator(svc, params)
+		for paginator.HasMorePages() {
+			res, err := paginator.NextPage(ctx)
 			if err != nil {
 				return nil, err
 			}
-			mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
-			mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = a.Region.Data
-			pcs = append(pcs, mqlPeerConn)
+
+			for _, peerconn := range res.VpcPeeringConnections {
+				id := convert.ToValue(peerconn.VpcPeeringConnectionId)
+				if _, ok := seen[id]; ok {
+					continue
+				}
+				seen[id] = struct{}{}
+
+				status := ""
+				if peerconn.Status != nil {
+					status = convert.ToValue(peerconn.Status.Message)
+				}
+				// Determine DNS resolution status from peering options
+				dnsResolution := false
+				if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
+					peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+					dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+				}
+				if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
+					peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+					dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+				}
+
+				var requesterAccountId, accepterAccountId string
+				if peerconn.RequesterVpcInfo != nil {
+					requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
+				}
+				if peerconn.AccepterVpcInfo != nil {
+					accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
+				}
+
+				mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
+					map[string]*llx.RawData{
+						"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
+						"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
+						"status":               llx.StringData(status),
+						"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
+						"requesterAccountId":   llx.StringData(requesterAccountId),
+						"accepterAccountId":    llx.StringData(accepterAccountId),
+						"dnsResolutionEnabled": llx.BoolData(dnsResolution),
+					},
+				)
+				if err != nil {
+					return nil, err
+				}
+				mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
+				mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = a.Region.Data
+				pcs = append(pcs, mqlPeerConn)
+			}
 		}
 	}
 	return pcs, nil
