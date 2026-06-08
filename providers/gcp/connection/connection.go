@@ -5,6 +5,7 @@ package connection
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
@@ -36,6 +37,13 @@ type GcpConnection struct {
 	asset *inventory.Asset
 
 	opts gcpConnectionOptions
+
+	// clientCache and credsCache memoize the HTTP client / credentials per
+	// sorted scope set so that the per-asset auth stack (credential parse,
+	// token source, HTTP transport) is built once rather than on every API
+	// call. Keyed by scopeCacheKey.
+	clientCache sync.Map
+	credsCache  sync.Map
 }
 
 type gcpConnectionOptions struct {

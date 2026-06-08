@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/pkg/errors"
@@ -18,7 +20,34 @@ import (
 	"google.golang.org/api/transport"
 )
 
+// scopeCacheKey builds an order-independent cache key from a scope set so that
+// Client/Credentials calls with the same scopes (in any order) share a cached
+// result.
+func scopeCacheKey(scopes []string) string {
+	sorted := make([]string, len(scopes))
+	copy(sorted, scopes)
+	sort.Strings(sorted)
+	return strings.Join(sorted, " ")
+}
+
+// Credentials returns OAuth credentials for the given scopes, building them
+// once per scope set and caching the result on the connection. The credentials
+// carry a token source that refreshes internally, so reuse is both correct and
+// avoids re-parsing the service account / re-reading ADC on every call.
 func (c *GcpConnection) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
+	key := scopeCacheKey(scopes)
+	if v, ok := c.credsCache.Load(key); ok {
+		return v.(*googleoauth.Credentials), nil
+	}
+	creds, err := c.buildCredentials(scopes...)
+	if err != nil {
+		return nil, err
+	}
+	actual, _ := c.credsCache.LoadOrStore(key, creds)
+	return actual.(*googleoauth.Credentials), nil
+}
+
+func (c *GcpConnection) buildCredentials(scopes ...string) (*googleoauth.Credentials, error) {
 	ctx := context.Background()
 	credParams := googleoauth.CredentialsParams{
 		Scopes:  scopes,
@@ -38,7 +67,23 @@ func (c *GcpConnection) Credentials(scopes ...string) (*googleoauth.Credentials,
 	return googleoauth.FindDefaultCredentials(ctx, scopes...)
 }
 
+// Client returns an HTTP client authorized for the given scopes, building it
+// once per scope set and caching it on the connection. http.Client is safe for
+// concurrent use, so the cached instance is shared across all callers.
 func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
+	key := scopeCacheKey(scope)
+	if v, ok := c.clientCache.Load(key); ok {
+		return v.(*http.Client), nil
+	}
+	client, err := c.buildClient(scope...)
+	if err != nil {
+		return nil, err
+	}
+	actual, _ := c.clientCache.LoadOrStore(key, client)
+	return actual.(*http.Client), nil
+}
+
+func (c *GcpConnection) buildClient(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
 	// use service account from secret if one is provided

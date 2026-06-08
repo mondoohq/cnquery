@@ -34,10 +34,12 @@ func (g *mqlGcpProjects) id() (string, error) {
 
 type mqlGcpProjectInternal struct {
 	// serviceEnabled services
-	enabledServices map[string]struct{}
-	iamPolicyOnce   sync.Once
-	iamPolicyCache  *cloudresourcemanager.Policy
-	iamPolicyErr    error
+	enabledServices     map[string]struct{}
+	enabledServicesOnce sync.Once
+	enabledServicesErr  error
+	iamPolicyOnce       sync.Once
+	iamPolicyCache      *cloudresourcemanager.Policy
+	iamPolicyErr        error
 }
 
 func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -533,23 +535,24 @@ func projectToMql(runtime *plugin.Runtime, p *cloudresourcemanager.Project) (*mq
 }
 
 func (g *mqlGcpProject) getEnabledServices() (map[string]struct{}, error) {
-	if g.enabledServices != nil {
-		return g.enabledServices, nil
-	}
+	g.enabledServicesOnce.Do(func() {
+		services := make(map[string]struct{})
+		enabledServices, err := g.fetchServices("state:ENABLED")
+		if err != nil {
+			g.enabledServicesErr = err
+			return
+		}
 
-	g.enabledServices = make(map[string]struct{})
-	enabledServices, err := g.fetchServices("state:ENABLED")
-	if err != nil {
-		return nil, err
-	}
+		for i := range enabledServices {
+			srv := enabledServices[i].(*mqlGcpService)
+			services[srv.Name.Data] = struct{}{}
+		}
+		// publish the fully-built map only after population so concurrent
+		// readers never observe a partially-filled map
+		g.enabledServices = services
+	})
 
-	for i := range enabledServices {
-		entry := enabledServices[i]
-		srv := entry.(*mqlGcpService)
-		g.enabledServices[srv.Name.Data] = struct{}{}
-	}
-
-	return g.enabledServices, nil
+	return g.enabledServices, g.enabledServicesErr
 }
 
 // isServiceEnabled is an internal helper function to check if a service is serviceEnabled
