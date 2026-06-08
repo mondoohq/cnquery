@@ -477,9 +477,33 @@ func (g *mqlGcpProjectComputeServiceInstance) machineType() (*mqlGcpProjectCompu
 	values := strings.Split(machineTypeUrl, "/")
 	machineTypeValue := values[len(values)-1]
 
-	// TODO: we can save calls if we move it to the into method
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	// Resolve through the project's machineTypes() aggregated list, which is
+	// fetched once and shared across every instance, rather than issuing a
+	// MachineTypes.Get per instance. For hundreds of VMs this turns N Gets into
+	// a single AggregatedList plus in-memory lookups.
+	svcObj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	machineTypes := svcObj.(*mqlGcpProjectComputeService).GetMachineTypes()
+	if machineTypes.Error == nil {
+		for _, mt := range machineTypes.Data {
+			m, ok := mt.(*mqlGcpProjectComputeServiceMachineType)
+			if !ok || m.Name.Data != machineTypeValue || m.Zone.Data == nil {
+				continue
+			}
+			if m.Zone.Data.Name.Data == zoneName.Data {
+				return m, nil
+			}
+		}
+	}
 
+	// Fall back to a direct Get for machine types absent from the aggregated
+	// list (custom machine types are synthesized and never listed) or if the
+	// list could not be fetched.
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
