@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -23,10 +24,9 @@ import (
 	mqlTypes "go.mondoo.com/mql/v13/types"
 )
 
-// guarddutyDetailConcurrency caps the per-detector fan-out of Describe/Get
-// calls for publishing destinations, IP sets, and threat-intel sets. There is
-// no batch API; fanning out shrinks the wall clock for detectors with many
-// children.
+// guarddutyDetailConcurrency caps the per-detector fan-out of GetIPSet and
+// GetThreatIntelSet calls. There is no batch API; fanning out shrinks the wall
+// clock for detectors with many IP or threat-intel sets.
 const guarddutyDetailConcurrency = 10
 
 func (a *mqlAwsGuardduty) id() (string, error) {
@@ -464,34 +464,12 @@ func (a *mqlAwsGuarddutyDetector) publishingDestinations() ([]any, error) {
 		return nil, err
 	}
 
-	details := make([]*guardduty.DescribePublishingDestinationOutput, len(resp.Destinations))
-	var wg sync.WaitGroup
-	sem := make(chan struct{}, guarddutyDetailConcurrency)
-	for i, dest := range resp.Destinations {
-		wg.Add(1)
-		go func(idx int, destId *string) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			detail, err := svc.DescribePublishingDestination(ctx, &guardduty.DescribePublishingDestinationInput{
-				DetectorId:    &detectorId,
-				DestinationId: destId,
-			})
-			if err != nil {
-				log.Warn().Err(err).Str("destinationId", convert.ToValue(destId)).Msg("could not describe publishing destination")
-				return
-			}
-			details[idx] = detail
-		}(i, dest.DestinationId)
-	}
-	wg.Wait()
-
+	// The list response already carries destinationId, destinationType, and
+	// status. The per-destination DescribePublishingDestination call is only
+	// needed for the s3Bucket()/kmsKey() references, so it is deferred to
+	// fetchDetail() and made only when one of those fields is accessed.
 	res := []any{}
-	for i, dest := range resp.Destinations {
-		detail := details[i]
-		if detail == nil {
-			continue
-		}
+	for _, dest := range resp.Destinations {
 		mqlDest, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.publishingDestination",
 			map[string]*llx.RawData{
 				"__id":            llx.StringData(fmt.Sprintf("%s/publishingDestination/%s", detectorId, convert.ToValue(dest.DestinationId))),
@@ -504,18 +482,53 @@ func (a *mqlAwsGuarddutyDetector) publishingDestinations() ([]any, error) {
 		}
 
 		mqlDestRes := mqlDest.(*mqlAwsGuarddutyDetectorPublishingDestination)
-		if detail.DestinationProperties != nil {
-			mqlDestRes.cacheBucketArn = detail.DestinationProperties.DestinationArn
-			mqlDestRes.cacheKmsKeyArn = detail.DestinationProperties.KmsKeyArn
-		}
+		mqlDestRes.detectorId = detectorId
+		mqlDestRes.region = region
 		res = append(res, mqlDestRes)
 	}
 	return res, nil
 }
 
 type mqlAwsGuarddutyDetectorPublishingDestinationInternal struct {
+	detectorId     string
+	region         string
+	fetched        atomic.Bool
+	lock           sync.Mutex
 	cacheBucketArn *string
 	cacheKmsKeyArn *string
+	fetchErr       error
+}
+
+// fetchDetail lazily calls DescribePublishingDestination once to resolve the
+// destination's S3 bucket and KMS key, shared by s3Bucket() and kmsKey().
+func (a *mqlAwsGuarddutyDetectorPublishingDestination) fetchDetail() error {
+	if a.fetched.Load() {
+		return a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched.Load() {
+		return a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Guardduty(a.region)
+	destinationId := a.DestinationId.Data
+	detail, err := svc.DescribePublishingDestination(context.Background(), &guardduty.DescribePublishingDestinationInput{
+		DetectorId:    &a.detectorId,
+		DestinationId: &destinationId,
+	})
+	if err != nil {
+		a.fetchErr = err
+		a.fetched.Store(true)
+		return err
+	}
+	if detail.DestinationProperties != nil {
+		a.cacheBucketArn = detail.DestinationProperties.DestinationArn
+		a.cacheKmsKeyArn = detail.DestinationProperties.KmsKeyArn
+	}
+	a.fetched.Store(true)
+	return nil
 }
 
 func (a *mqlAwsGuarddutyDetectorPublishingDestination) id() (string, error) {
@@ -523,6 +536,9 @@ func (a *mqlAwsGuarddutyDetectorPublishingDestination) id() (string, error) {
 }
 
 func (a *mqlAwsGuarddutyDetectorPublishingDestination) s3Bucket() (*mqlAwsS3Bucket, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
 	if a.cacheBucketArn == nil || *a.cacheBucketArn == "" {
 		a.S3Bucket.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -546,6 +562,9 @@ func (a *mqlAwsGuarddutyDetectorPublishingDestination) s3Bucket() (*mqlAwsS3Buck
 }
 
 func (a *mqlAwsGuarddutyDetectorPublishingDestination) kmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
 	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
 		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
