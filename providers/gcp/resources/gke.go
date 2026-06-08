@@ -344,6 +344,10 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
+		verticalPodAutoscalingEnabled := c.GetVerticalPodAutoscaling().GetEnabled()
+		intraNodeVisibilityEnabled := c.GetNetworkConfig().GetEnableIntraNodeVisibility()
+		defaultMaxPodsPerNode := c.GetDefaultMaxPodsConstraint().GetMaxPodsPerNode()
+
 		var addonsConfig plugin.Resource
 		if c.AddonsConfig != nil {
 			var httpLoadBalancing map[string]any
@@ -848,6 +852,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"autopilotEnabled":                     llx.BoolData(autopilotEnabled),
 			"autopilotWorkloadPolicyAllowNetAdmin": llx.BoolData(autopilotAllowNetAdmin),
 			"resourceUsageExportConfig":            llx.DictData(resourceUsageExportConfig),
+			"verticalPodAutoscalingEnabled":        llx.BoolData(verticalPodAutoscalingEnabled),
+			"intraNodeVisibilityEnabled":           llx.BoolData(intraNodeVisibilityEnabled),
+			"defaultMaxPodsPerNode":                llx.IntData(defaultMaxPodsPerNode),
 			"location":                             llx.StringData(c.Location),
 			"endpoint":                             llx.StringData(c.Endpoint),
 			"initialClusterVersion":                llx.StringData(c.InitialClusterVersion),

@@ -99,6 +99,8 @@ gcp.organization @defaults("name") {
   customRoles() []gcp.organization.role
   // Cloud Logging configuration scoped to the organization
   logging() gcp.organization.loggingService
+  // Essential Contacts configured at the organization level for security, technical, and other notification categories
+  essentialContacts() []gcp.essentialContact
 }
 
 // Google Cloud (GCP) IAM custom role defined at the organization level
@@ -653,6 +655,8 @@ private gcp.folder @defaults("name") {
   auditConfig() []gcp.resourcemanager.auditConfig
   // Cloud Logging configuration scoped to the folder
   logging() gcp.folder.loggingService
+  // Essential Contacts configured at the folder level for security, technical, and other notification categories
+  essentialContacts() []gcp.essentialContact
 }
 
 // Google Cloud (GCP) projects
@@ -1183,6 +1187,8 @@ private gcp.project.computeService.forwardingRule {
   labels map[string]string
   // Forwarding rule type
   loadBalancingScheme string
+  // Whether the forwarding rule is internet-facing (loadBalancingScheme is EXTERNAL or EXTERNAL_MANAGED)
+  isExternal() bool
   // Opaque filter criteria used by the load balancer to restrict routing configuration to a limited set of xDS-compliant clients
   metadataFilters []dict
   // Forwarding rule name
@@ -1380,6 +1386,8 @@ gcp.project.computeService.instance @defaults("name id") {
   blockProjectSshKeysEnabled() bool
   // Whether OS Login is enabled on this instance — checks instance metadata 'enable-oslogin', then falls back to project commonInstanceMetadata when unset
   osLoginEnabled() bool
+  // Whether instance-level SSH keys are set in metadata ('ssh-keys'), which grant access outside OS Login / IAM and are unmanaged
+  hasInstanceSshKeys() bool
   // Whether instance metadata 'serial-port-enable' is set to true (interactive serial console)
   serialPortEnabled() bool
   // Private IPv6 google access type for the VM
@@ -2249,6 +2257,8 @@ private gcp.project.computeService.backendService @defaults("name") {
   cloudArmorEnabled() bool
   // Whether Identity-Aware Proxy is enabled for the backend service (iap.enabled is true)
   iapEnabled() bool
+  // Whether load-balancer request logging is enabled for the backend service (logConfig.enable is true)
+  loggingEnabled() bool
   // Client TLS policy and subject alternative names for the backend service
   securitySettings dict
   // URL of the networksecurity ClientTlsPolicy that describes how clients authenticate with the backends
@@ -3693,6 +3703,12 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   autopilotEnabled bool
   // Whether Autopilot workloads may request the NET_ADMIN capability, relaxing the default privileged-container guardrail
   autopilotWorkloadPolicyAllowNetAdmin bool
+  // Whether Vertical Pod Autoscaling is enabled for the cluster
+  verticalPodAutoscalingEnabled bool
+  // Whether intra-node visibility is enabled, making pod-to-pod traffic on the same node visible to VPC networking (and its flow logs)
+  intraNodeVisibilityEnabled bool
+  // Default maximum number of pods that can run on a node, bounding per-node blast radius and IP consumption (0 when unset)
+  defaultMaxPodsPerNode int
   // Resource usage export configuration
   //
   // Holds `enableNetworkEgressMetering`, `enableResourceConsumptionMetering`,
@@ -5497,6 +5513,11 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   attributeMapping map[string]string
   // CEL expression evaluated against the external token. When empty, every external token that satisfies the mapping is accepted.
   attributeCondition string
+  // Whether an attribute condition is set on the provider
+  //
+  // When false, every external token that satisfies the mapping is accepted —
+  // the classic over-broad workload-identity-federation misconfiguration.
+  hasAttributeCondition() bool
   // Discriminator for which credential family this provider trusts: `aws`, `oidc`, `saml`, or `x509`.
   providerType string
   // For AWS providers: the AWS account ID whose IAM roles/users may federate
@@ -6720,6 +6741,8 @@ private gcp.project.monitoringService.alertPolicy {
   validity dict
   // Notification channel URLs to which notifications should be sent when incidents are opened or closed
   notificationChannelUrls []string
+  // Notification channels to which notifications are sent when incidents open or close
+  notificationChannels() []gcp.project.monitoringService.notificationChannel
   // Creation timestamp
   created time
   // Email address of the user who created the alert policy
@@ -8004,6 +8027,8 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
   selfLink string
   // Expiration time
   expireTime string
+  // Whether the certificate has already expired
+  expired() bool
   // Creation timestamp
   createdAt time
 }
@@ -11974,6 +11999,17 @@ private gcp.scc.finding @defaults("name category severity") {
   compliances []dict
   // Vulnerability details, including the CVE and its CVSS scores, when the finding describes a known vulnerability
   vulnerability dict
+  // Access details for the finding
+  //
+  // The principal, caller IP, user agent, and method that performed the
+  // action that triggered the finding — the "who" behind a threat finding.
+  access dict
+  // Network connections associated with the finding (source/destination IP and port, protocol) — the command-and-control or data-movement tuples
+  connections []dict
+  // Kubernetes details for the finding (affected pods, namespaces, roles, and bindings) when the finding concerns a GKE workload
+  kubernetes dict
+  // IAM bindings associated with the finding — the role and members granted (the ADD/REMOVE action) that triggered or relates to the finding
+  iamBindings []dict
   // Finding class (THREAT, VULNERABILITY, MISCONFIGURATION, etc.)
   findingClass string
   // State (ACTIVE, INACTIVE)

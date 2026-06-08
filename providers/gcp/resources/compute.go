@@ -2820,6 +2820,17 @@ func (g *mqlGcpProjectComputeServiceForwardingRule) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectComputeServiceForwardingRule) isExternal() (bool, error) {
+	if g.LoadBalancingScheme.Error != nil {
+		return false, g.LoadBalancingScheme.Error
+	}
+	switch g.LoadBalancingScheme.Data {
+	case "EXTERNAL", "EXTERNAL_MANAGED":
+		return true, nil
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProjectComputeServiceForwardingRule) network() (*mqlGcpProjectComputeServiceNetwork, error) {
 	if g.NetworkUrl.Error != nil {
 		return nil, g.NetworkUrl.Error
@@ -3126,6 +3137,20 @@ func (g *mqlGcpProjectComputeService) sslPolicies() ([]any, error) {
 
 func (g *mqlGcpProjectComputeServiceSslCertificate) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeServiceSslCertificate) expired() (bool, error) {
+	if g.ExpireTime.Error != nil {
+		return false, g.ExpireTime.Error
+	}
+	if g.ExpireTime.Data == "" {
+		return false, nil
+	}
+	t, err := time.Parse(time.RFC3339, g.ExpireTime.Data)
+	if err != nil {
+		return false, nil
+	}
+	return t.Before(time.Now()), nil
 }
 
 func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
@@ -3632,6 +3657,15 @@ func (g *mqlGcpProjectComputeServiceInstance) blockProjectSshKeysEnabled() (bool
 	return metadataBoolFlag(md.Data, "block-project-ssh-keys"), nil
 }
 
+func (g *mqlGcpProjectComputeServiceInstance) hasInstanceSshKeys() (bool, error) {
+	md := g.GetMetadata()
+	if md.Error != nil {
+		return false, md.Error
+	}
+	s, _ := md.Data["ssh-keys"].(string)
+	return s != "", nil
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {
 	md := g.GetMetadata()
 	if md.Error != nil {
@@ -3858,5 +3892,17 @@ func (g *mqlGcpProjectComputeServiceBackendService) iapEnabled() (bool, error) {
 		return false, nil
 	}
 	enabled, _ := iapMap["enabled"].(bool)
+	return enabled, nil
+}
+
+func (g *mqlGcpProjectComputeServiceBackendService) loggingEnabled() (bool, error) {
+	if g.LogConfig.Error != nil {
+		return false, g.LogConfig.Error
+	}
+	logMap, ok := g.LogConfig.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	enabled, _ := logMap["enable"].(bool)
 	return enabled, nil
 }

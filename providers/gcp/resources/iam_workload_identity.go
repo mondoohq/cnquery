@@ -176,6 +176,13 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) id() (string, erro
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) hasAttributeCondition() (bool, error) {
+	if g.AttributeCondition.Error != nil {
+		return false, g.AttributeCondition.Error
+	}
+	return g.AttributeCondition.Data != "", nil
+}
+
 // flattenWifProviderConfig extracts the credential-family discriminator and
 // the per-family fields from a WorkloadIdentityPoolProvider. Exactly one of
 // Aws, Oidc, Saml, or X509 should be set; the rest return zero values. For

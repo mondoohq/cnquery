@@ -71,6 +71,7 @@ gcp.folder 9.0.0
 gcp.folder.auditConfig 13.16.3
 gcp.folder.created 9.0.0
 gcp.folder.deleteTime 11.6.6
+gcp.folder.essentialContacts 13.21.2
 gcp.folder.folders 9.0.0
 gcp.folder.iamPolicy 13.16.3
 gcp.folder.id 9.0.0
@@ -140,6 +141,7 @@ gcp.organization.customConstraints 13.15.1
 gcp.organization.customRoles 13.16.3
 gcp.organization.customerId 13.15.1
 gcp.organization.deleteTime 11.6.6
+gcp.organization.essentialContacts 13.21.2
 gcp.organization.folders 9.0.0
 gcp.organization.iamPolicy 9.0.0
 gcp.organization.id 9.0.0
@@ -1426,6 +1428,7 @@ gcp.project.computeService.backendService.loadBalancingScheme 9.0.0
 gcp.project.computeService.backendService.localityLbPolicies 9.0.0
 gcp.project.computeService.backendService.localityLbPolicy 9.0.0
 gcp.project.computeService.backendService.logConfig 9.0.0
+gcp.project.computeService.backendService.loggingEnabled 13.21.2
 gcp.project.computeService.backendService.maxStreamDuration 9.0.0
 gcp.project.computeService.backendService.name 9.0.0
 gcp.project.computeService.backendService.network 13.6.1
@@ -1566,6 +1569,7 @@ gcp.project.computeService.forwardingRule.ipAddress 9.0.0
 gcp.project.computeService.forwardingRule.ipCollection 13.1.2
 gcp.project.computeService.forwardingRule.ipProtocol 9.0.0
 gcp.project.computeService.forwardingRule.ipVersion 9.0.0
+gcp.project.computeService.forwardingRule.isExternal 13.21.2
 gcp.project.computeService.forwardingRule.isMirroringCollector 9.0.0
 gcp.project.computeService.forwardingRule.labels 9.0.0
 gcp.project.computeService.forwardingRule.loadBalancingScheme 9.0.0
@@ -1657,6 +1661,7 @@ gcp.project.computeService.instance.enableVtpm 9.0.0
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
 gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2
+gcp.project.computeService.instance.hasInstanceSshKeys 13.21.2
 gcp.project.computeService.instance.hasPublicIp 13.12.2
 gcp.project.computeService.instance.hostname 9.0.0
 gcp.project.computeService.instance.id 9.0.0
@@ -2099,6 +2104,7 @@ gcp.project.computeService.sslCertificate 11.5.1
 gcp.project.computeService.sslCertificate.createdAt 11.5.1
 gcp.project.computeService.sslCertificate.description 11.5.1
 gcp.project.computeService.sslCertificate.expireTime 11.5.1
+gcp.project.computeService.sslCertificate.expired 13.21.2
 gcp.project.computeService.sslCertificate.id 11.5.1
 gcp.project.computeService.sslCertificate.managed 11.5.1
 gcp.project.computeService.sslCertificate.managedStatus 13.18.1
@@ -3009,6 +3015,7 @@ gcp.project.gkeService.cluster.currentNodeCount 11.6.6
 gcp.project.gkeService.cluster.databaseEncryption 9.0.0
 gcp.project.gkeService.cluster.databaseEncryptionKey 13.2.3
 gcp.project.gkeService.cluster.databaseEncryptionState 13.2.3
+gcp.project.gkeService.cluster.defaultMaxPodsPerNode 13.21.2
 gcp.project.gkeService.cluster.description 9.0.0
 gcp.project.gkeService.cluster.enableKubernetesAlpha 9.0.0
 gcp.project.gkeService.cluster.enableTpu 11.6.6
@@ -3021,6 +3028,7 @@ gcp.project.gkeService.cluster.id 9.0.0
 gcp.project.gkeService.cluster.identityServiceConfig 9.0.0
 gcp.project.gkeService.cluster.initialClusterVersion 9.0.0
 gcp.project.gkeService.cluster.initialNodeCount 13.1.2
+gcp.project.gkeService.cluster.intraNodeVisibilityEnabled 13.21.2
 gcp.project.gkeService.cluster.ipAllocationPolicy 9.0.0
 gcp.project.gkeService.cluster.ipAllocationPolicy.clusterIpv4CidrBlock 9.0.0
 gcp.project.gkeService.cluster.ipAllocationPolicy.clusterSecondaryRangeName 9.0.0
@@ -3223,6 +3231,7 @@ gcp.project.gkeService.cluster.status 9.0.0
 gcp.project.gkeService.cluster.subnetwork 9.0.0
 gcp.project.gkeService.cluster.tpuIpv4CidrBlock 13.1.2
 gcp.project.gkeService.cluster.userManagedKeysConfig 13.16.3
+gcp.project.gkeService.cluster.verticalPodAutoscalingEnabled 13.21.2
 gcp.project.gkeService.cluster.workloadIdentityConfig 9.0.0
 gcp.project.gkeService.cluster.workloadIdentityEnabled 13.12.2
 gcp.project.gkeService.clusters 9.0.0
@@ -3331,6 +3340,7 @@ gcp.project.iamService.workloadIdentityPool.provider.description 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.disabled 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.displayName 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.expireTime 13.13.4
+gcp.project.iamService.workloadIdentityPool.provider.hasAttributeCondition 13.21.2
 gcp.project.iamService.workloadIdentityPool.provider.name 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.oidcAllowedAudiences 13.13.4
 gcp.project.iamService.workloadIdentityPool.provider.oidcIssuerUri 13.13.4
@@ -3712,6 +3722,7 @@ gcp.project.monitoringService.alertPolicy.enabled 9.0.0
 gcp.project.monitoringService.alertPolicy.labels 9.0.0
 gcp.project.monitoringService.alertPolicy.name 9.0.0
 gcp.project.monitoringService.alertPolicy.notificationChannelUrls 9.0.0
+gcp.project.monitoringService.alertPolicy.notificationChannels 13.21.2
 gcp.project.monitoringService.alertPolicy.projectId 9.0.0
 gcp.project.monitoringService.alertPolicy.updated 9.0.0
 gcp.project.monitoringService.alertPolicy.updatedBy 9.0.0
@@ -5060,14 +5071,18 @@ gcp.scc.bigQueryExport.mostRecentEditor 13.3.4
 gcp.scc.bigQueryExport.name 13.3.4
 gcp.scc.bigQueryExport.updateTime 13.3.4
 gcp.scc.finding 13.3.4
+gcp.scc.finding.access 13.21.2
 gcp.scc.finding.category 13.3.4
 gcp.scc.finding.chokepoint 13.3.5
 gcp.scc.finding.compliances 13.21.2
+gcp.scc.finding.connections 13.21.2
 gcp.scc.finding.createTime 13.3.4
 gcp.scc.finding.eventTime 13.3.4
 gcp.scc.finding.externalExposure 13.3.5
 gcp.scc.finding.externalUri 13.3.4
 gcp.scc.finding.findingClass 13.3.4
+gcp.scc.finding.iamBindings 13.21.2
+gcp.scc.finding.kubernetes 13.21.2
 gcp.scc.finding.mute 13.3.4
 gcp.scc.finding.muteInitiator 13.21.2
 gcp.scc.finding.muteUpdateTime 13.21.2

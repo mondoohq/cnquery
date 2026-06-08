@@ -92,6 +92,47 @@ func (g *mqlGcpProjectMonitoringServiceAlertPolicy) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+// notificationChannels resolves the alert policy's channel resource names to
+// the typed notification channels listed by the parent monitoring service.
+func (g *mqlGcpProjectMonitoringServiceAlertPolicy) notificationChannels() ([]any, error) {
+	if g.NotificationChannelUrls.Error != nil {
+		return nil, g.NotificationChannelUrls.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if len(g.NotificationChannelUrls.Data) == 0 {
+		return []any{}, nil
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	channels := res.(*mqlGcpProjectMonitoringService).GetNotificationChannels()
+	if channels.Error != nil {
+		return nil, channels.Error
+	}
+
+	byName := make(map[string]*mqlGcpProjectMonitoringServiceNotificationChannel, len(channels.Data))
+	for _, c := range channels.Data {
+		ch := c.(*mqlGcpProjectMonitoringServiceNotificationChannel)
+		byName[ch.Name.Data] = ch
+	}
+
+	out := make([]any, 0, len(g.NotificationChannelUrls.Data))
+	for _, u := range g.NotificationChannelUrls.Data {
+		if name, ok := u.(string); ok {
+			if ch, found := byName[name]; found {
+				out = append(out, ch)
+			}
+		}
+	}
+	return out, nil
+}
+
 func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

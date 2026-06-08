@@ -139,6 +139,34 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			return nil, err
 		}
 
+		access, err := protoToDict(f.GetAccess())
+		if err != nil {
+			return nil, err
+		}
+
+		kubernetes, err := protoToDict(f.GetKubernetes())
+		if err != nil {
+			return nil, err
+		}
+
+		connections := make([]any, 0, len(f.GetConnections()))
+		for _, c := range f.GetConnections() {
+			d, err := protoToDict(c)
+			if err != nil {
+				return nil, err
+			}
+			connections = append(connections, d)
+		}
+
+		iamBindings := make([]any, 0, len(f.GetIamBindings()))
+		for _, b := range f.GetIamBindings() {
+			d, err := protoToDict(b)
+			if err != nil {
+				return nil, err
+			}
+			iamBindings = append(iamBindings, d)
+		}
+
 		mqlFinding, err := CreateResource(runtime, "gcp.scc.finding", map[string]*llx.RawData{
 			"name":             llx.StringData(f.Name),
 			"parent":           llx.StringData(f.Parent),
@@ -154,6 +182,10 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			"muteUpdateTime":   llx.TimeDataPtr(timestampAsTimePtr(f.GetMuteUpdateTime())),
 			"compliances":      llx.ArrayData(compliances, types.Dict),
 			"vulnerability":    llx.DictData(vulnerability),
+			"access":           llx.DictData(access),
+			"connections":      llx.ArrayData(connections, types.Dict),
+			"kubernetes":       llx.DictData(kubernetes),
+			"iamBindings":      llx.ArrayData(iamBindings, types.Dict),
 			"findingClass":     llx.StringData(f.FindingClass.String()),
 			"state":            llx.StringData(f.State.String()),
 			"resourceName":     llx.StringData(f.ResourceName),
