@@ -390,6 +390,30 @@ func (a *mqlAwsCloudtrailTrail) getEventSelectorsData() (*cloudtrail.GetEventSel
 	return resp, nil
 }
 
+// capturesAllManagementEvents reports whether any event selector logs
+// management events for both read and write events (readWriteType "All").
+func (a *mqlAwsCloudtrailTrail) capturesAllManagementEvents() (bool, error) {
+	entries := a.GetEventSelectorEntries()
+	if entries.Error != nil {
+		return false, entries.Error
+	}
+	for _, e := range entries.Data {
+		sel := e.(*mqlAwsCloudtrailTrailEventSelector)
+		mgmt := sel.GetIncludeManagementEvents()
+		if mgmt.Error != nil {
+			return false, mgmt.Error
+		}
+		rw := sel.GetReadWriteType()
+		if rw.Error != nil {
+			return false, rw.Error
+		}
+		if mgmt.Data && rw.Data == "All" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (a *mqlAwsCloudtrailTrail) eventSelectorEntries() ([]any, error) {
 	resp, err := a.getEventSelectorsData()
 	if err != nil {

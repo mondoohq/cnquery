@@ -9795,6 +9795,11 @@ private aws.cloudtrail.trail @defaults("name region") {
   eventSelectors() @maturity("deprecated") []dict
   // Typed event selector configuration for the trail
   eventSelectorEntries() []aws.cloudtrail.trail.eventSelector
+  // Whether the trail logs all management events
+  //
+  // True when an event selector includes management events and applies to both
+  // read and write events (`readWriteType` of `All`).
+  capturesAllManagementEvents() bool
   // Advanced event selectors configured for the trail
   advancedEventSelectors() []aws.cloudtrail.trail.advancedEventSelector
   // Region in which the trail was created (home region)

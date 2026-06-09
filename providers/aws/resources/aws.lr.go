@@ -15332,6 +15332,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.eventSelectorEntries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetEventSelectorEntries()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail.eventSelector")))
 	},
+	"aws.cloudtrail.trail.capturesAllManagementEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetCapturesAllManagementEvents()).ToDataRes(types.Bool)
+	},
 	"aws.cloudtrail.trail.advancedEventSelectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetAdvancedEventSelectors()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail.advancedEventSelector")))
 	},
@@ -48218,6 +48221,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudtrail.trail.eventSelectorEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).EventSelectorEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.capturesAllManagementEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).CapturesAllManagementEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.advancedEventSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -115553,6 +115560,7 @@ type mqlAwsCloudtrailTrail struct {
 	CloudWatchLogsLogGroupArn            plugin.TValue[string]
 	EventSelectors                       plugin.TValue[[]any]
 	EventSelectorEntries                 plugin.TValue[[]any]
+	CapturesAllManagementEvents          plugin.TValue[bool]
 	AdvancedEventSelectors               plugin.TValue[[]any]
 	Region                               plugin.TValue[string]
 	HasInsightSelectors                  plugin.TValue[bool]
@@ -115754,6 +115762,12 @@ func (c *mqlAwsCloudtrailTrail) GetEventSelectorEntries() *plugin.TValue[[]any] 
 		}
 
 		return c.eventSelectorEntries()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetCapturesAllManagementEvents() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CapturesAllManagementEvents, func() (bool, error) {
+		return c.capturesAllManagementEvents()
 	})
 }
 

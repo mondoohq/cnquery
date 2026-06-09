@@ -1639,6 +1639,7 @@ aws.cloudtrail.trail.advancedEventSelector.fieldSelectors 13.12.1
 aws.cloudtrail.trail.advancedEventSelector.name 13.12.1
 aws.cloudtrail.trail.advancedEventSelectors 13.12.1
 aws.cloudtrail.trail.arn 11.15.2
+aws.cloudtrail.trail.capturesAllManagementEvents 13.34.1
 aws.cloudtrail.trail.cloudWatchLogsLogGroupArn 11.15.2
 aws.cloudtrail.trail.cloudWatchLogsRole 13.12.1
 aws.cloudtrail.trail.cloudWatchLogsRoleArn 11.15.2
