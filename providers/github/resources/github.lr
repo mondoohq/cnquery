@@ -1209,8 +1209,8 @@ private github.release @defaults("name tagName") {
 //
 // Examine a webhook configured on a repository or organization. Provides `name`,
 // `url`, subscribed `events`, `config` (content type, insecure_ssl flag, and
-// redacted secret reference), `active` status, and `createdAt`/`updatedAt`
-// timestamps.
+// redacted secret reference), the typed `contentType` and `insecureSsl`
+// accessors, `active` status, and `createdAt`/`updatedAt` timestamps.
 private github.webhook @defaults("id name") {
   // Webhook ID
   id int
@@ -1222,6 +1222,10 @@ private github.webhook @defaults("id name") {
   events []string
   // Webhook configuration: content_type (json/form), insecure_ssl (0/1), and a redacted secret reference
   config dict
+  // Payload media type (json or form); typed accessor for the `content_type` config value
+  contentType string
+  // Whether the webhook skips TLS certificate verification, exposing payloads to interception; typed accessor for the `insecure_ssl` config value
+  insecureSsl bool
   // Whether the webhook is active
   active bool
   // Webhook creation time
@@ -1317,6 +1321,20 @@ private github.branchprotection @defaults("id") {
   lockBranch bool
   // Whether fork syncing is allowed
   allowForkSyncing bool
+  // Whether administrators are included in branch protection enforcement; typed accessor for the `enforceAdmins` dict
+  enforceAdminsEnabled bool
+  // Whether force pushes are allowed on matching branches; typed accessor for the `allowForcePushes` dict
+  allowForcePushesEnabled bool
+  // Whether branch deletions are allowed on matching branches; typed accessor for the `allowDeletions` dict
+  allowDeletionsEnabled bool
+  // Whether conversation resolution is required before merging; typed accessor for the `requiredConversationResolution` dict
+  requiredConversationResolutionEnabled bool
+  // Whether a linear commit history is required before merging; typed accessor for the `requireLinearHistory` dict
+  requireLinearHistoryEnabled bool
+  // Whether a pull request is required before merging; true when `requiredPullRequestReviews` is configured
+  requiredPullRequestReviewsEnabled bool
+  // Whether status checks are required before merging; true when `requiredStatusChecks` is configured
+  requiredStatusChecksEnabled bool
   // Number of approving reviews required to merge a pull request (0 if not configured)
   requiredApprovingReviewCount int
   // Whether an approved review is required for files with a designated code owner
@@ -1574,14 +1592,17 @@ private github.issue @defaults("title") {
 // GitHub Dependabot alert
 //
 // Examine a Dependabot vulnerability alert for a repository. Provides `number`,
-// `state` (auto_dismissed, dismissed, fixed, open), `dependency`, `securityAdvisory`,
-// `securityVulnerability`, `dismissedBy`, `dismissedReason`, `dismissedComment`,
-// and `createdAt`/`updatedAt`/`dismissedAt`/`fixedAt`/`autoDismissedAt` timestamps.
-private github.dependabotAlert @defaults("number state") {
+// `state` (auto_dismissed, dismissed, fixed, open), `severity`, `dependency`,
+// `securityAdvisory`, `securityVulnerability`, `dismissedBy`, `dismissedReason`,
+// `dismissedComment`, and
+// `createdAt`/`updatedAt`/`dismissedAt`/`fixedAt`/`autoDismissedAt` timestamps.
+private github.dependabotAlert @defaults("number state severity") {
   // Alert number
   number int
   // Alert state (auto_dismissed, dismissed, fixed, open)
   state string
+  // Severity of the alert (low, medium, high, critical); typed accessor for the `securityVulnerability` severity
+  severity string
   // Vulnerable dependency information
   dependency dict
   // Security advisory details

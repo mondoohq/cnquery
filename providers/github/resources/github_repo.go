@@ -784,11 +784,22 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		"blockCreations":                 llx.BoolData(branchProtection.GetBlockCreations().GetEnabled()),
 		"lockBranch":                     llx.BoolData(branchProtection.GetLockBranch().GetEnabled()),
 		"allowForkSyncing":               llx.BoolData(branchProtection.GetAllowForkSyncing().GetEnabled()),
-		"requiredApprovingReviewCount":   llx.IntData(requiredApprovingReviewCount),
-		"requireCodeOwnerReviews":        llx.BoolData(requireCodeOwnerReviews),
-		"dismissStaleReviews":            llx.BoolData(dismissStaleReviews),
-		"requireLastPushApproval":        llx.BoolData(requireLastPushApproval),
-		"dismissalRestrictions":          llx.MapData(dismissalRestrictionsDict, types.Any),
+		// Typed "enabled" accessors flattened from the corresponding dict fields above
+		// for easier MQL queries (e.g. branchprotection.allowForcePushesEnabled == false).
+		"enforceAdminsEnabled":                  llx.BoolData(branchProtection.GetEnforceAdmins().GetEnabled()),
+		"allowForcePushesEnabled":               llx.BoolData(branchProtection.GetAllowForcePushes().GetEnabled()),
+		"allowDeletionsEnabled":                 llx.BoolData(branchProtection.GetAllowDeletions().GetEnabled()),
+		"requiredConversationResolutionEnabled": llx.BoolData(branchProtection.GetRequiredConversationResolution().GetEnabled()),
+		"requireLinearHistoryEnabled":           llx.BoolData(branchProtection.GetRequireLinearHistory().GetEnabled()),
+		// These two protection categories have no "enabled" flag in the API; the
+		// object is present only when the protection is configured.
+		"requiredPullRequestReviewsEnabled": llx.BoolData(branchProtection.RequiredPullRequestReviews != nil),
+		"requiredStatusChecksEnabled":       llx.BoolData(branchProtection.RequiredStatusChecks != nil),
+		"requiredApprovingReviewCount":      llx.IntData(requiredApprovingReviewCount),
+		"requireCodeOwnerReviews":           llx.BoolData(requireCodeOwnerReviews),
+		"dismissStaleReviews":               llx.BoolData(dismissStaleReviews),
+		"requireLastPushApproval":           llx.BoolData(requireLastPushApproval),
+		"dismissalRestrictions":             llx.MapData(dismissalRestrictionsDict, types.Any),
 	})
 	if err != nil {
 		return nil, err
@@ -1350,14 +1361,16 @@ func (g *mqlGithubRepository) webhooks() ([]any, error) {
 		}
 
 		mqlWebhook, err := CreateResource(g.MqlRuntime, "github.webhook", map[string]*llx.RawData{
-			"id":        llx.IntDataPtr(h.ID),
-			"name":      llx.StringDataPtr(h.Name),
-			"events":    llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
-			"config":    llx.MapData(config, types.Any),
-			"url":       llx.StringDataPtr(h.URL),
-			"active":    llx.BoolDataPtr(h.Active),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(h.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(h.UpdatedAt)),
+			"id":          llx.IntDataPtr(h.ID),
+			"name":        llx.StringDataPtr(h.Name),
+			"events":      llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
+			"config":      llx.MapData(config, types.Any),
+			"contentType": llx.StringData(h.Config.GetContentType()),
+			"insecureSsl": llx.BoolData(h.Config.GetInsecureSSL() == "1"),
+			"url":         llx.StringDataPtr(h.URL),
+			"active":      llx.BoolDataPtr(h.Active),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(h.CreatedAt)),
+			"updatedAt":   llx.TimeDataPtr(githubTimestamp(h.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -2203,6 +2216,7 @@ func (g *mqlGithubRepository) dependabotAlerts() ([]any, error) {
 		mqlAlert, err := CreateResource(g.MqlRuntime, "github.dependabotAlert", map[string]*llx.RawData{
 			"number":                llx.IntData(int64(alert.GetNumber())),
 			"state":                 llx.StringData(alert.GetState()),
+			"severity":              llx.StringData(alert.GetSecurityVulnerability().GetSeverity()),
 			"dependency":            llx.DictData(dependency),
 			"securityAdvisory":      llx.DictData(securityAdvisory),
 			"securityVulnerability": llx.DictData(securityVulnerability),

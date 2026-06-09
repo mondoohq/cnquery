@@ -466,14 +466,16 @@ func (g *mqlGithubOrganization) webhooks() ([]any, error) {
 		}
 
 		mqlUser, err := CreateResource(g.MqlRuntime, "github.webhook", map[string]*llx.RawData{
-			"id":        llx.IntDataPtr(h.ID),
-			"name":      llx.StringDataPtr(h.Name),
-			"events":    llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
-			"config":    llx.MapData(config, types.Any),
-			"url":       llx.StringDataPtr(h.URL),
-			"active":    llx.BoolDataPtr(h.Active),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(h.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(h.UpdatedAt)),
+			"id":          llx.IntDataPtr(h.ID),
+			"name":        llx.StringDataPtr(h.Name),
+			"events":      llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
+			"config":      llx.MapData(config, types.Any),
+			"contentType": llx.StringData(h.Config.GetContentType()),
+			"insecureSsl": llx.BoolData(h.Config.GetInsecureSSL() == "1"),
+			"url":         llx.StringDataPtr(h.URL),
+			"active":      llx.BoolDataPtr(h.Active),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(h.CreatedAt)),
+			"updatedAt":   llx.TimeDataPtr(githubTimestamp(h.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err

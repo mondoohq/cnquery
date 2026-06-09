@@ -1654,6 +1654,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.webhook.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubWebhook).GetConfig()).ToDataRes(types.Dict)
 	},
+	"github.webhook.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubWebhook).GetContentType()).ToDataRes(types.String)
+	},
+	"github.webhook.insecureSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubWebhook).GetInsecureSsl()).ToDataRes(types.Bool)
+	},
 	"github.webhook.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubWebhook).GetActive()).ToDataRes(types.Bool)
 	},
@@ -1752,6 +1758,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.branchprotection.allowForkSyncing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranchprotection).GetAllowForkSyncing()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.enforceAdminsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetEnforceAdminsEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.allowForcePushesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetAllowForcePushesEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.allowDeletionsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetAllowDeletionsEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.requiredConversationResolutionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetRequiredConversationResolutionEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.requireLinearHistoryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetRequireLinearHistoryEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.requiredPullRequestReviewsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetRequiredPullRequestReviewsEnabled()).ToDataRes(types.Bool)
+	},
+	"github.branchprotection.requiredStatusChecksEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubBranchprotection).GetRequiredStatusChecksEnabled()).ToDataRes(types.Bool)
 	},
 	"github.branchprotection.requiredApprovingReviewCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranchprotection).GetRequiredApprovingReviewCount()).ToDataRes(types.Int)
@@ -2037,6 +2064,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.dependabotAlert.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDependabotAlert).GetState()).ToDataRes(types.String)
+	},
+	"github.dependabotAlert.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubDependabotAlert).GetSeverity()).ToDataRes(types.String)
 	},
 	"github.dependabotAlert.dependency": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDependabotAlert).GetDependency()).ToDataRes(types.Dict)
@@ -4306,6 +4336,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubWebhook).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"github.webhook.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubWebhook).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.webhook.insecureSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubWebhook).InsecureSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"github.webhook.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubWebhook).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -4448,6 +4486,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.branchprotection.allowForkSyncing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubBranchprotection).AllowForkSyncing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.enforceAdminsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).EnforceAdminsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.allowForcePushesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).AllowForcePushesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.allowDeletionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).AllowDeletionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.requiredConversationResolutionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).RequiredConversationResolutionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.requireLinearHistoryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).RequireLinearHistoryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.requiredPullRequestReviewsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).RequiredPullRequestReviewsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.branchprotection.requiredStatusChecksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubBranchprotection).RequiredStatusChecksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.branchprotection.requiredApprovingReviewCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4864,6 +4930,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.dependabotAlert.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubDependabotAlert).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.dependabotAlert.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubDependabotAlert).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.dependabotAlert.dependency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10154,14 +10224,16 @@ type mqlGithubWebhook struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubWebhookInternal it will be used here
-	Id        plugin.TValue[int64]
-	Name      plugin.TValue[string]
-	Url       plugin.TValue[string]
-	Events    plugin.TValue[[]any]
-	Config    plugin.TValue[any]
-	Active    plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	Id          plugin.TValue[int64]
+	Name        plugin.TValue[string]
+	Url         plugin.TValue[string]
+	Events      plugin.TValue[[]any]
+	Config      plugin.TValue[any]
+	ContentType plugin.TValue[string]
+	InsecureSsl plugin.TValue[bool]
+	Active      plugin.TValue[bool]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
 }
 
 // createGithubWebhook creates a new instance of this resource
@@ -10219,6 +10291,14 @@ func (c *mqlGithubWebhook) GetEvents() *plugin.TValue[[]any] {
 
 func (c *mqlGithubWebhook) GetConfig() *plugin.TValue[any] {
 	return &c.Config
+}
+
+func (c *mqlGithubWebhook) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlGithubWebhook) GetInsecureSsl() *plugin.TValue[bool] {
+	return &c.InsecureSsl
 }
 
 func (c *mqlGithubWebhook) GetActive() *plugin.TValue[bool] {
@@ -10444,25 +10524,32 @@ type mqlGithubBranchprotection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubBranchprotectionInternal it will be used here
-	Id                             plugin.TValue[string]
-	RequiredStatusChecks           plugin.TValue[any]
-	RequiredPullRequestReviews     plugin.TValue[any]
-	RequiredConversationResolution plugin.TValue[any]
-	RequiredSignatures             plugin.TValue[bool]
-	RequireSignedCommits           plugin.TValue[bool]
-	RequireLinearHistory           plugin.TValue[any]
-	EnforceAdmins                  plugin.TValue[any]
-	Restrictions                   plugin.TValue[any]
-	AllowForcePushes               plugin.TValue[any]
-	AllowDeletions                 plugin.TValue[any]
-	BlockCreations                 plugin.TValue[bool]
-	LockBranch                     plugin.TValue[bool]
-	AllowForkSyncing               plugin.TValue[bool]
-	RequiredApprovingReviewCount   plugin.TValue[int64]
-	RequireCodeOwnerReviews        plugin.TValue[bool]
-	DismissStaleReviews            plugin.TValue[bool]
-	RequireLastPushApproval        plugin.TValue[bool]
-	DismissalRestrictions          plugin.TValue[any]
+	Id                                    plugin.TValue[string]
+	RequiredStatusChecks                  plugin.TValue[any]
+	RequiredPullRequestReviews            plugin.TValue[any]
+	RequiredConversationResolution        plugin.TValue[any]
+	RequiredSignatures                    plugin.TValue[bool]
+	RequireSignedCommits                  plugin.TValue[bool]
+	RequireLinearHistory                  plugin.TValue[any]
+	EnforceAdmins                         plugin.TValue[any]
+	Restrictions                          plugin.TValue[any]
+	AllowForcePushes                      plugin.TValue[any]
+	AllowDeletions                        plugin.TValue[any]
+	BlockCreations                        plugin.TValue[bool]
+	LockBranch                            plugin.TValue[bool]
+	AllowForkSyncing                      plugin.TValue[bool]
+	EnforceAdminsEnabled                  plugin.TValue[bool]
+	AllowForcePushesEnabled               plugin.TValue[bool]
+	AllowDeletionsEnabled                 plugin.TValue[bool]
+	RequiredConversationResolutionEnabled plugin.TValue[bool]
+	RequireLinearHistoryEnabled           plugin.TValue[bool]
+	RequiredPullRequestReviewsEnabled     plugin.TValue[bool]
+	RequiredStatusChecksEnabled           plugin.TValue[bool]
+	RequiredApprovingReviewCount          plugin.TValue[int64]
+	RequireCodeOwnerReviews               plugin.TValue[bool]
+	DismissStaleReviews                   plugin.TValue[bool]
+	RequireLastPushApproval               plugin.TValue[bool]
+	DismissalRestrictions                 plugin.TValue[any]
 }
 
 // createGithubBranchprotection creates a new instance of this resource
@@ -10556,6 +10643,34 @@ func (c *mqlGithubBranchprotection) GetLockBranch() *plugin.TValue[bool] {
 
 func (c *mqlGithubBranchprotection) GetAllowForkSyncing() *plugin.TValue[bool] {
 	return &c.AllowForkSyncing
+}
+
+func (c *mqlGithubBranchprotection) GetEnforceAdminsEnabled() *plugin.TValue[bool] {
+	return &c.EnforceAdminsEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetAllowForcePushesEnabled() *plugin.TValue[bool] {
+	return &c.AllowForcePushesEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetAllowDeletionsEnabled() *plugin.TValue[bool] {
+	return &c.AllowDeletionsEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetRequiredConversationResolutionEnabled() *plugin.TValue[bool] {
+	return &c.RequiredConversationResolutionEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetRequireLinearHistoryEnabled() *plugin.TValue[bool] {
+	return &c.RequireLinearHistoryEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetRequiredPullRequestReviewsEnabled() *plugin.TValue[bool] {
+	return &c.RequiredPullRequestReviewsEnabled
+}
+
+func (c *mqlGithubBranchprotection) GetRequiredStatusChecksEnabled() *plugin.TValue[bool] {
+	return &c.RequiredStatusChecksEnabled
 }
 
 func (c *mqlGithubBranchprotection) GetRequiredApprovingReviewCount() *plugin.TValue[int64] {
@@ -11415,6 +11530,7 @@ type mqlGithubDependabotAlert struct {
 	// optional: if you define mqlGithubDependabotAlertInternal it will be used here
 	Number                plugin.TValue[int64]
 	State                 plugin.TValue[string]
+	Severity              plugin.TValue[string]
 	Dependency            plugin.TValue[any]
 	SecurityAdvisory      plugin.TValue[any]
 	SecurityVulnerability plugin.TValue[any]
@@ -11473,6 +11589,10 @@ func (c *mqlGithubDependabotAlert) GetNumber() *plugin.TValue[int64] {
 
 func (c *mqlGithubDependabotAlert) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlGithubDependabotAlert) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
 }
 
 func (c *mqlGithubDependabotAlert) GetDependency() *plugin.TValue[any] {
