@@ -10,6 +10,12 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
+func init() {
+	vault.Register(vault.VaultType_Memory, func(cfg *vault.VaultConfiguration) (vault.Vault, error) {
+		return New(), nil
+	})
+}
+
 type Option func(*inmemoryVault)
 
 func WithSecretMap(secrets map[string]*vault.Secret) Option {

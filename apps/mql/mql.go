@@ -12,6 +12,11 @@ import (
 	"go.mondoo.com/mql/v13/cli/selfupdate"
 	"go.mondoo.com/mql/v13/metrics"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/health"
+
+	// Link in all vault backends (AWS, GCP, HashiCorp, keyring) so they
+	// self-register with the vault registry. The in-memory backend is always
+	// available via the SDK.
+	_ "go.mondoo.com/mql/v13/vault/register"
 )
 
 func main() {

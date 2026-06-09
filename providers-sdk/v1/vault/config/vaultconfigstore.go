@@ -4,79 +4,24 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/awsparameterstore"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/awssecretsmanager"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/gcpberglas"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/gcpsecretmanager"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/hashivault"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/inmemory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault/keyring"
+
+	// The in-memory vault has no heavy dependencies and stays in the SDK, so we
+	// register it here to guarantee that the memory backend is always available
+	// on the factory path. Heavy backends (AWS, GCP, HashiCorp, keyring) live in
+	// the separate go.mondoo.com/mql/v13/vault module and are opted into by the
+	// binary (see vault/register).
+	_ "go.mondoo.com/mql/v13/providers-sdk/v1/vault/inmemory"
 )
 
+// New instantiates a vault from its configuration. The concrete implementation
+// is resolved through the vault registry; the corresponding implementation
+// package must be linked into the binary for its VaultType to be available.
 func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
-	if vCfg == nil {
-		return nil, errors.New("vault configuration cannot be empty")
-	}
-	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("initialize new vault")
-	var v vault.Vault
-	switch vCfg.Type {
-	case vault.VaultType_Memory:
-		v = inmemory.New()
-	case vault.VaultType_HashiCorp:
-		serverUrl := vCfg.Options["url"]
-		token := vCfg.Options["token"]
-		v = hashivault.New(serverUrl, token)
-	case vault.VaultType_EncryptedFile:
-		path := vCfg.Options["path"]
-		keyRingName := vCfg.Name
-		password := vCfg.Options["password"]
-		v = keyring.NewEncryptedFile(path, keyRingName, password)
-	case vault.VaultType_KeyRing:
-		keyRingName := vCfg.Name
-		v = keyring.New(keyRingName)
-	case vault.VaultType_LinuxKernelKeyring:
-		keyRingName := vCfg.Name
-		v = keyring.NewLinuxKernelKeyring(keyRingName)
-	case vault.VaultType_GCPSecretsManager:
-		projectID := vCfg.Options["project-id"]
-		v = gcpsecretmanager.New(projectID)
-	case vault.VaultType_AWSSecretsManager:
-		// TODO: do we really want to load it from the env?
-		cfg, err := config.LoadDefaultConfig(context.Background())
-		if err != nil {
-			return nil, errors.Wrap(err, "cannot not determine aws environment")
-		}
-		v = awssecretsmanager.New(cfg)
-	case vault.VaultType_AWSParameterStore:
-		cfg, err := config.LoadDefaultConfig(context.Background())
-		if err != nil {
-			return nil, errors.Wrap(err, "cannot not determine aws environment")
-		}
-		v = awsparameterstore.New(cfg)
-	case vault.VaultType_GCPBerglas:
-		projectID := vCfg.Options["project-id"]
-		kmsKeyID := vCfg.Options["kms-key-id"]
-		bucketName := vCfg.Options["bucket-name"]
-		opts := []gcpberglas.Option{}
-		if kmsKeyID != "" {
-			opts = append(opts, gcpberglas.WithKmsKey(kmsKeyID))
-		}
-		if bucketName != "" {
-			opts = append(opts, gcpberglas.WithBucket(bucketName))
-		}
-		v = gcpberglas.New(projectID, opts...)
-
-	default:
-		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String())
-	}
-	return v, nil
+	return vault.New(vCfg)
 }
 
 // ClientVaultConfig is the structured type where we store the client configuration for
