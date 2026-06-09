@@ -22,6 +22,24 @@ func TestResource_TLS(t *testing.T) {
 	assert.Nil(t, res[0].Data.Error)
 }
 
+func TestResource_TlsCipherSuites(t *testing.T) {
+	// A modern endpoint negotiates forward-secret, AEAD suites and offers no
+	// NULL/export/anonymous ones.
+	res := x.TestQuery(t, `tls("mondoo.com").cipherSuites != empty`)
+	assert.NotEmpty(t, res)
+	assert.Nil(t, res[0].Data.Error)
+
+	res = x.TestQuery(t, `tls("mondoo.com").cipherSuites.none(nullCipher || export || anonymous)`)
+	assert.NotEmpty(t, res)
+	assert.Nil(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+
+	res = x.TestQuery(t, `tls("mondoo.com").cipherSuites.all(name != "")`)
+	assert.NotEmpty(t, res)
+	assert.Nil(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+}
+
 func TestResource_TlsFqdn(t *testing.T) {
 	testCases := []struct {
 		hostName   string

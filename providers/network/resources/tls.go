@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"net"
 	"regexp"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -290,6 +291,53 @@ func (s *mqlTls) ciphers(params any) ([]any, error) {
 		if v.(bool) {
 			res = append(res, k)
 		}
+	}
+
+	return res, nil
+}
+
+func (s *mqlTls) cipherSuites(params any) ([]any, error) {
+	paramsM, ok := params.(map[string]any)
+	if !ok {
+		s.CipherSuites.State = plugin.StateIsSet | plugin.StateIsNull
+		return []any{}, nil
+	}
+
+	raw, ok := paramsM["ciphers"]
+	if !ok {
+		return []any{}, nil
+	}
+
+	data := raw.(map[string]any)
+	names := make([]string, 0, len(data))
+	for name, supported := range data {
+		if b, _ := supported.(bool); b {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names) // map iteration is non-deterministic; keep a stable order
+
+	res := make([]any, 0, len(names))
+	for _, name := range names {
+		info := classifyCipher(name)
+		resource, err := CreateResource(s.MqlRuntime, "tls.cipher", map[string]*llx.RawData{
+			"__id":           llx.StringData("tls.cipher/" + name),
+			"name":           llx.StringData(name),
+			"keyExchange":    llx.StringData(info.keyExchange),
+			"authentication": llx.StringData(info.authentication),
+			"encryption":     llx.StringData(info.encryption),
+			"mac":            llx.StringData(info.mac),
+			"forwardSecrecy": llx.BoolData(info.forwardSecrecy),
+			"aead":           llx.BoolData(info.aead),
+			"export":         llx.BoolData(info.export),
+			"nullCipher":     llx.BoolData(info.null),
+			"anonymous":      llx.BoolData(info.anonymous),
+			"cbc":            llx.BoolData(info.cbc),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
 	}
 
 	return res, nil

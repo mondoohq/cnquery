@@ -175,6 +175,8 @@ tls @defaults("socket domainName") {
   versions(params) []string
   // Ciphers supported by this TLS/SSL connection
   ciphers(params) []string
+  // Supported cipher suites parsed into components and security properties
+  cipherSuites(params) []tls.cipher
   // Extensions supported by this TLS/SSL connection
   extensions(params) []string
   // Key exchange group negotiated during the TLS handshake (e.g., X25519, X25519MLKEM768)
@@ -197,6 +199,44 @@ tls @defaults("socket domainName") {
   // chain trust or expiry. Null when the connection has no domain name
   // to match, such as when connecting directly to an IP address.
   certificateMatchesDomain() bool
+}
+
+// TLS/SSL cipher suite
+//
+// Examine a single negotiable cipher suite broken into its key-exchange,
+// authentication, bulk-encryption, and MAC components, plus derived security
+// properties. Components are parsed best-effort from the IANA/OpenSSL suite
+// name, so audits can select suites by property — for example
+// `forwardSecrecy == false` or `cbc` — instead of matching the raw name with
+// regular expressions. Unknown components are empty.
+private tls.cipher @defaults("name") {
+  // Cipher suite name, e.g. "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+  name string
+  // Key-exchange algorithm, e.g. "ECDHE", "DHE", or "RSA"
+  //
+  // Empty for TLS 1.3 suites, where the key exchange is negotiated separately
+  // from the cipher suite.
+  keyExchange string
+  // Authentication algorithm, e.g. "RSA", "ECDSA", or "anon"
+  authentication string
+  // Bulk encryption algorithm, e.g. "AES_128_GCM", "3DES_EDE_CBC", or "RC4_128"
+  encryption string
+  // Message authentication or PRF hash, e.g. "SHA256", "SHA", or "MD5"
+  mac string
+  // Whether the suite provides forward secrecy
+  //
+  // True for ephemeral key exchanges (ECDHE, DHE) and all TLS 1.3 suites.
+  forwardSecrecy bool
+  // Whether the suite uses authenticated encryption (GCM, CCM, or ChaCha20-Poly1305)
+  aead bool
+  // Whether the suite is export-grade (deliberately weakened)
+  export bool
+  // Whether the suite uses null (no) encryption
+  nullCipher bool
+  // Whether the suite is anonymous and performs no server authentication
+  anonymous bool
+  // Whether the suite uses CBC mode, which is exposed to a class of padding attacks
+  cbc bool
 }
 
 // X.509 certificate bundle

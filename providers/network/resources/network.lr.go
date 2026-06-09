@@ -26,6 +26,7 @@ const (
 	ResourceHttpHeaderSetCookie     string = "http.header.setCookie"
 	ResourceUrl                     string = "url"
 	ResourceTls                     string = "tls"
+	ResourceTlsCipher               string = "tls.cipher"
 	ResourceCertificates            string = "certificates"
 	ResourceCertificate             string = "certificate"
 	ResourcePkixName                string = "pkix.name"
@@ -88,6 +89,10 @@ func init() {
 		"tls": {
 			Init:   initTls,
 			Create: createTls,
+		},
+		"tls.cipher": {
+			// to override args, implement: initTlsCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTlsCipher,
 		},
 		"certificates": {
 			// to override args, implement: initCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -363,6 +368,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tls.ciphers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetCiphers()).ToDataRes(types.Array(types.String))
 	},
+	"tls.cipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTls).GetCipherSuites()).ToDataRes(types.Array(types.Resource("tls.cipher")))
+	},
 	"tls.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetExtensions()).ToDataRes(types.Array(types.String))
 	},
@@ -383,6 +391,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"tls.certificateMatchesDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetCertificateMatchesDomain()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetName()).ToDataRes(types.String)
+	},
+	"tls.cipher.keyExchange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetKeyExchange()).ToDataRes(types.String)
+	},
+	"tls.cipher.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetAuthentication()).ToDataRes(types.String)
+	},
+	"tls.cipher.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetEncryption()).ToDataRes(types.String)
+	},
+	"tls.cipher.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetMac()).ToDataRes(types.String)
+	},
+	"tls.cipher.forwardSecrecy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetForwardSecrecy()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.aead": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetAead()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.export": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetExport()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.nullCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetNullCipher()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.anonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetAnonymous()).ToDataRes(types.Bool)
+	},
+	"tls.cipher.cbc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTlsCipher).GetCbc()).ToDataRes(types.Bool)
 	},
 	"certificates.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCertificates).GetPem()).ToDataRes(types.String)
@@ -973,6 +1014,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTls).Ciphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"tls.cipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTls).CipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"tls.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTls).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -999,6 +1044,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tls.certificateMatchesDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTls).CertificateMatchesDomain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).__id, ok = v.Value.(string)
+		return
+	},
+	"tls.cipher.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.keyExchange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).KeyExchange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Authentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Encryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.forwardSecrecy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).ForwardSecrecy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.aead": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Aead, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.export": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Export, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.nullCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).NullCipher, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.anonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Anonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tls.cipher.cbc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTlsCipher).Cbc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2248,6 +2341,7 @@ type mqlTls struct {
 	Params                   plugin.TValue[any]
 	Versions                 plugin.TValue[[]any]
 	Ciphers                  plugin.TValue[[]any]
+	CipherSuites             plugin.TValue[[]any]
 	Extensions               plugin.TValue[[]any]
 	NegotiatedGroup          plugin.TValue[string]
 	NegotiatedVersion        plugin.TValue[string]
@@ -2337,6 +2431,27 @@ func (c *mqlTls) GetCiphers() *plugin.TValue[[]any] {
 		}
 
 		return c.ciphers(vargParams.Data)
+	})
+}
+
+func (c *mqlTls) GetCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CipherSuites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("tls", c.__id, "cipherSuites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.cipherSuites(vargParams.Data)
 	})
 }
 
@@ -2455,6 +2570,100 @@ func (c *mqlTls) GetCertificateMatchesDomain() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.CertificateMatchesDomain, func() (bool, error) {
 		return c.certificateMatchesDomain()
 	})
+}
+
+// mqlTlsCipher for the tls.cipher resource
+type mqlTlsCipher struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTlsCipherInternal it will be used here
+	Name           plugin.TValue[string]
+	KeyExchange    plugin.TValue[string]
+	Authentication plugin.TValue[string]
+	Encryption     plugin.TValue[string]
+	Mac            plugin.TValue[string]
+	ForwardSecrecy plugin.TValue[bool]
+	Aead           plugin.TValue[bool]
+	Export         plugin.TValue[bool]
+	NullCipher     plugin.TValue[bool]
+	Anonymous      plugin.TValue[bool]
+	Cbc            plugin.TValue[bool]
+}
+
+// createTlsCipher creates a new instance of this resource
+func createTlsCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTlsCipher{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("tls.cipher", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTlsCipher) MqlName() string {
+	return "tls.cipher"
+}
+
+func (c *mqlTlsCipher) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTlsCipher) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTlsCipher) GetKeyExchange() *plugin.TValue[string] {
+	return &c.KeyExchange
+}
+
+func (c *mqlTlsCipher) GetAuthentication() *plugin.TValue[string] {
+	return &c.Authentication
+}
+
+func (c *mqlTlsCipher) GetEncryption() *plugin.TValue[string] {
+	return &c.Encryption
+}
+
+func (c *mqlTlsCipher) GetMac() *plugin.TValue[string] {
+	return &c.Mac
+}
+
+func (c *mqlTlsCipher) GetForwardSecrecy() *plugin.TValue[bool] {
+	return &c.ForwardSecrecy
+}
+
+func (c *mqlTlsCipher) GetAead() *plugin.TValue[bool] {
+	return &c.Aead
+}
+
+func (c *mqlTlsCipher) GetExport() *plugin.TValue[bool] {
+	return &c.Export
+}
+
+func (c *mqlTlsCipher) GetNullCipher() *plugin.TValue[bool] {
+	return &c.NullCipher
+}
+
+func (c *mqlTlsCipher) GetAnonymous() *plugin.TValue[bool] {
+	return &c.Anonymous
+}
+
+func (c *mqlTlsCipher) GetCbc() *plugin.TValue[bool] {
+	return &c.Cbc
 }
 
 // mqlCertificates for the certificates resource
