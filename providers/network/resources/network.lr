@@ -501,7 +501,7 @@ dns @defaults("fqdn") {
   // DKIM TXT records
   dkim(params) []dns.dkimRecord
   // DNSSEC signing state for the domain
-  dnssec(params) dns.dnssec
+  dnssec(params) dns.dnssecConfig
   // Parsed SPF (Sender Policy Framework) records
   spf(params) []dns.spfRecord
   // Parsed DMARC record published at the domain's _dmarc subdomain
@@ -555,11 +555,11 @@ dns.mxRecord @defaults("domainName") {
 // weak or deprecated algorithms without parsing raw DNSKEY rdata. `enabled`
 // reflects the presence of published DNSKEY records and does not, on its own,
 // validate the DS chain of trust at the parent zone.
-dns.dnssec @defaults("enabled") {
+dns.dnssecConfig @defaults("enabled") {
   // Whether the domain publishes DNSKEY records
   enabled bool
   // Published DNSKEY signing keys
-  keys []dns.dnssec.key
+  keys []dns.dnssecKey
   // Distinct DNSSEC algorithm numbers across all published keys
   //
   // Algorithm numbers as defined in RFC 8624, e.g. 8 (RSASHA256) or
@@ -574,7 +574,7 @@ dns.dnssec @defaults("enabled") {
 // number, and base64-encoded public key. `keySigningKey` is true for a
 // key-signing key — the one whose SEP flag is set (flags value 257) — as
 // opposed to a zone-signing key (flags value 256).
-private dns.dnssec.key @defaults("algorithm keySigningKey") {
+private dns.dnssecKey @defaults("algorithm keySigningKey") {
   // DNSKEY flags field, e.g. 256 for a zone-signing key or 257 for a key-signing key
   flags int
   // Protocol field, always 3 for DNSSEC

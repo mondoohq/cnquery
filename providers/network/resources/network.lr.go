@@ -41,8 +41,8 @@ const (
 	ResourceDns                     string = "dns"
 	ResourceDnsRecord               string = "dns.record"
 	ResourceDnsMxRecord             string = "dns.mxRecord"
-	ResourceDnsDnssec               string = "dns.dnssec"
-	ResourceDnsDnssecKey            string = "dns.dnssec.key"
+	ResourceDnsDnssecConfig         string = "dns.dnssecConfig"
+	ResourceDnsDnssecKey            string = "dns.dnssecKey"
 	ResourceDnsSpfRecord            string = "dns.spfRecord"
 	ResourceDnsDmarcRecord          string = "dns.dmarcRecord"
 	ResourceDnsDkimRecord           string = "dns.dkimRecord"
@@ -152,11 +152,11 @@ func init() {
 			// to override args, implement: initDnsMxRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDnsMxRecord,
 		},
-		"dns.dnssec": {
-			// to override args, implement: initDnsDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createDnsDnssec,
+		"dns.dnssecConfig": {
+			// to override args, implement: initDnsDnssecConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsDnssecConfig,
 		},
-		"dns.dnssec.key": {
+		"dns.dnssecKey": {
 			// to override args, implement: initDnsDnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDnsDnssecKey,
 		},
@@ -709,7 +709,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlDns).GetDkim()).ToDataRes(types.Array(types.Resource("dns.dkimRecord")))
 	},
 	"dns.dnssec": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDns).GetDnssec()).ToDataRes(types.Resource("dns.dnssec"))
+		return (r.(*mqlDns).GetDnssec()).ToDataRes(types.Resource("dns.dnssecConfig"))
 	},
 	"dns.spf": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetSpf()).ToDataRes(types.Array(types.Resource("dns.spfRecord")))
@@ -744,28 +744,28 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.mxRecord.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsMxRecord).GetDomainName()).ToDataRes(types.String)
 	},
-	"dns.dnssec.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDnsDnssec).GetEnabled()).ToDataRes(types.Bool)
+	"dns.dnssecConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDnssecConfig).GetEnabled()).ToDataRes(types.Bool)
 	},
-	"dns.dnssec.keys": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDnsDnssec).GetKeys()).ToDataRes(types.Array(types.Resource("dns.dnssec.key")))
+	"dns.dnssecConfig.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDnssecConfig).GetKeys()).ToDataRes(types.Array(types.Resource("dns.dnssecKey")))
 	},
-	"dns.dnssec.algorithms": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDnsDnssec).GetAlgorithms()).ToDataRes(types.Array(types.Int))
+	"dns.dnssecConfig.algorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDnssecConfig).GetAlgorithms()).ToDataRes(types.Array(types.Int))
 	},
-	"dns.dnssec.key.flags": func(r plugin.Resource) *plugin.DataRes {
+	"dns.dnssecKey.flags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetFlags()).ToDataRes(types.Int)
 	},
-	"dns.dnssec.key.protocol": func(r plugin.Resource) *plugin.DataRes {
+	"dns.dnssecKey.protocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetProtocol()).ToDataRes(types.Int)
 	},
-	"dns.dnssec.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
+	"dns.dnssecKey.algorithm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetAlgorithm()).ToDataRes(types.Int)
 	},
-	"dns.dnssec.key.publicKey": func(r plugin.Resource) *plugin.DataRes {
+	"dns.dnssecKey.publicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetPublicKey()).ToDataRes(types.String)
 	},
-	"dns.dnssec.key.keySigningKey": func(r plugin.Resource) *plugin.DataRes {
+	"dns.dnssecKey.keySigningKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetKeySigningKey()).ToDataRes(types.Bool)
 	},
 	"dns.spfRecord.dnsTxt": func(r plugin.Resource) *plugin.DataRes {
@@ -1562,7 +1562,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"dns.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDns).Dnssec, ok = plugin.RawToTValue[*mqlDnsDnssec](v.Value, v.Error)
+		r.(*mqlDns).Dnssec, ok = plugin.RawToTValue[*mqlDnsDnssecConfig](v.Value, v.Error)
 		return
 	},
 	"dns.spf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1617,43 +1617,43 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDnsMxRecord).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDnsDnssec).__id, ok = v.Value.(string)
+	"dns.dnssecConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDnssecConfig).__id, ok = v.Value.(string)
 		return
 	},
-	"dns.dnssec.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDnsDnssec).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"dns.dnssecConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDnssecConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDnsDnssec).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"dns.dnssecConfig.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDnssecConfig).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.algorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDnsDnssec).Algorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"dns.dnssecConfig.algorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDnssecConfig).Algorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).__id, ok = v.Value.(string)
 		return
 	},
-	"dns.dnssec.key.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).Flags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.key.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).Protocol, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.key.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).Algorithm, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.key.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"dns.dnssec.key.keySigningKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"dns.dnssecKey.keySigningKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).KeySigningKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
@@ -3859,7 +3859,7 @@ type mqlDns struct {
 	Records plugin.TValue[[]any]
 	Mx      plugin.TValue[[]any]
 	Dkim    plugin.TValue[[]any]
-	Dnssec  plugin.TValue[*mqlDnsDnssec]
+	Dnssec  plugin.TValue[*mqlDnsDnssecConfig]
 	Spf     plugin.TValue[[]any]
 	Dmarc   plugin.TValue[*mqlDnsDmarcRecord]
 	Reverse plugin.TValue[[]any]
@@ -3980,15 +3980,15 @@ func (c *mqlDns) GetDkim() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlDns) GetDnssec() *plugin.TValue[*mqlDnsDnssec] {
-	return plugin.GetOrCompute[*mqlDnsDnssec](&c.Dnssec, func() (*mqlDnsDnssec, error) {
+func (c *mqlDns) GetDnssec() *plugin.TValue[*mqlDnsDnssecConfig] {
+	return plugin.GetOrCompute[*mqlDnsDnssecConfig](&c.Dnssec, func() (*mqlDnsDnssecConfig, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "dnssec")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlDnsDnssec), nil
+				return d.Value.(*mqlDnsDnssecConfig), nil
 			}
 		}
 
@@ -4187,19 +4187,19 @@ func (c *mqlDnsMxRecord) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
 }
 
-// mqlDnsDnssec for the dns.dnssec resource
-type mqlDnsDnssec struct {
+// mqlDnsDnssecConfig for the dns.dnssecConfig resource
+type mqlDnsDnssecConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDnsDnssecInternal it will be used here
+	// optional: if you define mqlDnsDnssecConfigInternal it will be used here
 	Enabled    plugin.TValue[bool]
 	Keys       plugin.TValue[[]any]
 	Algorithms plugin.TValue[[]any]
 }
 
-// createDnsDnssec creates a new instance of this resource
-func createDnsDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlDnsDnssec{
+// createDnsDnssecConfig creates a new instance of this resource
+func createDnsDnssecConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsDnssecConfig{
 		MqlRuntime: runtime,
 	}
 
@@ -4211,7 +4211,7 @@ func createDnsDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("dns.dnssec", res.__id)
+		args, err = runtime.ResourceFromRecording("dns.dnssecConfig", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -4221,27 +4221,27 @@ func createDnsDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	return res, nil
 }
 
-func (c *mqlDnsDnssec) MqlName() string {
-	return "dns.dnssec"
+func (c *mqlDnsDnssecConfig) MqlName() string {
+	return "dns.dnssecConfig"
 }
 
-func (c *mqlDnsDnssec) MqlID() string {
+func (c *mqlDnsDnssecConfig) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlDnsDnssec) GetEnabled() *plugin.TValue[bool] {
+func (c *mqlDnsDnssecConfig) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
-func (c *mqlDnsDnssec) GetKeys() *plugin.TValue[[]any] {
+func (c *mqlDnsDnssecConfig) GetKeys() *plugin.TValue[[]any] {
 	return &c.Keys
 }
 
-func (c *mqlDnsDnssec) GetAlgorithms() *plugin.TValue[[]any] {
+func (c *mqlDnsDnssecConfig) GetAlgorithms() *plugin.TValue[[]any] {
 	return &c.Algorithms
 }
 
-// mqlDnsDnssecKey for the dns.dnssec.key resource
+// mqlDnsDnssecKey for the dns.dnssecKey resource
 type mqlDnsDnssecKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
@@ -4267,7 +4267,7 @@ func createDnsDnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("dns.dnssec.key", res.__id)
+		args, err = runtime.ResourceFromRecording("dns.dnssecKey", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -4278,7 +4278,7 @@ func createDnsDnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 }
 
 func (c *mqlDnsDnssecKey) MqlName() string {
-	return "dns.dnssec.key"
+	return "dns.dnssecKey"
 }
 
 func (c *mqlDnsDnssecKey) MqlID() string {

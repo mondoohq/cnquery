@@ -296,7 +296,7 @@ func (d *mqlDnsDkimRecord) valid() (bool, error) {
 	return ok, nil
 }
 
-func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
+func (d *mqlDns) dnssec(params any) (*mqlDnsDnssecConfig, error) {
 	keys := []any{}
 	algoSet := map[int64]struct{}{}
 
@@ -338,8 +338,8 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
 				// the SEP flag (least-significant bit of the flags field)
 				// marks a key-signing key; flags 257 is a KSK, 256 a ZSK
 				keySigningKey := key.Flags&1 == 1
-				keyResource, err := CreateResource(d.MqlRuntime, "dns.dnssec.key", map[string]*llx.RawData{
-					"__id":          llx.StringData(fmt.Sprintf("dns.dnssec.key/%d/%d/%s", key.Algorithm, key.Flags, key.PublicKey)),
+				keyResource, err := CreateResource(d.MqlRuntime, "dns.dnssecKey", map[string]*llx.RawData{
+					"__id":          llx.StringData(fmt.Sprintf("dns.dnssecKey/%d/%d/%s", key.Algorithm, key.Flags, key.PublicKey)),
 					"flags":         llx.IntData(int64(key.Flags)),
 					"protocol":      llx.IntData(int64(key.Protocol)),
 					"algorithm":     llx.IntData(int64(key.Algorithm)),
@@ -363,16 +363,16 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
 		return int(a.(int64) - b.(int64))
 	})
 
-	res, err := CreateResource(d.MqlRuntime, "dns.dnssec", map[string]*llx.RawData{
-		"__id":       llx.StringData("dns.dnssec/" + d.Fqdn.Data),
+	res, err := CreateResource(d.MqlRuntime, "dns.dnssecConfig", map[string]*llx.RawData{
+		"__id":       llx.StringData("dns.dnssecConfig/" + d.Fqdn.Data),
 		"enabled":    llx.BoolData(len(keys) > 0),
-		"keys":       llx.ArrayData(keys, types.Resource("dns.dnssec.key")),
+		"keys":       llx.ArrayData(keys, types.Resource("dns.dnssecKey")),
 		"algorithms": llx.ArrayData(algorithms, types.Int),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlDnsDnssec), nil
+	return res.(*mqlDnsDnssecConfig), nil
 }
 
 // parseSPF extracts the version, ordered mechanisms, and the qualifier of the
