@@ -1,0 +1,48 @@
+{
+  "assets": [
+    {
+      "asset": {
+        "id": "windows-server-de",
+        "platform_ids": [
+          "windows"
+        ],
+        "name": "windows-de",
+        "platform": {
+          "name": "windows",
+          "arch": "x86_64",
+          "title": "Windows Server",
+          "family": [
+            "windows",
+            "os"
+          ],
+          "build": "rolling",
+          "version": "2022"
+        }
+      },
+      "connections": [
+        {
+          "url": "local://",
+          "provider": "os",
+          "connector": "local",
+          "version": ""
+        }
+      ],
+      "resources": [
+        {
+          "Resource": "powershell",
+          "ID": "[Console]::OutputEncoding = [Text.Encoding]::UTF8;auditpol /get /category:* /r",
+          "Fields": {
+            "exitcode": {
+              "type": "\u0005",
+              "value": 0
+            },
+            "stdout": {
+              "type": "\u0007",
+              "value": "Machine Name,Policy Target,Subcategory,Subcategory GUID,Inclusion Setting,Exclusion Setting\r\r\nWIN-DE-TEST,System,Sicherheitssystemerweiterung,{0CCE9211-69AE-11D9-BED3-505054503030},Keine Überwachung,\r\r\nWIN-DE-TEST,System,Kontosperrung,{0CCE9217-69AE-11D9-BED3-505054503030},Erfolg und Fehler,\r\r\nWIN-DE-TEST,System,Richtlinienänderungen überwachen,{0CCE922F-69AE-11D9-BED3-505054503030},Erfolg,\r\r\nWIN-DE-TEST,System,Spezielle Anmeldung,{0CCE9234-69AE-11D9-BED3-505054503030},Fehler,\r\r\nWIN-DE-TEST,System,Sicherheitsgruppenverwaltung,{0CCE9239-69AE-11D9-BED3-505054503030},Erfolg und Fehler,\r\r\n"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
