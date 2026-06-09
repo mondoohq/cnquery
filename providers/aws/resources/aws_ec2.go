@@ -314,6 +314,18 @@ func (a *mqlAwsEc2NetworkaclEntry) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// cidrEntryIsPublic reports whether a network ACL entry opens traffic to the
+// entire internet, matching every IPv4 address (0.0.0.0/0) or every IPv6
+// address (::/0).
+func cidrEntryIsPublic(cidrBlock, ipv6CidrBlock string) bool {
+	return cidrBlock == "0.0.0.0/0" || ipv6CidrBlock == "::/0"
+}
+
+// isPublic reports whether the entry opens traffic to the entire internet.
+func (a *mqlAwsEc2NetworkaclEntry) isPublic() (bool, error) {
+	return cidrEntryIsPublic(a.CidrBlock.Data, a.Ipv6CidrBlock.Data), nil
+}
+
 func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil

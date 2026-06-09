@@ -93,6 +93,7 @@ const (
 	ResourceAwsKmsKeyMultiRegionConfiguration                                   string = "aws.kms.key.multiRegionConfiguration"
 	ResourceAwsKmsCustomKeyStore                                                string = "aws.kms.customKeyStore"
 	ResourceAwsIam                                                              string = "aws.iam"
+	ResourceAwsIamPasswordPolicy                                                string = "aws.iam.passwordPolicy"
 	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
 	ResourceAwsIamUser                                                          string = "aws.iam.user"
 	ResourceAwsIamUserAccessKey                                                 string = "aws.iam.user.accessKey"
@@ -149,6 +150,7 @@ const (
 	ResourceAwsSagemakerMonitoringJobDefinitionMonitoringOutput                 string = "aws.sagemaker.monitoringJobDefinition.monitoringOutput"
 	ResourceAwsSagemakerMonitoringJobDefinitionJobResources                     string = "aws.sagemaker.monitoringJobDefinition.jobResources"
 	ResourceAwsSagemakerMonitoringJobDefinitionNetworkConfig                    string = "aws.sagemaker.monitoringJobDefinition.networkConfig"
+	ResourceAwsSagemakerMonitoringJobDefinition                                 string = "aws.sagemaker.monitoringJobDefinition"
 	ResourceAwsSagemakerDataQualityJobDefinition                                string = "aws.sagemaker.dataQualityJobDefinition"
 	ResourceAwsSagemakerModelQualityJobDefinition                               string = "aws.sagemaker.modelQualityJobDefinition"
 	ResourceAwsSagemakerModelBiasJobDefinition                                  string = "aws.sagemaker.modelBiasJobDefinition"
@@ -1222,6 +1224,10 @@ func init() {
 			// to override args, implement: initAwsIam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIam,
 		},
+		"aws.iam.passwordPolicy": {
+			Init:   initAwsIamPasswordPolicy,
+			Create: createAwsIamPasswordPolicy,
+		},
 		"aws.iam.usercredentialreportentry": {
 			// to override args, implement: initAwsIamUsercredentialreportentry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamUsercredentialreportentry,
@@ -1445,6 +1451,10 @@ func init() {
 		"aws.sagemaker.monitoringJobDefinition.networkConfig": {
 			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerMonitoringJobDefinitionNetworkConfig,
+		},
+		"aws.sagemaker.monitoringJobDefinition": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinition,
 		},
 		"aws.sagemaker.dataQualityJobDefinition": {
 			// to override args, implement: initAwsSagemakerDataQualityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6515,6 +6525,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.accountPasswordPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetAccountPasswordPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.iam.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetPasswordPolicy()).ToDataRes(types.Resource("aws.iam.passwordPolicy"))
+	},
 	"aws.iam.accountSummary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetAccountSummary()).ToDataRes(types.Map(types.String, types.Int))
 	},
@@ -6536,11 +6549,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.accountAlias": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetAccountAlias()).ToDataRes(types.String)
 	},
+	"aws.iam.passwordPolicy.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetExists()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.minimumPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetMinimumPasswordLength()).ToDataRes(types.Int)
+	},
+	"aws.iam.passwordPolicy.requireUppercaseCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetRequireUppercaseCharacters()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.requireLowercaseCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetRequireLowercaseCharacters()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.requireSymbols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetRequireSymbols()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.requireNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetRequireNumbers()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.passwordReusePrevention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetPasswordReusePrevention()).ToDataRes(types.Int)
+	},
+	"aws.iam.passwordPolicy.maxPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetMaxPasswordAge()).ToDataRes(types.Int)
+	},
+	"aws.iam.passwordPolicy.expirePasswords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetExpirePasswords()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.hardExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetHardExpiry()).ToDataRes(types.Bool)
+	},
+	"aws.iam.passwordPolicy.allowUsersToChangePassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPasswordPolicy).GetAllowUsersToChangePassword()).ToDataRes(types.Bool)
+	},
 	"aws.iam.usercredentialreportentry.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.iam.usercredentialreportentry.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.isRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetIsRoot()).ToDataRes(types.Bool)
 	},
 	"aws.iam.usercredentialreportentry.accessKey1Active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1Active()).ToDataRes(types.Bool)
@@ -6557,6 +6606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.usercredentialreportentry.accessKey1LastUsedService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastUsedService()).ToDataRes(types.String)
 	},
+	"aws.iam.usercredentialreportentry.accessKey1InactiveDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1InactiveDays()).ToDataRes(types.Int)
+	},
 	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2Active()).ToDataRes(types.Bool)
 	},
@@ -6571,6 +6623,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.usercredentialreportentry.accessKey2LastUsedService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2LastUsedService()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2InactiveDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2InactiveDays()).ToDataRes(types.Int)
 	},
 	"aws.iam.usercredentialreportentry.cert1Active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetCert1Active()).ToDataRes(types.Bool)
@@ -6595,6 +6650,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.usercredentialreportentry.passwordLastUsed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordLastUsed()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.passwordInactiveDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordInactiveDays()).ToDataRes(types.Int)
 	},
 	"aws.iam.usercredentialreportentry.passwordNextRotation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordNextRotation()).ToDataRes(types.Time)
@@ -6719,6 +6777,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policyStatement.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyStatement).GetConditions()).ToDataRes(types.Dict)
 	},
+	"aws.iam.policyStatement.hasWildcardResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetHasWildcardResource()).ToDataRes(types.Bool)
+	},
+	"aws.iam.policyStatement.hasWildcardAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetHasWildcardAction()).ToDataRes(types.Bool)
+	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
 	},
@@ -6754,6 +6818,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.policy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.iam.policy.hasWildcardAllow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetHasWildcardAllow()).ToDataRes(types.Bool)
 	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetAttachedUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
@@ -7036,6 +7103,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.modelExplainabilityJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetModelExplainabilityJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelExplainabilityJobDefinition")))
+	},
+	"aws.sagemaker.monitoringJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetMonitoringJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.monitoringJobDefinition")))
 	},
 	"aws.sagemaker.experiments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetExperiments()).ToDataRes(types.Array(types.Resource("aws.sagemaker.experiment")))
@@ -8266,6 +8336,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.monitoringJobDefinition.networkConfig.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.monitoringJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinition).GetNetworkConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.networkConfig"))
 	},
 	"aws.sagemaker.dataQualityJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetArn()).ToDataRes(types.String)
@@ -15431,6 +15519,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.s3.bucket.enforceSslOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetEnforceSslOnly()).ToDataRes(types.Bool)
+	},
 	"aws.s3.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -20638,6 +20729,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.networkacl.entry.ipv6CidrBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetIpv6CidrBlock()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkacl.entry.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetId()).ToDataRes(types.String)
@@ -35110,6 +35204,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIam).AccountPasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.passwordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).PasswordPolicy, ok = plugin.RawToTValue[*mqlAwsIamPasswordPolicy](v.Value, v.Error)
+		return
+	},
 	"aws.iam.accountSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIam).AccountSummary, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -35138,6 +35236,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIam).AccountAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.iam.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.passwordPolicy.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.minimumPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).MinimumPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.requireUppercaseCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).RequireUppercaseCharacters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.requireLowercaseCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).RequireLowercaseCharacters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.requireSymbols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).RequireSymbols, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.requireNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).RequireNumbers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.passwordReusePrevention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).PasswordReusePrevention, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.maxPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).MaxPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.expirePasswords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).ExpirePasswords, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.hardExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).HardExpiry, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.passwordPolicy.allowUsersToChangePassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPasswordPolicy).AllowUsersToChangePassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.iam.usercredentialreportentry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).__id, ok = v.Value.(string)
 		return
@@ -35148,6 +35294,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.usercredentialreportentry.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.isRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).IsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.accessKey1Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35170,6 +35320,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.iam.usercredentialreportentry.accessKey1InactiveDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1InactiveDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -35188,6 +35342,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.usercredentialreportentry.accessKey2LastUsedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2InactiveDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2InactiveDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.cert1Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35220,6 +35378,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.usercredentialreportentry.passwordLastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).PasswordLastUsed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.passwordInactiveDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).PasswordInactiveDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.passwordNextRotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35406,6 +35568,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamPolicyStatement).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.policyStatement.hasWildcardResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).HasWildcardResource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.hasWildcardAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).HasWildcardAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).__id, ok = v.Value.(string)
 		return
@@ -35456,6 +35626,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.hasWildcardAllow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).HasWildcardAllow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35872,6 +36046,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.modelExplainabilityJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemaker).ModelExplainabilityJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).MonitoringJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.experiments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37668,6 +37846,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.monitoringJobDefinition.networkConfig.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinition).NetworkConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.dataQualityJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48254,6 +48460,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.enforceSslOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).EnforceSslOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -55784,6 +55994,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.networkacl.entry.ipv6CidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2NetworkaclEntry).Ipv6CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.entry.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80417,6 +80631,7 @@ type mqlAwsIam struct {
 	AttachedPolicies      plugin.TValue[[]any]
 	CredentialReport      plugin.TValue[[]any]
 	AccountPasswordPolicy plugin.TValue[any]
+	PasswordPolicy        plugin.TValue[*mqlAwsIamPasswordPolicy]
 	AccountSummary        plugin.TValue[map[string]any]
 	VirtualMfaDevices     plugin.TValue[[]any]
 	ServerCertificates    plugin.TValue[[]any]
@@ -80565,6 +80780,22 @@ func (c *mqlAwsIam) GetAccountPasswordPolicy() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsIam) GetPasswordPolicy() *plugin.TValue[*mqlAwsIamPasswordPolicy] {
+	return plugin.GetOrCompute[*mqlAwsIamPasswordPolicy](&c.PasswordPolicy, func() (*mqlAwsIamPasswordPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "passwordPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamPasswordPolicy), nil
+			}
+		}
+
+		return c.passwordPolicy()
+	})
+}
+
 func (c *mqlAwsIam) GetAccountSummary() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.AccountSummary, func() (map[string]any, error) {
 		return c.accountSummary()
@@ -80647,6 +80878,100 @@ func (c *mqlAwsIam) GetAccountAlias() *plugin.TValue[string] {
 	})
 }
 
+// mqlAwsIamPasswordPolicy for the aws.iam.passwordPolicy resource
+type mqlAwsIamPasswordPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamPasswordPolicyInternal it will be used here
+	Exists                     plugin.TValue[bool]
+	MinimumPasswordLength      plugin.TValue[int64]
+	RequireUppercaseCharacters plugin.TValue[bool]
+	RequireLowercaseCharacters plugin.TValue[bool]
+	RequireSymbols             plugin.TValue[bool]
+	RequireNumbers             plugin.TValue[bool]
+	PasswordReusePrevention    plugin.TValue[int64]
+	MaxPasswordAge             plugin.TValue[int64]
+	ExpirePasswords            plugin.TValue[bool]
+	HardExpiry                 plugin.TValue[bool]
+	AllowUsersToChangePassword plugin.TValue[bool]
+}
+
+// createAwsIamPasswordPolicy creates a new instance of this resource
+func createAwsIamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamPasswordPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.passwordPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamPasswordPolicy) MqlName() string {
+	return "aws.iam.passwordPolicy"
+}
+
+func (c *mqlAwsIamPasswordPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetExists() *plugin.TValue[bool] {
+	return &c.Exists
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetMinimumPasswordLength() *plugin.TValue[int64] {
+	return &c.MinimumPasswordLength
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetRequireUppercaseCharacters() *plugin.TValue[bool] {
+	return &c.RequireUppercaseCharacters
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetRequireLowercaseCharacters() *plugin.TValue[bool] {
+	return &c.RequireLowercaseCharacters
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetRequireSymbols() *plugin.TValue[bool] {
+	return &c.RequireSymbols
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetRequireNumbers() *plugin.TValue[bool] {
+	return &c.RequireNumbers
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetPasswordReusePrevention() *plugin.TValue[int64] {
+	return &c.PasswordReusePrevention
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetMaxPasswordAge() *plugin.TValue[int64] {
+	return &c.MaxPasswordAge
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetExpirePasswords() *plugin.TValue[bool] {
+	return &c.ExpirePasswords
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetHardExpiry() *plugin.TValue[bool] {
+	return &c.HardExpiry
+}
+
+func (c *mqlAwsIamPasswordPolicy) GetAllowUsersToChangePassword() *plugin.TValue[bool] {
+	return &c.AllowUsersToChangePassword
+}
+
 // mqlAwsIamUsercredentialreportentry for the aws.iam.usercredentialreportentry resource
 type mqlAwsIamUsercredentialreportentry struct {
 	MqlRuntime *plugin.Runtime
@@ -80654,16 +80979,19 @@ type mqlAwsIamUsercredentialreportentry struct {
 	// optional: if you define mqlAwsIamUsercredentialreportentryInternal it will be used here
 	Properties                plugin.TValue[map[string]any]
 	Arn                       plugin.TValue[string]
+	IsRoot                    plugin.TValue[bool]
 	AccessKey1Active          plugin.TValue[bool]
 	AccessKey1LastRotated     plugin.TValue[*time.Time]
 	AccessKey1LastUsedDate    plugin.TValue[*time.Time]
 	AccessKey1LastUsedRegion  plugin.TValue[string]
 	AccessKey1LastUsedService plugin.TValue[string]
+	AccessKey1InactiveDays    plugin.TValue[int64]
 	AccessKey2Active          plugin.TValue[bool]
 	AccessKey2LastRotated     plugin.TValue[*time.Time]
 	AccessKey2LastUsedDate    plugin.TValue[*time.Time]
 	AccessKey2LastUsedRegion  plugin.TValue[string]
 	AccessKey2LastUsedService plugin.TValue[string]
+	AccessKey2InactiveDays    plugin.TValue[int64]
 	Cert1Active               plugin.TValue[bool]
 	Cert1LastRotated          plugin.TValue[*time.Time]
 	Cert2Active               plugin.TValue[bool]
@@ -80672,6 +81000,7 @@ type mqlAwsIamUsercredentialreportentry struct {
 	PasswordEnabled           plugin.TValue[bool]
 	PasswordLastChanged       plugin.TValue[*time.Time]
 	PasswordLastUsed          plugin.TValue[*time.Time]
+	PasswordInactiveDays      plugin.TValue[int64]
 	PasswordNextRotation      plugin.TValue[*time.Time]
 	User                      plugin.TValue[*mqlAwsIamUser]
 	CreatedAt                 plugin.TValue[*time.Time]
@@ -80724,6 +81053,12 @@ func (c *mqlAwsIamUsercredentialreportentry) GetArn() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsIamUsercredentialreportentry) GetIsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsRoot, func() (bool, error) {
+		return c.isRoot()
+	})
+}
+
 func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1Active() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AccessKey1Active, func() (bool, error) {
 		return c.accessKey1Active()
@@ -80754,6 +81089,12 @@ func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() *plu
 	})
 }
 
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1InactiveDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccessKey1InactiveDays, func() (int64, error) {
+		return c.accessKey1InactiveDays()
+	})
+}
+
 func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2Active() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AccessKey2Active, func() (bool, error) {
 		return c.accessKey2Active()
@@ -80781,6 +81122,12 @@ func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedRegion() *plug
 func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedService() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AccessKey2LastUsedService, func() (string, error) {
 		return c.accessKey2LastUsedService()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2InactiveDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccessKey2InactiveDays, func() (int64, error) {
+		return c.accessKey2InactiveDays()
 	})
 }
 
@@ -80829,6 +81176,12 @@ func (c *mqlAwsIamUsercredentialreportentry) GetPasswordLastChanged() *plugin.TV
 func (c *mqlAwsIamUsercredentialreportentry) GetPasswordLastUsed() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.PasswordLastUsed, func() (*time.Time, error) {
 		return c.passwordLastUsed()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetPasswordInactiveDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordInactiveDays, func() (int64, error) {
+		return c.passwordInactiveDays()
 	})
 }
 
@@ -81232,15 +81585,17 @@ type mqlAwsIamPolicyStatement struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamPolicyStatementInternal it will be used here
-	Sid           plugin.TValue[string]
-	Effect        plugin.TValue[string]
-	Actions       plugin.TValue[[]any]
-	NotActions    plugin.TValue[[]any]
-	Resources     plugin.TValue[[]any]
-	NotResources  plugin.TValue[[]any]
-	Principals    plugin.TValue[map[string]any]
-	NotPrincipals plugin.TValue[map[string]any]
-	Conditions    plugin.TValue[any]
+	Sid                 plugin.TValue[string]
+	Effect              plugin.TValue[string]
+	Actions             plugin.TValue[[]any]
+	NotActions          plugin.TValue[[]any]
+	Resources           plugin.TValue[[]any]
+	NotResources        plugin.TValue[[]any]
+	Principals          plugin.TValue[map[string]any]
+	NotPrincipals       plugin.TValue[map[string]any]
+	Conditions          plugin.TValue[any]
+	HasWildcardResource plugin.TValue[bool]
+	HasWildcardAction   plugin.TValue[bool]
 }
 
 // createAwsIamPolicyStatement creates a new instance of this resource
@@ -81311,26 +81666,39 @@ func (c *mqlAwsIamPolicyStatement) GetConditions() *plugin.TValue[any] {
 	return &c.Conditions
 }
 
+func (c *mqlAwsIamPolicyStatement) GetHasWildcardResource() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardResource, func() (bool, error) {
+		return c.hasWildcardResource()
+	})
+}
+
+func (c *mqlAwsIamPolicyStatement) GetHasWildcardAction() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAction, func() (bool, error) {
+		return c.hasWildcardAction()
+	})
+}
+
 // mqlAwsIamPolicy for the aws.iam.policy resource
 type mqlAwsIamPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamPolicyInternal
-	Arn             plugin.TValue[string]
-	PolicyId        plugin.TValue[string]
-	Name            plugin.TValue[string]
-	Description     plugin.TValue[string]
-	IsAttachable    plugin.TValue[bool]
-	AttachmentCount plugin.TValue[int64]
-	CreatedAt       plugin.TValue[*time.Time]
-	UpdatedAt       plugin.TValue[*time.Time]
-	Scope           plugin.TValue[string]
-	Versions        plugin.TValue[[]any]
-	DefaultVersion  plugin.TValue[*mqlAwsIamPolicyversion]
-	Statements      plugin.TValue[[]any]
-	AttachedUsers   plugin.TValue[[]any]
-	AttachedRoles   plugin.TValue[[]any]
-	AttachedGroups  plugin.TValue[[]any]
+	Arn              plugin.TValue[string]
+	PolicyId         plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	IsAttachable     plugin.TValue[bool]
+	AttachmentCount  plugin.TValue[int64]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	Scope            plugin.TValue[string]
+	Versions         plugin.TValue[[]any]
+	DefaultVersion   plugin.TValue[*mqlAwsIamPolicyversion]
+	Statements       plugin.TValue[[]any]
+	HasWildcardAllow plugin.TValue[bool]
+	AttachedUsers    plugin.TValue[[]any]
+	AttachedRoles    plugin.TValue[[]any]
+	AttachedGroups   plugin.TValue[[]any]
 }
 
 // createAwsIamPolicy creates a new instance of this resource
@@ -81462,6 +81830,12 @@ func (c *mqlAwsIamPolicy) GetStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.statements()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetHasWildcardAllow() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardAllow, func() (bool, error) {
+		return c.hasWildcardAllow()
 	})
 }
 
@@ -82409,6 +82783,7 @@ type mqlAwsSagemaker struct {
 	ModelQualityJobDefinitions        plugin.TValue[[]any]
 	ModelBiasJobDefinitions           plugin.TValue[[]any]
 	ModelExplainabilityJobDefinitions plugin.TValue[[]any]
+	MonitoringJobDefinitions          plugin.TValue[[]any]
 	Experiments                       plugin.TValue[[]any]
 	Trials                            plugin.TValue[[]any]
 	TrialComponents                   plugin.TValue[[]any]
@@ -82807,6 +83182,22 @@ func (c *mqlAwsSagemaker) GetModelExplainabilityJobDefinitions() *plugin.TValue[
 		}
 
 		return c.modelExplainabilityJobDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetMonitoringJobDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MonitoringJobDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "monitoringJobDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.monitoringJobDefinitions()
 	})
 }
 
@@ -87731,6 +88122,92 @@ func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetSubnets() *plug
 		}
 
 		return c.subnets()
+	})
+}
+
+// mqlAwsSagemakerMonitoringJobDefinition for the aws.sagemaker.monitoringJobDefinition resource
+type mqlAwsSagemakerMonitoringJobDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionInternal
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	NetworkConfig plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig]
+}
+
+// createAwsSagemakerMonitoringJobDefinition creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinition) GetNetworkConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](&c.NetworkConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition", c.__id, "networkConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig), nil
+			}
+		}
+
+		return c.networkConfig()
 	})
 }
 
@@ -115964,6 +116441,7 @@ type mqlAwsS3Bucket struct {
 	Name                             plugin.TValue[string]
 	Policy                           plugin.TValue[*mqlAwsS3BucketPolicy]
 	PolicyStatements                 plugin.TValue[[]any]
+	EnforceSslOnly                   plugin.TValue[bool]
 	Tags                             plugin.TValue[map[string]any]
 	Acl                              plugin.TValue[[]any]
 	Owner                            plugin.TValue[map[string]any]
@@ -116075,6 +116553,12 @@ func (c *mqlAwsS3Bucket) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetEnforceSslOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnforceSslOnly, func() (bool, error) {
+		return c.enforceSslOnly()
 	})
 }
 
@@ -134573,6 +135057,7 @@ type mqlAwsEc2NetworkaclEntry struct {
 	PortRange     plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange]
 	CidrBlock     plugin.TValue[string]
 	Ipv6CidrBlock plugin.TValue[string]
+	IsPublic      plugin.TValue[bool]
 	Id            plugin.TValue[string]
 }
 
@@ -134651,6 +135136,12 @@ func (c *mqlAwsEc2NetworkaclEntry) GetCidrBlock() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2NetworkaclEntry) GetIpv6CidrBlock() *plugin.TValue[string] {
 	return &c.Ipv6CidrBlock
+}
+
+func (c *mqlAwsEc2NetworkaclEntry) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 func (c *mqlAwsEc2NetworkaclEntry) GetId() *plugin.TValue[string] {

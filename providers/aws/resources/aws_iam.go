@@ -207,6 +207,88 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]any
 	return res
 }
 
+// initAwsIamPasswordPolicy lets the resource be queried by its dotted path
+// (aws.iam.passwordPolicy) rather than only through the aws.iam accessor. A bare
+// instantiation has no __id, so it delegates to the parent accessor to populate
+// the policy data.
+func initAwsIamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	iam, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	pp := iam.(*mqlAwsIam).GetPasswordPolicy()
+	if pp.Error != nil {
+		return nil, nil, pp.Error
+	}
+	return args, pp.Data, nil
+}
+
+func (a *mqlAwsIam) passwordPolicy() (*mqlAwsIamPasswordPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	var pp *iamtypes.PasswordPolicy
+	resp, err := svc.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
+	if err != nil {
+		var notFoundErr *iamtypes.NoSuchEntityException
+		if !errors.As(err, &notFoundErr) {
+			return nil, errors.Wrap(err, "could not gather aws iam account-password-policy")
+		}
+		// no password policy is configured for the account; pp stays nil
+	} else {
+		pp = resp.PasswordPolicy
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.iam.passwordPolicy", passwordPolicyData(conn.AccountId(), pp))
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamPasswordPolicy), nil
+}
+
+// passwordPolicyData builds the resource arguments for aws.iam.passwordPolicy.
+// When pp is nil no policy is configured, so exists is false and every other
+// field is null. Optional settings the policy leaves unset (reuse prevention,
+// max password age, hard expiry) are null rather than zero.
+func passwordPolicyData(accountID string, pp *iamtypes.PasswordPolicy) map[string]*llx.RawData {
+	id := "aws.iam.passwordPolicy/" + accountID
+	if pp == nil {
+		return map[string]*llx.RawData{
+			"__id":                       llx.StringData(id),
+			"exists":                     llx.BoolData(false),
+			"minimumPasswordLength":      llx.NilData,
+			"requireUppercaseCharacters": llx.NilData,
+			"requireLowercaseCharacters": llx.NilData,
+			"requireSymbols":             llx.NilData,
+			"requireNumbers":             llx.NilData,
+			"passwordReusePrevention":    llx.NilData,
+			"maxPasswordAge":             llx.NilData,
+			"expirePasswords":            llx.NilData,
+			"hardExpiry":                 llx.NilData,
+			"allowUsersToChangePassword": llx.NilData,
+		}
+	}
+	return map[string]*llx.RawData{
+		"__id":                       llx.StringData(id),
+		"exists":                     llx.BoolData(true),
+		"minimumPasswordLength":      llx.IntDataPtr(pp.MinimumPasswordLength),
+		"requireUppercaseCharacters": llx.BoolData(pp.RequireUppercaseCharacters),
+		"requireLowercaseCharacters": llx.BoolData(pp.RequireLowercaseCharacters),
+		"requireSymbols":             llx.BoolData(pp.RequireSymbols),
+		"requireNumbers":             llx.BoolData(pp.RequireNumbers),
+		"passwordReusePrevention":    llx.IntDataPtr(pp.PasswordReusePrevention),
+		"maxPasswordAge":             llx.IntDataPtr(pp.MaxPasswordAge),
+		"expirePasswords":            llx.BoolData(pp.ExpirePasswords),
+		"hardExpiry":                 llx.BoolDataPtr(pp.HardExpiry),
+		"allowUsersToChangePassword": llx.BoolData(pp.AllowUsersToChangePassword),
+	}
+}
+
 func (a *mqlAwsIam) accountSummary() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -801,6 +883,106 @@ func (a *mqlAwsIamUsercredentialreportentry) user() (*mqlAwsIamUser, error) {
 
 func (a *mqlAwsIamUsercredentialreportentry) createdAt() (*time.Time, error) {
 	return a.getTimeValue("user_creation_time")
+}
+
+func (p *mqlAwsIamUsercredentialreportentry) isRoot() (bool, error) {
+	props := p.Properties.Data
+	if props == nil {
+		return false, errors.New("could not read the credentials report")
+	}
+	return props["user"] == "<root_account>", nil
+}
+
+// isCredentialReportPlaceholder reports whether a credential-report value is a
+// placeholder for data the account never produced rather than a real value.
+func isCredentialReportPlaceholder(val string) bool {
+	switch val {
+	case "", "N/A", "no_information", "not_supported":
+		return true
+	}
+	return false
+}
+
+// lastActivityTime returns the timestamp to measure inactivity from: the most
+// recent use recorded under usedKey, or, when the credential has never been
+// used, the creation or rotation time under fallbackKey. It returns nil when
+// neither key holds a real timestamp.
+func (p *mqlAwsIamUsercredentialreportentry) lastActivityTime(usedKey, fallbackKey string) (*time.Time, error) {
+	props := p.Properties.Data
+	if props == nil {
+		return nil, errors.New("could not read the credentials report")
+	}
+	for _, key := range []string{usedKey, fallbackKey} {
+		val, ok := props[key].(string)
+		if !ok || isCredentialReportPlaceholder(val) {
+			continue
+		}
+		parsed, err := time.Parse(time.RFC3339, val)
+		if err != nil {
+			return nil, errors.New("failed to parse time: " + err.Error())
+		}
+		return &parsed, nil
+	}
+	return nil, nil
+}
+
+func daysSince(ref time.Time) int64 {
+	days := int64(time.Since(ref).Hours() / 24)
+	if days < 0 {
+		return 0
+	}
+	return days
+}
+
+func (p *mqlAwsIamUsercredentialreportentry) passwordInactiveDays() (int64, error) {
+	enabled, err := p.passwordEnabled()
+	if err != nil {
+		return 0, err
+	}
+	if !enabled {
+		p.PasswordInactiveDays = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return 0, nil
+	}
+	ref, err := p.lastActivityTime("password_last_used", "user_creation_time")
+	if err != nil {
+		return 0, err
+	}
+	if ref == nil {
+		p.PasswordInactiveDays = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return 0, nil
+	}
+	return daysSince(*ref), nil
+}
+
+func (p *mqlAwsIamUsercredentialreportentry) accessKey1InactiveDays() (int64, error) {
+	return p.accessKeyInactiveDays(&p.AccessKey1InactiveDays, "access_key_1_active", "access_key_1_last_used_date", "access_key_1_last_rotated")
+}
+
+func (p *mqlAwsIamUsercredentialreportentry) accessKey2InactiveDays() (int64, error) {
+	return p.accessKeyInactiveDays(&p.AccessKey2InactiveDays, "access_key_2_active", "access_key_2_last_used_date", "access_key_2_last_rotated")
+}
+
+// accessKeyInactiveDays returns whole days since the access key was last used,
+// or since it was last rotated when it has never been used. It is null when the
+// key is inactive.
+func (p *mqlAwsIamUsercredentialreportentry) accessKeyInactiveDays(field *plugin.TValue[int64], activeKey, usedKey, rotatedKey string) (int64, error) {
+	active, err := p.getBoolValue(activeKey)
+	if err != nil {
+		return 0, err
+	}
+	if !active {
+		*field = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return 0, nil
+	}
+	ref, err := p.lastActivityTime(usedKey, rotatedKey)
+	if err != nil {
+		return 0, err
+	}
+	if ref == nil {
+		*field = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return 0, nil
+	}
+	return daysSince(*ref), nil
 }
 
 func (a *mqlAwsIamVirtualmfadevice) id() (string, error) {

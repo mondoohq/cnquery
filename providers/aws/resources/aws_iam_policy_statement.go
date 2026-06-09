@@ -117,6 +117,83 @@ func (a *mqlAwsIamPolicy) statements() ([]any, error) {
 	return defaultVersion.statements()
 }
 
+// anyWildcardResource reports whether any element is the all-resources
+// wildcard `*`.
+func anyWildcardResource(resources []any) bool {
+	for _, r := range resources {
+		if s, ok := r.(string); ok && s == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+// anyWildcardAction reports whether any element grants service-wide or global
+// access — the global `*` action or a service-wide wildcard such as `s3:*`.
+func anyWildcardAction(actions []any) bool {
+	for _, raw := range actions {
+		s, ok := raw.(string)
+		if !ok {
+			continue
+		}
+		if s == "*" || strings.HasSuffix(s, ":*") {
+			return true
+		}
+	}
+	return false
+}
+
+// hasWildcardResource reports whether any resource the statement applies to is
+// the all-resources wildcard `*`.
+func (a *mqlAwsIamPolicyStatement) hasWildcardResource() (bool, error) {
+	resources := a.GetResources()
+	if resources.Error != nil {
+		return false, resources.Error
+	}
+	return anyWildcardResource(resources.Data), nil
+}
+
+// hasWildcardAction reports whether any action grants service-wide or global
+// access — the global `*` action or a service-wide wildcard such as `s3:*`.
+func (a *mqlAwsIamPolicyStatement) hasWildcardAction() (bool, error) {
+	actions := a.GetActions()
+	if actions.Error != nil {
+		return false, actions.Error
+	}
+	return anyWildcardAction(actions.Data), nil
+}
+
+// hasWildcardAllow reports whether any Allow statement in the policy default
+// version grants wildcard access through its actions or resources.
+func (a *mqlAwsIamPolicy) hasWildcardAllow() (bool, error) {
+	statements, err := a.statements()
+	if err != nil {
+		return false, err
+	}
+	for _, raw := range statements {
+		stmt := raw.(*mqlAwsIamPolicyStatement)
+		effect := stmt.GetEffect()
+		if effect.Error != nil {
+			return false, effect.Error
+		}
+		if !strings.EqualFold(effect.Data, "Allow") {
+			continue
+		}
+		hasRes, err := stmt.hasWildcardResource()
+		if err != nil {
+			return false, err
+		}
+		hasAct, err := stmt.hasWildcardAction()
+		if err != nil {
+			return false, err
+		}
+		if hasRes || hasAct {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (a *mqlAwsIamPolicyversion) statements() ([]any, error) {
 	rawDoc, err := a.rawDocument()
 	if err != nil {

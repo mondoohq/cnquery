@@ -1866,8 +1866,13 @@ aws.iam {
   attachedPolicies() []aws.iam.policy
   // IAM credential report
   credentialReport() []aws.iam.usercredentialreportentry
-  // IAM account password policy for the account
-  accountPasswordPolicy() dict
+  // Raw IAM account password policy
+  //
+  // Deprecated in favor of passwordPolicy, which resolves each setting to a
+  // typed field with null semantics for unset values.
+  accountPasswordPolicy() @maturity("deprecated") dict
+  // Account password policy
+  passwordPolicy() aws.iam.passwordPolicy
   // IAM account summary
   accountSummary() map[string]int
   // List of virtual mfs devices associated with the account
@@ -1884,6 +1889,37 @@ aws.iam {
   accountAlias() string
 }
 
+// AWS IAM account password policy
+//
+// Examine the password complexity rules enforced on IAM user passwords for the
+// account. The `exists` field reports whether a policy is configured at all;
+// when no policy is set every other field is null. The remaining fields cover
+// length, character-class requirements, reuse prevention, and expiration.
+private aws.iam.passwordPolicy @defaults("exists minimumPasswordLength") {
+  // Whether an account password policy is configured
+  exists bool
+  // Minimum number of characters required in a password
+  minimumPasswordLength int
+  // Whether at least one uppercase letter is required
+  requireUppercaseCharacters bool
+  // Whether at least one lowercase letter is required
+  requireLowercaseCharacters bool
+  // Whether at least one symbol is required
+  requireSymbols bool
+  // Whether at least one number is required
+  requireNumbers bool
+  // Number of previous passwords that cannot be reused
+  passwordReusePrevention int
+  // Maximum number of days a password remains valid before it must be changed
+  maxPasswordAge int
+  // Whether passwords expire
+  expirePasswords bool
+  // Whether users are prevented from resetting their own password once it expires
+  hardExpiry bool
+  // Whether users may change their own password
+  allowUsersToChangePassword bool
+}
+
 // Entry in AWS IAM credential report
 private aws.iam.usercredentialreportentry @defaults("arn") {
   init(properties map[string]string)
@@ -1892,6 +1928,8 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // ARN for the credential report
   arn() string
+  // Whether this entry is the account root user
+  isRoot() bool
 
   // Whether the access key is active
   accessKey1Active() bool
@@ -1903,6 +1941,11 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   accessKey1LastUsedRegion() string
   // Service that last used the key
   accessKey1LastUsedService() string
+  // Whole days since the first access key was last used
+  //
+  // Counts from the most recent use of the key, or from when the key was last
+  // rotated when it has never been used. Null when the key is inactive.
+  accessKey1InactiveDays() int
 
   // Whether the access key is active
   accessKey2Active() bool
@@ -1914,6 +1957,11 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   accessKey2LastUsedRegion() string
   // Service that last used the key
   accessKey2LastUsedService() string
+  // Whole days since the second access key was last used
+  //
+  // Counts from the most recent use of the key, or from when the key was last
+  // rotated when it has never been used. Null when the key is inactive.
+  accessKey2InactiveDays() int
 
   // Whether the cert is active
   cert1Active() bool
@@ -1933,6 +1981,11 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   passwordLastChanged() time
   // Time when the password was last used
   passwordLastUsed() time
+  // Whole days since the password was last used
+  //
+  // Counts from the most recent password use, or from the user creation time
+  // when the password has never been used. Null when the user has no password.
+  passwordInactiveDays() int
   // Next time when the password should rotate
   passwordNextRotation() time
 
@@ -2053,6 +2106,13 @@ private aws.iam.policyStatement @defaults("effect") {
   notPrincipals map[string][]string
   // Conditions under which the statement is in effect, keyed by condition operator then condition key
   conditions dict
+  // Whether any resource the statement applies to is the all-resources wildcard `*`
+  hasWildcardResource() bool
+  // Whether any action grants service-wide or global access
+  //
+  // True when the statement includes the global `*` action or any service-wide
+  // wildcard such as `s3:*` or `ec2:*`.
+  hasWildcardAction() bool
 }
 
 // AWS IAM policy
@@ -2081,6 +2141,11 @@ private aws.iam.policy @defaults("arn name") {
   defaultVersion() aws.iam.policyversion
   // Parsed statements from the policy default version
   statements() []aws.iam.policyStatement
+  // Whether any Allow statement in the default version grants wildcard access
+  //
+  // True when an Allow statement includes a wildcard action — the global `*`
+  // or a service-wide wildcard such as `s3:*` — or the all-resources `*`.
+  hasWildcardAllow() bool
 
   // List of users attached to the policy
   attachedUsers() []aws.iam.user
@@ -2329,6 +2394,8 @@ aws.sagemaker {
   modelBiasJobDefinitions() []aws.sagemaker.modelBiasJobDefinition
   // List of SageMaker model explainability job definitions
   modelExplainabilityJobDefinitions() []aws.sagemaker.modelExplainabilityJobDefinition
+  // List of SageMaker monitoring job definitions of every type
+  monitoringJobDefinitions() []aws.sagemaker.monitoringJobDefinition
   // List of SageMaker experiments
   experiments() []aws.sagemaker.experiment
   // List of SageMaker trials
@@ -3318,6 +3385,31 @@ private aws.sagemaker.monitoringJobDefinition.networkConfig {
   securityGroups() []aws.ec2.securitygroup
   // Subnets for the job
   subnets() []aws.vpc.subnet
+}
+
+// AWS SageMaker monitoring job definition
+//
+// Iterate every monitoring job definition in the account regardless of kind —
+// data quality, model quality, model bias, and model explainability — when an
+// audit applies the same check across all of them. The `type` field reports
+// which kind each entry is, and `networkConfig` exposes the network-isolation
+// and inter-container traffic-encryption settings. Use the kind-specific
+// collections such as `dataQualityJobDefinitions` for the full per-kind detail.
+private aws.sagemaker.monitoringJobDefinition @defaults("arn name type") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Kind of monitoring job definition
+  //
+  // One of DataQuality, ModelQuality, ModelBias, or ModelExplainability.
+  type string
+  // Region where the job definition exists
+  region string
+  // Time when the job definition was created
+  createdAt time
+  // Network configuration
+  networkConfig() aws.sagemaker.monitoringJobDefinition.networkConfig
 }
 
 // AWS SageMaker data quality job definition
@@ -9884,6 +9976,12 @@ private aws.s3.bucket @defaults("name location public") {
   policy() aws.s3.bucket.policy
   // Parsed statements from the bucket policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the bucket policy denies requests made without TLS
+  //
+  // True when the bucket policy contains a Deny statement conditioned on
+  // `aws:SecureTransport` being false, which rejects any request that does not
+  // use HTTPS. False when the bucket has no policy.
+  enforceSslOnly() bool
   // Tags for the bucket
   tags() map[string]string
   // List of access control grants associated with the bucket
@@ -14568,6 +14666,11 @@ private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portR
   cidrBlock string
   // IPv6 CIDR block for the ACL entry
   ipv6CidrBlock string
+  // Whether the entry opens traffic to the entire internet
+  //
+  // True when the entry matches every IPv4 address (`0.0.0.0/0`) or every IPv6
+  // address (`::/0`).
+  isPublic() bool
   // ID for the ACL entry rule
   id string
 }

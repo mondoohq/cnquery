@@ -425,6 +425,76 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	return nil, nil
 }
 
+// enforceSslOnly reports whether the bucket policy denies any request that does
+// not use TLS, i.e. it contains a Deny statement conditioned on
+// `aws:SecureTransport` being false. It is false when the bucket has no policy.
+func (a *mqlAwsS3Bucket) enforceSslOnly() (bool, error) {
+	statements, err := a.policyStatements()
+	if err != nil {
+		return false, err
+	}
+	for _, raw := range statements {
+		stmt := raw.(*mqlAwsIamPolicyStatement)
+		effect := stmt.GetEffect()
+		if effect.Error != nil {
+			return false, effect.Error
+		}
+		if !strings.EqualFold(effect.Data, "Deny") {
+			continue
+		}
+		conditions := stmt.GetConditions()
+		if conditions.Error != nil {
+			return false, conditions.Error
+		}
+		if conditionDeniesInsecureTransport(conditions.Data) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// conditionDeniesInsecureTransport reports whether a statement condition map
+// contains a `Bool` operator that requires `aws:SecureTransport` to be false.
+// The condition value may be a JSON bool, a string ("false"), or a list of
+// either, so each form is checked.
+func conditionDeniesInsecureTransport(conditions any) bool {
+	condMap, ok := conditions.(map[string]any)
+	if !ok {
+		return false
+	}
+	for op, raw := range condMap {
+		if !strings.EqualFold(op, "Bool") {
+			continue
+		}
+		keys, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		for k, v := range keys {
+			if strings.EqualFold(k, "aws:SecureTransport") && isFalseConditionValue(v) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isFalseConditionValue(v any) bool {
+	switch val := v.(type) {
+	case bool:
+		return !val
+	case string:
+		return strings.EqualFold(val, "false")
+	case []any:
+		for _, item := range val {
+			if isFalseConditionValue(item) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	if !a.Exists.Data {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sagemakerTypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -917,6 +918,114 @@ func (a *mqlAwsSagemaker) dataQualityJobDefinitions() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// monitoringJobDefinitionSource is implemented by every per-kind monitoring
+// job definition resource. It lets the unified aws.sagemaker.monitoringJobDefinition
+// collection read the shared summary fields and defer to the per-kind resource
+// for the network configuration, which requires a kind-specific Describe call.
+type monitoringJobDefinitionSource interface {
+	GetArn() *plugin.TValue[string]
+	GetName() *plugin.TValue[string]
+	GetRegion() *plugin.TValue[string]
+	GetCreatedAt() *plugin.TValue[*time.Time]
+	networkConfig() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error)
+}
+
+func (a *mqlAwsSagemaker) monitoringJobDefinitions() ([]any, error) {
+	sources := []struct {
+		typ  string
+		list func() ([]any, error)
+	}{
+		{"DataQuality", a.dataQualityJobDefinitions},
+		{"ModelQuality", a.modelQualityJobDefinitions},
+		{"ModelBias", a.modelBiasJobDefinitions},
+		{"ModelExplainability", a.modelExplainabilityJobDefinitions},
+	}
+
+	res := []any{}
+	for _, s := range sources {
+		items, err := s.list()
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items {
+			src := item.(monitoringJobDefinitionSource)
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerMonitoringJobDefinition,
+				map[string]*llx.RawData{
+					"arn":       llx.StringData(src.GetArn().Data),
+					"name":      llx.StringData(src.GetName().Data),
+					"type":      llx.StringData(s.typ),
+					"region":    llx.StringData(src.GetRegion().Data),
+					"createdAt": llx.TimeDataPtr(src.GetCreatedAt().Data),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlRes.(*mqlAwsSagemakerMonitoringJobDefinition).source = src
+			res = append(res, mqlRes)
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsSagemakerMonitoringJobDefinitionInternal struct {
+	source monitoringJobDefinitionSource
+}
+
+func (a *mqlAwsSagemakerMonitoringJobDefinition) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+// jobDefinitionSource returns the per-kind resource backing this entry. The
+// collection caches it directly; this rebuilds it from the entry's kind when
+// the resource is reached without that cached reference.
+func (a *mqlAwsSagemakerMonitoringJobDefinition) jobDefinitionSource() (monitoringJobDefinitionSource, error) {
+	if a.source != nil {
+		return a.source, nil
+	}
+
+	var resourceName string
+	switch a.Type.Data {
+	case "DataQuality":
+		resourceName = ResourceAwsSagemakerDataQualityJobDefinition
+	case "ModelQuality":
+		resourceName = ResourceAwsSagemakerModelQualityJobDefinition
+	case "ModelBias":
+		resourceName = ResourceAwsSagemakerModelBiasJobDefinition
+	case "ModelExplainability":
+		resourceName = ResourceAwsSagemakerModelExplainabilityJobDefinition
+	default:
+		return nil, fmt.Errorf("unknown monitoring job definition type %q", a.Type.Data)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, resourceName, map[string]*llx.RawData{
+		"arn":       llx.StringData(a.Arn.Data),
+		"name":      llx.StringData(a.Name.Data),
+		"region":    llx.StringData(a.Region.Data),
+		"createdAt": llx.TimeDataPtr(a.CreatedAt.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.source = res.(monitoringJobDefinitionSource)
+	return a.source, nil
+}
+
+func (a *mqlAwsSagemakerMonitoringJobDefinition) networkConfig() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+	src, err := a.jobDefinitionSource()
+	if err != nil {
+		return nil, err
+	}
+	nc, err := src.networkConfig()
+	if err != nil {
+		return nil, err
+	}
+	if nc == nil {
+		a.NetworkConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return nc, nil
 }
 
 func (a *mqlAwsSagemaker) getDataQualityJobDefinitions(conn *connection.AwsConnection) []*jobpool.Job {
