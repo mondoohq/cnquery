@@ -2931,8 +2931,9 @@ private docker.file.run @defaults("script") {
   // arguments with leading `VAR=value` assignments removed. Exec-form
   // instructions yield a single command from the argv. Use this to audit the
   // program invoked and its options instead of substring-matching the raw
-  // `script`. Parsing is best-effort and does not descend into subshells or
-  // command substitutions.
+  // `script`. Parsing is best-effort: it does not descend into subshells or
+  // command substitutions, and redirections (`>`, `>>`, `<`, `2>&1`) appear as
+  // ordinary tokens in the following command's `args`.
   commands []docker.file.run.command
 }
 
@@ -2952,6 +2953,10 @@ private docker.file.run.command @defaults("binary subcommand") {
   // `install`.
   subcommand string
   // Dash-prefixed options, e.g. ["--no-install-recommends", "-y"]
+  //
+  // A flag that carries an `=`-joined value is kept as one token, so
+  // `--mount=type=bind` matches `flags.contains("--mount=type=bind")` or
+  // `flags.any(_.contains("--mount"))`, not `flags.contains("--mount")`.
   flags []string
   // All arguments after the executable, in the order they appear
   args []string

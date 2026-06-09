@@ -37,15 +37,15 @@ func lexShell(s string) []shellToken {
 	n := len(runes)
 	for i := 0; i < n; {
 		c := runes[i]
-		switch {
-		case c == ' ' || c == '\t' || c == '\r':
+		switch c {
+		case ' ', '\t', '\r':
 			flush()
 			i++
-		case c == '\n' || c == ';':
+		case '\n', ';':
 			flush()
 			toks = append(toks, shellToken{text: string(c), op: true})
 			i++
-		case c == '&':
+		case '&':
 			flush()
 			if i+1 < n && runes[i+1] == '&' {
 				toks = append(toks, shellToken{text: "&&", op: true})
@@ -54,7 +54,7 @@ func lexShell(s string) []shellToken {
 				toks = append(toks, shellToken{text: "&", op: true})
 				i++
 			}
-		case c == '|':
+		case '|':
 			flush()
 			if i+1 < n && runes[i+1] == '|' {
 				toks = append(toks, shellToken{text: "||", op: true})
@@ -63,7 +63,7 @@ func lexShell(s string) []shellToken {
 				toks = append(toks, shellToken{text: "|", op: true})
 				i++
 			}
-		case c == '\'':
+		case '\'':
 			wordInProgress = true
 			i++
 			for i < n && runes[i] != '\'' {
@@ -73,7 +73,7 @@ func lexShell(s string) []shellToken {
 			if i < n {
 				i++ // closing quote
 			}
-		case c == '"':
+		case '"':
 			wordInProgress = true
 			i++
 			for i < n && runes[i] != '"' {
@@ -91,7 +91,7 @@ func lexShell(s string) []shellToken {
 			if i < n {
 				i++ // closing quote
 			}
-		case c == '\\':
+		case '\\':
 			if i+1 < n {
 				if runes[i+1] == '\n' {
 					i += 2 // line continuation
