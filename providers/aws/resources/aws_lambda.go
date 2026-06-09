@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -562,6 +563,107 @@ func (a *mqlAwsLambdaFunction) policy() (any, error) {
 	}
 
 	return nil, nil
+}
+
+// allowsPublicAccess reports whether the function's resource policy grants a
+// wildcard principal access through an Allow statement that lacks a scoping
+// condition on aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID. It is
+// false when the function has no resource policy.
+func (a *mqlAwsLambdaFunction) allowsPublicAccess() (bool, error) {
+	stmts, err := a.policyStatements()
+	if err != nil {
+		return false, err
+	}
+	for _, raw := range stmts {
+		stmt := raw.(*mqlAwsIamPolicyStatement)
+		effect := stmt.GetEffect()
+		if effect.Error != nil {
+			return false, effect.Error
+		}
+		if !strings.EqualFold(effect.Data, "Allow") {
+			continue
+		}
+		principals := stmt.GetPrincipals()
+		if principals.Error != nil {
+			return false, principals.Error
+		}
+		if !hasWildcardPrincipal(principals.Data) {
+			continue
+		}
+		conditions := stmt.GetConditions()
+		if conditions.Error != nil {
+			return false, conditions.Error
+		}
+		if !hasSourceScopingCondition(conditions.Data) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// hasWildcardPrincipal reports whether a parsed policy-statement principal map
+// grants access to the `*` wildcard under any principal type.
+func hasWildcardPrincipal(principals any) bool {
+	m, ok := principals.(map[string]any)
+	if !ok {
+		return false
+	}
+	for _, v := range m {
+		list, ok := v.([]any)
+		if !ok {
+			continue
+		}
+		for _, item := range list {
+			if s, ok := item.(string); ok && s == "*" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// hasSourceScopingCondition reports whether a statement condition map scopes
+// access with a non-wildcard aws:SourceArn, aws:SourceAccount, or
+// aws:PrincipalOrgID value.
+func hasSourceScopingCondition(conditions any) bool {
+	m, ok := conditions.(map[string]any)
+	if !ok {
+		return false
+	}
+	for _, opVal := range m {
+		keys, ok := opVal.(map[string]any)
+		if !ok {
+			continue
+		}
+		for key, val := range keys {
+			if isSourceScopingKey(key) && !conditionValueIsWildcard(val) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isSourceScopingKey(key string) bool {
+	switch strings.ToLower(key) {
+	case "aws:sourcearn", "aws:sourceaccount", "aws:principalorgid":
+		return true
+	}
+	return false
+}
+
+func conditionValueIsWildcard(val any) bool {
+	switch v := val.(type) {
+	case string:
+		return v == "*"
+	case []any:
+		for _, item := range v {
+			if s, ok := item.(string); ok && s == "*" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (a *mqlAwsLambdaFunction) urlConfig() (*mqlAwsLambdaFunctionUrlConfig, error) {

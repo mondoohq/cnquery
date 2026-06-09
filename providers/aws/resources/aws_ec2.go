@@ -2048,6 +2048,33 @@ func (a *mqlAwsEc2SecuritygroupIppermission) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// includesPublicSource reports whether the rule allows traffic from the entire
+// internet — an IPv4 range of 0.0.0.0/0 or an IPv6 range of ::/0.
+func (a *mqlAwsEc2SecuritygroupIppermission) includesPublicSource() (bool, error) {
+	ipv4 := a.GetIpRanges()
+	if ipv4.Error != nil {
+		return false, ipv4.Error
+	}
+	if anyStringEquals(ipv4.Data, "0.0.0.0/0") {
+		return true, nil
+	}
+	ipv6 := a.GetIpv6Ranges()
+	if ipv6.Error != nil {
+		return false, ipv6.Error
+	}
+	return anyStringEquals(ipv6.Data, "::/0"), nil
+}
+
+// anyStringEquals reports whether any element of the slice equals target.
+func anyStringEquals(list []any, target string) bool {
+	for _, item := range list {
+		if s, ok := item.(string); ok && s == target {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *mqlAwsEc2InstanceDevice) id() (string, error) {
 	return a.VolumeId.Data, nil
 }

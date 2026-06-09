@@ -14588,6 +14588,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.metricsfilter.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.cloudwatch.loggroup.metricsfilter.monitoredEventNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetMonitoredEventNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.monitoredEventSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetMonitoredEventSources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.hasActiveAlarm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetHasActiveAlarm()).ToDataRes(types.Bool)
+	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetId()).ToDataRes(types.String)
 	},
@@ -19964,6 +19973,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.lambda.function.allowsPublicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetAllowsPublicAccess()).ToDataRes(types.Bool)
+	},
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetVpcConfig()).ToDataRes(types.Dict)
 	},
@@ -22270,6 +22282,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetUserIdGroupPairs()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetIncludesPublicSource()).ToDataRes(types.Bool)
 	},
 	"aws.config.recorders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfig).GetRecorders()).ToDataRes(types.Array(types.Resource("aws.config.recorder")))
@@ -47101,6 +47116,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.cloudwatch.loggroup.metricsfilter.monitoredEventNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).MonitoredEventNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.monitoredEventSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).MonitoredEventSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.hasActiveAlarm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).HasActiveAlarm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).__id, ok = v.Value.(string)
 		return
@@ -54917,6 +54944,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.allowsPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).AllowsPublicAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -58271,6 +58302,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.ippermission.userIdGroupPairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2SecuritygroupIppermission).UserIdGroupPairs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.ippermission.includesPublicSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2SecuritygroupIppermission).IncludesPublicSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -112721,6 +112756,9 @@ type mqlAwsCloudwatchLoggroupMetricsfilter struct {
 	MetricTransformations  plugin.TValue[[]any]
 	ApplyOnTransformedLogs plugin.TValue[bool]
 	CreatedAt              plugin.TValue[*time.Time]
+	MonitoredEventNames    plugin.TValue[[]any]
+	MonitoredEventSources  plugin.TValue[[]any]
+	HasActiveAlarm         plugin.TValue[bool]
 }
 
 // createAwsCloudwatchLoggroupMetricsfilter creates a new instance of this resource
@@ -112790,6 +112828,24 @@ func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetApplyOnTransformedLogs() *plu
 
 func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMonitoredEventNames() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MonitoredEventNames, func() ([]any, error) {
+		return c.monitoredEventNames()
+	})
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMonitoredEventSources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MonitoredEventSources, func() ([]any, error) {
+		return c.monitoredEventSources()
+	})
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetHasActiveAlarm() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasActiveAlarm, func() (bool, error) {
+		return c.hasActiveAlarm()
+	})
 }
 
 // mqlAwsCloudwatchLoggroupSubscriptionfilter for the aws.cloudwatch.loggroup.subscriptionfilter resource
@@ -132142,6 +132198,7 @@ type mqlAwsLambdaFunction struct {
 	RecursiveLoop                 plugin.TValue[string]
 	Policy                        plugin.TValue[any]
 	PolicyStatements              plugin.TValue[[]any]
+	AllowsPublicAccess            plugin.TValue[bool]
 	VpcConfig                     plugin.TValue[any]
 	Vpc                           plugin.TValue[*mqlAwsVpc]
 	Subnets                       plugin.TValue[[]any]
@@ -132270,6 +132327,12 @@ func (c *mqlAwsLambdaFunction) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetAllowsPublicAccess() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPublicAccess, func() (bool, error) {
+		return c.allowsPublicAccess()
 	})
 }
 
@@ -140300,17 +140363,18 @@ type mqlAwsEc2SecuritygroupIppermission struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2SecuritygroupIppermissionInternal
-	Id               plugin.TValue[string]
-	FromPort         plugin.TValue[int64]
-	ToPort           plugin.TValue[int64]
-	IpProtocol       plugin.TValue[string]
-	IpRanges         plugin.TValue[[]any]
-	IpRangeDetails   plugin.TValue[[]any]
-	Ipv6Ranges       plugin.TValue[[]any]
-	Ipv6RangeDetails plugin.TValue[[]any]
-	PrefixListIds    plugin.TValue[[]any]
-	PrefixLists      plugin.TValue[[]any]
-	UserIdGroupPairs plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	FromPort             plugin.TValue[int64]
+	ToPort               plugin.TValue[int64]
+	IpProtocol           plugin.TValue[string]
+	IpRanges             plugin.TValue[[]any]
+	IpRangeDetails       plugin.TValue[[]any]
+	Ipv6Ranges           plugin.TValue[[]any]
+	Ipv6RangeDetails     plugin.TValue[[]any]
+	PrefixListIds        plugin.TValue[[]any]
+	PrefixLists          plugin.TValue[[]any]
+	UserIdGroupPairs     plugin.TValue[[]any]
+	IncludesPublicSource plugin.TValue[bool]
 }
 
 // createAwsEc2SecuritygroupIppermission creates a new instance of this resource
@@ -140404,6 +140468,12 @@ func (c *mqlAwsEc2SecuritygroupIppermission) GetPrefixLists() *plugin.TValue[[]a
 
 func (c *mqlAwsEc2SecuritygroupIppermission) GetUserIdGroupPairs() *plugin.TValue[[]any] {
 	return &c.UserIdGroupPairs
+}
+
+func (c *mqlAwsEc2SecuritygroupIppermission) GetIncludesPublicSource() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IncludesPublicSource, func() (bool, error) {
+		return c.includesPublicSource()
+	})
 }
 
 // mqlAwsConfig for the aws.config resource

@@ -8983,6 +8983,22 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("filterName") {
   applyOnTransformedLogs bool
   // Creation time of the metric filter
   createdAt time
+  // Event names the filter pattern selects on
+  //
+  // The values extracted from `$.eventName = "…"` terms in the filter pattern.
+  // Empty when the pattern does not constrain the event name.
+  monitoredEventNames() []string
+  // Event sources the filter pattern selects on
+  //
+  // The values extracted from `$.eventSource = "…"` terms in the filter
+  // pattern. Empty when the pattern does not constrain the event source.
+  monitoredEventSources() []string
+  // Whether a triggered alarm notifies an active subscriber
+  //
+  // True when one of the filter's metrics has an alarm whose actions include an
+  // SNS topic with at least one confirmed (non-pending, non-deleted)
+  // subscription.
+  hasActiveAlarm() bool
 }
 
 // Amazon CloudWatch log group subscription filter
@@ -14012,6 +14028,12 @@ private aws.lambda.function @defaults("arn") {
   policy() dict
   // Parsed statements from the function resource policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to any principal
+  //
+  // True when an Allow statement grants a wildcard principal (`*`) without a
+  // scoping condition on `aws:SourceArn`, `aws:SourceAccount`, or
+  // `aws:PrincipalOrgID`. False when the function has no resource policy.
+  allowsPublicAccess() bool
   // Raw VPC configuration for the Lambda function
   //
   // Deprecated in favor of `vpc()`, `subnets()`, and `securityGroups()`.
@@ -15911,6 +15933,11 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   prefixLists() []aws.ec2.managedPrefixList
   // List of user ID group pairs
   userIdGroupPairs []dict
+  // Whether the rule allows traffic from the entire internet
+  //
+  // True when the IPv4 ranges include `0.0.0.0/0` or the IPv6 ranges include
+  // `::/0`.
+  includesPublicSource() bool
 }
 
 // AWS Config
