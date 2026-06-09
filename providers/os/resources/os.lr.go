@@ -3156,6 +3156,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
 	},
+	"auditd.rule.syscall.arch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetArch()).ToDataRes(types.String)
+	},
+	"auditd.rule.syscall.auidMin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetAuidMin()).ToDataRes(types.Int)
+	},
+	"auditd.rule.syscall.excludesUnsetAuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditdRuleSyscall).GetExcludesUnsetAuid()).ToDataRes(types.Bool)
+	},
 	"apache2.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApache2).GetVersion()).ToDataRes(types.String)
 	},
@@ -11475,6 +11484,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleSyscall).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.auidMin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).AuidMin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"auditd.rule.syscall.excludesUnsetAuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditdRuleSyscall).ExcludesUnsetAuid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"apache2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27554,12 +27575,15 @@ type mqlAuditdRuleSyscall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAuditdRuleSyscallInternal it will be used here
-	Action      plugin.TValue[string]
-	List        plugin.TValue[string]
-	Syscalls    plugin.TValue[[]any]
-	Fields      plugin.TValue[[]any]
-	Comparisons plugin.TValue[[]any]
-	Keyname     plugin.TValue[string]
+	Action            plugin.TValue[string]
+	List              plugin.TValue[string]
+	Syscalls          plugin.TValue[[]any]
+	Fields            plugin.TValue[[]any]
+	Comparisons       plugin.TValue[[]any]
+	Keyname           plugin.TValue[string]
+	Arch              plugin.TValue[string]
+	AuidMin           plugin.TValue[int64]
+	ExcludesUnsetAuid plugin.TValue[bool]
 }
 
 // createAuditdRuleSyscall creates a new instance of this resource
@@ -27621,6 +27645,18 @@ func (c *mqlAuditdRuleSyscall) GetComparisons() *plugin.TValue[[]any] {
 
 func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
 	return &c.Keyname
+}
+
+func (c *mqlAuditdRuleSyscall) GetArch() *plugin.TValue[string] {
+	return &c.Arch
+}
+
+func (c *mqlAuditdRuleSyscall) GetAuidMin() *plugin.TValue[int64] {
+	return &c.AuidMin
+}
+
+func (c *mqlAuditdRuleSyscall) GetExcludesUnsetAuid() *plugin.TValue[bool] {
+	return &c.ExcludesUnsetAuid
 }
 
 // mqlApache2 for the apache2 resource

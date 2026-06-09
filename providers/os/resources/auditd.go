@@ -10,6 +10,7 @@ import (
 	"maps"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode"
@@ -338,7 +339,14 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				args["permissions"] = llx.StringData(v)
 
 			case "-S":
-				syscalls = append(syscalls, v)
+				// -S accepts a comma-separated list of syscalls (and may be
+				// repeated); store each syscall individually so policies can
+				// match them as a flat list.
+				for _, sc := range strings.Split(v, ",") {
+					if sc != "" {
+						syscalls = append(syscalls, sc)
+					}
+				}
 
 			default:
 				other = append(other, [2]string{k, v})
@@ -393,6 +401,44 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				}
 			}
 			args["comparisons"] = llx.ArrayData(comparisons, types.Dict)
+
+			// Derive convenience accessors from the parsed -F fields so policies
+			// can match the common arch/auid filters directly instead of
+			// re-implementing the key/op/value lookups in MQL.
+			var arch string
+			var auidMin *int64
+			excludesUnsetAuid := false
+			for _, raw := range fields {
+				f, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				key, _ := f["key"].(string)
+				op, _ := f["op"].(string)
+				val, _ := f["value"].(string)
+				switch key {
+				case "arch":
+					if op == "=" {
+						arch = val
+					}
+				case "auid":
+					switch op {
+					case ">=":
+						if n, err := strconv.ParseInt(val, 10, 64); err == nil {
+							auidMin = &n
+						}
+					case "!=":
+						// auid is unset for processes without a login UID;
+						// the kernel reports it as the raw sentinels below.
+						if val == "unset" || val == "4294967295" || val == "-1" {
+							excludesUnsetAuid = true
+						}
+					}
+				}
+			}
+			args["arch"] = llx.StringData(arch)
+			args["auidMin"] = llx.IntDataPtr(auidMin)
+			args["excludesUnsetAuid"] = llx.BoolData(excludesUnsetAuid)
 
 			if _, ok := args["keyname"]; !ok {
 				args["keyname"] = llx.StringData("")

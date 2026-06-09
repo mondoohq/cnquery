@@ -144,7 +144,10 @@ auditd.rule.file.path 11.4.21
 auditd.rule.file.permissions 11.4.21
 auditd.rule.syscall 11.4.21
 auditd.rule.syscall.action 11.4.21
+auditd.rule.syscall.arch 13.25.1
+auditd.rule.syscall.auidMin 13.25.1
 auditd.rule.syscall.comparisons 11.4.21
+auditd.rule.syscall.excludesUnsetAuid 13.25.1
 auditd.rule.syscall.fields 11.4.21
 auditd.rule.syscall.keyname 11.4.21
 auditd.rule.syscall.list 11.4.21

@@ -1262,6 +1262,24 @@ private auditd.rule.syscall @defaults("action list") {
   comparisons []dict
   // The key name for related rules as specified by -k
   keyname string
+  // CPU architecture this rule is restricted to
+  //
+  // The value of the `-F arch=` filter, normally `b64` or `b32`. Empty when
+  // the rule has no architecture filter and therefore applies to all
+  // architectures.
+  arch string
+  // Minimum audit UID this rule is restricted to
+  //
+  // The threshold N from a `-F auid>=N` filter, commonly `1000` to target
+  // interactive users above the system UID range. Null when the rule has no
+  // `auid>=` filter.
+  auidMin int
+  // Whether the rule excludes events with an unset audit UID
+  //
+  // True when the rule carries a `-F auid!=unset` filter (also matching the
+  // raw sentinels `4294967295` and `-1`), which drops events from daemons
+  // and other processes that never had a login UID assigned.
+  excludesUnsetAuid bool
 }
 
 // Apache2 HTTP Server
