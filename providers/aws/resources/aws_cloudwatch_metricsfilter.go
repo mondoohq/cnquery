@@ -8,19 +8,26 @@ import (
 	"strings"
 )
 
+// Compiled once for the two fields the metric-filter accessors select on,
+// rather than recompiling on every call.
+var (
+	monitoredEventNameRe   = filterPatternValueRe("eventName")
+	monitoredEventSourceRe = filterPatternValueRe("eventSource")
+)
+
 // filterPatternValueRe matches an equality selector in a CloudWatch Logs metric
 // filter pattern — `$.<field> = <value>` — capturing the value whether it is
 // quoted or bare. The `=` is not preceded by `!`, so `!=` selectors are
-// excluded. Built per field by extractFilterPatternValues.
+// excluded.
 func filterPatternValueRe(field string) *regexp.Regexp {
 	return regexp.MustCompile(`\$\.` + regexp.QuoteMeta(field) + `\s*=\s*(?:"([^"]*)"|([^\s)|&"]+))`)
 }
 
 // extractFilterPatternValues returns the distinct values a metric filter pattern
-// selects for a given JSON field via `$.<field> = <value>` terms, preserving
-// the order they appear. Inequality (`!=`) terms are ignored.
-func extractFilterPatternValues(pattern, field string) []string {
-	matches := filterPatternValueRe(field).FindAllStringSubmatch(pattern, -1)
+// selects via the `$.<field> = <value>` terms matched by re, preserving the
+// order they appear. Inequality (`!=`) terms are ignored.
+func extractFilterPatternValues(re *regexp.Regexp, pattern string) []string {
+	matches := re.FindAllStringSubmatch(pattern, -1)
 	res := []string{}
 	seen := map[string]struct{}{}
 	for _, m := range matches {
@@ -45,7 +52,7 @@ func (a *mqlAwsCloudwatchLoggroupMetricsfilter) monitoredEventNames() ([]any, er
 	if pattern.Error != nil {
 		return nil, pattern.Error
 	}
-	return toAnySlice(extractFilterPatternValues(pattern.Data, "eventName")), nil
+	return toAnySlice(extractFilterPatternValues(monitoredEventNameRe, pattern.Data)), nil
 }
 
 func (a *mqlAwsCloudwatchLoggroupMetricsfilter) monitoredEventSources() ([]any, error) {
@@ -53,7 +60,7 @@ func (a *mqlAwsCloudwatchLoggroupMetricsfilter) monitoredEventSources() ([]any, 
 	if pattern.Error != nil {
 		return nil, pattern.Error
 	}
-	return toAnySlice(extractFilterPatternValues(pattern.Data, "eventSource")), nil
+	return toAnySlice(extractFilterPatternValues(monitoredEventSourceRe, pattern.Data)), nil
 }
 
 // isActiveSubscriptionArn reports whether an SNS subscription ARN belongs to a

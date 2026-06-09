@@ -69,7 +69,7 @@ func TestExtractFilterPatternValues(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, extractFilterPatternValues(tc.pattern, tc.field))
+			assert.Equal(t, tc.want, extractFilterPatternValues(filterPatternValueRe(tc.field), tc.pattern))
 		})
 	}
 }
