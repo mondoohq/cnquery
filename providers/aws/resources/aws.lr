@@ -18858,8 +18858,10 @@ private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingS
 // retention period, shard count, encryption, stream mode, and registered
 // consumers), `firehoseDeliveryStreams()` for Kinesis Data Firehose
 // delivery streams (with their source, destination, transformation, and
-// backup configuration), and `streamConsumers()` for the enhanced fan-out
-// consumers registered across all data streams.
+// backup configuration), `streamConsumers()` for the enhanced fan-out
+// consumers registered across all data streams, and `videoStreams()` for
+// Kinesis Video Streams (with their media type, retention, and encryption
+// key).
 aws.kinesis @defaults("streams") {
   // List of Kinesis data streams
   streams() []aws.kinesis.stream
@@ -18867,6 +18869,8 @@ aws.kinesis @defaults("streams") {
   firehoseDeliveryStreams() []aws.kinesis.firehoseDeliveryStream
   // List of all enhanced fan-out consumers across all streams
   streamConsumers() []aws.kinesis.streamConsumer
+  // List of Kinesis video streams
+  videoStreams() []aws.kinesis.videoStream
 }
 
 // Amazon Kinesis data stream
@@ -18919,6 +18923,38 @@ private aws.kinesis.streamConsumer @defaults("name status") {
   stream() aws.kinesis.stream
   // Region where the consumer exists
   region string
+}
+
+// Amazon Kinesis Video Streams stream
+//
+// Examine a Kinesis Video Streams stream that ingests time-encoded media
+// (video, audio, or other time-series data) from connected devices. Each
+// stream exposes its media type, the device it is associated with, how long
+// data is retained, the encryption key, lifecycle status, and tags. Use the
+// stream ARN as the selection key.
+private aws.kinesis.videoStream @defaults("name status mediaType region") {
+  // ARN of the video stream
+  arn string
+  // Name of the video stream
+  name string
+  // Current status of the video stream: CREATING, ACTIVE, UPDATING, or DELETING
+  status string
+  // Media type of the stream, for example `video/h264`
+  mediaType string
+  // Name of the device associated with the stream
+  deviceName string
+  // Number of hours data is retained in the stream
+  dataRetentionInHours int
+  // Version of the stream
+  version string
+  // KMS key used to encrypt data on the stream
+  kmsKey() aws.kms.key
+  // Date and time the stream was created
+  createdAt time
+  // Region where the stream exists
+  region string
+  // Tags for the stream
+  tags() map[string]string
 }
 
 // Amazon Kinesis Firehose delivery stream

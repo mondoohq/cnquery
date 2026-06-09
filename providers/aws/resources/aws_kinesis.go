@@ -9,12 +9,15 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	firehose_types "github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	kinesis_types "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
+	kinesisvideo_types "github.com/aws/aws-sdk-go-v2/service/kinesisvideo/types"
 	kmsSDK "github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -388,6 +391,176 @@ func (a *mqlAwsKinesis) streamConsumers() ([]any, error) {
 		res = append(res, consumers.Data...)
 	}
 	return res, nil
+}
+
+// isKinesisvideoRegionError reports whether the error means the Kinesis Video
+// Streams service is unavailable or unreachable in the region (access denied,
+// an unresolvable endpoint in a region that doesn't offer the service, or the
+// per-request timeout firing on such a region).
+func isKinesisvideoRegionError(err error) bool {
+	return Is400AccessDeniedError(err) ||
+		IsServiceNotAvailableInRegionError(err) ||
+		errors.Is(err, context.DeadlineExceeded)
+}
+
+// videoStreams lists Kinesis video streams across all regions
+func (a *mqlAwsKinesis) videoStreams() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getVideoStreams(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKinesis) getVideoStreams(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("kinesis>getVideoStreams>calling aws with region %s", region)
+
+			svc := conn.Kinesisvideo(region)
+			res := []any{}
+
+			paginator := kinesisvideo.NewListStreamsPaginator(svc, &kinesisvideo.ListStreamsInput{})
+			for paginator.HasMorePages() {
+				// Kinesis Video Streams is not offered in every region; cap the
+				// per-request wait so unreachable endpoints fail fast.
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				page, err := paginator.NextPage(ctx)
+				cancel()
+				if err != nil {
+					if isKinesisvideoRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS Kinesis Video API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, streamInfo := range page.StreamInfoList {
+					mqlStream, err := newMqlAwsKinesisVideoStream(a.MqlRuntime, region, &streamInfo)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlStream)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsKinesisVideoStream(runtime *plugin.Runtime, region string, info *kinesisvideo_types.StreamInfo) (*mqlAwsKinesisVideoStream, error) {
+	var retention int64
+	if info.DataRetentionInHours != nil {
+		retention = int64(*info.DataRetentionInHours)
+	}
+
+	resource, err := CreateResource(runtime, "aws.kinesis.videoStream",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(info.StreamARN),
+			"arn":                  llx.StringDataPtr(info.StreamARN),
+			"name":                 llx.StringDataPtr(info.StreamName),
+			"status":               llx.StringData(string(info.Status)),
+			"mediaType":            llx.StringDataPtr(info.MediaType),
+			"deviceName":           llx.StringDataPtr(info.DeviceName),
+			"dataRetentionInHours": llx.IntData(retention),
+			"version":              llx.StringDataPtr(info.Version),
+			"createdAt":            llx.TimeDataPtr(info.CreationTime),
+			"region":               llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlStream := resource.(*mqlAwsKinesisVideoStream)
+	if info.KmsKeyId != nil {
+		mqlStream.cacheKmsKeyId = *info.KmsKeyId
+	}
+	return mqlStream, nil
+}
+
+type mqlAwsKinesisVideoStreamInternal struct {
+	cacheKmsKeyId string
+}
+
+func (a *mqlAwsKinesisVideoStream) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.cacheKmsKeyId
+	if strings.HasPrefix(keyArn, "arn:") {
+		// Already an ARN (handles all partitions: aws, aws-cn, aws-us-gov)
+	} else if strings.HasPrefix(keyArn, "alias/") {
+		// Resolve alias to key ARN via DescribeKey
+		svc := conn.Kms(a.Region.Data)
+		resp, err := svc.DescribeKey(context.Background(), &kmsSDK.DescribeKeyInput{KeyId: &keyArn})
+		if err != nil {
+			return nil, err
+		}
+		if resp.KeyMetadata == nil || resp.KeyMetadata.Arn == nil {
+			return nil, fmt.Errorf("kms alias %q has no resolved key ARN", keyArn)
+		}
+		keyArn = *resp.KeyMetadata.Arn
+	} else {
+		// Assume raw key ID, construct ARN
+		keyArn = fmt.Sprintf(kmsKeyArnPattern, a.Region.Data, conn.AccountId(), keyArn)
+	}
+
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(keyArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsKinesisVideoStream) tags() (map[string]any, error) {
+	arn := a.Arn.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Kinesisvideo(a.Region.Data)
+	ctx := context.Background()
+
+	tags := make(map[string]any)
+	var nextToken *string
+	for {
+		resp, err := svc.ListTagsForStream(ctx, &kinesisvideo.ListTagsForStreamInput{
+			StreamARN: &arn,
+			NextToken: nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return tags, nil
+			}
+			return nil, err
+		}
+		for k, v := range resp.Tags {
+			tags[k] = v
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return tags, nil
 }
 
 func (a *mqlAwsKinesisStream) tags() (map[string]any, error) {

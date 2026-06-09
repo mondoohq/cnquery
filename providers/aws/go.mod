@@ -76,6 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.44.2
+	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/kms v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.92.3

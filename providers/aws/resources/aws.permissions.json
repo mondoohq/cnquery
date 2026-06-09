@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.33.1",
-  "generated_at": "2026-06-08T11:10:44-07:00",
+  "generated_at": "2026-06-08T14:47:26-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -501,6 +501,8 @@
     "kinesis:ListStreamConsumers",
     "kinesis:ListStreams",
     "kinesis:ListTagsForStream",
+    "kinesisvideo:ListStreams",
+    "kinesisvideo:ListTagsForStream",
     "kms:DescribeCustomKeyStores",
     "kms:DescribeKey",
     "kms:GetKeyLastUsage",
@@ -3957,6 +3959,18 @@
     {
       "permission": "kinesis:ListTagsForStream",
       "service": "kinesis",
+      "action": "ListTagsForStream",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesisvideo:ListStreams",
+      "service": "kinesisvideo",
+      "action": "ListStreams",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesisvideo:ListTagsForStream",
+      "service": "kinesisvideo",
       "action": "ListTagsForStream",
       "source_file": "aws_kinesis.go"
     },

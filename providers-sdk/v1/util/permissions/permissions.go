@@ -604,6 +604,7 @@ func awsConnectionMethodToService(method string) string {
 		"emr":                      "emr",
 		"guardduty":                "guardduty",
 		"kinesis":                  "kinesis",
+		"kinesisvideo":             "kinesisvideo",
 		"secretsmanager":           "secretsmanager",
 		"securityhub":              "securityhub",
 		"sesv2":                    "sesv2",

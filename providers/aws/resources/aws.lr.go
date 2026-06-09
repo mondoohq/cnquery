@@ -700,6 +700,7 @@ const (
 	ResourceAwsKinesis                                                          string = "aws.kinesis"
 	ResourceAwsKinesisStream                                                    string = "aws.kinesis.stream"
 	ResourceAwsKinesisStreamConsumer                                            string = "aws.kinesis.streamConsumer"
+	ResourceAwsKinesisVideoStream                                               string = "aws.kinesis.videoStream"
 	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
 	ResourceAwsKinesisFirehoseDeliveryStreamEncryption                          string = "aws.kinesis.firehoseDeliveryStream.encryption"
 	ResourceAwsKinesisFirehoseDeliveryStreamDestination                         string = "aws.kinesis.firehoseDeliveryStream.destination"
@@ -3649,6 +3650,10 @@ func init() {
 		"aws.kinesis.streamConsumer": {
 			// to override args, implement: initAwsKinesisStreamConsumer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsKinesisStreamConsumer,
+		},
+		"aws.kinesis.videoStream": {
+			// to override args, implement: initAwsKinesisVideoStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisVideoStream,
 		},
 		"aws.kinesis.firehoseDeliveryStream": {
 			Init:   initAwsKinesisFirehoseDeliveryStream,
@@ -25604,6 +25609,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.streamConsumers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesis).GetStreamConsumers()).ToDataRes(types.Array(types.Resource("aws.kinesis.streamConsumer")))
 	},
+	"aws.kinesis.videoStreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesis).GetVideoStreams()).ToDataRes(types.Array(types.Resource("aws.kinesis.videoStream")))
+	},
 	"aws.kinesis.stream.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetArn()).ToDataRes(types.String)
 	},
@@ -25666,6 +25674,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kinesis.streamConsumer.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStreamConsumer).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.mediaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetMediaType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.deviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetDeviceName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.dataRetentionInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetDataRetentionInHours()).ToDataRes(types.Int)
+	},
+	"aws.kinesis.videoStream.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.kinesis.videoStream.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.kinesis.videoStream.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.videoStream.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisVideoStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.kinesis.firehoseDeliveryStream.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetArn()).ToDataRes(types.String)
@@ -62982,6 +63023,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKinesis).StreamConsumers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kinesis.videoStreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesis).VideoStreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kinesis.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisStream).__id, ok = v.Value.(string)
 		return
@@ -63072,6 +63117,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.streamConsumer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisStreamConsumer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.videoStream.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.mediaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).MediaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.dataRetentionInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).DataRetentionInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.videoStream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisVideoStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -152264,6 +152357,7 @@ type mqlAwsKinesis struct {
 	Streams                 plugin.TValue[[]any]
 	FirehoseDeliveryStreams plugin.TValue[[]any]
 	StreamConsumers         plugin.TValue[[]any]
+	VideoStreams            plugin.TValue[[]any]
 }
 
 // createAwsKinesis creates a new instance of this resource
@@ -152348,6 +152442,22 @@ func (c *mqlAwsKinesis) GetStreamConsumers() *plugin.TValue[[]any] {
 		}
 
 		return c.streamConsumers()
+	})
+}
+
+func (c *mqlAwsKinesis) GetVideoStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VideoStreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis", c.__id, "videoStreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.videoStreams()
 	})
 }
 
@@ -152582,6 +152692,114 @@ func (c *mqlAwsKinesisStreamConsumer) GetStream() *plugin.TValue[*mqlAwsKinesisS
 
 func (c *mqlAwsKinesisStreamConsumer) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsKinesisVideoStream for the aws.kinesis.videoStream resource
+type mqlAwsKinesisVideoStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKinesisVideoStreamInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	MediaType            plugin.TValue[string]
+	DeviceName           plugin.TValue[string]
+	DataRetentionInHours plugin.TValue[int64]
+	Version              plugin.TValue[string]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt            plugin.TValue[*time.Time]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsKinesisVideoStream creates a new instance of this resource
+func createAwsKinesisVideoStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisVideoStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.videoStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisVideoStream) MqlName() string {
+	return "aws.kinesis.videoStream"
+}
+
+func (c *mqlAwsKinesisVideoStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisVideoStream) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKinesisVideoStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKinesisVideoStream) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsKinesisVideoStream) GetMediaType() *plugin.TValue[string] {
+	return &c.MediaType
+}
+
+func (c *mqlAwsKinesisVideoStream) GetDeviceName() *plugin.TValue[string] {
+	return &c.DeviceName
+}
+
+func (c *mqlAwsKinesisVideoStream) GetDataRetentionInHours() *plugin.TValue[int64] {
+	return &c.DataRetentionInHours
+}
+
+func (c *mqlAwsKinesisVideoStream) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsKinesisVideoStream) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.videoStream", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsKinesisVideoStream) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsKinesisVideoStream) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKinesisVideoStream) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsKinesisFirehoseDeliveryStream for the aws.kinesis.firehoseDeliveryStream resource

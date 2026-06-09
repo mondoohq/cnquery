@@ -73,6 +73,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -748,6 +749,26 @@ func (t *AwsConnection) Kinesis(region string) *kinesis.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := kinesis.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Kinesisvideo(region string) *kinesisvideo.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_kinesisvideo_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached kinesisvideo client")
+		return c.Data.(*kinesisvideo.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := kinesisvideo.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
