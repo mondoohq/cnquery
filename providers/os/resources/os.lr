@@ -4360,6 +4360,29 @@ docker.file @defaults("file.path instructions.length stages.length") {
   // Shortcut to the last `docker.file.stage`, which is the one that produces
   // the image when the build runs without `--target`. Null for an empty file.
   finalStage(file) docker.file.stage
+  // SHA256 of the Dockerfile contents
+  //
+  // Hex-encoded SHA256 digest of the raw file bytes. Provides a stable
+  // fingerprint for identifying or comparing Dockerfiles independent of the
+  // path or repository they were scanned from.
+  sha256(file) string
+  // HTTPS URL of the source code repository
+  //
+  // Set when the Dockerfile was discovered through a source-control
+  // integration, such as a GitHub or GitLab scan, that records the origin
+  // repository. Null when the Dockerfile was scanned from a path with no
+  // repository context.
+  repositoryUrl() string
+  // Organization or owner of the source code repository
+  //
+  // Null when the Dockerfile was scanned from a path with no repository
+  // context.
+  repositoryOrganization() string
+  // Name of the source code repository
+  //
+  // Null when the Dockerfile was scanned from a path with no repository
+  // context.
+  repositoryName() string
 }
 
 // Build stage in a Dockerfile

@@ -61,5 +61,49 @@ func TestNewDockerfileConnection(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, subject)
 		require.Equal(t, dockerfile.Name(), subject.FileAbsSrc)
+		// no repository context when scanned from a plain path
+		require.Empty(t, subject.RepositoryURL)
+		require.Empty(t, subject.RepositoryOrg)
+		require.Empty(t, subject.RepositoryName)
+	})
+	t.Run("repository context from ssh-url", func(t *testing.T) {
+		dockerfile, err := os.CreateTemp("", "Dockerfile")
+		require.Nil(t, err)
+		defer os.Remove(dockerfile.Name())
+		_, err = dockerfile.WriteString("FROM debian:stable")
+		require.Nil(t, err)
+		conf := &inventory.Config{
+			Path:    dockerfile.Name(),
+			Options: map[string]string{"ssh-url": "git@github.com:mondoohq/lunalectric.git"},
+		}
+		asset := &inventory.Asset{Connections: []*inventory.Config{{}}}
+		local := local.NewConnection(0, conf, asset)
+		subject, err := NewDockerfileConnection(0, conf, asset, local, []string{})
+		require.Nil(t, err)
+		require.NotNil(t, subject)
+		require.Equal(t, "mondoohq", subject.RepositoryOrg)
+		require.Equal(t, "lunalectric", subject.RepositoryName)
+		// reconstructed from the ssh-url when no http-url is provided
+		require.Equal(t, "https://github.com/mondoohq/lunalectric", subject.RepositoryURL)
+	})
+	t.Run("repository url prefers explicit http-url", func(t *testing.T) {
+		dockerfile, err := os.CreateTemp("", "Dockerfile")
+		require.Nil(t, err)
+		defer os.Remove(dockerfile.Name())
+		_, err = dockerfile.WriteString("FROM debian:stable")
+		require.Nil(t, err)
+		conf := &inventory.Config{
+			Path: dockerfile.Name(),
+			Options: map[string]string{
+				"ssh-url":  "git@github.com:mondoohq/lunalectric.git",
+				"http-url": "https://github.com/mondoohq/lunalectric.git",
+			},
+		}
+		asset := &inventory.Asset{Connections: []*inventory.Config{{}}}
+		local := local.NewConnection(0, conf, asset)
+		subject, err := NewDockerfileConnection(0, conf, asset, local, []string{})
+		require.Nil(t, err)
+		require.NotNil(t, subject)
+		require.Equal(t, "https://github.com/mondoohq/lunalectric.git", subject.RepositoryURL)
 	})
 }

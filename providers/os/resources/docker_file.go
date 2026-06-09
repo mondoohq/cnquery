@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"slices"
 	"strconv"
@@ -82,6 +84,39 @@ func (p *mqlDockerFile) id() (string, error) {
 
 func (p *mqlDockerFile) file() (*mqlFile, error) {
 	return nil, errors.New("missing underlying file, please specify a path of file")
+}
+
+func (p *mqlDockerFile) sha256(file *mqlFile) (string, error) {
+	content := file.GetContent()
+	if content.Error != nil {
+		return "", content.Error
+	}
+	sum := sha256.Sum256([]byte(content.Data))
+	return hex.EncodeToString(sum[:]), nil
+}
+
+func (p *mqlDockerFile) repositoryUrl() (string, error) {
+	if dfc, ok := p.MqlRuntime.Connection.(*docker.DockerfileConnection); ok && dfc.RepositoryURL != "" {
+		return dfc.RepositoryURL, nil
+	}
+	p.RepositoryUrl.State = plugin.StateIsSet | plugin.StateIsNull
+	return "", nil
+}
+
+func (p *mqlDockerFile) repositoryOrganization() (string, error) {
+	if dfc, ok := p.MqlRuntime.Connection.(*docker.DockerfileConnection); ok && dfc.RepositoryOrg != "" {
+		return dfc.RepositoryOrg, nil
+	}
+	p.RepositoryOrganization.State = plugin.StateIsSet | plugin.StateIsNull
+	return "", nil
+}
+
+func (p *mqlDockerFile) repositoryName() (string, error) {
+	if dfc, ok := p.MqlRuntime.Connection.(*docker.DockerfileConnection); ok && dfc.RepositoryName != "" {
+		return dfc.RepositoryName, nil
+	}
+	p.RepositoryName.State = plugin.StateIsSet | plugin.StateIsNull
+	return "", nil
 }
 
 func (p *mqlDockerFile) parse(file *mqlFile) error {

@@ -6360,6 +6360,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.finalStage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFile).GetFinalStage()).ToDataRes(types.Resource("docker.file.stage"))
 	},
+	"docker.file.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetSha256()).ToDataRes(types.String)
+	},
+	"docker.file.repositoryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetRepositoryUrl()).ToDataRes(types.String)
+	},
+	"docker.file.repositoryOrganization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetRepositoryOrganization()).ToDataRes(types.String)
+	},
+	"docker.file.repositoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFile).GetRepositoryName()).ToDataRes(types.String)
+	},
 	"docker.file.stage.from": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetFrom()).ToDataRes(types.Resource("docker.file.from"))
 	},
@@ -19335,6 +19347,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.finalStage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFile).FinalStage, ok = plugin.RawToTValue[*mqlDockerFileStage](v.Value, v.Error)
+		return
+	},
+	"docker.file.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.repositoryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).RepositoryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.repositoryOrganization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).RepositoryOrganization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.repositoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFile).RepositoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.file.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47848,13 +47876,17 @@ type mqlDockerFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDockerFileInternal
-	File               plugin.TValue[*mqlFile]
-	Instructions       plugin.TValue[any]
-	Stages             plugin.TValue[[]any]
-	Directives         plugin.TValue[map[string]any]
-	MultiStage         plugin.TValue[bool]
-	HasSyntaxDirective plugin.TValue[bool]
-	FinalStage         plugin.TValue[*mqlDockerFileStage]
+	File                   plugin.TValue[*mqlFile]
+	Instructions           plugin.TValue[any]
+	Stages                 plugin.TValue[[]any]
+	Directives             plugin.TValue[map[string]any]
+	MultiStage             plugin.TValue[bool]
+	HasSyntaxDirective     plugin.TValue[bool]
+	FinalStage             plugin.TValue[*mqlDockerFileStage]
+	Sha256                 plugin.TValue[string]
+	RepositoryUrl          plugin.TValue[string]
+	RepositoryOrganization plugin.TValue[string]
+	RepositoryName         plugin.TValue[string]
 }
 
 // createDockerFile creates a new instance of this resource
@@ -47993,6 +48025,35 @@ func (c *mqlDockerFile) GetFinalStage() *plugin.TValue[*mqlDockerFileStage] {
 		}
 
 		return c.finalStage(vargFile.Data)
+	})
+}
+
+func (c *mqlDockerFile) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.sha256(vargFile.Data)
+	})
+}
+
+func (c *mqlDockerFile) GetRepositoryUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RepositoryUrl, func() (string, error) {
+		return c.repositoryUrl()
+	})
+}
+
+func (c *mqlDockerFile) GetRepositoryOrganization() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RepositoryOrganization, func() (string, error) {
+		return c.repositoryOrganization()
+	})
+}
+
+func (c *mqlDockerFile) GetRepositoryName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RepositoryName, func() (string, error) {
+		return c.repositoryName()
 	})
 }
 

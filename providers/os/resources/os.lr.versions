@@ -676,6 +676,9 @@ docker.file.oci.version 13.25.1
 docker.file.onbuild 13.16.10
 docker.file.onbuild.context 13.30.2
 docker.file.onbuild.expression 13.16.10
+docker.file.repositoryName 13.26.1
+docker.file.repositoryOrganization 13.26.1
+docker.file.repositoryUrl 13.26.1
 docker.file.run 11.0.2
 docker.file.run.command 13.25.1
 docker.file.run.command.args 13.25.1
@@ -706,6 +709,7 @@ docker.file.run.mountsSsh 13.21.1
 docker.file.run.network 13.16.10
 docker.file.run.script 11.0.2
 docker.file.run.security 13.16.10
+docker.file.sha256 13.26.1
 docker.file.shell 11.8.15
 docker.file.shell.command 11.8.15
 docker.file.shell.context 13.30.2
