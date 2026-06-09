@@ -70,6 +70,12 @@ private http.header @defaults("length=params.length") {
   setCookie() http.header.setCookie
   // Content-Security-Policy header
   csp() map[string]string
+  // Server header value, e.g. "nginx" or "Apache/2.4.62"
+  //
+  // The product token(s) the server discloses about itself. Empty when no
+  // Server header is sent. Frequently flagged by hardening policies because it
+  // leaks the server software and sometimes its version.
+  server() string
 }
 
 // HTTP header Strict-Transport-Security

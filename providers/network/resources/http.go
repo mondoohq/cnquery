@@ -332,6 +332,11 @@ func (x *mqlHttpHeader) referrerPolicy() (string, error) {
 	return parseSingleHeaderValue(params, ok, &x.ReferrerPolicy)
 }
 
+func (x *mqlHttpHeader) server() (string, error) {
+	params, ok := x.Params.Data["Server"]
+	return parseSingleHeaderValue(params, ok, &x.Server)
+}
+
 func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
 	raw, ok := x.Params.Data["Content-Type"]
 	if !ok {

@@ -84,6 +84,7 @@ http.header.contentType.type 9.0.5
 http.header.csp 9.0.5
 http.header.params 9.0.5
 http.header.referrerPolicy 9.0.5
+http.header.server 13.1.1
 http.header.setCookie 9.0.5
 http.header.setCookie.name 9.0.5
 http.header.setCookie.params 9.0.5
