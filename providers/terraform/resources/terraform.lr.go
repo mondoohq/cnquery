@@ -246,6 +246,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.block.arguments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetArguments()).ToDataRes(types.Dict)
 	},
+	"terraform.block.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformBlock).GetValues()).ToDataRes(types.Dict)
+	},
 	"terraform.block.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetAttributes()).ToDataRes(types.Dict)
 	},
@@ -566,6 +569,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.block.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).Arguments, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.block.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformBlock).Values, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"terraform.block.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1268,6 +1275,7 @@ type mqlTerraformBlock struct {
 	Start        plugin.TValue[*mqlTerraformFileposition]
 	End          plugin.TValue[*mqlTerraformFileposition]
 	Arguments    plugin.TValue[any]
+	Values       plugin.TValue[any]
 	Attributes   plugin.TValue[any]
 	Blocks       plugin.TValue[[]any]
 	Related      plugin.TValue[[]any]
@@ -1348,6 +1356,12 @@ func (c *mqlTerraformBlock) GetEnd() *plugin.TValue[*mqlTerraformFileposition] {
 func (c *mqlTerraformBlock) GetArguments() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Arguments, func() (any, error) {
 		return c.arguments()
+	})
+}
+
+func (c *mqlTerraformBlock) GetValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Values, func() (any, error) {
+		return c.values()
 	})
 }
 

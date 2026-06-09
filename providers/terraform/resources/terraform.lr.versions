@@ -15,6 +15,7 @@ terraform.block.resourceType 13.0.15
 terraform.block.snippet 9.0.0
 terraform.block.start 9.0.0
 terraform.block.type 9.0.0
+terraform.block.values 13.1.2
 terraform.blocks 9.0.0
 terraform.datasources 9.0.0
 terraform.file 9.0.0

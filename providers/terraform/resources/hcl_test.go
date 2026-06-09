@@ -241,3 +241,99 @@ locals {
 	assert.True(t, containsString(amiVal, "var.disaster_recovery_mode"),
 		"ami_id should reference var.disaster_recovery_mode, got: %#v", amiVal)
 }
+
+// resourceBody parses an HCL snippet containing a single resource block and
+// returns that block's body, so tests can exercise nested-block flattening.
+func resourceBody(t *testing.T, src string) *hclsyntax.Body {
+	t.Helper()
+	f, diags := hclsyntax.ParseConfig([]byte(src), "test.tf", hcl.Pos{Line: 1, Column: 1})
+	require.False(t, diags.HasErrors(), "parse errors: %s", diags.Error())
+	body, ok := f.Body.(*hclsyntax.Body)
+	require.True(t, ok)
+	require.Len(t, body.Blocks, 1, "snippet must contain exactly one top-level block")
+	return body.Blocks[0].Body
+}
+
+// TestHclBodyToValuesDict_FlattensNestedBlocksToPlanStateShape verifies that
+// values() folds child blocks into the arguments dict as lists-of-maps keyed
+// by block type — the same shape Terraform plan (change.after) and state
+// (values) expose — so a single MQL body can run against all three backends.
+func TestHclBodyToValuesDict_FlattensNestedBlocksToPlanStateShape(t *testing.T) {
+	// resource "aws_eks_cluster" "example" { ... }
+	body := resourceBody(t, `
+resource "aws_eks_cluster" "example" {
+  name = "example"
+
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = "arn:aws:kms:us-east-1:111:key/abc"
+    }
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+  }
+}
+`)
+
+	values, err := hclBodyToValuesDict(body)
+	require.NoError(t, err)
+
+	// Scalar arguments stay as direct values.
+	assert.Equal(t, "example", values["name"])
+
+	// A nested block becomes a []any of maps keyed by the block type — even
+	// when it appears once — matching the plan/state JSON representation.
+	encList, ok := values["encryption_config"].([]any)
+	require.True(t, ok, "encryption_config should be []any, got %#v", values["encryption_config"])
+	require.Len(t, encList, 1)
+	enc := encList[0].(map[string]any)
+
+	// Nested-within-nested blocks flatten recursively the same way.
+	provList, ok := enc["provider"].([]any)
+	require.True(t, ok, "provider should be []any, got %#v", enc["provider"])
+	require.Len(t, provList, 1)
+	assert.Equal(t, "arn:aws:kms:us-east-1:111:key/abc", provList[0].(map[string]any)["key_arn"])
+
+	// Booleans round-trip as bools so `_['endpoint_public_access'] == false` works.
+	vpcList, ok := values["vpc_config"].([]any)
+	require.True(t, ok, "vpc_config should be []any, got %#v", values["vpc_config"])
+	require.Len(t, vpcList, 1)
+	assert.Equal(t, true, vpcList[0].(map[string]any)["endpoint_private_access"])
+	assert.Equal(t, false, vpcList[0].(map[string]any)["endpoint_public_access"])
+}
+
+// TestHclBodyToValuesDict_RepeatedBlocksBecomeList verifies that repeated
+// nested blocks of the same type (e.g. multiple database_flags) collect into
+// a single list, matching how plan/state represent them.
+func TestHclBodyToValuesDict_RepeatedBlocksBecomeList(t *testing.T) {
+	body := resourceBody(t, `
+resource "google_sql_database_instance" "example" {
+  settings {
+    database_flags {
+      name  = "skip_show_database"
+      value = "on"
+    }
+    database_flags {
+      name  = "local_infile"
+      value = "off"
+    }
+  }
+}
+`)
+
+	values, err := hclBodyToValuesDict(body)
+	require.NoError(t, err)
+
+	settings, ok := values["settings"].([]any)
+	require.True(t, ok)
+	require.Len(t, settings, 1)
+
+	flags, ok := settings[0].(map[string]any)["database_flags"].([]any)
+	require.True(t, ok, "database_flags should be []any, got %#v", settings[0].(map[string]any)["database_flags"])
+	require.Len(t, flags, 2)
+	assert.Equal(t, "skip_show_database", flags[0].(map[string]any)["name"])
+	assert.Equal(t, "local_infile", flags[1].(map[string]any)["name"])
+}

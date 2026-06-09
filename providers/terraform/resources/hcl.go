@@ -455,6 +455,57 @@ func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
 	return hclResolvedAttributesToDict(attributes)
 }
 
+// hclBodyToValuesDict folds an HCL block body into a single dict in the same
+// shape Terraform plan (`change.after`) and state (`values`) expose: scalar
+// arguments become direct values, and each nested block is collected into a
+// list-of-maps keyed by its block type (recursively). This lets one MQL body
+// run against terraform-hcl, terraform-plan, and terraform-state assets
+// instead of three separately-written variants.
+func hclBodyToValuesDict(rawBody hcl.Body) (map[string]any, error) {
+	dict := map[string]any{}
+
+	body, ok := rawBody.(*hclsyntax.Body)
+	if !ok {
+		// .tf.json and other non-native bodies: best effort, attributes only.
+		// Nested-block traversal needs a schema we don't have here.
+		attributes, _ := rawBody.JustAttributes()
+		return hclResolvedAttributesToDict(attributes)
+	}
+
+	attributes := make(map[string]*hcl.Attribute, len(body.Attributes))
+	for name, attr := range body.Attributes {
+		attributes[name] = attr.AsHCLAttribute()
+	}
+	resolved, err := hclResolvedAttributesToDict(attributes)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range resolved {
+		dict[k] = v
+	}
+
+	for _, block := range body.Blocks {
+		child, err := hclBodyToValuesDict(block.Body)
+		if err != nil {
+			return nil, err
+		}
+		existing, _ := dict[block.Type].([]any)
+		dict[block.Type] = append(existing, child)
+	}
+
+	return dict, nil
+}
+
+func (t *mqlTerraformBlock) values() (map[string]any, error) {
+	if t.block.State != plugin.StateIsSet {
+		if t.block.Error != nil {
+			return nil, t.block.Error
+		}
+		return nil, errors.New("cannot get hcl block")
+	}
+	return hclBodyToValuesDict(t.block.Data.Body)
+}
+
 func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]any, error) {
 	dict := map[string]any{}
 	for k := range attributes {

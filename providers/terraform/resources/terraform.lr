@@ -84,6 +84,8 @@ private terraform.block @defaults("type labels") {
   end terraform.fileposition
   // Block arguments
   arguments() dict
+  // Arguments with child blocks folded in as lists-of-maps, mirroring the plan (change.after) and state (values) shape
+  values() dict
   // Raw block attributes
   attributes() dict
   // Child blocks
