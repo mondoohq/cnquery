@@ -462,6 +462,10 @@ dns @defaults("fqdn") {
   dkim(params) []dns.dkimRecord
   // DNSSEC signing state for the domain
   dnssec(params) dns.dnssec
+  // Parsed SPF (Sender Policy Framework) records
+  spf(params) []dns.spfRecord
+  // Parsed DMARC record published at the domain's _dmarc subdomain
+  dmarc() dns.dmarcRecord
   // Reverse DNS (PTR) records for the domain's resolved addresses
   //
   // Resolves the domain's A and AAAA addresses, then looks up the PTR
@@ -541,6 +545,63 @@ private dns.dnssec.key @defaults("algorithm keySigningKey") {
   publicKey string
   // Whether this is a key-signing key (the SEP flag is set)
   keySigningKey bool
+}
+
+// SPF policy record (RFC 7208)
+//
+// Examine a parsed Sender Policy Framework record from a domain's TXT records:
+// the version, the ordered list of mechanisms, and the qualifier on the
+// terminating `all` mechanism that decides how unauthorized senders are
+// handled. Select a domain's records with `dns(fqdn: "example.com").spf`.
+private dns.spfRecord @defaults("dnsTxt allQualifier") {
+  // Raw TXT record
+  dnsTxt string
+  // Version tag, e.g. "spf1"
+  version string
+  // Ordered SPF mechanisms and modifiers
+  //
+  // The terms after the version, in order — for example
+  // `["ip4:192.0.2.0/24", "include:_spf.example.com", "-all"]`.
+  mechanisms []string
+  // Qualifier on the terminating `all` mechanism
+  //
+  // One of `+` (pass), `-` (fail), `~` (softfail), or `?` (neutral). A bare
+  // `all` is reported as `+` (the SPF default). Empty when the record has no
+  // `all` mechanism.
+  allQualifier string
+}
+
+// DMARC policy record (RFC 7489)
+//
+// Examine a parsed DMARC record from a domain's `_dmarc` TXT record: the policy
+// applied to failing mail, the subdomain policy, the aggregate and forensic
+// report destinations, the percentage of mail the policy covers, and the
+// SPF/DKIM identifier alignment modes. Reachable as
+// `dns(fqdn: "example.com").dmarc`, which resolves the `_dmarc` subdomain
+// itself.
+private dns.dmarcRecord @defaults("policy") {
+  // Raw TXT record
+  dnsTxt string
+  // Version tag, e.g. "DMARC1"
+  version string
+  // Policy applied to mail that fails DMARC
+  //
+  // One of `none`, `quarantine`, or `reject` (the `p=` tag).
+  policy string
+  // Policy applied to subdomains (the `sp=` tag); empty when not set
+  subdomainPolicy string
+  // Aggregate report destination URIs (the `rua=` tag)
+  aggregateReportUris []string
+  // Forensic report destination URIs (the `ruf=` tag)
+  forensicReportUris []string
+  // Percentage of failing mail the policy is applied to (the `pct=` tag)
+  //
+  // Defaults to 100 when the tag is absent.
+  percentage int
+  // SPF identifier alignment mode (the `aspf=` tag): `r` relaxed or `s` strict
+  spfAlignment string
+  // DKIM identifier alignment mode (the `adkim=` tag): `r` relaxed or `s` strict
+  dkimAlignment string
 }
 
 // DKIM public-key DNS record (RFC 6376)

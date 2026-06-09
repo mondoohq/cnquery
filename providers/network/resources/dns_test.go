@@ -39,6 +39,32 @@ func TestResource_DnsDnssec(t *testing.T) {
 	assert.NotEmpty(t, res[0].Data.Value)
 }
 
+func TestResource_DnsSpf(t *testing.T) {
+	// google.com publishes an SPF record with a terminating ~all.
+	res := x.TestQuery(t, `dns("google.com").spf.any(version == "spf1")`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+
+	res = x.TestQuery(t, `dns("google.com").spf.all(allQualifier.in(["+","-","~","?"]))`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+}
+
+func TestResource_DnsDmarc(t *testing.T) {
+	// google.com publishes a DMARC record at _dmarc.google.com.
+	res := x.TestQuery(t, `dns("google.com").dmarc.version`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, "DMARC1", res[0].Data.Value)
+
+	res = x.TestQuery(t, `dns("google.com").dmarc.policy.in(["none","quarantine","reject"])`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+}
+
 func TestResource_DomainName(t *testing.T) {
 	res := x.TestQuery(t, "domainName")
 	assert.NotEmpty(t, res)

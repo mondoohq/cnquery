@@ -42,6 +42,8 @@ const (
 	ResourceDnsMxRecord             string = "dns.mxRecord"
 	ResourceDnsDnssec               string = "dns.dnssec"
 	ResourceDnsDnssecKey            string = "dns.dnssec.key"
+	ResourceDnsSpfRecord            string = "dns.spfRecord"
+	ResourceDnsDmarcRecord          string = "dns.dmarcRecord"
 	ResourceDnsDkimRecord           string = "dns.dkimRecord"
 )
 
@@ -152,6 +154,14 @@ func init() {
 		"dns.dnssec.key": {
 			// to override args, implement: initDnsDnssecKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDnsDnssecKey,
+		},
+		"dns.spfRecord": {
+			// to override args, implement: initDnsSpfRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsSpfRecord,
+		},
+		"dns.dmarcRecord": {
+			// to override args, implement: initDnsDmarcRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsDmarcRecord,
 		},
 		"dns.dkimRecord": {
 			// to override args, implement: initDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -660,6 +670,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.dnssec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetDnssec()).ToDataRes(types.Resource("dns.dnssec"))
 	},
+	"dns.spf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetSpf()).ToDataRes(types.Array(types.Resource("dns.spfRecord")))
+	},
+	"dns.dmarc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetDmarc()).ToDataRes(types.Resource("dns.dmarcRecord"))
+	},
 	"dns.reverse": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetReverse()).ToDataRes(types.Array(types.Resource("dns.record")))
 	},
@@ -710,6 +726,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dns.dnssec.key.keySigningKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDnssecKey).GetKeySigningKey()).ToDataRes(types.Bool)
+	},
+	"dns.spfRecord.dnsTxt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsSpfRecord).GetDnsTxt()).ToDataRes(types.String)
+	},
+	"dns.spfRecord.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsSpfRecord).GetVersion()).ToDataRes(types.String)
+	},
+	"dns.spfRecord.mechanisms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsSpfRecord).GetMechanisms()).ToDataRes(types.Array(types.String))
+	},
+	"dns.spfRecord.allQualifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsSpfRecord).GetAllQualifier()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.dnsTxt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetDnsTxt()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetVersion()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetPolicy()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.subdomainPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetSubdomainPolicy()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.aggregateReportUris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetAggregateReportUris()).ToDataRes(types.Array(types.String))
+	},
+	"dns.dmarcRecord.forensicReportUris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetForensicReportUris()).ToDataRes(types.Array(types.String))
+	},
+	"dns.dmarcRecord.percentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetPercentage()).ToDataRes(types.Int)
+	},
+	"dns.dmarcRecord.spfAlignment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetSpfAlignment()).ToDataRes(types.String)
+	},
+	"dns.dmarcRecord.dkimAlignment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDmarcRecord).GetDkimAlignment()).ToDataRes(types.String)
 	},
 	"dns.dkimRecord.dnsTxt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDnsDkimRecord).GetDnsTxt()).ToDataRes(types.String)
@@ -1417,6 +1472,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDns).Dnssec, ok = plugin.RawToTValue[*mqlDnsDnssec](v.Value, v.Error)
 		return
 	},
+	"dns.spf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Spf, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.dmarc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Dmarc, ok = plugin.RawToTValue[*mqlDnsDmarcRecord](v.Value, v.Error)
+		return
+	},
 	"dns.reverse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Reverse, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1499,6 +1562,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dns.dnssec.key.keySigningKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDnsDnssecKey).KeySigningKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"dns.spfRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsSpfRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"dns.spfRecord.dnsTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsSpfRecord).DnsTxt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.spfRecord.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsSpfRecord).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.spfRecord.mechanisms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsSpfRecord).Mechanisms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.spfRecord.allQualifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsSpfRecord).AllQualifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"dns.dmarcRecord.dnsTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).DnsTxt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.subdomainPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).SubdomainPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.aggregateReportUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).AggregateReportUris, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.forensicReportUris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).ForensicReportUris, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.percentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).Percentage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.spfAlignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).SpfAlignment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dmarcRecord.dkimAlignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDmarcRecord).DkimAlignment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"dns.dkimRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3528,6 +3651,8 @@ type mqlDns struct {
 	Mx      plugin.TValue[[]any]
 	Dkim    plugin.TValue[[]any]
 	Dnssec  plugin.TValue[*mqlDnsDnssec]
+	Spf     plugin.TValue[[]any]
+	Dmarc   plugin.TValue[*mqlDnsDmarcRecord]
 	Reverse plugin.TValue[[]any]
 }
 
@@ -3664,6 +3789,43 @@ func (c *mqlDns) GetDnssec() *plugin.TValue[*mqlDnsDnssec] {
 		}
 
 		return c.dnssec(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetSpf() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Spf, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "spf")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.spf(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetDmarc() *plugin.TValue[*mqlDnsDmarcRecord] {
+	return plugin.GetOrCompute[*mqlDnsDmarcRecord](&c.Dmarc, func() (*mqlDnsDmarcRecord, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "dmarc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDnsDmarcRecord), nil
+			}
+		}
+
+		return c.dmarc()
 	})
 }
 
@@ -3932,6 +4094,149 @@ func (c *mqlDnsDnssecKey) GetPublicKey() *plugin.TValue[string] {
 
 func (c *mqlDnsDnssecKey) GetKeySigningKey() *plugin.TValue[bool] {
 	return &c.KeySigningKey
+}
+
+// mqlDnsSpfRecord for the dns.spfRecord resource
+type mqlDnsSpfRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDnsSpfRecordInternal it will be used here
+	DnsTxt       plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Mechanisms   plugin.TValue[[]any]
+	AllQualifier plugin.TValue[string]
+}
+
+// createDnsSpfRecord creates a new instance of this resource
+func createDnsSpfRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsSpfRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns.spfRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDnsSpfRecord) MqlName() string {
+	return "dns.spfRecord"
+}
+
+func (c *mqlDnsSpfRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDnsSpfRecord) GetDnsTxt() *plugin.TValue[string] {
+	return &c.DnsTxt
+}
+
+func (c *mqlDnsSpfRecord) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlDnsSpfRecord) GetMechanisms() *plugin.TValue[[]any] {
+	return &c.Mechanisms
+}
+
+func (c *mqlDnsSpfRecord) GetAllQualifier() *plugin.TValue[string] {
+	return &c.AllQualifier
+}
+
+// mqlDnsDmarcRecord for the dns.dmarcRecord resource
+type mqlDnsDmarcRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDnsDmarcRecordInternal it will be used here
+	DnsTxt              plugin.TValue[string]
+	Version             plugin.TValue[string]
+	Policy              plugin.TValue[string]
+	SubdomainPolicy     plugin.TValue[string]
+	AggregateReportUris plugin.TValue[[]any]
+	ForensicReportUris  plugin.TValue[[]any]
+	Percentage          plugin.TValue[int64]
+	SpfAlignment        plugin.TValue[string]
+	DkimAlignment       plugin.TValue[string]
+}
+
+// createDnsDmarcRecord creates a new instance of this resource
+func createDnsDmarcRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsDmarcRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns.dmarcRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDnsDmarcRecord) MqlName() string {
+	return "dns.dmarcRecord"
+}
+
+func (c *mqlDnsDmarcRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDnsDmarcRecord) GetDnsTxt() *plugin.TValue[string] {
+	return &c.DnsTxt
+}
+
+func (c *mqlDnsDmarcRecord) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlDnsDmarcRecord) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlDnsDmarcRecord) GetSubdomainPolicy() *plugin.TValue[string] {
+	return &c.SubdomainPolicy
+}
+
+func (c *mqlDnsDmarcRecord) GetAggregateReportUris() *plugin.TValue[[]any] {
+	return &c.AggregateReportUris
+}
+
+func (c *mqlDnsDmarcRecord) GetForensicReportUris() *plugin.TValue[[]any] {
+	return &c.ForensicReportUris
+}
+
+func (c *mqlDnsDmarcRecord) GetPercentage() *plugin.TValue[int64] {
+	return &c.Percentage
+}
+
+func (c *mqlDnsDmarcRecord) GetSpfAlignment() *plugin.TValue[string] {
+	return &c.SpfAlignment
+}
+
+func (c *mqlDnsDmarcRecord) GetDkimAlignment() *plugin.TValue[string] {
+	return &c.DkimAlignment
 }
 
 // mqlDnsDkimRecord for the dns.dkimRecord resource

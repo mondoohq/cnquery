@@ -375,6 +375,155 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
 	return res.(*mqlDnsDnssec), nil
 }
 
+func dnsTxtHash(s string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(s))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+// parseSPF extracts the version, ordered mechanisms, and the qualifier of the
+// terminating `all` mechanism from an SPF TXT record.
+func parseSPF(txt string) (version string, mechanisms []string, allQualifier string) {
+	mechanisms = []string{}
+	for i, f := range strings.Fields(txt) {
+		if i == 0 {
+			version = strings.TrimPrefix(f, "v=")
+			continue
+		}
+		mechanisms = append(mechanisms, f)
+
+		lower := strings.ToLower(f)
+		switch {
+		case lower == "all":
+			allQualifier = "+" // a bare `all` uses the default pass qualifier
+		case len(lower) == 4 && lower[1:] == "all" && strings.ContainsRune("+-~?", rune(lower[0])):
+			allQualifier = lower[0:1]
+		}
+	}
+	return version, mechanisms, allQualifier
+}
+
+func (d *mqlDns) spf(params any) ([]any, error) {
+	entries := []any{}
+
+	paramsM, ok := params.(map[string]any)
+	if !ok {
+		return entries, nil
+	}
+	record, ok := paramsM["TXT"].(map[string]any)
+	if !ok || record["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
+		return entries, nil
+	}
+
+	name, _ := record["name"].(string)
+	rdata, _ := record["rData"].([]any)
+	for j := range rdata {
+		entry, ok := rdata[j].(string)
+		if !ok {
+			continue
+		}
+		entry = strings.TrimSpace(entry)
+		if !strings.HasPrefix(strings.ToLower(entry), "v=spf1") {
+			continue
+		}
+
+		version, mechanisms, allQualifier := parseSPF(entry)
+		res, err := CreateResource(d.MqlRuntime, "dns.spfRecord", map[string]*llx.RawData{
+			"__id":         llx.StringData("dns.spf/" + name + "/" + dnsTxtHash(entry)),
+			"dnsTxt":       llx.StringData(entry),
+			"version":      llx.StringData(version),
+			"mechanisms":   llx.ArrayData(llx.TArr2Raw(mechanisms), types.String),
+			"allQualifier": llx.StringData(allQualifier),
+		})
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, res)
+	}
+	return entries, nil
+}
+
+// parseDMARC splits a DMARC TXT record into its lowercased tag map.
+func parseDMARC(txt string) map[string]string {
+	tags := map[string]string{}
+	for _, part := range strings.Split(txt, ";") {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		tags[strings.ToLower(strings.TrimSpace(kv[0]))] = strings.TrimSpace(kv[1])
+	}
+	return tags
+}
+
+func dmarcUris(raw string) []any {
+	uris := []any{}
+	if raw == "" {
+		return uris
+	}
+	for _, u := range strings.Split(raw, ",") {
+		if u = strings.TrimSpace(u); u != "" {
+			uris = append(uris, u)
+		}
+	}
+	return uris
+}
+
+func (d *mqlDns) dmarc() (*mqlDnsDmarcRecord, error) {
+	// DMARC policy is published at the _dmarc subdomain, not on the base name.
+	dmarcFqdn := "_dmarc." + d.Fqdn.Data
+	shaker, err := dnsshake.New(dmarcFqdn)
+	if err != nil {
+		return nil, err
+	}
+	records, err := shaker.Query("TXT")
+	if err != nil {
+		return nil, err
+	}
+
+	var dmarcTxt string
+	if rec, ok := records["TXT"]; ok && rec.RCode == dns.RcodeToString[dns.RcodeSuccess] {
+		for _, entry := range rec.RData {
+			entry = strings.TrimSpace(entry)
+			if strings.HasPrefix(strings.ToLower(entry), "v=dmarc1") {
+				dmarcTxt = entry
+				break
+			}
+		}
+	}
+
+	if dmarcTxt == "" {
+		d.Dmarc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	tags := parseDMARC(dmarcTxt)
+
+	percentage := int64(100) // DMARC defaults pct to 100 when the tag is absent
+	if pct, ok := tags["pct"]; ok {
+		if n, err := strconv.ParseInt(pct, 10, 64); err == nil {
+			percentage = n
+		}
+	}
+
+	res, err := CreateResource(d.MqlRuntime, "dns.dmarcRecord", map[string]*llx.RawData{
+		"__id":                llx.StringData("dns.dmarc/" + dmarcFqdn),
+		"dnsTxt":              llx.StringData(dmarcTxt),
+		"version":             llx.StringData(tags["v"]),
+		"policy":              llx.StringData(tags["p"]),
+		"subdomainPolicy":     llx.StringData(tags["sp"]),
+		"aggregateReportUris": llx.ArrayData(dmarcUris(tags["rua"]), types.String),
+		"forensicReportUris":  llx.ArrayData(dmarcUris(tags["ruf"]), types.String),
+		"percentage":          llx.IntData(percentage),
+		"spfAlignment":        llx.StringData(tags["aspf"]),
+		"dkimAlignment":       llx.StringData(tags["adkim"]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDnsDmarcRecord), nil
+}
+
 // addressesFromParams extracts the resolved IPv4 (A) and IPv6 (AAAA) addresses
 // from a dns params dict.
 func addressesFromParams(params any) ([]string, error) {
