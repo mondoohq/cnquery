@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "openstack",
 	ID:              "go.mondoo.com/mql/providers/openstack",
-	Version:         "13.3.0",
+	Version:         "13.3.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
