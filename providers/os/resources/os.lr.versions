@@ -492,6 +492,12 @@ docker.file.multiStage 13.21.1
 docker.file.onbuild 13.16.10
 docker.file.onbuild.expression 13.16.10
 docker.file.run 11.0.2
+docker.file.run.command 13.25.1
+docker.file.run.command.args 13.25.1
+docker.file.run.command.binary 13.25.1
+docker.file.run.command.flags 13.25.1
+docker.file.run.command.subcommand 13.25.1
+docker.file.run.commands 13.25.1
 docker.file.run.isExecForm 13.21.1
 docker.file.run.isShellForm 13.21.1
 docker.file.run.mount 13.16.10

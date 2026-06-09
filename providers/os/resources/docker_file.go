@@ -274,6 +274,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				return nil, err
 			}
 			mountsSecret, mountsSsh := mountTypeFlags(mounts)
+			commands, err := p.runCommandResources(p.locationID(v.Location()), v.CmdLine, !v.PrependShell)
+			if err != nil {
+				return nil, err
+			}
 			runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 				"__id":         llx.StringData(p.locationID(v.Location())),
 				"script":       llx.StringData(script),
@@ -284,6 +288,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 				"isExecForm":   llx.BoolData(!v.PrependShell),
 				"mountsSecret": llx.BoolData(mountsSecret),
 				"mountsSsh":    llx.BoolData(mountsSsh),
+				"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
 			})
 			if err != nil {
 				return nil, err
@@ -460,6 +465,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 
 	if entrypointRaw != nil {
 		script := strings.Join(entrypointRaw.CmdLine, "\n")
+		commands, err := p.runCommandResources(p.locationID(entrypointRaw.Location()), entrypointRaw.CmdLine, !entrypointRaw.PrependShell)
+		if err != nil {
+			return nil, err
+		}
 		runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":         llx.StringData(p.locationID(entrypointRaw.Location())),
 			"script":       llx.StringData(script),
@@ -470,6 +479,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			"isExecForm":   llx.BoolData(!entrypointRaw.PrependShell),
 			"mountsSecret": llx.BoolData(false),
 			"mountsSsh":    llx.BoolData(false),
+			"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
 		})
 		if err != nil {
 			return nil, err
@@ -481,6 +491,10 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 
 	if cmdRaw != nil {
 		script := strings.Join(cmdRaw.CmdLine, "\n")
+		commands, err := p.runCommandResources(p.locationID(cmdRaw.Location()), cmdRaw.CmdLine, !cmdRaw.PrependShell)
+		if err != nil {
+			return nil, err
+		}
 		cmdResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
 			"__id":         llx.StringData(p.locationID(cmdRaw.Location())),
 			"script":       llx.StringData(script),
@@ -491,6 +505,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 			"isExecForm":   llx.BoolData(!cmdRaw.PrependShell),
 			"mountsSecret": llx.BoolData(false),
 			"mountsSsh":    llx.BoolData(false),
+			"commands":     llx.ArrayData(commands, types.Resource(ResourceDockerFileRunCommand)),
 		})
 		if err != nil {
 			return nil, err
@@ -640,6 +655,53 @@ func runFlagValue(cmd *instructions.RunCommand, name string) string {
 		}
 	}
 	return ""
+}
+
+// runCommandResources builds the parsed docker.file.run.command list for a
+// RUN/CMD/ENTRYPOINT instruction. For exec form the CmdLine is already the argv
+// of a single command; for shell form it is parsed with parseShellCommands.
+func (p *mqlDockerFile) runCommandResources(parentID string, cmdLine []string, execForm bool) ([]any, error) {
+	var argvs [][]string
+	if execForm {
+		if len(cmdLine) > 0 {
+			argvs = [][]string{cmdLine}
+		}
+	} else {
+		argvs = parseShellCommands(strings.Join(cmdLine, " "))
+	}
+
+	out := make([]any, 0, len(argvs))
+	for i, argv := range argvs {
+		if len(argv) == 0 {
+			continue
+		}
+		cmdArgs := argv[1:]
+
+		flags := []any{}
+		subcommand := ""
+		args := make([]any, len(cmdArgs))
+		for j, a := range cmdArgs {
+			args[j] = a
+			if strings.HasPrefix(a, "-") {
+				flags = append(flags, a)
+			} else if subcommand == "" {
+				subcommand = a
+			}
+		}
+
+		resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRunCommand, map[string]*llx.RawData{
+			"__id":       llx.StringData(parentID + "/command/" + strconv.Itoa(i)),
+			"binary":     llx.StringData(argv[0]),
+			"subcommand": llx.StringData(subcommand),
+			"flags":      llx.ArrayData(flags, types.String),
+			"args":       llx.ArrayData(args, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, resource)
+	}
+	return out, nil
 }
 
 func (p *mqlDockerFile) mountResources(cmd *instructions.RunCommand) ([]any, error) {

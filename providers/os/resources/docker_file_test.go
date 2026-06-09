@@ -744,3 +744,88 @@ ENTRYPOINT /entry.sh
 	require.True(t, stage.Entrypoint.Data.IsShellForm.Data, `ENTRYPOINT /entry.sh is shell form`)
 	require.False(t, stage.Entrypoint.Data.IsExecForm.Data)
 }
+
+// cmdFields is a test helper that flattens a docker.file.run.command resource
+// into plain Go values for easy assertions.
+func cmdFields(t *testing.T, raw any) (binary, subcommand string, flags, args []string) {
+	t.Helper()
+	c := raw.(*mqlDockerFileRunCommand)
+	binary = c.Binary.Data
+	subcommand = c.Subcommand.Data
+	for _, f := range c.Flags.Data {
+		flags = append(flags, f.(string))
+	}
+	for _, a := range c.Args.Data {
+		args = append(args, a.(string))
+	}
+	return
+}
+
+func TestParseDockerfile_RunCommands(t *testing.T) {
+	src := `
+FROM alpine
+RUN apt-get update && apt-get install -y --no-install-recommends nginx
+RUN ["/bin/sh", "-c", "echo hi"]
+CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+
+	t.Run("shell-form RUN splits the && chain into two commands", func(t *testing.T) {
+		run := stage.Run.Data[0].(*mqlDockerFileRun)
+		require.Equal(t, 2, len(run.Commands.Data))
+
+		binary, sub, flags, args := cmdFields(t, run.Commands.Data[0])
+		require.Equal(t, "apt-get", binary)
+		require.Equal(t, "update", sub)
+		require.Empty(t, flags)
+		require.Equal(t, []string{"update"}, args)
+
+		binary, sub, flags, args = cmdFields(t, run.Commands.Data[1])
+		require.Equal(t, "apt-get", binary)
+		require.Equal(t, "install", sub)
+		require.Equal(t, []string{"-y", "--no-install-recommends"}, flags)
+		require.Equal(t, []string{"install", "-y", "--no-install-recommends", "nginx"}, args)
+	})
+
+	t.Run("exec-form RUN yields a single command from the argv", func(t *testing.T) {
+		run := stage.Run.Data[1].(*mqlDockerFileRun)
+		require.Equal(t, 1, len(run.Commands.Data))
+		binary, sub, flags, args := cmdFields(t, run.Commands.Data[0])
+		require.Equal(t, "/bin/sh", binary)
+		require.Equal(t, []string{"-c"}, flags)
+		require.Equal(t, "echo hi", sub) // first non-flag arg
+		require.Equal(t, []string{"-c", "echo hi"}, args)
+	})
+
+	t.Run("CMD exposes commands", func(t *testing.T) {
+		require.NotNil(t, stage.Cmd.Data)
+		require.Equal(t, 1, len(stage.Cmd.Data.Commands.Data))
+		binary, _, flags, args := cmdFields(t, stage.Cmd.Data.Commands.Data[0])
+		require.Equal(t, "nginx", binary)
+		require.Equal(t, []string{"-g"}, flags)
+		require.Equal(t, []string{"-g", "daemon off;"}, args)
+	})
+
+	t.Run("ENTRYPOINT exposes commands", func(t *testing.T) {
+		require.NotNil(t, stage.Entrypoint.Data)
+		require.Equal(t, 1, len(stage.Entrypoint.Data.Commands.Data))
+		binary, sub, flags, args := cmdFields(t, stage.Entrypoint.Data.Commands.Data[0])
+		require.Equal(t, "docker-entrypoint.sh", binary)
+		require.Empty(t, flags)
+		require.Empty(t, args)
+		require.Equal(t, "", sub)
+	})
+}

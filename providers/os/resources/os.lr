@@ -2924,6 +2924,37 @@ private docker.file.run @defaults("script") {
   mountsSecret bool
   // Whether the instruction declares a `--mount=type=ssh`
   mountsSsh bool
+  // Individual commands parsed from the instruction
+  //
+  // The script split on the shell operators `&&`, `||`, `;`, and `|` (and
+  // newlines) into separate commands, each tokenized into its executable and
+  // arguments with leading `VAR=value` assignments removed. Exec-form
+  // instructions yield a single command from the argv. Use this to audit the
+  // program invoked and its options instead of substring-matching the raw
+  // `script`. Parsing is best-effort and does not descend into subshells or
+  // command substitutions.
+  commands []docker.file.run.command
+}
+
+// Single command parsed from a Dockerfile RUN, CMD, or ENTRYPOINT
+//
+// One entry per command in the instruction's shell pipeline. Select the
+// program with `binary` and, for tools with subcommands, `subcommand` — for
+// example `binary == "apt-get"` and `subcommand == "install"` — then inspect
+// `flags` for required options such as `--no-install-recommends`.
+private docker.file.run.command @defaults("binary subcommand") {
+  // Executable invoked, e.g. "apt-get", "curl", or "npm"
+  binary string
+  // First non-flag argument, e.g. "install" or "add"
+  //
+  // Empty when the command takes no subcommand. Resolved independently of flag
+  // position, so `apt-get -y install` and `apt-get install -y` both report
+  // `install`.
+  subcommand string
+  // Dash-prefixed options, e.g. ["--no-install-recommends", "-y"]
+  flags []string
+  // All arguments after the executable, in the order they appear
+  args []string
 }
 
 // Dockerfile RUN --mount flag

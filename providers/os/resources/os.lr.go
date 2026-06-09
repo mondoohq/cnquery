@@ -147,6 +147,7 @@ const (
 	ResourceDockerFileExpose              string = "docker.file.expose"
 	ResourceDockerFileFrom                string = "docker.file.from"
 	ResourceDockerFileRun                 string = "docker.file.run"
+	ResourceDockerFileRunCommand          string = "docker.file.run.command"
 	ResourceDockerFileRunMount            string = "docker.file.run.mount"
 	ResourceDockerFileAdd                 string = "docker.file.add"
 	ResourceDockerFileCopy                string = "docker.file.copy"
@@ -968,6 +969,10 @@ func init() {
 		"docker.file.run": {
 			// to override args, implement: initDockerFileRun(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileRun,
+		},
+		"docker.file.run.command": {
+			// to override args, implement: initDockerFileRunCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileRunCommand,
 		},
 		"docker.file.run.mount": {
 			// to override args, implement: initDockerFileRunMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4748,6 +4753,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.run.mountsSsh": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileRun).GetMountsSsh()).ToDataRes(types.Bool)
+	},
+	"docker.file.run.commands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRun).GetCommands()).ToDataRes(types.Array(types.Resource("docker.file.run.command")))
+	},
+	"docker.file.run.command.binary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRunCommand).GetBinary()).ToDataRes(types.String)
+	},
+	"docker.file.run.command.subcommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRunCommand).GetSubcommand()).ToDataRes(types.String)
+	},
+	"docker.file.run.command.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRunCommand).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"docker.file.run.command.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileRunCommand).GetArgs()).ToDataRes(types.Array(types.String))
 	},
 	"docker.file.run.mount.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileRunMount).GetType()).ToDataRes(types.String)
@@ -13855,6 +13875,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.run.mountsSsh": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileRun).MountsSsh, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.commands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRun).Commands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRunCommand).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.run.command.binary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRunCommand).Binary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.command.subcommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRunCommand).Subcommand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.command.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRunCommand).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.run.command.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileRunCommand).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"docker.file.run.mount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33947,6 +33991,7 @@ type mqlDockerFileRun struct {
 	IsExecForm   plugin.TValue[bool]
 	MountsSecret plugin.TValue[bool]
 	MountsSsh    plugin.TValue[bool]
+	Commands     plugin.TValue[[]any]
 }
 
 // createDockerFileRun creates a new instance of this resource
@@ -34011,6 +34056,69 @@ func (c *mqlDockerFileRun) GetMountsSecret() *plugin.TValue[bool] {
 
 func (c *mqlDockerFileRun) GetMountsSsh() *plugin.TValue[bool] {
 	return &c.MountsSsh
+}
+
+func (c *mqlDockerFileRun) GetCommands() *plugin.TValue[[]any] {
+	return &c.Commands
+}
+
+// mqlDockerFileRunCommand for the docker.file.run.command resource
+type mqlDockerFileRunCommand struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileRunCommandInternal it will be used here
+	Binary     plugin.TValue[string]
+	Subcommand plugin.TValue[string]
+	Flags      plugin.TValue[[]any]
+	Args       plugin.TValue[[]any]
+}
+
+// createDockerFileRunCommand creates a new instance of this resource
+func createDockerFileRunCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileRunCommand{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.run.command", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileRunCommand) MqlName() string {
+	return "docker.file.run.command"
+}
+
+func (c *mqlDockerFileRunCommand) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileRunCommand) GetBinary() *plugin.TValue[string] {
+	return &c.Binary
+}
+
+func (c *mqlDockerFileRunCommand) GetSubcommand() *plugin.TValue[string] {
+	return &c.Subcommand
+}
+
+func (c *mqlDockerFileRunCommand) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlDockerFileRunCommand) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
 }
 
 // mqlDockerFileRunMount for the docker.file.run.mount resource
