@@ -301,7 +301,7 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
 	algoSet := map[int64]struct{}{}
 
 	if paramsM, ok := params.(map[string]any); ok {
-		if record, ok := paramsM["DNSKEY"].(map[string]any); ok {
+		if record, ok := paramsM["DNSKEY"].(map[string]any); ok && record["rCode"] == dns.RcodeToString[dns.RcodeSuccess] {
 			var name, class string
 			var ttl int64
 			var rdata []any
