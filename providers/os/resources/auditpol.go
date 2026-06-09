@@ -57,31 +57,71 @@ func (p *mqlAuditpolEntry) id() (string, error) {
 	return p.Subcategoryguid.Data, nil
 }
 
-// auditpolInclusionAudits reports whether an auditpol inclusion setting audits
-// the given event kind ("success" or "failure"). The setting is one of
-// "Success", "Failure", "Success and Failure", or "No Auditing".
-func auditpolInclusionAudits(inclusionSetting, kind string) bool {
-	return strings.Contains(strings.ToLower(inclusionSetting), kind)
+// auditpolAuditFlags records whether an inclusion setting audits success and/or
+// failure events.
+type auditpolAuditFlags struct {
+	success bool
+	failure bool
+}
+
+// auditpolInclusionSettings maps every "Inclusion Setting" value auditpol /r can
+// emit to whether it audits success and/or failure events. auditpol localizes
+// this column to the OS display language, so the same setting appears under
+// several spellings; keys are lowercased. Settings that audit neither event
+// (e.g. "No Auditing" and its localized forms) are intentionally absent and
+// resolve to the zero value via the map lookup. Supported languages: English,
+// German, Dutch, Italian.
+var auditpolInclusionSettings = map[string]auditpolAuditFlags{
+	// English
+	"success":             {success: true},
+	"failure":             {failure: true},
+	"success and failure": {success: true, failure: true},
+	// German
+	"erfolg":            {success: true},
+	"fehler":            {failure: true},
+	"erfolg und fehler": {success: true, failure: true},
+	// Dutch
+	"geslaagd":            {success: true},
+	"mislukt":             {failure: true},
+	"geslaagd en mislukt": {success: true, failure: true},
+	// Italian
+	"operazione riuscita":       {success: true},
+	"errore":                    {failure: true},
+	"esito positivo e negativo": {success: true, failure: true},
+	// French. auditpol may render the capital "É" with or without its accent,
+	// so accept both spellings of the failure forms.
+	"succès":          {success: true},
+	"échec":           {failure: true},
+	"echec":           {failure: true},
+	"succès et échec": {success: true, failure: true},
+	"succès et echec": {success: true, failure: true},
+}
+
+// auditpolInclusionAudits reports whether the given (possibly localized)
+// inclusion setting audits success and failure events. Unrecognized settings
+// audit neither.
+func auditpolInclusionAudits(inclusionSetting string) auditpolAuditFlags {
+	return auditpolInclusionSettings[strings.ToLower(strings.TrimSpace(inclusionSetting))]
 }
 
 // success reports whether the inclusion setting audits success events. It is
-// true for "Success" and "Success and Failure", false for "Failure" and
-// "No Auditing".
+// true for "Success" and "Success and Failure" (and their localized forms),
+// false for "Failure" and "No Auditing".
 func (p *mqlAuditpolEntry) success() (bool, error) {
 	setting := p.GetInclusionsetting()
 	if setting.Error != nil {
 		return false, setting.Error
 	}
-	return auditpolInclusionAudits(setting.Data, "success"), nil
+	return auditpolInclusionAudits(setting.Data).success, nil
 }
 
 // failure reports whether the inclusion setting audits failure events. It is
-// true for "Failure" and "Success and Failure", false for "Success" and
-// "No Auditing".
+// true for "Failure" and "Success and Failure" (and their localized forms),
+// false for "Success" and "No Auditing".
 func (p *mqlAuditpolEntry) failure() (bool, error) {
 	setting := p.GetInclusionsetting()
 	if setting.Error != nil {
 		return false, setting.Error
 	}
-	return auditpolInclusionAudits(setting.Data, "failure"), nil
+	return auditpolInclusionAudits(setting.Data).failure, nil
 }
