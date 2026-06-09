@@ -824,6 +824,46 @@ private k8s.container @defaults("name") {
   imagePullPolicy string
   // Security options the pod should run with
   securityContext dict
+  // Whether the container runs in privileged mode
+  //
+  // Null when not set by the container's security context. Parsed from
+  // `securityContext.privileged`.
+  privileged bool
+  // Whether a process can gain more privileges than its parent process
+  //
+  // Null when not set. Parsed from `securityContext.allowPrivilegeEscalation`.
+  allowPrivilegeEscalation bool
+  // Whether the container must run as a non-root user
+  //
+  // Null when not set on the container; in that case the pod-level setting (if
+  // any) applies. Parsed from `securityContext.runAsNonRoot`.
+  runAsNonRoot bool
+  // UID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsUser`.
+  runAsUser int
+  // GID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsGroup`.
+  runAsGroup int
+  // Whether the container's root filesystem is mounted read-only
+  //
+  // Null when not set. Parsed from `securityContext.readOnlyRootFilesystem`.
+  readOnlyRootFilesystem bool
+  // Linux capabilities added to the container
+  //
+  // From `securityContext.capabilities.add`; empty when none are added.
+  addedCapabilities []string
+  // Linux capabilities dropped from the container
+  //
+  // From `securityContext.capabilities.drop`; empty when none are dropped.
+  droppedCapabilities []string
+  // Seccomp profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no seccomp profile, in which case the pod-level profile (if
+  // any) applies. Parsed from `securityContext.seccompProfile.type`.
+  seccompProfileType string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself
@@ -904,6 +944,46 @@ private k8s.initContainer @defaults("name") {
   imagePullPolicy string
   // Security options the pod should run with
   securityContext dict
+  // Whether the container runs in privileged mode
+  //
+  // Null when not set by the container's security context. Parsed from
+  // `securityContext.privileged`.
+  privileged bool
+  // Whether a process can gain more privileges than its parent process
+  //
+  // Null when not set. Parsed from `securityContext.allowPrivilegeEscalation`.
+  allowPrivilegeEscalation bool
+  // Whether the container must run as a non-root user
+  //
+  // Null when not set on the container; in that case the pod-level setting (if
+  // any) applies. Parsed from `securityContext.runAsNonRoot`.
+  runAsNonRoot bool
+  // UID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsUser`.
+  runAsUser int
+  // GID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsGroup`.
+  runAsGroup int
+  // Whether the container's root filesystem is mounted read-only
+  //
+  // Null when not set. Parsed from `securityContext.readOnlyRootFilesystem`.
+  readOnlyRootFilesystem bool
+  // Linux capabilities added to the container
+  //
+  // From `securityContext.capabilities.add`; empty when none are added.
+  addedCapabilities []string
+  // Linux capabilities dropped from the container
+  //
+  // From `securityContext.capabilities.drop`; empty when none are dropped.
+  droppedCapabilities []string
+  // Seccomp profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no seccomp profile, in which case the pod-level profile (if
+  // any) applies. Parsed from `securityContext.seccompProfile.type`.
+  seccompProfileType string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself
@@ -952,6 +1032,46 @@ private k8s.ephemeralContainer @defaults("name") {
   imagePullPolicy string
   // Security options the Pod should run with
   securityContext dict
+  // Whether the container runs in privileged mode
+  //
+  // Null when not set by the container's security context. Parsed from
+  // `securityContext.privileged`.
+  privileged bool
+  // Whether a process can gain more privileges than its parent process
+  //
+  // Null when not set. Parsed from `securityContext.allowPrivilegeEscalation`.
+  allowPrivilegeEscalation bool
+  // Whether the container must run as a non-root user
+  //
+  // Null when not set on the container; in that case the pod-level setting (if
+  // any) applies. Parsed from `securityContext.runAsNonRoot`.
+  runAsNonRoot bool
+  // UID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsUser`.
+  runAsUser int
+  // GID the container entry point runs as
+  //
+  // Null when not set. Parsed from `securityContext.runAsGroup`.
+  runAsGroup int
+  // Whether the container's root filesystem is mounted read-only
+  //
+  // Null when not set. Parsed from `securityContext.readOnlyRootFilesystem`.
+  readOnlyRootFilesystem bool
+  // Linux capabilities added to the container
+  //
+  // From `securityContext.capabilities.add`; empty when none are added.
+  addedCapabilities []string
+  // Linux capabilities dropped from the container
+  //
+  // From `securityContext.capabilities.drop`; empty when none are dropped.
+  droppedCapabilities []string
+  // Seccomp profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no seccomp profile, in which case the pod-level profile (if
+  // any) applies. Parsed from `securityContext.seccompProfile.type`.
+  seccompProfileType string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself

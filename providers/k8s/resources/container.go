@@ -24,6 +24,52 @@ var (
 	ContainerContainerType ContainerType = "container"
 )
 
+// containerSecurityContextArgs flattens the security-relevant fields of a
+// container's SecurityContext into typed resource args. Pointer fields stay
+// null when unset so policies can distinguish "not configured" from false.
+func containerSecurityContextArgs(sc *corev1.SecurityContext) map[string]*llx.RawData {
+	added := []any{}
+	dropped := []any{}
+	seccompType := ""
+
+	var (
+		privileged, allowPrivEsc, runAsNonRoot, readOnlyRoot *bool
+		runAsUser, runAsGroup                                *int64
+	)
+
+	if sc != nil {
+		privileged = sc.Privileged
+		allowPrivEsc = sc.AllowPrivilegeEscalation
+		runAsNonRoot = sc.RunAsNonRoot
+		readOnlyRoot = sc.ReadOnlyRootFilesystem
+		runAsUser = sc.RunAsUser
+		runAsGroup = sc.RunAsGroup
+		if sc.Capabilities != nil {
+			for _, c := range sc.Capabilities.Add {
+				added = append(added, string(c))
+			}
+			for _, c := range sc.Capabilities.Drop {
+				dropped = append(dropped, string(c))
+			}
+		}
+		if sc.SeccompProfile != nil {
+			seccompType = string(sc.SeccompProfile.Type)
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"privileged":               llx.BoolDataPtr(privileged),
+		"allowPrivilegeEscalation": llx.BoolDataPtr(allowPrivEsc),
+		"runAsNonRoot":             llx.BoolDataPtr(runAsNonRoot),
+		"runAsUser":                llx.IntDataPtr(runAsUser),
+		"runAsGroup":               llx.IntDataPtr(runAsGroup),
+		"readOnlyRootFilesystem":   llx.BoolDataPtr(readOnlyRoot),
+		"addedCapabilities":        llx.ArrayData(added, types.String),
+		"droppedCapabilities":      llx.ArrayData(dropped, types.String),
+		"seccompProfileType":       llx.StringData(seccompType),
+	}
+}
+
 func getContainers(
 	obj runtime.Object, meta metav1.Object, pluginRuntime *plugin.Runtime, containerType ContainerType,
 ) ([]any, error) {
@@ -106,6 +152,12 @@ func getContainers(
 			"ports":                    llx.ArrayData(ports, types.Dict),
 			"terminationMessagePath":   llx.StringData(c.TerminationMessagePath),
 			"terminationMessagePolicy": llx.StringData(string(c.TerminationMessagePolicy)),
+		}
+
+		// flatten the common security-context fields so policies can read them
+		// without digging through the raw securityContext dict
+		for k, v := range containerSecurityContextArgs(c.SecurityContext) {
+			args[k] = v
 		}
 
 		if containerType != EphemeralContainerType {

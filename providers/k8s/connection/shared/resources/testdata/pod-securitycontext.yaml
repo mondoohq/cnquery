@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secctx
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 3000
+      readOnlyRootFilesystem: true
+      capabilities:
+        add: ["NET_BIND_SERVICE"]
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  - name: bare
+    image: busybox:1.36

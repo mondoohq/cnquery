@@ -1501,6 +1501,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.container.securityContext": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetSecurityContext()).ToDataRes(types.Dict)
 	},
+	"k8s.container.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.container.allowPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetAllowPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.container.runAsNonRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetRunAsNonRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.container.runAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetRunAsUser()).ToDataRes(types.Int)
+	},
+	"k8s.container.runAsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetRunAsGroup()).ToDataRes(types.Int)
+	},
+	"k8s.container.readOnlyRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetReadOnlyRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.container.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.container.droppedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetDroppedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.container.seccompProfileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetSeccompProfileType()).ToDataRes(types.String)
+	},
 	"k8s.container.workingDir": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetWorkingDir()).ToDataRes(types.String)
 	},
@@ -1609,6 +1636,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.initContainer.securityContext": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetSecurityContext()).ToDataRes(types.Dict)
 	},
+	"k8s.initContainer.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.initContainer.allowPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetAllowPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.initContainer.runAsNonRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetRunAsNonRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.initContainer.runAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetRunAsUser()).ToDataRes(types.Int)
+	},
+	"k8s.initContainer.runAsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetRunAsGroup()).ToDataRes(types.Int)
+	},
+	"k8s.initContainer.readOnlyRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetReadOnlyRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.initContainer.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.initContainer.droppedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetDroppedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.initContainer.seccompProfileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetSeccompProfileType()).ToDataRes(types.String)
+	},
 	"k8s.initContainer.workingDir": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetWorkingDir()).ToDataRes(types.String)
 	},
@@ -1674,6 +1728,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ephemeralContainer.securityContext": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.privileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.ephemeralContainer.allowPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetAllowPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.ephemeralContainer.runAsNonRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetRunAsNonRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.ephemeralContainer.runAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetRunAsUser()).ToDataRes(types.Int)
+	},
+	"k8s.ephemeralContainer.runAsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetRunAsGroup()).ToDataRes(types.Int)
+	},
+	"k8s.ephemeralContainer.readOnlyRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetReadOnlyRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.ephemeralContainer.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.ephemeralContainer.droppedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetDroppedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.ephemeralContainer.seccompProfileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetSeccompProfileType()).ToDataRes(types.String)
 	},
 	"k8s.ephemeralContainer.workingDir": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetWorkingDir()).ToDataRes(types.String)
@@ -4830,6 +4911,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.container.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.container.allowPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).AllowPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.container.runAsNonRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).RunAsNonRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.container.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).RunAsUser, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.container.runAsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).RunAsGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.container.readOnlyRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).ReadOnlyRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.container.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.container.droppedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).DroppedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.container.seccompProfileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).SeccompProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"k8s.container.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sContainer).WorkingDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4982,6 +5099,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sInitContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.initContainer.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.allowPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).AllowPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.runAsNonRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).RunAsNonRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).RunAsUser, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.runAsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).RunAsGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.readOnlyRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).ReadOnlyRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.droppedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).DroppedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.seccompProfileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).SeccompProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"k8s.initContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sInitContainer).WorkingDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5072,6 +5225,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.ephemeralContainer.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEphemeralContainer).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.allowPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).AllowPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.runAsNonRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).RunAsNonRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.runAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).RunAsUser, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.runAsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).RunAsGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.readOnlyRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).ReadOnlyRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.droppedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).DroppedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.seccompProfileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).SeccompProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11314,6 +11503,15 @@ type mqlK8sContainer struct {
 	StartupProbe             plugin.TValue[any]
 	ImagePullPolicy          plugin.TValue[string]
 	SecurityContext          plugin.TValue[any]
+	Privileged               plugin.TValue[bool]
+	AllowPrivilegeEscalation plugin.TValue[bool]
+	RunAsNonRoot             plugin.TValue[bool]
+	RunAsUser                plugin.TValue[int64]
+	RunAsGroup               plugin.TValue[int64]
+	ReadOnlyRootFilesystem   plugin.TValue[bool]
+	AddedCapabilities        plugin.TValue[[]any]
+	DroppedCapabilities      plugin.TValue[[]any]
+	SeccompProfileType       plugin.TValue[string]
 	WorkingDir               plugin.TValue[string]
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
@@ -11431,6 +11629,42 @@ func (c *mqlK8sContainer) GetImagePullPolicy() *plugin.TValue[string] {
 
 func (c *mqlK8sContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
+}
+
+func (c *mqlK8sContainer) GetPrivileged() *plugin.TValue[bool] {
+	return &c.Privileged
+}
+
+func (c *mqlK8sContainer) GetAllowPrivilegeEscalation() *plugin.TValue[bool] {
+	return &c.AllowPrivilegeEscalation
+}
+
+func (c *mqlK8sContainer) GetRunAsNonRoot() *plugin.TValue[bool] {
+	return &c.RunAsNonRoot
+}
+
+func (c *mqlK8sContainer) GetRunAsUser() *plugin.TValue[int64] {
+	return &c.RunAsUser
+}
+
+func (c *mqlK8sContainer) GetRunAsGroup() *plugin.TValue[int64] {
+	return &c.RunAsGroup
+}
+
+func (c *mqlK8sContainer) GetReadOnlyRootFilesystem() *plugin.TValue[bool] {
+	return &c.ReadOnlyRootFilesystem
+}
+
+func (c *mqlK8sContainer) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return &c.AddedCapabilities
+}
+
+func (c *mqlK8sContainer) GetDroppedCapabilities() *plugin.TValue[[]any] {
+	return &c.DroppedCapabilities
+}
+
+func (c *mqlK8sContainer) GetSeccompProfileType() *plugin.TValue[string] {
+	return &c.SeccompProfileType
 }
 
 func (c *mqlK8sContainer) GetWorkingDir() *plugin.TValue[string] {
@@ -11589,6 +11823,15 @@ type mqlK8sInitContainer struct {
 	StartupProbe             plugin.TValue[any]
 	ImagePullPolicy          plugin.TValue[string]
 	SecurityContext          plugin.TValue[any]
+	Privileged               plugin.TValue[bool]
+	AllowPrivilegeEscalation plugin.TValue[bool]
+	RunAsNonRoot             plugin.TValue[bool]
+	RunAsUser                plugin.TValue[int64]
+	RunAsGroup               plugin.TValue[int64]
+	ReadOnlyRootFilesystem   plugin.TValue[bool]
+	AddedCapabilities        plugin.TValue[[]any]
+	DroppedCapabilities      plugin.TValue[[]any]
+	SeccompProfileType       plugin.TValue[string]
 	WorkingDir               plugin.TValue[string]
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
@@ -11708,6 +11951,42 @@ func (c *mqlK8sInitContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
 }
 
+func (c *mqlK8sInitContainer) GetPrivileged() *plugin.TValue[bool] {
+	return &c.Privileged
+}
+
+func (c *mqlK8sInitContainer) GetAllowPrivilegeEscalation() *plugin.TValue[bool] {
+	return &c.AllowPrivilegeEscalation
+}
+
+func (c *mqlK8sInitContainer) GetRunAsNonRoot() *plugin.TValue[bool] {
+	return &c.RunAsNonRoot
+}
+
+func (c *mqlK8sInitContainer) GetRunAsUser() *plugin.TValue[int64] {
+	return &c.RunAsUser
+}
+
+func (c *mqlK8sInitContainer) GetRunAsGroup() *plugin.TValue[int64] {
+	return &c.RunAsGroup
+}
+
+func (c *mqlK8sInitContainer) GetReadOnlyRootFilesystem() *plugin.TValue[bool] {
+	return &c.ReadOnlyRootFilesystem
+}
+
+func (c *mqlK8sInitContainer) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return &c.AddedCapabilities
+}
+
+func (c *mqlK8sInitContainer) GetDroppedCapabilities() *plugin.TValue[[]any] {
+	return &c.DroppedCapabilities
+}
+
+func (c *mqlK8sInitContainer) GetSeccompProfileType() *plugin.TValue[string] {
+	return &c.SeccompProfileType
+}
+
 func (c *mqlK8sInitContainer) GetWorkingDir() *plugin.TValue[string] {
 	return &c.WorkingDir
 }
@@ -11771,6 +12050,15 @@ type mqlK8sEphemeralContainer struct {
 	VolumeDevices            plugin.TValue[[]any]
 	ImagePullPolicy          plugin.TValue[string]
 	SecurityContext          plugin.TValue[any]
+	Privileged               plugin.TValue[bool]
+	AllowPrivilegeEscalation plugin.TValue[bool]
+	RunAsNonRoot             plugin.TValue[bool]
+	RunAsUser                plugin.TValue[int64]
+	RunAsGroup               plugin.TValue[int64]
+	ReadOnlyRootFilesystem   plugin.TValue[bool]
+	AddedCapabilities        plugin.TValue[[]any]
+	DroppedCapabilities      plugin.TValue[[]any]
+	SeccompProfileType       plugin.TValue[string]
 	WorkingDir               plugin.TValue[string]
 	Tty                      plugin.TValue[bool]
 	Stdin                    plugin.TValue[bool]
@@ -11869,6 +12157,42 @@ func (c *mqlK8sEphemeralContainer) GetImagePullPolicy() *plugin.TValue[string] {
 
 func (c *mqlK8sEphemeralContainer) GetSecurityContext() *plugin.TValue[any] {
 	return &c.SecurityContext
+}
+
+func (c *mqlK8sEphemeralContainer) GetPrivileged() *plugin.TValue[bool] {
+	return &c.Privileged
+}
+
+func (c *mqlK8sEphemeralContainer) GetAllowPrivilegeEscalation() *plugin.TValue[bool] {
+	return &c.AllowPrivilegeEscalation
+}
+
+func (c *mqlK8sEphemeralContainer) GetRunAsNonRoot() *plugin.TValue[bool] {
+	return &c.RunAsNonRoot
+}
+
+func (c *mqlK8sEphemeralContainer) GetRunAsUser() *plugin.TValue[int64] {
+	return &c.RunAsUser
+}
+
+func (c *mqlK8sEphemeralContainer) GetRunAsGroup() *plugin.TValue[int64] {
+	return &c.RunAsGroup
+}
+
+func (c *mqlK8sEphemeralContainer) GetReadOnlyRootFilesystem() *plugin.TValue[bool] {
+	return &c.ReadOnlyRootFilesystem
+}
+
+func (c *mqlK8sEphemeralContainer) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return &c.AddedCapabilities
+}
+
+func (c *mqlK8sEphemeralContainer) GetDroppedCapabilities() *plugin.TValue[[]any] {
+	return &c.DroppedCapabilities
+}
+
+func (c *mqlK8sEphemeralContainer) GetSeccompProfileType() *plugin.TValue[string] {
+	return &c.SeccompProfileType
 }
 
 func (c *mqlK8sEphemeralContainer) GetWorkingDir() *plugin.TValue[string] {
