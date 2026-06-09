@@ -52,6 +52,13 @@ func TestParseSPF(t *testing.T) {
 			wantMechanisms:   []string{"include:spf.recall.example", "-all"},
 			wantAllQualifier: "-",
 		},
+		{
+			name:             "first all wins when multiple are present",
+			txt:              "v=spf1 ~all -all",
+			wantVersion:      "spf1",
+			wantMechanisms:   []string{"~all", "-all"},
+			wantAllQualifier: "~",
+		},
 	}
 
 	for _, tc := range cases {

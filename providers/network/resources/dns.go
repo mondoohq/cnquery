@@ -375,14 +375,10 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssec, error) {
 	return res.(*mqlDnsDnssec), nil
 }
 
-func dnsTxtHash(s string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(s))
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
 // parseSPF extracts the version, ordered mechanisms, and the qualifier of the
-// terminating `all` mechanism from an SPF TXT record.
+// operative `all` mechanism from an SPF TXT record. SPF mechanisms are
+// evaluated left to right and `all` always matches, so the first `all` term is
+// the operative one and any later all-like terms are unreachable.
 func parseSPF(txt string) (version string, mechanisms []string, allQualifier string) {
 	mechanisms = []string{}
 	for i, f := range strings.Fields(txt) {
@@ -392,6 +388,9 @@ func parseSPF(txt string) (version string, mechanisms []string, allQualifier str
 		}
 		mechanisms = append(mechanisms, f)
 
+		if allQualifier != "" {
+			continue // first `all` wins; ignore any later all-like terms
+		}
 		lower := strings.ToLower(f)
 		switch {
 		case lower == "all":
@@ -429,7 +428,7 @@ func (d *mqlDns) spf(params any) ([]any, error) {
 
 		version, mechanisms, allQualifier := parseSPF(entry)
 		res, err := CreateResource(d.MqlRuntime, "dns.spfRecord", map[string]*llx.RawData{
-			"__id":         llx.StringData("dns.spf/" + name + "/" + dnsTxtHash(entry)),
+			"__id":         llx.StringData("dns.spf/" + name + "/" + entry),
 			"dnsTxt":       llx.StringData(entry),
 			"version":      llx.StringData(version),
 			"mechanisms":   llx.ArrayData(llx.TArr2Raw(mechanisms), types.String),

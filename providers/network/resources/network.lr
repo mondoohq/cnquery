@@ -560,8 +560,10 @@ private dns.spfRecord @defaults("dnsTxt allQualifier") {
   version string
   // Ordered SPF mechanisms and modifiers
   //
-  // The terms after the version, in order — for example
-  // `["ip4:192.0.2.0/24", "include:_spf.example.com", "-all"]`.
+  // All terms after the version, in order, including the terminating `all`
+  // term — for example `["ip4:192.0.2.0/24", "include:_spf.example.com",
+  // "-all"]`. The `all` qualifier is also surfaced separately as
+  // `allQualifier`.
   mechanisms []string
   // Qualifier on the terminating `all` mechanism
   //
