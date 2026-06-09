@@ -48,6 +48,16 @@ dns.dkimRecord.publicKeyData 9.0.1
 dns.dkimRecord.serviceTypes 9.0.1
 dns.dkimRecord.valid 9.0.1
 dns.dkimRecord.version 9.0.1
+dns.dnssec 13.1.1
+dns.dnssec.algorithms 13.1.1
+dns.dnssec.enabled 13.1.1
+dns.dnssec.key 13.1.1
+dns.dnssec.key.algorithm 13.1.1
+dns.dnssec.key.flags 13.1.1
+dns.dnssec.key.keySigningKey 13.1.1
+dns.dnssec.key.protocol 13.1.1
+dns.dnssec.key.publicKey 13.1.1
+dns.dnssec.keys 13.1.1
 dns.fqdn 9.0.1
 dns.mx 9.0.1
 dns.mxRecord 9.0.1

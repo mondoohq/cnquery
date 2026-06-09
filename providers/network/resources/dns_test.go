@@ -21,6 +21,24 @@ func TestResource_DNS(t *testing.T) {
 	assert.NotEmpty(t, res)
 }
 
+func TestResource_DnsDnssec(t *testing.T) {
+	// cloudflare.com is reliably DNSSEC-signed.
+	res := x.TestQuery(t, `dns("cloudflare.com").dnssec.enabled`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+
+	res = x.TestQuery(t, `dns("cloudflare.com").dnssec.keys.all(algorithm > 0 && publicKey != "")`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.Equal(t, true, res[0].Data.Value)
+
+	res = x.TestQuery(t, `dns("cloudflare.com").dnssec.algorithms`)
+	require.NotEmpty(t, res)
+	require.NoError(t, res[0].Data.Error)
+	assert.NotEmpty(t, res[0].Data.Value)
+}
+
 func TestResource_DomainName(t *testing.T) {
 	res := x.TestQuery(t, "domainName")
 	assert.NotEmpty(t, res)

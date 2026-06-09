@@ -454,6 +454,8 @@ dns @defaults("fqdn") {
   mx(params) []dns.mxRecord
   // DKIM TXT records
   dkim(params) []dns.dkimRecord
+  // DNSSEC signing state for the domain
+  dnssec(params) dns.dnssec
   // Reverse DNS (PTR) records for the domain's resolved addresses
   //
   // Resolves the domain's A and AAAA addresses, then looks up the PTR
@@ -493,6 +495,46 @@ dns.mxRecord @defaults("domainName") {
   preference int
   // Domain name
   domainName string
+}
+
+// DNSSEC configuration for a domain
+//
+// Examine whether a domain is signed with DNSSEC and how. Reports whether
+// the domain publishes DNSKEY records, the parsed signing keys, and the
+// distinct algorithm numbers in use, so audits can require DNSSEC and flag
+// weak or deprecated algorithms without parsing raw DNSKEY rdata. `enabled`
+// reflects the presence of published DNSKEY records and does not, on its own,
+// validate the DS chain of trust at the parent zone.
+dns.dnssec @defaults("enabled") {
+  // Whether the domain publishes DNSKEY records
+  enabled bool
+  // Published DNSKEY signing keys
+  keys []dns.dnssec.key
+  // Distinct DNSSEC algorithm numbers across all published keys
+  //
+  // Algorithm numbers as defined in RFC 8624, e.g. 8 (RSASHA256) or
+  // 13 (ECDSAP256SHA256). Use it to flag deprecated algorithms such as
+  // 5/7 (RSASHA1) or 3 (DSA).
+  algorithms []int
+}
+
+// DNSKEY record (RFC 4034)
+//
+// Examine a single published DNSSEC key: its flags, protocol, algorithm
+// number, and base64-encoded public key. `keySigningKey` is true for a
+// key-signing key — the one whose SEP flag is set (flags value 257) — as
+// opposed to a zone-signing key (flags value 256).
+private dns.dnssec.key @defaults("algorithm keySigningKey") {
+  // DNSKEY flags field, e.g. 256 for a zone-signing key or 257 for a key-signing key
+  flags int
+  // Protocol field, always 3 for DNSSEC
+  protocol int
+  // DNSSEC algorithm number (RFC 8624), e.g. 8 (RSASHA256) or 13 (ECDSAP256SHA256)
+  algorithm int
+  // Base64-encoded public key
+  publicKey string
+  // Whether this is a key-signing key (the SEP flag is set)
+  keySigningKey bool
 }
 
 // DKIM public-key DNS record (RFC 6376)
