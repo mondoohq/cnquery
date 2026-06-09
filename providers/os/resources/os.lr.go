@@ -141,6 +141,7 @@ const (
 	ResourceDocker                        string = "docker"
 	ResourceDockerFile                    string = "docker.file"
 	ResourceDockerFileStage               string = "docker.file.stage"
+	ResourceDockerFileOci                 string = "docker.file.oci"
 	ResourceDockerFileArg                 string = "docker.file.arg"
 	ResourceDockerFileEnv                 string = "docker.file.env"
 	ResourceDockerFileUser                string = "docker.file.user"
@@ -944,6 +945,10 @@ func init() {
 		"docker.file.stage": {
 			// to override args, implement: initDockerFileStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileStage,
+		},
+		"docker.file.oci": {
+			// to override args, implement: initDockerFileOci(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileOci,
 		},
 		"docker.file.arg": {
 			// to override args, implement: initDockerFileArg(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4635,6 +4640,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"docker.file.stage.oci": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetOci()).ToDataRes(types.Resource("docker.file.oci"))
+	},
 	"docker.file.stage.run": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetRun()).ToDataRes(types.Array(types.Resource("docker.file.run")))
 	},
@@ -4682,6 +4690,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.stage.final": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetFinal()).ToDataRes(types.Bool)
+	},
+	"docker.file.oci.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetCreated()).ToDataRes(types.String)
+	},
+	"docker.file.oci.authors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetAuthors()).ToDataRes(types.String)
+	},
+	"docker.file.oci.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetUrl()).ToDataRes(types.String)
+	},
+	"docker.file.oci.documentation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetDocumentation()).ToDataRes(types.String)
+	},
+	"docker.file.oci.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetSource()).ToDataRes(types.String)
+	},
+	"docker.file.oci.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetVersion()).ToDataRes(types.String)
+	},
+	"docker.file.oci.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetRevision()).ToDataRes(types.String)
+	},
+	"docker.file.oci.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetVendor()).ToDataRes(types.String)
+	},
+	"docker.file.oci.licenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetLicenses()).ToDataRes(types.String)
+	},
+	"docker.file.oci.refName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetRefName()).ToDataRes(types.String)
+	},
+	"docker.file.oci.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetTitle()).ToDataRes(types.String)
+	},
+	"docker.file.oci.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetDescription()).ToDataRes(types.String)
+	},
+	"docker.file.oci.baseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetBaseName()).ToDataRes(types.String)
+	},
+	"docker.file.oci.baseDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetBaseDigest()).ToDataRes(types.String)
+	},
+	"docker.file.oci.all": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileOci).GetAll()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"docker.file.arg.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileArg).GetName()).ToDataRes(types.String)
@@ -13681,6 +13734,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFileStage).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"docker.file.stage.oci": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Oci, ok = plugin.RawToTValue[*mqlDockerFileOci](v.Value, v.Error)
+		return
+	},
 	"docker.file.stage.run": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Run, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -13743,6 +13800,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.stage.final": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Final, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.oci.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Created, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.authors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Authors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.documentation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Documentation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Revision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Licenses, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.refName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).RefName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.baseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).BaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.baseDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).BaseDigest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.oci.all": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileOci).All, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"docker.file.arg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33535,6 +33656,7 @@ type mqlDockerFileStage struct {
 	Env            plugin.TValue[[]any]
 	Arg            plugin.TValue[[]any]
 	Labels         plugin.TValue[map[string]any]
+	Oci            plugin.TValue[*mqlDockerFileOci]
 	Run            plugin.TValue[[]any]
 	Cmd            plugin.TValue[*mqlDockerFileRun]
 	User           plugin.TValue[*mqlDockerFileUser]
@@ -33605,6 +33727,10 @@ func (c *mqlDockerFileStage) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
 
+func (c *mqlDockerFileStage) GetOci() *plugin.TValue[*mqlDockerFileOci] {
+	return &c.Oci
+}
+
 func (c *mqlDockerFileStage) GetRun() *plugin.TValue[[]any] {
 	return &c.Run
 }
@@ -33667,6 +33793,120 @@ func (c *mqlDockerFileStage) GetHasHealthcheck() *plugin.TValue[bool] {
 
 func (c *mqlDockerFileStage) GetFinal() *plugin.TValue[bool] {
 	return &c.Final
+}
+
+// mqlDockerFileOci for the docker.file.oci resource
+type mqlDockerFileOci struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileOciInternal it will be used here
+	Created       plugin.TValue[string]
+	Authors       plugin.TValue[string]
+	Url           plugin.TValue[string]
+	Documentation plugin.TValue[string]
+	Source        plugin.TValue[string]
+	Version       plugin.TValue[string]
+	Revision      plugin.TValue[string]
+	Vendor        plugin.TValue[string]
+	Licenses      plugin.TValue[string]
+	RefName       plugin.TValue[string]
+	Title         plugin.TValue[string]
+	Description   plugin.TValue[string]
+	BaseName      plugin.TValue[string]
+	BaseDigest    plugin.TValue[string]
+	All           plugin.TValue[map[string]any]
+}
+
+// createDockerFileOci creates a new instance of this resource
+func createDockerFileOci(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileOci{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.oci", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileOci) MqlName() string {
+	return "docker.file.oci"
+}
+
+func (c *mqlDockerFileOci) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileOci) GetCreated() *plugin.TValue[string] {
+	return &c.Created
+}
+
+func (c *mqlDockerFileOci) GetAuthors() *plugin.TValue[string] {
+	return &c.Authors
+}
+
+func (c *mqlDockerFileOci) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlDockerFileOci) GetDocumentation() *plugin.TValue[string] {
+	return &c.Documentation
+}
+
+func (c *mqlDockerFileOci) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlDockerFileOci) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlDockerFileOci) GetRevision() *plugin.TValue[string] {
+	return &c.Revision
+}
+
+func (c *mqlDockerFileOci) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlDockerFileOci) GetLicenses() *plugin.TValue[string] {
+	return &c.Licenses
+}
+
+func (c *mqlDockerFileOci) GetRefName() *plugin.TValue[string] {
+	return &c.RefName
+}
+
+func (c *mqlDockerFileOci) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlDockerFileOci) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlDockerFileOci) GetBaseName() *plugin.TValue[string] {
+	return &c.BaseName
+}
+
+func (c *mqlDockerFileOci) GetBaseDigest() *plugin.TValue[string] {
+	return &c.BaseDigest
+}
+
+func (c *mqlDockerFileOci) GetAll() *plugin.TValue[map[string]any] {
+	return &c.All
 }
 
 // mqlDockerFileArg for the docker.file.arg resource

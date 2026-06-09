@@ -557,12 +557,72 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage, isFinal bool) (
 		args["shell"] = llx.NilData
 	}
 
+	ociResource, err := p.ociResource(stageID, labels)
+	if err != nil {
+		return nil, err
+	}
+	args["oci"] = llx.ResourceData(ociResource, ResourceDockerFileOci)
+
 	rawStage, err := CreateResource(p.MqlRuntime, ResourceDockerFileStage, args)
 	if err != nil {
 		return nil, err
 	}
 
 	return rawStage.(*mqlDockerFileStage), nil
+}
+
+// ociAnnotationFields maps a docker.file.oci field to its OpenContainer image
+// annotation key (https://github.com/opencontainers/image-spec/blob/main/annotations.md).
+var ociAnnotationFields = map[string]string{
+	"created":       "org.opencontainers.image.created",
+	"authors":       "org.opencontainers.image.authors",
+	"url":           "org.opencontainers.image.url",
+	"documentation": "org.opencontainers.image.documentation",
+	"source":        "org.opencontainers.image.source",
+	"version":       "org.opencontainers.image.version",
+	"revision":      "org.opencontainers.image.revision",
+	"vendor":        "org.opencontainers.image.vendor",
+	"licenses":      "org.opencontainers.image.licenses",
+	"refName":       "org.opencontainers.image.ref.name",
+	"title":         "org.opencontainers.image.title",
+	"description":   "org.opencontainers.image.description",
+	"baseName":      "org.opencontainers.image.base.name",
+	"baseDigest":    "org.opencontainers.image.base.digest",
+}
+
+// ociResource builds a docker.file.oci from a stage's LABEL map, surfacing the
+// standard OpenContainer image annotations as named fields and collecting every
+// org.opencontainers.* label into `all`. Values are unquoted for convenient
+// consumption, unlike the verbatim stage `labels` map.
+func (p *mqlDockerFile) ociResource(stageID string, labels map[string]string) (plugin.Resource, error) {
+	args := map[string]*llx.RawData{
+		"__id": llx.StringData(stageID + "/oci"),
+	}
+	for field, annotation := range ociAnnotationFields {
+		args[field] = llx.StringData(trimMatchingQuotes(labels[annotation]))
+	}
+
+	all := map[string]string{}
+	for k, v := range labels {
+		if strings.HasPrefix(k, "org.opencontainers.") {
+			all[k] = trimMatchingQuotes(v)
+		}
+	}
+	args["all"] = llx.MapData(llx.TMap2Raw(all), types.String)
+
+	return CreateResource(p.MqlRuntime, ResourceDockerFileOci, args)
+}
+
+// trimMatchingQuotes removes a single pair of matched surrounding double or
+// single quotes from a LABEL value (e.g. `"mql"` -> `mql`). Values without a
+// matched pair are returned unchanged.
+func trimMatchingQuotes(s string) string {
+	if len(s) >= 2 {
+		if c := s[0]; (c == '"' || c == '\'') && s[len(s)-1] == c {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }
 
 func (p *mqlDockerFile) locationID(location []parser.Range) string {

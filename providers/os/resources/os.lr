@@ -2793,6 +2793,8 @@ private docker.file.stage @defaults("from.name") {
   arg []docker.file.arg
   // LABEL instructions in the Dockerfile
   labels map[string]string
+  // OpenContainer image annotations from this stage's labels
+  oci docker.file.oci
   // RUN instructions in this Dockerfile
   run []docker.file.run
   // CMD instructions in this Dockerfile
@@ -2839,6 +2841,59 @@ private docker.file.stage @defaults("from.name") {
   // Only the final stage produces the image when the Dockerfile is built
   // without `--target`.
   final bool
+}
+
+// OpenContainer image annotations declared in a build stage
+//
+// Examine the `org.opencontainers.image.*` labels set via `LABEL`
+// instructions in a single build stage. The standard annotations defined by
+// the OpenContainer image specification are surfaced as named fields so you
+// can read provenance and metadata without remembering the full annotation
+// keys — for example the upstream repository (`source`), the commit it was
+// built from (`revision`), the release (`version`), and the SPDX license
+// expression (`licenses`). The `all` field holds every `org.opencontainers.*`
+// label found on the stage, including vendor-specific annotations that have
+// no named field. A field is empty when its annotation is not declared in the
+// stage. Surrounding quotes are removed from values, so a quoted `LABEL`
+// reads back unquoted; the verbatim form remains available in the stage
+// `labels` map.
+private docker.file.oci @defaults("source version revision") {
+  // Date and time the image was built, as an RFC 3339 string (`org.opencontainers.image.created`)
+  created string
+  // Contact details of the people or organization responsible for the image (`org.opencontainers.image.authors`)
+  authors string
+  // URL to find more information about the image (`org.opencontainers.image.url`)
+  url string
+  // URL to get documentation about the image (`org.opencontainers.image.documentation`)
+  documentation string
+  // URL to the source code that built the image (`org.opencontainers.image.source`)
+  source string
+  // Version of the packaged software (`org.opencontainers.image.version`)
+  version string
+  // Source control revision the image was built from (`org.opencontainers.image.revision`)
+  revision string
+  // Name of the distributing entity, organization, or individual (`org.opencontainers.image.vendor`)
+  vendor string
+  // License(s) under which the contained software is distributed (`org.opencontainers.image.licenses`)
+  //
+  // An SPDX license expression, for example `Apache-2.0` or `MIT OR GPL-2.0-only`.
+  licenses string
+  // Name of the reference for the image's target (`org.opencontainers.image.ref.name`)
+  refName string
+  // Human-readable title of the image (`org.opencontainers.image.title`)
+  title string
+  // Human-readable description of the software packaged in the image (`org.opencontainers.image.description`)
+  description string
+  // Image reference of the base image this image was built on (`org.opencontainers.image.base.name`)
+  baseName string
+  // Digest of the base image this image was built on (`org.opencontainers.image.base.digest`)
+  baseDigest string
+  // Every `org.opencontainers.*` label on the stage, keyed by full annotation name
+  //
+  // Includes the standard annotations surfaced as named fields as well as any
+  // vendor-specific or non-standard annotations under the `org.opencontainers`
+  // namespace.
+  all map[string]string
 }
 
 // Dockerfile ARG instructions

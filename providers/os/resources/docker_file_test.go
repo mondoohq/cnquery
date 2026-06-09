@@ -386,6 +386,87 @@ ONBUILD RUN make
 	require.Equal(t, "RUN make", second.Expression.Data)
 }
 
+func TestParseDockerfile_OCILabels(t *testing.T) {
+	// Mixes unquoted, double-quoted, and single-quoted LABEL values to verify
+	// the oci.* accessors strip a matched surrounding quote pair.
+	src := `
+FROM alpine
+LABEL org.opencontainers.image.source=https://github.com/example/repo
+LABEL org.opencontainers.image.version="1.2.3"
+LABEL org.opencontainers.image.revision=abc123
+LABEL org.opencontainers.image.licenses='Apache-2.0'
+LABEL org.opencontainers.image.title="My App"
+LABEL org.opencontainers.image.base.name=docker.io/library/alpine:3.20
+LABEL org.opencontainers.artifact.created="2026-01-01T00:00:00Z"
+LABEL com.example.team=platform
+`
+	r := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	file := &mqlFile{
+		Content:    plugin.TValue[string]{Data: src, State: plugin.StateIsSet},
+		Path:       plugin.TValue[string]{Data: "Dockerfile", State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	df := mqlDockerFile{
+		File:       plugin.TValue[*mqlFile]{Data: file, State: plugin.StateIsSet},
+		MqlRuntime: r,
+	}
+	require.NoError(t, df.parse(file))
+
+	stage := df.Stages.Data[0].(*mqlDockerFileStage)
+	require.NotNil(t, stage.Oci.Data)
+	oci := stage.Oci.Data
+
+	// standard annotations surface as named fields, with surrounding quotes removed
+	require.Equal(t, "https://github.com/example/repo", oci.Source.Data) // unquoted
+	require.Equal(t, "1.2.3", oci.Version.Data)                          // double-quoted
+	require.Equal(t, "abc123", oci.Revision.Data)                        // unquoted
+	require.Equal(t, "Apache-2.0", oci.Licenses.Data)                    // single-quoted
+	require.Equal(t, "My App", oci.Title.Data)                           // double-quoted, with a space
+	require.Equal(t, "docker.io/library/alpine:3.20", oci.BaseName.Data)
+
+	// the verbatim labels map keeps the quotes that oci.* strips
+	require.Equal(t, "\"1.2.3\"", stage.Labels.Data["org.opencontainers.image.version"])
+	require.Equal(t, "'Apache-2.0'", stage.Labels.Data["org.opencontainers.image.licenses"])
+
+	// undeclared annotations are empty, not unset
+	require.Equal(t, "", oci.Authors.Data)
+	require.Equal(t, "", oci.Created.Data) // image.created not set; artifact.created is unrelated
+
+	// `all` holds every org.opencontainers.* label (unquoted), excluding non-OCI labels
+	require.Equal(t, map[string]any{
+		"org.opencontainers.image.source":     "https://github.com/example/repo",
+		"org.opencontainers.image.version":    "1.2.3",
+		"org.opencontainers.image.revision":   "abc123",
+		"org.opencontainers.image.licenses":   "Apache-2.0",
+		"org.opencontainers.image.title":      "My App",
+		"org.opencontainers.image.base.name":  "docker.io/library/alpine:3.20",
+		"org.opencontainers.artifact.created": "2026-01-01T00:00:00Z",
+	}, oci.All.Data)
+}
+
+func TestTrimMatchingQuotes(t *testing.T) {
+	cases := []struct {
+		in, out string
+	}{
+		{``, ``},
+		{`x`, `x`},
+		{`"`, `"`},                 // single char, no pair
+		{`""`, ``},                 // empty quoted
+		{`"abc"`, `abc`},           // double quotes
+		{`'abc'`, `abc`},           // single quotes
+		{`abc`, `abc`},             // no quotes
+		{`"abc`, `"abc`},           // unmatched leading
+		{`abc"`, `abc"`},           // unmatched trailing
+		{`"abc'`, `"abc'`},         // mismatched pair
+		{`"a"b"`, `a"b`},           // strips only the outer pair
+		{`https://x`, `https://x`}, // realistic unquoted url
+		{`"My App"`, `My App`},     // value with a space
+	}
+	for _, kase := range cases {
+		require.Equal(t, kase.out, trimMatchingQuotes(kase.in), "input %q", kase.in)
+	}
+}
+
 func TestParseDockerfile_Directives(t *testing.T) {
 	src := `# syntax=docker/dockerfile:1.7
 # escape=` + "`" + `
