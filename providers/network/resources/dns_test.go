@@ -37,14 +37,13 @@ func dnsLiveQuery(t *testing.T, query string) *llx.RawData {
 }
 
 func TestResource_DnsDnssec(t *testing.T) {
-	// cloudflare.com is reliably DNSSEC-signed. A successful lookup reports
-	// enabled; an empty result means the DNSKEY lookup didn't complete in this
-	// environment, so skip rather than fail.
-	enabled := dnsLiveQuery(t, `dns("cloudflare.com").dnssec.enabled`)
-	if enabled.Value != true {
+	// cloudflare.com is reliably DNSSEC-signed. The enabled flag probes whether
+	// the live DNSKEY lookup completed (empty on restricted/flaky CI networks);
+	// skip rather than fail in that case. The remaining assertions then verify
+	// the keys and algorithms parsed correctly.
+	if dnsLiveQuery(t, `dns("cloudflare.com").dnssec.enabled`).Value != true {
 		t.Skip("skipping: live DNSKEY lookup returned no data")
 	}
-	assert.Equal(t, true, enabled.Value)
 
 	keys := dnsLiveQuery(t, `dns("cloudflare.com").dnssec.keys.all(algorithm > 0 && publicKey != "")`)
 	assert.Equal(t, true, keys.Value)
@@ -54,24 +53,26 @@ func TestResource_DnsDnssec(t *testing.T) {
 }
 
 func TestResource_DnsSpf(t *testing.T) {
-	// google.com publishes an SPF record with a terminating ~all.
-	has := dnsLiveQuery(t, `dns("google.com").spf.any(version == "spf1")`)
-	if has.Value != true {
+	// google.com publishes an SPF record with a terminating ~all. The presence
+	// of an spf1 record probes whether the lookup completed; the assertion then
+	// verifies the parsed all-qualifier.
+	if dnsLiveQuery(t, `dns("google.com").spf.any(version == "spf1")`).Value != true {
 		t.Skip("skipping: live SPF lookup returned no data")
 	}
-	assert.Equal(t, true, has.Value)
 
 	q := dnsLiveQuery(t, `dns("google.com").spf.all(allQualifier.in(["+","-","~","?"]))`)
 	assert.Equal(t, true, q.Value)
 }
 
 func TestResource_DnsDmarc(t *testing.T) {
-	// google.com publishes a DMARC record at _dmarc.google.com.
-	ver := dnsLiveQuery(t, `dns("google.com").dmarc.version`)
-	if v, _ := ver.Value.(string); v == "" {
+	// google.com publishes a DMARC record at _dmarc.google.com. Presence of the
+	// record probes whether the lookup completed; the assertions then verify the
+	// parsed version and policy.
+	if dnsLiveQuery(t, `dns("google.com").dmarc != null`).Value != true {
 		t.Skip("skipping: live DMARC lookup returned no data")
 	}
-	assert.Equal(t, "DMARC1", ver.Value)
+
+	assert.Equal(t, "DMARC1", dnsLiveQuery(t, `dns("google.com").dmarc.version`).Value)
 
 	pol := dnsLiveQuery(t, `dns("google.com").dmarc.policy.in(["none","quarantine","reject"])`)
 	assert.Equal(t, true, pol.Value)
