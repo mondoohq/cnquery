@@ -2,18 +2,16 @@ module go.mondoo.com/mql/v13
 
 go 1.26.3
 
-replace go.mondoo.com/mql/v13/vault => ./vault
-
 require (
 	cloud.google.com/go/logging v1.11.0
-	cloud.google.com/go/secretmanager v1.14.0 // indirect
+	cloud.google.com/go/secretmanager v1.14.0
 	dario.cat/mergo v1.0.2
-	github.com/99designs/keyring v1.2.2 // indirect
+	github.com/99designs/keyring v1.2.2
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/BurntSushi/toml v1.6.0
 	github.com/CycloneDX/cyclonedx-go v0.11.0
-	github.com/GoogleCloudPlatform/berglas/v2 v2.0.2 // indirect
+	github.com/GoogleCloudPlatform/berglas/v2 v2.0.2
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v1.4.1
 	github.com/StackExchange/wmi v1.2.1
@@ -26,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.28
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.305.2
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.42.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.69.2
 	github.com/aws/smithy-go v1.27.2
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0
@@ -53,7 +51,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.8.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/hashicorp/vault/api v1.23.0 // indirect
+	github.com/hashicorp/vault/api v1.23.0
 	github.com/hnakamur/go-scp v1.0.2
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
@@ -100,7 +98,6 @@ require (
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.15
 	go.mondoo.com/mondoo-go v0.0.0-20260608064248-5890e657cd12
-	go.mondoo.com/mql/v13/vault v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0

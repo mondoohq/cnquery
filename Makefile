@@ -318,13 +318,6 @@ providers/test:
 	@$(call testGoModProvider, providers/vllm)
 	@$(call testGoModProvider, providers/vsphere)
 
-# The vault implementations live in their own module (go.mondoo.com/mql/v13/vault)
-# so their heavy cloud-SDK dependencies stay out of the core module. It is not
-# covered by the root `go list ./...`, so test it explicitly.
-.PHONY: vault/test
-vault/test:
-	cd vault && gotestsum --junitfile ../report_vault.xml --format pkgname -- -cover ./...
-
 lr/test:
 	go test ./providers-sdk/v1/mqlr/...
 
