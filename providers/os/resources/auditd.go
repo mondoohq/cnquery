@@ -423,8 +423,14 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 					}
 				case "auid":
 					switch op {
-					case ">=":
+					case ">=", ">":
+						// auidMin is the effective lower bound, so `auid>999`
+						// (equivalent to `auid>=1000`) and `auid>=1000` both
+						// report 1000.
 						if n, err := strconv.ParseInt(val, 10, 64); err == nil {
+							if op == ">" {
+								n++
+							}
 							auidMin = &n
 						}
 					case "!=":

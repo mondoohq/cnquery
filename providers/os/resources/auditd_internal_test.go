@@ -96,6 +96,23 @@ func TestAuditdSyscallRuleParsing(t *testing.T) {
 	})
 }
 
+func TestAuditdSyscallAuidGreaterThan(t *testing.T) {
+	runtime := newAuditdRulesTestRuntime(t)
+	rules := &mqlAuditdRules{MqlRuntime: runtime}
+
+	// `auid>999` is the strict-greater-than spelling of `auid>=1000`; auidMin
+	// reports the effective lower bound of 1000 either way.
+	content := "-a always,exit -F arch=b64 -S execve -F auid>999 -k t\n"
+
+	var errs multierr.Errors
+	rules.parse(content, &errs)
+	require.NoError(t, errs.Deduplicate())
+	require.Len(t, rules.Syscalls.Data, 1)
+
+	r := rules.Syscalls.Data[0].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, int64(1000), r.AuidMin.Data)
+}
+
 func TestAuditdSyscallRuleRepeatedFlags(t *testing.T) {
 	runtime := newAuditdRulesTestRuntime(t)
 	rules := &mqlAuditdRules{MqlRuntime: runtime}
