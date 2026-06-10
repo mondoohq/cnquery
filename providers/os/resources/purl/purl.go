@@ -16,6 +16,7 @@ const (
 	QualifierArch   = "arch"
 	QualifierDistro = "distro"
 	QualifierEpoch  = "epoch"
+	QualifierBuild  = "build"
 )
 
 // PackageURL is a helper struct that renters a package url based of an inventory

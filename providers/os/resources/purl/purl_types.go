@@ -21,6 +21,10 @@ var (
 	Type_X_Platform Type = "platform"
 	// TypeSnap is a pkg:snap purl.
 	TypeSnap Type = "snap"
+	// TypeCos is a pkg:cos purl for Google Container-Optimized OS packages.
+	// Tracks the shape proposed in package-url/purl-spec#270 and emitted by
+	// osv-scalibr; not (yet) in the formal purl-spec registry.
+	TypeCos Type = "cos"
 	// Types we use coming from:
 	// https://github.com/package-url/packageurl-go/blob/master/packageurl.go#L54
 	TypeGeneric = Type(packageurl.TypeGeneric)
@@ -43,6 +47,7 @@ var (
 		TypeEbuild:      {},
 		TypeNix:         {},
 		TypeRPM:         {},
+		TypeCos:         {},
 	}
 )
 

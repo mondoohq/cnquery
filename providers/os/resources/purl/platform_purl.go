@@ -33,7 +33,7 @@ func NewPlatformPurl(platform *inventory.Platform) (string, error) {
 	qualifiers[QualifierDistro] = strings.Join(distroQualifiers, "-")
 
 	if platform.Build != "" {
-		qualifiers["build"] = platform.Build
+		qualifiers[QualifierBuild] = platform.Build
 	}
 
 	// e.g. used on suse linux

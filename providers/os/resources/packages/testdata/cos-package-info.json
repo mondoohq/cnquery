@@ -17,6 +17,11 @@
       "name": "baselayout",
       "version": "16919.103.16",
       "ebuild_version": "2.2-r1"
+    },
+    {
+      "category": "app-misc",
+      "name": "ca-certificates",
+      "version": "20230311.3.96.1"
     }
   ]
 }
