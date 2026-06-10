@@ -1209,8 +1209,8 @@ private github.release @defaults("name tagName") {
 //
 // Examine a webhook configured on a repository or organization. Provides `name`,
 // `url`, subscribed `events`, `config` (content type, insecure_ssl flag, and
-// redacted secret reference), the typed `contentType` and `insecureSsl`
-// accessors, `active` status, and `createdAt`/`updatedAt` timestamps.
+// redacted secret reference), the `contentType` and `insecureSsl` fields,
+// `active` status, and `createdAt`/`updatedAt` timestamps.
 private github.webhook @defaults("id name") {
   // Webhook ID
   id int
@@ -1222,9 +1222,9 @@ private github.webhook @defaults("id name") {
   events []string
   // Webhook configuration: content_type (json/form), insecure_ssl (0/1), and a redacted secret reference
   config dict
-  // Payload media type (json or form); typed accessor for the `content_type` config value
+  // Payload media type: "json" or "form"
   contentType string
-  // Whether the webhook skips TLS certificate verification, exposing payloads to interception; typed accessor for the `insecure_ssl` config value
+  // Whether TLS certificate verification is skipped for webhook delivery, exposing payloads to interception
   insecureSsl bool
   // Whether the webhook is active
   active bool
@@ -1321,19 +1321,19 @@ private github.branchprotection @defaults("id") {
   lockBranch bool
   // Whether fork syncing is allowed
   allowForkSyncing bool
-  // Whether administrators are included in branch protection enforcement; typed accessor for the `enforceAdmins` dict
+  // Whether administrators are included in branch protection enforcement
   enforceAdminsEnabled bool
-  // Whether force pushes are allowed on matching branches; typed accessor for the `allowForcePushes` dict
+  // Whether force pushes are allowed on matching branches
   allowForcePushesEnabled bool
-  // Whether branch deletions are allowed on matching branches; typed accessor for the `allowDeletions` dict
+  // Whether branch deletions are allowed on matching branches
   allowDeletionsEnabled bool
-  // Whether conversation resolution is required before merging; typed accessor for the `requiredConversationResolution` dict
+  // Whether conversation resolution is required before merging
   requiredConversationResolutionEnabled bool
-  // Whether a linear commit history is required before merging; typed accessor for the `requireLinearHistory` dict
+  // Whether a linear commit history is required before merging
   requireLinearHistoryEnabled bool
-  // Whether a pull request is required before merging; true when `requiredPullRequestReviews` is configured
+  // Whether a pull request review is required before merging
   requiredPullRequestReviewsEnabled bool
-  // Whether status checks are required before merging; true when `requiredStatusChecks` is configured
+  // Whether status checks are required before merging
   requiredStatusChecksEnabled bool
   // Number of approving reviews required to merge a pull request (0 if not configured)
   requiredApprovingReviewCount int
@@ -1601,7 +1601,7 @@ private github.dependabotAlert @defaults("number state severity") {
   number int
   // Alert state (auto_dismissed, dismissed, fixed, open)
   state string
-  // Severity of the alert (low, medium, high, critical); typed accessor for the `securityVulnerability` severity
+  // Severity of the alert: low, medium, high, or critical
   severity string
   // Vulnerable dependency information
   dependency dict
