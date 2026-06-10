@@ -96,8 +96,10 @@ func (s *mqlPamConf) exists() (bool, error) {
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
 func (s *mqlPamConf) files() ([]any, error) {
-	// check if the pam.d directory exists and is a directory
-	// according to the pam spec, pam prefers the directory if it  exists over the single file config
+	// Linux-PAM uses the /etc/pam.d directory when it exists and ignores the
+	// legacy single-file /etc/pam.conf entirely; only when /etc/pam.d is absent
+	// does it fall back to /etc/pam.conf. We parse the same source PAM itself
+	// uses so audits reflect the effective configuration rather than dead files.
 	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
 	raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData(defaultPamDir),
