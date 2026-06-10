@@ -30,8 +30,13 @@ const (
 	DiscoveryGroup   = "groups"
 	DiscoveryProject = "projects"
 	// -- chained git discovery options --
-	DiscoveryTerraform    = "terraform"
-	DiscoveryK8sManifests = "k8s-manifests"
+	DiscoveryTerraform      = "terraform"
+	DiscoveryK8sManifests   = "k8s-manifests"
+	DiscoveryCloudformation = "cloudformation"
+	DiscoveryDockerfiles    = "dockerfiles"
+	DiscoveryBicep          = "bicep"
+	DiscoveryHelm           = "helm"
+	DiscoveryKustomize      = "kustomize"
 )
 
 type Service struct {

@@ -47,6 +47,11 @@ Notes:
 				connection.DiscoveryOrganization,
 				connection.DiscoveryTerraform,
 				connection.DiscoveryK8sManifests,
+				connection.DiscoveryCloudformation,
+				connection.DiscoveryDockerfiles,
+				connection.DiscoveryBicep,
+				connection.DiscoveryHelm,
+				connection.DiscoveryKustomize,
 			},
 			Flags: []plugin.Flag{
 				{
