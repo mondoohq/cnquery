@@ -5614,6 +5614,14 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   backupRetentionIntervalInHours int
   // Backup storage redundancy (for Periodic backup policy: "Geo", "Local", "Zone")
   backupStorageRedundancy string
+  // Default consistency level ("Eventual", "Session", "BoundedStaleness", "Strong", "ConsistentPrefix")
+  defaultConsistencyLevel string
+  // Network ACL bypass setting ("None" or "AzureServices")
+  networkAclBypass string
+  // Allowed origins from the account's CORS policies (empty when CORS is not configured)
+  corsAllowedOrigins []string
+  // Names of the regions the account is deployed to (more than one indicates multi-region)
+  locations []string
   // Virtual network rules for the Cosmos DB account
   virtualNetworkRules []azure.subscription.cosmosDbService.account.virtualNetworkRule
   // Private endpoint connections for the Cosmos DB account

@@ -8460,6 +8460,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.backupStorageRedundancy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetBackupStorageRedundancy()).ToDataRes(types.String)
 	},
+	"azure.subscription.cosmosDbService.account.defaultConsistencyLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDefaultConsistencyLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.networkAclBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetNetworkAclBypass()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.corsAllowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetCorsAllowedOrigins()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetLocations()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")))
 	},
@@ -24367,6 +24379,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.backupStorageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).BackupStorageRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.defaultConsistencyLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DefaultConsistencyLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.networkAclBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).NetworkAclBypass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.corsAllowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).CorsAllowedOrigins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55711,6 +55739,10 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	BackupIntervalInMinutes            plugin.TValue[int64]
 	BackupRetentionIntervalInHours     plugin.TValue[int64]
 	BackupStorageRedundancy            plugin.TValue[string]
+	DefaultConsistencyLevel            plugin.TValue[string]
+	NetworkAclBypass                   plugin.TValue[string]
+	CorsAllowedOrigins                 plugin.TValue[[]any]
+	Locations                          plugin.TValue[[]any]
 	VirtualNetworkRules                plugin.TValue[[]any]
 	PrivateEndpointConnections         plugin.TValue[[]any]
 	SqlRoleDefinitions                 plugin.TValue[[]any]
@@ -55845,6 +55877,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetBackupRetentionIntervalI
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetBackupStorageRedundancy() *plugin.TValue[string] {
 	return &c.BackupStorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetDefaultConsistencyLevel() *plugin.TValue[string] {
+	return &c.DefaultConsistencyLevel
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetNetworkAclBypass() *plugin.TValue[string] {
+	return &c.NetworkAclBypass
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetCorsAllowedOrigins() *plugin.TValue[[]any] {
+	return &c.CorsAllowedOrigins
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetLocations() *plugin.TValue[[]any] {
+	return &c.Locations
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetVirtualNetworkRules() *plugin.TValue[[]any] {

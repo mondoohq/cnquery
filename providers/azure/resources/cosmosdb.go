@@ -201,6 +201,8 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 		}
 	}
 
+	defaultConsistencyLevel, networkAclBypass, corsAllowedOrigins, locations := cosmosNetworkConsistency(account.Properties)
+
 	virtualNetworkRules := []any{}
 	if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 		for _, rule := range account.Properties.VirtualNetworkRules {
@@ -252,6 +254,10 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			"backupIntervalInMinutes":            llx.IntData(backupIntervalMinutes),
 			"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
 			"backupStorageRedundancy":            llx.StringData(backupRedundancy),
+			"defaultConsistencyLevel":            llx.StringDataPtr(defaultConsistencyLevel),
+			"networkAclBypass":                   llx.StringDataPtr(networkAclBypass),
+			"corsAllowedOrigins":                 llx.ArrayData(corsAllowedOrigins, types.String),
+			"locations":                          llx.ArrayData(locations, types.String),
 			"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
 		})
 	if err != nil {
@@ -272,6 +278,34 @@ func cosmosEnumStrPtr[T ~string](v *T) *string {
 	}
 	s := string(*v)
 	return &s
+}
+
+// cosmosNetworkConsistency extracts the default consistency level, network ACL
+// bypass setting, CORS allowed origins, and deployed region names from a Cosmos
+// DB account's properties. Consistency level and ACL bypass stay nil (null in
+// MQL) when absent; the slices are always non-nil so callers can assert on
+// length without a null guard.
+func cosmosNetworkConsistency(props *cosmosdb.DatabaseAccountGetProperties) (defaultConsistencyLevel, networkAclBypass *string, corsAllowedOrigins, locations []any) {
+	corsAllowedOrigins = []any{}
+	locations = []any{}
+	if props == nil {
+		return nil, nil, corsAllowedOrigins, locations
+	}
+	if props.ConsistencyPolicy != nil {
+		defaultConsistencyLevel = cosmosEnumStrPtr(props.ConsistencyPolicy.DefaultConsistencyLevel)
+	}
+	networkAclBypass = cosmosEnumStrPtr(props.NetworkACLBypass)
+	for _, cors := range props.Cors {
+		if cors != nil && cors.AllowedOrigins != nil {
+			corsAllowedOrigins = append(corsAllowedOrigins, *cors.AllowedOrigins)
+		}
+	}
+	for _, loc := range props.Locations {
+		if loc != nil && loc.LocationName != nil {
+			locations = append(locations, *loc.LocationName)
+		}
+	}
+	return defaultConsistencyLevel, networkAclBypass, corsAllowedOrigins, locations
 }
 
 // fetchMongoClusters lists the Cosmos DB for MongoDB (vCore) clusters

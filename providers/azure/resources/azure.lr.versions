@@ -1535,6 +1535,8 @@ azure.subscription.cosmosDbService.account.backupIntervalInMinutes 13.1.8
 azure.subscription.cosmosDbService.account.backupRetentionIntervalInHours 13.1.8
 azure.subscription.cosmosDbService.account.backupStorageRedundancy 13.1.8
 azure.subscription.cosmosDbService.account.backupType 13.1.8
+azure.subscription.cosmosDbService.account.corsAllowedOrigins 13.18.1
+azure.subscription.cosmosDbService.account.defaultConsistencyLevel 13.18.1
 azure.subscription.cosmosDbService.account.defaultIdentity 13.1.8
 azure.subscription.cosmosDbService.account.diagnosticSettings 13.8.2
 azure.subscription.cosmosDbService.account.disableKeyBasedMetadataWriteAccess 11.4.28
@@ -1547,8 +1549,10 @@ azure.subscription.cosmosDbService.account.ipRangeFilter 11.4.28
 azure.subscription.cosmosDbService.account.isVirtualNetworkFilterEnabled 11.4.28
 azure.subscription.cosmosDbService.account.kind 9.0.1
 azure.subscription.cosmosDbService.account.location 9.0.1
+azure.subscription.cosmosDbService.account.locations 13.18.1
 azure.subscription.cosmosDbService.account.minimalTlsVersion 11.4.28
 azure.subscription.cosmosDbService.account.name 9.0.1
+azure.subscription.cosmosDbService.account.networkAclBypass 13.18.1
 azure.subscription.cosmosDbService.account.privateEndpointConnections 13.8.2
 azure.subscription.cosmosDbService.account.properties 9.0.1
 azure.subscription.cosmosDbService.account.publicNetworkAccess 11.4.28

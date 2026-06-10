@@ -188,6 +188,47 @@ func TestIsCosmosServerlessThroughputError(t *testing.T) {
 	})
 }
 
+func TestCosmosNetworkConsistency(t *testing.T) {
+	t.Run("nil props returns nils and empty slices", func(t *testing.T) {
+		dcl, bypass, cors, locs := cosmosNetworkConsistency(nil)
+		assert.Nil(t, dcl)
+		assert.Nil(t, bypass)
+		assert.Equal(t, []any{}, cors)
+		assert.Equal(t, []any{}, locs)
+	})
+
+	t.Run("populated props map to typed values", func(t *testing.T) {
+		strong := cosmos.DefaultConsistencyLevelStrong
+		bypassNone := cosmos.NetworkACLBypassNone
+		origin1, origin2 := "https://example.com", "*"
+		east, west := "East US", "West US"
+		props := &cosmos.DatabaseAccountGetProperties{
+			ConsistencyPolicy: &cosmos.ConsistencyPolicy{DefaultConsistencyLevel: &strong},
+			NetworkACLBypass:  &bypassNone,
+			Cors: []*cosmos.CorsPolicy{
+				{AllowedOrigins: &origin1},
+				{AllowedOrigins: &origin2},
+				{AllowedOrigins: nil},
+			},
+			Locations: []*cosmos.Location{
+				{LocationName: &east},
+				{LocationName: &west},
+				nil,
+			},
+		}
+		dcl, bypass, cors, locs := cosmosNetworkConsistency(props)
+		assert.Equal(t, "Strong", *dcl)
+		assert.Equal(t, "None", *bypass)
+		assert.Equal(t, []any{"https://example.com", "*"}, cors)
+		assert.Equal(t, []any{"East US", "West US"}, locs)
+	})
+
+	t.Run("nil consistency policy leaves level nil", func(t *testing.T) {
+		dcl, _, _, _ := cosmosNetworkConsistency(&cosmos.DatabaseAccountGetProperties{})
+		assert.Nil(t, dcl)
+	})
+}
+
 func TestIsCosmosForbiddenError(t *testing.T) {
 	t.Run("nil error", func(t *testing.T) {
 		assert.False(t, isCosmosForbiddenError(nil))
