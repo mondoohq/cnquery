@@ -23,6 +23,16 @@ func (a *mqlAzureSubscriptionFunctionsService) id() (string, error) {
 	return "azure.subscription.functions/" + a.SubscriptionId.Data, nil
 }
 
+// functionAppPublicNetworkAccess returns the site's public network access
+// setting ("Enabled" or "Disabled"), or "" when the properties or field are
+// absent.
+func functionAppPublicNetworkAccess(props *web.SiteProperties) string {
+	if props == nil || props.PublicNetworkAccess == nil {
+		return ""
+	}
+	return *props.PublicNetworkAccess
+}
+
 func initAzureSubscriptionFunctionsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -152,8 +162,9 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 	}
 
 	var state, defaultHostName, clientCertMode, managedServiceIdentityId string
-	var keyVaultReferenceIdentity, publicNetworkAccess string
+	var keyVaultReferenceIdentity string
 	var httpsOnly, clientCertEnabled bool
+	publicNetworkAccess := functionAppPublicNetworkAccess(site.Properties)
 	if site.Properties != nil {
 		if site.Properties.State != nil {
 			state = *site.Properties.State
@@ -172,9 +183,6 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		}
 		if site.Properties.KeyVaultReferenceIdentity != nil {
 			keyVaultReferenceIdentity = *site.Properties.KeyVaultReferenceIdentity
-		}
-		if site.Properties.PublicNetworkAccess != nil {
-			publicNetworkAccess = *site.Properties.PublicNetworkAccess
 		}
 	}
 	if site.Identity != nil && site.Identity.PrincipalID != nil {
