@@ -125,11 +125,12 @@ func ReportPanicWithTags(product, version, build string, tagsFn PanicTagsFn, rep
 }
 
 func handlePanic(product, version, build string, r any, tags map[string]string, reporters []PanicReportFn) {
-	sendPanic(product, version, build, r, debug.Stack(), tags)
+	stack := debug.Stack()
+	sendPanic(product, version, build, r, stack, tags)
 
 	// call additional reporters
 	for _, reporter := range reporters {
-		reporter(product, version, build, r, debug.Stack())
+		reporter(product, version, build, r, stack)
 	}
 }
 
@@ -165,13 +166,14 @@ func sendPanic(product, version, build string, r any, stacktrace []byte, tags ma
 // platform the binary runs on so reports remain attributable even when no
 // asset context is available (e.g. panics outside a scan).
 func panicEvent(product, version, build string, r any, stacktrace []byte, tags map[string]string) *SendErrorReq {
-	allTags := map[string]string{
-		"os":   runtime.GOOS,
-		"arch": runtime.GOARCH,
-	}
+	allTags := make(map[string]string, len(tags)+2)
 	for k, v := range tags {
 		allTags[k] = v
 	}
+	// Platform tags are written last so caller-supplied tags cannot
+	// overwrite them.
+	allTags["os"] = runtime.GOOS
+	allTags["arch"] = runtime.GOARCH
 	return &SendErrorReq{
 		Product: &ProductInfo{
 			Name:    product,

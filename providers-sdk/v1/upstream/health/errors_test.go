@@ -38,6 +38,14 @@ func TestPanicEventIncludesQueryTags(t *testing.T) {
 	assert.Equal(t, runtime.GOARCH, event.Tags["arch"])
 }
 
+func TestPanicEventPlatformTagsWin(t *testing.T) {
+	event := panicEvent("cnspec", "12.0.0", "abc123", "boom", []byte("st"),
+		map[string]string{"os": "spoofed", "arch": "spoofed"})
+
+	assert.Equal(t, runtime.GOOS, event.Tags["os"])
+	assert.Equal(t, runtime.GOARCH, event.Tags["arch"])
+}
+
 func TestQueryPanicTags(t *testing.T) {
 	assert.Nil(t, QueryPanicTags("", ""))
 
