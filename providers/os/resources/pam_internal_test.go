@@ -5,6 +5,7 @@ package resources
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,27 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/filesfind"
 	"go.mondoo.com/mql/v13/utils/syncx"
 )
+
+// newPamRuntimeWithFiles builds a runtime backed by a mock filesystem whose
+// files have the given contents, so the full files -> entries pipeline runs.
+func newPamRuntimeWithFiles(t *testing.T, files map[string]string) *plugin.Runtime {
+	t.Helper()
+
+	fileData := map[string]*mock.MockFileData{}
+	for path, content := range files {
+		fileData[path] = &mock.MockFileData{Path: path, Content: content}
+	}
+
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux"}},
+	}, mock.WithData(&mock.TomlData{Files: fileData}))
+	require.NoError(t, err)
+
+	return &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+}
 
 // newPamEntry builds a parsed service-entry resource directly for unit tests.
 func newPamEntry(pamType, control, module string, options []any) *mqlPamConfServiceEntry {
@@ -150,6 +172,53 @@ func TestPamConfServiceMissing(t *testing.T) {
 	assert.Equal(t, "su", args["name"].Value)
 	assert.Equal(t, "", args["path"].Value)
 	assert.Empty(t, args["entries"].Value)
+}
+
+func TestPamConfSingleFile(t *testing.T) {
+	// Legacy single-file /etc/pam.conf: every line is prefixed with the
+	// service name. With no /etc/pam.d directory present, files() falls back
+	// to this file and entries() must split off the service column.
+	content := strings.Join([]string{
+		"# legacy single-file pam.conf",
+		"su    auth required pam_wheel.so use_uid group=sugroup",
+		"su    auth required pam_unix.so",
+		"sshd  auth required pam_unix.so",
+		"",
+	}, "\n")
+	rt := newPamRuntimeWithFiles(t, map[string]string{"/etc/pam.conf": content})
+
+	pam := &mqlPamConf{MqlRuntime: rt}
+	entries := pam.GetEntries()
+	require.NoError(t, entries.Error)
+
+	// Keyed by service name (not the file path), one service per first column.
+	suList, ok := entries.Data["su"].([]any)
+	require.True(t, ok, "entries keyed by service name 'su'")
+	assert.Len(t, suList, 2)
+	_, hasSshd := entries.Data["sshd"]
+	assert.True(t, hasSshd)
+	assert.Equal(t, "auth", suList[0].(*mqlPamConfServiceEntry).PamType.Data,
+		"service column stripped, not misparsed as pamType")
+
+	// pam.conf.service resolves the single-file service and reports the
+	// source file as its path. Run the init hook (as the executor does) then
+	// create from the resolved args.
+	args, _, err := initPamConfService(rt, map[string]*llx.RawData{
+		"name": llx.StringData("su"),
+	})
+	require.NoError(t, err)
+	res, err := CreateResource(rt, "pam.conf.service", args)
+	require.NoError(t, err)
+	svc := res.(*mqlPamConfService)
+	assert.Equal(t, "/etc/pam.conf", svc.GetPath().Data)
+
+	mods := svc.GetModules()
+	require.NoError(t, mods.Error)
+	wheel, ok := mods.Data["pam_wheel"].(*mqlPamModule)
+	require.True(t, ok)
+	assert.True(t, wheel.Enabled.Data)
+	assert.Equal(t, "sugroup", wheel.Params.Data["group"])
+	assert.Equal(t, "", wheel.Params.Data["use_uid"])
 }
 
 func TestPamConfServiceEntryParams(t *testing.T) {

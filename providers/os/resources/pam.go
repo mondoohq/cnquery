@@ -411,10 +411,10 @@ func (s *mqlPamConf) modules(entries map[string]any) ([]any, error) {
 }
 
 // initPamConfService selects a single PAM service by name and caches its
-// parsed entries. The service name matches the file basename under
-// /etc/pam.d (e.g. "su" -> /etc/pam.d/su); when no such service is configured
-// the resource is returned with an empty path and no entries rather than an
-// error, so audits can branch on it cleanly.
+// parsed entries. The name matches the file under /etc/pam.d (e.g. "su" ->
+// /etc/pam.d/su) or the service column in the single-file /etc/pam.conf. When
+// no such service is configured the resource is returned with an empty path
+// and no entries rather than an error, so audits can branch on it cleanly.
 func initPamConfService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	nameRaw := args["name"]
 	if nameRaw == nil {
@@ -449,16 +449,22 @@ func initPamConfService(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, entries.Error
 	}
 
+	// entries is keyed by the /etc/pam.d/<name> file path, or by the bare
+	// service name for single-file /etc/pam.conf. filepath.Base matches both.
 	path := ""
 	serviceEntries := []any{}
-	for filePath, raw := range entries.Data {
-		if filepath.Base(filePath) != name {
+	for key, raw := range entries.Data {
+		if filepath.Base(key) != name {
 			continue
 		}
 		if list, ok := raw.([]any); ok {
 			serviceEntries = list
 		}
-		path = filePath
+		if strings.Contains(key, "/") {
+			path = key
+		} else {
+			path = defaultPamConf
+		}
 		break
 	}
 
@@ -522,12 +528,36 @@ func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
 	}
 
 	services := map[string]any{}
-	for basename, content := range contents {
+	for filePath, content := range contents {
+		// Files directly under /etc/pam.d carry one service each (the file
+		// name is the service). The legacy single-file /etc/pam.conf instead
+		// prefixes every line with the service name, so its lines have one
+		// extra leading column. Detect the layout by whether the file lives
+		// in the pam.d directory and group single-file lines by that column.
+		singleFile := filepath.Dir(filePath) != defaultPamDir
+		if !singleFile {
+			// Preserve the empty-service key so e.g.
+			// pam.conf.entries["/etc/pam.d/su"] stays an empty list rather
+			// than null when the file has no parsable entries.
+			if _, ok := services[filePath]; !ok {
+				services[filePath] = []any{}
+			}
+		}
+
 		lines := strings.Split(content, "\n")
-		settings := []any{}
-		var line string
 		for i := range lines {
-			line = lines[i]
+			line := lines[i]
+			service := filePath
+
+			if singleFile {
+				fields := strings.Fields(pam.StripComments(line))
+				if len(fields) < 2 {
+					// Blank/comment line or one with no module reference.
+					continue
+				}
+				service = fields[0]
+				line = strings.Join(fields[1:], " ")
+			}
 
 			entry, err := pam.ParseLine(line)
 			if err != nil {
@@ -540,7 +570,7 @@ func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
 			}
 
 			pamEntry, err := CreateResource(s.MqlRuntime, "pam.conf.serviceEntry", map[string]*llx.RawData{
-				"service":    llx.StringData(basename),
+				"service":    llx.StringData(service),
 				"lineNumber": llx.IntData(int64(i)), // Used for ID
 				"pamType":    llx.StringData(entry.PamType),
 				"control":    llx.StringData(entry.Control),
@@ -550,11 +580,10 @@ func (s *mqlPamConf) entries(files []any) (map[string]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			settings = append(settings, pamEntry.(*mqlPamConfServiceEntry))
 
+			list, _ := services[service].([]any)
+			services[service] = append(list, pamEntry.(*mqlPamConfServiceEntry))
 		}
-
-		services[basename] = settings
 	}
 
 	return services, nil
