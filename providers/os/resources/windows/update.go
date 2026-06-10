@@ -58,7 +58,6 @@ if ($count -gt 0) {
       "Date" = $_.Date
       "Operation" = [int]$_.Operation
       "ResultCode" = [int]$_.ResultCode
-      "Description" = $_.Description
       "SupportUrl" = $_.SupportUrl
       "UpdateID" = $_.UpdateIdentity.UpdateID
       "Categories" = @($_.Categories | ForEach-Object { $_.Name })
@@ -69,14 +68,13 @@ if ($count -gt 0) {
 
 // WindowsUpdateHistoryEntry is a single Windows Update Agent history record.
 type WindowsUpdateHistoryEntry struct {
-	Title       string   `json:"Title"`
-	Date        string   `json:"Date"`
-	Operation   int      `json:"Operation"`
-	ResultCode  int      `json:"ResultCode"`
-	Description string   `json:"Description"`
-	SupportUrl  string   `json:"SupportUrl"`
-	UpdateID    string   `json:"UpdateID"`
-	Categories  []string `json:"Categories"`
+	Title      string   `json:"Title"`
+	Date       string   `json:"Date"`
+	Operation  int      `json:"Operation"`
+	ResultCode int      `json:"ResultCode"`
+	SupportUrl string   `json:"SupportUrl"`
+	UpdateID   string   `json:"UpdateID"`
+	Categories []string `json:"Categories"`
 }
 
 func ParseWindowsUpdateHistory(input io.Reader) ([]WindowsUpdateHistoryEntry, error) {
