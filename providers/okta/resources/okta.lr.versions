@@ -233,7 +233,12 @@ okta.organization.lastUpdated 9.0.0
 okta.organization.optOutCommunicationEmails 9.0.0
 okta.organization.phoneNumber 9.0.0
 okta.organization.postalCode 9.0.0
+okta.organization.reportSuspiciousActivityEnabled 13.2.9
 okta.organization.securityNotificationEmails 9.0.0
+okta.organization.sendEmailForFactorEnrollmentEnabled 13.2.9
+okta.organization.sendEmailForFactorResetEnabled 13.2.9
+okta.organization.sendEmailForNewDeviceEnabled 13.2.9
+okta.organization.sendEmailForPasswordChangedEnabled 13.2.9
 okta.organization.state 9.0.0
 okta.organization.status 9.0.0
 okta.organization.subdomain 9.0.0

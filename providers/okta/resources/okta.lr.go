@@ -327,6 +327,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.organization.securityNotificationEmails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetSecurityNotificationEmails()).ToDataRes(types.Dict)
 	},
+	"okta.organization.reportSuspiciousActivityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetReportSuspiciousActivityEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.sendEmailForNewDeviceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetSendEmailForNewDeviceEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.sendEmailForFactorEnrollmentEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetSendEmailForFactorEnrollmentEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.sendEmailForFactorResetEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetSendEmailForFactorResetEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.sendEmailForPasswordChangedEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetSendEmailForPasswordChangedEnabled()).ToDataRes(types.Bool)
+	},
 	"okta.organization.threatInsightSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetThreatInsightSettings()).ToDataRes(types.Resource("okta.threatsConfiguration"))
 	},
@@ -1263,6 +1278,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.organization.securityNotificationEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaOrganization).SecurityNotificationEmails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"okta.organization.reportSuspiciousActivityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).ReportSuspiciousActivityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.sendEmailForNewDeviceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).SendEmailForNewDeviceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.sendEmailForFactorEnrollmentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).SendEmailForFactorEnrollmentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.sendEmailForFactorResetEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).SendEmailForFactorResetEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.sendEmailForPasswordChangedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).SendEmailForPasswordChangedEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"okta.organization.threatInsightSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2690,28 +2725,33 @@ type mqlOktaOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOktaOrganizationInternal it will be used here
-	Id                         plugin.TValue[string]
-	CompanyName                plugin.TValue[string]
-	Status                     plugin.TValue[string]
-	Subdomain                  plugin.TValue[string]
-	Address1                   plugin.TValue[string]
-	Address2                   plugin.TValue[string]
-	City                       plugin.TValue[string]
-	State                      plugin.TValue[string]
-	PhoneNumber                plugin.TValue[string]
-	PostalCode                 plugin.TValue[string]
-	Country                    plugin.TValue[string]
-	SupportPhoneNumber         plugin.TValue[string]
-	Website                    plugin.TValue[string]
-	EndUserSupportHelpURL      plugin.TValue[string]
-	Created                    plugin.TValue[*time.Time]
-	LastUpdated                plugin.TValue[*time.Time]
-	ExpiresAt                  plugin.TValue[*time.Time]
-	OptOutCommunicationEmails  plugin.TValue[bool]
-	BillingContact             plugin.TValue[*mqlOktaUser]
-	TechnicalContact           plugin.TValue[*mqlOktaUser]
-	SecurityNotificationEmails plugin.TValue[any]
-	ThreatInsightSettings      plugin.TValue[*mqlOktaThreatsConfiguration]
+	Id                                  plugin.TValue[string]
+	CompanyName                         plugin.TValue[string]
+	Status                              plugin.TValue[string]
+	Subdomain                           plugin.TValue[string]
+	Address1                            plugin.TValue[string]
+	Address2                            plugin.TValue[string]
+	City                                plugin.TValue[string]
+	State                               plugin.TValue[string]
+	PhoneNumber                         plugin.TValue[string]
+	PostalCode                          plugin.TValue[string]
+	Country                             plugin.TValue[string]
+	SupportPhoneNumber                  plugin.TValue[string]
+	Website                             plugin.TValue[string]
+	EndUserSupportHelpURL               plugin.TValue[string]
+	Created                             plugin.TValue[*time.Time]
+	LastUpdated                         plugin.TValue[*time.Time]
+	ExpiresAt                           plugin.TValue[*time.Time]
+	OptOutCommunicationEmails           plugin.TValue[bool]
+	BillingContact                      plugin.TValue[*mqlOktaUser]
+	TechnicalContact                    plugin.TValue[*mqlOktaUser]
+	SecurityNotificationEmails          plugin.TValue[any]
+	ReportSuspiciousActivityEnabled     plugin.TValue[bool]
+	SendEmailForNewDeviceEnabled        plugin.TValue[bool]
+	SendEmailForFactorEnrollmentEnabled plugin.TValue[bool]
+	SendEmailForFactorResetEnabled      plugin.TValue[bool]
+	SendEmailForPasswordChangedEnabled  plugin.TValue[bool]
+	ThreatInsightSettings               plugin.TValue[*mqlOktaThreatsConfiguration]
 }
 
 // createOktaOrganization creates a new instance of this resource
@@ -2860,6 +2900,36 @@ func (c *mqlOktaOrganization) GetTechnicalContact() *plugin.TValue[*mqlOktaUser]
 func (c *mqlOktaOrganization) GetSecurityNotificationEmails() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.SecurityNotificationEmails, func() (any, error) {
 		return c.securityNotificationEmails()
+	})
+}
+
+func (c *mqlOktaOrganization) GetReportSuspiciousActivityEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ReportSuspiciousActivityEnabled, func() (bool, error) {
+		return c.reportSuspiciousActivityEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetSendEmailForNewDeviceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendEmailForNewDeviceEnabled, func() (bool, error) {
+		return c.sendEmailForNewDeviceEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetSendEmailForFactorEnrollmentEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendEmailForFactorEnrollmentEnabled, func() (bool, error) {
+		return c.sendEmailForFactorEnrollmentEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetSendEmailForFactorResetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendEmailForFactorResetEnabled, func() (bool, error) {
+		return c.sendEmailForFactorResetEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetSendEmailForPasswordChangedEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendEmailForPasswordChangedEnabled, func() (bool, error) {
+		return c.sendEmailForPasswordChangedEnabled()
 	})
 }
 

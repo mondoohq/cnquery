@@ -89,6 +89,16 @@ okta.organization @defaults("companyName") {
   technicalContact() okta.user
   // Security notification email
   securityNotificationEmails() dict
+  // Whether users can report suspicious activity via email
+  reportSuspiciousActivityEnabled() bool
+  // Whether a notification email is sent when a user signs in from a new device
+  sendEmailForNewDeviceEnabled() bool
+  // Whether a notification email is sent when a user enrolls a new MFA factor
+  sendEmailForFactorEnrollmentEnabled() bool
+  // Whether a notification email is sent when a user resets an MFA factor
+  sendEmailForFactorResetEnabled() bool
+  // Whether a notification email is sent when a user's password is changed
+  sendEmailForPasswordChangedEnabled() bool
   // Okta ThreatInsight settings
   threatInsightSettings() okta.threatsConfiguration
 }

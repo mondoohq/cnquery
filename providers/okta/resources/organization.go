@@ -138,6 +138,52 @@ func (o *mqlOktaOrganization) securityNotificationEmails() (any, error) {
 	return convert.JsonToDict(emails)
 }
 
+// securityNotificationEmailFlag extracts a boolean flag by key from the
+// securityNotificationEmails dict. It returns false when the dict is nil, the
+// key is absent, or the stored value is not a bool.
+func securityNotificationEmailFlag(emails any, key string) bool {
+	m, ok := emails.(map[string]any)
+	if !ok {
+		return false
+	}
+	v, ok := m[key].(bool)
+	if !ok {
+		return false
+	}
+	return v
+}
+
+// securityNotificationFlag reads the memoized securityNotificationEmails dict
+// and extracts the given boolean key, so the typed fields always agree with the
+// dict.
+func (o *mqlOktaOrganization) securityNotificationFlag(key string) (bool, error) {
+	emails := o.GetSecurityNotificationEmails()
+	if emails.Error != nil {
+		return false, emails.Error
+	}
+	return securityNotificationEmailFlag(emails.Data, key), nil
+}
+
+func (o *mqlOktaOrganization) reportSuspiciousActivityEnabled() (bool, error) {
+	return o.securityNotificationFlag("reportSuspiciousActivityEnabled")
+}
+
+func (o *mqlOktaOrganization) sendEmailForNewDeviceEnabled() (bool, error) {
+	return o.securityNotificationFlag("sendEmailForNewDeviceEnabled")
+}
+
+func (o *mqlOktaOrganization) sendEmailForFactorEnrollmentEnabled() (bool, error) {
+	return o.securityNotificationFlag("sendEmailForFactorEnrollmentEnabled")
+}
+
+func (o *mqlOktaOrganization) sendEmailForFactorResetEnabled() (bool, error) {
+	return o.securityNotificationFlag("sendEmailForFactorResetEnabled")
+}
+
+func (o *mqlOktaOrganization) sendEmailForPasswordChangedEnabled() (bool, error) {
+	return o.securityNotificationFlag("sendEmailForPasswordChangedEnabled")
+}
+
 // threatInsightSettings returns the Threat Insight settings for the organization
 func (o *mqlOktaOrganization) threatInsightSettings() (*mqlOktaThreatsConfiguration, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
