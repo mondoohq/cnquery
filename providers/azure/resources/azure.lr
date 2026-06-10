@@ -4288,6 +4288,8 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   type string
   // Appsite config properties
   properties dict
+  // CORS allowed origins configured for the site (empty when CORS is not configured; "*" allows any origin)
+  corsAllowedOrigins []string
   // Minimum TLS version for the site (1.0, 1.1, 1.2, 1.3)
   minTlsVersion string
   // FTP state for the site (AllAllowed, FtpsOnly, Disabled)

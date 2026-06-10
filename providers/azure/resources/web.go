@@ -690,6 +690,19 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 
 // webAppSiteConfigToMql fetches the site configuration for an App Service site
 // (regular web app or function app) and maps it to an appsiteconfig resource.
+// siteConfigCorsAllowedOrigins returns the CORS allowed origins configured on
+// an App Service site configuration. It is always non-nil so the typed
+// corsAllowedOrigins field is set on every code path that builds an
+// appsiteconfig resource (the value stays an empty list when CORS is not
+// configured).
+func siteConfigCorsAllowedOrigins(props *web.SiteConfig) []any {
+	origins := []any{}
+	if props != nil && props.Cors != nil {
+		origins = convert.SliceStrPtrToInterface(props.Cors.AllowedOrigins)
+	}
+	return origins
+}
+
 func webAppSiteConfigToMql(runtime *plugin.Runtime, conn *connection.AzureConnection, id string) (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
 	ctx := context.Background()
 	token := conn.Token()
@@ -723,11 +736,12 @@ func webAppSiteConfigToMql(runtime *plugin.Runtime, conn *connection.AzureConnec
 	}
 
 	args := map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(entry.ID),
-		"name":       llx.StringDataPtr(entry.Name),
-		"kind":       llx.StringDataPtr(entry.Kind),
-		"type":       llx.StringDataPtr(entry.Type),
-		"properties": llx.DictData(properties),
+		"id":                 llx.StringDataPtr(entry.ID),
+		"name":               llx.StringDataPtr(entry.Name),
+		"kind":               llx.StringDataPtr(entry.Kind),
+		"type":               llx.StringDataPtr(entry.Type),
+		"properties":         llx.DictData(properties),
+		"corsAllowedOrigins": llx.ArrayData(siteConfigCorsAllowedOrigins(entry.Properties), types.String),
 	}
 
 	if entry.Properties != nil {
@@ -1175,11 +1189,12 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 	}
 
 	args := map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(configuration.ID),
-		"name":       llx.StringDataPtr(configuration.Name),
-		"kind":       llx.StringDataPtr(configuration.Kind),
-		"type":       llx.StringDataPtr(configuration.Type),
-		"properties": llx.DictData(properties),
+		"id":                 llx.StringDataPtr(configuration.ID),
+		"name":               llx.StringDataPtr(configuration.Name),
+		"kind":               llx.StringDataPtr(configuration.Kind),
+		"type":               llx.StringDataPtr(configuration.Type),
+		"properties":         llx.DictData(properties),
+		"corsAllowedOrigins": llx.ArrayData(siteConfigCorsAllowedOrigins(configuration.Properties), types.String),
 	}
 
 	if configuration.Properties != nil {

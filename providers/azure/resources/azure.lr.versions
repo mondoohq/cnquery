@@ -4578,6 +4578,7 @@ azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction 13
 azure.subscription.webService.appsiteconfig 9.0.1
 azure.subscription.webService.appsiteconfig.alwaysOn 11.4.28
 azure.subscription.webService.appsiteconfig.autoHealEnabled 13.12.2
+azure.subscription.webService.appsiteconfig.corsAllowedOrigins 13.18.1
 azure.subscription.webService.appsiteconfig.detailedErrorLoggingEnabled 13.12.2
 azure.subscription.webService.appsiteconfig.ftpsState 11.4.28
 azure.subscription.webService.appsiteconfig.http20Enabled 11.4.28
