@@ -122,6 +122,24 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 	return res, nil
 }
 
+// bucketRetentionPeriodSeconds returns the retention period (in seconds)
+// enforced by a bucket's retention policy, or 0 when no policy is set.
+func bucketRetentionPeriodSeconds(rp *storage.BucketRetentionPolicy) int64 {
+	if rp == nil {
+		return 0
+	}
+	return rp.RetentionPeriod
+}
+
+// bucketSoftDeleteRetentionSeconds returns the soft-delete retention duration
+// (in seconds), or 0 when no soft-delete policy is set.
+func bucketSoftDeleteRetentionSeconds(sdp *storage.BucketSoftDeletePolicy) int64 {
+	if sdp == nil {
+		return 0
+	}
+	return sdp.RetentionDurationSeconds
+}
+
 // mqlBucketFromAPI converts a *storage.Bucket into a fully-populated mql
 // resource. Used by buckets() during a list and by init when resolving a
 // single bucket by name.
@@ -223,32 +241,34 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 		"iamConfiguration":      llx.DictData(iamConfigurationDict),
 		"retentionPolicy":       llx.DictData(retentionPolicy),
 		"retentionPolicyLocked": llx.BoolData(bucket.RetentionPolicy != nil && bucket.RetentionPolicy.IsLocked),
+		"retentionPeriod":       llx.IntData(bucketRetentionPeriodSeconds(bucket.RetentionPolicy)),
 		"loggingEnabled":        llx.BoolData(bucket.Logging != nil && bucket.Logging.LogBucket != ""),
 		"encryption":            llx.DictData(enc),
 		"lifecycle": llx.ArrayData(
 			storageLifecycleRulesToArrayInterface(runtime, bucket.Id, bucket.Lifecycle),
 			types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
 		),
-		"defaultEventBasedHold":    llx.BoolData(bucket.DefaultEventBasedHold),
-		"rpo":                      llx.StringData(bucket.Rpo),
-		"satisfiesPZS":             llx.BoolData(bucket.SatisfiesPZS),
-		"satisfiesPZI":             llx.BoolData(bucket.SatisfiesPZI),
-		"versioningEnabled":        llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
-		"publicAccessPrevention":   llx.StringData(publicAccessPrevention),
-		"metageneration":           llx.IntData(bucket.Metageneration),
-		"uniformBucketLevelAccess": llx.DictData(uniformBucketLevelAccess),
-		"softDeletePolicy":         llx.DictData(softDeletePolicy),
-		"softDeleteTime":           llx.TimeDataPtr(softDeleteTime),
-		"objectRetentionMode":      llx.StringData(objectRetentionMode),
-		"autoclass":                llx.DictData(autoclass),
-		"ipFilter":                 llx.DictData(ipFilter),
-		"hierarchicalNamespace":    llx.DictData(hierarchicalNamespace),
-		"customPlacementConfig":    llx.DictData(customPlacementConfig),
-		"logging":                  llx.DictData(logging),
-		"cors":                     llx.ArrayData(cors, types.Dict),
-		"website":                  llx.DictData(website),
-		"billing":                  llx.DictData(billing),
-		"owner":                    llx.DictData(owner),
+		"defaultEventBasedHold":       llx.BoolData(bucket.DefaultEventBasedHold),
+		"rpo":                         llx.StringData(bucket.Rpo),
+		"satisfiesPZS":                llx.BoolData(bucket.SatisfiesPZS),
+		"satisfiesPZI":                llx.BoolData(bucket.SatisfiesPZI),
+		"versioningEnabled":           llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
+		"publicAccessPrevention":      llx.StringData(publicAccessPrevention),
+		"metageneration":              llx.IntData(bucket.Metageneration),
+		"uniformBucketLevelAccess":    llx.DictData(uniformBucketLevelAccess),
+		"softDeletePolicy":            llx.DictData(softDeletePolicy),
+		"softDeleteRetentionDuration": llx.IntData(bucketSoftDeleteRetentionSeconds(bucket.SoftDeletePolicy)),
+		"softDeleteTime":              llx.TimeDataPtr(softDeleteTime),
+		"objectRetentionMode":         llx.StringData(objectRetentionMode),
+		"autoclass":                   llx.DictData(autoclass),
+		"ipFilter":                    llx.DictData(ipFilter),
+		"hierarchicalNamespace":       llx.DictData(hierarchicalNamespace),
+		"customPlacementConfig":       llx.DictData(customPlacementConfig),
+		"logging":                     llx.DictData(logging),
+		"cors":                        llx.ArrayData(cors, types.Dict),
+		"website":                     llx.DictData(website),
+		"billing":                     llx.DictData(billing),
+		"owner":                       llx.DictData(owner),
 	})
 	if err != nil {
 		return nil, err

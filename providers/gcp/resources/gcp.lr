@@ -2399,6 +2399,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicy dict
   // Whether the bucket's retention policy is locked (retentionPolicy.isLocked == true)
   retentionPolicyLocked bool
+  // Retention period in seconds enforced by the retention policy (0 when no policy is set)
+  retentionPeriod int
   // Whether bucket access logs are configured (logging.logBucket is set)
   loggingEnabled bool
   // Encryption configuration
@@ -2437,6 +2439,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   uniformBucketLevelAccessEnabled() bool
   // Soft delete policy (retentionDurationSeconds, effectiveTime)
   softDeletePolicy dict
+  // Soft-delete retention duration in seconds (0 when no soft-delete policy is set)
+  softDeleteRetentionDuration int
   // Whether soft-delete is enabled — true when softDeletePolicy.retentionDurationSeconds > 0
   softDeletePolicyEnabled() bool
   // Object retention mode (Enabled or empty)

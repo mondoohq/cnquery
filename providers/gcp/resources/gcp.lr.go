@@ -4847,6 +4847,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.retentionPolicyLocked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPolicyLocked()).ToDataRes(types.Bool)
 	},
+	"gcp.project.storageService.bucket.retentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPeriod()).ToDataRes(types.Int)
+	},
 	"gcp.project.storageService.bucket.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetLoggingEnabled()).ToDataRes(types.Bool)
 	},
@@ -4891,6 +4894,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.bucket.softDeletePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetSoftDeletePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.softDeleteRetentionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetSoftDeleteRetentionDuration()).ToDataRes(types.Int)
 	},
 	"gcp.project.storageService.bucket.softDeletePolicyEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetSoftDeletePolicyEnabled()).ToDataRes(types.Bool)
@@ -20219,6 +20225,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).RetentionPolicyLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.retentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).RetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -20277,6 +20287,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.softDeletePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).SoftDeletePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.softDeleteRetentionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).SoftDeleteRetentionDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.softDeletePolicyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46257,6 +46271,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamConfiguration                plugin.TValue[any]
 	RetentionPolicy                 plugin.TValue[any]
 	RetentionPolicyLocked           plugin.TValue[bool]
+	RetentionPeriod                 plugin.TValue[int64]
 	LoggingEnabled                  plugin.TValue[bool]
 	Encryption                      plugin.TValue[any]
 	DefaultKmsKey                   plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
@@ -46272,6 +46287,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	UniformBucketLevelAccess        plugin.TValue[any]
 	UniformBucketLevelAccessEnabled plugin.TValue[bool]
 	SoftDeletePolicy                plugin.TValue[any]
+	SoftDeleteRetentionDuration     plugin.TValue[int64]
 	SoftDeletePolicyEnabled         plugin.TValue[bool]
 	ObjectRetentionMode             plugin.TValue[string]
 	Autoclass                       plugin.TValue[any]
@@ -46395,6 +46411,10 @@ func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicyLocked() *plugin.T
 	return &c.RetentionPolicyLocked
 }
 
+func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPeriod() *plugin.TValue[int64] {
+	return &c.RetentionPeriod
+}
+
 func (c *mqlGcpProjectStorageServiceBucket) GetLoggingEnabled() *plugin.TValue[bool] {
 	return &c.LoggingEnabled
 }
@@ -46469,6 +46489,10 @@ func (c *mqlGcpProjectStorageServiceBucket) GetUniformBucketLevelAccessEnabled()
 
 func (c *mqlGcpProjectStorageServiceBucket) GetSoftDeletePolicy() *plugin.TValue[any] {
 	return &c.SoftDeletePolicy
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetSoftDeleteRetentionDuration() *plugin.TValue[int64] {
+	return &c.SoftDeleteRetentionDuration
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetSoftDeletePolicyEnabled() *plugin.TValue[bool] {

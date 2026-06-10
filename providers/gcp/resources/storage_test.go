@@ -110,3 +110,14 @@ func TestEvaluateBucketPublic(t *testing.T) {
 		})
 	}
 }
+
+func TestBucketRetentionHelpers(t *testing.T) {
+	t.Run("nil policies return 0", func(t *testing.T) {
+		assert.Equal(t, int64(0), bucketRetentionPeriodSeconds(nil))
+		assert.Equal(t, int64(0), bucketSoftDeleteRetentionSeconds(nil))
+	})
+	t.Run("values are returned", func(t *testing.T) {
+		assert.Equal(t, int64(86400), bucketRetentionPeriodSeconds(&storage.BucketRetentionPolicy{RetentionPeriod: 86400}))
+		assert.Equal(t, int64(604800), bucketSoftDeleteRetentionSeconds(&storage.BucketSoftDeletePolicy{RetentionDurationSeconds: 604800}))
+	})
+}

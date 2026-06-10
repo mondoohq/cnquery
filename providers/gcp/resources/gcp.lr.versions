@@ -4557,6 +4557,7 @@ gcp.project.storageService.bucket.projectId 9.0.0
 gcp.project.storageService.bucket.projectNumber 9.0.0
 gcp.project.storageService.bucket.public 13.12.2
 gcp.project.storageService.bucket.publicAccessPrevention 13.1.2
+gcp.project.storageService.bucket.retentionPeriod 13.22.2
 gcp.project.storageService.bucket.retentionPolicy 9.0.0
 gcp.project.storageService.bucket.retentionPolicyLocked 13.12.2
 gcp.project.storageService.bucket.rpo 11.6.6
@@ -4564,6 +4565,7 @@ gcp.project.storageService.bucket.satisfiesPZI 13.16.3
 gcp.project.storageService.bucket.satisfiesPZS 11.6.6
 gcp.project.storageService.bucket.softDeletePolicy 13.7.2
 gcp.project.storageService.bucket.softDeletePolicyEnabled 13.12.2
+gcp.project.storageService.bucket.softDeleteRetentionDuration 13.22.2
 gcp.project.storageService.bucket.softDeleteTime 13.16.3
 gcp.project.storageService.bucket.storageClass 9.0.0
 gcp.project.storageService.bucket.uniformBucketLevelAccess 13.7.2
