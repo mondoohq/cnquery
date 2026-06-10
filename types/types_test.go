@@ -5,6 +5,7 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -41,5 +42,30 @@ func TestTypes(t *testing.T) {
 
 		// test for human friendly name
 		assert.Equal(t, test.ExpectedLabel, test.T.Label())
+	}
+}
+
+func TestEqual_NilOperands(t *testing.T) {
+	// A null array element surfaces as a nil interface value. The Equal
+	// comparators must treat nil safely (nil == nil, nil \!= value) instead
+	// of panicking on the type assertion, which would crash the whole scan.
+	cases := []struct {
+		typ   Type
+		value any
+	}{
+		{Bool, true},
+		{Int, int64(1)},
+		{Float, 1.5},
+		{String, "x"},
+		{Regex, "x"},
+		{Score, int32(1)},
+		{Time, &time.Time{}},
+	}
+	for _, c := range cases {
+		eq, ok := Equal[c.typ]
+		assert.True(t, ok, c.typ.Label())
+		assert.False(t, eq(c.value, nil), "%s: value == nil", c.typ.Label())
+		assert.False(t, eq(nil, c.value), "%s: nil == value", c.typ.Label())
+		assert.True(t, eq(nil, nil), "%s: nil == nil", c.typ.Label())
 	}
 }

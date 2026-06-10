@@ -732,6 +732,15 @@ func TestArray(t *testing.T) {
 			Code:        "a = [1]; [2,1,2,1].containsNone(a)",
 			Expectation: []any{int64(1), int64(1)},
 		},
+		// Regression: a null array element (here a missing map key) surfaces as
+		// a nil interface. The element comparators must handle it instead of
+		// panicking with "interface conversion: interface {} is nil, not
+		// string", which would crash the whole scan. The nil filter never
+		// matches "x", so it remains in the leftover.
+		{
+			Code:        "['x'].containsAll([asset.labels['nope']])",
+			Expectation: []any{nil},
+		},
 		{
 			Code:        "['a','b'] != /c/",
 			ResultIndex: 0, Expectation: true,

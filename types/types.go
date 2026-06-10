@@ -338,24 +338,47 @@ func (typ Type) Label() string {
 }
 
 // Equal provides a set of function for a range of types to test if 2 values
-// of that type are equal
+// of that type are equal.
+//
+// A null array element surfaces here as a nil interface, so every comparator
+// guards against it: two nils are equal, a nil and a value are not. Without
+// this the type assertions below panic (e.g. `interface {} is nil, not
+// string`), which crashes the entire scan instead of failing one comparison.
 var Equal = map[Type]func(any, any) bool{
 	Bool: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(bool) == right.(bool)
 	},
 	Int: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(int64) == right.(int64)
 	},
 	Float: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(float64) == right.(float64)
 	},
 	String: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(string) == right.(string)
 	},
 	Regex: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(string) == right.(string)
 	},
 	Time: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		l := left.(*time.Time)
 		r := right.(*time.Time)
 		if l == nil || r == nil {
@@ -365,6 +388,9 @@ var Equal = map[Type]func(any, any) bool{
 	},
 	// types.Dict: func(left, right any) bool {},
 	Score: func(left, right any) bool {
+		if left == nil || right == nil {
+			return left == nil && right == nil
+		}
 		return left.(int32) == right.(int32)
 	},
 }
