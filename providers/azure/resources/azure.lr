@@ -2625,13 +2625,17 @@ private azure.subscription.networkService.applicationGateway.frontendIpConfig @d
   id string
   // Frontend IP configuration name
   name string
-  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends
+  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends (cached for the typed `subnet` accessor)
   subnetId string
-  // ARM resource ID of the bound public IP address; non-empty for internet-facing frontends
+  // Bound subnet; null for internet-facing frontends that have no subnet
+  subnet() azure.subscription.networkService.subnet
+  // ARM resource ID of the bound public IP address; non-empty for internet-facing frontends (cached for the typed `publicIpAddress` accessor)
   publicIpAddressId string
+  // Bound public IP address; null for internal frontends that have no public IP
+  publicIpAddress() azure.subscription.networkService.ipAddress
   // Static private IP address, when allocation is static
   privateIPAddress string
-  // Private IP allocation method ("Static" or "Dynamic")
+  // Private IP allocation method (one of Static or Dynamic; current known values from the Azure IPAllocationMethod enum)
   privateIPAllocationMethod string
 }
 

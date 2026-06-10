@@ -2686,7 +2686,9 @@ azure.subscription.networkService.applicationGateway.frontendIpConfig.id 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.name 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAllocationMethod 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddress 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.subnet 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfigs 13.18.1
 azure.subscription.networkService.applicationGateway.id 9.0.13

@@ -3276,6 +3276,54 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) i
 	return a.Id.Data, nil
 }
 
+// subnet resolves the typed subnet bound to an internal (private) frontend IP
+// configuration from the cached subnetId. Returns null for internet-facing
+// frontends that are not bound to a subnet.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.SubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.SubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+// publicIpAddress resolves the typed public IP address bound to an
+// internet-facing frontend IP configuration from the cached publicIpAddressId.
+// Returns null for internal frontends that have no public IP.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	if a.PublicIpAddressId.Data == "" {
+		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	azureId, err := ParseResourceID(a.PublicIpAddressId.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	ipAddressName, err := azureId.Component("publicIPAddresses")
+	if err != nil {
+		return nil, err
+	}
+	ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+}
+
 // frontendIpConfigFields extracts the displayable fields from an application
 // gateway frontend IP configuration. subnetId is set for internal (private)
 // frontends; publicIpAddressId is set for internet-facing ones.

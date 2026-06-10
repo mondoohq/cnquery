@@ -5033,8 +5033,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetSubnetId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
 	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPublicIpAddressId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
 	},
 	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPrivateIPAddress()).ToDataRes(types.String)
@@ -19415,8 +19421,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).PublicIpAddressId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44172,7 +44186,9 @@ type mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig struct
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	SubnetId                  plugin.TValue[string]
+	Subnet                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	PublicIpAddressId         plugin.TValue[string]
+	PublicIpAddress           plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
 	PrivateIPAddress          plugin.TValue[string]
 	PrivateIPAllocationMethod plugin.TValue[string]
 }
@@ -44226,8 +44242,40 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) G
 	return &c.SubnetId
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway.frontendIpConfig", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPublicIpAddressId() *plugin.TValue[string] {
 	return &c.PublicIpAddressId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway.frontendIpConfig", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPrivateIPAddress() *plugin.TValue[string] {
