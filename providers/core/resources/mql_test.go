@@ -757,6 +757,15 @@ func TestArray(t *testing.T) {
 			Code:        "a = {a: [1,2]}; [1,2,3] - a['b']",
 			Expectation: nil,
 		},
+		// Regression: containsAll of an empty (typed, non-null) list is
+		// vacuously satisfied, so the compiled `== []` check is true. The
+		// mondoo-linux-security su-restriction check relies on this for
+		// `groups.containsAll(suRestrictedGroups)` when no group is configured
+		// and suRestrictedGroups is an empty []string.
+		{
+			Code:        `a = ["x", "y"]; ["wheel", "sudo"].containsAll(a.where(false))`,
+			ResultIndex: 1, Expectation: true,
+		},
 		{
 			Code:        "['a','b'] != /c/",
 			ResultIndex: 0, Expectation: true,
