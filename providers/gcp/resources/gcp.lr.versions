@@ -4614,6 +4614,7 @@ gcp.project.vertexaiService.cachedContents 13.20.2
 gcp.project.vertexaiService.customJob 13.6.1
 gcp.project.vertexaiService.customJob.created 13.6.1
 gcp.project.vertexaiService.customJob.displayName 13.6.1
+gcp.project.vertexaiService.customJob.enableWebAccess 13.22.2
 gcp.project.vertexaiService.customJob.encryptionSpec 13.6.1
 gcp.project.vertexaiService.customJob.endTime 13.6.1
 gcp.project.vertexaiService.customJob.error 13.6.1
@@ -4621,6 +4622,10 @@ gcp.project.vertexaiService.customJob.jobSpec 13.6.1
 gcp.project.vertexaiService.customJob.kmsKey 13.19.2
 gcp.project.vertexaiService.customJob.labels 13.6.1
 gcp.project.vertexaiService.customJob.name 13.6.1
+gcp.project.vertexaiService.customJob.network 13.22.2
+gcp.project.vertexaiService.customJob.networkRef 13.22.2
+gcp.project.vertexaiService.customJob.serviceAccount 13.22.2
+gcp.project.vertexaiService.customJob.serviceAccountRef 13.22.2
 gcp.project.vertexaiService.customJob.startTime 13.6.1
 gcp.project.vertexaiService.customJob.state 13.6.1
 gcp.project.vertexaiService.customJob.updated 13.6.1

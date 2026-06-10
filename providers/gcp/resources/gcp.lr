@@ -11317,6 +11317,16 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   state string
   // Job spec (worker pool specs, scheduling, etc.)
   jobSpec dict
+  // Email of the service account the job runs as (jobSpec.serviceAccount); empty when the default is used
+  serviceAccount string
+  // The job's run-as service account, resolved to the typed resource
+  serviceAccountRef() gcp.project.iamService.serviceAccount
+  // Resource name of the VPC network the job peers with (jobSpec.network); empty when none
+  network string
+  // The job's peering VPC network, resolved to the typed resource
+  networkRef() gcp.project.computeService.network
+  // Whether interactive web-access portals are enabled for the job (jobSpec.enableWebAccessPortals)
+  enableWebAccess bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec

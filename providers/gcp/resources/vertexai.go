@@ -948,6 +948,47 @@ func (g *mqlGcpProjectVertexaiServiceCustomJob) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+func (g *mqlGcpProjectVertexaiServiceCustomJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccount.Error != nil {
+		return nil, g.ServiceAccount.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	email := g.ServiceAccount.Data
+	projectId := projectFromResourceName(g.Name.Data)
+	if email == "" || projectId == "" {
+		g.ServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
+func (g *mqlGcpProjectVertexaiServiceCustomJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.Network.Error != nil {
+		return nil, g.Network.Error
+	}
+	if g.Network.Data == "" {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
 func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1018,11 +1059,20 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 	return args, res, nil
 }
 
+// customJobSpecFields extracts the security-relevant scalar fields from a
+// Vertex AI custom-job spec — the run-as service account, the peering network,
+// and whether interactive web-access portals are enabled. The protobuf getters
+// are nil-safe, so an absent spec yields zero values.
+func customJobSpecFields(spec *aiplatformpb.CustomJobSpec) (serviceAccount, network string, enableWebAccess bool) {
+	return spec.GetServiceAccount(), spec.GetNetwork(), spec.GetEnableWebAccess()
+}
+
 func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.CustomJob) (*mqlGcpProjectVertexaiServiceCustomJob, error) {
 	jobSpec, err := protoToDict(job.JobSpec)
 	if err != nil {
 		return nil, err
 	}
+	serviceAccount, network, enableWebAccess := customJobSpecFields(job.GetJobSpec())
 	encryptionSpec, err := protoToDict(job.EncryptionSpec)
 	if err != nil {
 		return nil, err
@@ -1033,17 +1083,20 @@ func mqlVertexAICustomJobFromProto(runtime *plugin.Runtime, job *aiplatformpb.Cu
 	}
 
 	res, err := CreateResource(runtime, "gcp.project.vertexaiService.customJob", map[string]*llx.RawData{
-		"name":           llx.StringData(job.Name),
-		"displayName":    llx.StringData(job.DisplayName),
-		"state":          llx.StringData(job.State.String()),
-		"jobSpec":        llx.DictData(jobSpec),
-		"labels":         llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-		"encryptionSpec": llx.DictData(encryptionSpec),
-		"error":          llx.DictData(errorDict),
-		"created":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
-		"updated":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
-		"startTime":      llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
-		"endTime":        llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+		"name":            llx.StringData(job.Name),
+		"displayName":     llx.StringData(job.DisplayName),
+		"state":           llx.StringData(job.State.String()),
+		"jobSpec":         llx.DictData(jobSpec),
+		"serviceAccount":  llx.StringData(serviceAccount),
+		"network":         llx.StringData(network),
+		"enableWebAccess": llx.BoolData(enableWebAccess),
+		"labels":          llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+		"encryptionSpec":  llx.DictData(encryptionSpec),
+		"error":           llx.DictData(errorDict),
+		"created":         llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+		"updated":         llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+		"startTime":       llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+		"endTime":         llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
 	})
 	if err != nil {
 		return nil, err

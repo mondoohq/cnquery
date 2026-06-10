@@ -13670,6 +13670,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.customJob.jobSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetJobSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.customJob.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.customJob.serviceAccountRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.vertexaiService.customJob.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.customJob.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.vertexaiService.customJob.enableWebAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetEnableWebAccess()).ToDataRes(types.Bool)
+	},
 	"gcp.project.vertexaiService.customJob.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -33101,6 +33116,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.customJob.jobSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceCustomJob).JobSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.serviceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).ServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.enableWebAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).EnableWebAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.customJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -76643,18 +76678,23 @@ type mqlGcpProjectVertexaiServiceCustomJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceCustomJobInternal
-	Name           plugin.TValue[string]
-	DisplayName    plugin.TValue[string]
-	State          plugin.TValue[string]
-	JobSpec        plugin.TValue[any]
-	Labels         plugin.TValue[map[string]any]
-	EncryptionSpec plugin.TValue[any]
-	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	Error          plugin.TValue[any]
-	Created        plugin.TValue[*time.Time]
-	Updated        plugin.TValue[*time.Time]
-	StartTime      plugin.TValue[*time.Time]
-	EndTime        plugin.TValue[*time.Time]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	State             plugin.TValue[string]
+	JobSpec           plugin.TValue[any]
+	ServiceAccount    plugin.TValue[string]
+	ServiceAccountRef plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Network           plugin.TValue[string]
+	NetworkRef        plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	EnableWebAccess   plugin.TValue[bool]
+	Labels            plugin.TValue[map[string]any]
+	EncryptionSpec    plugin.TValue[any]
+	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Error             plugin.TValue[any]
+	Created           plugin.TValue[*time.Time]
+	Updated           plugin.TValue[*time.Time]
+	StartTime         plugin.TValue[*time.Time]
+	EndTime           plugin.TValue[*time.Time]
 }
 
 // createGcpProjectVertexaiServiceCustomJob creates a new instance of this resource
@@ -76708,6 +76748,50 @@ func (c *mqlGcpProjectVertexaiServiceCustomJob) GetState() *plugin.TValue[string
 
 func (c *mqlGcpProjectVertexaiServiceCustomJob) GetJobSpec() *plugin.TValue[any] {
 	return &c.JobSpec
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.customJob", c.__id, "serviceAccountRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccountRef()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.customJob", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetEnableWebAccess() *plugin.TValue[bool] {
+	return &c.EnableWebAccess
 }
 
 func (c *mqlGcpProjectVertexaiServiceCustomJob) GetLabels() *plugin.TValue[map[string]any] {
