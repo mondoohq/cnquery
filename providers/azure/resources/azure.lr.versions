@@ -69,6 +69,7 @@ azure.subscription.aksService.cluster.createdAt 9.0.1
 azure.subscription.aksService.cluster.defenderEnabled 11.4.28
 azure.subscription.aksService.cluster.disableLocalAccounts 11.4.28
 azure.subscription.aksService.cluster.disableRunCommand 11.4.28
+azure.subscription.aksService.cluster.diskCsiDriverEnabled 13.18.1
 azure.subscription.aksService.cluster.dnsPrefix 9.0.1
 azure.subscription.aksService.cluster.enablePrivateCluster 11.4.28
 azure.subscription.aksService.cluster.enablePrivateClusterPublicFQDN 11.4.28

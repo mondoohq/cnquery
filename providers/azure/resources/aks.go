@@ -139,6 +139,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			diskCsiDriverEnabled := aksDiskCsiDriverEnabled(entry.Properties.StorageProfile)
 			workloadAutoScalerProfile, err := convert.JsonToDict(entry.Properties.WorkloadAutoScalerProfile)
 			if err != nil {
 				return nil, err
@@ -289,6 +290,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"podIdentityProfile":                llx.DictData(podIdentityProfile),
 					"securityProfile":                   llx.DictData(securityProfile),
 					"storageProfile":                    llx.DictData(storageProfile),
+					"diskCsiDriverEnabled":              llx.BoolDataPtr(diskCsiDriverEnabled),
 					"workloadAutoScalerProfile":         llx.DictData(workloadAutoScalerProfile),
 					"apiServerAccessProfile":            llx.DictData(apiServerAccessProfile),
 					"enablePrivateCluster":              llx.BoolDataPtr(enablePrivateCluster),
@@ -621,4 +623,14 @@ func (a *mqlAzureSubscriptionAksServiceClusterNodePool) recentlyUsedVersions() (
 		return []any{}, nil
 	}
 	return convert.JsonToDictSlice(profile.Properties.RecentlyUsedVersions)
+}
+
+// aksDiskCsiDriverEnabled reports whether the Azure Disk CSI driver is enabled
+// on an AKS cluster, returning nil (null in MQL) when the storage profile or
+// driver block is absent.
+func aksDiskCsiDriverEnabled(sp *clusters.ManagedClusterStorageProfile) *bool {
+	if sp == nil || sp.DiskCSIDriver == nil {
+		return nil
+	}
+	return sp.DiskCSIDriver.Enabled
 }

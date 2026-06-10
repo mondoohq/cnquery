@@ -10317,6 +10317,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.storageProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetStorageProfile()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.aksService.cluster.diskCsiDriverEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetDiskCsiDriverEnabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.aksService.cluster.workloadAutoScalerProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetWorkloadAutoScalerProfile()).ToDataRes(types.Dict)
 	},
@@ -27091,6 +27094,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.storageProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).StorageProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.diskCsiDriverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).DiskCsiDriverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.workloadAutoScalerProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62336,6 +62343,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	Fqdn                              plugin.TValue[string]
 	DnsPrefix                         plugin.TValue[string]
 	StorageProfile                    plugin.TValue[any]
+	DiskCsiDriverEnabled              plugin.TValue[bool]
 	WorkloadAutoScalerProfile         plugin.TValue[any]
 	SecurityProfile                   plugin.TValue[any]
 	PodIdentityProfile                plugin.TValue[any]
@@ -62462,6 +62470,10 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetDnsPrefix() *plugin.TValue[st
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetStorageProfile() *plugin.TValue[any] {
 	return &c.StorageProfile
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetDiskCsiDriverEnabled() *plugin.TValue[bool] {
+	return &c.DiskCsiDriverEnabled
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetWorkloadAutoScalerProfile() *plugin.TValue[any] {

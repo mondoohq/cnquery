@@ -7208,6 +7208,8 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   dnsPrefix string
   // The storage profile of the AKS cluster
   storageProfile dict
+  // Whether the Azure Disk CSI driver is enabled on the cluster
+  diskCsiDriverEnabled bool
   // The workload autoscaler profile of the AKS cluster
   workloadAutoScalerProfile dict
   // The security profile of the AKS cluster
