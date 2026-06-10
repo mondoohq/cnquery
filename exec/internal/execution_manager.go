@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/health"
 )
 
 type executionManager struct {
@@ -56,6 +58,18 @@ func (em *executionManager) Start() {
 	em.wg.Add(1)
 	go func() {
 		defer em.wg.Done()
+		// current is the code bundle being executed; the deferred panic
+		// reporter snapshots it at crash time so the report carries WHICH
+		// query was running, not just where the engine died. The recover
+		// stays at the goroutine top — recovering closer to the query and
+		// re-panicking would truncate the stacktrace.
+		var current *llx.CodeBundle
+		defer health.ReportPanicWithTags("mql", mql.Version, mql.Build, func() map[string]string {
+			if current == nil {
+				return nil
+			}
+			return health.QueryPanicTags(current.CodeV2.GetId(), current.Source)
+		})
 		for {
 			// Prioritize stopChan
 			select {
@@ -85,6 +99,7 @@ func (em *executionManager) Start() {
 					props[k] = r.Data
 				}
 
+				current = item.codeBundle
 				if err := em.executeCodeBundle(item.codeBundle, props, errMsg); err != nil {
 					// an error is returned if we cannot execute a query. This happens
 					// if the lumi runtime doesn't report back expected data, there is

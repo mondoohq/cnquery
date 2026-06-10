@@ -54,22 +54,89 @@ func ReportPanic(product, version, build string, reporters ...PanicReportFn) {
 	}
 
 	if r := recover(); r != nil {
-		sendPanic(product, version, build, r, debug.Stack())
-
-		// call additional reporters
-		for _, reporter := range reporters {
-			reporter(product, version, build, r, debug.Stack())
-		}
+		handlePanic(product, version, build, r, nil, reporters)
 
 		// output error to console
 		panic(r)
 	}
 }
 
+// Tag keys for query-context panic tags. The platform's error report
+// handler reads these to surface the crashing query in obslog
+// (mondoo.query.text / mondoo.query.code_id) and Sentry.
+const (
+	TagQueryCodeID = "queryCodeID"
+	TagQuerySource = "querySource"
+)
+
+// querySourceMax bounds the query source attached to a panic report,
+// mirroring the platform's slow-query text bound. Large enough for any
+// real check; bounded so a pathological bundle can't bloat the report.
+const querySourceMax = 2048
+
+// QueryPanicTags builds the crash-time tags identifying the query an
+// executor was running when it panicked. Returns nil when there is no
+// query context so callers can pass the result straight to
+// ReportPanicWithTags.
+func QueryPanicTags(codeID, source string) map[string]string {
+	if codeID == "" && source == "" {
+		return nil
+	}
+	tags := make(map[string]string, 2)
+	if codeID != "" {
+		tags[TagQueryCodeID] = codeID
+	}
+	if source != "" {
+		if r := []rune(source); len(r) > querySourceMax {
+			source = string(r[:querySourceMax])
+		}
+		tags[TagQuerySource] = source
+	}
+	return tags
+}
+
+// PanicTagsFn supplies tags for a panic report. It is invoked only while a
+// panic is being recovered, so implementations can cheaply close over mutable
+// state — e.g. the query an executor is currently running — and snapshot it
+// at crash time.
+type PanicTagsFn func() map[string]string
+
+// ReportPanicWithTags is ReportPanic with crash-time tags attached to the
+// report. Tags are forwarded to the platform (obslog fields and Sentry tags),
+// which is how an executor can record WHICH query was running when the engine
+// panicked — the stacktrace alone only shows where it died.
+//
+// Like ReportPanic, it must be invoked directly via defer.
+func ReportPanicWithTags(product, version, build string, tagsFn PanicTagsFn, reporters ...PanicReportFn) {
+	if build == "" {
+		return // avoid reporting panics from environments that don't set this variable
+	}
+
+	if r := recover(); r != nil {
+		var tags map[string]string
+		if tagsFn != nil {
+			tags = tagsFn()
+		}
+		handlePanic(product, version, build, r, tags, reporters)
+
+		// output error to console
+		panic(r)
+	}
+}
+
+func handlePanic(product, version, build string, r any, tags map[string]string, reporters []PanicReportFn) {
+	sendPanic(product, version, build, r, debug.Stack(), tags)
+
+	// call additional reporters
+	for _, reporter := range reporters {
+		reporter(product, version, build, r, debug.Stack())
+	}
+}
+
 // sendPanic sends a panic to the mondoo platform for further analysis if the
 // service account is configured.
 // This function does not return an error as it is not critical to send the panic to the platform.
-func sendPanic(product, version, build string, r any, stacktrace []byte) {
+func sendPanic(product, version, build string, r any, stacktrace []byte, tags map[string]string) {
 	// 1. read config
 	opts, err := config.Read()
 	if err != nil {
@@ -84,7 +151,7 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	}
 
 	// 2. create local support bundle
-	event := panicEvent(product, version, build, r, stacktrace)
+	event := panicEvent(product, version, build, r, stacktrace, tags)
 	event.ServiceAccountMrn = opts.ServiceAccountMrn
 	event.AgentMrn = opts.AgentMrn
 
@@ -97,7 +164,14 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 // panicEvent builds the error report for a recovered panic, tagged with the
 // platform the binary runs on so reports remain attributable even when no
 // asset context is available (e.g. panics outside a scan).
-func panicEvent(product, version, build string, r any, stacktrace []byte) *SendErrorReq {
+func panicEvent(product, version, build string, r any, stacktrace []byte, tags map[string]string) *SendErrorReq {
+	allTags := map[string]string{
+		"os":   runtime.GOOS,
+		"arch": runtime.GOARCH,
+	}
+	for k, v := range tags {
+		allTags[k] = v
+	}
 	return &SendErrorReq{
 		Product: &ProductInfo{
 			Name:    product,
@@ -108,10 +182,7 @@ func panicEvent(product, version, build string, r any, stacktrace []byte) *SendE
 			Message:    "panic: " + fmt.Sprintf("%v", r),
 			Stacktrace: string(stacktrace),
 		},
-		Tags: map[string]string{
-			"os":   runtime.GOOS,
-			"arch": runtime.GOARCH,
-		},
+		Tags: allTags,
 	}
 }
 
