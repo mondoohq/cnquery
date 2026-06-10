@@ -2681,6 +2681,14 @@ azure.subscription.networkService.applicationFirewallPolicy.tags 9.0.13
 azure.subscription.networkService.applicationFirewallPolicy.type 9.0.13
 azure.subscription.networkService.applicationGateway 9.0.13
 azure.subscription.networkService.applicationGateway.etag 9.0.13
+azure.subscription.networkService.applicationGateway.frontendIpConfig 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.id 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.name 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAllocationMethod 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId 13.18.1
+azure.subscription.networkService.applicationGateway.frontendIpConfigs 13.18.1
 azure.subscription.networkService.applicationGateway.id 9.0.13
 azure.subscription.networkService.applicationGateway.listener 13.12.2
 azure.subscription.networkService.applicationGateway.listener.hostName 13.12.2

@@ -3132,6 +3132,20 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		}
 	}
 
+	frontendIpConfigs := []any{}
+	if ag.Properties != nil {
+		for _, fc := range ag.Properties.FrontendIPConfigurations {
+			if fc == nil {
+				continue
+			}
+			mqlFc, err := azureAppGatewayFrontendIpConfigToMql(runtime, fc)
+			if err != nil {
+				return nil, err
+			}
+			frontendIpConfigs = append(frontendIpConfigs, mqlFc)
+		}
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                    llx.StringDataPtr(ag.ID),
 		"name":                  llx.StringDataPtr(ag.Name),
@@ -3145,6 +3159,7 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		"sslCipherSuites":       llx.ArrayData(sslCipherSuites, types.String),
 		"listeners":             llx.ArrayData(listeners, types.Resource("azure.subscription.networkService.applicationGateway.listener")),
 		"sslCertificates":       llx.ArrayData(sslCertificates, types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")),
+		"frontendIpConfigs":     llx.ArrayData(frontendIpConfigs, types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -3255,6 +3270,56 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// frontendIpConfigFields extracts the displayable fields from an application
+// gateway frontend IP configuration. subnetId is set for internal (private)
+// frontends; publicIpAddressId is set for internet-facing ones.
+func frontendIpConfigFields(fc *network.ApplicationGatewayFrontendIPConfiguration) (id, name, subnetId, publicIpAddressId, privateIPAddress, privateIPAllocationMethod string) {
+	if fc == nil {
+		return
+	}
+	if fc.ID != nil {
+		id = *fc.ID
+	}
+	if fc.Name != nil {
+		name = *fc.Name
+	}
+	if p := fc.Properties; p != nil {
+		if p.Subnet != nil && p.Subnet.ID != nil {
+			subnetId = *p.Subnet.ID
+		}
+		if p.PublicIPAddress != nil && p.PublicIPAddress.ID != nil {
+			publicIpAddressId = *p.PublicIPAddress.ID
+		}
+		if p.PrivateIPAddress != nil {
+			privateIPAddress = *p.PrivateIPAddress
+		}
+		if p.PrivateIPAllocationMethod != nil {
+			privateIPAllocationMethod = string(*p.PrivateIPAllocationMethod)
+		}
+	}
+	return id, name, subnetId, publicIpAddressId, privateIPAddress, privateIPAllocationMethod
+}
+
+func azureAppGatewayFrontendIpConfigToMql(runtime *plugin.Runtime, fc *network.ApplicationGatewayFrontendIPConfiguration) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig, error) {
+	id, name, subnetId, publicIpAddressId, privateIPAddress, privateIPAllocationMethod := frontendIpConfigFields(fc)
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.frontendIpConfig", map[string]*llx.RawData{
+		"id":                        llx.StringData(id),
+		"name":                      llx.StringData(name),
+		"subnetId":                  llx.StringData(subnetId),
+		"publicIpAddressId":         llx.StringData(publicIpAddressId),
+		"privateIPAddress":          llx.StringData(privateIPAddress),
+		"privateIPAllocationMethod": llx.StringData(privateIPAllocationMethod),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) id() (string, error) {

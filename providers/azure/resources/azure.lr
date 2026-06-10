@@ -2610,6 +2610,29 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   listeners []azure.subscription.networkService.applicationGateway.listener
   // SSL certificates uploaded or referenced from Key Vault on the application gateway
   sslCertificates []azure.subscription.networkService.applicationGateway.sslCertificate
+  // Frontend IP configurations on the application gateway (a config with a subnet is internal/private; one with a public IP is internet-facing)
+  frontendIpConfigs []azure.subscription.networkService.applicationGateway.frontendIpConfig
+}
+
+// Azure Application Gateway frontend IP configuration
+//
+// Examine a single frontend IP configuration on an Application Gateway. A
+// configuration bound to a `subnetId` is an internal (private) frontend; one
+// with a `publicIpAddressId` is internet-facing. Use this to audit whether a
+// gateway exposes a public entry point.
+private azure.subscription.networkService.applicationGateway.frontendIpConfig @defaults("name subnetId publicIpAddressId") {
+  // ARM resource ID
+  id string
+  // Frontend IP configuration name
+  name string
+  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends
+  subnetId string
+  // ARM resource ID of the bound public IP address; non-empty for internet-facing frontends
+  publicIpAddressId string
+  // Static private IP address, when allocation is static
+  privateIPAddress string
+  // Private IP allocation method ("Static" or "Dynamic")
+  privateIPAllocationMethod string
 }
 
 // Azure Application Gateway HTTP listener

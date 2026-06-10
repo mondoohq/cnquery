@@ -88,6 +88,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                  string = "azure.subscription.networkService.watcher.packetCapture"
 	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                              string = "azure.subscription.networkService.watcher.connectionMonitor"
 	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                    string = "azure.subscription.networkService.applicationGateway"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                    string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                            string = "azure.subscription.networkService.applicationGateway.listener"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                      string = "azure.subscription.networkService.applicationGateway.sslCertificate"
 	ResourceAzureSubscriptionNetworkServiceWafConfig                                             string = "azure.subscription.networkService.wafConfig"
@@ -708,6 +709,10 @@ func init() {
 		"azure.subscription.networkService.applicationGateway": {
 			Init:   initAzureSubscriptionNetworkServiceApplicationGateway,
 			Create: createAzureSubscriptionNetworkServiceApplicationGateway,
+		},
+		"azure.subscription.networkService.applicationGateway.frontendIpConfig": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig,
 		},
 		"azure.subscription.networkService.applicationGateway.listener": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewayListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5015,6 +5020,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetSslCertificates()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")))
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetFrontendIpConfigs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")))
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPublicIpAddressId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPrivateIPAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAllocationMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).GetPrivateIPAllocationMethod()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.applicationGateway.listener.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).GetId()).ToDataRes(types.String)
@@ -19367,6 +19393,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).SslCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).FrontendIpConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAddressId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).PublicIpAddressId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).PrivateIPAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.frontendIpConfig.privateIPAllocationMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig).PrivateIPAllocationMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.applicationGateway.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43982,6 +44040,7 @@ type mqlAzureSubscriptionNetworkServiceApplicationGateway struct {
 	SslCipherSuites       plugin.TValue[[]any]
 	Listeners             plugin.TValue[[]any]
 	SslCertificates       plugin.TValue[[]any]
+	FrontendIpConfigs     plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceApplicationGateway creates a new instance of this resource
@@ -44099,6 +44158,84 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetListeners() *p
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetSslCertificates() *plugin.TValue[[]any] {
 	return &c.SslCertificates
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetFrontendIpConfigs() *plugin.TValue[[]any] {
+	return &c.FrontendIpConfigs
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig for the azure.subscription.networkService.applicationGateway.frontendIpConfig resource
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfigInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	SubnetId                  plugin.TValue[string]
+	PublicIpAddressId         plugin.TValue[string]
+	PrivateIPAddress          plugin.TValue[string]
+	PrivateIPAllocationMethod plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationGateway.frontendIpConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) MqlName() string {
+	return "azure.subscription.networkService.applicationGateway.frontendIpConfig"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPublicIpAddressId() *plugin.TValue[string] {
+	return &c.PublicIpAddressId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPrivateIPAddress() *plugin.TValue[string] {
+	return &c.PrivateIPAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig) GetPrivateIPAllocationMethod() *plugin.TValue[string] {
+	return &c.PrivateIPAllocationMethod
 }
 
 // mqlAzureSubscriptionNetworkServiceApplicationGatewayListener for the azure.subscription.networkService.applicationGateway.listener resource
