@@ -76,8 +76,7 @@ func ParseCosPackages(pf *inventory.Platform, input io.Reader) ([]Package, error
 	}
 
 	pkgs := make([]Package, len(cPkgs.InstalledPackages))
-	for i := range cPkgs.InstalledPackages {
-		src := cPkgs.InstalledPackages[i]
+	for i, src := range cPkgs.InstalledPackages {
 		// older /etc/cos-package-info.json entries only populate `version`
 		// with the COS image version; newer ones add `ebuild_version`. Prefer
 		// the ebuild version when present and fall back so we still emit a
