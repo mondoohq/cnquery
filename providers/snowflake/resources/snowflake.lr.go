@@ -251,6 +251,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.account.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetParameters()).ToDataRes(types.Array(types.Resource("snowflake.parameter")))
 	},
+	"snowflake.account.networkPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetNetworkPolicy()).ToDataRes(types.String)
+	},
 	"snowflake.account.stages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetStages()).ToDataRes(types.Array(types.Resource("snowflake.stage")))
 	},
@@ -1264,6 +1267,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.account.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAccount).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.account.networkPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).NetworkPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"snowflake.account.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2705,7 +2712,7 @@ func (c *mqlSnowflake) GetCurrentRole() *plugin.TValue[string] {
 type mqlSnowflakeAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeAccountInternal it will be used here
+	mqlSnowflakeAccountInternal
 	AccountId              plugin.TValue[string]
 	Region                 plugin.TValue[string]
 	Url                    plugin.TValue[string]
@@ -2716,6 +2723,7 @@ type mqlSnowflakeAccount struct {
 	NetworkPolicies        plugin.TValue[[]any]
 	Procedures             plugin.TValue[[]any]
 	Parameters             plugin.TValue[[]any]
+	NetworkPolicy          plugin.TValue[string]
 	Stages                 plugin.TValue[[]any]
 	Databases              plugin.TValue[[]any]
 	Warehouses             plugin.TValue[[]any]
@@ -2896,6 +2904,12 @@ func (c *mqlSnowflakeAccount) GetParameters() *plugin.TValue[[]any] {
 		}
 
 		return c.parameters()
+	})
+}
+
+func (c *mqlSnowflakeAccount) GetNetworkPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkPolicy, func() (string, error) {
+		return c.networkPolicy()
 	})
 }
 

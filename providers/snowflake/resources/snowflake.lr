@@ -45,6 +45,14 @@ snowflake.account {
   procedures() []snowflake.procedure
   // Parameters in the account
   parameters() []snowflake.parameter
+  // Value of the account's NETWORK_POLICY parameter (empty when unset)
+  //
+  // Deliberately a string rather than a typed snowflake.networkPolicy reference:
+  // the value reports whether an account-level policy is configured, and the
+  // named policy is not always enumerable in networkPolicies (e.g. when the
+  // session role lacks privileges to list it). A typed reference would resolve
+  // to null in those cases and wrongly read as "no policy set".
+  networkPolicy() string
   // Stages in the account
   stages() []snowflake.stage
   // Databases in the account

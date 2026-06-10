@@ -5,6 +5,8 @@ package resources
 
 import (
 	"context"
+	"strings"
+	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
@@ -12,16 +14,51 @@ import (
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
 
-func (r *mqlSnowflakeAccount) parameters() ([]any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
-	client := conn.Client()
-	ctx := context.Background()
+// mqlSnowflakeAccountInternal caches the account-level SHOW PARAMETERS response
+// so the fields backed by it (parameters and networkPolicy) share a single API
+// call instead of each issuing their own.
+type mqlSnowflakeAccountInternal struct {
+	parametersOnce      sync.Once
+	cachedParameters    []*sdk.Parameter
+	cachedParametersErr error
+}
 
-	parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Account: sdk.Bool(true),
-		},
+// showAccountParameters fetches the account-level parameters from Snowflake,
+// memoizing the result on the resource. Both parameters() and networkPolicy()
+// route through here, so touching either (or both) on the same account hits the
+// Snowflake API at most once.
+func (r *mqlSnowflakeAccount) showAccountParameters() ([]*sdk.Parameter, error) {
+	r.parametersOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
+		client := conn.Client()
+		ctx := context.Background()
+
+		r.cachedParameters, r.cachedParametersErr = client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				Account: sdk.Bool(true),
+			},
+		})
 	})
+	return r.cachedParameters, r.cachedParametersErr
+}
+
+// findParameterValue returns the value of the parameter whose key matches the
+// given key (case-insensitively), or an empty string when no such parameter is
+// present.
+func findParameterValue(parameters []*sdk.Parameter, key string) string {
+	for _, p := range parameters {
+		if p == nil {
+			continue
+		}
+		if strings.EqualFold(p.Key, key) {
+			return p.Value
+		}
+	}
+	return ""
+}
+
+func (r *mqlSnowflakeAccount) parameters() ([]any, error) {
+	parameters, err := r.showAccountParameters()
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +73,14 @@ func (r *mqlSnowflakeAccount) parameters() ([]any, error) {
 	}
 
 	return list, nil
+}
+
+func (r *mqlSnowflakeAccount) networkPolicy() (string, error) {
+	parameters, err := r.showAccountParameters()
+	if err != nil {
+		return "", err
+	}
+	return findParameterValue(parameters, "NETWORK_POLICY"), nil
 }
 
 func newMqlSnowflakeParameter(runtime *plugin.Runtime, parameter *sdk.Parameter) (*mqlSnowflakeParameter, error) {

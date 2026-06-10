@@ -12,6 +12,7 @@ snowflake.account.failoverGroups 13.1.1
 snowflake.account.grants 13.0.7
 snowflake.account.maskingPolicies 13.2.7
 snowflake.account.networkPolicies 11.0.0
+snowflake.account.networkPolicy 13.2.10
 snowflake.account.parameters 11.0.0
 snowflake.account.passwordPolicies 11.0.0
 snowflake.account.procedures 11.0.0
