@@ -20,6 +20,10 @@ func (m *mqlMicrosoftSecuritySecurityscore) id() (string, error) {
 	return m.Id.Data, nil
 }
 
+func (m *mqlMicrosoftSecuritySecurityscoreControlScore) id() (string, error) {
+	return m.Id.Data, nil
+}
+
 func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScoreable) (*mqlMicrosoftSecuritySecurityscore, error) {
 	if score == nil {
 		return nil, nil
@@ -34,14 +38,33 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 		averageComparativeScores = append(averageComparativeScores, entry)
 	}
 
+	// controlScores is the deprecated raw-dict form; controls is the typed form.
 	controlScores := []any{}
+	controls := []any{}
 	graphControlScores := score.GetControlScores()
 	for j := range graphControlScores {
-		entry, err := convert.JsonToDict(newControlScore(graphControlScores[j]))
+		cs := newControlScore(graphControlScores[j])
+		if cs == nil {
+			continue
+		}
+		entry, err := convert.JsonToDict(cs)
 		if err != nil {
 			return nil, err
 		}
 		controlScores = append(controlScores, entry)
+
+		csResource, err := CreateResource(runtime, "microsoft.security.securityscore.controlScore",
+			map[string]*llx.RawData{
+				"id":              llx.StringData(convert.ToValue(score.GetId()) + "/" + convert.ToValue(cs.ControlName)),
+				"controlCategory": llx.StringDataPtr(cs.ControlCategory),
+				"controlName":     llx.StringDataPtr(cs.ControlName),
+				"description":     llx.StringDataPtr(cs.Description),
+				"score":           llx.FloatData(convert.ToValue(cs.Score)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		controls = append(controls, csResource)
 	}
 
 	vendorInformation, err := convert.JsonToDict(newSecurityVendorInformation(score.GetVendorInformation()))
@@ -60,6 +83,7 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 			"averageComparativeScores": llx.ArrayData(averageComparativeScores, types.Any),
 			"azureTenantId":            llx.StringDataPtr(score.GetAzureTenantId()),
 			"controlScores":            llx.ArrayData(controlScores, types.Any),
+			"controls":                 llx.ArrayData(controls, types.Resource("microsoft.security.securityscore.controlScore")),
 			"createdDateTime":          llx.TimeDataPtr(score.GetCreatedDateTime()),
 			"currentScore":             llx.FloatData(convert.ToValue(score.GetCurrentScore())),
 			"enabledServices":          llx.ArrayData(enabledServices, types.String),

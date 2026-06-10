@@ -520,6 +520,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	adminAuditLogConfig, adminAuditLogConfigErr := convert.JsonToDict(report.AdminAuditLogConfig)
 	r.AdminAuditLogConfig = plugin.TValue[any]{Data: adminAuditLogConfig, State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
+	r.UnifiedAuditLogIngestionEnabled = plugin.TValue[bool]{Data: dictBoolValue(adminAuditLogConfig, "unifiedAuditLogIngestionEnabled"), State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
 
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
 	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
@@ -770,6 +771,26 @@ func (r *mqlMs365Exchangeonline) owaMailboxPolicy() ([]any, error) {
 
 func (r *mqlMs365Exchangeonline) adminAuditLogConfig() (any, error) {
 	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) unifiedAuditLogIngestionEnabled() (bool, error) {
+	return false, r.getExchangeReport()
+}
+
+// dictBoolValue does a case-insensitive lookup of key in a JsonToDict result
+// and returns its bool value, or false when the key is absent or not a bool.
+func dictBoolValue(d any, key string) bool {
+	m, ok := d.(map[string]any)
+	if !ok {
+		return false
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			b, _ := v.(bool)
+			return b
+		}
+	}
+	return false
 }
 
 func (r *mqlMs365Exchangeonline) phishFilterPolicy() ([]any, error) {

@@ -990,7 +990,14 @@ microsoft.security.securityscore 9.0.0
 microsoft.security.securityscore.activeUserCount 9.0.0
 microsoft.security.securityscore.averageComparativeScores 9.0.0
 microsoft.security.securityscore.azureTenantId 9.0.0
+microsoft.security.securityscore.controlScore 13.6.1
+microsoft.security.securityscore.controlScore.controlCategory 13.6.1
+microsoft.security.securityscore.controlScore.controlName 13.6.1
+microsoft.security.securityscore.controlScore.description 13.6.1
+microsoft.security.securityscore.controlScore.id 13.6.1
+microsoft.security.securityscore.controlScore.score 13.6.1
 microsoft.security.securityscore.controlScores 9.0.0
+microsoft.security.securityscore.controls 13.6.1
 microsoft.security.securityscore.createdDateTime 9.0.0
 microsoft.security.securityscore.currentScore 9.0.0
 microsoft.security.securityscore.enabledServices 9.0.0
@@ -1542,6 +1549,7 @@ ms365.exchangeonline.transportRuleEntry.routeMessageOutboundRequireTls 13.3.1
 ms365.exchangeonline.transportRuleEntry.senderDomainIs 13.5.1
 ms365.exchangeonline.transportRuleEntry.state 13.3.1
 ms365.exchangeonline.transportRules 13.3.1
+ms365.exchangeonline.unifiedAuditLogIngestionEnabled 13.6.1
 ms365.exchangeonlineMailboxAuditBypassAssociation 11.1.43
 ms365.exchangeonlineMailboxAuditBypassAssociation.auditBypassEnabled 11.1.43
 ms365.exchangeonlineMailboxAuditBypassAssociation.name 11.1.43

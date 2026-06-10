@@ -1682,8 +1682,15 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   averageComparativeScores []dict
   // Secure Score tenant ID
   azureTenantId string
-  // Secure Score control scores
-  controlScores []dict
+  // Secure Score control scores as raw dictionaries
+  //
+  // Deprecated in favor of `controls`.
+  controlScores @maturity("deprecated") []dict
+  // Per-control score breakdown for the Secure Score
+  //
+  // Each entry exposes the control's `controlName`, `controlCategory`,
+  // `description`, and tenant-achieved `score`.
+  controls []microsoft.security.securityscore.controlScore
   // Secure Score creation time
   createdDateTime time
   // Secure Score current score
@@ -1696,6 +1703,27 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   maxScore float
   // Secure Score vendor information
   vendorInformation dict
+}
+
+// Microsoft Secure Score control score
+//
+// A single security control's contribution to the tenant Secure Score. Exposes
+// the `controlName`, the `controlCategory` (Identity, Data, Device, Apps,
+// Infrastructure), the human-readable `description`, and the tenant-achieved
+// `score` for the control.
+private microsoft.security.securityscore.controlScore @defaults("controlName score") {
+  // Control score ID (parent score ID and control name)
+  id string
+  // Control action category (Identity, Data, Device, Apps, Infrastructure)
+  controlCategory string
+  // Control unique name
+  controlName string
+  // Description of the control
+  description string
+  // Tenant-achieved score for the control
+  //
+  // Varies day to day depending on tenant operations on the control.
+  score float
 }
 
 // Microsoft Entra ID Risky User
@@ -3491,6 +3519,11 @@ ms365.exchangeonline {
   owaMailboxPolicies() []ms365.exchangeonline.owaMailboxPolicyEntry
   // Admin audit log configuration
   adminAuditLogConfig() dict
+  // Whether unified audit log ingestion is enabled for the organization
+  //
+  // When true, admin and user activity is recorded to the unified audit log and
+  // available for search in the Microsoft Purview compliance portal.
+  unifiedAuditLogIngestionEnabled() bool
   // List of phishing filter policies
   phishFilterPolicy() []dict
   // Quarantine policies as raw dictionaries

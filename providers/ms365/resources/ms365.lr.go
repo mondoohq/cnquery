@@ -92,6 +92,7 @@ const (
 	ResourceMicrosoftOauth2PermissionGrant                                                               string = "microsoft.oauth2PermissionGrant"
 	ResourceMicrosoftSecurity                                                                            string = "microsoft.security"
 	ResourceMicrosoftSecuritySecurityscore                                                               string = "microsoft.security.securityscore"
+	ResourceMicrosoftSecuritySecurityscoreControlScore                                                   string = "microsoft.security.securityscore.controlScore"
 	ResourceMicrosoftSecurityRiskyUser                                                                   string = "microsoft.security.riskyUser"
 	ResourceMicrosoftSecurityRiskDetection                                                               string = "microsoft.security.riskDetection"
 	ResourceMicrosoftSecurityAlert                                                                       string = "microsoft.security.alert"
@@ -502,6 +503,10 @@ func init() {
 		"microsoft.security.securityscore": {
 			// to override args, implement: initMicrosoftSecuritySecurityscore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecuritySecurityscore,
+		},
+		"microsoft.security.securityscore.controlScore": {
+			// to override args, implement: initMicrosoftSecuritySecurityscoreControlScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecuritySecurityscoreControlScore,
 		},
 		"microsoft.security.riskyUser": {
 			// to override args, implement: initMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2682,6 +2687,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.securityscore.controlScores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetControlScores()).ToDataRes(types.Array(types.Dict))
 	},
+	"microsoft.security.securityscore.controls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscore).GetControls()).ToDataRes(types.Array(types.Resource("microsoft.security.securityscore.controlScore")))
+	},
 	"microsoft.security.securityscore.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetCreatedDateTime()).ToDataRes(types.Time)
 	},
@@ -2699,6 +2707,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.securityscore.vendorInformation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetVendorInformation()).ToDataRes(types.Dict)
+	},
+	"microsoft.security.securityscore.controlScore.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.securityscore.controlScore.controlCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetControlCategory()).ToDataRes(types.String)
+	},
+	"microsoft.security.securityscore.controlScore.controlName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetControlName()).ToDataRes(types.String)
+	},
+	"microsoft.security.securityscore.controlScore.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.security.securityscore.controlScore.score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetScore()).ToDataRes(types.Float)
 	},
 	"microsoft.security.riskyUser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityRiskyUser).GetId()).ToDataRes(types.String)
@@ -4412,6 +4435,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.adminAuditLogConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetAdminAuditLogConfig()).ToDataRes(types.Dict)
+	},
+	"ms365.exchangeonline.unifiedAuditLogIngestionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetUnifiedAuditLogIngestionEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.phishFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetPhishFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -8195,6 +8221,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftSecuritySecurityscore).ControlScores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.securityscore.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscore).Controls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.securityscore.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscore).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -8217,6 +8247,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.securityscore.vendorInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscore).VendorInformation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.controlCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).ControlCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.controlName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).ControlName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.securityscore.controlScore.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.riskyUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10757,6 +10811,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.adminAuditLogConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Exchangeonline).AdminAuditLogConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.unifiedAuditLogIngestionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).UnifiedAuditLogIngestionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.phishFilterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19235,6 +19293,7 @@ type mqlMicrosoftSecuritySecurityscore struct {
 	AverageComparativeScores plugin.TValue[[]any]
 	AzureTenantId            plugin.TValue[string]
 	ControlScores            plugin.TValue[[]any]
+	Controls                 plugin.TValue[[]any]
 	CreatedDateTime          plugin.TValue[*time.Time]
 	CurrentScore             plugin.TValue[float64]
 	EnabledServices          plugin.TValue[[]any]
@@ -19300,6 +19359,10 @@ func (c *mqlMicrosoftSecuritySecurityscore) GetControlScores() *plugin.TValue[[]
 	return &c.ControlScores
 }
 
+func (c *mqlMicrosoftSecuritySecurityscore) GetControls() *plugin.TValue[[]any] {
+	return &c.Controls
+}
+
 func (c *mqlMicrosoftSecuritySecurityscore) GetCreatedDateTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedDateTime
 }
@@ -19322,6 +19385,75 @@ func (c *mqlMicrosoftSecuritySecurityscore) GetMaxScore() *plugin.TValue[float64
 
 func (c *mqlMicrosoftSecuritySecurityscore) GetVendorInformation() *plugin.TValue[any] {
 	return &c.VendorInformation
+}
+
+// mqlMicrosoftSecuritySecurityscoreControlScore for the microsoft.security.securityscore.controlScore resource
+type mqlMicrosoftSecuritySecurityscoreControlScore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecuritySecurityscoreControlScoreInternal it will be used here
+	Id              plugin.TValue[string]
+	ControlCategory plugin.TValue[string]
+	ControlName     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Score           plugin.TValue[float64]
+}
+
+// createMicrosoftSecuritySecurityscoreControlScore creates a new instance of this resource
+func createMicrosoftSecuritySecurityscoreControlScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecuritySecurityscoreControlScore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.securityscore.controlScore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) MqlName() string {
+	return "microsoft.security.securityscore.controlScore"
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetControlCategory() *plugin.TValue[string] {
+	return &c.ControlCategory
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetControlName() *plugin.TValue[string] {
+	return &c.ControlName
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetScore() *plugin.TValue[float64] {
+	return &c.Score
 }
 
 // mqlMicrosoftSecurityRiskyUser for the microsoft.security.riskyUser resource
@@ -25422,6 +25554,7 @@ type mqlMs365Exchangeonline struct {
 	OwaMailboxPolicy                 plugin.TValue[[]any]
 	OwaMailboxPolicies               plugin.TValue[[]any]
 	AdminAuditLogConfig              plugin.TValue[any]
+	UnifiedAuditLogIngestionEnabled  plugin.TValue[bool]
 	PhishFilterPolicy                plugin.TValue[[]any]
 	QuarantinePolicy                 plugin.TValue[[]any]
 	QuarantinePolicies               plugin.TValue[[]any]
@@ -25728,6 +25861,12 @@ func (c *mqlMs365Exchangeonline) GetOwaMailboxPolicies() *plugin.TValue[[]any] {
 func (c *mqlMs365Exchangeonline) GetAdminAuditLogConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.AdminAuditLogConfig, func() (any, error) {
 		return c.adminAuditLogConfig()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetUnifiedAuditLogIngestionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UnifiedAuditLogIngestionEnabled, func() (bool, error) {
+		return c.unifiedAuditLogIngestionEnabled()
 	})
 }
 
