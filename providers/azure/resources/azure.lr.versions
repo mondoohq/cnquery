@@ -1100,6 +1100,7 @@ azure.subscription.computeService.vm.name 9.0.1
 azure.subscription.computeService.vm.networkInterfaces 13.7.1
 azure.subscription.computeService.vm.omsInstalled 13.12.2
 azure.subscription.computeService.vm.osDisk 9.0.1
+azure.subscription.computeService.vm.osType 13.18.1
 azure.subscription.computeService.vm.patchMode 13.5.1
 azure.subscription.computeService.vm.properties 9.0.1
 azure.subscription.computeService.vm.provisionVMAgent 13.5.1

@@ -345,6 +345,8 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   sshPublicKeys []dict
   // Whether password authentication is disabled for SSH on the Linux VM
   disablePasswordAuthentication bool
+  // Operating system type of the OS disk ("Linux" or "Windows")
+  osType string
   // Whether the VM agent is provisioned (Linux/Windows)
   provisionVMAgent bool
   // Whether automatic OS upgrades by the platform are enabled (WindowsConfiguration.EnableAutomaticUpdates)

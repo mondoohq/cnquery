@@ -205,7 +205,11 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 
 	var bootDiagnosticsEnabled bool
 	var bootDiagnosticsStorageUri, userData string
+	var osType *string
 	if vm.Properties != nil {
+		if sp := vm.Properties.StorageProfile; sp != nil && sp.OSDisk != nil {
+			osType = stringEnumPtr(sp.OSDisk.OSType)
+		}
 		if dp := vm.Properties.DiagnosticsProfile; dp != nil && dp.BootDiagnostics != nil {
 			if dp.BootDiagnostics.Enabled != nil {
 				bootDiagnosticsEnabled = *dp.BootDiagnostics.Enabled
@@ -260,6 +264,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"timeCreated":                   llx.TimeDataPtr(timeCreated),
 			"sshPublicKeys":                 llx.ArrayData(sshPublicKeys, types.Dict),
 			"disablePasswordAuthentication": llx.BoolDataPtr(disablePasswordAuth),
+			"osType":                        llx.StringDataPtr(osType),
 			"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
 			"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
 			"patchMode":                     llx.StringData(patchMode),
