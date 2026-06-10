@@ -819,6 +819,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
 	},
+	"vsphere.host.accountLockFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetAccountLockFailures()).ToDataRes(types.Int)
+	},
+	"vsphere.host.accountUnlockTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetAccountUnlockTime()).ToDataRes(types.Int)
+	},
+	"vsphere.host.esxiShellInteractiveTimeOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetEsxiShellInteractiveTimeOut()).ToDataRes(types.Int)
+	},
+	"vsphere.host.esxiShellTimeOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetEsxiShellTimeOut()).ToDataRes(types.Int)
+	},
+	"vsphere.host.dcuiTimeOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetDcuiTimeOut()).ToDataRes(types.Int)
+	},
+	"vsphere.host.mobEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetMobEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.syslogLogHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSyslogLogHost()).ToDataRes(types.String)
+	},
+	"vsphere.host.syslogLogDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSyslogLogDir()).ToDataRes(types.String)
+	},
+	"vsphere.host.memShareForceSalting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetMemShareForceSalting()).ToDataRes(types.Int)
+	},
+	"vsphere.host.dvFilterBindIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetDvFilterBindIpAddress()).ToDataRes(types.String)
+	},
 	"vsphere.host.bootTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetBootTime()).ToDataRes(types.Time)
 	},
@@ -2520,6 +2550,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.accountLockFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).AccountLockFailures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.accountUnlockTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).AccountUnlockTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.esxiShellInteractiveTimeOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).EsxiShellInteractiveTimeOut, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.esxiShellTimeOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).EsxiShellTimeOut, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dcuiTimeOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).DcuiTimeOut, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.mobEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).MobEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.syslogLogHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).SyslogLogHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.syslogLogDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).SyslogLogDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.memShareForceSalting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).MemShareForceSalting, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dvFilterBindIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).DvFilterBindIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.bootTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5749,44 +5819,54 @@ type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereHostInternal
-	Moid                    plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	InventoryPath           plugin.TValue[string]
-	Properties              plugin.TValue[any]
-	StandardSwitch          plugin.TValue[[]any]
-	DistributedSwitch       plugin.TValue[[]any]
-	Adapters                plugin.TValue[[]any]
-	Vmknics                 plugin.TValue[[]any]
-	Packages                plugin.TValue[[]any]
-	AcceptanceLevel         plugin.TValue[string]
-	KernelModules           plugin.TValue[[]any]
-	AdvancedSettings        plugin.TValue[map[string]any]
-	Services                plugin.TValue[[]any]
-	Timezone                plugin.TValue[*mqlVsphereHostTimezone]
-	Ntp                     plugin.TValue[*mqlVsphereHostNtpConfig]
-	Snmp                    plugin.TValue[map[string]any]
-	Tags                    plugin.TValue[[]any]
-	LockdownMode            plugin.TValue[string]
-	FirewallIncomingBlocked plugin.TValue[bool]
-	FirewallOutgoingBlocked plugin.TValue[bool]
-	SecureBootEnabled       plugin.TValue[bool]
-	BootTime                plugin.TValue[*time.Time]
-	InMaintenanceMode       plugin.TValue[bool]
-	RebootRequired          plugin.TValue[bool]
-	Certificate             plugin.TValue[*mqlVsphereHostCertificate]
-	Vendor                  plugin.TValue[string]
-	Model                   plugin.TValue[string]
-	CpuMhz                  plugin.TValue[int64]
-	NumCpuCores             plugin.TValue[int64]
-	FirewallRulesets        plugin.TValue[[]any]
-	IscsiAdapters           plugin.TValue[[]any]
-	Cluster                 plugin.TValue[*mqlVsphereCluster]
-	Datastores              plugin.TValue[[]any]
-	BootInfo                plugin.TValue[*mqlVsphereHostBootInfo]
-	SystemInfo              plugin.TValue[*mqlVsphereHostSystemInfo]
-	DnsConfig               plugin.TValue[*mqlVsphereHostDnsConfig]
-	IpRouteConfig           plugin.TValue[*mqlVsphereHostIpRouteConfig]
-	Vsan                    plugin.TValue[*mqlVsphereHostVsan]
+	Moid                        plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	InventoryPath               plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	StandardSwitch              plugin.TValue[[]any]
+	DistributedSwitch           plugin.TValue[[]any]
+	Adapters                    plugin.TValue[[]any]
+	Vmknics                     plugin.TValue[[]any]
+	Packages                    plugin.TValue[[]any]
+	AcceptanceLevel             plugin.TValue[string]
+	KernelModules               plugin.TValue[[]any]
+	AdvancedSettings            plugin.TValue[map[string]any]
+	Services                    plugin.TValue[[]any]
+	Timezone                    plugin.TValue[*mqlVsphereHostTimezone]
+	Ntp                         plugin.TValue[*mqlVsphereHostNtpConfig]
+	Snmp                        plugin.TValue[map[string]any]
+	Tags                        plugin.TValue[[]any]
+	LockdownMode                plugin.TValue[string]
+	FirewallIncomingBlocked     plugin.TValue[bool]
+	FirewallOutgoingBlocked     plugin.TValue[bool]
+	SecureBootEnabled           plugin.TValue[bool]
+	AccountLockFailures         plugin.TValue[int64]
+	AccountUnlockTime           plugin.TValue[int64]
+	EsxiShellInteractiveTimeOut plugin.TValue[int64]
+	EsxiShellTimeOut            plugin.TValue[int64]
+	DcuiTimeOut                 plugin.TValue[int64]
+	MobEnabled                  plugin.TValue[bool]
+	SyslogLogHost               plugin.TValue[string]
+	SyslogLogDir                plugin.TValue[string]
+	MemShareForceSalting        plugin.TValue[int64]
+	DvFilterBindIpAddress       plugin.TValue[string]
+	BootTime                    plugin.TValue[*time.Time]
+	InMaintenanceMode           plugin.TValue[bool]
+	RebootRequired              plugin.TValue[bool]
+	Certificate                 plugin.TValue[*mqlVsphereHostCertificate]
+	Vendor                      plugin.TValue[string]
+	Model                       plugin.TValue[string]
+	CpuMhz                      plugin.TValue[int64]
+	NumCpuCores                 plugin.TValue[int64]
+	FirewallRulesets            plugin.TValue[[]any]
+	IscsiAdapters               plugin.TValue[[]any]
+	Cluster                     plugin.TValue[*mqlVsphereCluster]
+	Datastores                  plugin.TValue[[]any]
+	BootInfo                    plugin.TValue[*mqlVsphereHostBootInfo]
+	SystemInfo                  plugin.TValue[*mqlVsphereHostSystemInfo]
+	DnsConfig                   plugin.TValue[*mqlVsphereHostDnsConfig]
+	IpRouteConfig               plugin.TValue[*mqlVsphereHostIpRouteConfig]
+	Vsan                        plugin.TValue[*mqlVsphereHostVsan]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -6022,6 +6102,66 @@ func (c *mqlVsphereHost) GetFirewallOutgoingBlocked() *plugin.TValue[bool] {
 
 func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
 	return &c.SecureBootEnabled
+}
+
+func (c *mqlVsphereHost) GetAccountLockFailures() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccountLockFailures, func() (int64, error) {
+		return c.accountLockFailures()
+	})
+}
+
+func (c *mqlVsphereHost) GetAccountUnlockTime() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccountUnlockTime, func() (int64, error) {
+		return c.accountUnlockTime()
+	})
+}
+
+func (c *mqlVsphereHost) GetEsxiShellInteractiveTimeOut() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EsxiShellInteractiveTimeOut, func() (int64, error) {
+		return c.esxiShellInteractiveTimeOut()
+	})
+}
+
+func (c *mqlVsphereHost) GetEsxiShellTimeOut() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EsxiShellTimeOut, func() (int64, error) {
+		return c.esxiShellTimeOut()
+	})
+}
+
+func (c *mqlVsphereHost) GetDcuiTimeOut() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DcuiTimeOut, func() (int64, error) {
+		return c.dcuiTimeOut()
+	})
+}
+
+func (c *mqlVsphereHost) GetMobEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MobEnabled, func() (bool, error) {
+		return c.mobEnabled()
+	})
+}
+
+func (c *mqlVsphereHost) GetSyslogLogHost() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SyslogLogHost, func() (string, error) {
+		return c.syslogLogHost()
+	})
+}
+
+func (c *mqlVsphereHost) GetSyslogLogDir() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SyslogLogDir, func() (string, error) {
+		return c.syslogLogDir()
+	})
+}
+
+func (c *mqlVsphereHost) GetMemShareForceSalting() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MemShareForceSalting, func() (int64, error) {
+		return c.memShareForceSalting()
+	})
+}
+
+func (c *mqlVsphereHost) GetDvFilterBindIpAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DvFilterBindIpAddress, func() (string, error) {
+		return c.dvFilterBindIpAddress()
+	})
 }
 
 func (c *mqlVsphereHost) GetBootTime() *plugin.TValue[*time.Time] {

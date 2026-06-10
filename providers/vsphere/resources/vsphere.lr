@@ -457,6 +457,26 @@ private vsphere.host @defaults("moid name") {
   firewallOutgoingBlocked bool
   // Whether the host firmware reports UEFI Secure Boot was used during system boot (requires vSphere 8.0.3 or later)
   secureBootEnabled bool
+  // Maximum failed login attempts before an account is locked (Security.AccountLockFailures); 0 disables lockout
+  accountLockFailures() int
+  // Seconds a locked account stays locked before automatic unlock (Security.AccountUnlockTime)
+  accountUnlockTime() int
+  // Idle timeout in seconds for interactive ESXi Shell and SSH sessions (UserVars.ESXiShellInteractiveTimeOut); 0 disables the timeout
+  esxiShellInteractiveTimeOut() int
+  // Availability timeout in seconds for the ESXi Shell and SSH services after they start (UserVars.ESXiShellTimeOut); 0 disables the timeout
+  esxiShellTimeOut() int
+  // Idle timeout in seconds for the Direct Console User Interface (UserVars.DcuiTimeOut); 0 disables the timeout
+  dcuiTimeOut() int
+  // Whether the Managed Object Browser (MOB) is enabled (Config.HostAgent.plugins.solo.enableMob)
+  mobEnabled() bool
+  // Remote syslog host(s) the ESXi host forwards logs to (Syslog.global.logHost); empty when remote logging is not configured
+  syslogLogHost() string
+  // Datastore path where the ESXi host stores persistent logs (Syslog.global.logDir); empty when not configured for persistent logging
+  syslogLogDir() string
+  // Transparent Page Sharing salting mode (Mem.ShareForceSalting); 2 is the secure per-VM default that disables inter-VM page sharing
+  memShareForceSalting() int
+  // IP address the dvFilter network API is bound to (Net.DVFilterBindIpAddress); empty when dvFilter is not configured
+  dvFilterBindIpAddress() string
   // Last time the host booted; zero time if vCenter has never observed a boot
   bootTime time
   // Whether the host is currently in maintenance mode

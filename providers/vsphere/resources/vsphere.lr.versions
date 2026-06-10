@@ -151,6 +151,8 @@ vsphere.folder.name 13.0.12
 vsphere.folders 13.0.12
 vsphere.host 9.0.0
 vsphere.host.acceptanceLevel 9.0.0
+vsphere.host.accountLockFailures 13.4.3
+vsphere.host.accountUnlockTime 13.4.3
 vsphere.host.adapters 9.0.0
 vsphere.host.advancedSettings 9.0.0
 vsphere.host.bootInfo 13.1.1
@@ -177,6 +179,7 @@ vsphere.host.command.inventoryPath 13.1.1
 vsphere.host.command.result 13.1.1
 vsphere.host.cpuMhz 13.0.12
 vsphere.host.datastores 13.0.12
+vsphere.host.dcuiTimeOut 13.4.3
 vsphere.host.distributedSwitch 9.0.0
 vsphere.host.dnsConfig 13.1.1
 vsphere.host.dnsConfig.dhcp 13.1.1
@@ -186,6 +189,9 @@ vsphere.host.dnsConfig.hostName 13.1.1
 vsphere.host.dnsConfig.searchDomains 13.1.1
 vsphere.host.dnsConfig.servers 13.1.1
 vsphere.host.dnsConfig.virtualNicDevice 13.1.1
+vsphere.host.dvFilterBindIpAddress 13.4.3
+vsphere.host.esxiShellInteractiveTimeOut 13.4.3
+vsphere.host.esxiShellTimeOut 13.4.3
 vsphere.host.firewallIncomingBlocked 13.0.11
 vsphere.host.firewallOutgoingBlocked 13.0.11
 vsphere.host.firewallRule 13.1.1
@@ -238,6 +244,8 @@ vsphere.host.kernelModule.version 13.1.1
 vsphere.host.kernelModule.vibAcceptanceLevel 13.1.1
 vsphere.host.kernelModules 9.0.0
 vsphere.host.lockdownMode 13.0.10
+vsphere.host.memShareForceSalting 13.4.3
+vsphere.host.mobEnabled 13.4.3
 vsphere.host.model 13.0.12
 vsphere.host.moid 9.0.0
 vsphere.host.name 9.0.0
@@ -261,6 +269,8 @@ vsphere.host.service.running 13.1.1
 vsphere.host.services 9.0.0
 vsphere.host.snmp 9.0.0
 vsphere.host.standardSwitch 9.0.0
+vsphere.host.syslogLogDir 13.4.3
+vsphere.host.syslogLogHost 13.4.3
 vsphere.host.systemInfo 13.1.1
 vsphere.host.systemInfo.assetTag 13.1.1
 vsphere.host.systemInfo.installDate 13.1.1

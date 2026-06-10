@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -597,6 +598,105 @@ func (v *mqlVsphereHost) advancedSettings() (map[string]any, error) {
 		return nil, err
 	}
 	return resourceclient.HostOptions(host)
+}
+
+// advancedSettingString looks up a single ESXi advanced (host option) value by
+// key from the memoized advancedSettings map. The map stores every value as its
+// fmt-formatted string, so callers parse from there. A missing key yields an
+// empty string with ok=false, letting numeric resolvers fall back to a zero
+// default rather than erroring on hosts that don't expose the setting.
+func (v *mqlVsphereHost) advancedSettingString(key string) (value string, ok bool, err error) {
+	settings := v.GetAdvancedSettings()
+	if settings.Error != nil {
+		return "", false, settings.Error
+	}
+	raw, found := settings.Data[key]
+	if !found {
+		return "", false, nil
+	}
+	s, _ := raw.(string)
+	return s, true, nil
+}
+
+// advancedSettingInt resolves an integer-valued ESXi advanced setting, returning
+// 0 when the key is absent or empty (the natural default for the lockout/timeout
+// counters these back, where 0 already means "disabled").
+func (v *mqlVsphereHost) advancedSettingInt(key string) (int64, error) {
+	s, ok, err := v.advancedSettingString(key)
+	if err != nil || !ok {
+		return 0, err
+	}
+	return parseHostAdvancedSettingInt(key, s)
+}
+
+// parseHostAdvancedSettingInt converts a stringified ESXi advanced-setting value
+// to an int64. An empty value (an unset option) reads as 0; a non-numeric value
+// is a real error worth surfacing rather than silently zeroing.
+func parseHostAdvancedSettingInt(key, s string) (int64, error) {
+	if s == "" {
+		return 0, nil
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("vsphere host advanced setting %q is not an integer %q: %w", key, s, err)
+	}
+	return n, nil
+}
+
+// parseHostBoolSetting interprets ESXi's stringified boolean options. vCenter
+// renders the value as "true"/"false"; some builds surface "1"/"0".
+func parseHostBoolSetting(s string) bool {
+	return s == "true" || s == "1"
+}
+
+func (v *mqlVsphereHost) accountLockFailures() (int64, error) {
+	return v.advancedSettingInt("Security.AccountLockFailures")
+}
+
+func (v *mqlVsphereHost) accountUnlockTime() (int64, error) {
+	return v.advancedSettingInt("Security.AccountUnlockTime")
+}
+
+func (v *mqlVsphereHost) esxiShellInteractiveTimeOut() (int64, error) {
+	return v.advancedSettingInt("UserVars.ESXiShellInteractiveTimeOut")
+}
+
+func (v *mqlVsphereHost) esxiShellTimeOut() (int64, error) {
+	return v.advancedSettingInt("UserVars.ESXiShellTimeOut")
+}
+
+func (v *mqlVsphereHost) dcuiTimeOut() (int64, error) {
+	return v.advancedSettingInt("UserVars.DcuiTimeOut")
+}
+
+func (v *mqlVsphereHost) memShareForceSalting() (int64, error) {
+	return v.advancedSettingInt("Mem.ShareForceSalting")
+}
+
+// mobEnabled reports whether the Managed Object Browser is enabled. ESXi returns
+// the option as a boolean, which advancedSettings stringifies to "true"/"false";
+// older builds may surface "1"/"0", so both spellings are accepted.
+func (v *mqlVsphereHost) mobEnabled() (bool, error) {
+	s, ok, err := v.advancedSettingString("Config.HostAgent.plugins.solo.enableMob")
+	if err != nil || !ok {
+		return false, err
+	}
+	return parseHostBoolSetting(s), nil
+}
+
+func (v *mqlVsphereHost) syslogLogHost() (string, error) {
+	s, _, err := v.advancedSettingString("Syslog.global.logHost")
+	return s, err
+}
+
+func (v *mqlVsphereHost) syslogLogDir() (string, error) {
+	s, _, err := v.advancedSettingString("Syslog.global.logDir")
+	return s, err
+}
+
+func (v *mqlVsphereHost) dvFilterBindIpAddress() (string, error) {
+	s, _, err := v.advancedSettingString("Net.DVFilterBindIpAddress")
+	return s, err
 }
 
 func (v *mqlVsphereHost) services() ([]any, error) {
