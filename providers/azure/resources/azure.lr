@@ -8859,6 +8859,8 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   managedServiceIdentityId string
   // Identity used to resolve Key Vault references in app settings and connection strings (resource ID of a user-assigned identity, or "SystemAssigned")
   keyVaultReferenceIdentity string
+  // Whether public network access is enabled ("Enabled" or "Disabled")
+  publicNetworkAccess string
   // Function App properties
   properties dict
   // Site configuration: minimum TLS version, FTPS state, HTTP/2, always-on, remote debugging, and IP restrictions

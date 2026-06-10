@@ -2012,6 +2012,7 @@ azure.subscription.functionsService.functionApp.location 13.3.3
 azure.subscription.functionsService.functionApp.managedServiceIdentityId 13.3.3
 azure.subscription.functionsService.functionApp.name 13.3.3
 azure.subscription.functionsService.functionApp.properties 13.3.3
+azure.subscription.functionsService.functionApp.publicNetworkAccess 13.18.1
 azure.subscription.functionsService.functionApp.state 13.3.3
 azure.subscription.functionsService.functionApp.tags 13.3.3
 azure.subscription.functionsService.functionApps 13.3.3
