@@ -74,6 +74,15 @@ type mqlGcpProjectDnsServiceInternal struct {
 	serviceChecked bool
 }
 
+// managedZoneDnssecNonExistence returns the DNSSEC proof-of-nonexistence mode
+// ("nsec" or "nsec3") for a managed zone, or "" when DNSSEC is not configured.
+func managedZoneDnssecNonExistence(cfg *dns.ManagedZoneDnsSecConfig) string {
+	if cfg == nil {
+		return ""
+	}
+	return cfg.NonExistence
+}
+
 func (g *mqlGcpProjectDnsService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -184,6 +193,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			var mqlDnssecCfg map[string]any
 			dnssecAlgorithms := []any{}
 			dnssecAlgorithmSet := map[string]struct{}{}
+			dnssecNonExistence := managedZoneDnssecNonExistence(managedZone.DnssecConfig)
 			if managedZone.DnssecConfig != nil {
 				keySpecs := make([]any, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
 				for _, keySpec := range managedZone.DnssecConfig.DefaultKeySpecs {
@@ -253,6 +263,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				"labels":                     llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
 				"cloudLoggingEnabled":        llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
 				"dnssecEnabled":              llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
+				"dnssecNonExistence":         llx.StringData(dnssecNonExistence),
 				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),
 				"privateVisibilityConfig":    llx.DictData(mqlPrivateVisibilityCfg),
 				"forwardingTargets":          llx.ArrayData(forwardingTargets, types.String),

@@ -5987,6 +5987,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.dnssecEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnssecEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.dnsService.managedzone.dnssecNonExistence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnssecNonExistence()).ToDataRes(types.String)
+	},
 	"gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnsSecAlgorithmWeak()).ToDataRes(types.Bool)
 	},
@@ -21857,6 +21860,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.managedzone.dnssecEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).DnssecEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.dnssecNonExistence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).DnssecNonExistence, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49822,6 +49829,7 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	Labels                     plugin.TValue[map[string]any]
 	CloudLoggingEnabled        plugin.TValue[bool]
 	DnssecEnabled              plugin.TValue[bool]
+	DnssecNonExistence         plugin.TValue[string]
 	DnsSecAlgorithmWeak        plugin.TValue[bool]
 	DnssecDefaultKeyAlgorithms plugin.TValue[[]any]
 	PrivateVisibilityConfig    plugin.TValue[any]
@@ -49919,6 +49927,10 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetCloudLoggingEnabled() *plugin.TV
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecEnabled() *plugin.TValue[bool] {
 	return &c.DnssecEnabled
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecNonExistence() *plugin.TValue[string] {
+	return &c.DnssecNonExistence
 }
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetDnsSecAlgorithmWeak() *plugin.TValue[bool] {

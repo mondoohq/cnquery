@@ -2807,6 +2807,7 @@ gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak 13.12.2
 gcp.project.dnsService.managedzone.dnssecConfig 9.0.0
 gcp.project.dnsService.managedzone.dnssecDefaultKeyAlgorithms 13.18.1
 gcp.project.dnsService.managedzone.dnssecEnabled 13.1.2
+gcp.project.dnsService.managedzone.dnssecNonExistence 13.22.2
 gcp.project.dnsService.managedzone.forwardingTargets 13.18.1
 gcp.project.dnsService.managedzone.iamPolicy 13.9.1
 gcp.project.dnsService.managedzone.id 9.0.0

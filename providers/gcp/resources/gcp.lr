@@ -3562,6 +3562,8 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   cloudLoggingEnabled bool
   // Whether DNSSEC is enabled
   dnssecEnabled bool
+  // DNSSEC proof-of-nonexistence mode ("nsec" or "nsec3"); empty when DNSSEC is not configured
+  dnssecNonExistence string
   // Whether DNSSEC is enabled but uses a weak signing algorithm (RSASHA1 / RSASHA1-NSEC3-SHA1)
   dnsSecAlgorithmWeak() bool
   // DNSSEC signing algorithms of the zone's default key specs (e.g. rsasha256, ecdsap256sha256, rsasha1)
