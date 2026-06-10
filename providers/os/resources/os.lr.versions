@@ -1981,6 +1981,11 @@ pam.conf.entries 9.0.0
 pam.conf.exists 13.26.3
 pam.conf.files 9.0.0
 pam.conf.modules 13.16.10
+pam.conf.service 13.27.1
+pam.conf.service.entries 13.27.1
+pam.conf.service.modules 13.27.1
+pam.conf.service.name 13.27.1
+pam.conf.service.path 13.27.1
 pam.conf.serviceEntry 9.0.0
 pam.conf.serviceEntry.control 9.0.0
 pam.conf.serviceEntry.lineNumber 9.0.0

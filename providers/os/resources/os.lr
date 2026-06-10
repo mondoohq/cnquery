@@ -999,6 +999,34 @@ private pam.conf.serviceEntry @defaults("service module") {
   params(options) map[string]string
 }
 
+// PAM service configuration
+//
+// Examine the PAM configuration for a single service selected by name — for
+// example `pam.conf.service(name: "su")` or `pam.conf.service(name: "sshd")`.
+// `entries` are the parsed lines for that service and `modules` aggregates the
+// modules it loads keyed by name, so audits such as
+// `pam.conf.service(name: "su").modules["pam_wheel"].params["use_uid"]` work
+// without filtering `pam.conf.entries` by file path.
+private pam.conf.service {
+  init(name string)
+  // Service name (e.g. `su`, `sshd`, `login`)
+  name string
+  // Path of the service configuration file (e.g. `/etc/pam.d/su`)
+  //
+  // Empty when the service is defined inside the single-file `/etc/pam.conf`
+  // rather than its own file under `/etc/pam.d`.
+  path string
+  // Parsed entries for this service, in source order
+  entries []pam.conf.serviceEntry
+  // Modules loaded by this service, keyed by canonical module name
+  //
+  // Each value aggregates every entry in this service that loads the module
+  // (last-write-wins per option), so `modules["pam_wheel"].params["use_uid"]`
+  // and `modules["pam_wheel"].enabled` answer module-level questions without
+  // iterating `entries`.
+  modules() map[string]pam.module
+}
+
 // PAM module aggregated view
 //
 // Examine a single PAM module across every service that loads it. The
