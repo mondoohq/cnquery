@@ -381,6 +381,9 @@ var Equal = map[Type]func(any, any) bool{
 		}
 		l := left.(*time.Time)
 		r := right.(*time.Time)
+		// The guard above only catches an untyped nil interface; a typed
+		// (*time.Time)(nil) element still reaches here, so keep checking the
+		// pointer before dereferencing it.
 		if l == nil || r == nil {
 			return false
 		}
