@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"time"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -16,6 +17,31 @@ import (
 
 func (r *mqlTailscaleAuthKey) id() (string, error) {
 	return "tailscale/authKey/" + r.Id.Data, nil
+}
+
+// timeIsSet reports whether a Tailscale timestamp represents a real value.
+// Tailscale encodes "unset" timestamps as the zero time (Unix epoch 0 /
+// 0001-01-01), which the resource carries as a nil or zero-valued *time.Time.
+func timeIsSet(t *time.Time) bool {
+	return t != nil && !t.IsZero()
+}
+
+// hasExpiration reports whether the key has an expiration set. A key with no
+// expiration carries the zero time in `expires`.
+func (r *mqlTailscaleAuthKey) hasExpiration() (bool, error) {
+	if r.Expires.Error != nil {
+		return false, r.Expires.Error
+	}
+	return timeIsSet(r.Expires.Data), nil
+}
+
+// isRevoked reports whether the key has been revoked. A key that has not been
+// revoked carries the zero time in `revoked`.
+func (r *mqlTailscaleAuthKey) isRevoked() (bool, error) {
+	if r.Revoked.Error != nil {
+		return false, r.Revoked.Error
+	}
+	return timeIsSet(r.Revoked.Data), nil
 }
 
 func initTailscaleAuthKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

@@ -225,8 +225,12 @@ private tailscale.authKey @defaults("id description expires revoked") {
   created time
   // Time the key expires; the zero value means the key never expires
   expires time
+  // Whether the key has an expiration set (false means the key never expires)
+  hasExpiration() bool
   // Time the key was revoked; the zero value means the key has not been revoked
   revoked time
+  // Whether the key has been revoked
+  isRevoked() bool
   // Whether the key has been marked invalid (revoked or its tailnet was deleted)
   invalid bool
   // Whether the key can be used to authenticate more than one device

@@ -341,8 +341,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.authKey.expires": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAuthKey).GetExpires()).ToDataRes(types.Time)
 	},
+	"tailscale.authKey.hasExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetHasExpiration()).ToDataRes(types.Bool)
+	},
 	"tailscale.authKey.revoked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAuthKey).GetRevoked()).ToDataRes(types.Time)
+	},
+	"tailscale.authKey.isRevoked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetIsRevoked()).ToDataRes(types.Bool)
 	},
 	"tailscale.authKey.invalid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAuthKey).GetInvalid()).ToDataRes(types.Bool)
@@ -729,8 +735,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTailscaleAuthKey).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"tailscale.authKey.hasExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).HasExpiration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"tailscale.authKey.revoked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleAuthKey).Revoked, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.isRevoked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).IsRevoked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"tailscale.authKey.invalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1467,7 +1481,9 @@ type mqlTailscaleAuthKey struct {
 	UserId        plugin.TValue[string]
 	Created       plugin.TValue[*time.Time]
 	Expires       plugin.TValue[*time.Time]
+	HasExpiration plugin.TValue[bool]
 	Revoked       plugin.TValue[*time.Time]
+	IsRevoked     plugin.TValue[bool]
 	Invalid       plugin.TValue[bool]
 	Reusable      plugin.TValue[bool]
 	Ephemeral     plugin.TValue[bool]
@@ -1532,8 +1548,20 @@ func (c *mqlTailscaleAuthKey) GetExpires() *plugin.TValue[*time.Time] {
 	return &c.Expires
 }
 
+func (c *mqlTailscaleAuthKey) GetHasExpiration() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasExpiration, func() (bool, error) {
+		return c.hasExpiration()
+	})
+}
+
 func (c *mqlTailscaleAuthKey) GetRevoked() *plugin.TValue[*time.Time] {
 	return &c.Revoked
+}
+
+func (c *mqlTailscaleAuthKey) GetIsRevoked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsRevoked, func() (bool, error) {
+		return c.isRevoked()
+	})
 }
 
 func (c *mqlTailscaleAuthKey) GetInvalid() *plugin.TValue[bool] {
