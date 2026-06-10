@@ -42,6 +42,17 @@ func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
 	return "azure.subscription.compute/" + a.SubscriptionId.Data, nil
 }
 
+// vmOsType returns the OS type of a virtual machine's OS disk ("Linux" or
+// "Windows"), or nil when the properties, storage profile, or OS disk are
+// absent — guarding the three-level nil chain so a partially-populated VM
+// doesn't panic.
+func vmOsType(props *compute.VirtualMachineProperties) *string {
+	if props == nil || props.StorageProfile == nil || props.StorageProfile.OSDisk == nil {
+		return nil
+	}
+	return stringEnumPtr(props.StorageProfile.OSDisk.OSType)
+}
+
 func getState(vm compute.VirtualMachineInstanceView) string {
 	if vm.Statuses == nil {
 		return "unknown"
@@ -205,11 +216,8 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 
 	var bootDiagnosticsEnabled bool
 	var bootDiagnosticsStorageUri, userData string
-	var osType *string
+	osType := vmOsType(vm.Properties)
 	if vm.Properties != nil {
-		if sp := vm.Properties.StorageProfile; sp != nil && sp.OSDisk != nil {
-			osType = stringEnumPtr(sp.OSDisk.OSType)
-		}
 		if dp := vm.Properties.DiagnosticsProfile; dp != nil && dp.BootDiagnostics != nil {
 			if dp.BootDiagnostics.Enabled != nil {
 				bootDiagnosticsEnabled = *dp.BootDiagnostics.Enabled
