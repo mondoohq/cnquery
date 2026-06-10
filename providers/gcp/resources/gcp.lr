@@ -3923,6 +3923,10 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // `enableInsecureBindingSystemAuthenticated` allows bindings to
   // `system:authenticated`. Both default to disallowed.
   rbacBindingConfig dict
+  // Whether bindings to system:anonymous or system:unauthenticated subjects are allowed (insecure)
+  rbacBindingInsecureSystemUnauthenticated bool
+  // Whether bindings to system:authenticated subjects are allowed (insecure)
+  rbacBindingInsecureSystemAuthenticated bool
   // Status conditions
   //
   // Conditions that caused the current cluster state. Each entry has a

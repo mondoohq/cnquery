@@ -3223,6 +3223,8 @@ gcp.project.gkeService.cluster.privateEndpointEnabled 13.12.2
 gcp.project.gkeService.cluster.privateNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.projectId 9.0.0
 gcp.project.gkeService.cluster.rbacBindingConfig 13.16.3
+gcp.project.gkeService.cluster.rbacBindingInsecureSystemAuthenticated 13.22.2
+gcp.project.gkeService.cluster.rbacBindingInsecureSystemUnauthenticated 13.22.2
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
 gcp.project.gkeService.cluster.releaseChannelManaged 13.12.2
 gcp.project.gkeService.cluster.resourceLabels 9.0.0

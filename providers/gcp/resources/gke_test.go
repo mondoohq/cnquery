@@ -62,3 +62,21 @@ func TestBuildGKENotificationConfig(t *testing.T) {
 		assert.Nil(t, result)
 	})
 }
+
+func TestGkeRbacInsecureBindings(t *testing.T) {
+	t.Run("nil config defaults to secure (both false)", func(t *testing.T) {
+		unauth, auth := gkeRbacInsecureBindings(nil)
+		assert.False(t, unauth)
+		assert.False(t, auth)
+	})
+	t.Run("flags are surfaced", func(t *testing.T) {
+		trueVal, falseVal := true, false
+		cfg := &containerpb.RBACBindingConfig{
+			EnableInsecureBindingSystemUnauthenticated: &trueVal,
+			EnableInsecureBindingSystemAuthenticated:   &falseVal,
+		}
+		unauth, auth := gkeRbacInsecureBindings(cfg)
+		assert.True(t, unauth)
+		assert.False(t, auth)
+	})
+}
