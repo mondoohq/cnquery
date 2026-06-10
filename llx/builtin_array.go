@@ -815,6 +815,14 @@ func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 		return nil, rref, err
 	}
 
+	// A null argument (e.g. a missing map key resolving to a typed null
+	// array) propagates as null, mirroring the receiver-nil guard above.
+	// Without this the `arg.Value.([]any)` assertion below panics, which
+	// crashes the whole scan rather than failing the single check.
+	if arg.Value == nil {
+		return &RawData{Type: bind.Type, Error: arg.Error}, 0, nil
+	}
+
 	t := types.Type(arg.Type)
 	if t != bind.Type {
 		return nil, 0, errors.New("called `difference` with wrong type (got: " + t.Label() + ", expected:" + bind.Type.Label() + ")")
@@ -920,6 +928,14 @@ func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, rref, err
 	}
 
+	// A null argument (e.g. a missing map key resolving to a typed null
+	// array) propagates as null, mirroring the receiver-nil guard above.
+	// Without this the `arg.Value.([]any)` assertion below panics, which
+	// crashes the whole scan rather than failing the single check.
+	if arg.Value == nil {
+		return &RawData{Type: bind.Type, Error: arg.Error}, 0, nil
+	}
+
 	t := types.Type(arg.Type)
 	if t != bind.Type {
 		return nil, 0, errors.New("called `arrayNone` with wrong type (got: " + t.Label() + ", expected:" + bind.Type.Label() + ")")
@@ -971,6 +987,14 @@ func arrayContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
+	}
+
+	// A null argument (e.g. a missing map key resolving to a typed null
+	// array) propagates as null, mirroring the receiver-nil guard above.
+	// Without this the `arg.Value.([]any)` assertion below panics, which
+	// crashes the whole scan rather than failing the single check.
+	if arg.Value == nil {
+		return &RawData{Type: bind.Type, Error: arg.Error}, 0, nil
 	}
 
 	t := types.Type(arg.Type)

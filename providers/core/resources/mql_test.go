@@ -741,6 +741,22 @@ func TestArray(t *testing.T) {
 			Code:        "['x'].containsAll([asset.labels['nope']])",
 			Expectation: []any{nil},
 		},
+		// Regression: a null argument (e.g. a missing map key resolving to a
+		// typed null array, as happens on hosts with no /etc/pam.d) must
+		// propagate as null instead of panicking the whole scan with
+		// "interface conversion: interface {} is nil, not []interface {}".
+		{
+			Code:        "a = {a: [1,2]}; [1,2,3].containsAll(a['b'])",
+			Expectation: nil,
+		},
+		{
+			Code:        "a = {a: [1,2]}; [1,2,3].containsNone(a['b'])",
+			Expectation: nil,
+		},
+		{
+			Code:        "a = {a: [1,2]}; [1,2,3] - a['b']",
+			Expectation: nil,
+		},
 		{
 			Code:        "['a','b'] != /c/",
 			ResultIndex: 0, Expectation: true,
