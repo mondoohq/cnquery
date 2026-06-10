@@ -1712,8 +1712,6 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
 // Infrastructure), the human-readable `description`, and the tenant-achieved
 // `score` for the control.
 private microsoft.security.securityscore.controlScore @defaults("controlName score") {
-  // Control score ID (parent score ID and control name)
-  id string
   // Control action category (Identity, Data, Device, Apps, Infrastructure)
   controlCategory string
   // Control unique name

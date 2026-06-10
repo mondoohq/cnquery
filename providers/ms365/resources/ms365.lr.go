@@ -2708,9 +2708,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.securityscore.vendorInformation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscore).GetVendorInformation()).ToDataRes(types.Dict)
 	},
-	"microsoft.security.securityscore.controlScore.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetId()).ToDataRes(types.String)
-	},
 	"microsoft.security.securityscore.controlScore.controlCategory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecuritySecurityscoreControlScore).GetControlCategory()).ToDataRes(types.String)
 	},
@@ -8251,10 +8248,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.securityscore.controlScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).__id, ok = v.Value.(string)
-		return
-	},
-	"microsoft.security.securityscore.controlScore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftSecuritySecurityscoreControlScore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.securityscore.controlScore.controlCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19392,7 +19385,6 @@ type mqlMicrosoftSecuritySecurityscoreControlScore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftSecuritySecurityscoreControlScoreInternal it will be used here
-	Id              plugin.TValue[string]
 	ControlCategory plugin.TValue[string]
 	ControlName     plugin.TValue[string]
 	Description     plugin.TValue[string]
@@ -19410,12 +19402,7 @@ func createMicrosoftSecuritySecurityscoreControlScore(runtime *plugin.Runtime, a
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.security.securityscore.controlScore", res.__id)
@@ -19434,10 +19421,6 @@ func (c *mqlMicrosoftSecuritySecurityscoreControlScore) MqlName() string {
 
 func (c *mqlMicrosoftSecuritySecurityscoreControlScore) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlMicrosoftSecuritySecurityscoreControlScore) GetControlCategory() *plugin.TValue[string] {

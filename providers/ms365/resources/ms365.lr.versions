@@ -994,7 +994,6 @@ microsoft.security.securityscore.controlScore 13.6.1
 microsoft.security.securityscore.controlScore.controlCategory 13.6.1
 microsoft.security.securityscore.controlScore.controlName 13.6.1
 microsoft.security.securityscore.controlScore.description 13.6.1
-microsoft.security.securityscore.controlScore.id 13.6.1
 microsoft.security.securityscore.controlScore.score 13.6.1
 microsoft.security.securityscore.controlScores 9.0.0
 microsoft.security.securityscore.controls 13.6.1

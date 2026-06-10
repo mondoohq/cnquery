@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/security"
@@ -17,10 +18,6 @@ import (
 )
 
 func (m *mqlMicrosoftSecuritySecurityscore) id() (string, error) {
-	return m.Id.Data, nil
-}
-
-func (m *mqlMicrosoftSecuritySecurityscoreControlScore) id() (string, error) {
 	return m.Id.Data, nil
 }
 
@@ -53,9 +50,17 @@ func newMqlMicrosoftSecureScore(runtime *plugin.Runtime, score models.SecureScor
 		}
 		controlScores = append(controlScores, entry)
 
+		// __id must be unique per control within a score. controlName is the
+		// natural key; fall back to the loop index when it is empty so unnamed
+		// controls don't collide in the resource cache.
+		controlName := convert.ToValue(cs.ControlName)
+		controlID := convert.ToValue(score.GetId()) + "/" + controlName
+		if controlName == "" {
+			controlID = convert.ToValue(score.GetId()) + "/#" + strconv.Itoa(j)
+		}
 		csResource, err := CreateResource(runtime, "microsoft.security.securityscore.controlScore",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(convert.ToValue(score.GetId()) + "/" + convert.ToValue(cs.ControlName)),
+				"__id":            llx.StringData(controlID),
 				"controlCategory": llx.StringDataPtr(cs.ControlCategory),
 				"controlName":     llx.StringDataPtr(cs.ControlName),
 				"description":     llx.StringDataPtr(cs.Description),
