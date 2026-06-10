@@ -990,6 +990,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nutanix.iam.directoryService.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixIamDirectoryService).GetUrl()).ToDataRes(types.String)
 	},
+	"nutanix.iam.directoryService.usesLdaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNutanixIamDirectoryService).GetUsesLdaps()).ToDataRes(types.Bool)
+	},
 	"nutanix.iam.directoryService.secondaryUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNutanixIamDirectoryService).GetSecondaryUrls()).ToDataRes(types.Array(types.String))
 	},
@@ -2369,6 +2372,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nutanix.iam.directoryService.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNutanixIamDirectoryService).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nutanix.iam.directoryService.usesLdaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNutanixIamDirectoryService).UsesLdaps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"nutanix.iam.directoryService.secondaryUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5215,6 +5222,7 @@ type mqlNutanixIamDirectoryService struct {
 	DirectoryType          plugin.TValue[string]
 	DomainName             plugin.TValue[string]
 	Url                    plugin.TValue[string]
+	UsesLdaps              plugin.TValue[bool]
 	SecondaryUrls          plugin.TValue[[]any]
 	GroupSearchType        plugin.TValue[string]
 	WhiteListedGroups      plugin.TValue[[]any]
@@ -5274,6 +5282,12 @@ func (c *mqlNutanixIamDirectoryService) GetDomainName() *plugin.TValue[string] {
 
 func (c *mqlNutanixIamDirectoryService) GetUrl() *plugin.TValue[string] {
 	return &c.Url
+}
+
+func (c *mqlNutanixIamDirectoryService) GetUsesLdaps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLdaps, func() (bool, error) {
+		return c.usesLdaps()
+	})
 }
 
 func (c *mqlNutanixIamDirectoryService) GetSecondaryUrls() *plugin.TValue[[]any] {

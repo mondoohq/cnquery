@@ -755,6 +755,8 @@ private nutanix.iam.directoryService @defaults("name directoryType domainName") 
   domainName string
   // Primary server URL
   url string
+  // Whether the primary server URL uses the secure LDAPS scheme
+  usesLdaps() bool
   // Secondary server URLs
   secondaryUrls []string
   // Group search behavior

@@ -151,6 +151,7 @@ nutanix.iam.directoryService.name 13.0.0
 nutanix.iam.directoryService.secondaryUrls 13.0.0
 nutanix.iam.directoryService.serviceAccountUsername 13.0.0
 nutanix.iam.directoryService.url 13.0.0
+nutanix.iam.directoryService.usesLdaps 13.0.2
 nutanix.iam.directoryService.whiteListedGroups 13.0.0
 nutanix.iam.group 13.0.0
 nutanix.iam.group.createdBy 13.0.0

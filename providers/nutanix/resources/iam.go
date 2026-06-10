@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
 	authn "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
 	authz "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
@@ -384,6 +385,20 @@ func (a *mqlNutanix) directoryServices() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// urlUsesLdaps reports whether the given URL uses the secure LDAPS scheme,
+// matching the "ldaps://" prefix case-insensitively.
+func urlUsesLdaps(url string) bool {
+	return strings.HasPrefix(strings.ToLower(url), "ldaps://")
+}
+
+func (d *mqlNutanixIamDirectoryService) usesLdaps() (bool, error) {
+	url := d.GetUrl()
+	if url.Error != nil {
+		return false, url.Error
+	}
+	return urlUsesLdaps(url.Data), nil
 }
 
 // ---------------------------------------------------------------------------
