@@ -6,6 +6,7 @@ package health
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 	"time"
 
@@ -83,9 +84,21 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	}
 
 	// 2. create local support bundle
-	event := &SendErrorReq{
-		ServiceAccountMrn: opts.ServiceAccountMrn,
-		AgentMrn:          opts.AgentMrn,
+	event := panicEvent(product, version, build, r, stacktrace)
+	event.ServiceAccountMrn = opts.ServiceAccountMrn
+	event.AgentMrn = opts.AgentMrn
+
+	// 3. send error to mondoo platform
+	sendErrorToMondooPlatform(serviceAccount, event)
+
+	log.Info().Msg("reported panic to Mondoo Platform")
+}
+
+// panicEvent builds the error report for a recovered panic, tagged with the
+// platform the binary runs on so reports remain attributable even when no
+// asset context is available (e.g. panics outside a scan).
+func panicEvent(product, version, build string, r any, stacktrace []byte) *SendErrorReq {
+	return &SendErrorReq{
 		Product: &ProductInfo{
 			Name:    product,
 			Version: version,
@@ -95,12 +108,11 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 			Message:    "panic: " + fmt.Sprintf("%v", r),
 			Stacktrace: string(stacktrace),
 		},
+		Tags: map[string]string{
+			"os":   runtime.GOOS,
+			"arch": runtime.GOARCH,
+		},
 	}
-
-	// 3. send error to mondoo platform
-	sendErrorToMondooPlatform(serviceAccount, event)
-
-	log.Info().Msg("reported panic to Mondoo Platform")
 }
 
 func ReportError(product, version, build, err string, opts ...ReportOption) {
