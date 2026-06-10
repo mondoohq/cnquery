@@ -2938,6 +2938,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"packages.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackages).GetList()).ToDataRes(types.Array(types.Resource("package")))
 	},
+	"pam.conf.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetExists()).ToDataRes(types.Bool)
+	},
 	"pam.conf.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPamConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
 	},
@@ -11189,6 +11192,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"pam.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPamConf).__id, ok = v.Value.(string)
+		return
+	},
+	"pam.conf.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"pam.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26279,6 +26286,7 @@ type mqlPamConf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlPamConfInternal it will be used here
+	Exists   plugin.TValue[bool]
 	Files    plugin.TValue[[]any]
 	Content  plugin.TValue[string]
 	Services plugin.TValue[map[string]any]
@@ -26321,6 +26329,12 @@ func (c *mqlPamConf) MqlName() string {
 
 func (c *mqlPamConf) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlPamConf) GetExists() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Exists, func() (bool, error) {
+		return c.exists()
+	})
 }
 
 func (c *mqlPamConf) GetFiles() *plugin.TValue[[]any] {

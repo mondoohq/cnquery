@@ -1978,6 +1978,7 @@ packages.list 9.0.0
 pam.conf 9.0.0
 pam.conf.content 9.0.0
 pam.conf.entries 9.0.0
+pam.conf.exists 13.26.3
 pam.conf.files 9.0.0
 pam.conf.modules 13.16.10
 pam.conf.serviceEntry 9.0.0

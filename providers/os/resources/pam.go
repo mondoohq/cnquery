@@ -70,6 +70,29 @@ func (se *mqlPamConfServiceEntry) id() (string, error) {
 	return id, nil
 }
 
+// exists reports whether any PAM configuration is present, checking the
+// pam.d directory and the single-file pam.conf the same way files() selects
+// between them. Unlike files() it never errors when nothing is found, so
+// audits can guard PAM checks on hosts that ship no PAM configuration.
+func (s *mqlPamConf) exists() (bool, error) {
+	for _, path := range []string{defaultPamDir, defaultPamConf} {
+		raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
+		if err != nil {
+			return false, err
+		}
+		exist := raw.(*mqlFile).GetExists()
+		if exist.Error != nil {
+			return false, exist.Error
+		}
+		if exist.Data {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
 func (s *mqlPamConf) files() ([]any, error) {

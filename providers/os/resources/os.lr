@@ -954,6 +954,12 @@ packages {
 // Examine /etc/pam.d service entries with their type, control, and module
 pam.conf {
   init(path string)
+  // Whether PAM configuration is present on the system
+  //
+  // True when either the `/etc/pam.d` directory or the `/etc/pam.conf` file
+  // exists. Use it to guard PAM audits on hosts that ship no PAM
+  // configuration, such as container-optimized OS images.
+  exists() bool
   // List of files that make up the PAM configuration
   files() []file
   // The raw PAM configuration (across all files)
