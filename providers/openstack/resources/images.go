@@ -95,6 +95,30 @@ func (o *mqlOpenstack) images() ([]any, error) {
 	return out, nil
 }
 
+// imageSignatureFromProperties extracts the Glance `img_signature` property
+// value from an image's free-form properties dict. It returns an empty string
+// when the property is absent, null, or not a string (i.e. the image is
+// unsigned).
+func imageSignatureFromProperties(properties any) string {
+	props, ok := properties.(map[string]any)
+	if !ok {
+		return ""
+	}
+	sig, ok := props["img_signature"].(string)
+	if !ok {
+		return ""
+	}
+	return sig
+}
+
+func (r *mqlOpenstackImage) imageSignature() (string, error) {
+	props := r.GetProperties()
+	if props.Error != nil {
+		return "", props.Error
+	}
+	return imageSignatureFromProperties(props.Data), nil
+}
+
 func (r *mqlOpenstackImage) owner() (*mqlOpenstackProject, error) {
 	if r.cacheOwnerID == "" {
 		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull

@@ -474,6 +474,7 @@ openstack.image.createdAt 13.0.1
 openstack.image.diskFormat 13.0.1
 openstack.image.hidden 13.0.1
 openstack.image.id 13.0.1
+openstack.image.imageSignature 13.3.2
 openstack.image.member 13.0.1
 openstack.image.member.createdAt 13.0.1
 openstack.image.member.image 13.0.1

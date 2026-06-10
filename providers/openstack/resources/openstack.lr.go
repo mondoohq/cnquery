@@ -1341,6 +1341,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.image.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackImage).GetProperties()).ToDataRes(types.Dict)
 	},
+	"openstack.image.imageSignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImage).GetImageSignature()).ToDataRes(types.String)
+	},
 	"openstack.image.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackImage).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -4591,6 +4594,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.image.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackImage).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"openstack.image.imageSignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImage).ImageSignature, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.image.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11073,6 +11080,7 @@ type mqlOpenstackImage struct {
 	Tags             plugin.TValue[[]any]
 	Metadata         plugin.TValue[map[string]any]
 	Properties       plugin.TValue[any]
+	ImageSignature   plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	UpdatedAt        plugin.TValue[*time.Time]
 	Owner            plugin.TValue[*mqlOpenstackProject]
@@ -11178,6 +11186,12 @@ func (c *mqlOpenstackImage) GetMetadata() *plugin.TValue[map[string]any] {
 
 func (c *mqlOpenstackImage) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlOpenstackImage) GetImageSignature() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ImageSignature, func() (string, error) {
+		return c.imageSignature()
+	})
 }
 
 func (c *mqlOpenstackImage) GetCreatedAt() *plugin.TValue[*time.Time] {

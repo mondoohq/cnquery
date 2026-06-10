@@ -736,6 +736,8 @@ private openstack.image @defaults("id name status visibility") {
   //
   // Carries Glance signing fields (`img_signature`, `img_signature_hash_method`, `img_signature_key_type`, `img_signature_certificate_uuid`), kernel/ramdisk references, and OS distro hints.
   properties dict
+  // Glance image signature (`img_signature` property); empty string when the image is unsigned
+  imageSignature() string
   // Creation timestamp
   createdAt time
   // Last update timestamp
