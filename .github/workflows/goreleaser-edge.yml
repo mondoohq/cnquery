@@ -11,6 +11,11 @@ on:
         required: false
         default: false
         type: boolean
+      dry-run:
+        description: "Skip publishing to registry (build only)"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: goreleaser-edge
@@ -73,7 +78,7 @@ jobs:
           distribution: goreleaser
           # auto-update: source=github-releases repo=goreleaser/goreleaser updates=minor
           version: v2.16.0
-          args: release -f .github/.goreleaser-edge.yml --clean --timeout 120m
+          args: release -f .github/.goreleaser-edge.yml --clean --timeout 120m ${{ inputs.dry-run == true && '--skip=publish' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
