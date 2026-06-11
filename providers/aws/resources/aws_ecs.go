@@ -769,10 +769,7 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 						"arn":    llx.StringData(taskDefArn),
 						"region": llx.StringData(region),
 					}
-					// Honor discovery tag filters. Task definition tags aren't
-					// returned by ListTaskDefinitions, so fetch them explicitly with
-					// ListTagsForResource only when tag filters are set. On a fetch
-					// error keep the asset (fail open) rather than silently drop it.
+					// Only fetch tags eagerly when tag-based filters are configured
 					if conn.Filters.General.HasTags() {
 						tagsResp, err := svc.ListTagsForResource(ctx, &ecsservice.ListTagsForResourceInput{ResourceArn: &taskDefArn})
 						if err == nil {
