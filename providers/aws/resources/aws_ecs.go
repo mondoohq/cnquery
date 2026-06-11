@@ -785,7 +785,7 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 						}
 					}
 
-					mqlTaskDef, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition", args)
+					mqlTaskDef, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinition, args)
 					if err != nil {
 						return nil, err
 					}
