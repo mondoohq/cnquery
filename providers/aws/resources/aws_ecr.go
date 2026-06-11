@@ -168,7 +168,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			}
 
 			for _, batch := range batches {
-				req := &ecr.DescribeRepositoriesInput{}
+				req := &ecr.DescribeRepositoriesInput{MaxResults: aws.Int32(250)}
 				if len(batch) > 0 {
 					req.RepositoryNames = batch
 				}
@@ -261,7 +261,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	mqlres := []any{}
 	if public {
 		svc := conn.EcrPublic(region)
-		paginator := ecrpublic.NewDescribeImagesPaginator(svc, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
+		paginator := ecrpublic.NewDescribeImagesPaginator(svc, &ecrpublic.DescribeImagesInput{RepositoryName: &name, MaxResults: aws.Int32(250)})
 		for paginator.HasMorePages() {
 			res, err := paginator.NextPage(ctx)
 			if err != nil {
@@ -299,7 +299,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 
 	// private
 	svc := conn.Ecr(region)
-	paginator := ecr.NewDescribeImagesPaginator(svc, &ecr.DescribeImagesInput{RepositoryName: &name})
+	paginator := ecr.NewDescribeImagesPaginator(svc, &ecr.DescribeImagesInput{RepositoryName: &name, MaxResults: aws.Int32(250)})
 	for paginator.HasMorePages() {
 		res, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -544,6 +544,7 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	for _, batch := range batches {
 		req := &ecrpublic.DescribeRepositoriesInput{
 			RegistryId: aws.String(conn.AccountId()),
+			MaxResults: aws.Int32(250),
 		}
 		if len(batch) > 0 {
 			// AWS does not do partial results and returns an error if a single repository
