@@ -42,9 +42,14 @@ func ParseKBID(s string) string {
 }
 
 // WINDOWS_QUERY_UPDATE_HISTORY enumerates the Windows Update Agent install
-// history via the COM API. Results include uninstalled and failed entries;
-// callers filter on Operation == Installation and ResultCode == Succeeded.
-// Dates serialize as PowerShell "/Date(ms)/" strings.
+// history via the COM API, pre-filtering in PowerShell to succeeded
+// installations (Operation == Installation, ResultCode == Succeeded) so that
+// only those entries are turned into objects and serialized — uninstalls,
+// failures, and aborted/in-progress entries are dropped before the expensive
+// per-entry work. Go's FilterInstalledHistory re-applies the same predicate
+// (and de-duplicates by KB), so the two must stay in sync; see
+// TestUpdateHistoryQueryFilterMatchesGo. Dates serialize as PowerShell
+// "/Date(ms)/" strings.
 var WINDOWS_QUERY_UPDATE_HISTORY = `
 $ProgressPreference='SilentlyContinue';
 $session = New-Object -ComObject Microsoft.Update.Session
@@ -52,7 +57,9 @@ $searcher = $session.CreateUpdateSearcher()
 $count = $searcher.GetTotalHistoryCount()
 $history = @()
 if ($count -gt 0) {
-  $history = $searcher.QueryHistory(0, $count) | ForEach-Object {
+  $history = $searcher.QueryHistory(0, $count) |
+    Where-Object { $_.Operation -eq 1 -and $_.ResultCode -eq 2 } |
+    ForEach-Object {
     New-Object psobject -Property @{
       "Title" = $_.Title
       "Date" = $_.Date

@@ -4,6 +4,7 @@
 package windows
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -11,6 +12,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestUpdateHistoryQueryFilterMatchesGo guards that the PowerShell-side
+// Where-Object pre-filter uses the same Operation/ResultCode codes that the
+// Go-side FilterInstalledHistory enforces. If the constants change, the
+// embedded query must change with them or installed updates would silently
+// disappear.
+func TestUpdateHistoryQueryFilterMatchesGo(t *testing.T) {
+	want := fmt.Sprintf("$_.Operation -eq %d -and $_.ResultCode -eq %d",
+		UpdateOperationInstallation, UpdateResultSucceeded)
+	assert.Contains(t, WINDOWS_QUERY_UPDATE_HISTORY, want,
+		"PowerShell pre-filter must match the Go install/succeeded predicate")
+}
 
 func TestParseWindowsUpdateHistory(t *testing.T) {
 	r, err := os.Open("./testdata/update_history.json")
