@@ -106,8 +106,16 @@ func (s *sbomProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 			Build:   sbomReport.Asset.Platform.Build,
 			Arch:    sbomReport.Asset.Platform.Arch,
 			Family:  sbomReport.Asset.Platform.Family,
+			Labels:  sbomReport.Asset.Platform.Labels,
 		}
-		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/sbom/uuid/" + uuid.New().String()}
+		// Keep the identity the SBOM declares (e.g. the hostname / bios-uuid
+		// platform ids a live scan emits) so re-importing the same document
+		// updates the same asset instead of spawning a new one on every run.
+		// Only fall back to a random UUID when the document carries no
+		// identity at all.
+		if len(asset.PlatformIds) == 0 {
+			asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/sbom/uuid/" + uuid.New().String()}
+		}
 	}
 
 	// generate recording from sbom and store it into the provider
