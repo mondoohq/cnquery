@@ -32,7 +32,7 @@ env:
 jobs:
   scoping:
     name: "Scoping"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     outputs:
       providers: ${{ steps.providers.outputs.providers }}
@@ -102,7 +102,7 @@ jobs:
   provider-build:
     name: "${{ matrix.provider }}"
     runs-on:
-      group: Default
+      group: arc-runners
     environment: prod
     timeout-minutes: 120
     permissions:
