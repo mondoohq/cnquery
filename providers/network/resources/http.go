@@ -272,17 +272,9 @@ func (x *mqlHttpHeader) xFrameOptions() (string, error) {
 	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
 }
 
-func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
-	raw, ok := x.Params.Data["X-XSS-Protection"]
-	if !ok {
-		x.XXssProtection.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	enabled := llx.NilData
-	mode := llx.NilData
-	report := llx.NilData
-	parseHeaderFields(raw.([]any), func(key string, value string) {
+func parseXssProtectionDirectives(raw []any) (enabled *llx.RawData, mode *llx.RawData, report *llx.RawData) {
+	enabled, mode, report = llx.NilData, llx.NilData, llx.NilData
+	parseHeaderFields(raw, func(key string, value string) {
 		switch key {
 		case "0":
 			enabled = llx.BoolFalse
@@ -290,10 +282,21 @@ func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
 			enabled = llx.BoolTrue
 		case "mode":
 			mode = llx.StringData(value)
-		case "max-age":
+		case "report":
 			report = llx.StringData(value)
 		}
 	})
+	return enabled, mode, report
+}
+
+func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
+	raw, ok := x.Params.Data["X-XSS-Protection"]
+	if !ok {
+		x.XXssProtection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	enabled, mode, report := parseXssProtectionDirectives(raw.([]any))
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.xssProtection", map[string]*llx.RawData{
 		"enabled": enabled,
