@@ -218,6 +218,15 @@ func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar
 		return nil, err
 	}
 
+	// Resolve the digest before creating the tar connection so a Digest()
+	// failure doesn't leak the temp file that newImageTarConnection allocates,
+	// and so the caller surfaces the same error the pre-refactor code did
+	// instead of silently ending up with an empty PlatformIdentifier.
+	hash, err := img.Digest()
+	if err != nil {
+		return nil, err
+	}
+
 	// includeOci=false because the input *is* an OCI tar already; we don't need
 	// to emit a second one. Pass nil ref since the OCI-write path is skipped.
 	conn, err := newImageTarConnection(id, conf, asset, img, nil, false)
@@ -225,8 +234,6 @@ func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar
 		return nil, err
 	}
 
-	if hash, hErr := img.Digest(); hErr == nil {
-		conn.PlatformIdentifier = containerid.MondooContainerImageID(hash.String())
-	}
+	conn.PlatformIdentifier = containerid.MondooContainerImageID(hash.String())
 	return conn, nil
 }
