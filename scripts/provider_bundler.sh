@@ -12,8 +12,25 @@ PROVIDER_PATH=$REPOROOT/providers/$PROVIDER_NAME
 PROVIDER_DIST=$PROVIDER_PATH/dist
 BUNDLE_DIST=$REPOROOT/dist
 
-# Maximum number of parallel arch builds (default: all 11 at once)
-MAX_PARALLEL=${MAX_PARALLEL:-11}
+# Maximum number of parallel arch builds (default: physical core count)
+get_physical_cores() {
+  case "$(uname -s)" in
+    Darwin)
+      sysctl -n hw.physicalcpu 2>/dev/null || echo 4
+      ;;
+    Linux)
+      # Count unique (physical_id, core_id) pairs; fall back to nproc/2 on VMs
+      local count
+      count=$(grep -E "^(physical id|core id)" /proc/cpuinfo 2>/dev/null \
+              | paste - - | sort -u | wc -l)
+      [ "${count:-0}" -gt 0 ] && echo "$count" || echo $(( $(nproc --all 2>/dev/null || echo 8) / 2 ))
+      ;;
+    *)
+      echo 4
+      ;;
+  esac
+}
+MAX_PARALLEL=${MAX_PARALLEL:-$(get_physical_cores)}
 
 cd $REPOROOT
 
