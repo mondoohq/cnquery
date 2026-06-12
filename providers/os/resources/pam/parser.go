@@ -95,8 +95,14 @@ func complicatedParse(fields []string) (*PamLine, error) {
 }
 
 func StripComments(line string) string {
-	if idx := strings.Index(line, "#"); idx >= 0 {
-		line = line[0:idx]
+	// A '#' starts a comment only when it begins a token (start of line or
+	// preceded by whitespace). A '#' embedded in a module option is part of
+	// the option value and must be preserved.
+	for idx := 0; idx < len(line); idx++ {
+		if line[idx] == '#' && (idx == 0 || line[idx-1] == ' ' || line[idx-1] == '\t') {
+			line = line[0:idx]
+			break
+		}
 	}
 	line = strings.Trim(line, " \t\r")
 	return line

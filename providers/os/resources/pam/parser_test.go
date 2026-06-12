@@ -79,6 +79,32 @@ func TestParseLine(t *testing.T) {
 		require.Equal(t, expected, result)
 	})
 
+	t.Run("parsing conf lines with a literal # inside an option", func(t *testing.T) {
+		line := "password   required       pam_passwdqc.so config=/etc/passwdqc.conf match=*#*"
+		expected := &PamLine{
+			PamType: "password",
+			Control: "required",
+			Module:  "pam_passwdqc.so",
+			Options: []any{"config=/etc/passwdqc.conf", "match=*#*"},
+		}
+		result, err := ParseLine(line)
+		require.NoError(t, err)
+		require.Equal(t, expected, result)
+	})
+
+	t.Run("parsing conf lines with a trailing comment", func(t *testing.T) {
+		line := "auth       required       pam_unix.so nullok # comment text"
+		expected := &PamLine{
+			PamType: "auth",
+			Control: "required",
+			Module:  "pam_unix.so",
+			Options: []any{"nullok"},
+		}
+		result, err := ParseLine(line)
+		require.NoError(t, err)
+		require.Equal(t, expected, result)
+	})
+
 	t.Run("parsing conf line with include", func(t *testing.T) {
 		line := "@include common-password"
 		expected := &PamLine{
@@ -292,4 +318,26 @@ func TestIncludePamConfigurationFile(t *testing.T) {
 	entries, err := parsePamContent(content)
 	require.NoError(t, err)
 	assert.Equal(t, expected, entries)
+}
+
+func TestStripComments(t *testing.T) {
+	tests := []struct {
+		name     string
+		line     string
+		expected string
+	}{
+		{"full-line comment", "# this is a comment", ""},
+		{"indented full-line comment", "   # indented comment", ""},
+		{"trailing comment", "auth required pam_unix.so # use unix auth", "auth required pam_unix.so"},
+		{"tab before comment", "auth required pam_unix.so\t# use unix auth", "auth required pam_unix.so"},
+		{"hash inside option value", "password required pam_passwdqc.so match=*#*", "password required pam_passwdqc.so match=*#*"},
+		{"hash inside option plus trailing comment", "password required pam_passwdqc.so match=*#* # strict", "password required pam_passwdqc.so match=*#*"},
+		{"no comment", "auth required pam_unix.so nullok", "auth required pam_unix.so nullok"},
+		{"empty line", "", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, StripComments(tc.line))
+		})
+	}
 }
