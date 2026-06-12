@@ -63,12 +63,14 @@ func TestNewRecording_WindowsPackages(t *testing.T) {
 
 	seenIDs := map[string]bool{}
 	for i, pkg := range doc.Packages {
-		// Each input package must produce a package recording resource with a
-		// unique, non-empty ID. Hotfixes without purl must fall back to name.
-		pkgRes, ok := rec.GetResource("package", pkg.Purl)
-		if pkg.Purl == "" {
-			pkgRes, ok = rec.GetResource("package", pkg.Name)
+		// Mirror the production fallback (newOsPackage): use purl when set,
+		// else name. Hotfixes have no purl so the recording must key them by
+		// name to keep IDs unique.
+		lookupKey := pkg.Purl
+		if lookupKey == "" {
+			lookupKey = pkg.Name
 		}
+		pkgRes, ok := rec.GetResource("package", lookupKey)
 		require.Truef(t, ok, "package %d (%s) missing from recording", i, pkg.Name)
 		assert.NotEmptyf(t, pkgRes.ID, "package %s recording ID must not be empty", pkg.Name)
 		assert.Falsef(t, seenIDs[pkgRes.ID], "package ID %q collides between two recording resources", pkgRes.ID)
