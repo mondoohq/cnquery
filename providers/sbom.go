@@ -283,7 +283,12 @@ func newRecording(asset *inventory.Asset, s *sbom.Sbom) (*recording.Asset, error
 	for i := range s.Packages {
 		pkg := s.Packages[i]
 
-		if pkg.Type == "deb" || pkg.Type == "rpm" || pkg.Type == "apk" {
+		// windows/app, windows/appx and windows/hotfix mirror what a live scan's
+		// packages resource returns on Windows (WinPkgManager.List includes
+		// hotfixes alongside apps). They feed Windows advisory matching
+		// (OS build + KB list + application packages).
+		if pkg.Type == "deb" || pkg.Type == "rpm" || pkg.Type == "apk" ||
+			pkg.Type == "windows/app" || pkg.Type == "windows/appx" || pkg.Type == "windows/hotfix" {
 			pkgResource, otherResources := newOsPackage(pkg)
 			r.Resources = append(r.Resources, pkgResource)
 			r.Resources = append(r.Resources, otherResources...)
@@ -375,9 +380,17 @@ func newOsPackage(pkg *sbom.Package) (recording.Resource, []recording.Resource) 
 		})
 	}
 
+	// Some package types carry no purl (e.g. windows/hotfix). Fall back to
+	// the package name so each recording resource keeps a unique, stable id
+	// instead of all colliding on "".
+	id := pkg.Purl
+	if id == "" {
+		id = pkg.Name
+	}
+
 	return recording.Resource{
 		Resource: "package",
-		ID:       pkg.Purl,
+		ID:       id,
 		Fields: map[string]*llx.RawData{
 			"name": {
 				Type:  types.String,
