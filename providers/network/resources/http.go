@@ -214,22 +214,14 @@ func (x *mqlHttpHeader) id() (string, error) {
 	return "", errors.New("http header not initialized")
 }
 
-func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
-	raw, ok := x.Params.Data["Strict-Transport-Security"]
-	if !ok {
-		x.Sts.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-
-	preload := false
-	includeSubDomains := false
-	maxAge := llx.NilData
-
-	parseHeaderFields(raw.([]any), func(key string, value string) {
-		switch key {
+func parseStsDirectives(raw []any) (preload bool, includeSubDomains bool, maxAge *llx.RawData) {
+	maxAge = llx.NilData
+	parseHeaderFields(raw, func(key string, value string) {
+		// RFC 6797 section 6.1: directive names are case-insensitive
+		switch strings.ToLower(key) {
 		case "preload":
 			preload = true
-		case "includeSubDomains":
+		case "includesubdomains":
 			includeSubDomains = true
 		case "max-age":
 			age, err := strconv.Atoi(value)
@@ -241,6 +233,17 @@ func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 			}
 		}
 	})
+	return preload, includeSubDomains, maxAge
+}
+
+func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
+	raw, ok := x.Params.Data["Strict-Transport-Security"]
+	if !ok {
+		x.Sts.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	preload, includeSubDomains, maxAge := parseStsDirectives(raw.([]any))
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.sts", map[string]*llx.RawData{
 		"preload":           llx.BoolData(preload),
@@ -275,7 +278,8 @@ func (x *mqlHttpHeader) xFrameOptions() (string, error) {
 func parseXssProtectionDirectives(raw []any) (enabled *llx.RawData, mode *llx.RawData, report *llx.RawData) {
 	enabled, mode, report = llx.NilData, llx.NilData, llx.NilData
 	parseHeaderFields(raw, func(key string, value string) {
-		switch key {
+		// directive names are case-insensitive, matching the other parsers
+		switch strings.ToLower(key) {
 		case "0":
 			enabled = llx.BoolFalse
 		case "1":
@@ -340,6 +344,23 @@ func (x *mqlHttpHeader) server() (string, error) {
 	return parseSingleHeaderValue(params, ok, &x.Server)
 }
 
+func parseContentTypeDirectives(raw []any) (typ *llx.RawData, params *llx.RawData) {
+	typ, params = llx.NilData, llx.NilData
+	parseHeaderFields(raw, func(key string, value string) {
+		// RFC 9110 section 8.3.1: media types and parameter names are
+		// case-insensitive; parameter values keep their casing
+		if typ.Value == nil && value == "" {
+			typ = llx.StringData(strings.ToLower(key))
+			return
+		}
+		if params.Value == nil {
+			params = llx.MapData(map[string]any{}, types.String)
+		}
+		params.Value.(map[string]any)[strings.ToLower(key)] = value
+	})
+	return typ, params
+}
+
 func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
 	raw, ok := x.Params.Data["Content-Type"]
 	if !ok {
@@ -347,18 +368,7 @@ func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
 		return nil, nil
 	}
 
-	typ := llx.NilData
-	params := llx.NilData
-	parseHeaderFields(raw.([]any), func(key string, value string) {
-		if typ.Value == nil && value == "" {
-			typ = llx.StringData(key)
-			return
-		}
-		if params.Value == nil {
-			params = llx.MapData(map[string]any{}, types.String)
-		}
-		params.Value.(map[string]any)[key] = value
-	})
+	typ, params := parseContentTypeDirectives(raw.([]any))
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.contentType", map[string]*llx.RawData{
 		"type":   typ,
@@ -385,6 +395,24 @@ func (x *mqlHttpHeaderContentType) id() (string, error) {
 	return id.String(), nil
 }
 
+func parseSetCookieDirectives(raw []any) (name *llx.RawData, value *llx.RawData, params *llx.RawData) {
+	name, value, params = llx.NilData, llx.NilData, llx.NilData
+	parseHeaderFields(raw, func(key string, val string) {
+		// RFC 6265 section 5.2: attribute names are case-insensitive,
+		// while cookie names and values keep their casing
+		if name.Value == nil && val != "" {
+			name = llx.StringData(key)
+			value = llx.StringData(val)
+			return
+		}
+		if params.Value == nil {
+			params = llx.MapData(map[string]any{}, types.String)
+		}
+		params.Value.(map[string]any)[strings.ToLower(key)] = val
+	})
+	return name, value, params
+}
+
 func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 	raw, ok := x.Params.Data["Set-Cookie"]
 	if !ok {
@@ -392,20 +420,7 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 		return nil, nil
 	}
 
-	cname := llx.NilData
-	cval := llx.NilData
-	params := llx.NilData
-	parseHeaderFields(raw.([]any), func(key string, value string) {
-		if cname.Value == nil && value != "" {
-			cname = llx.StringData(key)
-			cval = llx.StringData(value)
-			return
-		}
-		if params.Value == nil {
-			params = llx.MapData(map[string]any{}, types.String)
-		}
-		params.Value.(map[string]any)[key] = value
-	})
+	cname, cval, params := parseSetCookieDirectives(raw.([]any))
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.setCookie", map[string]*llx.RawData{
 		"name":   cname,
@@ -418,6 +433,16 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 	return o.(*mqlHttpHeaderSetCookie), nil
 }
 
+func parseCspDirectives(raw []any) map[string]any {
+	m := map[string]any{}
+	parseHeaderFieldsD(raw, func(key string, value string) {
+		// CSP3: directive names are ASCII case-insensitive; their values
+		// keep their casing
+		m[strings.ToLower(key)] = value
+	}, ";", " ")
+	return m
+}
+
 func (x *mqlHttpHeader) csp() (map[string]any, error) {
 	raw, ok := x.Params.Data["Content-Security-Policy"]
 	if !ok {
@@ -425,12 +450,7 @@ func (x *mqlHttpHeader) csp() (map[string]any, error) {
 		return nil, nil
 	}
 
-	m := map[string]any{}
-	parseHeaderFieldsD(raw.([]any), func(key string, value string) {
-		m[key] = value
-	}, ";", " ")
-
-	return m, nil
+	return parseCspDirectives(raw.([]any)), nil
 }
 
 func (x *mqlHttpHeaderSetCookie) id() (string, error) {
