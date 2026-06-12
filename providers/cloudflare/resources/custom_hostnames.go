@@ -5,7 +5,8 @@ package resources
 import (
 	"context"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/custom_hostnames"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -21,47 +22,31 @@ func (c *mqlCloudflareZone) customHostnames() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
-	page := 1
-	for {
-		records, info, err := conn.Cf.CustomHostnames(context.TODO(), c.Id.Data, page, cloudflare.CustomHostname{})
+	iter := conn.Cf.CustomHostnames.ListAutoPaging(context.TODO(), custom_hostnames.CustomHostnameListParams{
+		ZoneID: cloudflare.F(c.Id.Data),
+	})
+	for iter.Next() {
+		rec := iter.Current()
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.customHostname", map[string]*llx.RawData{
+			"id":                 llx.StringData(rec.ID),
+			"hostname":           llx.StringData(rec.Hostname),
+			"customOriginServer": llx.StringData(rec.CustomOriginServer),
+			"customOriginSni":    llx.StringData(rec.CustomOriginSNI),
+			"status":             llx.StringData(string(rec.Status)),
+			"sslStatus":          llx.StringData(string(rec.SSL.Status)),
+			"sslMethod":          llx.StringData(string(rec.SSL.Method)),
+			"sslType":            llx.StringData(string(rec.SSL.Type)),
+			"createdAt":          timeOrNil(rec.CreatedAt),
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range records {
-			rec := records[i]
-
-			sslStatus := ""
-			sslMethod := ""
-			sslType := ""
-			if rec.SSL != nil {
-				sslStatus = rec.SSL.Status
-				sslMethod = rec.SSL.Method
-				sslType = rec.SSL.Type
-			}
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.zone.customHostname", map[string]*llx.RawData{
-				"id":                 llx.StringData(rec.ID),
-				"hostname":           llx.StringData(rec.Hostname),
-				"customOriginServer": llx.StringData(rec.CustomOriginServer),
-				"customOriginSni":    llx.StringData(rec.CustomOriginSNI),
-				"status":             llx.StringData(string(rec.Status)),
-				"sslStatus":          llx.StringData(sslStatus),
-				"sslMethod":          llx.StringData(sslMethod),
-				"sslType":            llx.StringData(sslType),
-				"createdAt":          llx.TimeDataPtr(rec.CreatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !info.HasMorePages() {
-			break
-		}
-		page++
+		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

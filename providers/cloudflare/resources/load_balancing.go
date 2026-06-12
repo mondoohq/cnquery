@@ -3,10 +3,9 @@
 package resources
 
 import (
-	"context"
-	"errors"
+	"fmt"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -15,13 +14,66 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// loadBalancer and loadBalancerPool mirror the Cloudflare load-balancing API
+// responses. We decode them via the client's generic Get so the typed pool
+// references can be resolved in memory without depending on the (substantially
+// different) cloudflare-go v6 load-balancer types.
+type loadBalancer struct {
+	ID                        string              `json:"id"`
+	Name                      string              `json:"name"`
+	Description               string              `json:"description"`
+	Enabled                   *bool               `json:"enabled"`
+	Proxied                   bool                `json:"proxied"`
+	TTL                       int64               `json:"ttl"`
+	SteeringPolicy            string              `json:"steering_policy"`
+	FallbackPool              string              `json:"fallback_pool"`
+	DefaultPools              []string            `json:"default_pools"`
+	RegionPools               map[string][]string `json:"region_pools"`
+	PopPools                  map[string][]string `json:"pop_pools"`
+	CountryPools              map[string][]string `json:"country_pools"`
+	Persistence               string              `json:"session_affinity"`
+	PersistenceTTL            int64               `json:"session_affinity_ttl"`
+	SessionAffinityAttributes *struct {
+		SameSite             string   `json:"samesite"`
+		Secure               string   `json:"secure"`
+		DrainDuration        int64    `json:"drain_duration"`
+		ZeroDowntimeFailover string   `json:"zero_downtime_failover"`
+		Headers              []string `json:"headers"`
+		RequireAllHeaders    bool     `json:"require_all_headers"`
+	} `json:"session_affinity_attributes"`
+	CreatedOn  *time.Time `json:"created_on"`
+	ModifiedOn *time.Time `json:"modified_on"`
+}
+
+type loadBalancerPool struct {
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	Enabled           bool   `json:"enabled"`
+	MinimumOrigins    *int   `json:"minimum_origins"`
+	Monitor           string `json:"monitor"`
+	NotificationEmail string `json:"notification_email"`
+	Origins           []struct {
+		Name             string  `json:"name"`
+		Address          string  `json:"address"`
+		Enabled          bool    `json:"enabled"`
+		Weight           float64 `json:"weight"`
+		VirtualNetworkID string  `json:"virtual_network_id"`
+	} `json:"origins"`
+	CheckRegions []string   `json:"check_regions"`
+	Latitude     *float64   `json:"latitude"`
+	Longitude    *float64   `json:"longitude"`
+	CreatedOn    *time.Time `json:"created_on"`
+	ModifiedOn   *time.Time `json:"modified_on"`
+}
+
 type mqlCloudflareZoneLoadBalancerInternal struct {
 	// lb caches the load balancer record so the pool accessors can read its
 	// fallback/default/geo pool ID lists.
-	lb cloudflare.LoadBalancer
+	lb loadBalancer
 	// poolIndex maps every account pool ID to its record, so pool references
 	// resolve in memory without a per-pool API call.
-	poolIndex map[string]cloudflare.LoadBalancerPool
+	poolIndex map[string]loadBalancerPool
 }
 
 func (c *mqlCloudflareZoneLoadBalancer) id() (string, error) {
@@ -29,16 +81,6 @@ func (c *mqlCloudflareZoneLoadBalancer) id() (string, error) {
 		return "", c.Id.Error
 	}
 	return c.Id.Data, nil
-}
-
-// isLoadBalancingUnavailable reports whether the error means the account has
-// no load balancing subscription, which should surface as "no data" rather
-// than failing the whole zone query.
-func isLoadBalancingUnavailable(err error) bool {
-	var notFound *cloudflare.NotFoundError
-	var authN *cloudflare.AuthenticationError
-	var authZ *cloudflare.AuthorizationError
-	return errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ)
 }
 
 // poolMapDict converts a region/pop/country pool map into a dict-safe map.
@@ -57,29 +99,14 @@ func poolMapDict(m map[string][]string) map[string]any {
 func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	const perPage = 50
-	var lbs []cloudflare.LoadBalancer
-	{
-		params := cloudflare.ListLoadBalancerParams{PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1}}
-		for {
-			page, err := conn.Cf.ListLoadBalancers(context.TODO(), &cloudflare.ResourceContainer{
-				Identifier: c.Id.Data,
-				Level:      cloudflare.ZoneRouteLevel,
-			}, params)
-			if err != nil {
-				// Load balancing is a paid add-on; treat a missing subscription as "no
-				// load balancers" rather than failing the whole zone query.
-				if isLoadBalancingUnavailable(err) {
-					return []any{}, nil
-				}
-				return nil, err
-			}
-			lbs = append(lbs, page...)
-			if len(page) < perPage {
-				break
-			}
-			params.PaginationOptions.Page++
+	lbs, err := cfGetPaged[loadBalancer](conn, fmt.Sprintf("zones/%s/load_balancers", c.Id.Data))
+	if err != nil {
+		// Load balancing is a paid add-on; treat a missing subscription as "no
+		// load balancers" rather than failing the whole zone query.
+		if isUnavailable(err) {
+			return []any{}, nil
 		}
+		return nil, err
 	}
 	if len(lbs) == 0 {
 		return []any{}, nil
@@ -87,31 +114,18 @@ func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 
 	// Pools are account-scoped and shared across load balancers; fetch them
 	// once so the typed pool accessors resolve in memory.
-	poolIndex := map[string]cloudflare.LoadBalancerPool{}
+	poolIndex := map[string]loadBalancerPool{}
 	if acc := c.GetAccount(); acc.Error != nil || acc.Data == nil {
 		// Without the account ID the pool list cannot be fetched; warn so the
 		// empty pool references are not mistaken for "no pools configured".
 		log.Warn().Msg("cloudflare> could not resolve the zone's account; load balancer pool references will be empty")
 	} else {
-		params := cloudflare.ListLoadBalancerPoolParams{PaginationOptions: cloudflare.PaginationOptions{PerPage: perPage, Page: 1}}
-		for {
-			pools, err := conn.Cf.ListLoadBalancerPools(context.TODO(), &cloudflare.ResourceContainer{
-				Identifier: acc.Data.Id.Data,
-				Level:      cloudflare.AccountRouteLevel,
-			}, params)
-			if err != nil {
-				if isLoadBalancingUnavailable(err) {
-					break
-				}
-				return nil, err
-			}
-			for i := range pools {
-				poolIndex[pools[i].ID] = pools[i]
-			}
-			if len(pools) < perPage {
-				break
-			}
-			params.PaginationOptions.Page++
+		pools, err := cfGetPaged[loadBalancerPool](conn, fmt.Sprintf("accounts/%s/load_balancers/pools", acc.Data.Id.Data))
+		if err != nil && !isUnavailable(err) {
+			return nil, err
+		}
+		for i := range pools {
+			poolIndex[pools[i].ID] = pools[i]
 		}
 	}
 
@@ -129,7 +143,7 @@ func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 			saa = map[string]any{
 				"samesite":             a.SameSite,
 				"secure":               a.Secure,
-				"drainDuration":        int64(a.DrainDuration),
+				"drainDuration":        a.DrainDuration,
 				"zeroDowntimeFailover": a.ZeroDowntimeFailover,
 				"headers":              headers,
 				"requireAllHeaders":    a.RequireAllHeaders,
@@ -142,13 +156,13 @@ func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 			"description":               llx.StringData(lb.Description),
 			"enabled":                   llx.BoolDataPtr(lb.Enabled),
 			"proxied":                   llx.BoolData(lb.Proxied),
-			"ttl":                       llx.IntData(int64(lb.TTL)),
+			"ttl":                       llx.IntData(lb.TTL),
 			"steeringPolicy":            llx.StringData(lb.SteeringPolicy),
 			"regionPools":               llx.DictData(poolMapDict(lb.RegionPools)),
 			"popPools":                  llx.DictData(poolMapDict(lb.PopPools)),
 			"countryPools":              llx.DictData(poolMapDict(lb.CountryPools)),
 			"sessionAffinity":           llx.StringData(lb.Persistence),
-			"sessionAffinityTtl":        llx.IntData(int64(lb.PersistenceTTL)),
+			"sessionAffinityTtl":        llx.IntData(lb.PersistenceTTL),
 			"sessionAffinityAttributes": llx.DictData(saa),
 			"createdOn":                 llx.TimeDataPtr(lb.CreatedOn),
 			"modifiedOn":                llx.TimeDataPtr(lb.ModifiedOn),
@@ -225,7 +239,7 @@ func (c *mqlCloudflareLoadBalancerPool) id() (string, error) {
 	return c.Id.Data, nil
 }
 
-func newMqlCloudflareLoadBalancerPool(runtime *plugin.Runtime, p cloudflare.LoadBalancerPool) (*mqlCloudflareLoadBalancerPool, error) {
+func newMqlCloudflareLoadBalancerPool(runtime *plugin.Runtime, p loadBalancerPool) (*mqlCloudflareLoadBalancerPool, error) {
 	origins := make([]any, len(p.Origins))
 	for i, o := range p.Origins {
 		origins[i] = map[string]any{
@@ -245,11 +259,11 @@ func newMqlCloudflareLoadBalancerPool(runtime *plugin.Runtime, p cloudflare.Load
 	// leave them null otherwise rather than reporting a spurious (0, 0).
 	latitude := llx.NilData
 	if p.Latitude != nil {
-		latitude = llx.FloatData(float64(*p.Latitude))
+		latitude = llx.FloatData(*p.Latitude)
 	}
 	longitude := llx.NilData
 	if p.Longitude != nil {
-		longitude = llx.FloatData(float64(*p.Longitude))
+		longitude = llx.FloatData(*p.Longitude)
 	}
 
 	res, err := NewResource(runtime, "cloudflare.loadBalancerPool", map[string]*llx.RawData{

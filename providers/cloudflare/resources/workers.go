@@ -4,12 +4,10 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -28,31 +26,55 @@ func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 	return workers, nil
 }
 
+// workerScript mirrors the account workers-scripts list entry. We decode it via
+// the client's generic Get to preserve fields (size, deployment_id,
+// pipeline_hash) that the typed cloudflare-go v6 script struct no longer
+// exposes.
+type workerScript struct {
+	ID               string    `json:"id"`
+	ETag             string    `json:"etag"`
+	Size             int64     `json:"size"`
+	DeploymentID     *string   `json:"deployment_id"`
+	PipelineHash     *string   `json:"pipeline_hash"`
+	PlacementMode    string    `json:"placement_mode"`
+	LastDeployedFrom *string   `json:"last_deployed_from"`
+	Logpush          *bool     `json:"logpush"`
+	CreatedOn        time.Time `json:"created_on"`
+	ModifiedOn       time.Time `json:"modified_on"`
+}
+
 type mqlCloudflareWorkersInternal struct {
 	AccountID string
 
-	workerListOnce sync.Once
-	workerList     []cloudflare.WorkerMetaData
+	workerListLock sync.Mutex
+	workerListDone bool
+	workerList     []workerScript
 	workerListErr  error
 }
 
 // fetchWorkerList caches the per-account workers list so that workers() and
-// secrets() share a single round-trip across the underlying API.
-func (c *mqlCloudflareWorkers) fetchWorkerList() ([]cloudflare.WorkerMetaData, error) {
-	c.workerListOnce.Do(func() {
-		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-		err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/workers/scripts", c.mqlCloudflareWorkersInternal.AccountID), func(raw json.RawMessage) error {
-			var batch []cloudflare.WorkerMetaData
-			if err := json.Unmarshal(raw, &batch); err != nil {
-				return err
-			}
-			c.workerList = append(c.workerList, batch...)
-			return nil
-		})
-		if err != nil {
-			c.workerListErr = err
-		}
-	})
+// secrets() share a single list API call.
+func (c *mqlCloudflareWorkers) fetchWorkerList() ([]workerScript, error) {
+	if c.workerListDone {
+		return c.workerList, c.workerListErr
+	}
+	c.workerListLock.Lock()
+	defer c.workerListLock.Unlock()
+	if c.workerListDone {
+		return c.workerList, c.workerListErr
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+	var env struct {
+		Result []workerScript `json:"result"`
+	}
+	uri := fmt.Sprintf("accounts/%s/workers/scripts", c.mqlCloudflareWorkersInternal.AccountID)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+		c.workerListErr = err
+	} else {
+		c.workerList = env.Result
+	}
+	c.workerListDone = true
 	return c.workerList, c.workerListErr
 }
 
@@ -66,18 +88,13 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 	for i := range workerList {
 		w := workerList[i]
 
-		placementMode := ""
-		if w.PlacementMode != nil {
-			placementMode = string(*w.PlacementMode)
-		}
-
 		res, err := NewResource(c.MqlRuntime, "cloudflare.workers.worker", map[string]*llx.RawData{
 			"id":               llx.StringData(w.ID),
-			"etag":             llx.StringData(w.ETAG),
+			"etag":             llx.StringData(w.ETag),
 			"size":             llx.IntData(w.Size),
-			"deploymentId":     llx.StringDataPtr(w.DeploymentId),
+			"deploymentId":     llx.StringDataPtr(w.DeploymentID),
 			"pipelineHash":     llx.StringDataPtr(w.PipelineHash),
-			"placementMode":    llx.StringData(placementMode),
+			"placementMode":    llx.StringData(w.PlacementMode),
 			"lastDeployedFrom": llx.StringDataPtr(w.LastDeployedFrom),
 			"logPush":          llx.BoolDataPtr(w.Logpush),
 			"createdOn":        llx.TimeData(w.CreatedOn),
@@ -110,11 +127,6 @@ func (c *mqlCloudflarePagesEnvVar) id() (string, error) {
 func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	rc := &cloudflare.ResourceContainer{
-		Identifier: c.mqlCloudflareWorkersInternal.AccountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}
-
 	workerList, err := c.fetchWorkerList()
 	if err != nil {
 		return nil, err
@@ -123,23 +135,25 @@ func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 	var result []any
 	for i := range workerList {
 		w := workerList[i]
-		secrets, err := conn.Cf.ListWorkersSecrets(context.TODO(), rc, cloudflare.ListWorkersSecretsParams{
-			ScriptName: w.ID,
-		})
-		if err != nil {
+
+		var env struct {
+			Result []struct {
+				Name string `json:"name"`
+				Type string `json:"type"`
+			} `json:"result"`
+		}
+		uri := fmt.Sprintf("accounts/%s/workers/scripts/%s/secrets", c.mqlCloudflareWorkersInternal.AccountID, w.ID)
+		if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
 			// Skip scripts where we lack permission rather than failing the
 			// whole enumeration.
-			var notFound *cloudflare.NotFoundError
-			var authN *cloudflare.AuthenticationError
-			var authZ *cloudflare.AuthorizationError
-			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+			if isUnavailable(err) {
 				continue
 			}
 			return nil, err
 		}
 
-		for j := range secrets.Result {
-			s := secrets.Result[j]
+		for j := range env.Result {
+			s := env.Result[j]
 			res, err := CreateResource(c.MqlRuntime, "cloudflare.workers.secret", map[string]*llx.RawData{
 				"__id":       llx.StringData("cloudflare.workers.secret@" + w.ID + "/" + s.Name),
 				"scriptName": llx.StringData(w.ID),
@@ -156,70 +170,64 @@ func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 	return result, nil
 }
 
+type pagesDeployConfig struct {
+	EnvVars map[string]*struct {
+		Type string `json:"type"`
+	} `json:"env_vars"`
+}
+
+type pagesProject struct {
+	Name              string `json:"name"`
+	DeploymentConfigs struct {
+		Preview    pagesDeployConfig `json:"preview"`
+		Production pagesDeployConfig `json:"production"`
+	} `json:"deployment_configs"`
+}
+
 // pageEnvVars enumerates environment variable bindings across every Pages
 // project. We expose only `{name, type, environment}` and never `value` so
 // secret bindings cannot leak even if the API were to return one.
 func (c *mqlCloudflareWorkers) pageEnvVars() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	rc := &cloudflare.ResourceContainer{
-		Identifier: c.mqlCloudflareWorkersInternal.AccountID,
+	projects, err := cfGetPaged[pagesProject](conn, fmt.Sprintf("accounts/%s/pages/projects", c.mqlCloudflareWorkersInternal.AccountID))
+	if err != nil {
+		if isUnavailable(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	var (
-		result  []any
-		page    = 1
-		envvars = func(env, projectName string, m cloudflare.EnvironmentVariableMap) error {
-			for name, v := range m {
-				varType := ""
-				if v != nil {
-					varType = string(v.Type)
-				}
-				res, err := CreateResource(c.MqlRuntime, "cloudflare.pages.envVar", map[string]*llx.RawData{
-					"__id":        llx.StringData("cloudflare.pages.envVar@" + projectName + "/" + env + "/" + name),
-					"projectName": llx.StringData(projectName),
-					"environment": llx.StringData(env),
-					"name":        llx.StringData(name),
-					"type":        llx.StringData(varType),
-				})
-				if err != nil {
-					return err
-				}
-				result = append(result, res)
+	var result []any
+	emit := func(env, projectName string, cfg pagesDeployConfig) error {
+		for name, v := range cfg.EnvVars {
+			varType := ""
+			if v != nil {
+				varType = v.Type
 			}
-			return nil
+			res, err := CreateResource(c.MqlRuntime, "cloudflare.pages.envVar", map[string]*llx.RawData{
+				"__id":        llx.StringData("cloudflare.pages.envVar@" + projectName + "/" + env + "/" + name),
+				"projectName": llx.StringData(projectName),
+				"environment": llx.StringData(env),
+				"name":        llx.StringData(name),
+				"type":        llx.StringData(varType),
+			})
+			if err != nil {
+				return err
+			}
+			result = append(result, res)
 		}
-	)
+		return nil
+	}
 
-	for {
-		params := cloudflare.ListPagesProjectsParams{
-			PaginationOptions: cloudflare.PaginationOptions{Page: page, PerPage: 50},
-		}
-		projects, info, err := conn.Cf.ListPagesProjects(context.TODO(), rc, params)
-		if err != nil {
-			var notFound *cloudflare.NotFoundError
-			var authN *cloudflare.AuthenticationError
-			var authZ *cloudflare.AuthorizationError
-			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
-				return nil, nil
-			}
+	for j := range projects {
+		p := projects[j]
+		if err := emit("preview", p.Name, p.DeploymentConfigs.Preview); err != nil {
 			return nil, err
 		}
-
-		for j := range projects {
-			p := projects[j]
-			if err := envvars("preview", p.Name, p.DeploymentConfigs.Preview.EnvVars); err != nil {
-				return nil, err
-			}
-			if err := envvars("production", p.Name, p.DeploymentConfigs.Production.EnvVars); err != nil {
-				return nil, err
-			}
+		if err := emit("production", p.Name, p.DeploymentConfigs.Production); err != nil {
+			return nil, err
 		}
-
-		if !info.HasMorePages() {
-			break
-		}
-		page++
 	}
 
 	return result, nil

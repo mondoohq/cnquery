@@ -7,31 +7,21 @@
       "id": "f70ff985-a4ef-4643-bbbc-4a0ed4fc8415",
       "name": "blog-tunnel",
       "tun_type": "cfd_tunnel",
+      "config_src": "cloudflare",
       "status": "healthy",
       "remote_config": true,
       "created_at": "2024-01-15T10:00:00Z",
-      "deleted_at": null,
-      "connections": [
-        {
-          "id": "conn-1234",
-          "colo_name": "DFW",
-          "is_pending_reconnect": false,
-          "client_id": "dc6472cc-f1ae-44a0-b795-6b8a0ce29f90",
-          "client_version": "2024.1.0",
-          "opened_at": "2024-01-15T10:05:00Z",
-          "origin_ip": "198.51.100.1"
-        }
-      ]
+      "deleted_at": null
     },
     {
       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "api-tunnel",
       "tun_type": "warp_connector",
+      "config_src": "local",
       "status": "down",
       "remote_config": false,
       "created_at": "2024-02-01T12:00:00Z",
-      "deleted_at": null,
-      "connections": []
+      "deleted_at": null
     }
   ],
   "result_info": {

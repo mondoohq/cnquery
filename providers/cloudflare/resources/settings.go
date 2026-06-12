@@ -4,15 +4,23 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
-func extractSettingStr(settings []cloudflare.ZoneSetting, id string) string {
+// zoneSetting is the shape of a single entry returned by the bulk zone-settings
+// endpoint (`/zones/{id}/settings`). cloudflare-go v6 only exposes a typed
+// per-setting Get, so we read the full set in one call via the client's generic
+// Get and pick out the settings we surface.
+type zoneSetting struct {
+	ID    string `json:"id"`
+	Value any    `json:"value"`
+}
+
+func extractSettingStr(settings []zoneSetting, id string) string {
 	for _, s := range settings {
 		if s.ID == id {
 			if v, ok := s.Value.(string); ok {
@@ -23,7 +31,7 @@ func extractSettingStr(settings []cloudflare.ZoneSetting, id string) string {
 	return ""
 }
 
-func extractSettingValue(settings []cloudflare.ZoneSetting, id string) any {
+func extractSettingValue(settings []zoneSetting, id string) any {
 	for _, s := range settings {
 		if s.ID == id {
 			return s.Value
@@ -34,7 +42,7 @@ func extractSettingValue(settings []cloudflare.ZoneSetting, id string) any {
 
 // extractSettingInt pulls a numeric zone setting. Cloudflare returns these as
 // JSON numbers, which decode to float64.
-func extractSettingInt(settings []cloudflare.ZoneSetting, id string) int64 {
+func extractSettingInt(settings []zoneSetting, id string) int64 {
 	if v, ok := extractSettingValue(settings, id).(float64); ok {
 		return int64(v)
 	}
@@ -43,7 +51,7 @@ func extractSettingInt(settings []cloudflare.ZoneSetting, id string) int64 {
 
 // extractHSTS pulls HSTS subfields from the `security_header` zone setting.
 // The setting value is `{strict_transport_security: {enabled, max_age, include_subdomains, preload, nosniff}}`.
-func extractHSTS(settings []cloudflare.ZoneSetting) (enabled bool, maxAge int64, includeSubdomains bool, preload bool, nosniff bool) {
+func extractHSTS(settings []zoneSetting) (enabled bool, maxAge int64, includeSubdomains bool, preload bool, nosniff bool) {
 	v := extractSettingValue(settings, "security_header")
 	m, ok := v.(map[string]any)
 	if !ok {
@@ -74,12 +82,15 @@ func extractHSTS(settings []cloudflare.ZoneSetting) (enabled bool, maxAge int64,
 func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	resp, err := conn.Cf.ZoneSettings(context.Background(), c.Id.Data)
-	if err != nil {
+	var env struct {
+		Result []zoneSetting `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/settings", c.Id.Data)
+	if err := conn.Cf.Get(context.Background(), uri, nil, &env); err != nil {
 		return nil, err
 	}
 
-	settings := resp.Result
+	settings := env.Result
 
 	hstsEnabled, hstsMaxAge, hstsIncludeSubdomains, hstsPreload, hstsNoSniff := extractHSTS(settings)
 
@@ -116,23 +127,40 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	return res.(*mqlCloudflareZoneSettings), nil
 }
 
+// botManagementSettings mirrors the zone bot-management response. cloudflare-go
+// v6 models this endpoint as a polymorphic union (each bot-management plan is a
+// separate variant), so decoding into a single typed struct only populates one
+// variant's fields. We read the endpoint via the client's generic Get and decode
+// the full payload to keep every field the MQL schema exposes.
+type botManagementSettings struct {
+	EnableJS                     *bool   `json:"enable_js"`
+	FightMode                    *bool   `json:"fight_mode"`
+	SBFMDefinitelyAutomated      *string `json:"sbfm_definitely_automated"`
+	SBFMLikelyAutomated          *string `json:"sbfm_likely_automated"`
+	SBFMVerifiedBots             *string `json:"sbfm_verified_bots"`
+	SBFMStaticResourceProtection *bool   `json:"sbfm_static_resource_protection"`
+	OptimizeWordpress            *bool   `json:"optimize_wordpress"`
+	AutoUpdateModel              *bool   `json:"auto_update_model"`
+	UsingLatestModel             *bool   `json:"using_latest_model"`
+	AIBotsProtection             *string `json:"ai_bots_protection"`
+}
+
 func (c *mqlCloudflareZone) botManagement() (*mqlCloudflareZoneBotManagement, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	bm, err := conn.Cf.GetBotManagement(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-	})
-	if err != nil {
+	var env struct {
+		Result botManagementSettings `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/bot_management", c.Id.Data)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
 		// Bot management may not be available on all plans (403/404)
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+		if isUnavailable(err) {
 			c.BotManagement.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
 	}
+	bm := env.Result
 
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.botManagement", map[string]*llx.RawData{
 		"__id":                         llx.StringData("cloudflare.zone.botManagement@" + c.Id.Data),

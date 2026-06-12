@@ -4,8 +4,11 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/custom_certificates"
+	"github.com/cloudflare/cloudflare-go/v6/origin_ca_certificates"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -29,26 +32,24 @@ func (c *mqlCloudflareZoneCertificatePack) id() (string, error) {
 func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	certs, err := conn.Cf.ListSSL(context.Background(), c.Id.Data)
-	if err != nil {
-		return nil, err
-	}
-
 	var result []any
-	for i := range certs {
-		cert := certs[i]
+	iter := conn.Cf.CustomCertificates.ListAutoPaging(context.Background(), custom_certificates.CustomCertificateListParams{
+		ZoneID: cloudflare.F(c.Id.Data),
+	})
+	for iter.Next() {
+		cert := iter.Current()
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.customCertificate", map[string]*llx.RawData{
 			"id":           llx.StringData(cert.ID),
 			"hosts":        llx.ArrayData(convert.SliceAnyToInterface(cert.Hosts), types.String),
 			"issuer":       llx.StringData(cert.Issuer),
 			"signature":    llx.StringData(cert.Signature),
-			"status":       llx.StringData(cert.Status),
-			"bundleMethod": llx.StringData(cert.BundleMethod),
+			"status":       llx.StringData(string(cert.Status)),
+			"bundleMethod": llx.StringData(string(cert.BundleMethod)),
 			"expiresAt":    llx.TimeData(cert.ExpiresOn),
 			"uploadedAt":   llx.TimeData(cert.UploadedOn),
 			"modifiedAt":   llx.TimeData(cert.ModifiedOn),
-			"priority":     llx.IntData(cert.Priority),
+			"priority":     llx.IntData(int64(cert.Priority)),
 		})
 		if err != nil {
 			return nil, err
@@ -56,14 +57,31 @@ func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 
 		result = append(result, res)
 	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
 
 	return result, nil
+}
+
+// certificatePack mirrors a zone SSL certificate-pack list entry. We read the
+// endpoint via the client's generic Get with `status=all` so pending/expired
+// packs are included (matching the v0 behavior); the cloudflare-go v6 typed
+// list does not expose that filter.
+type certificatePack struct {
+	ID                   string   `json:"id"`
+	Type                 string   `json:"type"`
+	Hosts                []string `json:"hosts"`
+	Status               string   `json:"status"`
+	ValidationMethod     string   `json:"validation_method"`
+	ValidityDays         int64    `json:"validity_days"`
+	CertificateAuthority string   `json:"certificate_authority"`
 }
 
 func (c *mqlCloudflareZone) certificatePacks() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	packs, err := conn.Cf.ListCertificatePacks(context.Background(), c.Id.Data)
+	packs, err := cfGetPaged[certificatePack](conn, fmt.Sprintf("zones/%s/ssl/certificate_packs?status=all", c.Id.Data))
 	if err != nil {
 		return nil, err
 	}
@@ -101,30 +119,31 @@ func (c *mqlCloudflareZoneOriginCACertificate) id() (string, error) {
 func (c *mqlCloudflareZone) originCACertificates() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	certs, err := conn.Cf.ListOriginCACertificates(context.TODO(), cloudflare.ListOriginCertificatesParams{
-		ZoneID: c.Id.Data,
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	var result []any
-	for i := range certs {
-		cert := certs[i]
+	iter := conn.Cf.OriginCACertificates.ListAutoPaging(context.TODO(), origin_ca_certificates.OriginCACertificateListParams{
+		ZoneID: cloudflare.F(c.Id.Data),
+	})
+	for iter.Next() {
+		cert := iter.Current()
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.originCACertificate", map[string]*llx.RawData{
 			"id":              llx.StringData(cert.ID),
 			"hostnames":       llx.ArrayData(convert.SliceAnyToInterface(cert.Hostnames), types.String),
-			"requestType":     llx.StringData(cert.RequestType),
-			"requestValidity": llx.IntData(int64(cert.RequestValidity)),
-			"expiresAt":       llx.TimeData(cert.ExpiresOn),
-			"revokedAt":       llx.TimeData(cert.RevokedAt),
+			"requestType":     llx.StringData(string(cert.RequestType)),
+			"requestValidity": llx.IntData(int64(cert.RequestedValidity)),
+			"expiresAt":       timeOrNil(parseRFC3339(cert.ExpiresOn)),
+			// cloudflare-go v6's origin CA certificate list response no longer
+			// exposes a revocation timestamp, so this field is always null.
+			"revokedAt": llx.NilData,
 		})
 		if err != nil {
 			return nil, err
 		}
 
 		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

@@ -4,9 +4,11 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/rulesets"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -18,6 +20,26 @@ func (c *mqlCloudflareZoneWafRule) id() (string, error) {
 	return c.RulesetId.Data + "/" + c.Id.Data, nil
 }
 
+// rulesetDetail mirrors the ruleset-detail response. cloudflare-go v6's typed
+// rule struct doesn't expose the per-rule score_threshold we surface, so we read
+// the ruleset detail via the client's generic Get and decode it ourselves.
+type rulesetDetail struct {
+	Result struct {
+		Version string `json:"version"`
+		Rules   []struct {
+			ID             string    `json:"id"`
+			Action         string    `json:"action"`
+			Expression     string    `json:"expression"`
+			Description    string    `json:"description"`
+			Ref            string    `json:"ref"`
+			Enabled        bool      `json:"enabled"`
+			ScoreThreshold int64     `json:"score_threshold"`
+			Version        string    `json:"version"`
+			LastUpdated    time.Time `json:"last_updated"`
+		} `json:"rules"`
+	} `json:"result"`
+}
+
 // wafRules expands every ruleset attached to the zone (managed and custom)
 // into the individual rules that make it up. We surface ruleset metadata on
 // each rule so downstream queries can distinguish managed-by-Cloudflare rules
@@ -26,51 +48,32 @@ func (c *mqlCloudflareZoneWafRule) id() (string, error) {
 func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	zone := &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-		Level:      cloudflare.ZoneRouteLevel,
-	}
-
-	rulesets, err := conn.Cf.ListRulesets(context.TODO(), zone, cloudflare.ListRulesetsParams{})
-	if err != nil {
-		return nil, err
-	}
-
 	var result []any
-	for i := range rulesets {
-		rs := rulesets[i]
+	iter := conn.Cf.Rulesets.ListAutoPaging(context.TODO(), rulesets.RulesetListParams{
+		ZoneID: cloudflare.F(c.Id.Data),
+	})
+	for iter.Next() {
+		rs := iter.Current()
 
-		// `ListRulesets` only returns ruleset metadata; fetch each ruleset to
-		// get its rules. Skip individual rulesets that the caller can't read
-		// (e.g., managed rulesets requiring extra entitlements) but surface
+		// The list only returns ruleset metadata; fetch each ruleset to get its
+		// rules. Skip individual rulesets that the caller can't read (e.g.,
+		// managed rulesets requiring extra entitlements) but surface
 		// transient/unknown errors so they aren't silently swallowed.
-		full, err := conn.Cf.GetRuleset(context.TODO(), zone, rs.ID)
-		if err != nil {
-			var notFound *cloudflare.NotFoundError
-			var authN *cloudflare.AuthenticationError
-			var authZ *cloudflare.AuthorizationError
-			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+		var full rulesetDetail
+		uri := fmt.Sprintf("zones/%s/rulesets/%s", c.Id.Data, rs.ID)
+		if err := conn.Cf.Get(context.TODO(), uri, nil, &full); err != nil {
+			if isUnavailable(err) {
 				continue
 			}
 			return nil, err
 		}
 
-		version := ""
-		if full.Version != nil {
-			version = *full.Version
-		}
+		for j := range full.Result.Rules {
+			r := full.Result.Rules[j]
 
-		for j := range full.Rules {
-			r := full.Rules[j]
-
-			ruleVersion := version
-			if r.Version != nil {
-				ruleVersion = *r.Version
-			}
-
-			enabled := false
-			if r.Enabled != nil {
-				enabled = *r.Enabled
+			ruleVersion := full.Result.Version
+			if r.Version != "" {
+				ruleVersion = r.Version
 			}
 
 			res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.wafRule", map[string]*llx.RawData{
@@ -78,16 +81,16 @@ func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 				"id":             llx.StringData(r.ID),
 				"rulesetId":      llx.StringData(rs.ID),
 				"rulesetName":    llx.StringData(rs.Name),
-				"rulesetKind":    llx.StringData(rs.Kind),
-				"rulesetPhase":   llx.StringData(rs.Phase),
+				"rulesetKind":    llx.StringData(string(rs.Kind)),
+				"rulesetPhase":   llx.StringData(string(rs.Phase)),
 				"action":         llx.StringData(r.Action),
 				"expression":     llx.StringData(r.Expression),
 				"description":    llx.StringData(r.Description),
 				"ref":            llx.StringData(r.Ref),
-				"enabled":        llx.BoolData(enabled),
-				"scoreThreshold": llx.IntData(int64(r.ScoreThreshold)),
+				"enabled":        llx.BoolData(r.Enabled),
+				"scoreThreshold": llx.IntData(r.ScoreThreshold),
 				"version":        llx.StringData(ruleVersion),
-				"lastUpdated":    llx.TimeDataPtr(r.LastUpdated),
+				"lastUpdated":    timeOrNil(r.LastUpdated),
 			})
 			if err != nil {
 				return nil, err
@@ -95,6 +98,9 @@ func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 
 			result = append(result, res)
 		}
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

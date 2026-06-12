@@ -5,8 +5,8 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -22,23 +22,41 @@ func (c *mqlCloudflareZoneLogpushJob) id() (string, error) {
 	return fmt.Sprintf("logpush@%s@%d", c.zoneID, c.Id.Data), nil
 }
 
+// logpushJob is the response shape of the zone logpush-jobs endpoint. We read it
+// via the client's generic Get rather than the typed service because
+// cloudflare-go v6 marks the logpull_options and frequency fields deprecated on
+// its typed struct; decoding the raw payload keeps those values available
+// without referencing deprecated SDK symbols.
+type logpushJob struct {
+	ID              int64     `json:"id"`
+	Name            string    `json:"name"`
+	Dataset         string    `json:"dataset"`
+	LogpullOptions  string    `json:"logpull_options"`
+	DestinationConf string    `json:"destination_conf"`
+	Frequency       string    `json:"frequency"`
+	ErrorMessage    string    `json:"error_message"`
+	Enabled         bool      `json:"enabled"`
+	LastComplete    time.Time `json:"last_complete"`
+	LastError       time.Time `json:"last_error"`
+}
+
 func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListLogpushJobs(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-		Level:      cloudflare.ZoneRouteLevel,
-	}, cloudflare.ListLogpushJobsParams{})
-	if err != nil {
+	var env struct {
+		Result []logpushJob `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/logpush/jobs", c.Id.Data)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
 		return nil, err
 	}
 
 	var result []any
-	for i := range records {
-		rec := records[i]
+	for i := range env.Result {
+		rec := env.Result[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.logpushJob", map[string]*llx.RawData{
-			"id":              llx.IntData(int64(rec.ID)),
+			"id":              llx.IntData(rec.ID),
 			"name":            llx.StringData(rec.Name),
 			"dataset":         llx.StringData(rec.Dataset),
 			"logpullOptions":  llx.StringData(rec.LogpullOptions),
@@ -46,8 +64,8 @@ func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 			"frequency":       llx.StringData(rec.Frequency),
 			"errorMessage":    llx.StringData(rec.ErrorMessage),
 			"enabled":         llx.BoolData(rec.Enabled),
-			"lastComplete":    llx.TimeDataPtr(rec.LastComplete),
-			"lastError":       llx.TimeDataPtr(rec.LastError),
+			"lastComplete":    timeOrNil(rec.LastComplete),
+			"lastError":       timeOrNil(rec.LastError),
 		})
 		if err != nil {
 			return nil, err

@@ -7,7 +7,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/accounts"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -58,17 +59,12 @@ func (c *mqlCloudflareAccountRole) id() (string, error) {
 func (c *mqlCloudflareAccount) roles() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListAccountRoles(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.ListAccountRolesParams{})
-	if err != nil {
-		return nil, err
-	}
-
 	var result []any
-	for i := range records {
-		rec := records[i]
+	iter := conn.Cf.Accounts.Roles.ListAutoPaging(context.TODO(), accounts.RoleListParams{
+		AccountID: cloudflare.F(c.Id.Data),
+	})
+	for iter.Next() {
+		rec := iter.Current()
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.account.role", map[string]*llx.RawData{
 			"id":          llx.StringData(rec.ID),
@@ -80,6 +76,9 @@ func (c *mqlCloudflareAccount) roles() ([]any, error) {
 		}
 
 		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

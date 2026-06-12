@@ -4,12 +4,9 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -21,6 +18,108 @@ type mqlCloudflareOneInternal struct {
 	ZoneID    string
 	AccountID string
 }
+
+// The Cloudflare Access (Zero Trust) list endpoints are modeled as polymorphic
+// unions in cloudflare-go v6 (apps and identity providers vary by type). To keep
+// the existing MQL schema stable we read these endpoints via the client's
+// generic Get and decode them into the flat shapes below.
+type (
+	accessApp struct {
+		ID                      string            `json:"id"`
+		AUD                     string            `json:"aud"`
+		Name                    string            `json:"name"`
+		Domain                  string            `json:"domain"`
+		AllowedIdps             []string          `json:"allowed_idps"`
+		AppLauncherVisible      *bool             `json:"app_launcher_visible"`
+		AutoRedirectToIdentity  *bool             `json:"auto_redirect_to_identity"`
+		OptionsPreflightBypass  *bool             `json:"options_preflight_bypass"`
+		CustomDenyMessage       string            `json:"custom_deny_message"`
+		CustomDenyURL           string            `json:"custom_deny_url"`
+		ServiceAuth401Redirect  *bool             `json:"service_auth_401_redirect"`
+		EnableBindingCookie     *bool             `json:"enable_binding_cookie"`
+		HTTPOnlyCookieAttribute *bool             `json:"http_only_cookie_attribute"`
+		SameSiteCookieAttribute string            `json:"same_site_cookie_attribute"`
+		LogoURL                 string            `json:"logo_url"`
+		SessionDuration         string            `json:"session_duration"`
+		SkipInterstitial        *bool             `json:"skip_interstitial"`
+		Type                    string            `json:"type"`
+		CreatedAt               *time.Time        `json:"created_at"`
+		UpdatedAt               *time.Time        `json:"updated_at"`
+		CorsHeaders             *accessCorsHeader `json:"cors_headers"`
+		Policies                []accessPolicy    `json:"policies"`
+	}
+
+	accessCorsHeader struct {
+		AllowAllHeaders  bool     `json:"allow_all_headers"`
+		AllowAllMethods  bool     `json:"allow_all_methods"`
+		AllowAllOrigins  bool     `json:"allow_all_origins"`
+		AllowCredentials bool     `json:"allow_credentials"`
+		AllowedHeaders   []string `json:"allowed_headers"`
+		AllowedMethods   []string `json:"allowed_methods"`
+		AllowedOrigins   []string `json:"allowed_origins"`
+		MaxAge           int64    `json:"max_age"`
+	}
+
+	accessPolicy struct {
+		ID         string     `json:"id"`
+		Name       string     `json:"name"`
+		Decision   string     `json:"decision"`
+		Precedence int64      `json:"precedence"`
+		CreatedAt  *time.Time `json:"created_at"`
+		UpdatedAt  *time.Time `json:"updated_at"`
+		Include    []any      `json:"include"`
+		Require    []any      `json:"require"`
+		Exclude    []any      `json:"exclude"`
+	}
+
+	accessGroup struct {
+		ID        string     `json:"id"`
+		Name      string     `json:"name"`
+		CreatedAt *time.Time `json:"created_at"`
+		UpdatedAt *time.Time `json:"updated_at"`
+	}
+
+	accessServiceToken struct {
+		ID         string     `json:"id"`
+		Name       string     `json:"name"`
+		ClientID   string     `json:"client_id"`
+		Duration   string     `json:"duration"`
+		ExpiresAt  *time.Time `json:"expires_at"`
+		LastSeenAt *time.Time `json:"last_seen_at"`
+		CreatedAt  *time.Time `json:"created_at"`
+		UpdatedAt  *time.Time `json:"updated_at"`
+	}
+
+	accessOrganization struct {
+		Name                           string     `json:"name"`
+		AuthDomain                     string     `json:"auth_domain"`
+		IsUIReadOnly                   *bool      `json:"is_ui_read_only"`
+		UserSeatExpirationInactiveTime string     `json:"user_seat_expiration_inactive_time"`
+		AutoRedirectToIdentity         *bool      `json:"auto_redirect_to_identity"`
+		SessionDuration                *string    `json:"session_duration"`
+		WarpAuthSessionDuration        *string    `json:"warp_auth_session_duration"`
+		AllowAuthenticateViaWarp       *bool      `json:"allow_authenticate_via_warp"`
+		CreatedAt                      *time.Time `json:"created_at"`
+		UpdatedAt                      *time.Time `json:"updated_at"`
+	}
+
+	accessIdp struct {
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Type   string `json:"type"`
+		Config struct {
+			SsoTargetURL       string   `json:"sso_target_url"`
+			IssuerURL          string   `json:"issuer_url"`
+			SignRequest        bool     `json:"sign_request"`
+			IdpPublicCert      string   `json:"idp_public_cert"`
+			EmailAttributeName string   `json:"email_attribute_name"`
+			Attributes         []string `json:"attributes"`
+		} `json:"config"`
+		ScimConfig struct {
+			Enabled bool `json:"enabled"`
+		} `json:"scim_config"`
+	}
+)
 
 // isSAMLIdpType returns true for IdP types that authenticate via SAML 2.0
 // (either the generic SAML connector or vendor-specific SAML connectors).
@@ -58,8 +157,8 @@ func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
 
 type mqlCloudflareOneAppInternal struct {
 	// appPolicies caches the access policies embedded in the application
-	// record so the typed policies() accessor needs no extra API call.
-	appPolicies []cloudflare.AccessPolicy
+	// record so the policies() accessor needs no extra API call.
+	appPolicies []accessPolicy
 }
 
 func (c *mqlCloudflareOneApp) id() (string, error) {
@@ -71,22 +170,22 @@ func (c *mqlCloudflareOneApp) id() (string, error) {
 
 // accessRules normalizes an Access include/require/exclude rule list (a list of
 // generic condition objects) into a dict-safe slice.
-func accessRules(in []interface{}) []any {
+func accessRules(in []any) []any {
 	if in == nil {
 		return []any{}
 	}
 	return in
 }
 
-// newMqlCloudflareOneAccessPolicy builds an access policy resource, including
-// its include/require/exclude condition rules. It is shared by the account
-// accessPolicies() listing and the per-application policies() accessor.
-func newMqlCloudflareOneAccessPolicy(runtime *plugin.Runtime, p cloudflare.AccessPolicy) (plugin.Resource, error) {
+// newAccessPolicyResource builds an access policy resource, including its
+// include/require/exclude condition rules. Shared by the account accessPolicies()
+// listing and the per-application policies() accessor.
+func newAccessPolicyResource(runtime *plugin.Runtime, p accessPolicy) (plugin.Resource, error) {
 	return NewResource(runtime, "cloudflare.one.accessPolicy", map[string]*llx.RawData{
 		"id":         llx.StringData(p.ID),
 		"name":       llx.StringData(p.Name),
 		"decision":   llx.StringData(p.Decision),
-		"precedence": llx.IntData(int64(p.Precedence)),
+		"precedence": llx.IntData(p.Precedence),
 		"createdAt":  llx.TimeDataPtr(p.CreatedAt),
 		"updatedAt":  llx.TimeDataPtr(p.UpdatedAt),
 		"include":    llx.ArrayData(accessRules(p.Include), types.Dict),
@@ -98,7 +197,7 @@ func newMqlCloudflareOneAccessPolicy(runtime *plugin.Runtime, p cloudflare.Acces
 func (c *mqlCloudflareOneApp) policies() ([]any, error) {
 	result := make([]any, 0, len(c.appPolicies))
 	for i := range c.appPolicies {
-		res, err := newMqlCloudflareOneAccessPolicy(c.MqlRuntime, c.appPolicies[i])
+		res, err := newAccessPolicyResource(c.MqlRuntime, c.appPolicies[i])
 		if err != nil {
 			return nil, err
 		}
@@ -110,88 +209,71 @@ func (c *mqlCloudflareOneApp) policies() ([]any, error) {
 func (c *mqlCloudflareOne) apps() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	cursor := &cloudflare.ResultInfo{}
+	records, err := cfGetPaged[accessApp](conn, fmt.Sprintf("zones/%s/access/apps", c.ZoneID))
+	if err != nil {
+		return nil, err
+	}
 
 	var result []any
-	for {
-		records, info, err := conn.Cf.ListAccessApplications(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.ZoneID,
-			Level:      cloudflare.ZoneRouteLevel,
-		}, cloudflare.ListAccessApplicationsParams{
-			ResultInfo: *cursor,
-		})
+	for i := range records {
+		rec := records[i]
+
+		resourceData := map[string]*llx.RawData{
+			"id":     llx.StringData(rec.ID),
+			"aud":    llx.StringData(rec.AUD),
+			"name":   llx.StringData(rec.Name),
+			"domain": llx.StringData(rec.Domain),
+
+			"allowedIdentityProviders": llx.ArrayData(convert.SliceAnyToInterface(rec.AllowedIdps), types.String),
+
+			"appLauncherVisible":     llx.BoolDataPtr(rec.AppLauncherVisible),
+			"autoRedirectToIdentity": llx.BoolDataPtr(rec.AutoRedirectToIdentity),
+			"optionsPreflightBypass": llx.BoolDataPtr(rec.OptionsPreflightBypass),
+
+			"customDenyMessage":      llx.StringData(rec.CustomDenyMessage),
+			"customDenyUrl":          llx.StringData(rec.CustomDenyURL),
+			"serviceAuth401Redirect": llx.BoolDataPtr(rec.ServiceAuth401Redirect),
+
+			"enableBindingCookie":     llx.BoolDataPtr(rec.EnableBindingCookie),
+			"httpOnlyCookieAttribute": llx.BoolDataPtr(rec.HTTPOnlyCookieAttribute),
+			"sameSiteCookieAttribute": llx.StringData(rec.SameSiteCookieAttribute),
+
+			"logoUrl":          llx.StringData(rec.LogoURL),
+			"sessionDuration":  llx.StringData(rec.SessionDuration),
+			"skipInterstitial": llx.BoolDataPtr(rec.SkipInterstitial),
+
+			"type": llx.StringData(rec.Type),
+
+			"createdAt": llx.TimeDataPtr(rec.CreatedAt),
+			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt),
+
+			"corsHeaders": llx.NilData,
+		}
+
+		if rec.CorsHeaders != nil {
+			headers := rec.CorsHeaders
+			corsHeaders, err := NewResource(c.MqlRuntime, "cloudflare.corsHeaders", map[string]*llx.RawData{
+				"allowAllHeaders":  llx.BoolData(headers.AllowAllHeaders),
+				"allowAllMethods":  llx.BoolData(headers.AllowAllMethods),
+				"allowAllOrigins":  llx.BoolData(headers.AllowAllOrigins),
+				"allowCredentials": llx.BoolData(headers.AllowCredentials),
+				"allowedHeaders":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedHeaders), types.String),
+				"allowedMethods":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedMethods), types.String),
+				"allowedOrigins":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedOrigins), types.String),
+				"maxAge":           llx.IntData(headers.MaxAge),
+			})
+			if err == nil {
+				resourceData["corsHeaders"] = llx.ResourceData(corsHeaders, corsHeaders.MqlName())
+			}
+		}
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.app", resourceData)
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlCloudflareOneApp).appPolicies = rec.Policies
 
-		cursor = info
-
-		for i := range records {
-			rec := records[i]
-
-			resourceData := map[string]*llx.RawData{
-				"id":     llx.StringData(rec.ID),
-				"aud":    llx.StringData(rec.AUD),
-				"name":   llx.StringData(rec.Name),
-				"domain": llx.StringData(rec.Domain),
-
-				"allowedIdentityProviders": llx.ArrayData(convert.SliceAnyToInterface(rec.AllowedIdps), types.String),
-
-				"appLauncherVisible":     llx.BoolDataPtr(rec.AppLauncherVisible),
-				"autoRedirectToIdentity": llx.BoolDataPtr(rec.AutoRedirectToIdentity),
-				"optionsPreflightBypass": llx.BoolDataPtr(rec.OptionsPreflightBypass),
-
-				"customDenyMessage":      llx.StringData(rec.CustomDenyMessage),
-				"customDenyUrl":          llx.StringData(rec.CustomDenyURL),
-				"serviceAuth401Redirect": llx.BoolDataPtr(rec.ServiceAuth401Redirect),
-
-				"enableBindingCookie":     llx.BoolDataPtr(rec.EnableBindingCookie),
-				"httpOnlyCookieAttribute": llx.BoolDataPtr(rec.HttpOnlyCookieAttribute),
-				"sameSiteCookieAttribute": llx.StringData(rec.SameSiteCookieAttribute),
-
-				"logoUrl":          llx.StringData(rec.LogoURL),
-				"sessionDuration":  llx.StringData(rec.SessionDuration),
-				"skipInterstitial": llx.BoolDataPtr(rec.SkipInterstitial),
-
-				"type": llx.StringData(string(rec.Type)),
-
-				"createdAt": llx.TimeDataPtr(rec.CreatedAt),
-				"updatedAt": llx.TimeDataPtr(rec.UpdatedAt),
-
-				"corsHeaders": llx.NilData,
-			}
-
-			if rec.CorsHeaders != nil {
-				headers := rec.CorsHeaders
-				corsHeaders, err := NewResource(c.MqlRuntime, "cloudflare.corsHeaders", map[string]*llx.RawData{
-					"allowAllHeaders":  llx.BoolData(headers.AllowAllHeaders),
-					"allowAllMethods":  llx.BoolData(headers.AllowAllMethods),
-					"allowAllOrigins":  llx.BoolData(headers.AllowAllOrigins),
-					"allowCredentials": llx.BoolData(headers.AllowCredentials),
-					"allowedHeaders":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedHeaders), types.String),
-					"allowedMethods":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedMethods), types.String),
-					"allowedOrigins":   llx.ArrayData(convert.SliceAnyToInterface(headers.AllowedOrigins), types.String),
-					"maxAge":           llx.IntData(headers.MaxAge),
-				})
-				if err != nil {
-					return nil, err
-				}
-				resourceData["corsHeaders"] = llx.ResourceData(corsHeaders, corsHeaders.MqlName())
-			}
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.app", resourceData)
-			if err != nil {
-				return nil, err
-			}
-			res.(*mqlCloudflareOneApp).appPolicies = rec.Policies
-
-			result = append(result, res)
-
-		}
-
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
 	}
 
 	return result, nil
@@ -207,35 +289,19 @@ func (c *mqlCloudflareOneAccessPolicy) id() (string, error) {
 func (c *mqlCloudflareOne) accessPolicies() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	cursor := &cloudflare.ResultInfo{}
+	records, err := cfGetPaged[accessPolicy](conn, fmt.Sprintf("accounts/%s/access/policies", c.AccountID))
+	if err != nil {
+		return nil, err
+	}
+
 	var result []any
-	for {
-		records, info, err := conn.Cf.ListAccessPolicies(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.AccountID,
-			Level:      cloudflare.AccountRouteLevel,
-		}, cloudflare.ListAccessPoliciesParams{
-			ResultInfo: *cursor,
-		})
+	for i := range records {
+		res, err := newAccessPolicyResource(c.MqlRuntime, records[i])
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
-		for i := range records {
-			rec := records[i]
-
-			res, err := newMqlCloudflareOneAccessPolicy(c.MqlRuntime, rec)
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
 	}
 
 	return result, nil
@@ -251,40 +317,26 @@ func (c *mqlCloudflareOneAccessGroup) id() (string, error) {
 func (c *mqlCloudflareOne) accessGroups() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	cursor := &cloudflare.ResultInfo{}
+	records, err := cfGetPaged[accessGroup](conn, fmt.Sprintf("accounts/%s/access/groups", c.AccountID))
+	if err != nil {
+		return nil, err
+	}
+
 	var result []any
-	for {
-		records, info, err := conn.Cf.ListAccessGroups(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.AccountID,
-			Level:      cloudflare.AccountRouteLevel,
-		}, cloudflare.ListAccessGroupsParams{
-			ResultInfo: *cursor,
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.accessGroup", map[string]*llx.RawData{
+			"id":        llx.StringData(rec.ID),
+			"name":      llx.StringData(rec.Name),
+			"createdAt": llx.TimeDataPtr(rec.CreatedAt),
+			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
-		for i := range records {
-			rec := records[i]
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.accessGroup", map[string]*llx.RawData{
-				"id":        llx.StringData(rec.ID),
-				"name":      llx.StringData(rec.Name),
-				"createdAt": llx.TimeDataPtr(rec.CreatedAt),
-				"updatedAt": llx.TimeDataPtr(rec.UpdatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
 	}
 
 	return result, nil
@@ -297,56 +349,33 @@ func (c *mqlCloudflareOneServiceToken) id() (string, error) {
 	return c.Id.Data, nil
 }
 
-// serviceTokens lists Access service tokens. cloudflare-go's
-// ListAccessServiceTokens does not paginate, so we call the endpoint directly
-// via api.Raw and walk pages using the response's result_info block.
 func (c *mqlCloudflareOne) serviceTokens() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	var (
-		result  []any
-		page    = 1
-		perPage = 50
-	)
+	records, err := cfGetPaged[accessServiceToken](conn, fmt.Sprintf("accounts/%s/access/service_tokens", c.AccountID))
+	if err != nil {
+		return nil, err
+	}
 
-	for {
-		uri := fmt.Sprintf("/accounts/%s/access/service_tokens?page=%d&per_page=%d", c.AccountID, page, perPage)
-		raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+	var result []any
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.serviceToken", map[string]*llx.RawData{
+			"id":         llx.StringData(rec.ID),
+			"name":       llx.StringData(rec.Name),
+			"clientId":   llx.StringData(rec.ClientID),
+			"duration":   llx.StringData(rec.Duration),
+			"expiresAt":  llx.TimeDataPtr(rec.ExpiresAt),
+			"lastSeenAt": llx.TimeDataPtr(rec.LastSeenAt),
+			"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
+			"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt),
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		var records []cloudflare.AccessServiceToken
-		if len(raw.Result) > 0 {
-			if err := json.Unmarshal(raw.Result, &records); err != nil {
-				return nil, fmt.Errorf("failed to decode access service tokens response: %w", err)
-			}
-		}
-
-		for i := range records {
-			rec := records[i]
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.serviceToken", map[string]*llx.RawData{
-				"id":         llx.StringData(rec.ID),
-				"name":       llx.StringData(rec.Name),
-				"clientId":   llx.StringData(rec.ClientID),
-				"duration":   llx.StringData(rec.Duration),
-				"expiresAt":  llx.TimeDataPtr(rec.ExpiresAt),
-				"lastSeenAt": llx.TimeDataPtr(rec.LastSeenAt),
-				"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
-				"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if raw.ResultInfo == nil || !raw.ResultInfo.HasMorePages() {
-			break
-		}
-		page++
+		result = append(result, res)
 	}
 
 	return result, nil
@@ -355,20 +384,18 @@ func (c *mqlCloudflareOne) serviceTokens() ([]any, error) {
 func (c *mqlCloudflareOne) organization() (*mqlCloudflareOneOrganization, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	org, _, err := conn.Cf.GetAccessOrganization(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.AccountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.GetAccessOrganizationParams{})
-	if err != nil {
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+	var env struct {
+		Result accessOrganization `json:"result"`
+	}
+	uri := fmt.Sprintf("accounts/%s/access/organizations", c.AccountID)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+		if isUnavailable(err) {
 			c.Organization.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
 	}
+	org := env.Result
 
 	res, err := NewResource(c.MqlRuntime, "cloudflare.one.organization", map[string]*llx.RawData{
 		"__id":                           llx.StringData("cloudflare.one.organization@" + c.AccountID),
@@ -400,47 +427,33 @@ func (c *mqlCloudflareOneIdp) id() (string, error) {
 func (c *mqlCloudflareOne) identityProviders() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	cursor := &cloudflare.ResultInfo{}
+	records, err := cfGetPaged[accessIdp](conn, fmt.Sprintf("zones/%s/access/identity_providers", c.ZoneID))
+	if err != nil {
+		return nil, err
+	}
+
 	var result []any
-	for {
-		records, info, err := conn.Cf.ListAccessIdentityProviders(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.ZoneID,
-			Level:      cloudflare.ZoneRouteLevel,
-		}, cloudflare.ListAccessIdentityProvidersParams{
-			ResultInfo: *cursor,
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.idp", map[string]*llx.RawData{
+			"id":                 llx.StringData(rec.ID),
+			"name":               llx.StringData(rec.Name),
+			"type":               llx.StringData(rec.Type),
+			"saml":               llx.BoolData(isSAMLIdpType(rec.Type)),
+			"ssoTargetUrl":       llx.StringData(rec.Config.SsoTargetURL),
+			"issuerUrl":          llx.StringData(rec.Config.IssuerURL),
+			"signRequest":        llx.BoolData(rec.Config.SignRequest),
+			"idpPublicCert":      llx.StringData(rec.Config.IdpPublicCert),
+			"emailAttributeName": llx.StringData(rec.Config.EmailAttributeName),
+			"attributes":         llx.ArrayData(convert.SliceAnyToInterface(rec.Config.Attributes), types.String),
+			"scimEnabled":        llx.BoolData(rec.ScimConfig.Enabled),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
-		for i := range records {
-			rec := records[i]
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.idp", map[string]*llx.RawData{
-				"id":                 llx.StringData(rec.ID),
-				"name":               llx.StringData(rec.Name),
-				"type":               llx.StringData(string(rec.Type)),
-				"saml":               llx.BoolData(isSAMLIdpType(string(rec.Type))),
-				"ssoTargetUrl":       llx.StringData(rec.Config.SsoTargetURL),
-				"issuerUrl":          llx.StringData(rec.Config.IssuerURL),
-				"signRequest":        llx.BoolData(rec.Config.SignRequest),
-				"idpPublicCert":      llx.StringData(rec.Config.IdpPublicCert),
-				"emailAttributeName": llx.StringData(rec.Config.EmailAttributeName),
-				"attributes":         llx.ArrayData(convert.SliceAnyToInterface(rec.Config.Attributes), types.String),
-				"scimEnabled":        llx.BoolData(rec.ScimConfig.Enabled),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
 	}
 
 	return result, nil

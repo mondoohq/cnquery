@@ -18,6 +18,10 @@ func TestAccountRoles(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/roles", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("account_roles"))
 	})
 

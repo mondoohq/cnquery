@@ -6,7 +6,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/option"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -17,7 +18,8 @@ type CloudflareConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	Cf *cloudflare.API
+	// Cf is the cloudflare-go v6 client.
+	Cf *cloudflare.Client
 }
 
 func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*CloudflareConnection, error) {
@@ -39,11 +41,7 @@ func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.
 		return nil, errors.New("a valid Cloudflare token is required (set CLOUDFLARE_TOKEN or use --token)")
 	}
 
-	api, err := cloudflare.NewWithAPIToken(token)
-	if err != nil {
-		return nil, err
-	}
-	conn.Cf = api
+	conn.Cf = cloudflare.NewClient(option.WithAPIToken(token))
 
 	return conn, nil
 }

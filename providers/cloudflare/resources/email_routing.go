@@ -4,15 +4,26 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"net/url"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
+
+// emailRoutingDNSRecord is a suggested DNS record returned by the email-routing
+// DNS endpoint, decoded via the client's generic Get.
+type emailRoutingDNSRecord struct {
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Content  string `json:"content"`
+	TTL      int64  `json:"ttl"`
+	Priority *int   `json:"priority"`
+}
 
 type mqlCloudflareZoneEmailRoutingInternal struct {
 	zoneID   string
@@ -20,7 +31,7 @@ type mqlCloudflareZoneEmailRoutingInternal struct {
 
 	dnsLock    sync.Mutex
 	dnsFetched bool
-	dnsCache   []cloudflare.DNSRecord
+	dnsCache   []emailRoutingDNSRecord
 
 	zoneNameOnce sync.Once
 	zoneNameErr  error
@@ -29,20 +40,25 @@ type mqlCloudflareZoneEmailRoutingInternal struct {
 func (c *mqlCloudflareZone) emailRouting() (*mqlCloudflareZoneEmailRouting, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	settings, err := conn.Cf.GetEmailRoutingSettings(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.Id.Data,
-	})
-	if err != nil {
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+	var env struct {
+		Result struct {
+			Name     string     `json:"name"`
+			Enabled  bool       `json:"enabled"`
+			Status   string     `json:"status"`
+			Created  *time.Time `json:"created"`
+			Modified *time.Time `json:"modified"`
+		} `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/email/routing", c.Id.Data)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+		if isUnavailable(err) {
 			c.EmailRouting.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
 		return nil, err
 	}
 
+	settings := env.Result
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.emailRouting", map[string]*llx.RawData{
 		"__id":       llx.StringData("cloudflare.zone.emailRouting@" + c.Id.Data),
 		"enabled":    llx.BoolData(settings.Enabled),
@@ -79,7 +95,7 @@ func (c *mqlCloudflareZoneEmailRouting) dnsRecords() ([]any, error) {
 			"type":     r.Type,
 			"name":     r.Name,
 			"content":  r.Content,
-			"ttl":      int64(r.TTL),
+			"ttl":      r.TTL,
 			"priority": int64(0),
 		}
 		if r.Priority != nil {
@@ -138,14 +154,18 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 		dmarcName = "_dmarc." + zoneName
 	}
 
-	records, _, err := conn.Cf.ListDNSRecords(context.TODO(),
-		&cloudflare.ResourceContainer{Identifier: c.zoneID},
-		cloudflare.ListDNSRecordsParams{Type: "TXT", Name: dmarcName})
-	if err != nil {
+	var env struct {
+		Result []struct {
+			Name    string `json:"name"`
+			Content string `json:"content"`
+		} `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/dns_records?type=TXT&name=%s", c.zoneID, url.QueryEscape(dmarcName))
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
 		return false, err
 	}
 
-	for _, r := range records {
+	for _, r := range env.Result {
 		if !strings.EqualFold(r.Name, dmarcName) {
 			continue
 		}
@@ -167,23 +187,28 @@ func (c *mqlCloudflareZoneEmailRouting) resolveZoneName() (string, error) {
 		}
 
 		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-		zone, err := conn.Cf.ZoneDetails(context.TODO(), c.zoneID)
-		if err != nil {
-			var notFound *cloudflare.NotFoundError
-			var authN *cloudflare.AuthenticationError
-			var authZ *cloudflare.AuthorizationError
-			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+		var env struct {
+			Result struct {
+				Name string `json:"name"`
+			} `json:"result"`
+		}
+		uri := fmt.Sprintf("zones/%s", c.zoneID)
+		if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+			if isUnavailable(err) {
 				return
 			}
 			c.zoneNameErr = err
 			return
 		}
-		c.zoneName = zone.Name
+		c.zoneName = env.Result.Name
 	})
 	return c.zoneName, c.zoneNameErr
 }
 
-func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare.DNSRecord, error) {
+func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]emailRoutingDNSRecord, error) {
+	if c.dnsFetched {
+		return c.dnsCache, nil
+	}
 	c.dnsLock.Lock()
 	defer c.dnsLock.Unlock()
 	if c.dnsFetched {
@@ -196,15 +221,16 @@ func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare
 	}
 
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	records, err := conn.Cf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.zoneID,
-	})
-	if err != nil {
+	var env struct {
+		Result []emailRoutingDNSRecord `json:"result"`
+	}
+	uri := fmt.Sprintf("zones/%s/email/routing/dns", c.zoneID)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
 		// Don't cache transient errors — leave dnsFetched=false so the next
 		// call retries instead of returning the stale failure forever.
 		return nil, err
 	}
-	c.dnsCache = records
+	c.dnsCache = env.Result
 	c.dnsFetched = true
 	return c.dnsCache, nil
 }

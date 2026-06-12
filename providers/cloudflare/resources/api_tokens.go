@@ -4,9 +4,9 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 
-	"github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go/v6/user"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -28,26 +28,13 @@ func (c *mqlCloudflareApiToken) id() (string, error) {
 func (c *mqlCloudflare) apiTokens() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	tokens, err := conn.Cf.APITokens(context.TODO())
-	if err != nil {
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
 	var result []any
-	for i := range tokens {
-		t := tokens[i]
+	iter := conn.Cf.User.Tokens.ListAutoPaging(context.TODO(), user.TokenListParams{})
+	for iter.Next() {
+		t := iter.Current()
 
-		var ipIn, ipNotIn []any
-		if t.Condition != nil && t.Condition.RequestIP != nil {
-			ipIn = convert.SliceAnyToInterface(t.Condition.RequestIP.In)
-			ipNotIn = convert.SliceAnyToInterface(t.Condition.RequestIP.NotIn)
-		}
+		ipIn := convert.SliceAnyToInterface(t.Condition.RequestIP.In)
+		ipNotIn := convert.SliceAnyToInterface(t.Condition.RequestIP.NotIn)
 
 		policies := make([]any, 0, len(t.Policies))
 		for j := range t.Policies {
@@ -60,10 +47,17 @@ func (c *mqlCloudflare) apiTokens() ([]any, error) {
 					"name": pg.Name,
 				})
 			}
+			// The resources field is a polymorphic union in cloudflare-go v6;
+			// round-trip it through JSON so the dict holds a plain decoded value
+			// matching the raw API shape.
+			var resources any
+			if b, err := json.Marshal(p.Resources); err == nil {
+				_ = json.Unmarshal(b, &resources)
+			}
 			policies = append(policies, map[string]any{
 				"id":               p.ID,
-				"effect":           p.Effect,
-				"resources":        p.Resources,
+				"effect":           string(p.Effect),
+				"resources":        resources,
 				"permissionGroups": pgs,
 			})
 		}
@@ -72,11 +66,11 @@ func (c *mqlCloudflare) apiTokens() ([]any, error) {
 			"__id":       llx.StringData("cloudflare.apiToken@" + t.ID),
 			"id":         llx.StringData(t.ID),
 			"name":       llx.StringData(t.Name),
-			"status":     llx.StringData(t.Status),
-			"issuedOn":   llx.TimeDataPtr(t.IssuedOn),
-			"modifiedOn": llx.TimeDataPtr(t.ModifiedOn),
-			"notBefore":  llx.TimeDataPtr(t.NotBefore),
-			"expiresOn":  llx.TimeDataPtr(t.ExpiresOn),
+			"status":     llx.StringData(string(t.Status)),
+			"issuedOn":   timeOrNil(t.IssuedOn),
+			"modifiedOn": timeOrNil(t.ModifiedOn),
+			"notBefore":  timeOrNil(t.NotBefore),
+			"expiresOn":  timeOrNil(t.ExpiresOn),
 			"ipIn":       llx.ArrayData(ipIn, types.String),
 			"ipNotIn":    llx.ArrayData(ipNotIn, types.String),
 			"policies":   llx.ArrayData(policies, types.Dict),
@@ -86,6 +80,14 @@ func (c *mqlCloudflare) apiTokens() ([]any, error) {
 		}
 
 		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		// Token listing requires a token with the right permissions; treat
+		// permission/availability errors as an empty result rather than failing.
+		if isUnavailable(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	return result, nil

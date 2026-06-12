@@ -20,7 +20,18 @@ func TestTunnels(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/cfd_tunnel", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
+		// cloudflare-go v6 keeps fetching pages until result is empty.
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("tunnels"))
+	})
+
+	// Connection details now come from the dedicated per-tunnel endpoint.
+	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/cfd_tunnel/{tunnelID}/connections", testAccountID), func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		jsonResponse(w, loadFixture("tunnel_connections"))
 	})
 
 	result, err := zone.tunnels()
@@ -57,6 +68,10 @@ func TestTunnelRoutes(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/routes", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("tunnel_routes"))
 	})
 
@@ -136,6 +151,7 @@ func TestTunnelRoutesPagination(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/routes", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&calls, 1)
+		w.Header().Set("Content-Type", "application/json")
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 		if page == 0 {
 			page = 1

@@ -19,6 +19,10 @@ func TestOriginCACertificates(t *testing.T) {
 	env.Mux.HandleFunc("/certificates", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, testZoneID, r.URL.Query().Get("zone_id"))
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("origin_ca_certificates"))
 	})
 
@@ -40,6 +44,10 @@ func TestCustomCertificates(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/custom_certificates", testZoneID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("custom_certificates"))
 	})
 
@@ -120,6 +128,10 @@ func TestCustomHostnames(t *testing.T) {
 
 	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/custom_hostnames", testZoneID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, loadFixture("custom_hostnames"))
 	})
 
@@ -142,6 +154,10 @@ func TestCustomHostnames_nilSSL(t *testing.T) {
 	zone := createTestZone(t, env)
 
 	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/custom_hostnames", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+		if page := r.URL.Query().Get("page"); page != "" && page != "1" {
+			jsonResponse(w, `{"result":[],"success":true,"errors":[],"messages":[]}`)
+			return
+		}
 		jsonResponse(w, `{
 			"success": true,
 			"result": [{

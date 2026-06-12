@@ -5,7 +5,8 @@ package resources
 import (
 	"context"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/mtls_certificates"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -27,41 +28,33 @@ func (c *mqlCloudflareZone) mtlsCertificates() ([]any, error) {
 	accountID := acc.Data.GetId().Data
 
 	var result []any
-	params := cloudflare.ListMTLSCertificatesParams{}
-	for {
-		records, info, err := conn.Cf.ListMTLSCertificates(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: accountID,
-			Level:      cloudflare.AccountRouteLevel,
-		}, params)
+	iter := conn.Cf.MTLSCertificates.ListAutoPaging(context.TODO(), mtls_certificates.MTLSCertificateListParams{
+		AccountID: cloudflare.F(accountID),
+	})
+	for iter.Next() {
+		rec := iter.Current()
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.mtlsCertificate", map[string]*llx.RawData{
+			"id":           llx.StringData(rec.ID),
+			"name":         llx.StringData(rec.Name),
+			"issuer":       llx.StringData(rec.Issuer),
+			"signature":    llx.StringData(rec.Signature),
+			"serialNumber": llx.StringData(rec.SerialNumber),
+			"ca":           llx.BoolData(rec.CA),
+			"uploadedOn":   llx.TimeData(rec.UploadedOn),
+			"expiresAt":    llx.TimeData(rec.ExpiresOn),
+			// cloudflare-go v6's mTLS certificate response no longer exposes a
+			// separate "updated" timestamp, so this field is always null.
+			"updatedAt": llx.NilData,
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range records {
-			rec := records[i]
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.mtlsCertificate", map[string]*llx.RawData{
-				"id":           llx.StringData(rec.ID),
-				"name":         llx.StringData(rec.Name),
-				"issuer":       llx.StringData(rec.Issuer),
-				"signature":    llx.StringData(rec.Signature),
-				"serialNumber": llx.StringData(rec.SerialNumber),
-				"ca":           llx.BoolData(rec.CA),
-				"uploadedOn":   llx.TimeData(rec.UploadedOn),
-				"updatedAt":    llx.TimeData(rec.UpdatedAt),
-				"expiresAt":    llx.TimeData(rec.ExpiresOn),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !info.HasMorePages() {
-			break
-		}
-		params.PaginationOptions.Page = info.Page + 1
+		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

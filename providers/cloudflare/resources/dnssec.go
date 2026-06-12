@@ -4,9 +4,9 @@ package resources
 
 import (
 	"context"
-	"errors"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/dns"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -15,13 +15,12 @@ import (
 func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	ds, err := conn.Cf.ZoneDNSSECSetting(context.TODO(), c.Id.Data)
+	ds, err := conn.Cf.DNS.DNSSEC.Get(context.TODO(), dns.DNSSECGetParams{
+		ZoneID: cloudflare.F(c.Id.Data),
+	})
 	if err != nil {
 		// DNSSEC may not be available on all plans (403/404)
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+		if isUnavailable(err) {
 			c.Dnssec.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -33,11 +32,11 @@ func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 	// API zero-values and the fields surface as null when queried.
 	args := map[string]*llx.RawData{
 		"__id":       llx.StringData("cloudflare.zone.dnssec@" + c.Id.Data),
-		"status":     llx.StringData(ds.Status),
+		"status":     llx.StringData(string(ds.Status)),
 		"flags":      llx.IntData(int64(ds.Flags)),
 		"modifiedOn": llx.TimeData(ds.ModifiedOn),
 	}
-	if ds.Status != "disabled" {
+	if string(ds.Status) != "disabled" {
 		args["algorithm"] = llx.StringData(ds.Algorithm)
 		args["keyType"] = llx.StringData(ds.KeyType)
 		args["digestType"] = llx.StringData(ds.DigestType)
@@ -57,7 +56,7 @@ func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 
 	// Mark the omitted fields as explicitly null so the runtime doesn't try
 	// to recompute them when accessed.
-	if ds.Status == "disabled" {
+	if string(ds.Status) == "disabled" {
 		nullState := plugin.StateIsSet | plugin.StateIsNull
 		mqlDnssec.Algorithm.State = nullState
 		mqlDnssec.KeyType.State = nullState

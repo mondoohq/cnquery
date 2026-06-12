@@ -4,49 +4,25 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go/v6/zones"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
-const defaultCloudflarePageSize = 50
-
-// paginateRaw walks pagination on a Cloudflare GET endpoint via the SDK's Raw
-// helper, which reuses the same HTTP client, retries, and authentication as
-// the typed SDK methods. Stops when the response omits result_info or
-// HasMorePages reports no further pages. handle is invoked once per page with
-// the raw `result` array bytes.
-//
-// This exists because many cloudflare-go v0 List* methods (devices, posture
-// rules, notifications, teams rules/lists/locations, DLP profiles, workers)
-// take no pagination parameters and silently return only the first page.
-func paginateRaw(ctx context.Context, cf *cloudflare.API, endpoint string, handle func(raw json.RawMessage) error) error {
-	page := 1
-	for {
-		sep := "?"
-		if strings.Contains(endpoint, "?") {
-			sep = "&"
-		}
-		uri := fmt.Sprintf("%s%spage=%d&per_page=%d", endpoint, sep, page, defaultCloudflarePageSize)
-		raw, err := cf.Raw(ctx, http.MethodGet, uri, nil, nil)
-		if err != nil {
-			return err
-		}
-		if err := handle(raw.Result); err != nil {
-			return err
-		}
-		if raw.ResultInfo == nil || !raw.ResultInfo.HasMorePages() {
-			return nil
-		}
-		page = raw.ResultInfo.Page + 1
-	}
+// accountRecord mirrors an account list entry. We decode it via the client's
+// generic Get so account pagination follows result_info.total_pages.
+type accountRecord struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Settings *struct {
+		EnforceTwoFactor bool `json:"enforce_twofactor"`
+	} `json:"settings"`
+	CreatedOn time.Time `json:"created_on"`
 }
 
 func (r *mqlCloudflare) id() (string, error) {
@@ -56,29 +32,28 @@ func (r *mqlCloudflare) id() (string, error) {
 func (c *mqlCloudflare) zones() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	zones, err := conn.Cf.ListZones(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	var res []any
-	for i := range zones {
-		zone := zones[i]
+	iter := conn.Cf.Zones.ListAutoPaging(context.Background(), zones.ZoneListParams{})
+	for iter.Next() {
+		zone := iter.Current()
 
 		acc, err := NewResource(c.MqlRuntime, "cloudflare.zone.account", map[string]*llx.RawData{
 			"id":   llx.StringData(zone.Account.ID),
 			"name": llx.StringData(zone.Account.Name),
-			"type": llx.StringData(zone.Account.Type),
+			// v6 ZoneAccount has no Type field; surface empty for schema compatibility.
+			"type": llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err
 		}
 
 		owner, err := NewResource(c.MqlRuntime, "cloudflare.zone.owner", map[string]*llx.RawData{
-			"id":        llx.StringData(zone.Owner.ID),
-			"email":     llx.StringData(zone.Owner.Email),
+			"id": llx.StringData(zone.Owner.ID),
+			// v6 ZoneOwner has no Email field — the OpenAPI spec doesn't expose
+			// it at the zone level. Surface empty for schema compatibility.
+			"email":     llx.StringData(""),
 			"name":      llx.StringData(zone.Owner.Name),
-			"ownerType": llx.StringData(zone.Owner.OwnerType),
+			"ownerType": llx.StringData(zone.Owner.Type),
 		})
 		if err != nil {
 			return nil, err
@@ -87,7 +62,7 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 		plan, err := NewResource(c.MqlRuntime, "cloudflare.zone.plan", map[string]*llx.RawData{
 			"id":           llx.StringData(zone.Plan.ID),
 			"name":         llx.StringData(zone.Plan.Name),
-			"price":        llx.IntData(zone.Plan.Price),
+			"price":        llx.IntData(int64(zone.Plan.Price)),
 			"currency":     llx.StringData(zone.Plan.Currency),
 			"frequency":    llx.StringData(zone.Plan.Frequency),
 			"isSubscribed": llx.BoolData(zone.Plan.IsSubscribed),
@@ -101,11 +76,11 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 			"name": llx.StringData(zone.Name),
 
 			"nameServers":         llx.ArrayData(convert.SliceAnyToInterface(zone.NameServers), types.String),
-			"originalNameServers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNS), types.String),
+			"originalNameServers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNameServers), types.String),
 
-			"status": llx.StringData(zone.Status),
+			"status": llx.StringData(string(zone.Status)),
 			"paused": llx.BoolData(zone.Paused),
-			"type":   llx.StringData(zone.Type),
+			"type":   llx.StringData(string(zone.Type)),
 
 			"account": llx.ResourceData(acc, acc.MqlName()),
 			"owner":   llx.ResourceData(owner, owner.MqlName()),
@@ -119,6 +94,9 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 		}
 		res = append(res, r)
 	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -126,49 +104,39 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 func (c *mqlCloudflare) accounts() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	var result []any
-	params := cloudflare.AccountsListParams{}
+	accountsList, err := cfGetPaged[accountRecord](conn, "accounts")
+	if err != nil {
+		return nil, err
+	}
 
-	for {
-		_accounts, info, err := conn.Cf.Accounts(context.Background(), params)
+	var result []any
+	for i := range accountsList {
+		acc := accountsList[i]
+
+		enforceTwoFactor := false
+		if acc.Settings != nil {
+			enforceTwoFactor = acc.Settings.EnforceTwoFactor
+		}
+		settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
+			"__id":             llx.StringData("cloudflare.account.settings@" + acc.ID),
+			"enforceTwoFactor": llx.BoolData(enforceTwoFactor),
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range _accounts {
-			acc := _accounts[i]
-
-			settingsArgs := map[string]*llx.RawData{
-				"__id": llx.StringData("cloudflare.account.settings@" + acc.ID),
-			}
-			if acc.Settings != nil {
-				settingsArgs["enforceTwoFactor"] = llx.BoolData(acc.Settings.EnforceTwoFactor)
-			} else {
-				settingsArgs["enforceTwoFactor"] = llx.BoolData(false)
-			}
-			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", settingsArgs)
-			if err != nil {
-				return nil, err
-			}
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
-				"id":        llx.StringData(acc.ID),
-				"name":      llx.StringData(acc.Name),
-				"type":      llx.StringData(acc.Type),
-				"settings":  llx.ResourceData(settings, settings.MqlName()),
-				"createdOn": llx.TimeData(acc.CreatedOn),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
+		res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
+			"id":        llx.StringData(acc.ID),
+			"name":      llx.StringData(acc.Name),
+			"type":      llx.StringData(acc.Type),
+			"settings":  llx.ResourceData(settings, settings.MqlName()),
+			"createdOn": llx.TimeData(acc.CreatedOn),
+		})
+		if err != nil {
+			return nil, err
 		}
 
-		if !info.HasMorePages() {
-			break
-		}
-		params.PaginationOptions.Page = info.Page + 1
+		result = append(result, res)
 	}
 
 	return result, nil

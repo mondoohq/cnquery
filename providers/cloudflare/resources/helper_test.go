@@ -11,7 +11,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflarev6 "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/option"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -64,15 +65,14 @@ func setupTestEnv(t *testing.T) *testEnv {
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	// Create a Cloudflare API client pointed at the mock server.
-	api, err := cloudflare.New("test-key", "test@example.com")
-	if err != nil {
-		t.Fatalf("failed to create cloudflare api: %v", err)
-	}
-	api.BaseURL = server.URL
+	// Create a cloudflare-go v6 client pointed at the mock server.
+	v6Client := cloudflarev6.NewClient(
+		option.WithAPIToken("test-key"),
+		option.WithBaseURL(server.URL+"/"),
+	)
 
 	conn := &connection.CloudflareConnection{
-		Cf: api,
+		Cf: v6Client,
 	}
 
 	runtime := &plugin.Runtime{

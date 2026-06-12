@@ -3,9 +3,9 @@
 package resources
 
 import (
-	"context"
+	"fmt"
+	"time"
 
-	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -14,6 +14,24 @@ import (
 
 type mqlCloudflareDnsInternal struct {
 	ZoneID string
+}
+
+// dnsRecord mirrors a zone DNS record. cloudflare-go v6 models the record list
+// as a polymorphic union (and exposes tags as an untyped value), so we decode
+// the endpoint via the client's generic Get to keep the existing MQL schema.
+type dnsRecord struct {
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Tags       []string  `json:"tags"`
+	Proxied    bool      `json:"proxied"`
+	Proxiable  bool      `json:"proxiable"`
+	Comment    string    `json:"comment"`
+	Type       string    `json:"type"`
+	Content    string    `json:"content"`
+	TTL        int64     `json:"ttl"`
+	Priority   float64   `json:"priority"`
+	CreatedOn  time.Time `json:"created_on"`
+	ModifiedOn time.Time `json:"modified_on"`
 }
 
 func (c *mqlCloudflareZone) dns() (*mqlCloudflareDns, error) {
@@ -40,55 +58,36 @@ func (c *mqlCloudflareDnsRecord) id() (string, error) {
 func (c *mqlCloudflareDns) records() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	cursor := &cloudflare.ResultInfo{}
+	records, err := cfGetPaged[dnsRecord](conn, fmt.Sprintf("zones/%s/dns_records", c.ZoneID))
+	if err != nil {
+		return nil, err
+	}
 
 	var result []any
-	for {
-		records, info, err := conn.Cf.ListDNSRecords(
-			context.Background(),
-			&cloudflare.ResourceContainer{Identifier: c.ZoneID}, cloudflare.ListDNSRecordsParams{
-				ResultInfo: *cursor,
-			})
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.dns.record", map[string]*llx.RawData{
+			"id":        llx.StringData(rec.ID),
+			"name":      llx.StringData(rec.Name),
+			"tags":      llx.ArrayData(convert.SliceAnyToInterface(rec.Tags), types.String),
+			"proxied":   llx.BoolData(rec.Proxied),
+			"proxiable": llx.BoolData(rec.Proxiable),
+			"comment":   llx.StringData(rec.Comment),
+
+			"type":     llx.StringData(rec.Type),
+			"content":  llx.StringData(rec.Content),
+			"ttl":      llx.IntData(rec.TTL),
+			"priority": llx.IntData(int64(rec.Priority)),
+
+			"createdOn":  llx.TimeData(rec.CreatedOn),
+			"modifiedOn": llx.TimeData(rec.ModifiedOn),
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
-		for i := range records {
-			rec := records[i]
-
-			priority := 0
-			if rec.Priority != nil {
-				priority = int(*rec.Priority)
-			}
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.dns.record", map[string]*llx.RawData{
-				"id":        llx.StringData(rec.ID),
-				"name":      llx.StringData(rec.Name),
-				"tags":      llx.ArrayData(convert.SliceAnyToInterface(rec.Tags), types.String),
-				"proxied":   llx.BoolDataPtr(rec.Proxied),
-				"proxiable": llx.BoolData(rec.Proxiable),
-				"comment":   llx.StringData(rec.Comment),
-
-				"type":     llx.StringData(rec.Type),
-				"content":  llx.StringData(rec.Content),
-				"ttl":      llx.IntData(rec.TTL),
-				"priority": llx.IntData(priority),
-
-				"createdOn":  llx.TimeData(rec.CreatedOn),
-				"modifiedOn": llx.TimeData(rec.ModifiedOn),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
-		}
-
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
 	}
 
 	return result, nil

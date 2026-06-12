@@ -4,11 +4,11 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/zero_trust"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
@@ -20,45 +20,66 @@ func (c *mqlCloudflareOneDevice) id() (string, error) {
 	return c.Id.Data, nil
 }
 
+// teamsDevice is the response shape of the legacy WARP device inventory endpoint
+// (`/accounts/{id}/devices`). cloudflare-go v6 marks its typed device list as
+// deprecated in favor of newer, differently-shaped endpoints, so we read the
+// legacy endpoint via the client's generic Get to preserve the MQL schema.
+type teamsDevice struct {
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	DeviceType       string `json:"device_type"`
+	Model            string `json:"model"`
+	Manufacturer     string `json:"manufacturer"`
+	SerialNumber     string `json:"serial_number"`
+	MacAddress       string `json:"mac_address"`
+	IP               string `json:"ip"`
+	OSVersion        string `json:"os_version"`
+	OSDistroName     string `json:"os_distro_name"`
+	OSDistroRevision string `json:"os_distro_revision"`
+	Version          string `json:"version"`
+	Deleted          bool   `json:"deleted"`
+	Created          string `json:"created"`
+	Updated          string `json:"updated"`
+	LastSeen         string `json:"last_seen"`
+	RevokedAt        string `json:"revoked_at"`
+}
+
 func (c *mqlCloudflareOne) devices() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	var result []any
-	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices", c.AccountID), func(raw json.RawMessage) error {
-		var records []cloudflare.TeamsDeviceListItem
-		if err := json.Unmarshal(raw, &records); err != nil {
-			return err
-		}
-		for i := range records {
-			rec := records[i]
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.device", map[string]*llx.RawData{
-				"id":               llx.StringData(rec.ID),
-				"name":             llx.StringData(rec.Name),
-				"deviceType":       llx.StringData(rec.DeviceType),
-				"model":            llx.StringData(rec.Model),
-				"manufacturer":     llx.StringData(rec.Manufacturer),
-				"serialNumber":     llx.StringData(rec.SerialNumber),
-				"macAddress":       llx.StringData(rec.MacAddress),
-				"ip":               llx.StringData(rec.IP),
-				"osVersion":        llx.StringData(rec.OSVersion),
-				"osDistroName":     llx.StringData(rec.OSDistroName),
-				"osDistroRevision": llx.StringData(rec.OsDistroRevision),
-				"version":          llx.StringData(rec.Version),
-				"deleted":          llx.BoolData(rec.Deleted),
-				"created":          llx.TimeData(parseRFC3339(rec.Created)),
-				"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
-				"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
-				"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
-			})
-			if err != nil {
-				return err
-			}
-			result = append(result, res)
-		}
-		return nil
-	})
+	records, err := cfGetPaged[teamsDevice](conn, fmt.Sprintf("accounts/%s/devices", c.AccountID))
 	if err != nil {
 		return nil, err
+	}
+
+	var result []any
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.device", map[string]*llx.RawData{
+			"id":               llx.StringData(rec.ID),
+			"name":             llx.StringData(rec.Name),
+			"deviceType":       llx.StringData(rec.DeviceType),
+			"model":            llx.StringData(rec.Model),
+			"manufacturer":     llx.StringData(rec.Manufacturer),
+			"serialNumber":     llx.StringData(rec.SerialNumber),
+			"macAddress":       llx.StringData(rec.MacAddress),
+			"ip":               llx.StringData(rec.IP),
+			"osVersion":        llx.StringData(rec.OSVersion),
+			"osDistroName":     llx.StringData(rec.OSDistroName),
+			"osDistroRevision": llx.StringData(rec.OSDistroRevision),
+			"version":          llx.StringData(rec.Version),
+			"deleted":          llx.BoolData(rec.Deleted),
+			"created":          llx.TimeData(parseRFC3339(rec.Created)),
+			"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
+			"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
+			"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
 	}
 
 	return result, nil
@@ -75,29 +96,27 @@ func (c *mqlCloudflareOne) devicePostureRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
-	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices/posture", c.AccountID), func(raw json.RawMessage) error {
-		var records []cloudflare.DevicePostureRule
-		if err := json.Unmarshal(raw, &records); err != nil {
-			return err
-		}
-		for i := range records {
-			rec := records[i]
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureRule", map[string]*llx.RawData{
-				"id":          llx.StringData(rec.ID),
-				"name":        llx.StringData(rec.Name),
-				"type":        llx.StringData(rec.Type),
-				"description": llx.StringData(rec.Description),
-				"schedule":    llx.StringData(rec.Schedule),
-				"expiration":  llx.StringData(rec.Expiration),
-			})
-			if err != nil {
-				return err
-			}
-			result = append(result, res)
-		}
-		return nil
+	iter := conn.Cf.ZeroTrust.Devices.Posture.ListAutoPaging(context.TODO(), zero_trust.DevicePostureListParams{
+		AccountID: cloudflare.F(c.AccountID),
 	})
-	if err != nil {
+	for iter.Next() {
+		rec := iter.Current()
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureRule", map[string]*llx.RawData{
+			"id":          llx.StringData(rec.ID),
+			"name":        llx.StringData(rec.Name),
+			"type":        llx.StringData(string(rec.Type)),
+			"description": llx.StringData(rec.Description),
+			"schedule":    llx.StringData(rec.Schedule),
+			"expiration":  llx.StringData(rec.Expiration),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
 		return nil, err
 	}
 
@@ -115,27 +134,25 @@ func (c *mqlCloudflareOne) devicePostureIntegrations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
-	err := paginateRaw(context.TODO(), conn.Cf, fmt.Sprintf("/accounts/%s/devices/posture/integration", c.AccountID), func(raw json.RawMessage) error {
-		var records []cloudflare.DevicePostureIntegration
-		if err := json.Unmarshal(raw, &records); err != nil {
-			return err
-		}
-		for i := range records {
-			rec := records[i]
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureIntegration", map[string]*llx.RawData{
-				"id":       llx.StringData(rec.IntegrationID),
-				"name":     llx.StringData(rec.Name),
-				"type":     llx.StringData(rec.Type),
-				"interval": llx.StringData(rec.Interval),
-			})
-			if err != nil {
-				return err
-			}
-			result = append(result, res)
-		}
-		return nil
+	iter := conn.Cf.ZeroTrust.Devices.Posture.Integrations.ListAutoPaging(context.TODO(), zero_trust.DevicePostureIntegrationListParams{
+		AccountID: cloudflare.F(c.AccountID),
 	})
-	if err != nil {
+	for iter.Next() {
+		rec := iter.Current()
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.one.devicePostureIntegration", map[string]*llx.RawData{
+			"id":       llx.StringData(rec.ID),
+			"name":     llx.StringData(rec.Name),
+			"type":     llx.StringData(string(rec.Type)),
+			"interval": llx.StringData(rec.Interval),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
 		return nil, err
 	}
 

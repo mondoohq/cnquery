@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "dc6472cc-f1ae-44a0-b795-6b8a0ce29f90",
+      "arch": "linux_amd64",
+      "version": "2024.1.0",
+      "run_at": "2024-01-15T10:05:00Z",
+      "conns": [
+        {
+          "id": "conn-1234",
+          "colo_name": "DFW",
+          "is_pending_reconnect": false,
+          "client_id": "dc6472cc-f1ae-44a0-b795-6b8a0ce29f90",
+          "client_version": "2024.1.0",
+          "opened_at": "2024-01-15T10:05:00Z",
+          "origin_ip": "198.51.100.1"
+        }
+      ]
+    }
+  ]
+}
