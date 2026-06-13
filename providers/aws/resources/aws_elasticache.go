@@ -91,16 +91,16 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 }
 
 type mqlAwsElasticacheInternal struct {
-	// rgKms holds one *rgKmsRegion per region, each resolved at most once.
-	// Keying per region (rather than a single mutex) keeps DescribeReplicationGroups
-	// calls for different regions running concurrently when kmsKey is queried.
+	// rgKms holds one *rgKmsRegion per region. Keying per region (rather than a
+	// single mutex) keeps DescribeReplicationGroups calls for different regions
+	// running concurrently when kmsKey is queried.
 	rgKms sync.Map
 }
 
 type rgKmsRegion struct {
-	once sync.Once
-	keys map[string]*string
-	err  error
+	mu      sync.Mutex
+	fetched bool
+	keys    map[string]*string
 }
 
 // kmsKeyIdForReplicationGroup resolves the KMS key ID for a replication group,
@@ -108,11 +108,15 @@ type rgKmsRegion struct {
 // the region is queried and caching the result. Queries that never access a
 // cluster's kmsKey pay nothing, while a scan that walks every cluster's kmsKey
 // makes at most one DescribeReplicationGroups call per region, concurrently
-// across regions.
+// across regions. A transient failure is not cached, so a later access retries.
 func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConnection, region, replicationGroupId string) (*string, error) {
 	v, _ := a.rgKms.LoadOrStore(region, &rgKmsRegion{})
 	entry := v.(*rgKmsRegion)
-	entry.once.Do(func() {
+
+	entry.mu.Lock()
+	defer entry.mu.Unlock()
+
+	if !entry.fetched {
 		keys := map[string]*string{}
 		svc := conn.Elasticache(region)
 		ctx := context.Background()
@@ -123,8 +127,8 @@ func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConn
 				if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 					break
 				}
-				entry.err = err
-				return
+				// Leave fetched=false so a later access retries the transient failure.
+				return nil, err
 			}
 			for _, rg := range page.ReplicationGroups {
 				if rg.ReplicationGroupId != nil {
@@ -133,9 +137,7 @@ func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConn
 			}
 		}
 		entry.keys = keys
-	})
-	if entry.err != nil {
-		return nil, entry.err
+		entry.fetched = true
 	}
 	return entry.keys[replicationGroupId], nil
 }
