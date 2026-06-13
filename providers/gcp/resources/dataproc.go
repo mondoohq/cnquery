@@ -69,6 +69,9 @@ func (g *mqlGcpProject) dataproc() (*mqlGcpProjectDataprocService, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !serviceEnabled {
+		log.Debug().Str("service", service_dataproc).Msg("gcp service is not enabled, skipping")
+	}
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

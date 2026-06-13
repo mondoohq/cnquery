@@ -206,6 +206,7 @@ var gcpAPIServiceRe = regexp.MustCompile(`([A-Z][A-Za-z0-9 &.,/-]*?) API has not
 // API-not-enabled error is logged on one line and swallowed so the rest
 // of discovery can continue; any other error is propagated unchanged.
 func runDiscoveryStep(target string, fn func() error) error {
+	log.Debug().Str("target", target).Msg("gcp.discovery> running discovery step")
 	err := fn()
 	if err == nil {
 		return nil
@@ -231,6 +232,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		Assets: []*inventory.Asset{},
 	}}
 	discoveryTargets := getDiscoveryTargets(conn.Conf)
+	log.Debug().Strs("targets", discoveryTargets).Msg("gcp.discovery> resolved discovery targets")
 
 	if conn.ResourceType() == connection.Organization {
 		res, err := NewResource(runtime, "gcp.organization", nil)
@@ -1680,6 +1682,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 		}
 	}
 
+	log.Debug().
+		Str("project", gcpProject.Id.Data).
+		Int("assets", len(assetList)).
+		Msg("gcp.discovery> project discovery complete")
 	return assetList, nil
 }
 

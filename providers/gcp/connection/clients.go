@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/pkg/errors"
@@ -86,18 +87,63 @@ func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
 func (c *GcpConnection) buildClient(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
+	var client *http.Client
+	var err error
 	// use service account from secret if one is provided
 	if c.opts.cred != nil {
-		data, err := credsServiceAccountData(c.opts.cred)
-		if err != nil {
-			return nil, err
+		data, dataErr := credsServiceAccountData(c.opts.cred)
+		if dataErr != nil {
+			return nil, dataErr
 		}
-		return serviceAccountAuth(ctx, c.opts.serviceAccountSubject, data, scope...)
+		client, err = serviceAccountAuth(ctx, c.opts.serviceAccountSubject, data, scope...)
+	} else {
+		// otherwise fallback to default google sdk authentication
+		log.Debug().Msg("fallback to default google sdk authentication")
+		client, err = defaultAuth(ctx, scope...)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	// otherwise fallback to default google sdk authentication
-	log.Debug().Msg("fallback to default google sdk authentication")
-	return defaultAuth(ctx, scope...)
+	// wrap the transport so every Google API call is traced at Debug level
+	client.Transport = newApiTraceTransport(client.Transport)
+	return client, nil
+}
+
+// apiTraceTransport is an http.RoundTripper that logs every Google API call
+// with its method, URL, status code, and duration at Debug level. It is the GCP
+// analog of the Azure provider's apiTracePolicy, so that `-v` output reveals
+// which APIs are being called (and against which projects/regions/zones) and
+// whether they are failing, rather than presenting GCP discovery as a black box.
+type apiTraceTransport struct {
+	base http.RoundTripper
+}
+
+func newApiTraceTransport(base http.RoundTripper) http.RoundTripper {
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	return &apiTraceTransport{base: base}
+}
+
+func (t *apiTraceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	start := time.Now()
+	resp, err := t.base.RoundTrip(req)
+	elapsed := time.Since(start)
+
+	status := 0
+	if resp != nil {
+		status = resp.StatusCode
+	}
+	log.Debug().
+		Str("method", req.Method).
+		Str("url", req.URL.String()).
+		Int("status", status).
+		Dur("duration", elapsed).
+		Err(err).
+		Msg("gcp api call")
+
+	return resp, err
 }
 
 // defaultAuth builds an HTTP client from Application Default Credentials.

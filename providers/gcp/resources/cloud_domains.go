@@ -36,6 +36,9 @@ func (g *mqlGcpProject) cloudDomains() (*mqlGcpProjectCloudDomainsService, error
 	if err != nil {
 		return nil, err
 	}
+	if !serviceEnabled {
+		log.Debug().Str("service", service_clouddomains).Msg("gcp service is not enabled, skipping")
+	}
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.cloudDomainsService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

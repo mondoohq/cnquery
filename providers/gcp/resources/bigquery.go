@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -68,6 +69,9 @@ func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
 	}
 	bqService := res.(*mqlGcpProjectBigqueryService)
 	bqService.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_bigquery).Msg("gcp service is not enabled, skipping")
+	}
 
 	return bqService, nil
 }

@@ -9,6 +9,7 @@ import (
 
 	binaryauthorization "cloud.google.com/go/binaryauthorization/apiv1"
 	"cloud.google.com/go/binaryauthorization/apiv1/binaryauthorizationpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -28,6 +29,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 		return nil, err
 	}
 	if !serviceEnabled {
+		log.Debug().Str("service", service_binaryauthorization).Msg("gcp service is not enabled, skipping")
 		g.BinaryAuthorization.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

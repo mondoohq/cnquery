@@ -230,6 +230,7 @@ func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
 		res = append(res, mqlRegion)
 	}
 
+	log.Debug().Str("project", projectId).Int("regions", len(res)).Msg("gcp.compute> listed regions")
 	return res, nil
 }
 
@@ -281,6 +282,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
 		return nil, err
 	}
 
+	log.Debug().Str("project", projectId).Int("zones", len(res)).Msg("gcp.compute> listed zones")
 	return res, nil
 }
 
@@ -924,6 +926,7 @@ func (g *mqlGcpProjectComputeService) instances() ([]any, error) {
 	}); err != nil {
 		return nil, err
 	}
+	log.Debug().Str("project", projectId).Int("instances", len(res)).Msg("gcp.compute> listed instances")
 	return res, nil
 }
 

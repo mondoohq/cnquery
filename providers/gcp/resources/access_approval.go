@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -39,6 +40,7 @@ func (g *mqlGcpProject) accessApprovalSettings() (*mqlGcpAccessApprovalSettings,
 		return nil, err
 	}
 	if !serviceEnabled {
+		log.Debug().Str("service", service_accessapproval).Msg("gcp service is not enabled, skipping")
 		g.AccessApprovalSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}

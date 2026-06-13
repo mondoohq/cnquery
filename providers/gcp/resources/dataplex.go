@@ -36,6 +36,9 @@ func (g *mqlGcpProject) dataplex() (*mqlGcpProjectDataplexService, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !serviceEnabled {
+		log.Debug().Str("service", service_dataplex).Msg("gcp service is not enabled, skipping")
+	}
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.dataplexService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
