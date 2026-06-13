@@ -575,6 +575,10 @@ microsoft.devicemanagement.roleScopeTag.displayName 13.0.12
 microsoft.devicemanagement.roleScopeTag.id 13.0.12
 microsoft.devicemanagement.roleScopeTag.isBuiltIn 13.0.12
 microsoft.devicemanagement.roleScopeTags 13.0.12
+microsoft.devicemanagement.settings 13.7.2
+microsoft.devicemanagement.settings.deviceComplianceCheckinThresholdDays 13.7.2
+microsoft.devicemanagement.settings.isScheduledActionEnabled 13.7.2
+microsoft.devicemanagement.settings.secureByDefault 13.7.2
 microsoft.devicemanagement.windowsAutopilotDeploymentProfile 13.0.12
 microsoft.devicemanagement.windowsAutopilotDeploymentProfile.assignedDeviceCount 13.0.12
 microsoft.devicemanagement.windowsAutopilotDeploymentProfile.createdDateTime 13.0.12

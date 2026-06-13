@@ -2513,6 +2513,25 @@ microsoft.devicemanagement {
   windowsQualityUpdateProfiles() []microsoft.devicemanagement.windowsQualityUpdateProfile
   // Group policy (administrative template) configurations
   groupPolicyConfigurations() []microsoft.devicemanagement.groupPolicyConfiguration
+  // Tenant-wide Intune device management settings
+  settings() microsoft.devicemanagement.settings
+}
+
+// Intune tenant-wide device management settings
+//
+// Examine the tenant-level Intune settings: whether devices are marked
+// noncompliant when no compliance policy targets them (`secureByDefault`),
+// how many days a device may go without checking in before it is treated as
+// noncompliant, and whether scheduled actions for noncompliant devices are
+// enabled. This is null when no Intune device management settings are
+// configured for the tenant.
+private microsoft.devicemanagement.settings @defaults("secureByDefault deviceComplianceCheckinThresholdDays isScheduledActionEnabled") {
+  // Whether devices are marked noncompliant when no compliance policy targets them
+  secureByDefault bool
+  // Number of days a device may go without checking in before it is treated as noncompliant
+  deviceComplianceCheckinThresholdDays int
+  // Whether scheduled actions for noncompliant devices are enabled tenant-wide
+  isScheduledActionEnabled bool
 }
 
 // Microsoft Intune group policy configuration

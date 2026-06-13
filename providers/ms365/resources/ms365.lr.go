@@ -130,6 +130,7 @@ const (
 	ResourceMicrosoftRolemanagementRoledefinition                                                        string = "microsoft.rolemanagement.roledefinition"
 	ResourceMicrosoftRolemanagementRoleassignment                                                        string = "microsoft.rolemanagement.roleassignment"
 	ResourceMicrosoftDevicemanagement                                                                    string = "microsoft.devicemanagement"
+	ResourceMicrosoftDevicemanagementSettings                                                            string = "microsoft.devicemanagement.settings"
 	ResourceMicrosoftDevicemanagementGroupPolicyConfiguration                                            string = "microsoft.devicemanagement.groupPolicyConfiguration"
 	ResourceMicrosoftDevicemanagementGroupPolicyDefinitionValue                                          string = "microsoft.devicemanagement.groupPolicyDefinitionValue"
 	ResourceMicrosoftDevicemanagementWindowsUpdateRing                                                   string = "microsoft.devicemanagement.windowsUpdateRing"
@@ -655,6 +656,10 @@ func init() {
 		"microsoft.devicemanagement": {
 			// to override args, implement: initMicrosoftDevicemanagement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagement,
+		},
+		"microsoft.devicemanagement.settings": {
+			Init:   initMicrosoftDevicemanagementSettings,
+			Create: createMicrosoftDevicemanagementSettings,
 		},
 		"microsoft.devicemanagement.groupPolicyConfiguration": {
 			// to override args, implement: initMicrosoftDevicemanagementGroupPolicyConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3448,6 +3453,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.groupPolicyConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetGroupPolicyConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.groupPolicyConfiguration")))
+	},
+	"microsoft.devicemanagement.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetSettings()).ToDataRes(types.Resource("microsoft.devicemanagement.settings"))
+	},
+	"microsoft.devicemanagement.settings.secureByDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementSettings).GetSecureByDefault()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.settings.deviceComplianceCheckinThresholdDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementSettings).GetDeviceComplianceCheckinThresholdDays()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.settings.isScheduledActionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementSettings).GetIsScheduledActionEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.devicemanagement.groupPolicyConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementGroupPolicyConfiguration).GetId()).ToDataRes(types.String)
@@ -9384,6 +9401,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.groupPolicyConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagement).GroupPolicyConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).Settings, ok = plugin.RawToTValue[*mqlMicrosoftDevicemanagementSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.settings.secureByDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementSettings).SecureByDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.settings.deviceComplianceCheckinThresholdDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementSettings).DeviceComplianceCheckinThresholdDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.settings.isScheduledActionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementSettings).IsScheduledActionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.groupPolicyConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22406,6 +22443,7 @@ type mqlMicrosoftDevicemanagement struct {
 	WindowsFeatureUpdateProfiles       plugin.TValue[[]any]
 	WindowsQualityUpdateProfiles       plugin.TValue[[]any]
 	GroupPolicyConfigurations          plugin.TValue[[]any]
+	Settings                           plugin.TValue[*mqlMicrosoftDevicemanagementSettings]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -22790,6 +22828,76 @@ func (c *mqlMicrosoftDevicemanagement) GetGroupPolicyConfigurations() *plugin.TV
 
 		return c.groupPolicyConfigurations()
 	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetSettings() *plugin.TValue[*mqlMicrosoftDevicemanagementSettings] {
+	return plugin.GetOrCompute[*mqlMicrosoftDevicemanagementSettings](&c.Settings, func() (*mqlMicrosoftDevicemanagementSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftDevicemanagementSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+// mqlMicrosoftDevicemanagementSettings for the microsoft.devicemanagement.settings resource
+type mqlMicrosoftDevicemanagementSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementSettingsInternal it will be used here
+	SecureByDefault                      plugin.TValue[bool]
+	DeviceComplianceCheckinThresholdDays plugin.TValue[int64]
+	IsScheduledActionEnabled             plugin.TValue[bool]
+}
+
+// createMicrosoftDevicemanagementSettings creates a new instance of this resource
+func createMicrosoftDevicemanagementSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementSettings) MqlName() string {
+	return "microsoft.devicemanagement.settings"
+}
+
+func (c *mqlMicrosoftDevicemanagementSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementSettings) GetSecureByDefault() *plugin.TValue[bool] {
+	return &c.SecureByDefault
+}
+
+func (c *mqlMicrosoftDevicemanagementSettings) GetDeviceComplianceCheckinThresholdDays() *plugin.TValue[int64] {
+	return &c.DeviceComplianceCheckinThresholdDays
+}
+
+func (c *mqlMicrosoftDevicemanagementSettings) GetIsScheduledActionEnabled() *plugin.TValue[bool] {
+	return &c.IsScheduledActionEnabled
 }
 
 // mqlMicrosoftDevicemanagementGroupPolicyConfiguration for the microsoft.devicemanagement.groupPolicyConfiguration resource
