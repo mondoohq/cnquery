@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/mqlc"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // Core Language constructs
@@ -793,6 +794,45 @@ func TestArray(t *testing.T) {
 			Code:        "[].flat + [9]",
 			Expectation: []any{int64(9)},
 		},
+		// Regression for #5803: concatenating an empty array must be a no-op and
+		// must not depend on operand order. An empty literal `[]` carries no
+		// element type, so the non-empty side has to supply both the values and
+		// the result type (otherwise its items render as unknown).
+		{
+			Code:        "[1,2,3] + []",
+			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[] + [1,2,3]",
+			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[1,2] + [] + [3]",
+			Expectation: []any{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[] + []",
+			Expectation: []any{},
+		},
+		{
+			Code:        `["a"] + ["b"] + ["c"] + []`,
+			Expectation: []any{"a", "b", "c"},
+		},
+		{
+			Code:        `[] + ["a"] + ["b"] + ["c"]`,
+			Expectation: []any{"a", "b", "c"},
+		},
+	})
+
+	// Regression for #5803: when the left operand is an empty (untyped) literal,
+	// the result must inherit the element type from the non-empty right operand.
+	// Otherwise the type stays `[]unset` and the reporter renders every element
+	// as unknown ("🤷") even though the values are correct.
+	t.Run("empty-array concat preserves element type", func(t *testing.T) {
+		res := x.TestQuery(t, `[] + ["a","b"]`)
+		require.NotEmpty(t, res)
+		assert.Equal(t, types.Array(types.String), res[0].Data.Type)
+		assert.Equal(t, []any{"a", "b"}, res[0].Data.Value)
 	})
 
 	t.Run("join()", func(t *testing.T) {

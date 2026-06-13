@@ -1132,33 +1132,23 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 		return nil, rref, err
 	}
 
-	if items.Value == nil {
-		return &RawData{Type: items.Type}, 0, nil
-	}
+	left, _ := bind.Value.([]any)
+	right, _ := items.Value.([]any)
 
-	v, _ := bind.Value.([]any)
-	if v == nil {
-		if items.Value == nil {
-			return &RawData{Type: bind.Type}, 0, nil
-		}
-		return nil, 0, errors.New("cannot add arrays to null")
-	}
-
-	list := items.Value.([]any)
-	if len(list) == 0 {
+	// Concatenating an empty array is a no-op, and the result must not depend on
+	// operand order. Returning the non-empty side as-is also lets it supply the
+	// element type: an empty literal `[]` carries no element type, so deriving
+	// the result type from it would render the other side's items as unknown.
+	if len(right) == 0 {
 		return bind, 0, nil
 	}
+	if len(left) == 0 {
+		return items, 0, nil
+	}
 
-	res := make([]any, len(v)+len(list))
-	var idx int
-	for i := range v {
-		res[idx] = v[i]
-		idx++
-	}
-	for i := range list {
-		res[idx] = list[i]
-		idx++
-	}
+	res := make([]any, len(left)+len(right))
+	copy(res, left)
+	copy(res[len(left):], right)
 
 	return &RawData{
 		Type:  bind.Type,
