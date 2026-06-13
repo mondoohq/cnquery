@@ -104,6 +104,10 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 		return nil, err
 	}
 
+	// The unfiltered subscription list also returns assignments inherited from the
+	// management groups that contain the subscription; their scope is a
+	// managementGroups path rather than the subscription. Every returned assignment
+	// is mapped, inherited ones included.
 	pas, err := getPolicyAssignments(ctx, armConn)
 	if err != nil {
 		return nil, err
@@ -111,19 +115,9 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 
 	res := []any{}
 	for _, assignment := range pas.PolicyAssignments {
-		parameters, err := convert.JsonToDict(assignment.Properties.Parameters)
+		assignmentData, err := policyAssignmentArgs(assignment)
 		if err != nil {
 			return nil, err
-		}
-
-		assignmentData := map[string]*llx.RawData{
-			"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
-			"assignmentId":    llx.StringData(assignment.ID),
-			"name":            llx.StringData(assignment.Properties.DisplayName),
-			"scope":           llx.StringData(assignment.Properties.Scope),
-			"description":     llx.StringData(assignment.Properties.Description),
-			"enforcementMode": llx.StringData(assignment.Properties.EnforcementMode),
-			"parameters":      llx.DictData(parameters),
 		}
 
 		mqlAssignment, err := CreateResource(a.MqlRuntime, "azure.subscription.policy.assignment", assignmentData)
@@ -133,6 +127,26 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 		res = append(res, mqlAssignment)
 	}
 	return res, nil
+}
+
+// policyAssignmentArgs maps a single policy assignment to the resource fields.
+// The assignment's scope is preserved verbatim, so subscription-scoped and
+// management-group-inherited assignments are surfaced identically.
+func policyAssignmentArgs(assignment PolicyAssignment) (map[string]*llx.RawData, error) {
+	parameters, err := convert.JsonToDict(assignment.Properties.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]*llx.RawData{
+		"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
+		"assignmentId":    llx.StringData(assignment.ID),
+		"name":            llx.StringData(assignment.Properties.DisplayName),
+		"scope":           llx.StringData(assignment.Properties.Scope),
+		"description":     llx.StringData(assignment.Properties.Description),
+		"enforcementMode": llx.StringData(assignment.Properties.EnforcementMode),
+		"parameters":      llx.DictData(parameters),
+	}, nil
 }
 
 func policyClientFactory(conn *connection.AzureConnection, subId string) (*armpolicy.ClientFactory, error) {
