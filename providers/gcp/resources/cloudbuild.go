@@ -11,6 +11,7 @@ import (
 
 	cloudbuild "cloud.google.com/go/cloudbuild/apiv1/v2"
 	"cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -573,6 +574,10 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 		PageSize:  1000,
 	})
 
+	// ListBuilds returns builds newest-first and is unbounded — active projects
+	// can accumulate tens of thousands of builds. Cap at the most recent
+	// maxCloudBuilds and warn when truncated rather than silently paging the
+	// entire history (which would make the query very slow).
 	var res []any
 	for {
 		b, err := it.Next()
@@ -591,10 +596,22 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlBuild)
+
+		if len(res) >= maxCloudBuilds {
+			log.Warn().
+				Str("project", projectId).
+				Int("limit", maxCloudBuilds).
+				Msg("reached Cloud Build history limit; returning only the most recent builds")
+			break
+		}
 	}
 
 	return res, nil
 }
+
+// maxCloudBuilds bounds how many of the most recent builds builds() returns, to
+// keep the query responsive on projects with very long build histories.
+const maxCloudBuilds = 2000
 
 func newCloudBuild(runtime *plugin.Runtime, projectId string, b *cloudbuildpb.Build) (*mqlGcpProjectCloudBuildServiceBuild, error) {
 	source, err := protoToDict(b.GetSource())

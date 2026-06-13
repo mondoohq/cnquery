@@ -110,7 +110,7 @@ func (g *mqlGcpProjectAssetService) resources() ([]any, error) {
 	var res []any
 	for {
 		r, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		if err == iterator.Done {
 			break
 		}
 		if err != nil {
@@ -182,7 +182,7 @@ func (g *mqlGcpProjectAssetService) iamPolicies() ([]any, error) {
 	var res []any
 	for {
 		r, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		if err == iterator.Done {
 			break
 		}
 		if err != nil {
