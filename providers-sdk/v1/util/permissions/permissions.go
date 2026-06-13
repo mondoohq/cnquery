@@ -850,6 +850,7 @@ var gcpServiceNameMap = map[string]string{
 	"batch":                "batch",
 	"dataplex":             "dataplex",
 	"orgpolicy":            "orgpolicy",
+	"asset":                "cloudasset",
 }
 
 func gcpServiceName(pkg string) string {
@@ -1097,6 +1098,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	},
 	"artifactregistry": {
 		"GetIamPolicy": "artifactregistry.repositories.getIamPolicy",
+	},
+	"cloudasset": {
+		// Cloud Asset Inventory search methods map to the assets resource with a
+		// search* verb, not the naive "allResources"/"allIamPolicies" derivation.
+		"SearchAllResources":   "cloudasset.assets.searchAllResources",
+		"SearchAllIamPolicies": "cloudasset.assets.searchAllIamPolicies",
 	},
 	"serviceusage": {
 		"GetService": "serviceusage.services.get",

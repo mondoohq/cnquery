@@ -545,3 +545,179 @@ func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) id() (string, er
 	}
 	return g.Id.Data, nil
 }
+
+func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(cloudbuild.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	// NOTE: Like ListBuildTriggers, the project-scoped ListBuilds returns only
+	// builds in the global region. Regional builds require enumerating
+	// locations individually, which is not yet implemented.
+	it := client.ListBuilds(ctx, &cloudbuildpb.ListBuildsRequest{
+		ProjectId: projectId,
+		PageSize:  1000,
+	})
+
+	var res []any
+	for {
+		b, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isGRPCSkippable(err) {
+				break
+			}
+			return nil, err
+		}
+
+		mqlBuild, err := newCloudBuild(g.MqlRuntime, projectId, b)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBuild)
+	}
+
+	return res, nil
+}
+
+func newCloudBuild(runtime *plugin.Runtime, projectId string, b *cloudbuildpb.Build) (*mqlGcpProjectCloudBuildServiceBuild, error) {
+	source, err := protoToDict(b.GetSource())
+	if err != nil {
+		return nil, err
+	}
+	sourceProvenance, err := protoToDict(b.GetSourceProvenance())
+	if err != nil {
+		return nil, err
+	}
+	results, err := protoToDict(b.GetResults())
+	if err != nil {
+		return nil, err
+	}
+
+	images := make([]any, len(b.Images))
+	for i, img := range b.Images {
+		images[i] = img
+	}
+	tags := make([]any, len(b.Tags))
+	for i, t := range b.Tags {
+		tags[i] = t
+	}
+	var substitutions map[string]any
+	if len(b.Substitutions) > 0 {
+		substitutions = make(map[string]any, len(b.Substitutions))
+		for k, v := range b.Substitutions {
+			substitutions[k] = v
+		}
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.build", map[string]*llx.RawData{
+		"projectId":        llx.StringData(projectId),
+		"buildId":          llx.StringData(b.Id),
+		"status":           llx.StringData(b.Status.String()),
+		"statusDetail":     llx.StringData(b.StatusDetail),
+		"source":           llx.DictData(source),
+		"sourceProvenance": llx.DictData(sourceProvenance),
+		"createTime":       llx.TimeDataPtr(timestampAsTimePtr(b.CreateTime)),
+		"startTime":        llx.TimeDataPtr(timestampAsTimePtr(b.StartTime)),
+		"finishTime":       llx.TimeDataPtr(timestampAsTimePtr(b.FinishTime)),
+		"images":           llx.ArrayData(images, types.String),
+		"results":          llx.DictData(results),
+		"buildTriggerId":   llx.StringData(b.BuildTriggerId),
+		"logUrl":           llx.StringData(b.LogUrl),
+		"logsBucket":       llx.StringData(b.LogsBucket),
+		"serviceAccount":   llx.StringData(b.ServiceAccount),
+		"substitutions":    llx.MapData(substitutions, types.String),
+		"tags":             llx.ArrayData(tags, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlBuild := res.(*mqlGcpProjectCloudBuildServiceBuild)
+	mqlBuild.cacheProjectId = projectId
+	mqlBuild.cacheBuildTriggerId = b.BuildTriggerId
+	mqlBuild.cacheServiceAccount = b.ServiceAccount
+	return mqlBuild, nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceBuild) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.BuildId.Error != nil {
+		return "", g.BuildId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/cloudBuildService.build/%s", g.ProjectId.Data, g.BuildId.Data), nil
+}
+
+type mqlGcpProjectCloudBuildServiceBuildInternal struct {
+	cacheProjectId      string
+	cacheBuildTriggerId string
+	cacheServiceAccount string
+}
+
+func (g *mqlGcpProjectCloudBuildServiceBuild) trigger() (*mqlGcpProjectCloudBuildServiceTrigger, error) {
+	triggerId := g.cacheBuildTriggerId
+	if triggerId == "" {
+		g.Trigger.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	svc, err := NewResource(g.MqlRuntime, "gcp.project.cloudBuildService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.cacheProjectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	triggers := svc.(*mqlGcpProjectCloudBuildService).GetTriggers()
+	if triggers.Error != nil {
+		return nil, triggers.Error
+	}
+	for _, t := range triggers.Data {
+		trigger := t.(*mqlGcpProjectCloudBuildServiceTrigger)
+		if trigger.TriggerId.Data == triggerId {
+			return trigger, nil
+		}
+	}
+
+	// Trigger not found (deleted, or a regional trigger absent from the
+	// global ListBuildTriggers result).
+	g.Trigger.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceBuild) iamServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	sa := g.cacheServiceAccount
+	if sa == "" {
+		g.IamServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// Extract email from resource name: projects/{project}/serviceAccounts/{email}
+	email := sa
+	if idx := strings.LastIndex(sa, "/"); idx != -1 {
+		email = sa[idx+1:]
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"email":     llx.StringData(email),
+		"projectId": llx.StringData(g.cacheProjectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}

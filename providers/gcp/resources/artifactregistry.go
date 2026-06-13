@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"slices"
@@ -287,6 +288,146 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) public() (bool, error) 
 		return false, bindings.Error
 	}
 	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProjectArtifactRegistryServiceRepository) packages() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	repoPath := g.ResourcePath.Data
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(artifactregistry.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListPackages(ctx, &artifactregistrypb.ListPackagesRequest{Parent: repoPath})
+
+	var res []any
+	for {
+		p, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		name := p.DisplayName
+		if name == "" {
+			name = parseResourceName(p.Name)
+		}
+
+		mqlPkg, err := CreateResource(g.MqlRuntime, "gcp.project.artifactRegistryService.repository.package", map[string]*llx.RawData{
+			"projectId":    llx.StringData(projectId),
+			"resourcePath": llx.StringData(p.Name),
+			"name":         llx.StringData(name),
+			"createTime":   llx.TimeDataPtr(timestampAsTimePtr(p.CreateTime)),
+			"updateTime":   llx.TimeDataPtr(timestampAsTimePtr(p.UpdateTime)),
+			"annotations":  llx.MapData(convert.MapToInterfaceMap(p.Annotations), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPkg)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) versions() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	pkgPath := g.ResourcePath.Data
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(artifactregistry.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	// FULL view is required to populate relatedTags and metadata.
+	it := client.ListVersions(ctx, &artifactregistrypb.ListVersionsRequest{
+		Parent: pkgPath,
+		View:   artifactregistrypb.VersionView_FULL,
+	})
+
+	var res []any
+	for {
+		v, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		relatedTags := make([]any, 0, len(v.RelatedTags))
+		for _, t := range v.RelatedTags {
+			relatedTags = append(relatedTags, parseResourceName(t.Name))
+		}
+
+		fingerprints := make([]any, 0, len(v.Fingerprints))
+		for _, h := range v.Fingerprints {
+			fingerprints = append(fingerprints, map[string]any{
+				"type":  h.Type.String(),
+				"value": hex.EncodeToString(h.Value),
+			})
+		}
+
+		var metadata any
+		if v.Metadata != nil {
+			metadata = v.Metadata.AsMap()
+		}
+
+		mqlVer, err := CreateResource(g.MqlRuntime, "gcp.project.artifactRegistryService.repository.package.version", map[string]*llx.RawData{
+			"projectId":    llx.StringData(projectId),
+			"resourcePath": llx.StringData(v.Name),
+			"name":         llx.StringData(parseResourceName(v.Name)),
+			"description":  llx.StringData(v.Description),
+			"createTime":   llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
+			"updateTime":   llx.TimeDataPtr(timestampAsTimePtr(v.UpdateTime)),
+			"relatedTags":  llx.ArrayData(relatedTags, types.String),
+			"fingerprints": llx.ArrayData(fingerprints, types.Dict),
+			"metadata":     llx.DictData(metadata),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVer)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
 // Sub-resource id() methods

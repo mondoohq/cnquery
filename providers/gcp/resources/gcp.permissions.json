@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.23.1",
-  "generated_at": "2026-06-12T14:27:21-07:00",
+  "generated_at": "2026-06-12T17:40:19-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -37,8 +37,10 @@
     "alloydb.instances.list",
     "alloydb.users.list",
     "apikeys.keys.list",
+    "artifactregistry.packages.list",
     "artifactregistry.repositories.getIamPolicy",
     "artifactregistry.repositories.list",
+    "artifactregistry.versions.list",
     "backupdr.backupPlans.list",
     "backupdr.backupVaults.list",
     "backupdr.bvdataSources.list",
@@ -58,6 +60,8 @@
     "certificatemanager.dnsauthorizations.get",
     "certificatemanager.dnsauthorizations.list",
     "certificatemanager.trustconfigs.list",
+    "cloudasset.assets.searchAllIamPolicies",
+    "cloudasset.assets.searchAllResources",
     "cloudbuild.builds.list",
     "cloudbuild.workerpools.list",
     "clouddeploy.deliveryPipelines.list",
@@ -465,6 +469,12 @@
       "source_file": "apikeys.go"
     },
     {
+      "permission": "artifactregistry.packages.list",
+      "service": "artifactregistry",
+      "action": "ListPackages",
+      "source_file": "artifactregistry.go"
+    },
+    {
       "permission": "artifactregistry.repositories.getIamPolicy",
       "service": "artifactregistry",
       "action": "GetIamPolicy",
@@ -474,6 +484,12 @@
       "permission": "artifactregistry.repositories.list",
       "service": "artifactregistry",
       "action": "ListRepositories",
+      "source_file": "artifactregistry.go"
+    },
+    {
+      "permission": "artifactregistry.versions.list",
+      "service": "artifactregistry",
+      "action": "ListVersions",
       "source_file": "artifactregistry.go"
     },
     {
@@ -591,9 +607,21 @@
       "source_file": "certificatemanager.go"
     },
     {
+      "permission": "cloudasset.assets.searchAllIamPolicies",
+      "service": "cloudasset",
+      "action": "SearchAllIamPolicies",
+      "source_file": "asset.go"
+    },
+    {
+      "permission": "cloudasset.assets.searchAllResources",
+      "service": "cloudasset",
+      "action": "SearchAllResources",
+      "source_file": "asset.go"
+    },
+    {
       "permission": "cloudbuild.builds.list",
       "service": "cloudbuild",
-      "action": "ListBuildTriggers",
+      "action": "ListBuilds",
       "source_file": "cloudbuild.go"
     },
     {

@@ -819,6 +819,8 @@ gcp.project @defaults("name number") {
   containerAnalysis() gcp.project.containerAnalysisService
   // GCP Cloud Build resources
   cloudBuild() gcp.project.cloudBuildService
+  // GCP Cloud Asset Inventory resources
+  assetInventory() gcp.project.assetService
   // GCP Identity-Aware Proxy resources
   iap() gcp.project.iapService
   // GCP Cloud Source Repositories resources
@@ -10714,6 +10716,62 @@ private gcp.project.artifactRegistryService.repository @defaults("name format lo
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the repository's IAM policy grants any role to allUsers or allAuthenticatedUsers, making its artifacts anonymously pullable
   public() bool
+  // Packages stored in the repository
+  packages() []gcp.project.artifactRegistryService.repository.package
+}
+
+// Google Cloud (GCP) Artifact Registry package
+//
+// Examine a package stored in an Artifact Registry repository, identified by
+// `name` (for example a container image name or a Maven/npm/PyPI package
+// name). Inspect `createTime` for when the package first appeared and
+// `updateTime` for the most recent push; iterate `versions` for the
+// individual published versions, their tags, and their content digests — the
+// per-artifact provenance of what was published and when.
+private gcp.project.artifactRegistryService.repository.package @defaults("name updateTime") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Package name (last path segment, e.g. the image or library name)
+  name string
+  // Time the package was created
+  createTime time
+  // Time the package was last updated
+  updateTime time
+  // Client-specified annotations
+  annotations map[string]string
+  // Published versions of the package
+  versions() []gcp.project.artifactRegistryService.repository.package.version
+}
+
+// Google Cloud (GCP) Artifact Registry package version
+//
+// Examine a published version of an Artifact Registry package, identified by
+// `name` (the version's digest or version string). Inspect `createTime` for
+// when the version was pushed; `relatedTags` for the human-readable tags
+// (such as `latest`) that point at it; `fingerprints` for the content hashes
+// that uniquely pin the bytes; and `metadata` for format-specific details
+// like the image manifest media type and build time.
+private gcp.project.artifactRegistryService.repository.package.version @defaults("name createTime") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Version name (last path segment, typically a digest or version string)
+  name string
+  // Optional description of the version
+  description string
+  // Time the version was created (pushed)
+  createTime time
+  // Time the version was last updated
+  updateTime time
+  // Tags that point at this version (e.g. latest, v1.2.3)
+  relatedTags []string
+  // Content hashes that uniquely identify the version's bytes, each with its type and value
+  fingerprints []dict
+  // Format-specific metadata (e.g. image manifest media type, image size, build time)
+  metadata dict
 }
 
 // Google Cloud (GCP) Artifact Registry repository vulnerability scanning configuration
@@ -13491,7 +13549,31 @@ private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
   // Affected locations and their fixes within the associated resource
   vulnerabilityPackageIssues []dict
   // Build details (if kind is BUILD)
-  build dict
+  //
+  // Deprecated in favor of the build* fields, which expose the provenance
+  // ID, creator, timestamps, logs URI, trigger ID, built artifacts, and
+  // commands as scalars. Retained for backward compatibility.
+  build @maturity("deprecated") dict
+  // Unique identifier of the build that produced the artifact (when kind is BUILD)
+  buildProvenanceId string
+  // Email address of the user who initiated the build (when kind is BUILD)
+  buildCreator string
+  // Time at which the build was created (when kind is BUILD)
+  buildCreateTime time
+  // Time at which build execution started (when kind is BUILD)
+  buildStartTime time
+  // Time at which build execution finished (when kind is BUILD)
+  buildEndTime time
+  // URI where the build logs were written (when kind is BUILD)
+  buildLogsUri string
+  // Identifier of the trigger that automatically started the build, empty if started manually (when kind is BUILD)
+  buildTriggerId string
+  // Version string of the builder at the time the build was executed (when kind is BUILD)
+  buildBuilderVersion string
+  // Artifacts produced by the build, each with its checksums and tags (when kind is BUILD)
+  buildArtifacts []dict
+  // Commands executed during the build, each with its name, arguments, and environment (when kind is BUILD)
+  buildCommands []dict
   // Image details (if kind is IMAGE)
   image dict
   // Package details (if kind is PACKAGE)
@@ -13501,7 +13583,16 @@ private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
   // Discovery details (if kind is DISCOVERY)
   discovery dict
   // Attestation details (if kind is ATTESTATION)
-  attestation dict
+  //
+  // Deprecated in favor of attestationSerializedPayload and
+  // attestationSignatures, which expose the signed payload and the
+  // signatures with their public key IDs as scalars. Retained for backward
+  // compatibility.
+  attestation @maturity("deprecated") dict
+  // Base64-encoded payload that the attestation signatures verify (when kind is ATTESTATION)
+  attestationSerializedPayload string
+  // Signatures over the attestation payload, each with its content and verifying public key ID (when kind is ATTESTATION)
+  attestationSignatures []dict
   // Creation time
   created time
   // Last update time
@@ -13557,6 +13648,8 @@ private gcp.project.cloudBuildService {
   triggers() []gcp.project.cloudBuildService.trigger
   // List of Cloud Build worker pools
   workerPools() []gcp.project.cloudBuildService.workerPool
+  // History of Cloud Build build executions
+  builds() []gcp.project.cloudBuildService.build
 }
 
 // Google Cloud (GCP) Cloud Build trigger
@@ -13751,6 +13844,153 @@ private gcp.project.cloudBuildService.workerPool.networkConfig @defaults("egress
   peeredNetworkIpRange string
   // Egress option (NO_PUBLIC_EGRESS, PUBLIC_EGRESS)
   egressOption string
+}
+
+// Google Cloud (GCP) Cloud Build build execution
+//
+// Examine a Cloud Build build execution — the record of what was built, when,
+// from which source, and with what result. Inspect `status` for the outcome
+// (SUCCESS, FAILURE, TIMEOUT, CANCELLED); `createTime`, `startTime`, and
+// `finishTime` for the build timeline; `serviceAccount` (and
+// `iamServiceAccount`) for the identity the build ran as; `buildTriggerId`
+// (and `trigger`) for the trigger that started it; `source` for the requested
+// source and `sourceProvenance` for the resolved source with per-file hashes
+// that pin exactly what was built; and `images` and `results` for the
+// artifacts the build produced.
+private gcp.project.cloudBuildService.build @defaults("buildId status createTime") {
+  // Project ID
+  projectId string
+  // Unique build ID
+  buildId string
+  // Build status (STATUS_UNKNOWN, PENDING, QUEUED, WORKING, SUCCESS, FAILURE, INTERNAL_ERROR, TIMEOUT, CANCELLED, EXPIRED)
+  status string
+  // Customer-readable message about the current build status
+  statusDetail string
+  // Requested source for the build (repo source, storage source, or connected repository)
+  source dict
+  // Resolved source provenance
+  //
+  // Holds the resolved repo or storage source and a per-file map of hashes
+  // (keyed by file path) that pin exactly which source bytes were built.
+  sourceProvenance dict
+  // Time at which the build request was created
+  createTime time
+  // Time at which build execution started
+  startTime time
+  // Time at which build execution finished
+  finishTime time
+  // Container images uploaded to the registry on successful build completion
+  images []string
+  // Build results
+  //
+  // Holds the built images with their digests, the build-step images, and the
+  // artifact manifest produced by the build.
+  results dict
+  // Identifier of the trigger that started the build, empty if started manually
+  buildTriggerId string
+  // Trigger that started the build (resolved from buildTriggerId)
+  trigger() gcp.project.cloudBuildService.trigger
+  // Public URL where the build logs can be viewed
+  logUrl string
+  // Cloud Storage bucket where build logs are written
+  logsBucket string
+  // Service account resource name used to run the build
+  //
+  // Deprecated in favor of `iamServiceAccount`, which resolves the identity to
+  // the service account resource (the resource name is its `name`).
+  serviceAccount @maturity("deprecated") string
+  // IAM service account the build runs as
+  iamServiceAccount() gcp.project.iamService.serviceAccount
+  // Variable substitutions applied to the build
+  substitutions map[string]string
+  // Tags for annotating and filtering builds
+  tags []string
+}
+
+// ============================================================
+// Cloud Asset Inventory
+// ============================================================
+
+// Google Cloud (GCP) Cloud Asset Inventory
+//
+// Use this resource as the entry point for Cloud Asset Inventory in the
+// project. It provides a unified, cross-service view of resource provenance:
+// `resources` enumerates every asset with its creation and last-update times,
+// location, labels, and parent; and `iamPolicies` enumerates the IAM policies
+// across the project, each linked to the resource it is attached to —
+// answering who was granted what, and where.
+private gcp.project.assetService {
+  // Project ID
+  projectId string
+  // Resource inventory across the project, with per-asset creation and update metadata
+  resources() []gcp.project.assetService.resource
+  // IAM policies across the project, each linked to the resource it is attached to
+  iamPolicies() []gcp.project.assetService.iamPolicy
+}
+
+// Google Cloud (GCP) Cloud Asset Inventory resource
+//
+// Examine a single asset as recorded by Cloud Asset Inventory, identified by
+// its full resource `name`. Inspect `createTime` for when the asset was
+// created and `updateTime` for its last change — the creation and
+// modification provenance that individual service APIs often omit — alongside
+// `assetType`, `location`, `state`, `labels`, and `parentFullResourceName` to
+// place the asset within its hierarchy.
+private gcp.project.assetService.resource @defaults("assetType displayName createTime") {
+  // Full resource name (e.g. //compute.googleapis.com/projects/p/zones/z/instances/i)
+  name string
+  // Asset type (e.g. compute.googleapis.com/Instance)
+  assetType string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Location (region or zone)
+  location string
+  // Project the asset belongs to (projects/{number})
+  project string
+  // Organization the asset belongs to (organizations/{number})
+  organization string
+  // Folders the asset belongs to (folders/{number})
+  folders []string
+  // Time the asset was created
+  createTime time
+  // Time the asset was last updated
+  updateTime time
+  // Resource state (e.g. ACTIVE, RUNNING, TERMINATED)
+  state string
+  // User-assigned labels
+  labels map[string]string
+  // Network tags
+  networkTags []string
+  // Full resource name of the asset's parent
+  parentFullResourceName string
+  // Additional service-specific searchable attributes
+  additionalAttributes dict
+}
+
+// Google Cloud (GCP) Cloud Asset Inventory IAM policy
+//
+// Examine an IAM policy as recorded by Cloud Asset Inventory, attached to the
+// resource named by `resource`. Inspect `bindings` for the role-to-member
+// grants and `project`, `folders`, and `organization` for where in the
+// hierarchy the policy lives — together these reconstruct who can access which
+// resource across the whole project, the access provenance that per-resource
+// IAM lookups only reveal one resource at a time. Selected by `resource`, the
+// full resource name the policy is attached to.
+private gcp.project.assetService.iamPolicy @defaults("resource assetType") {
+  // Full resource name the policy is attached to
+  resource string
+  // Asset type of the resource the policy is attached to
+  assetType string
+  // Project the resource belongs to (projects/{number})
+  project string
+  // Organization the resource belongs to (organizations/{number})
+  organization string
+  // Folders the resource belongs to (folders/{number})
+  folders []string
+  // IAM policy bindings attached to the resource
+  bindings []gcp.resourcemanager.binding
 }
 
 // ============================================================

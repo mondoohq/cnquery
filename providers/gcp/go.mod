@@ -10,6 +10,7 @@ require (
 	cloud.google.com/go/aiplatform v1.125.0
 	cloud.google.com/go/alloydb v1.26.0
 	cloud.google.com/go/artifactregistry v1.25.0
+	cloud.google.com/go/asset v1.27.0
 	cloud.google.com/go/backupdr v1.14.0
 	cloud.google.com/go/batch v1.19.0
 	cloud.google.com/go/bigquery v1.77.0
@@ -67,6 +68,7 @@ require (
 require (
 	cel.dev/expr v0.25.2 // indirect
 	cloud.google.com/go/grafeas v0.3.17 // indirect
+	cloud.google.com/go/osconfig v1.21.0 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.11.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.33.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0 // indirect

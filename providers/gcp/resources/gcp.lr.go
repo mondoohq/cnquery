@@ -329,6 +329,8 @@ const (
 	ResourceGcpProjectDataflowServiceJob                                               string = "gcp.project.dataflowService.job"
 	ResourceGcpProjectArtifactRegistryService                                          string = "gcp.project.artifactRegistryService"
 	ResourceGcpProjectArtifactRegistryServiceRepository                                string = "gcp.project.artifactRegistryService.repository"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryPackage                         string = "gcp.project.artifactRegistryService.repository.package"
+	ResourceGcpProjectArtifactRegistryServiceRepositoryPackageVersion                  string = "gcp.project.artifactRegistryService.repository.package.version"
 	ResourceGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig                  string = "gcp.project.artifactRegistryService.repository.vulnScanConfig"
 	ResourceGcpProjectArtifactRegistryServiceRepositoryCleanupPolicy                   string = "gcp.project.artifactRegistryService.repository.cleanupPolicy"
 	ResourceGcpProjectArtifactRegistryServiceRepositoryCleanupPolicyCondition          string = "gcp.project.artifactRegistryService.repository.cleanupPolicy.condition"
@@ -430,6 +432,10 @@ const (
 	ResourceGcpProjectCloudBuildServiceWorkerPool                                      string = "gcp.project.cloudBuildService.workerPool"
 	ResourceGcpProjectCloudBuildServiceWorkerPoolWorkerConfig                          string = "gcp.project.cloudBuildService.workerPool.workerConfig"
 	ResourceGcpProjectCloudBuildServiceWorkerPoolNetworkConfig                         string = "gcp.project.cloudBuildService.workerPool.networkConfig"
+	ResourceGcpProjectCloudBuildServiceBuild                                           string = "gcp.project.cloudBuildService.build"
+	ResourceGcpProjectAssetService                                                     string = "gcp.project.assetService"
+	ResourceGcpProjectAssetServiceResource                                             string = "gcp.project.assetService.resource"
+	ResourceGcpProjectAssetServiceIamPolicy                                            string = "gcp.project.assetService.iamPolicy"
 	ResourceGcpProjectIapService                                                       string = "gcp.project.iapService"
 	ResourceGcpProjectIapServiceBrand                                                  string = "gcp.project.iapService.brand"
 	ResourceGcpProjectIapServiceIdentityAwareProxyClient                               string = "gcp.project.iapService.identityAwareProxyClient"
@@ -1716,6 +1722,14 @@ func init() {
 			Init:   initGcpProjectArtifactRegistryServiceRepository,
 			Create: createGcpProjectArtifactRegistryServiceRepository,
 		},
+		"gcp.project.artifactRegistryService.repository.package": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryPackage,
+		},
+		"gcp.project.artifactRegistryService.repository.package.version": {
+			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryPackageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectArtifactRegistryServiceRepositoryPackageVersion,
+		},
 		"gcp.project.artifactRegistryService.repository.vulnScanConfig": {
 			// to override args, implement: initGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig,
@@ -2119,6 +2133,22 @@ func init() {
 		"gcp.project.cloudBuildService.workerPool.networkConfig": {
 			// to override args, implement: initGcpProjectCloudBuildServiceWorkerPoolNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectCloudBuildServiceWorkerPoolNetworkConfig,
+		},
+		"gcp.project.cloudBuildService.build": {
+			// to override args, implement: initGcpProjectCloudBuildServiceBuild(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceBuild,
+		},
+		"gcp.project.assetService": {
+			Init:   initGcpProjectAssetService,
+			Create: createGcpProjectAssetService,
+		},
+		"gcp.project.assetService.resource": {
+			// to override args, implement: initGcpProjectAssetServiceResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAssetServiceResource,
+		},
+		"gcp.project.assetService.iamPolicy": {
+			// to override args, implement: initGcpProjectAssetServiceIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAssetServiceIamPolicy,
 		},
 		"gcp.project.iapService": {
 			// to override args, implement: initGcpProjectIapService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3172,6 +3202,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudBuild": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetCloudBuild()).ToDataRes(types.Resource("gcp.project.cloudBuildService"))
+	},
+	"gcp.project.assetInventory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetAssetInventory()).ToDataRes(types.Resource("gcp.project.assetService"))
 	},
 	"gcp.project.iap": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetIap()).ToDataRes(types.Resource("gcp.project.iapService"))
@@ -13037,6 +13070,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.artifactRegistryService.repository.public": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetPublic()).ToDataRes(types.Bool)
 	},
+	"gcp.project.artifactRegistryService.repository.packages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepository).GetPackages()).ToDataRes(types.Array(types.Resource("gcp.project.artifactRegistryService.repository.package")))
+	},
+	"gcp.project.artifactRegistryService.repository.package.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.package.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.package.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.package.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).GetVersions()).ToDataRes(types.Array(types.Resource("gcp.project.artifactRegistryService.repository.package.version")))
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.relatedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetRelatedTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.fingerprints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetFingerprints()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).GetMetadata()).ToDataRes(types.Dict)
+	},
 	"gcp.project.artifactRegistryService.repository.vulnScanConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).GetId()).ToDataRes(types.String)
 	},
@@ -15728,6 +15812,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.containerAnalysisService.occurrence.build": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuild()).ToDataRes(types.Dict)
 	},
+	"gcp.project.containerAnalysisService.occurrence.buildProvenanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildProvenanceId()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCreator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildCreator()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildEndTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildLogsUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildLogsUri()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildTriggerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildTriggerId()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildBuilderVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildBuilderVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildArtifacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildArtifacts()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCommands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetBuildCommands()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.containerAnalysisService.occurrence.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetImage()).ToDataRes(types.Dict)
 	},
@@ -15742,6 +15856,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.containerAnalysisService.occurrence.attestation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetAttestation()).ToDataRes(types.Dict)
+	},
+	"gcp.project.containerAnalysisService.occurrence.attestationSerializedPayload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetAttestationSerializedPayload()).ToDataRes(types.String)
+	},
+	"gcp.project.containerAnalysisService.occurrence.attestationSignatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetAttestationSignatures()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.containerAnalysisService.occurrence.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetCreated()).ToDataRes(types.Time)
@@ -15787,6 +15907,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudBuildService.workerPools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildService).GetWorkerPools()).ToDataRes(types.Array(types.Resource("gcp.project.cloudBuildService.workerPool")))
+	},
+	"gcp.project.cloudBuildService.builds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildService).GetBuilds()).ToDataRes(types.Array(types.Resource("gcp.project.cloudBuildService.build")))
 	},
 	"gcp.project.cloudBuildService.trigger.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetProjectId()).ToDataRes(types.String)
@@ -15949,6 +16072,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudBuildService.workerPool.networkConfig.egressOption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetEgressOption()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.buildId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetBuildId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.statusDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetStatusDetail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetSource()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.build.sourceProvenance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetSourceProvenance()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.build.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.build.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.build.finishTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetFinishTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.build.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetImages()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.cloudBuildService.build.results": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetResults()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.build.buildTriggerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetBuildTriggerId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.trigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetTrigger()).ToDataRes(types.Resource("gcp.project.cloudBuildService.trigger"))
+	},
+	"gcp.project.cloudBuildService.build.logUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetLogUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.logsBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetLogsBucket()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.build.iamServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetIamServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.cloudBuildService.build.substitutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetSubstitutions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudBuildService.build.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceBuild).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.assetService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetService).GetResources()).ToDataRes(types.Array(types.Resource("gcp.project.assetService.resource")))
+	},
+	"gcp.project.assetService.iamPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetService).GetIamPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.assetService.iamPolicy")))
+	},
+	"gcp.project.assetService.resource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.assetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetAssetType()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetProject()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetOrganization()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.folders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetFolders()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.assetService.resource.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.assetService.resource.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.assetService.resource.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.assetService.resource.networkTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetNetworkTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.assetService.resource.parentFullResourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetParentFullResourceName()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.resource.additionalAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceResource).GetAdditionalAttributes()).ToDataRes(types.Dict)
+	},
+	"gcp.project.assetService.iamPolicy.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetResource()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.iamPolicy.assetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetAssetType()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.iamPolicy.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetProject()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.iamPolicy.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetOrganization()).ToDataRes(types.String)
+	},
+	"gcp.project.assetService.iamPolicy.folders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetFolders()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.assetService.iamPolicy.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAssetServiceIamPolicy).GetBindings()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
 	"gcp.project.iapService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIapService).GetProjectId()).ToDataRes(types.String)
@@ -17892,6 +18144,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudBuild": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).CloudBuild, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetInventory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).AssetInventory, ok = plugin.RawToTValue[*mqlGcpProjectAssetService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32210,6 +32466,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.artifactRegistryService.repository.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepository).Packages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackage).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.relatedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).RelatedTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.fingerprints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).Fingerprints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.artifactRegistryService.repository.package.version.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.artifactRegistryService.repository.vulnScanConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig).__id, ok = v.Value.(string)
 		return
@@ -36162,6 +36494,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Build, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.containerAnalysisService.occurrence.buildProvenanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildProvenanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCreator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildCreator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildLogsUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildLogsUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildTriggerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildTriggerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildBuilderVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildBuilderVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildArtifacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildArtifacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.buildCommands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).BuildCommands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.containerAnalysisService.occurrence.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Image, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -36180,6 +36552,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.containerAnalysisService.occurrence.attestation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Attestation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.attestationSerializedPayload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).AttestationSerializedPayload, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.containerAnalysisService.occurrence.attestationSignatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).AttestationSignatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.containerAnalysisService.occurrence.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36248,6 +36628,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudBuildService.workerPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudBuildService).WorkerPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.builds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildService).Builds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudBuildService.trigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36496,6 +36880,194 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudBuildService.workerPool.networkConfig.egressOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).EgressOption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.build.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.buildId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).BuildId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.statusDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).StatusDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.sourceProvenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).SourceProvenance, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.finishTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).FinishTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.results": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Results, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.buildTriggerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).BuildTriggerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.trigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Trigger, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceTrigger](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.logUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).LogUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.logsBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).LogsBucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.iamServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).IamServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.substitutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Substitutions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.build.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceBuild).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.assetService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetService).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetService).IamPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.assetService.resource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.assetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).AssetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.folders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Folders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.networkTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).NetworkTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.parentFullResourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).ParentFullResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.resource.additionalAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceResource).AdditionalAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).Resource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.assetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).AssetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.folders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).Folders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.assetService.iamPolicy.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAssetServiceIamPolicy).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iapService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40133,6 +40705,7 @@ type mqlGcpProject struct {
 	GkeBackup                plugin.TValue[*mqlGcpProjectGkeBackupService]
 	ContainerAnalysis        plugin.TValue[*mqlGcpProjectContainerAnalysisService]
 	CloudBuild               plugin.TValue[*mqlGcpProjectCloudBuildService]
+	AssetInventory           plugin.TValue[*mqlGcpProjectAssetService]
 	Iap                      plugin.TValue[*mqlGcpProjectIapService]
 	SourceRepositories       plugin.TValue[*mqlGcpProjectSourceRepositoriesService]
 	Memcache                 plugin.TValue[*mqlGcpProjectMemcacheService]
@@ -41099,6 +41672,22 @@ func (c *mqlGcpProject) GetCloudBuild() *plugin.TValue[*mqlGcpProjectCloudBuildS
 		}
 
 		return c.cloudBuild()
+	})
+}
+
+func (c *mqlGcpProject) GetAssetInventory() *plugin.TValue[*mqlGcpProjectAssetService] {
+	return plugin.GetOrCompute[*mqlGcpProjectAssetService](&c.AssetInventory, func() (*mqlGcpProjectAssetService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "assetInventory")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectAssetService), nil
+			}
+		}
+
+		return c.assetInventory()
 	})
 }
 
@@ -74114,6 +74703,7 @@ type mqlGcpProjectArtifactRegistryServiceRepository struct {
 	ModeConfig                  plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepositoryModeConfig]
 	IamPolicy                   plugin.TValue[[]any]
 	Public                      plugin.TValue[bool]
+	Packages                    plugin.TValue[[]any]
 }
 
 // createGcpProjectArtifactRegistryServiceRepository creates a new instance of this resource
@@ -74269,6 +74859,202 @@ func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetPublic() *plugin.TVa
 	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
 		return c.public()
 	})
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepository) GetPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Packages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.artifactRegistryService.repository", c.__id, "packages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.packages()
+	})
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryPackage for the gcp.project.artifactRegistryService.repository.package resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryPackageInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	ResourcePath plugin.TValue[string]
+	Name         plugin.TValue[string]
+	CreateTime   plugin.TValue[*time.Time]
+	UpdateTime   plugin.TValue[*time.Time]
+	Annotations  plugin.TValue[map[string]any]
+	Versions     plugin.TValue[[]any]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryPackage creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.package"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.artifactRegistryService.repository.package", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion for the gcp.project.artifactRegistryService.repository.package.version resource
+type mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersionInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	ResourcePath plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	CreateTime   plugin.TValue[*time.Time]
+	UpdateTime   plugin.TValue[*time.Time]
+	RelatedTags  plugin.TValue[[]any]
+	Fingerprints plugin.TValue[[]any]
+	Metadata     plugin.TValue[any]
+}
+
+// createGcpProjectArtifactRegistryServiceRepositoryPackageVersion creates a new instance of this resource
+func createGcpProjectArtifactRegistryServiceRepositoryPackageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.artifactRegistryService.repository.package.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) MqlName() string {
+	return "gcp.project.artifactRegistryService.repository.package.version"
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetRelatedTags() *plugin.TValue[[]any] {
+	return &c.RelatedTags
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetFingerprints() *plugin.TValue[[]any] {
+	return &c.Fingerprints
+}
+
+func (c *mqlGcpProjectArtifactRegistryServiceRepositoryPackageVersion) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
 }
 
 // mqlGcpProjectArtifactRegistryServiceRepositoryVulnScanConfig for the gcp.project.artifactRegistryService.repository.vulnScanConfig resource
@@ -84028,11 +84814,23 @@ type mqlGcpProjectContainerAnalysisServiceOccurrence struct {
 	VulnerabilityLongDescription   plugin.TValue[string]
 	VulnerabilityPackageIssues     plugin.TValue[[]any]
 	Build                          plugin.TValue[any]
+	BuildProvenanceId              plugin.TValue[string]
+	BuildCreator                   plugin.TValue[string]
+	BuildCreateTime                plugin.TValue[*time.Time]
+	BuildStartTime                 plugin.TValue[*time.Time]
+	BuildEndTime                   plugin.TValue[*time.Time]
+	BuildLogsUri                   plugin.TValue[string]
+	BuildTriggerId                 plugin.TValue[string]
+	BuildBuilderVersion            plugin.TValue[string]
+	BuildArtifacts                 plugin.TValue[[]any]
+	BuildCommands                  plugin.TValue[[]any]
 	Image                          plugin.TValue[any]
 	PackageInfo                    plugin.TValue[any]
 	Deployment                     plugin.TValue[any]
 	Discovery                      plugin.TValue[any]
 	Attestation                    plugin.TValue[any]
+	AttestationSerializedPayload   plugin.TValue[string]
+	AttestationSignatures          plugin.TValue[[]any]
 	Created                        plugin.TValue[*time.Time]
 	Updated                        plugin.TValue[*time.Time]
 }
@@ -84130,6 +84928,46 @@ func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuild() *plugin.TVa
 	return &c.Build
 }
 
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildProvenanceId() *plugin.TValue[string] {
+	return &c.BuildProvenanceId
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildCreator() *plugin.TValue[string] {
+	return &c.BuildCreator
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildCreateTime() *plugin.TValue[*time.Time] {
+	return &c.BuildCreateTime
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildStartTime() *plugin.TValue[*time.Time] {
+	return &c.BuildStartTime
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildEndTime() *plugin.TValue[*time.Time] {
+	return &c.BuildEndTime
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildLogsUri() *plugin.TValue[string] {
+	return &c.BuildLogsUri
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildTriggerId() *plugin.TValue[string] {
+	return &c.BuildTriggerId
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildBuilderVersion() *plugin.TValue[string] {
+	return &c.BuildBuilderVersion
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildArtifacts() *plugin.TValue[[]any] {
+	return &c.BuildArtifacts
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetBuildCommands() *plugin.TValue[[]any] {
+	return &c.BuildCommands
+}
+
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetImage() *plugin.TValue[any] {
 	return &c.Image
 }
@@ -84148,6 +84986,14 @@ func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetDiscovery() *plugin
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetAttestation() *plugin.TValue[any] {
 	return &c.Attestation
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetAttestationSerializedPayload() *plugin.TValue[string] {
+	return &c.AttestationSerializedPayload
+}
+
+func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetAttestationSignatures() *plugin.TValue[[]any] {
+	return &c.AttestationSignatures
 }
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetCreated() *plugin.TValue[*time.Time] {
@@ -84260,6 +85106,7 @@ type mqlGcpProjectCloudBuildService struct {
 	ProjectId   plugin.TValue[string]
 	Triggers    plugin.TValue[[]any]
 	WorkerPools plugin.TValue[[]any]
+	Builds      plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudBuildService creates a new instance of this resource
@@ -84332,6 +85179,22 @@ func (c *mqlGcpProjectCloudBuildService) GetWorkerPools() *plugin.TValue[[]any] 
 		}
 
 		return c.workerPools()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildService) GetBuilds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Builds, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService", c.__id, "builds")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.builds()
 	})
 }
 
@@ -85003,6 +85866,445 @@ func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetwork
 
 func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetEgressOption() *plugin.TValue[string] {
 	return &c.EgressOption
+}
+
+// mqlGcpProjectCloudBuildServiceBuild for the gcp.project.cloudBuildService.build resource
+type mqlGcpProjectCloudBuildServiceBuild struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudBuildServiceBuildInternal
+	ProjectId         plugin.TValue[string]
+	BuildId           plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusDetail      plugin.TValue[string]
+	Source            plugin.TValue[any]
+	SourceProvenance  plugin.TValue[any]
+	CreateTime        plugin.TValue[*time.Time]
+	StartTime         plugin.TValue[*time.Time]
+	FinishTime        plugin.TValue[*time.Time]
+	Images            plugin.TValue[[]any]
+	Results           plugin.TValue[any]
+	BuildTriggerId    plugin.TValue[string]
+	Trigger           plugin.TValue[*mqlGcpProjectCloudBuildServiceTrigger]
+	LogUrl            plugin.TValue[string]
+	LogsBucket        plugin.TValue[string]
+	ServiceAccount    plugin.TValue[string]
+	IamServiceAccount plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Substitutions     plugin.TValue[map[string]any]
+	Tags              plugin.TValue[[]any]
+}
+
+// createGcpProjectCloudBuildServiceBuild creates a new instance of this resource
+func createGcpProjectCloudBuildServiceBuild(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceBuild{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.build", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) MqlName() string {
+	return "gcp.project.cloudBuildService.build"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetBuildId() *plugin.TValue[string] {
+	return &c.BuildId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetStatusDetail() *plugin.TValue[string] {
+	return &c.StatusDetail
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetSource() *plugin.TValue[any] {
+	return &c.Source
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetSourceProvenance() *plugin.TValue[any] {
+	return &c.SourceProvenance
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetFinishTime() *plugin.TValue[*time.Time] {
+	return &c.FinishTime
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetImages() *plugin.TValue[[]any] {
+	return &c.Images
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetResults() *plugin.TValue[any] {
+	return &c.Results
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetBuildTriggerId() *plugin.TValue[string] {
+	return &c.BuildTriggerId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetTrigger() *plugin.TValue[*mqlGcpProjectCloudBuildServiceTrigger] {
+	return plugin.GetOrCompute[*mqlGcpProjectCloudBuildServiceTrigger](&c.Trigger, func() (*mqlGcpProjectCloudBuildServiceTrigger, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.build", c.__id, "trigger")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectCloudBuildServiceTrigger), nil
+			}
+		}
+
+		return c.trigger()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetLogUrl() *plugin.TValue[string] {
+	return &c.LogUrl
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetLogsBucket() *plugin.TValue[string] {
+	return &c.LogsBucket
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetIamServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.IamServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.build", c.__id, "iamServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.iamServiceAccount()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetSubstitutions() *plugin.TValue[map[string]any] {
+	return &c.Substitutions
+}
+
+func (c *mqlGcpProjectCloudBuildServiceBuild) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+// mqlGcpProjectAssetService for the gcp.project.assetService resource
+type mqlGcpProjectAssetService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectAssetServiceInternal
+	ProjectId   plugin.TValue[string]
+	Resources   plugin.TValue[[]any]
+	IamPolicies plugin.TValue[[]any]
+}
+
+// createGcpProjectAssetService creates a new instance of this resource
+func createGcpProjectAssetService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAssetService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.assetService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAssetService) MqlName() string {
+	return "gcp.project.assetService"
+}
+
+func (c *mqlGcpProjectAssetService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAssetService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAssetService) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.assetService", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+func (c *mqlGcpProjectAssetService) GetIamPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.assetService", c.__id, "iamPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicies()
+	})
+}
+
+// mqlGcpProjectAssetServiceResource for the gcp.project.assetService.resource resource
+type mqlGcpProjectAssetServiceResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAssetServiceResourceInternal it will be used here
+	Name                   plugin.TValue[string]
+	AssetType              plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Project                plugin.TValue[string]
+	Organization           plugin.TValue[string]
+	Folders                plugin.TValue[[]any]
+	CreateTime             plugin.TValue[*time.Time]
+	UpdateTime             plugin.TValue[*time.Time]
+	State                  plugin.TValue[string]
+	Labels                 plugin.TValue[map[string]any]
+	NetworkTags            plugin.TValue[[]any]
+	ParentFullResourceName plugin.TValue[string]
+	AdditionalAttributes   plugin.TValue[any]
+}
+
+// createGcpProjectAssetServiceResource creates a new instance of this resource
+func createGcpProjectAssetServiceResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAssetServiceResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.assetService.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAssetServiceResource) MqlName() string {
+	return "gcp.project.assetService.resource"
+}
+
+func (c *mqlGcpProjectAssetServiceResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetAssetType() *plugin.TValue[string] {
+	return &c.AssetType
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetProject() *plugin.TValue[string] {
+	return &c.Project
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetFolders() *plugin.TValue[[]any] {
+	return &c.Folders
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetNetworkTags() *plugin.TValue[[]any] {
+	return &c.NetworkTags
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetParentFullResourceName() *plugin.TValue[string] {
+	return &c.ParentFullResourceName
+}
+
+func (c *mqlGcpProjectAssetServiceResource) GetAdditionalAttributes() *plugin.TValue[any] {
+	return &c.AdditionalAttributes
+}
+
+// mqlGcpProjectAssetServiceIamPolicy for the gcp.project.assetService.iamPolicy resource
+type mqlGcpProjectAssetServiceIamPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAssetServiceIamPolicyInternal it will be used here
+	Resource     plugin.TValue[string]
+	AssetType    plugin.TValue[string]
+	Project      plugin.TValue[string]
+	Organization plugin.TValue[string]
+	Folders      plugin.TValue[[]any]
+	Bindings     plugin.TValue[[]any]
+}
+
+// createGcpProjectAssetServiceIamPolicy creates a new instance of this resource
+func createGcpProjectAssetServiceIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAssetServiceIamPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.assetService.iamPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) MqlName() string {
+	return "gcp.project.assetService.iamPolicy"
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetResource() *plugin.TValue[string] {
+	return &c.Resource
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetAssetType() *plugin.TValue[string] {
+	return &c.AssetType
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetProject() *plugin.TValue[string] {
+	return &c.Project
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetOrganization() *plugin.TValue[string] {
+	return &c.Organization
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetFolders() *plugin.TValue[[]any] {
+	return &c.Folders
+}
+
+func (c *mqlGcpProjectAssetServiceIamPolicy) GetBindings() *plugin.TValue[[]any] {
+	return &c.Bindings
 }
 
 // mqlGcpProjectIapService for the gcp.project.iapService resource

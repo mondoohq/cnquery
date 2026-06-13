@@ -5,8 +5,10 @@ package resources
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"time"
 
 	containeranalysis "cloud.google.com/go/containeranalysis/apiv1"
 	"github.com/rs/zerolog/log"
@@ -272,6 +274,54 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			return nil, err
 		}
 
+		// Flatten build provenance into scalar fields for direct querying
+		// (e.g. occurrences.where(kind == "BUILD").buildCreator).
+		var (
+			buildProvenanceID, buildCreator             string
+			buildLogsURI, buildTriggerID, buildBuilderV string
+			buildCreateTime, buildStartTime, buildEnd   *time.Time
+			buildArtifacts, buildCommands               []any
+		)
+		if b := occ.GetBuild(); b != nil && b.Provenance != nil {
+			p := b.Provenance
+			buildProvenanceID = p.Id
+			buildCreator = p.Creator
+			buildLogsURI = p.LogsUri
+			buildTriggerID = p.TriggerId
+			buildBuilderV = p.BuilderVersion
+			buildCreateTime = timestampAsTimePtr(p.CreateTime)
+			buildStartTime = timestampAsTimePtr(p.StartTime)
+			buildEnd = timestampAsTimePtr(p.EndTime)
+			for _, a := range p.BuiltArtifacts {
+				d, err := protoToDict(a)
+				if err != nil {
+					return nil, err
+				}
+				buildArtifacts = append(buildArtifacts, d)
+			}
+			for _, c := range p.Commands {
+				d, err := protoToDict(c)
+				if err != nil {
+					return nil, err
+				}
+				buildCommands = append(buildCommands, d)
+			}
+		}
+
+		// Flatten attestation signatures so audits can inspect the signing
+		// public key IDs without decoding the raw dict.
+		var attestationSerializedPayload string
+		var attestationSignatures []any
+		if at := occ.GetAttestation(); at != nil {
+			attestationSerializedPayload = base64.StdEncoding.EncodeToString(at.SerializedPayload)
+			for _, s := range at.Signatures {
+				attestationSignatures = append(attestationSignatures, map[string]any{
+					"signature":   base64.StdEncoding.EncodeToString(s.Signature),
+					"publicKeyId": s.PublicKeyId,
+				})
+			}
+		}
+
 		mqlOcc, err := CreateResource(g.MqlRuntime, "gcp.project.containerAnalysisService.occurrence", map[string]*llx.RawData{
 			"name":                           llx.StringData(occ.Name),
 			"resourceUri":                    llx.StringData(occ.ResourceUri),
@@ -287,11 +337,23 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			"vulnerabilityLongDescription":   llx.StringData(vulnLongDescription),
 			"vulnerabilityPackageIssues":     llx.ArrayData(vulnPackageIssues, types.Dict),
 			"build":                          llx.DictData(build),
+			"buildProvenanceId":              llx.StringData(buildProvenanceID),
+			"buildCreator":                   llx.StringData(buildCreator),
+			"buildCreateTime":                llx.TimeDataPtr(buildCreateTime),
+			"buildStartTime":                 llx.TimeDataPtr(buildStartTime),
+			"buildEndTime":                   llx.TimeDataPtr(buildEnd),
+			"buildLogsUri":                   llx.StringData(buildLogsURI),
+			"buildTriggerId":                 llx.StringData(buildTriggerID),
+			"buildBuilderVersion":            llx.StringData(buildBuilderV),
+			"buildArtifacts":                 llx.ArrayData(buildArtifacts, types.Dict),
+			"buildCommands":                  llx.ArrayData(buildCommands, types.Dict),
 			"image":                          llx.DictData(image),
 			"packageInfo":                    llx.DictData(packageInfo),
 			"deployment":                     llx.DictData(deployment),
 			"discovery":                      llx.DictData(discovery),
 			"attestation":                    llx.DictData(attestation),
+			"attestationSerializedPayload":   llx.StringData(attestationSerializedPayload),
+			"attestationSignatures":          llx.ArrayData(attestationSignatures, types.Dict),
 			"created":                        llx.TimeDataPtr(timestampAsTimePtr(occ.CreateTime)),
 			"updated":                        llx.TimeDataPtr(timestampAsTimePtr(occ.UpdateTime)),
 		})
