@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/terraform/connection"
 )
 
 func blockWithLabels(labels ...string) *mqlTerraformBlock {
@@ -55,6 +56,47 @@ func TestBlockResourceTypeAndName(t *testing.T) {
 	rn, err = none.resourceName()
 	require.NoError(t, err)
 	assert.Equal(t, "", rn)
+}
+
+// TestHclResources_NoParser_DoNotPanic is a regression test for
+// https://github.com/mondoohq/mql/issues/2970: the terraform.files,
+// terraform.file.blocks and terraform.module.block resources used to
+// dereference a nil *hclparse.Parser and crash the provider on plan and
+// state assets (which have no HCL parser). They must now return empty
+// results instead of panicking.
+func TestHclResources_NoParser_DoNotPanic(t *testing.T) {
+	// A zero-value Connection mirrors what NewPlanConnection / NewStateConnection
+	// produce: no HCL parser is set, so Parser() returns nil.
+	runtime := &plugin.Runtime{Connection: &connection.Connection{}}
+
+	t.Run("terraform.files", func(t *testing.T) {
+		tf := &mqlTerraform{}
+		tf.MqlRuntime = runtime
+		files, err := tf.files()
+		require.NoError(t, err)
+		assert.Empty(t, files)
+	})
+
+	t.Run("terraform.file.blocks", func(t *testing.T) {
+		file := &mqlTerraformFile{}
+		file.MqlRuntime = runtime
+		file.Path = plugin.TValue[string]{Data: "main.tf", State: plugin.StateIsSet}
+		blocks, err := file.blocks()
+		require.NoError(t, err)
+		assert.Empty(t, blocks)
+	})
+
+	t.Run("terraform.module.block", func(t *testing.T) {
+		module := &mqlTerraformModule{}
+		module.MqlRuntime = runtime
+		module.Key = plugin.TValue[string]{Data: "vpc", State: plugin.StateIsSet}
+		block, err := module.block()
+		require.NoError(t, err)
+		assert.Nil(t, block)
+		// The accessor must mark the field resolved-and-null so the runtime
+		// does not re-fetch indefinitely.
+		assert.True(t, module.Block.State&plugin.StateIsNull != 0)
+	})
 }
 
 // parseAttrs parses an HCL snippet and returns the top-level attributes.

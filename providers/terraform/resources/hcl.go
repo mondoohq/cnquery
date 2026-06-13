@@ -37,8 +37,14 @@ type mqlTerraformInternal struct {
 func (t *mqlTerraform) files() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
+	// plan and state assets have no HCL parser; there are no files to list.
+	parser := conn.Parser()
+	if parser == nil {
+		return []any{}, nil
+	}
+
 	var mqlTerraformFiles []any
-	files := conn.Parser().Files()
+	files := parser.Files()
 	for path := range files {
 		mqlTerraformFile, err := CreateResource(t.MqlRuntime, "terraform.file", map[string]*llx.RawData{
 			"path": llx.StringData(path),
@@ -882,7 +888,13 @@ func (t *mqlTerraformFile) blocks() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	p := t.Path.Data
 
-	files := conn.Parser().Files()
+	// plan and state assets have no HCL parser; there are no blocks to list.
+	parser := conn.Parser()
+	if parser == nil {
+		return []any{}, nil
+	}
+
+	files := parser.Files()
 	file := files[p]
 	return listHclBlocks(t.MqlRuntime, file.Body, file)
 }
@@ -897,7 +909,15 @@ func (t *mqlTerraformModule) id() (string, error) {
 func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 	key := t.Key.Data
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+
+	// plan and state assets have no HCL parser; there is no backing block.
+	parser := conn.Parser()
+	if parser == nil {
+		t.Block.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	files := parser.Files()
 
 	var mqlHclBlock *mqlTerraformBlock
 	for k := range files {
