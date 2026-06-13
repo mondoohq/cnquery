@@ -31,7 +31,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 	}
 	m, err := packages.ParseMacOSPackages(mock, pf, c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(m), "detected the right amount of packages")
+	assert.Equal(t, 5, len(m), "detected the right amount of packages")
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
@@ -53,4 +53,16 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, packages.MacosPkgFormat, m[2].Format, "pkg format detected")
 	assert.Equal(t, "pkg:macos/macos/Firefox@128.12.0?arch=x86_64&remoting-name=firefox-esr", m[2].PUrl)
 	assert.Equal(t, []packages.FileRecord{{Path: "/Applications/Firefox.app"}}, m[2].Files)
+
+	// system_profiler only surfaces CFBundleShortVersionString; when that is
+	// absent (e.g. a PWA that ships only a CFBundleVersion) we recover the
+	// version from the bundle's Info.plist.
+	assert.Equal(t, "Microsoft Teams (PWA)", m[3].Name, "pkg name detected")
+	assert.Equal(t, "7778.181", m[3].Version, "pkg version recovered from Info.plist")
+	assert.Equal(t, "pkg:macos/macos/Microsoft%20Teams%20%28PWA%29@7778.181?arch=x86_64", m[3].PUrl)
+
+	// A bare ".app" directory with no Info.plist (a system daemon) genuinely
+	// has no version anywhere, so the version stays empty.
+	assert.Equal(t, "liquiddetectiond", m[4].Name, "pkg name detected")
+	assert.Equal(t, "", m[4].Version, "no version available for a bare .app daemon")
 }

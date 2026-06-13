@@ -91,11 +91,50 @@ stdout = """<?xml version="1.0" encoding="UTF-8"?>
 				<key>version</key>
 				<string>128.12.0</string>
 			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Microsoft Teams (PWA)</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2025-07-02T08:20:57Z</date>
+				<key>obtained_from</key>
+				<string>identified_developer</string>
+				<key>path</key>
+				<string>/Applications/Microsoft Teams (PWA).app</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>liquiddetectiond</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/System/Library/CoreServices/liquiddetectiond.app</string>
+			</dict>
 		</array>
 		<key>_parentDataType</key>
 		<string>SPSoftwareDataType</string>
 	</dict>
 </array>
+</plist>
+"""
+
+[files."/Applications/Microsoft Teams (PWA).app/Contents/Info.plist"]
+content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.microsoft.teams2.pwa</string>
+	<key>CFBundleName</key>
+	<string>Microsoft Teams (PWA)</string>
+	<key>CFBundleVersion</key>
+	<string>7778.181</string>
+</dict>
 </plist>
 """
 

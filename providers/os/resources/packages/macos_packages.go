@@ -32,6 +32,13 @@ type sysProfiler struct {
 	Items []sysProfilerItem `plist:"_items"`
 }
 
+// infoPlist holds the version keys we care about from an app bundle's
+// Contents/Info.plist.
+type infoPlist struct {
+	ShortVersion  string `plist:"CFBundleShortVersionString"`
+	BundleVersion string `plist:"CFBundleVersion"`
+}
+
 // parse macos system version property list
 func ParseMacOSPackages(conn shared.Connection, platform *inventory.Platform, input io.Reader) ([]Package, error) {
 	var r io.ReadSeeker
@@ -61,13 +68,23 @@ func ParseMacOSPackages(conn shared.Connection, platform *inventory.Platform, in
 	for i, entry := range data[0].Items {
 		// We need a special handling for Firefox to determine ESR installations
 		purlQualifiers := getPurlQualifiers(conn, entry)
+
+		// system_profiler only surfaces CFBundleShortVersionString as the
+		// version. Some bundles (e.g. PWAs) ship a version only in
+		// CFBundleVersion, so fall back to the bundle's Info.plist when
+		// system_profiler reports no version.
+		version := entry.Version
+		if version == "" {
+			version = bundleVersionFromInfoPlist(conn, entry.Path)
+		}
+
 		pkgs[i].Name = entry.Name
-		pkgs[i].Version = entry.Version
+		pkgs[i].Version = version
 		pkgs[i].Format = MacosPkgFormat
 		pkgs[i].FilesAvailable = PkgFilesIncluded
 		pkgs[i].Arch = platform.Arch
 		pkgs[i].PUrl = purl.NewPackageURL(
-			platform, purl.TypeMacos, entry.Name, entry.Version, purl.WithQualifiers(purlQualifiers),
+			platform, purl.TypeMacos, entry.Name, version, purl.WithQualifiers(purlQualifiers),
 		).String()
 		if entry.Path != "" {
 			pkgs[i].Files = []FileRecord{
@@ -111,6 +128,42 @@ func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {
 func (mpm *MacOSPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	// nothing extra to be done here since the list is already included in the package list
 	return nil, nil
+}
+
+// bundleVersionFromInfoPlist recovers an app's version from its
+// Contents/Info.plist when system_profiler did not report one. It prefers
+// CFBundleShortVersionString (the user-facing version) and falls back to
+// CFBundleVersion (the build version). Returns an empty string when no bundle
+// Info.plist exists (e.g. bare ".app" daemons) or it carries no version.
+func bundleVersionFromInfoPlist(conn shared.Connection, path string) string {
+	if path == "" {
+		return ""
+	}
+
+	infoPath := filepath.Join(path, "Contents", "Info.plist")
+	f, err := conn.FileSystem().Open(infoPath)
+	if err != nil {
+		log.Debug().Err(err).Str("path", infoPath).Msg("could not open Info.plist")
+		return ""
+	}
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Debug().Err(err).Str("path", infoPath).Msg("could not read Info.plist")
+		return ""
+	}
+
+	var info infoPlist
+	if _, err := plist.Unmarshal(content, &info); err != nil {
+		log.Debug().Err(err).Str("path", infoPath).Msg("could not parse Info.plist")
+		return ""
+	}
+
+	if info.ShortVersion != "" {
+		return info.ShortVersion
+	}
+	return info.BundleVersion
 }
 
 func getPurlQualifiers(conn shared.Connection, entry sysProfilerItem) map[string]string {
