@@ -166,3 +166,11 @@ func containerReferencesConfigMap(c corev1.Container, cmName string) bool {
 	}
 	return false
 }
+
+func (k *mqlK8sConfigmap) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sConfigmap) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

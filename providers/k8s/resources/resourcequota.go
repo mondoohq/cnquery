@@ -101,3 +101,11 @@ func (k *mqlK8sResourcequota) scopes() ([]any, error) {
 func (k *mqlK8sResourcequota) scopeSelector() (map[string]any, error) {
 	return convert.JsonToDict(k.obj.Spec.ScopeSelector)
 }
+
+func (k *mqlK8sResourcequota) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sResourcequota) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

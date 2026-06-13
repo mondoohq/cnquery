@@ -89,3 +89,11 @@ func (k *mqlK8sCertificatesigningrequest) labels() (map[string]any, error) {
 func initK8sCertificatesigningrequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initResource[*mqlK8sCertificatesigningrequest](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetCertificateSigningRequests() })
 }
+
+func (k *mqlK8sCertificatesigningrequest) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sCertificatesigningrequest) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

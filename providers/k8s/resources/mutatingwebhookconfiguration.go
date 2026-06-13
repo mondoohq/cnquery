@@ -70,3 +70,11 @@ func initK8sAdmissionMutatingwebhookconfiguration(runtime *plugin.Runtime, args 
 		return k.GetMutatingWebhookConfigurations()
 	})
 }
+
+func (k *mqlK8sAdmissionMutatingwebhookconfiguration) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sAdmissionMutatingwebhookconfiguration) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

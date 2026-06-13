@@ -84,3 +84,11 @@ func (k *mqlK8sCustomresource) annotations() (map[string]any, error) {
 func (k *mqlK8sCustomresource) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sCustomresource) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sCustomresource) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

@@ -164,3 +164,11 @@ func resolveServiceAccountSubjects(runtime *plugin.Runtime, subjects []rbacv1.Su
 	}
 	return out, nil
 }
+
+func (k *mqlK8sRbacRolebinding) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sRbacRolebinding) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

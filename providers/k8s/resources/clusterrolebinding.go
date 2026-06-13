@@ -108,3 +108,11 @@ func (k *mqlK8sRbacClusterrolebinding) clusterRole() (*mqlK8sRbacClusterrole, er
 	}
 	return r.(*mqlK8sRbacClusterrole), nil
 }
+
+func (k *mqlK8sRbacClusterrolebinding) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sRbacClusterrolebinding) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

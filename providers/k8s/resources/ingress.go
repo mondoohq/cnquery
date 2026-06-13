@@ -385,3 +385,11 @@ func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime
 
 	return tlsData, nil
 }
+
+func (k *mqlK8sIngress) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sIngress) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

@@ -341,3 +341,11 @@ func (k *mqlK8sJob) conditions() ([]any, error) {
 	}
 	return convert.JsonToDictSlice(j.Status.Conditions)
 }
+
+func (k *mqlK8sJob) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sJob) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

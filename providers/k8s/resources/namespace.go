@@ -164,3 +164,11 @@ func (k *mqlK8sNamespace) roles() ([]any, error) {
 func (k *mqlK8sNamespace) rolebindings() ([]any, error) {
 	return filterByNamespace[*mqlK8sRbacRolebinding](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetRolebindings() })
 }
+
+func (k *mqlK8sNamespace) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sNamespace) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

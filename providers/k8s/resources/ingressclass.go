@@ -71,3 +71,11 @@ func (k *mqlK8sIngressclass) labels() (map[string]any, error) {
 func initK8sIngressclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initResource[*mqlK8sIngressclass](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetIngressClasses() })
 }
+
+func (k *mqlK8sIngressclass) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sIngressclass) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

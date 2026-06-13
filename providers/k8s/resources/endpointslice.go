@@ -96,3 +96,11 @@ func (k *mqlK8sEndpointslice) service() (*mqlK8sService, error) {
 	}
 	return r.(*mqlK8sService), nil
 }
+
+func (k *mqlK8sEndpointslice) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sEndpointslice) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

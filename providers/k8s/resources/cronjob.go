@@ -295,3 +295,11 @@ func (k *mqlK8sCronjob) jobs() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (k *mqlK8sCronjob) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sCronjob) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

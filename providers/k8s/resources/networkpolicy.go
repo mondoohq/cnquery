@@ -97,3 +97,11 @@ func (k *mqlK8sNetworkpolicy) ingress() ([]any, error) {
 func (k *mqlK8sNetworkpolicy) egress() ([]any, error) {
 	return convert.JsonToDictSlice(k.obj.Spec.Egress)
 }
+
+func (k *mqlK8sNetworkpolicy) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sNetworkpolicy) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

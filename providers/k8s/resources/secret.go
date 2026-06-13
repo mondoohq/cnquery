@@ -181,3 +181,11 @@ func containerReferencesSecret(c corev1.Container, secretName string) bool {
 	}
 	return false
 }
+
+func (k *mqlK8sSecret) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sSecret) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

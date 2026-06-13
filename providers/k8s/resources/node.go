@@ -245,3 +245,11 @@ func (k *mqlK8sNode) volumesInUse() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (k *mqlK8sNode) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sNode) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

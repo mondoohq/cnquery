@@ -179,3 +179,11 @@ func (k *mqlK8sPersistentvolume) reason() (string, error) {
 func (k *mqlK8sPersistentvolume) message() (string, error) {
 	return k.obj.Status.Message, nil
 }
+
+func (k *mqlK8sPersistentvolume) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sPersistentvolume) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

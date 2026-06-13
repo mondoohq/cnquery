@@ -75,6 +75,8 @@ const (
 	ResourceK8sCertificatesigningrequest               string = "k8s.certificatesigningrequest"
 	ResourceK8sApiservice                              string = "k8s.apiservice"
 	ResourceK8sIngressclass                            string = "k8s.ingressclass"
+	ResourceK8sOwnerReference                          string = "k8s.ownerReference"
+	ResourceK8sManagedField                            string = "k8s.managedField"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -316,6 +318,14 @@ func init() {
 		"k8s.ingressclass": {
 			Init:   initK8sIngressclass,
 			Create: createK8sIngressclass,
+		},
+		"k8s.ownerReference": {
+			// to override args, implement: initK8sOwnerReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sOwnerReference,
+		},
+		"k8s.managedField": {
+			// to override args, implement: initK8sManagedField(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sManagedField,
 		},
 	}
 }
@@ -565,6 +575,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.namespace.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.namespace.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.namespace.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.namespace.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
 	},
@@ -639,6 +655,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.node.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.node.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.node.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.node.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetResourceVersion()).ToDataRes(types.String)
@@ -762,6 +784,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.pod.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.pod.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.pod.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.pod.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetName()).ToDataRes(types.String)
@@ -922,9 +950,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.message": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetMessage()).ToDataRes(types.String)
 	},
-	"k8s.pod.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sPod).GetOwnerReferences()).ToDataRes(types.Array(types.Dict))
-	},
 	"k8s.pod.replicaSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetReplicaSet()).ToDataRes(types.Resource("k8s.replicaset"))
 	},
@@ -954,6 +979,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.deployment.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.deployment.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.deployment.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.deployment.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetName()).ToDataRes(types.String)
@@ -1042,6 +1073,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.daemonset.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.daemonset.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.daemonset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetName()).ToDataRes(types.String)
 	},
@@ -1125,6 +1162,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.statefulset.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.statefulset.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.statefulset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetName()).ToDataRes(types.String)
@@ -1225,6 +1268,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.replicaset.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.replicaset.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.replicaset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetName()).ToDataRes(types.String)
 	},
@@ -1293,6 +1342,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.job.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.job.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.job.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetName()).ToDataRes(types.String)
@@ -1398,6 +1453,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.cronjob.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.cronjob.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.cronjob.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetName()).ToDataRes(types.String)
@@ -1798,6 +1859,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.secret.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sSecret).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.secret.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.secret.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.secret.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sSecret).GetName()).ToDataRes(types.String)
 	},
@@ -1837,6 +1904,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.configmap.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sConfigmap).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.configmap.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sConfigmap).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.configmap.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sConfigmap).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.configmap.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sConfigmap).GetName()).ToDataRes(types.String)
 	},
@@ -1872,6 +1945,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.service.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.service.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.service.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetName()).ToDataRes(types.String)
@@ -2032,6 +2111,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.ingress.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.ingress.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.ingress.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.ingress.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetName()).ToDataRes(types.String)
 	},
@@ -2077,6 +2162,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.serviceaccount.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.serviceaccount.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.serviceaccount.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.serviceaccount.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetName()).ToDataRes(types.String)
 	},
@@ -2116,6 +2207,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrole.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.rbac.clusterrole.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.rbac.clusterrole.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.rbac.clusterrole.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetName()).ToDataRes(types.String)
 	},
@@ -2151,6 +2248,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.clusterrolebinding.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.clusterrolebinding.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.rbac.clusterrolebinding.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.rbac.clusterrolebinding.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetName()).ToDataRes(types.String)
@@ -2191,6 +2294,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.role.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.rbac.role.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.rbac.role.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.rbac.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetName()).ToDataRes(types.String)
 	},
@@ -2226,6 +2335,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.rolebinding.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.rolebinding.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.rbac.rolebinding.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.rbac.rolebinding.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetName()).ToDataRes(types.String)
@@ -2272,6 +2387,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.networkpolicy.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.networkpolicy.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.networkpolicy.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.networkpolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetName()).ToDataRes(types.String)
 	},
@@ -2317,6 +2438,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.customresource.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.customresource.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCustomresource).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.customresource.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCustomresource).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.customresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetName()).ToDataRes(types.String)
 	},
@@ -2346,6 +2473,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.persistentvolume.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolume).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolume.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.persistentvolume.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.persistentvolume.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolume).GetName()).ToDataRes(types.String)
@@ -2422,6 +2555,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.storageclass.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStorageclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.storageclass.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.storageclass.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.storageclass.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStorageclass).GetName()).ToDataRes(types.String)
 	},
@@ -2467,6 +2606,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.priorityclass.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPriorityclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.priorityclass.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.priorityclass.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.priorityclass.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPriorityclass).GetName()).ToDataRes(types.String)
 	},
@@ -2505,6 +2650,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.horizontalpodautoscaler.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHorizontalpodautoscaler).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.horizontalpodautoscaler.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.horizontalpodautoscaler.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.horizontalpodautoscaler.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHorizontalpodautoscaler).GetName()).ToDataRes(types.String)
@@ -2590,6 +2741,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.resourcequota.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sResourcequota).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.resourcequota.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.resourcequota.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.resourcequota.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sResourcequota).GetName()).ToDataRes(types.String)
 	},
@@ -2638,6 +2795,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.limitrange.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.limitrange.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.limitrange.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.limitrange.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetName()).ToDataRes(types.String)
 	},
@@ -2673,6 +2836,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.persistentvolumeclaim.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolumeclaim).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolumeclaim.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.persistentvolumeclaim.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.persistentvolumeclaim.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolumeclaim).GetName()).ToDataRes(types.String)
@@ -2752,6 +2921,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.endpointslice.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.endpointslice.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.endpointslice.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.endpointslice.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetName()).ToDataRes(types.String)
 	},
@@ -2821,6 +2996,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.validatingwebhookconfiguration.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.admission.validatingwebhookconfiguration.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.admission.validatingwebhookconfiguration.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.admission.validatingwebhookconfiguration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetName()).ToDataRes(types.String)
 	},
@@ -2869,6 +3050,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.gatewayclass.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGatewayclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.gatewayclass.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.gatewayclass.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.gatewayclass.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGatewayclass).GetName()).ToDataRes(types.String)
 	},
@@ -2907,6 +3094,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.gateway.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGateway).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.gateway.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.gateway.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.gateway.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGateway).GetName()).ToDataRes(types.String)
@@ -2962,6 +3155,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.httproute.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHttproute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.httproute.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.httproute.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.httproute.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHttproute).GetName()).ToDataRes(types.String)
 	},
@@ -3003,6 +3202,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.grpcroute.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGrpcroute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.grpcroute.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.grpcroute.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.grpcroute.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGrpcroute).GetName()).ToDataRes(types.String)
@@ -3046,6 +3251,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.referencegrant.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReferencegrant).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.referencegrant.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.referencegrant.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.referencegrant.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReferencegrant).GetName()).ToDataRes(types.String)
 	},
@@ -3082,6 +3293,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.mutatingwebhookconfiguration.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.admission.mutatingwebhookconfiguration.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.admission.mutatingwebhookconfiguration.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.admission.mutatingwebhookconfiguration.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetName()).ToDataRes(types.String)
 	},
@@ -3111,6 +3328,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.poddisruptionbudget.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPoddisruptionbudget).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.poddisruptionbudget.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.poddisruptionbudget.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.poddisruptionbudget.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPoddisruptionbudget).GetName()).ToDataRes(types.String)
@@ -3172,6 +3395,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.lease.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLease).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.lease.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.lease.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.lease.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLease).GetName()).ToDataRes(types.String)
 	},
@@ -3222,6 +3451,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.certificatesigningrequest.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCertificatesigningrequest).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.certificatesigningrequest.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.certificatesigningrequest.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.certificatesigningrequest.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCertificatesigningrequest).GetName()).ToDataRes(types.String)
@@ -3276,6 +3511,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.apiservice.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiservice).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.apiservice.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.apiservice.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
 	},
 	"k8s.apiservice.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiservice).GetName()).ToDataRes(types.String)
@@ -3337,6 +3578,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.ingressclass.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"k8s.ingressclass.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressclass).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.ingressclass.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressclass).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
 	"k8s.ingressclass.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressclass).GetName()).ToDataRes(types.String)
 	},
@@ -3354,6 +3601,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ingressclass.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressclass).GetParameters()).ToDataRes(types.Dict)
+	},
+	"k8s.ownerReference.apiVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetApiVersion()).ToDataRes(types.String)
+	},
+	"k8s.ownerReference.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.ownerReference.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetName()).ToDataRes(types.String)
+	},
+	"k8s.ownerReference.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.ownerReference.controller": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetController()).ToDataRes(types.Bool)
+	},
+	"k8s.ownerReference.blockOwnerDeletion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sOwnerReference).GetBlockOwnerDeletion()).ToDataRes(types.Bool)
+	},
+	"k8s.managedField.manager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetManager()).ToDataRes(types.String)
+	},
+	"k8s.managedField.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetOperation()).ToDataRes(types.String)
+	},
+	"k8s.managedField.apiVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetApiVersion()).ToDataRes(types.String)
+	},
+	"k8s.managedField.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetTime()).ToDataRes(types.Time)
+	},
+	"k8s.managedField.subresource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetSubresource()).ToDataRes(types.String)
+	},
+	"k8s.managedField.fieldsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetFieldsType()).ToDataRes(types.String)
+	},
+	"k8s.managedField.fieldsV1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sManagedField).GetFieldsV1()).ToDataRes(types.Dict)
 	},
 }
 
@@ -3615,6 +3901,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sNamespace).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.namespace.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.namespace.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNamespace).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3717,6 +4011,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.node.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNode).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.node.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3897,6 +4199,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.pod.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4111,10 +4421,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"k8s.pod.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sPod).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"k8s.pod.replicaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).ReplicaSet, ok = plugin.RawToTValue[*mqlK8sReplicaset](v.Value, v.Error)
 		return
@@ -4157,6 +4463,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.deployment.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4279,6 +4593,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4393,6 +4715,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4531,6 +4861,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4625,6 +4963,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4769,6 +5115,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5323,6 +5677,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sSecret).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.secret.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5379,6 +5741,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sConfigmap).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.configmap.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sConfigmap).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.configmap.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sConfigmap).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.configmap.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sConfigmap).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5429,6 +5799,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.service.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sService).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5671,6 +6049,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sIngress).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.ingress.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.ingress.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngress).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5735,6 +6121,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sServiceaccount).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.serviceaccount.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.serviceaccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sServiceaccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5791,6 +6185,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrole).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrole.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5841,6 +6243,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.clusterrolebinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrolebinding).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5899,6 +6309,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacRole).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.role.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5949,6 +6367,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.rolebinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRolebinding).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6015,6 +6441,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sNetworkpolicy).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.networkpolicy.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.networkpolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkpolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6079,6 +6513,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sCustomresource).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.customresource.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCustomresource).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.customresource.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCustomresource).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.customresource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCustomresource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6121,6 +6563,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.persistentvolume.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPersistentvolume).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.persistentvolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6227,6 +6677,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sStorageclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.storageclass.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.storageclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStorageclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6291,6 +6749,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPriorityclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.priorityclass.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.priorityclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPriorityclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6345,6 +6811,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.horizontalpodautoscaler.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sHorizontalpodautoscaler).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.horizontalpodautoscaler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6463,6 +6937,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sResourcequota).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.resourcequota.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.resourcequota.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sResourcequota).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6531,6 +7013,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sLimitrange).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.limitrange.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.limitrange.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLimitrange).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6581,6 +7071,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.persistentvolumeclaim.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPersistentvolumeclaim).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.persistentvolumeclaim.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6691,6 +7189,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sEndpointslice).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.endpointslice.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.endpointslice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEndpointslice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6799,6 +7305,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.validatingwebhookconfiguration.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingwebhookconfiguration.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.admission.validatingwebhookconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6871,6 +7385,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sGatewayclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.gatewayclass.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.gatewayclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGatewayclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6925,6 +7447,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.gateway.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGateway).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gateway.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.gateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7003,6 +7533,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sHttproute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.httproute.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.httproute.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.httproute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sHttproute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7061,6 +7599,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.grpcroute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGrpcroute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.grpcroute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7123,6 +7669,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReferencegrant).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.referencegrant.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.referencegrant.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.referencegrant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReferencegrant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7175,6 +7729,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.mutatingwebhookconfiguration.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.admission.mutatingwebhookconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7217,6 +7779,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.poddisruptionbudget.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPoddisruptionbudget).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.poddisruptionbudget.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.poddisruptionbudget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7303,6 +7873,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sLease).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.lease.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.lease.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLease).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7373,6 +7951,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.certificatesigningrequest.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCertificatesigningrequest).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.certificatesigningrequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7449,6 +8035,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.apiservice.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sApiservice).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.apiservice.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiservice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7535,6 +8129,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sIngressclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"k8s.ingressclass.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressclass).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressclass.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressclass).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.ingressclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -7557,6 +8159,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.ingressclass.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressclass).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.ownerReference.apiVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).ApiVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.controller": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).Controller, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ownerReference.blockOwnerDeletion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sOwnerReference).BlockOwnerDeletion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.managedField.manager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).Manager, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.apiVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).ApiVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).Time, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.subresource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).Subresource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.fieldsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).FieldsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.managedField.fieldsV1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sManagedField).FieldsV1, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 }
@@ -8440,6 +9102,8 @@ type mqlK8sNamespace struct {
 	Kind                     plugin.TValue[string]
 	Labels                   plugin.TValue[map[string]any]
 	Annotations              plugin.TValue[map[string]any]
+	OwnerReferences          plugin.TValue[[]any]
+	ManagedFields            plugin.TValue[[]any]
 	Pods                     plugin.TValue[[]any]
 	Deployments              plugin.TValue[[]any]
 	Statefulsets             plugin.TValue[[]any]
@@ -8535,6 +9199,38 @@ func (c *mqlK8sNamespace) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sNamespace) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sNamespace) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.namespace", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sNamespace) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.namespace", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -8883,6 +9579,8 @@ type mqlK8sNode struct {
 	Uid                     plugin.TValue[string]
 	Labels                  plugin.TValue[map[string]any]
 	Annotations             plugin.TValue[map[string]any]
+	OwnerReferences         plugin.TValue[[]any]
+	ManagedFields           plugin.TValue[[]any]
 	ResourceVersion         plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	Kind                    plugin.TValue[string]
@@ -8963,6 +9661,38 @@ func (c *mqlK8sNode) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sNode) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sNode) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sNode) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -9317,6 +10047,8 @@ type mqlK8sPod struct {
 	ResourceVersion               plugin.TValue[string]
 	Labels                        plugin.TValue[map[string]any]
 	Annotations                   plugin.TValue[map[string]any]
+	OwnerReferences               plugin.TValue[[]any]
+	ManagedFields                 plugin.TValue[[]any]
 	Name                          plugin.TValue[string]
 	Namespace                     plugin.TValue[string]
 	ApiVersion                    plugin.TValue[string]
@@ -9370,7 +10102,6 @@ type mqlK8sPod struct {
 	Conditions                    plugin.TValue[[]any]
 	Reason                        plugin.TValue[string]
 	Message                       plugin.TValue[string]
-	OwnerReferences               plugin.TValue[[]any]
 	ReplicaSet                    plugin.TValue[*mqlK8sReplicaset]
 	StatefulSet                   plugin.TValue[*mqlK8sStatefulset]
 	DaemonSet                     plugin.TValue[*mqlK8sDaemonset]
@@ -9436,6 +10167,38 @@ func (c *mqlK8sPod) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sPod) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPod) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sPod) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -9817,12 +10580,6 @@ func (c *mqlK8sPod) GetMessage() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlK8sPod) GetOwnerReferences() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
-		return c.ownerReferences()
-	})
-}
-
 func (c *mqlK8sPod) GetReplicaSet() *plugin.TValue[*mqlK8sReplicaset] {
 	return plugin.GetOrCompute[*mqlK8sReplicaset](&c.ReplicaSet, func() (*mqlK8sReplicaset, error) {
 		if c.MqlRuntime.HasRecording {
@@ -9913,6 +10670,8 @@ type mqlK8sDeployment struct {
 	ResourceVersion         plugin.TValue[string]
 	Labels                  plugin.TValue[map[string]any]
 	Annotations             plugin.TValue[map[string]any]
+	OwnerReferences         plugin.TValue[[]any]
+	ManagedFields           plugin.TValue[[]any]
 	Name                    plugin.TValue[string]
 	Namespace               plugin.TValue[string]
 	Kind                    plugin.TValue[string]
@@ -9997,6 +10756,38 @@ func (c *mqlK8sDeployment) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sDeployment) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sDeployment) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sDeployment) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -10176,6 +10967,8 @@ type mqlK8sDaemonset struct {
 	ResourceVersion        plugin.TValue[string]
 	Labels                 plugin.TValue[map[string]any]
 	Annotations            plugin.TValue[map[string]any]
+	OwnerReferences        plugin.TValue[[]any]
+	ManagedFields          plugin.TValue[[]any]
 	Name                   plugin.TValue[string]
 	Namespace              plugin.TValue[string]
 	Kind                   plugin.TValue[string]
@@ -10259,6 +11052,38 @@ func (c *mqlK8sDaemonset) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sDaemonset) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -10432,6 +11257,8 @@ type mqlK8sStatefulset struct {
 	ResourceVersion                      plugin.TValue[string]
 	Labels                               plugin.TValue[map[string]any]
 	Annotations                          plugin.TValue[map[string]any]
+	OwnerReferences                      plugin.TValue[[]any]
+	ManagedFields                        plugin.TValue[[]any]
 	Name                                 plugin.TValue[string]
 	Namespace                            plugin.TValue[string]
 	Kind                                 plugin.TValue[string]
@@ -10520,6 +11347,38 @@ func (c *mqlK8sStatefulset) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sStatefulset) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -10723,6 +11582,8 @@ type mqlK8sReplicaset struct {
 	ResourceVersion      plugin.TValue[string]
 	Labels               plugin.TValue[map[string]any]
 	Annotations          plugin.TValue[map[string]any]
+	OwnerReferences      plugin.TValue[[]any]
+	ManagedFields        plugin.TValue[[]any]
 	Name                 plugin.TValue[string]
 	Namespace            plugin.TValue[string]
 	Kind                 plugin.TValue[string]
@@ -10801,6 +11662,38 @@ func (c *mqlK8sReplicaset) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sReplicaset) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -10944,6 +11837,8 @@ type mqlK8sJob struct {
 	ResourceVersion         plugin.TValue[string]
 	Labels                  plugin.TValue[map[string]any]
 	Annotations             plugin.TValue[map[string]any]
+	OwnerReferences         plugin.TValue[[]any]
+	ManagedFields           plugin.TValue[[]any]
 	Name                    plugin.TValue[string]
 	Namespace               plugin.TValue[string]
 	Kind                    plugin.TValue[string]
@@ -11034,6 +11929,38 @@ func (c *mqlK8sJob) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sJob) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sJob) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sJob) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -11249,6 +12176,8 @@ type mqlK8sCronjob struct {
 	ResourceVersion            plugin.TValue[string]
 	Labels                     plugin.TValue[map[string]any]
 	Annotations                plugin.TValue[map[string]any]
+	OwnerReferences            plugin.TValue[[]any]
+	ManagedFields              plugin.TValue[[]any]
 	Name                       plugin.TValue[string]
 	Namespace                  plugin.TValue[string]
 	Kind                       plugin.TValue[string]
@@ -11329,6 +12258,38 @@ func (c *mqlK8sCronjob) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sCronjob) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sCronjob) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sCronjob) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -12241,6 +13202,8 @@ type mqlK8sSecret struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -12312,6 +13275,38 @@ func (c *mqlK8sSecret) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sSecret) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.secret", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sSecret) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.secret", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sSecret) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -12380,6 +13375,8 @@ type mqlK8sConfigmap struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -12450,6 +13447,38 @@ func (c *mqlK8sConfigmap) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sConfigmap) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.configmap", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sConfigmap) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.configmap", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sConfigmap) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -12502,6 +13531,8 @@ type mqlK8sService struct {
 	ResourceVersion               plugin.TValue[string]
 	Labels                        plugin.TValue[map[string]any]
 	Annotations                   plugin.TValue[map[string]any]
+	OwnerReferences               plugin.TValue[[]any]
+	ManagedFields                 plugin.TValue[[]any]
 	Name                          plugin.TValue[string]
 	Namespace                     plugin.TValue[string]
 	Kind                          plugin.TValue[string]
@@ -12589,6 +13620,38 @@ func (c *mqlK8sService) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sService) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sService) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.service", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sService) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.service", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -13135,6 +14198,8 @@ type mqlK8sIngress struct {
 	ResourceVersion     plugin.TValue[string]
 	Labels              plugin.TValue[map[string]any]
 	Annotations         plugin.TValue[map[string]any]
+	OwnerReferences     plugin.TValue[[]any]
+	ManagedFields       plugin.TValue[[]any]
 	Name                plugin.TValue[string]
 	Namespace           plugin.TValue[string]
 	Kind                plugin.TValue[string]
@@ -13205,6 +14270,38 @@ func (c *mqlK8sIngress) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sIngress) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sIngress) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sIngress) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -13288,6 +14385,8 @@ type mqlK8sServiceaccount struct {
 	ResourceVersion              plugin.TValue[string]
 	Labels                       plugin.TValue[map[string]any]
 	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
 	Name                         plugin.TValue[string]
 	Namespace                    plugin.TValue[string]
 	Kind                         plugin.TValue[string]
@@ -13359,6 +14458,38 @@ func (c *mqlK8sServiceaccount) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sServiceaccount) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.serviceaccount", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.serviceaccount", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sServiceaccount) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -13403,6 +14534,8 @@ type mqlK8sRbacClusterrole struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -13473,6 +14606,38 @@ func (c *mqlK8sRbacClusterrole) GetAnnotations() *plugin.TValue[map[string]any] 
 	})
 }
 
+func (c *mqlK8sRbacClusterrole) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrole", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrole", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sRbacClusterrole) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -13525,6 +14690,8 @@ type mqlK8sRbacClusterrolebinding struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -13596,6 +14763,38 @@ func (c *mqlK8sRbacClusterrolebinding) GetAnnotations() *plugin.TValue[map[strin
 	})
 }
 
+func (c *mqlK8sRbacClusterrolebinding) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrolebinding", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sRbacClusterrolebinding) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrolebinding", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sRbacClusterrolebinding) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -13664,6 +14863,8 @@ type mqlK8sRbacRole struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -13734,6 +14935,38 @@ func (c *mqlK8sRbacRole) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sRbacRole) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.role", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.role", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sRbacRole) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -13786,6 +15019,8 @@ type mqlK8sRbacRolebinding struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -13856,6 +15091,38 @@ func (c *mqlK8sRbacRolebinding) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sRbacRolebinding) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -13947,6 +15214,8 @@ type mqlK8sNetworkpolicy struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -14020,6 +15289,38 @@ func (c *mqlK8sNetworkpolicy) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sNetworkpolicy) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.networkpolicy", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sNetworkpolicy) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.networkpolicy", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sNetworkpolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -14082,6 +15383,8 @@ type mqlK8sCustomresource struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -14150,6 +15453,38 @@ func (c *mqlK8sCustomresource) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sCustomresource) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.customresource", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sCustomresource) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.customresource", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sCustomresource) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -14182,6 +15517,8 @@ type mqlK8sPersistentvolume struct {
 	ResourceVersion               plugin.TValue[string]
 	Labels                        plugin.TValue[map[string]any]
 	Annotations                   plugin.TValue[map[string]any]
+	OwnerReferences               plugin.TValue[[]any]
+	ManagedFields                 plugin.TValue[[]any]
 	Name                          plugin.TValue[string]
 	Kind                          plugin.TValue[string]
 	Created                       plugin.TValue[*time.Time]
@@ -14262,6 +15599,38 @@ func (c *mqlK8sPersistentvolume) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sPersistentvolume) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolume", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolume", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -14409,6 +15778,8 @@ type mqlK8sStorageclass struct {
 	ResourceVersion      plugin.TValue[string]
 	Labels               plugin.TValue[map[string]any]
 	Annotations          plugin.TValue[map[string]any]
+	OwnerReferences      plugin.TValue[[]any]
+	ManagedFields        plugin.TValue[[]any]
 	Name                 plugin.TValue[string]
 	Kind                 plugin.TValue[string]
 	Created              plugin.TValue[*time.Time]
@@ -14482,6 +15853,38 @@ func (c *mqlK8sStorageclass) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sStorageclass) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.storageclass", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sStorageclass) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.storageclass", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sStorageclass) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -14538,6 +15941,8 @@ type mqlK8sPriorityclass struct {
 	ResourceVersion  plugin.TValue[string]
 	Labels           plugin.TValue[map[string]any]
 	Annotations      plugin.TValue[map[string]any]
+	OwnerReferences  plugin.TValue[[]any]
+	ManagedFields    plugin.TValue[[]any]
 	Name             plugin.TValue[string]
 	Kind             plugin.TValue[string]
 	Created          plugin.TValue[*time.Time]
@@ -14609,6 +16014,38 @@ func (c *mqlK8sPriorityclass) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sPriorityclass) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.priorityclass", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sPriorityclass) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.priorityclass", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sPriorityclass) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -14653,6 +16090,8 @@ type mqlK8sHorizontalpodautoscaler struct {
 	ResourceVersion        plugin.TValue[string]
 	Labels                 plugin.TValue[map[string]any]
 	Annotations            plugin.TValue[map[string]any]
+	OwnerReferences        plugin.TValue[[]any]
+	ManagedFields          plugin.TValue[[]any]
 	Name                   plugin.TValue[string]
 	Namespace              plugin.TValue[string]
 	Kind                   plugin.TValue[string]
@@ -14736,6 +16175,38 @@ func (c *mqlK8sHorizontalpodautoscaler) GetLabels() *plugin.TValue[map[string]an
 func (c *mqlK8sHorizontalpodautoscaler) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.horizontalpodautoscaler", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.horizontalpodautoscaler", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -14909,6 +16380,8 @@ type mqlK8sResourcequota struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -14983,6 +16456,38 @@ func (c *mqlK8sResourcequota) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sResourcequota) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourcequota", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourcequota", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sResourcequota) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -15051,6 +16556,8 @@ type mqlK8sLimitrange struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -15121,6 +16628,38 @@ func (c *mqlK8sLimitrange) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sLimitrange) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.limitrange", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sLimitrange) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.limitrange", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sLimitrange) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -15165,6 +16704,8 @@ type mqlK8sPersistentvolumeclaim struct {
 	ResourceVersion  plugin.TValue[string]
 	Labels           plugin.TValue[map[string]any]
 	Annotations      plugin.TValue[map[string]any]
+	OwnerReferences  plugin.TValue[[]any]
+	ManagedFields    plugin.TValue[[]any]
 	Name             plugin.TValue[string]
 	Namespace        plugin.TValue[string]
 	Kind             plugin.TValue[string]
@@ -15246,6 +16787,38 @@ func (c *mqlK8sPersistentvolumeclaim) GetLabels() *plugin.TValue[map[string]any]
 func (c *mqlK8sPersistentvolumeclaim) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolumeclaim", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolumeclaim", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -15397,6 +16970,8 @@ type mqlK8sEndpointslice struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -15466,6 +17041,38 @@ func (c *mqlK8sEndpointslice) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sEndpointslice) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.endpointslice", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.endpointslice", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -15729,6 +17336,8 @@ type mqlK8sAdmissionValidatingwebhookconfiguration struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -15794,6 +17403,38 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetLabels() *plugin.TVal
 func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingwebhookconfiguration", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingwebhookconfiguration", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -15900,6 +17541,8 @@ type mqlK8sGatewayclass struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -15971,6 +17614,38 @@ func (c *mqlK8sGatewayclass) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sGatewayclass) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gatewayclass", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sGatewayclass) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gatewayclass", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sGatewayclass) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16015,6 +17690,8 @@ type mqlK8sGateway struct {
 	ResourceVersion  plugin.TValue[string]
 	Labels           plugin.TValue[map[string]any]
 	Annotations      plugin.TValue[map[string]any]
+	OwnerReferences  plugin.TValue[[]any]
+	ManagedFields    plugin.TValue[[]any]
 	Name             plugin.TValue[string]
 	Namespace        plugin.TValue[string]
 	Kind             plugin.TValue[string]
@@ -16088,6 +17765,38 @@ func (c *mqlK8sGateway) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sGateway) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sGateway) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gateway", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sGateway) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gateway", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -16167,6 +17876,8 @@ type mqlK8sHttproute struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -16239,6 +17950,38 @@ func (c *mqlK8sHttproute) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sHttproute) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.httproute", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sHttproute) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.httproute", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sHttproute) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16287,6 +18030,8 @@ type mqlK8sGrpcroute struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -16359,6 +18104,38 @@ func (c *mqlK8sGrpcroute) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sGrpcroute) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.grpcroute", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sGrpcroute) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.grpcroute", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sGrpcroute) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16407,6 +18184,8 @@ type mqlK8sReferencegrant struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Namespace       plugin.TValue[string]
 	Kind            plugin.TValue[string]
@@ -16477,6 +18256,38 @@ func (c *mqlK8sReferencegrant) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sReferencegrant) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.referencegrant", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sReferencegrant) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.referencegrant", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sReferencegrant) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16517,6 +18328,8 @@ type mqlK8sAdmissionMutatingwebhookconfiguration struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -16585,6 +18398,38 @@ func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetAnnotations() *plugin.T
 	})
 }
 
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.mutatingwebhookconfiguration", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.mutatingwebhookconfiguration", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16619,6 +18464,8 @@ type mqlK8sPoddisruptionbudget struct {
 	ResourceVersion            plugin.TValue[string]
 	Labels                     plugin.TValue[map[string]any]
 	Annotations                plugin.TValue[map[string]any]
+	OwnerReferences            plugin.TValue[[]any]
+	ManagedFields              plugin.TValue[[]any]
 	Name                       plugin.TValue[string]
 	Namespace                  plugin.TValue[string]
 	Kind                       plugin.TValue[string]
@@ -16697,6 +18544,38 @@ func (c *mqlK8sPoddisruptionbudget) GetAnnotations() *plugin.TValue[map[string]a
 	})
 }
 
+func (c *mqlK8sPoddisruptionbudget) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.poddisruptionbudget", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sPoddisruptionbudget) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.poddisruptionbudget", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sPoddisruptionbudget) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16769,6 +18648,8 @@ type mqlK8sLease struct {
 	ResourceVersion      plugin.TValue[string]
 	Labels               plugin.TValue[map[string]any]
 	Annotations          plugin.TValue[map[string]any]
+	OwnerReferences      plugin.TValue[[]any]
+	ManagedFields        plugin.TValue[[]any]
 	Name                 plugin.TValue[string]
 	Namespace            plugin.TValue[string]
 	Kind                 plugin.TValue[string]
@@ -16844,6 +18725,38 @@ func (c *mqlK8sLease) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sLease) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.lease", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sLease) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.lease", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sLease) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -16904,6 +18817,8 @@ type mqlK8sCertificatesigningrequest struct {
 	ResourceVersion   plugin.TValue[string]
 	Labels            plugin.TValue[map[string]any]
 	Annotations       plugin.TValue[map[string]any]
+	OwnerReferences   plugin.TValue[[]any]
+	ManagedFields     plugin.TValue[[]any]
 	Name              plugin.TValue[string]
 	Kind              plugin.TValue[string]
 	Created           plugin.TValue[*time.Time]
@@ -16980,6 +18895,38 @@ func (c *mqlK8sCertificatesigningrequest) GetAnnotations() *plugin.TValue[map[st
 	})
 }
 
+func (c *mqlK8sCertificatesigningrequest) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.certificatesigningrequest", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sCertificatesigningrequest) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.certificatesigningrequest", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sCertificatesigningrequest) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -17044,6 +18991,8 @@ type mqlK8sApiservice struct {
 	ResourceVersion       plugin.TValue[string]
 	Labels                plugin.TValue[map[string]any]
 	Annotations           plugin.TValue[map[string]any]
+	OwnerReferences       plugin.TValue[[]any]
+	ManagedFields         plugin.TValue[[]any]
 	Name                  plugin.TValue[string]
 	Kind                  plugin.TValue[string]
 	Created               plugin.TValue[*time.Time]
@@ -17119,6 +19068,38 @@ func (c *mqlK8sApiservice) GetLabels() *plugin.TValue[map[string]any] {
 func (c *mqlK8sApiservice) GetAnnotations() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
 		return c.annotations()
+	})
+}
+
+func (c *mqlK8sApiservice) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.apiservice", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sApiservice) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.apiservice", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
 	})
 }
 
@@ -17206,6 +19187,8 @@ type mqlK8sIngressclass struct {
 	ResourceVersion plugin.TValue[string]
 	Labels          plugin.TValue[map[string]any]
 	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
 	Name            plugin.TValue[string]
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
@@ -17275,6 +19258,38 @@ func (c *mqlK8sIngressclass) GetAnnotations() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlK8sIngressclass) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingressclass", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sIngressclass) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingressclass", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
 func (c *mqlK8sIngressclass) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -17299,4 +19314,147 @@ func (c *mqlK8sIngressclass) GetController() *plugin.TValue[string] {
 
 func (c *mqlK8sIngressclass) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+// mqlK8sOwnerReference for the k8s.ownerReference resource
+type mqlK8sOwnerReference struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sOwnerReferenceInternal it will be used here
+	ApiVersion         plugin.TValue[string]
+	Kind               plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Uid                plugin.TValue[string]
+	Controller         plugin.TValue[bool]
+	BlockOwnerDeletion plugin.TValue[bool]
+}
+
+// createK8sOwnerReference creates a new instance of this resource
+func createK8sOwnerReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sOwnerReference{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ownerReference", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sOwnerReference) MqlName() string {
+	return "k8s.ownerReference"
+}
+
+func (c *mqlK8sOwnerReference) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sOwnerReference) GetApiVersion() *plugin.TValue[string] {
+	return &c.ApiVersion
+}
+
+func (c *mqlK8sOwnerReference) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sOwnerReference) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sOwnerReference) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sOwnerReference) GetController() *plugin.TValue[bool] {
+	return &c.Controller
+}
+
+func (c *mqlK8sOwnerReference) GetBlockOwnerDeletion() *plugin.TValue[bool] {
+	return &c.BlockOwnerDeletion
+}
+
+// mqlK8sManagedField for the k8s.managedField resource
+type mqlK8sManagedField struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sManagedFieldInternal it will be used here
+	Manager     plugin.TValue[string]
+	Operation   plugin.TValue[string]
+	ApiVersion  plugin.TValue[string]
+	Time        plugin.TValue[*time.Time]
+	Subresource plugin.TValue[string]
+	FieldsType  plugin.TValue[string]
+	FieldsV1    plugin.TValue[any]
+}
+
+// createK8sManagedField creates a new instance of this resource
+func createK8sManagedField(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sManagedField{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.managedField", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sManagedField) MqlName() string {
+	return "k8s.managedField"
+}
+
+func (c *mqlK8sManagedField) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sManagedField) GetManager() *plugin.TValue[string] {
+	return &c.Manager
+}
+
+func (c *mqlK8sManagedField) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlK8sManagedField) GetApiVersion() *plugin.TValue[string] {
+	return &c.ApiVersion
+}
+
+func (c *mqlK8sManagedField) GetTime() *plugin.TValue[*time.Time] {
+	return &c.Time
+}
+
+func (c *mqlK8sManagedField) GetSubresource() *plugin.TValue[string] {
+	return &c.Subresource
+}
+
+func (c *mqlK8sManagedField) GetFieldsType() *plugin.TValue[string] {
+	return &c.FieldsType
+}
+
+func (c *mqlK8sManagedField) GetFieldsV1() *plugin.TValue[any] {
+	return &c.FieldsV1
 }

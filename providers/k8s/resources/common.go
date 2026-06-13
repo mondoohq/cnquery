@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -323,6 +324,92 @@ func podsMatchingSelector(runtime *plugin.Runtime, selector *metav1.LabelSelecto
 		if sel.Matches(labels.Set(stringLabels)) {
 			out = append(out, p)
 		}
+	}
+	return out, nil
+}
+
+// k8sOwnerReferences builds typed k8s.ownerReference resources from any
+// Kubernetes object's metadata.ownerReferences. obj may be a runtime.Object or
+// a metav1.Object — meta.Accessor normalizes both.
+func k8sOwnerReferences(runtime *plugin.Runtime, obj any) ([]any, error) {
+	m, err := meta.Accessor(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	refs := m.GetOwnerReferences()
+	out := make([]any, 0, len(refs))
+	for i := range refs {
+		ref := refs[i]
+
+		// The referent UID is globally unique and stable; fall back to
+		// kind:name only for the rare reference that omits it.
+		id := string(ref.UID)
+		if id == "" {
+			id = strings.ToLower(ref.Kind) + ":" + ref.Name
+		}
+
+		r, err := CreateResource(runtime, "k8s.ownerReference", map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
+			"apiVersion":         llx.StringData(ref.APIVersion),
+			"kind":               llx.StringData(ref.Kind),
+			"name":               llx.StringData(ref.Name),
+			"uid":                llx.StringData(string(ref.UID)),
+			"controller":         llx.BoolDataPtr(ref.Controller),
+			"blockOwnerDeletion": llx.BoolDataPtr(ref.BlockOwnerDeletion),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+// k8sManagedFields builds typed k8s.managedField resources from any Kubernetes
+// object's metadata.managedFields (server-side apply authorship records).
+func k8sManagedFields(runtime *plugin.Runtime, obj any) ([]any, error) {
+	m, err := meta.Accessor(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	objUID := string(m.GetUID())
+	fields := m.GetManagedFields()
+	out := make([]any, 0, len(fields))
+	for i := range fields {
+		f := fields[i]
+
+		data := map[string]*llx.RawData{
+			// A manager can appear more than once, keyed by operation and
+			// subresource, so include all three in the synthetic id.
+			"__id":        llx.StringData(objUID + "/managedfield/" + f.Manager + "/" + string(f.Operation) + "/" + f.Subresource),
+			"manager":     llx.StringData(f.Manager),
+			"operation":   llx.StringData(string(f.Operation)),
+			"apiVersion":  llx.StringData(f.APIVersion),
+			"subresource": llx.StringData(f.Subresource),
+			"fieldsType":  llx.StringData(f.FieldsType),
+			"time":        llx.NilData,
+			"fieldsV1":    llx.NilData,
+		}
+		if f.Time != nil {
+			data["time"] = llx.TimeData(f.Time.Time)
+		}
+		if f.FieldsV1 != nil {
+			if raw := f.FieldsV1.GetRawBytes(); len(raw) > 0 {
+				var fv any
+				if err := json.Unmarshal(raw, &fv); err != nil {
+					return nil, err
+				}
+				data["fieldsV1"] = llx.DictData(fv)
+			}
+		}
+
+		r, err := CreateResource(runtime, "k8s.managedField", data)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
 	}
 	return out, nil
 }

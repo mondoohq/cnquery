@@ -251,3 +251,11 @@ func (k *mqlK8sDeployment) conditions() ([]any, error) {
 	}
 	return convert.JsonToDictSlice(d.Status.Conditions)
 }
+
+func (k *mqlK8sDeployment) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sDeployment) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

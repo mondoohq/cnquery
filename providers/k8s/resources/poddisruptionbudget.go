@@ -104,3 +104,11 @@ func (k *mqlK8sPoddisruptionbudget) labels() (map[string]any, error) {
 func initK8sPoddisruptionbudget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initNamespacedResource[*mqlK8sPoddisruptionbudget](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetPodDisruptionBudgets() })
 }
+
+func (k *mqlK8sPoddisruptionbudget) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sPoddisruptionbudget) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

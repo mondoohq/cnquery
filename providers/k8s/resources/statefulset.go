@@ -282,3 +282,11 @@ func (k *mqlK8sStatefulset) conditions() ([]any, error) {
 	}
 	return convert.JsonToDictSlice(s.Status.Conditions)
 }
+
+func (k *mqlK8sStatefulset) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sStatefulset) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

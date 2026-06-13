@@ -87,3 +87,11 @@ func (k *mqlK8sReferencegrant) labels() (map[string]any, error) {
 func initK8sReferencegrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initNamespacedResource[*mqlK8sReferencegrant](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetReferenceGrants() })
 }
+
+func (k *mqlK8sReferencegrant) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sReferencegrant) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

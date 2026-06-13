@@ -91,3 +91,11 @@ func (k *mqlK8sServiceaccount) annotations() (map[string]any, error) {
 func (k *mqlK8sServiceaccount) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sServiceaccount) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sServiceaccount) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

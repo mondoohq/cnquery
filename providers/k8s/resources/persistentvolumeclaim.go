@@ -181,3 +181,11 @@ func (k *mqlK8sPersistentvolumeclaim) boundAccessModes() ([]any, error) {
 func (k *mqlK8sPersistentvolumeclaim) conditions() ([]any, error) {
 	return convert.JsonToDictSlice(k.obj.Status.Conditions)
 }
+
+func (k *mqlK8sPersistentvolumeclaim) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sPersistentvolumeclaim) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

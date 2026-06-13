@@ -84,3 +84,11 @@ func (k *mqlK8sGatewayclass) labels() (map[string]any, error) {
 func initK8sGatewayclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initResource[*mqlK8sGatewayclass](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetGatewayClasses() })
 }
+
+func (k *mqlK8sGatewayclass) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sGatewayclass) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

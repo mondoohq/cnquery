@@ -152,6 +152,10 @@ private k8s.namespace @defaults("name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Pods in this namespace
   pods() []k8s.pod
   // Deployments in this namespace
@@ -206,6 +210,10 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes resource version
   resourceVersion string
   // Plural name of the resource
@@ -304,6 +312,10 @@ private k8s.pod @defaults("namespace name created"){
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -410,8 +422,6 @@ private k8s.pod @defaults("namespace name created"){
   reason() string
   // Human-readable message about the pod's current phase
   message() string
-  // Raw owner references (kind, name, uid, controller, blockOwnerDeletion, apiVersion)
-  ownerReferences() []dict
   // ReplicaSet that owns this pod (null if not owned by one)
   replicaSet() k8s.replicaset
   // StatefulSet that owns this pod (null if not owned by one)
@@ -436,6 +446,10 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -498,6 +512,10 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -558,6 +576,10 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -628,6 +650,10 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -678,6 +704,10 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -752,6 +782,10 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1104,6 +1138,10 @@ private k8s.secret @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1134,6 +1172,10 @@ private k8s.configmap @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1162,6 +1204,10 @@ private k8s.service @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1296,6 +1342,10 @@ private k8s.ingress @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1330,6 +1380,10 @@ private k8s.serviceaccount @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1360,6 +1414,10 @@ private k8s.rbac.clusterrole @defaults("name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1388,6 +1446,10 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1418,6 +1480,10 @@ private k8s.rbac.role @defaults("name namespace") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1446,6 +1512,10 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1480,6 +1550,10 @@ private k8s.networkpolicy @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1514,6 +1588,10 @@ private k8s.customresource @defaults("name namespace created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1538,6 +1616,10 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1592,6 +1674,10 @@ private k8s.storageclass @defaults("name provisioner") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1626,6 +1712,10 @@ private k8s.priorityclass @defaults("name value") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1656,6 +1746,10 @@ private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxRep
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1716,6 +1810,10 @@ private k8s.resourcequota @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1752,6 +1850,10 @@ private k8s.limitrange @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1780,6 +1882,10 @@ private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['stor
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1836,6 +1942,10 @@ private k8s.endpointslice @defaults("namespace name addressType") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -1906,6 +2016,10 @@ private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1946,6 +2060,10 @@ private k8s.gatewayclass @defaults("name controllerName created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -1976,6 +2094,10 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2016,6 +2138,10 @@ private k8s.httproute @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2048,6 +2174,10 @@ private k8s.grpcroute @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2080,6 +2210,10 @@ private k8s.referencegrant @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2108,6 +2242,10 @@ private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -2132,6 +2270,10 @@ private k8s.poddisruptionbudget @defaults("namespace name created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2176,6 +2318,10 @@ private k8s.lease @defaults("namespace name holderIdentity created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object namespace
@@ -2214,6 +2360,10 @@ private k8s.certificatesigningrequest @defaults("name signerName username create
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -2254,6 +2404,10 @@ private k8s.apiservice @defaults("name group version created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -2298,6 +2452,10 @@ private k8s.ingressclass @defaults("name controller created") {
   labels() map[string]string
   // Kubernetes annotations
   annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
   // Kubernetes object name
   name string
   // Kubernetes object type
@@ -2310,4 +2468,51 @@ private k8s.ingressclass @defaults("name controller created") {
   controller string
   // Reference to a controller-specific configuration resource (apiGroup, kind, name, namespace, scope)
   parameters dict
+}
+
+// Kubernetes owner reference
+//
+// Examine the controller or parent object that owns this object, as recorded
+// in metadata.ownerReferences: the referent's apiVersion, kind, name, and uid,
+// whether it is the managing controller, and whether it blocks foreground
+// cascading deletion. Correlate uid against the uid of any modeled object to
+// trace provenance and ownership chains across the cluster.
+private k8s.ownerReference @defaults("kind name") {
+  // API version of the referent
+  apiVersion string
+  // Kind of the referent
+  kind string
+  // Name of the referent
+  name string
+  // UID of the referent
+  uid string
+  // Whether the referent is the managing controller
+  controller bool
+  // Whether the referent blocks foreground cascading deletion
+  blockOwnerDeletion bool
+}
+
+// Kubernetes managed field entry
+//
+// Examine one server-side-apply field-management record from
+// metadata.managedFields: the manager that owns a set of fields, the operation
+// it used, the apiVersion those fields are expressed in, the time of the
+// change, the optional subresource, and the fieldsV1 set enumerating exactly
+// which fields the manager owns. Use these records to see which controller or
+// tool last wrote each part of an object.
+private k8s.managedField @defaults("manager operation") {
+  // Workflow or tool managing these fields, for example kubectl, helm, or kube-controller-manager
+  manager string
+  // Operation that led to this entry, either "Apply" or "Update"
+  operation string
+  // API version of the fields set
+  apiVersion string
+  // Time the manager last modified these fields
+  time time
+  // Subresource this entry applies to, for example "status", or empty for the main resource
+  subresource string
+  // Type of the fields set, always "FieldsV1"
+  fieldsType string
+  // Set of fields this manager owns, as a nested map
+  fieldsV1 dict
 }

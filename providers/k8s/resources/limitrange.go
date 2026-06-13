@@ -73,3 +73,11 @@ func (k *mqlK8sLimitrange) labels() (map[string]any, error) {
 func (k *mqlK8sLimitrange) limits() ([]any, error) {
 	return convert.JsonToDictSlice(k.obj.Spec.Limits)
 }
+
+func (k *mqlK8sLimitrange) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sLimitrange) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

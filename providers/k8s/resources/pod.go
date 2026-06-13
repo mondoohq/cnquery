@@ -615,11 +615,11 @@ func (k *mqlK8sPod) message() (string, error) {
 }
 
 func (k *mqlK8sPod) ownerReferences() ([]any, error) {
-	pod, err := k.getPod()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(pod.OwnerReferences)
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sPod) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
 }
 
 // ownerOfKind looks up the first owner reference matching kind and returns the

@@ -92,3 +92,11 @@ func (k *mqlK8sStorageclass) annotations() (map[string]any, error) {
 func (k *mqlK8sStorageclass) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
+
+func (k *mqlK8sStorageclass) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sStorageclass) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

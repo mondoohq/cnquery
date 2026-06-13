@@ -104,3 +104,11 @@ func (k *mqlK8sRbacRole) boundBy() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (k *mqlK8sRbacRole) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sRbacRole) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

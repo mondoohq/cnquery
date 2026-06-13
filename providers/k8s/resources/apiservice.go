@@ -124,3 +124,11 @@ func (k *mqlK8sApiservice) service() (*mqlK8sService, error) {
 func initK8sApiservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initResource[*mqlK8sApiservice](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetApiServices() })
 }
+
+func (k *mqlK8sApiservice) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sApiservice) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

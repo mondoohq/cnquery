@@ -90,3 +90,11 @@ func (k *mqlK8sGrpcroute) labels() (map[string]any, error) {
 func initK8sGrpcroute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initNamespacedResource[*mqlK8sGrpcroute](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetGrpcRoutes() })
 }
+
+func (k *mqlK8sGrpcroute) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sGrpcroute) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

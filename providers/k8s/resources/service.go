@@ -306,3 +306,11 @@ func (k *mqlK8sService) endpointSlices() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (k *mqlK8sService) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sService) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

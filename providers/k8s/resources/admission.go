@@ -171,3 +171,11 @@ func initK8sAdmissionValidatingwebhookconfiguration(runtime *plugin.Runtime, arg
 		return k.GetValidatingWebhookConfigurations()
 	})
 }
+
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

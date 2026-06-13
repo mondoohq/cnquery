@@ -90,3 +90,11 @@ func (k *mqlK8sHttproute) labels() (map[string]any, error) {
 func initK8sHttproute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return initNamespacedResource[*mqlK8sHttproute](runtime, args, func(k *mqlK8s) *plugin.TValue[[]any] { return k.GetHttpRoutes() })
 }
+
+func (k *mqlK8sHttproute) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sHttproute) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

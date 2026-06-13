@@ -193,3 +193,11 @@ func (k *mqlK8sReplicaset) conditions() ([]any, error) {
 	}
 	return convert.JsonToDictSlice(rs.Status.Conditions)
 }
+
+func (k *mqlK8sReplicaset) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sReplicaset) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}

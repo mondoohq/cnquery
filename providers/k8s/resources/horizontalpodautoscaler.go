@@ -196,3 +196,11 @@ func (k *mqlK8sHorizontalpodautoscaler) currentMetrics() ([]any, error) {
 func (k *mqlK8sHorizontalpodautoscaler) conditions() ([]any, error) {
 	return convert.JsonToDictSlice(k.obj.Status.Conditions)
 }
+
+func (k *mqlK8sHorizontalpodautoscaler) ownerReferences() ([]any, error) {
+	return k8sOwnerReferences(k.MqlRuntime, k.obj)
+}
+
+func (k *mqlK8sHorizontalpodautoscaler) managedFields() ([]any, error) {
+	return k8sManagedFields(k.MqlRuntime, k.obj)
+}
