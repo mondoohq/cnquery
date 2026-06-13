@@ -3928,6 +3928,7 @@ gcp.project.pubsubService.schema.type 13.7.2
 gcp.project.pubsubService.schemas 13.7.2
 gcp.project.pubsubService.snapshot 9.0.0
 gcp.project.pubsubService.snapshot.expiration 9.0.0
+gcp.project.pubsubService.snapshot.labels 13.23.2
 gcp.project.pubsubService.snapshot.name 9.0.0
 gcp.project.pubsubService.snapshot.projectId 9.0.0
 gcp.project.pubsubService.snapshot.topic 9.0.0
@@ -3936,6 +3937,7 @@ gcp.project.pubsubService.subscription 9.0.0
 gcp.project.pubsubService.subscription.config 9.0.0
 gcp.project.pubsubService.subscription.config.ackDeadline 9.0.0
 gcp.project.pubsubService.subscription.config.bigqueryConfig 13.21.2
+gcp.project.pubsubService.subscription.config.bigtableConfig 13.23.2
 gcp.project.pubsubService.subscription.config.cloudStorageConfig 13.21.2
 gcp.project.pubsubService.subscription.config.deadLetterPolicy 13.7.2
 gcp.project.pubsubService.subscription.config.detached 11.0.146
@@ -3952,6 +3954,7 @@ gcp.project.pubsubService.subscription.config.pushconfig.configId 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.endpoint 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenAudience 13.18.1
 gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenServiceAccountEmail 13.18.1
+gcp.project.pubsubService.subscription.config.pushconfig.wrapper 13.23.2
 gcp.project.pubsubService.subscription.config.retainAckedMessages 9.0.0
 gcp.project.pubsubService.subscription.config.retentionDuration 9.0.0
 gcp.project.pubsubService.subscription.config.retryPolicy 13.7.2

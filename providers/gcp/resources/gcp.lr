@@ -4709,6 +4709,15 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   // that do not deliver to Cloud Storage. A populated value persists topic
   // data into object storage, so it widens the data's exposure surface.
   cloudStorageConfig dict
+  // Bigtable delivery sink
+  //
+  // When the subscription writes messages directly to a Cloud Bigtable table
+  // this dict holds the destination `table`, the `appProfileId` used for
+  // routing, the `serviceAccountEmail` the export runs as, the `writeMetadata`
+  // flag, and the delivery `state`. Null for subscriptions that do not deliver
+  // to Bigtable. A populated value is an egress path that moves topic data into
+  // a queryable store, so it widens the data's exposure surface.
+  bigtableConfig dict
 }
 
 // Google Cloud (GCP) Pub/Sub configuration for subscriptions that operate in push mode
@@ -4723,6 +4732,13 @@ private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attr
   oidcTokenServiceAccountEmail string
   // Audience used when generating the OIDC token for authenticated push
   oidcTokenAudience string
+  // How the Pub/Sub message is wrapped before it is delivered to the endpoint
+  //
+  // PUBSUB wraps the message in the standard Pub/Sub envelope (message data plus
+  // metadata such as attributes and the message ID); NONE delivers the raw
+  // message payload with metadata moved to HTTP headers. Empty when push
+  // delivery is not configured.
+  wrapper string
 }
 
 // Google Cloud (GCP) Pub/Sub snapshot
@@ -4740,6 +4756,8 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   topic gcp.project.pubsubService.topic
   // When the snapshot expires
   expiration time
+  // Labels associated with this snapshot
+  labels map[string]string
 }
 
 // Google Cloud (GCP) Pub/Sub schema

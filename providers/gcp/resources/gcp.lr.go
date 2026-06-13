@@ -7022,6 +7022,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.subscription.config.cloudStorageConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetCloudStorageConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.pubsubService.subscription.config.bigtableConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetBigtableConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.configId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetConfigId()).ToDataRes(types.String)
 	},
@@ -7037,6 +7040,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.subscription.config.pushconfig.oidcTokenAudience": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetOidcTokenAudience()).ToDataRes(types.String)
 	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.wrapper": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).GetWrapper()).ToDataRes(types.String)
+	},
 	"gcp.project.pubsubService.snapshot.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSnapshot).GetProjectId()).ToDataRes(types.String)
 	},
@@ -7048,6 +7054,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.snapshot.expiration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSnapshot).GetExpiration()).ToDataRes(types.Time)
+	},
+	"gcp.project.pubsubService.snapshot.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSnapshot).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.pubsubService.schema.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSchema).GetProjectId()).ToDataRes(types.String)
@@ -23417,6 +23426,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).CloudStorageConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.subscription.config.bigtableConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).BigtableConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.subscription.config.pushconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).__id, ok = v.Value.(string)
 		return
@@ -23441,6 +23454,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).OidcTokenAudience, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.subscription.config.pushconfig.wrapper": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig).Wrapper, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSnapshot).__id, ok = v.Value.(string)
 		return
@@ -23459,6 +23476,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.snapshot.expiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSnapshot).Expiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.snapshot.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSnapshot).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.schema.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53498,6 +53519,7 @@ type mqlGcpProjectPubsubServiceSubscriptionConfig struct {
 	RetryPolicy                   plugin.TValue[any]
 	BigqueryConfig                plugin.TValue[any]
 	CloudStorageConfig            plugin.TValue[any]
+	BigtableConfig                plugin.TValue[any]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfig creates a new instance of this resource
@@ -53613,6 +53635,10 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetCloudStorageConfig() *
 	return &c.CloudStorageConfig
 }
 
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfig) GetBigtableConfig() *plugin.TValue[any] {
+	return &c.BigtableConfig
+}
+
 // mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig for the gcp.project.pubsubService.subscription.config.pushconfig resource
 type mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig struct {
 	MqlRuntime *plugin.Runtime
@@ -53623,6 +53649,7 @@ type mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig struct {
 	Attributes                   plugin.TValue[map[string]any]
 	OidcTokenServiceAccountEmail plugin.TValue[string]
 	OidcTokenAudience            plugin.TValue[string]
+	Wrapper                      plugin.TValue[string]
 }
 
 // createGcpProjectPubsubServiceSubscriptionConfigPushconfig creates a new instance of this resource
@@ -53682,6 +53709,10 @@ func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetOidcTokenAud
 	return &c.OidcTokenAudience
 }
 
+func (c *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) GetWrapper() *plugin.TValue[string] {
+	return &c.Wrapper
+}
+
 // mqlGcpProjectPubsubServiceSnapshot for the gcp.project.pubsubService.snapshot resource
 type mqlGcpProjectPubsubServiceSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -53691,6 +53722,7 @@ type mqlGcpProjectPubsubServiceSnapshot struct {
 	Name       plugin.TValue[string]
 	Topic      plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
 	Expiration plugin.TValue[*time.Time]
+	Labels     plugin.TValue[map[string]any]
 }
 
 // createGcpProjectPubsubServiceSnapshot creates a new instance of this resource
@@ -53744,6 +53776,10 @@ func (c *mqlGcpProjectPubsubServiceSnapshot) GetTopic() *plugin.TValue[*mqlGcpPr
 
 func (c *mqlGcpProjectPubsubServiceSnapshot) GetExpiration() *plugin.TValue[*time.Time] {
 	return &c.Expiration
+}
+
+func (c *mqlGcpProjectPubsubServiceSnapshot) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlGcpProjectPubsubServiceSchema for the gcp.project.pubsubService.schema resource

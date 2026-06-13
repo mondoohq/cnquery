@@ -520,7 +520,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		return nil, err
 	}
 
-	var pushEndpoint, oidcServiceAccountEmail, oidcAudience string
+	var pushEndpoint, oidcServiceAccountEmail, oidcAudience, pushWrapper string
 	var pushAttributes map[string]string
 	if cfg.PushConfig != nil {
 		pushEndpoint = cfg.PushConfig.PushEndpoint
@@ -529,6 +529,12 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 			oidcServiceAccountEmail = oidc.ServiceAccountEmail
 			oidcAudience = oidc.Audience
 		}
+		switch cfg.PushConfig.Wrapper.(type) {
+		case *pubsubpb.PushConfig_PubsubWrapper_:
+			pushWrapper = "PUBSUB"
+		case *pubsubpb.PushConfig_NoWrapper_:
+			pushWrapper = "NONE"
+		}
 	}
 	pushConfig, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config.pushconfig", map[string]*llx.RawData{
 		"configId":                     llx.StringData(pubsubConfigId(projectId, name)),
@@ -536,6 +542,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"attributes":                   llx.MapData(convert.MapToInterfaceMap(pushAttributes), types.String),
 		"oidcTokenServiceAccountEmail": llx.StringData(oidcServiceAccountEmail),
 		"oidcTokenAudience":            llx.StringData(oidcAudience),
+		"wrapper":                      llx.StringData(pushWrapper),
 	})
 	if err != nil {
 		return nil, err
@@ -569,7 +576,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		}
 	}
 
-	var bigqueryConfigDict, cloudStorageConfigDict map[string]any
+	var bigqueryConfigDict, cloudStorageConfigDict, bigtableConfigDict map[string]any
 	if bq := cfg.GetBigqueryConfig(); bq != nil {
 		bigqueryConfigDict, err = protoToDict(bq)
 		if err != nil {
@@ -578,6 +585,12 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	}
 	if cs := cfg.GetCloudStorageConfig(); cs != nil {
 		cloudStorageConfigDict, err = protoToDict(cs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if bt := cfg.GetBigtableConfig(); bt != nil {
+		bigtableConfigDict, err = protoToDict(bt)
 		if err != nil {
 			return nil, err
 		}
@@ -603,6 +616,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"retryPolicy":                   llx.DictData(retryDict),
 		"bigqueryConfig":                llx.DictData(bigqueryConfigDict),
 		"cloudStorageConfig":            llx.DictData(cloudStorageConfigDict),
+		"bigtableConfig":                llx.DictData(bigtableConfigDict),
 	})
 	if err != nil {
 		return nil, err
@@ -670,6 +684,7 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 			"name":       llx.StringData(snapshotName),
 			"topic":      llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
 			"expiration": llx.TimeData(expiration),
+			"labels":     llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
 		})
 		if err != nil {
 			return nil, err
