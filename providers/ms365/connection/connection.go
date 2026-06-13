@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"sync"
 
 	azcore "github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	errors "github.com/cockroachdb/errors"
@@ -36,6 +37,30 @@ type Ms365Connection struct {
 	clientId      string
 	organization  string
 	sharepointUrl string
+
+	adminPrincipalsMu sync.Mutex
+	adminPrincipals   map[string]struct{}
+}
+
+// AdminPrincipalIDs returns the set of principal IDs that hold an active
+// Microsoft Entra directory role. The set is computed once per connection via
+// load and cached for the connection's lifetime, so it is not recomputed for
+// every user. Errors are not cached, so a transient failure is retried on the
+// next call.
+func (p *Ms365Connection) AdminPrincipalIDs(load func() (map[string]struct{}, error)) (map[string]struct{}, error) {
+	p.adminPrincipalsMu.Lock()
+	defer p.adminPrincipalsMu.Unlock()
+
+	if p.adminPrincipals != nil {
+		return p.adminPrincipals, nil
+	}
+
+	set, err := load()
+	if err != nil {
+		return nil, err
+	}
+	p.adminPrincipals = set
+	return set, nil
 }
 
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
