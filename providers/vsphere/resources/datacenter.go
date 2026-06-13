@@ -551,12 +551,20 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 			}
 		}
 
+		// PortConfigResetAtDisconnect comes from the port group's policy
+		// (Config.Policy), not its DefaultPortConfig.
+		var portConfigResetAtDisconnect bool
+		if config.Config.Policy != nil {
+			portConfigResetAtDisconnect = config.Config.Policy.GetDVPortgroupPolicy().PortConfigResetAtDisconnect
+		}
+
 		name := distPG.Name()
 		mqlDistPG, err := NewResource(v.MqlRuntime, "vsphere.vswitch.portgroup", map[string]*llx.RawData{
-			"moid":       llx.StringData(distPG.Reference().Encode()),
-			"name":       llx.StringData(name),
-			"properties": llx.DictData(configMap),
-			"vlanId":     llx.IntData(vlanId),
+			"moid":                        llx.StringData(distPG.Reference().Encode()),
+			"name":                        llx.StringData(name),
+			"properties":                  llx.DictData(configMap),
+			"vlanId":                      llx.IntData(vlanId),
+			"portConfigResetAtDisconnect": llx.BoolData(portConfigResetAtDisconnect),
 		})
 		if err != nil {
 			return nil, err

@@ -228,6 +228,45 @@ func (p *mqlVsphereVswitchPortgroup) shapingPolicySettings() (*mqlVsphereVswitch
 	return res.(*mqlVsphereVswitchShapingPolicy), nil
 }
 
+func (p *mqlVsphereVswitchPortgroup) macManagementPolicySettings() (*mqlVsphereVswitchMacManagementPolicy, error) {
+	if p.defaultPortConfig == nil || p.defaultPortConfig.MacManagementPolicy == nil {
+		p.MacManagementPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mp := p.defaultPortConfig.MacManagementPolicy
+
+	var (
+		learningEnabled, learningFlooding bool
+		learningLimit                     int64
+		learningLimitPolicy               string
+	)
+	if mp.MacLearningPolicy != nil {
+		lp := mp.MacLearningPolicy
+		learningEnabled = lp.Enabled
+		learningFlooding = boolPtrOr(lp.AllowUnicastFlooding, false)
+		if lp.Limit != nil {
+			learningLimit = int64(*lp.Limit)
+		}
+		learningLimitPolicy = lp.LimitPolicy
+	}
+
+	id := p.Moid.Data + "/policy/macManagement"
+	res, err := CreateResource(p.MqlRuntime, "vsphere.vswitch.macManagementPolicy", map[string]*llx.RawData{
+		"__id":                            llx.StringData(id),
+		"allowPromiscuous":                llx.BoolData(boolPtrOr(mp.AllowPromiscuous, false)),
+		"allowForgedTransmits":            llx.BoolData(boolPtrOr(mp.ForgedTransmits, false)),
+		"allowMacChanges":                 llx.BoolData(boolPtrOr(mp.MacChanges, false)),
+		"macLearningEnabled":              llx.BoolData(learningEnabled),
+		"macLearningAllowUnicastFlooding": llx.BoolData(learningFlooding),
+		"macLearningLimit":                llx.IntData(learningLimit),
+		"macLearningLimitPolicy":          llx.StringData(learningLimitPolicy),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchMacManagementPolicy), nil
+}
+
 // ---------- helpers for the *Policy wrappers and *bool ----------
 
 func boolPtrOr(b *bool, fallback bool) bool {

@@ -1275,6 +1275,54 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   failoverPolicySettings() vsphere.vswitch.failoverPolicy
   // Inbound traffic shaping policy from the port group's DefaultPortConfig
   shapingPolicySettings() vsphere.vswitch.shapingPolicy
+  // MAC management and MAC learning policy from the port group's DefaultPortConfig
+  macManagementPolicySettings() vsphere.vswitch.macManagementPolicy
+  // Whether per-port network settings are reset back to the port group defaults when a port is disconnected
+  //
+  // When true, any per-port overrides are removed once a virtual machine disconnects, so reconnecting ports
+  // inherit the port group's DefaultPortConfig. CIS hardening benchmarks recommend this be true.
+  portConfigResetAtDisconnect bool
+}
+
+// vSphere Distributed Virtual Switch MAC Management Policy
+//
+// Examine the MAC management policy applied to a distributed virtual port
+// group's DefaultPortConfig. `allowPromiscuous` (whether a guest NIC observes
+// traffic destined for other ports), `allowMacChanges` (whether the guest may
+// change its effective MAC at runtime), and `allowForgedTransmits` (whether
+// the guest may send frames with a different source MAC) are the layer-2
+// security controls; CIS hardening typically requires all three to be false.
+// The `macLearning*` fields describe source-MAC learning behavior:
+// `macLearningEnabled` turns learning on, `macLearningAllowUnicastFlooding`
+// permits flooding of unknown unicast ingress traffic, `macLearningLimit`
+// caps the number of learned addresses, and `macLearningLimitPolicy` is the
+// switching policy applied once that limit is exceeded (DROP or ALLOW).
+// Accessed via `macManagementPolicySettings` on a distributed port group.
+private vsphere.vswitch.macManagementPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges macLearningEnabled") {
+  // Whether a guest VM on this port can put its NIC in promiscuous mode
+  //
+  // When true, the NIC can observe traffic destined for other ports on the segment. CIS hardening typically requires this be false on production port groups.
+  allowPromiscuous bool
+  // Whether the guest may transmit frames with a source MAC different from the one assigned by ESXi
+  //
+  // When false, the host silently drops mismatched frames.
+  allowForgedTransmits bool
+  // Whether the guest may change the effective MAC of its NIC at runtime
+  //
+  // Away from the initial MAC assignment. When false, the host drops frames after a guest-initiated MAC change.
+  allowMacChanges bool
+  // Whether source MAC address learning is enabled on this port group
+  macLearningEnabled bool
+  // Whether flooding of unlearned unicast MAC addresses is allowed for ingress traffic
+  macLearningAllowUnicastFlooding bool
+  // Maximum number of MAC addresses that can be learned
+  //
+  // 0 when the host doesn't report a limit.
+  macLearningLimit int
+  // Switching policy applied once the learned-MAC limit is exceeded
+  //
+  // One of DROP (drop traffic from new source MACs) or ALLOW (forward without learning). Empty when not set.
+  macLearningLimitPolicy string
 }
 
 // vSphere vSwitch Layer-2 Security Policy

@@ -16,69 +16,70 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                           string = "asset"
-	ResourceVulnmgmt                        string = "vulnmgmt"
-	ResourceVulnCve                         string = "vuln.cve"
-	ResourceVulnAdvisory                    string = "vuln.advisory"
-	ResourceVulnPackage                     string = "vuln.package"
-	ResourceAuditCvss                       string = "audit.cvss"
-	ResourceVsphere                         string = "vsphere"
-	ResourceVspherePermission               string = "vsphere.permission"
-	ResourceVsphereFolder                   string = "vsphere.folder"
-	ResourceVsphereIdentitysource           string = "vsphere.identitysource"
-	ResourceVsphereKmsCluster               string = "vsphere.kmsCluster"
-	ResourceVsphereRole                     string = "vsphere.role"
-	ResourceVsphereLicense                  string = "vsphere.license"
-	ResourceVsphereDatacenter               string = "vsphere.datacenter"
-	ResourceVsphereResourcepool             string = "vsphere.resourcepool"
-	ResourceVsphereDatastore                string = "vsphere.datastore"
-	ResourceVsphereCluster                  string = "vsphere.cluster"
-	ResourceVsphereHost                     string = "vsphere.host"
-	ResourceVsphereClusterVsan              string = "vsphere.cluster.vsan"
-	ResourceVsphereHostVsan                 string = "vsphere.host.vsan"
-	ResourceVsphereHostVsanDiskGroup        string = "vsphere.host.vsan.diskGroup"
-	ResourceVsphereHostBootInfo             string = "vsphere.host.bootInfo"
-	ResourceVsphereHostSystemInfo           string = "vsphere.host.systemInfo"
-	ResourceVsphereHostDnsConfig            string = "vsphere.host.dnsConfig"
-	ResourceVsphereHostIpRouteConfig        string = "vsphere.host.ipRouteConfig"
-	ResourceVsphereHostFirewallRuleset      string = "vsphere.host.firewallRuleset"
-	ResourceVsphereHostFirewallRule         string = "vsphere.host.firewallRule"
-	ResourceVsphereHostIscsiAdapter         string = "vsphere.host.iscsiAdapter"
-	ResourceVsphereHostCertificate          string = "vsphere.host.certificate"
-	ResourceEsxiFirewallRuleset             string = "esxi.firewallRuleset"
-	ResourceEsxiFirewallRule                string = "esxi.firewallRule"
-	ResourceEsxiIscsiAdapter                string = "esxi.iscsiAdapter"
-	ResourceEsxiCertificate                 string = "esxi.certificate"
-	ResourceVsphereVm                       string = "vsphere.vm"
-	ResourceVsphereVmCdrom                  string = "vsphere.vm.cdrom"
-	ResourceVsphereVmNetworkAdapter         string = "vsphere.vm.networkAdapter"
-	ResourceVsphereVmCpuAllocation          string = "vsphere.vm.cpuAllocation"
-	ResourceVsphereVmMemoryAllocation       string = "vsphere.vm.memoryAllocation"
-	ResourceVsphereVmSnapshot               string = "vsphere.vm.snapshot"
-	ResourceVsphereVmDisk                   string = "vsphere.vm.disk"
-	ResourceVsphereEncryptionKey            string = "vsphere.encryptionKey"
-	ResourceVsphereVswitchStandard          string = "vsphere.vswitch.standard"
-	ResourceVsphereVswitchStandardPortgroup string = "vsphere.vswitch.standard.portgroup"
-	ResourceVsphereVswitchDvs               string = "vsphere.vswitch.dvs"
-	ResourceVsphereVswitchPortgroup         string = "vsphere.vswitch.portgroup"
-	ResourceVsphereVswitchSecurityPolicy    string = "vsphere.vswitch.securityPolicy"
-	ResourceVsphereVswitchFailoverPolicy    string = "vsphere.vswitch.failoverPolicy"
-	ResourceVsphereVswitchShapingPolicy     string = "vsphere.vswitch.shapingPolicy"
-	ResourceVsphereVmnic                    string = "vsphere.vmnic"
-	ResourceVsphereVmknic                   string = "vsphere.vmknic"
-	ResourceVsphereHostCommand              string = "vsphere.host.command"
-	ResourceVsphereHostVib                  string = "vsphere.host.vib"
-	ResourceVsphereHostKernelModule         string = "vsphere.host.kernelModule"
-	ResourceVsphereHostService              string = "vsphere.host.service"
-	ResourceVsphereHostTimezone             string = "vsphere.host.timezone"
-	ResourceVsphereHostNtpConfig            string = "vsphere.host.ntpConfig"
-	ResourceEsxi                            string = "esxi"
-	ResourceEsxiCommand                     string = "esxi.command"
-	ResourceEsxiVib                         string = "esxi.vib"
-	ResourceEsxiKernelmodule                string = "esxi.kernelmodule"
-	ResourceEsxiService                     string = "esxi.service"
-	ResourceEsxiTimezone                    string = "esxi.timezone"
-	ResourceEsxiNtpconfig                   string = "esxi.ntpconfig"
+	ResourceAsset                             string = "asset"
+	ResourceVulnmgmt                          string = "vulnmgmt"
+	ResourceVulnCve                           string = "vuln.cve"
+	ResourceVulnAdvisory                      string = "vuln.advisory"
+	ResourceVulnPackage                       string = "vuln.package"
+	ResourceAuditCvss                         string = "audit.cvss"
+	ResourceVsphere                           string = "vsphere"
+	ResourceVspherePermission                 string = "vsphere.permission"
+	ResourceVsphereFolder                     string = "vsphere.folder"
+	ResourceVsphereIdentitysource             string = "vsphere.identitysource"
+	ResourceVsphereKmsCluster                 string = "vsphere.kmsCluster"
+	ResourceVsphereRole                       string = "vsphere.role"
+	ResourceVsphereLicense                    string = "vsphere.license"
+	ResourceVsphereDatacenter                 string = "vsphere.datacenter"
+	ResourceVsphereResourcepool               string = "vsphere.resourcepool"
+	ResourceVsphereDatastore                  string = "vsphere.datastore"
+	ResourceVsphereCluster                    string = "vsphere.cluster"
+	ResourceVsphereHost                       string = "vsphere.host"
+	ResourceVsphereClusterVsan                string = "vsphere.cluster.vsan"
+	ResourceVsphereHostVsan                   string = "vsphere.host.vsan"
+	ResourceVsphereHostVsanDiskGroup          string = "vsphere.host.vsan.diskGroup"
+	ResourceVsphereHostBootInfo               string = "vsphere.host.bootInfo"
+	ResourceVsphereHostSystemInfo             string = "vsphere.host.systemInfo"
+	ResourceVsphereHostDnsConfig              string = "vsphere.host.dnsConfig"
+	ResourceVsphereHostIpRouteConfig          string = "vsphere.host.ipRouteConfig"
+	ResourceVsphereHostFirewallRuleset        string = "vsphere.host.firewallRuleset"
+	ResourceVsphereHostFirewallRule           string = "vsphere.host.firewallRule"
+	ResourceVsphereHostIscsiAdapter           string = "vsphere.host.iscsiAdapter"
+	ResourceVsphereHostCertificate            string = "vsphere.host.certificate"
+	ResourceEsxiFirewallRuleset               string = "esxi.firewallRuleset"
+	ResourceEsxiFirewallRule                  string = "esxi.firewallRule"
+	ResourceEsxiIscsiAdapter                  string = "esxi.iscsiAdapter"
+	ResourceEsxiCertificate                   string = "esxi.certificate"
+	ResourceVsphereVm                         string = "vsphere.vm"
+	ResourceVsphereVmCdrom                    string = "vsphere.vm.cdrom"
+	ResourceVsphereVmNetworkAdapter           string = "vsphere.vm.networkAdapter"
+	ResourceVsphereVmCpuAllocation            string = "vsphere.vm.cpuAllocation"
+	ResourceVsphereVmMemoryAllocation         string = "vsphere.vm.memoryAllocation"
+	ResourceVsphereVmSnapshot                 string = "vsphere.vm.snapshot"
+	ResourceVsphereVmDisk                     string = "vsphere.vm.disk"
+	ResourceVsphereEncryptionKey              string = "vsphere.encryptionKey"
+	ResourceVsphereVswitchStandard            string = "vsphere.vswitch.standard"
+	ResourceVsphereVswitchStandardPortgroup   string = "vsphere.vswitch.standard.portgroup"
+	ResourceVsphereVswitchDvs                 string = "vsphere.vswitch.dvs"
+	ResourceVsphereVswitchPortgroup           string = "vsphere.vswitch.portgroup"
+	ResourceVsphereVswitchMacManagementPolicy string = "vsphere.vswitch.macManagementPolicy"
+	ResourceVsphereVswitchSecurityPolicy      string = "vsphere.vswitch.securityPolicy"
+	ResourceVsphereVswitchFailoverPolicy      string = "vsphere.vswitch.failoverPolicy"
+	ResourceVsphereVswitchShapingPolicy       string = "vsphere.vswitch.shapingPolicy"
+	ResourceVsphereVmnic                      string = "vsphere.vmnic"
+	ResourceVsphereVmknic                     string = "vsphere.vmknic"
+	ResourceVsphereHostCommand                string = "vsphere.host.command"
+	ResourceVsphereHostVib                    string = "vsphere.host.vib"
+	ResourceVsphereHostKernelModule           string = "vsphere.host.kernelModule"
+	ResourceVsphereHostService                string = "vsphere.host.service"
+	ResourceVsphereHostTimezone               string = "vsphere.host.timezone"
+	ResourceVsphereHostNtpConfig              string = "vsphere.host.ntpConfig"
+	ResourceEsxi                              string = "esxi"
+	ResourceEsxiCommand                       string = "esxi.command"
+	ResourceEsxiVib                           string = "esxi.vib"
+	ResourceEsxiKernelmodule                  string = "esxi.kernelmodule"
+	ResourceEsxiService                       string = "esxi.service"
+	ResourceEsxiTimezone                      string = "esxi.timezone"
+	ResourceEsxiNtpconfig                     string = "esxi.ntpconfig"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -264,6 +265,10 @@ func init() {
 		"vsphere.vswitch.portgroup": {
 			// to override args, implement: initVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVswitchPortgroup,
+		},
+		"vsphere.vswitch.macManagementPolicy": {
+			// to override args, implement: initVsphereVswitchMacManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchMacManagementPolicy,
 		},
 		"vsphere.vswitch.securityPolicy": {
 			// to override args, implement: initVsphereVswitchSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1610,6 +1615,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.portgroup.shapingPolicySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetShapingPolicySettings()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
+	},
+	"vsphere.vswitch.portgroup.macManagementPolicySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetMacManagementPolicySettings()).ToDataRes(types.Resource("vsphere.vswitch.macManagementPolicy"))
+	},
+	"vsphere.vswitch.portgroup.portConfigResetAtDisconnect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetPortConfigResetAtDisconnect()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.allowPromiscuous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetAllowPromiscuous()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.allowForgedTransmits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetAllowForgedTransmits()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.allowMacChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetAllowMacChanges()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetMacLearningEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningAllowUnicastFlooding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetMacLearningAllowUnicastFlooding()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetMacLearningLimit()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningLimitPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchMacManagementPolicy).GetMacLearningLimitPolicy()).ToDataRes(types.String)
 	},
 	"vsphere.vswitch.securityPolicy.allowPromiscuous": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchSecurityPolicy).GetAllowPromiscuous()).ToDataRes(types.Bool)
@@ -3714,6 +3746,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.portgroup.shapingPolicySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).ShapingPolicySettings, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.macManagementPolicySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).MacManagementPolicySettings, ok = plugin.RawToTValue[*mqlVsphereVswitchMacManagementPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.portConfigResetAtDisconnect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).PortConfigResetAtDisconnect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.allowPromiscuous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).AllowPromiscuous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.allowForgedTransmits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).AllowForgedTransmits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.allowMacChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).AllowMacChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).MacLearningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningAllowUnicastFlooding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).MacLearningAllowUnicastFlooding, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).MacLearningLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.macManagementPolicy.macLearningLimitPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchMacManagementPolicy).MacLearningLimitPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8911,13 +8983,15 @@ type mqlVsphereVswitchPortgroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereVswitchPortgroupInternal
-	Moid                   plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Properties             plugin.TValue[any]
-	VlanId                 plugin.TValue[int64]
-	SecurityPolicySettings plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
-	FailoverPolicySettings plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
-	ShapingPolicySettings  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
+	Moid                        plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	VlanId                      plugin.TValue[int64]
+	SecurityPolicySettings      plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
+	FailoverPolicySettings      plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
+	ShapingPolicySettings       plugin.TValue[*mqlVsphereVswitchShapingPolicy]
+	MacManagementPolicySettings plugin.TValue[*mqlVsphereVswitchMacManagementPolicy]
+	PortConfigResetAtDisconnect plugin.TValue[bool]
 }
 
 // createVsphereVswitchPortgroup creates a new instance of this resource
@@ -9019,6 +9093,100 @@ func (c *mqlVsphereVswitchPortgroup) GetShapingPolicySettings() *plugin.TValue[*
 
 		return c.shapingPolicySettings()
 	})
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetMacManagementPolicySettings() *plugin.TValue[*mqlVsphereVswitchMacManagementPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchMacManagementPolicy](&c.MacManagementPolicySettings, func() (*mqlVsphereVswitchMacManagementPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "macManagementPolicySettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchMacManagementPolicy), nil
+			}
+		}
+
+		return c.macManagementPolicySettings()
+	})
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetPortConfigResetAtDisconnect() *plugin.TValue[bool] {
+	return &c.PortConfigResetAtDisconnect
+}
+
+// mqlVsphereVswitchMacManagementPolicy for the vsphere.vswitch.macManagementPolicy resource
+type mqlVsphereVswitchMacManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVswitchMacManagementPolicyInternal it will be used here
+	AllowPromiscuous                plugin.TValue[bool]
+	AllowForgedTransmits            plugin.TValue[bool]
+	AllowMacChanges                 plugin.TValue[bool]
+	MacLearningEnabled              plugin.TValue[bool]
+	MacLearningAllowUnicastFlooding plugin.TValue[bool]
+	MacLearningLimit                plugin.TValue[int64]
+	MacLearningLimitPolicy          plugin.TValue[string]
+}
+
+// createVsphereVswitchMacManagementPolicy creates a new instance of this resource
+func createVsphereVswitchMacManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchMacManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.macManagementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) MqlName() string {
+	return "vsphere.vswitch.macManagementPolicy"
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetAllowPromiscuous() *plugin.TValue[bool] {
+	return &c.AllowPromiscuous
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetAllowForgedTransmits() *plugin.TValue[bool] {
+	return &c.AllowForgedTransmits
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetAllowMacChanges() *plugin.TValue[bool] {
+	return &c.AllowMacChanges
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetMacLearningEnabled() *plugin.TValue[bool] {
+	return &c.MacLearningEnabled
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetMacLearningAllowUnicastFlooding() *plugin.TValue[bool] {
+	return &c.MacLearningAllowUnicastFlooding
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetMacLearningLimit() *plugin.TValue[int64] {
+	return &c.MacLearningLimit
+}
+
+func (c *mqlVsphereVswitchMacManagementPolicy) GetMacLearningLimitPolicy() *plugin.TValue[string] {
+	return &c.MacLearningLimitPolicy
 }
 
 // mqlVsphereVswitchSecurityPolicy for the vsphere.vswitch.securityPolicy resource
