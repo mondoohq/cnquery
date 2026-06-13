@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_types "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -82,30 +83,6 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 				}
 			}
 
-			// Batch-fetch replication groups to cache KMS key IDs (avoids N+1 on kmsKey()).
-			rgKmsKeys := map[string]*string{}
-			rgPaginator := elasticache.NewDescribeReplicationGroupsPaginator(svc, &elasticache.DescribeReplicationGroupsInput{})
-			for rgPaginator.HasMorePages() {
-				page, err := rgPaginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
-						break
-					}
-					return nil, err
-				}
-				for _, rg := range page.ReplicationGroups {
-					if rg.ReplicationGroupId != nil {
-						rgKmsKeys[*rg.ReplicationGroupId] = rg.KmsKeyId
-					}
-				}
-			}
-			for _, r := range res {
-				mqlCluster := r.(*mqlAwsElasticacheCluster)
-				if mqlCluster.cacheReplicationGroupId != nil {
-					mqlCluster.cacheKmsKeyId = rgKmsKeys[*mqlCluster.cacheReplicationGroupId]
-				}
-			}
-
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
@@ -113,10 +90,51 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 	return tasks
 }
 
+type mqlAwsElasticacheInternal struct {
+	rgKmsLock     sync.Mutex
+	rgKmsByRegion map[string]map[string]*string
+}
+
+// kmsKeyIdForReplicationGroup resolves the KMS key ID for a replication group,
+// fetching all replication groups for a region with a single call the first time
+// the region is queried and caching the result. Queries that never access a
+// cluster's kmsKey pay nothing, while a scan that walks every cluster's kmsKey
+// still makes at most one DescribeReplicationGroups call per region.
+func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConnection, region, replicationGroupId string) (*string, error) {
+	a.rgKmsLock.Lock()
+	defer a.rgKmsLock.Unlock()
+
+	if a.rgKmsByRegion == nil {
+		a.rgKmsByRegion = map[string]map[string]*string{}
+	}
+	regionMap, ok := a.rgKmsByRegion[region]
+	if !ok {
+		regionMap = map[string]*string{}
+		svc := conn.Elasticache(region)
+		ctx := context.Background()
+		paginator := elasticache.NewDescribeReplicationGroupsPaginator(svc, &elasticache.DescribeReplicationGroupsInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+					break
+				}
+				return nil, err
+			}
+			for _, rg := range page.ReplicationGroups {
+				if rg.ReplicationGroupId != nil {
+					regionMap[*rg.ReplicationGroupId] = rg.KmsKeyId
+				}
+			}
+		}
+		a.rgKmsByRegion[region] = regionMap
+	}
+	return regionMap[replicationGroupId], nil
+}
+
 type mqlAwsElasticacheClusterInternal struct {
 	securityGroupIdHandler
 	cacheReplicationGroupId *string
-	cacheKmsKeyId           *string
 	region                  string
 }
 
@@ -220,13 +238,26 @@ func (a *mqlAwsElasticacheCluster) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+	if a.cacheReplicationGroupId == nil || *a.cacheReplicationGroupId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	parent, err := CreateResource(a.MqlRuntime, "aws.elasticache", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	kmsKeyId, err := parent.(*mqlAwsElasticache).kmsKeyIdForReplicationGroup(conn, a.region, *a.cacheReplicationGroupId)
+	if err != nil {
+		return nil, err
+	}
+	if kmsKeyId == nil || *kmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+			"arn": llx.StringDataPtr(kmsKeyId),
 		})
 	if err != nil {
 		return nil, err

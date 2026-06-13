@@ -124078,7 +124078,7 @@ func (c *mqlAwsRdsParameterGroupParameter) GetSupportedEngineModes() *plugin.TVa
 type mqlAwsElasticache struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElasticacheInternal it will be used here
+	mqlAwsElasticacheInternal
 	CacheClusters    plugin.TValue[[]any]
 	ServerlessCaches plugin.TValue[[]any]
 	ParameterGroups  plugin.TValue[[]any]
