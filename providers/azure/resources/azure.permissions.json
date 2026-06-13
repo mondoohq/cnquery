@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.17.0",
-  "generated_at": "2026-06-08T13:12:39-07:00",
+  "version": "13.19.1",
+  "generated_at": "2026-06-12T17:40:19-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -102,6 +102,7 @@
     "Microsoft.HybridCompute/machines/extensions/read",
     "Microsoft.HybridCompute/machines/read",
     "Microsoft.Insights/activityLogAlerts/read",
+    "Microsoft.Insights/activityLogs/read",
     "Microsoft.Insights/components/read",
     "Microsoft.Insights/logProfiles/read",
     "Microsoft.KeyVault/managedHsms/read",
@@ -173,6 +174,7 @@
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
     "Microsoft.RecoveryServices/Vaults/backupconfig/read",
     "Microsoft.RecoveryServices/vaults/read",
+    "Microsoft.Resources/deployments/read",
     "Microsoft.Resources/resources/read",
     "Microsoft.Resources/subscriptions/read",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
@@ -835,6 +837,12 @@
       "source_file": "monitor.go"
     },
     {
+      "permission": "Microsoft.Insights/activityLogs/read",
+      "service": "Microsoft.Insights",
+      "action": "NewListPager",
+      "source_file": "monitor.go"
+    },
+    {
       "permission": "Microsoft.Insights/components/read",
       "service": "Microsoft.Insights",
       "action": "Get",
@@ -1289,6 +1297,12 @@
       "service": "Microsoft.RecoveryServices",
       "action": "Get",
       "source_file": "recoveryservices.go"
+    },
+    {
+      "permission": "Microsoft.Resources/deployments/read",
+      "service": "Microsoft.Resources",
+      "action": "NewListAtSubscriptionScopePager",
+      "source_file": "deployments.go"
     },
     {
       "permission": "Microsoft.Resources/resources/read",

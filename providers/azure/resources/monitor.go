@@ -6,7 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -366,6 +368,106 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceActivityLogEntry) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// localizableString returns the human-readable form of an activity log
+// LocalizableString, preferring the localized value and falling back to the
+// invariant value.
+func localizableString(s *monitor.LocalizableString) string {
+	if s == nil {
+		return ""
+	}
+	if s.LocalizedValue != nil && *s.LocalizedValue != "" {
+		return *s.LocalizedValue
+	}
+	return convert.ToValue(s.Value)
+}
+
+// entries lists the subscription's activity log management events from the last
+// seven days. The activity log API requires an eventTimestamp filter, so the
+// window is fixed; seven days is the practical horizon for change attribution
+// and keeps the response bounded.
+func (a *mqlAzureSubscriptionMonitorServiceActivityLog) entries() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := monitor.NewActivityLogsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	end := time.Now().UTC()
+	start := end.AddDate(0, 0, -7)
+	filter := fmt.Sprintf("eventTimestamp ge '%s' and eventTimestamp le '%s'",
+		start.Format(time.RFC3339), end.Format(time.RFC3339))
+
+	pager := client.NewListPager(filter, &monitor.ActivityLogsClientListOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			mqlEntry, err := newMqlActivityLogEntry(a.MqlRuntime, entry)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlEntry)
+		}
+	}
+	return res, nil
+}
+
+func newMqlActivityLogEntry(runtime *plugin.Runtime, entry *monitor.EventData) (*mqlAzureSubscriptionMonitorServiceActivityLogEntry, error) {
+	authorization, err := convert.JsonToDict(entry.Authorization)
+	if err != nil {
+		return nil, err
+	}
+	httpRequest, err := convert.JsonToDict(entry.HTTPRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	var level string
+	if entry.Level != nil {
+		level = string(*entry.Level)
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.monitorService.activityLog.entry",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(entry.EventDataID),
+			"id":                   llx.StringDataPtr(entry.EventDataID),
+			"eventTimestamp":       llx.TimeDataPtr(entry.EventTimestamp),
+			"operationName":        llx.StringData(localizableString(entry.OperationName)),
+			"caller":               llx.StringDataPtr(entry.Caller),
+			"level":                llx.StringData(level),
+			"status":               llx.StringData(localizableString(entry.Status)),
+			"subStatus":            llx.StringData(localizableString(entry.SubStatus)),
+			"resourceId":           llx.StringDataPtr(entry.ResourceID),
+			"resourceGroupName":    llx.StringDataPtr(entry.ResourceGroupName),
+			"resourceType":         llx.StringData(localizableString(entry.ResourceType)),
+			"resourceProviderName": llx.StringData(localizableString(entry.ResourceProviderName)),
+			"correlationId":        llx.StringDataPtr(entry.CorrelationID),
+			"operationId":          llx.StringDataPtr(entry.OperationID),
+			"category":             llx.StringData(localizableString(entry.Category)),
+			"description":          llx.StringDataPtr(entry.Description),
+			"claims":               llx.MapData(convert.PtrMapStrToInterface(entry.Claims), types.String),
+			"authorization":        llx.DictData(authorization),
+			"httpRequest":          llx.DictData(httpRequest),
+			"properties":           llx.MapData(convert.PtrMapStrToInterface(entry.Properties), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionMonitorServiceActivityLogEntry), nil
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
