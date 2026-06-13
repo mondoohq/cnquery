@@ -138,7 +138,9 @@ func (t *apiTraceTransport) RoundTrip(req *http.Request) (*http.Response, error)
 	}
 	log.Debug().
 		Str("method", req.Method).
-		Str("url", req.URL.String()).
+		// host+path only: the query string can carry signed-URL tokens or
+		// access tokens that must not leak into debug logs.
+		Str("url", req.URL.Host+req.URL.Path).
 		Int("status", status).
 		Dur("duration", elapsed).
 		Err(err).

@@ -111,7 +111,9 @@ func (p *apiTracePolicy) Do(req *policy.Request) (*http.Response, error) {
 	}
 	log.Debug().
 		Str("method", rawReq.Method).
-		Str("url", rawReq.URL.String()).
+		// host+path only: the query string can carry SAS tokens or other
+		// signed-URL credentials that must not leak into debug logs.
+		Str("url", rawReq.URL.Host+rawReq.URL.Path).
 		Int("status", status).
 		Dur("duration", elapsed).
 		Err(err).
