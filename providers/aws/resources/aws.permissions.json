@@ -119,6 +119,7 @@
     "ce:GetCostForecast",
     "cloudformation:DescribeStackSet",
     "cloudformation:DescribeStacks",
+    "cloudformation:ListStackResources",
     "cloudformation:ListStackSets",
     "cloudfront:GetAnycastIpList",
     "cloudfront:GetDistribution",
@@ -823,6 +824,7 @@
     "shield:GetSubscriptionState",
     "shield:ListProtectionGroups",
     "shield:ListProtections",
+    "signer:ListSigningProfiles",
     "sns:GetDataProtectionPolicy",
     "sns:GetSubscriptionAttributes",
     "sns:GetTopicAttributes",
@@ -1614,6 +1616,12 @@
       "permission": "cloudformation:DescribeStacks",
       "service": "cloudformation",
       "action": "DescribeStacks",
+      "source_file": "aws_cloudformation.go"
+    },
+    {
+      "permission": "cloudformation:ListStackResources",
+      "service": "cloudformation",
+      "action": "ListStackResources",
       "source_file": "aws_cloudformation.go"
     },
     {
@@ -5977,6 +5985,12 @@
       "service": "shield",
       "action": "ListProtections",
       "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "signer:ListSigningProfiles",
+      "service": "signer",
+      "action": "ListSigningProfiles",
+      "source_file": "aws_signer.go"
     },
     {
       "permission": "sns:GetDataProtectionPolicy",

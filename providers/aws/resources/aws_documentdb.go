@@ -974,6 +974,7 @@ func newMqlAwsDocumentdbSnapshot(runtime *plugin.Runtime, region, accountID stri
 			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
 			"status":            llx.StringDataPtr(snapshot.Status),
 			"snapshotType":      llx.StringDataPtr(snapshot.SnapshotType),
+			"sourceSnapshot":    llx.StringDataPtr(snapshot.SourceDBClusterSnapshotArn),
 			"port":              llx.IntDataDefault(snapshot.Port, 0),
 			"storageEncrypted":  llx.BoolDataPtr(snapshot.StorageEncrypted),
 			"storageType":       llx.StringDataPtr(snapshot.StorageType),

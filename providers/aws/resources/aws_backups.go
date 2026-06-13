@@ -128,15 +128,17 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 			}
 			mqlRP, err := CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
 				map[string]*llx.RawData{
-					"arn":              llx.StringDataPtr(rp.RecoveryPointArn),
-					"completionDate":   llx.TimeDataPtr(rp.CompletionDate),
-					"createdAt":        llx.TimeDataPtr(rp.CreationDate),
-					"createdBy":        llx.MapData(createdBy, types.String),
-					"encryptionKeyArn": llx.StringDataPtr(rp.EncryptionKeyArn),
-					"iamRoleArn":       llx.StringDataPtr(rp.IamRoleArn),
-					"isEncrypted":      llx.BoolData(rp.IsEncrypted),
-					"resourceType":     llx.StringDataPtr(rp.ResourceType),
-					"status":           llx.StringData(string(rp.Status)),
+					"arn":                  llx.StringDataPtr(rp.RecoveryPointArn),
+					"completionDate":       llx.TimeDataPtr(rp.CompletionDate),
+					"createdAt":            llx.TimeDataPtr(rp.CreationDate),
+					"createdBy":            llx.MapData(createdBy, types.String),
+					"encryptionKeyArn":     llx.StringDataPtr(rp.EncryptionKeyArn),
+					"iamRoleArn":           llx.StringDataPtr(rp.IamRoleArn),
+					"isEncrypted":          llx.BoolData(rp.IsEncrypted),
+					"resourceType":         llx.StringDataPtr(rp.ResourceType),
+					"status":               llx.StringData(string(rp.Status)),
+					"sourceResourceArn":    llx.StringDataPtr(rp.ResourceArn),
+					"sourceBackupVaultArn": llx.StringDataPtr(rp.SourceBackupVaultArn),
 				})
 			if err != nil {
 				return nil, err

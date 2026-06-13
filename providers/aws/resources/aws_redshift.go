@@ -344,6 +344,7 @@ func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot 
 			"clusterIdentifier":             llx.StringDataPtr(snapshot.ClusterIdentifier),
 			"region":                        llx.StringData(region),
 			"snapshotType":                  llx.StringDataPtr(snapshot.SnapshotType),
+			"sourceRegion":                  llx.StringDataPtr(snapshot.SourceRegion),
 			"status":                        llx.StringDataPtr(snapshot.Status),
 			"encrypted":                     llx.BoolDataPtr(snapshot.Encrypted),
 			"encryptedWithHSM":              llx.BoolDataPtr(snapshot.EncryptedWithHSM),

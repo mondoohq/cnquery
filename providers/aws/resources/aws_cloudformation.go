@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -242,6 +243,47 @@ func (a *mqlAwsCloudformationStack) notificationTopics() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlTopic)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudformationStack) resources() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudFormation(a.Region.Data)
+	ctx := context.Background()
+	stackName := a.Name.Data
+
+	res := []any{}
+	paginator := cloudformation.NewListStackResourcesPaginator(svc, &cloudformation.ListStackResourcesInput{StackName: &stackName})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, r := range page.StackResourceSummaries {
+			driftStatus := ""
+			if r.DriftInformation != nil {
+				driftStatus = string(r.DriftInformation.StackResourceDriftStatus)
+			}
+			mqlRes, err := CreateResource(a.MqlRuntime, "aws.cloudformation.stack.resource",
+				map[string]*llx.RawData{
+					"__id":          llx.StringData(a.StackId.Data + "/" + convert.ToValue(r.LogicalResourceId)),
+					"logicalId":     llx.StringDataPtr(r.LogicalResourceId),
+					"physicalId":    llx.StringDataPtr(r.PhysicalResourceId),
+					"resourceType":  llx.StringDataPtr(r.ResourceType),
+					"status":        llx.StringData(string(r.ResourceStatus)),
+					"statusReason":  llx.StringDataPtr(r.ResourceStatusReason),
+					"lastUpdatedAt": llx.TimeDataPtr(r.LastUpdatedTimestamp),
+					"driftStatus":   llx.StringData(driftStatus),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRes)
+		}
 	}
 	return res, nil
 }

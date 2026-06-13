@@ -607,6 +607,7 @@ func awsConnectionMethodToService(method string) string {
 		"kinesisvideo":             "kinesisvideo",
 		"secretsmanager":           "secretsmanager",
 		"securityhub":              "securityhub",
+		"signer":                   "signer",
 		"sesv2":                    "sesv2",
 		"shield":                   "shield",
 		"batch":                    "batch",

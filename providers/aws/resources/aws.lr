@@ -7088,6 +7088,8 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   publicIp string
   // Image used for the ECS container
   image string
+  // Resolved digest of the image actually running in the container
+  imageDigest string
   // Cluster associated with the ECS container
   clusterName string
   // Task definition associated with the ECS container
@@ -10751,6 +10753,10 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   arn string
   // Resource type for the recovery point: EFS, DynamoDB, and so on
   resourceType string
+  // ARN of the source resource this recovery point backs up
+  sourceResourceArn string
+  // ARN of the backup vault this recovery point was copied from, if it is a copy
+  sourceBackupVaultArn string
   // Information about who created the recovery point
   createdBy dict
   // IAM role used to create the recovery point
@@ -11476,6 +11482,12 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   availabilityZone string
   // Time zone of the source DB instance, if applicable (empty for cluster snapshots)
   timezone string
+  // Identifier or ARN of the snapshot this snapshot was copied from
+  sourceSnapshot string
+  // Region the source snapshot was copied from (empty unless this is a cross-region copy)
+  sourceRegion string
+  // Original creation time of the snapshot before any copy (empty unless this snapshot is a copy)
+  originalCreatedAt time
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
   // Whether the snapshot is shared publicly (restorable by any AWS account)
@@ -11605,6 +11617,14 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   dbiResourceId string
   // Cluster identifier if the instance belongs to a DB cluster
   dbClusterIdentifier string
+  // Identifier of the source DB instance if this instance is a read replica
+  readReplicaSourceInstanceId string
+  // Identifier of the source DB cluster if this instance is a read replica
+  readReplicaSourceClusterId string
+  // Source DB instance this instance replicates from, when it is present in this account
+  readReplicaSourceInstance() aws.rds.dbinstance
+  // Source DB cluster this instance replicates from, when it is present in this account
+  readReplicaSourceCluster() aws.rds.dbcluster
   // Storage throughput in MiBps for gp3 volumes
   storageThroughput int
   // KMS key used to encrypt the activity stream
@@ -12116,6 +12136,8 @@ private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt"
   region string
   // Snapshot type (manual or automated)
   snapshotType string
+  // Region the snapshot was copied from (empty unless this is a cross-region copy)
+  sourceRegion string
   // Snapshot status
   status string
   // Whether the snapshot data is encrypted
@@ -15302,6 +15324,14 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   storageTier string
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
+  // Volume the snapshot was created from, when it is still present in this account
+  sourceVolume() aws.ec2.volume
+  // Data encryption key identifier shared across a volume and snapshot lineage; snapshots with the same value derive from the same original volume
+  dataEncryptionKeyId string
+  // Owner alias of the snapshot (for example, amazon or aws-backup-vault)
+  ownerAlias string
+  // ARN of the Outpost on which the snapshot is stored
+  outpostArn string
   // Whether the snapshot is public (shared with all AWS accounts)
   isPublic() bool
 }
@@ -15342,6 +15372,60 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   kmsKey() aws.kms.key
   // Server-side encryption type: sse-ebs, sse-kms, or none
   sseType string
+  // ID of the snapshot the volume was created from
+  snapshotId string
+  // Snapshot the volume was created from, when it is still present in this account
+  snapshot() aws.ec2.snapshot
+  // Whether the volume was created from a snapshot using fast snapshot restore
+  fastRestored bool
+}
+
+// AWS Signer
+//
+// Use the Signer namespace to enumerate code-signing profiles in the
+// account. Iterate `signingProfiles()` to examine the signing platform,
+// profile status, signing-material certificate, and signature validity
+// period that govern how artifacts (such as Lambda deployment packages and
+// container images) are signed.
+aws.signer @defaults("signingProfiles") {
+  // List of signing profiles in the account
+  signingProfiles() []aws.signer.signingProfile
+}
+
+// AWS Signer code-signing profile
+//
+// Examine a code-signing profile — the named configuration Signer uses to
+// produce signatures for a given platform. Each profile carries the signing
+// `platformId`, the profile `status`, the certificate ARN of its signing
+// material, and the validity period stamped onto generated signatures,
+// establishing the provenance of artifacts signed through it.
+private aws.signer.signingProfile @defaults("profileName platformId status") {
+  // ARN of the signing profile
+  arn string
+  // Name of the signing profile
+  profileName string
+  // Version of the signing profile
+  profileVersion string
+  // ARN of the signing profile version
+  profileVersionArn string
+  // ID of the signing platform (for example, AWSLambda-SHA384-ECDSA)
+  platformId string
+  // Display name of the signing platform
+  platformDisplayName string
+  // Status of the signing profile: Active, Canceled, or Revoked
+  status string
+  // Certificate ARN of the signing material used to sign artifacts
+  signingMaterialCertificateArn string
+  // Validity period unit applied to generated signatures: DAYS, MONTHS, or YEARS
+  signatureValidityType string
+  // Number of validity-period units applied to generated signatures
+  signatureValidityValue int
+  // Signing parameters attached to the profile
+  signingParameters map[string]string
+  // Region where the signing profile exists
+  region string
+  // Tags for the signing profile
+  tags map[string]string
 }
 
 // Amazon Inspector
@@ -15806,6 +15890,14 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   sourceImageId string
   // Source image region if this AMI was copied from another region
   sourceImageRegion string
+  // ID of the instance this AMI was created from
+  sourceInstanceId string
+  // Image this AMI was copied from, when it is still present in this account
+  sourceImage() aws.ec2.image
+  // Instance this AMI was created from, when it is still present in this account
+  sourceInstance() aws.ec2.instance
+  // Marketplace and origin product codes associated with the image
+  productCodes []dict
   // Provenance watermarks recorded on the image
   watermarks []aws.ec2.image.watermark
 }
@@ -16742,6 +16834,8 @@ private aws.neptune.snapshot @defaults("arn status createdAt") {
   storageType string
   // KMS key used for the encrypted snapshot
   kmsKey() aws.kms.key
+  // ARN of the cluster snapshot this snapshot was copied from
+  sourceSnapshot string
   // Availability zones for the snapshot
   availabilityZones []string
   // Time the snapshot was taken
@@ -17230,6 +17324,8 @@ private aws.documentdb.snapshot @defaults("arn status createdAt") {
   status string
   // Snapshot type (manual or automated)
   snapshotType string
+  // ARN of the cluster snapshot this snapshot was copied from
+  sourceSnapshot string
   // Port the database engine was listening on at the time of the snapshot
   port int
   // Whether the snapshot is encrypted
@@ -22013,6 +22109,33 @@ private aws.cloudformation.stack @defaults("name status") {
   createdAt time
   // Date the stack was last updated
   updatedAt time
+  // Resources the stack provisioned, mapping each template entry to the concrete AWS resource
+  resources() []aws.cloudformation.stack.resource
+}
+
+// CloudFormation stack resource
+//
+// Examine a single resource managed by a CloudFormation stack — the
+// logical-to-physical mapping that records which concrete AWS resource the
+// stack provisioned for a given template entry. Each row carries the
+// `logicalId` from the template, the `physicalId` of the created resource,
+// its `resourceType`, current status, and drift state, making it the
+// authoritative link between a stack and the resources it owns.
+private aws.cloudformation.stack.resource @defaults("logicalId resourceType status") {
+  // Logical ID of the resource as defined in the stack template
+  logicalId string
+  // Physical ID of the provisioned resource
+  physicalId string
+  // Resource type (for example, AWS::EC2::Instance)
+  resourceType string
+  // Current status of the resource (for example, CREATE_COMPLETE)
+  status string
+  // Reason for the current resource status
+  statusReason string
+  // Time the resource status was last updated
+  lastUpdatedAt time
+  // Drift status of the resource: IN_SYNC, MODIFIED, DELETED, NOT_CHECKED, or UNKNOWN
+  driftStatus string
 }
 
 // AWS CloudFormation stack set

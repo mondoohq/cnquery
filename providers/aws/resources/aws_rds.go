@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -581,6 +582,8 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"dedicatedLogVolume":                 llx.BoolDataPtr(dbInstance.DedicatedLogVolume),
 			"dbiResourceId":                      llx.StringDataPtr(dbInstance.DbiResourceId),
 			"dbClusterIdentifier":                llx.StringDataPtr(dbInstance.DBClusterIdentifier),
+			"readReplicaSourceInstanceId":        llx.StringDataPtr(dbInstance.ReadReplicaSourceDBInstanceIdentifier),
+			"readReplicaSourceClusterId":         llx.StringDataPtr(dbInstance.ReadReplicaSourceDBClusterIdentifier),
 			"storageThroughput":                  llx.IntDataDefault(dbInstance.StorageThroughput, 0),
 			"masterUserSecret":                   llx.DictData(masterUserSecretToDict(dbInstance.MasterUserSecret)),
 			"customerOwnedIpEnabled":             llx.BoolDataPtr(dbInstance.CustomerOwnedIpEnabled),
@@ -719,6 +722,55 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		}
 	}
 	return nil, nil, errors.New("rds db instance does not exist")
+}
+
+// rdsSourceArn returns the ARN for a read-replica source identifier. Same-region
+// sources are reported as a bare identifier and are assembled into an ARN using
+// this instance's region and account; cross-region sources are already ARNs and
+// are returned as-is.
+func (a *mqlAwsRdsDbinstance) rdsSourceArn(identifier, pattern string) string {
+	if strings.HasPrefix(identifier, "arn:") {
+		return identifier
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(pattern, a.Region.Data, conn.AccountId(), identifier)
+}
+
+// readReplicaSourceInstance resolves the primary DB instance this read replica
+// replicates from, when it is present in this account. Cross-account or
+// cross-region sources that are not in the inventory resolve to null; the
+// readReplicaSourceInstanceId field always carries the lineage identifier.
+func (a *mqlAwsRdsDbinstance) readReplicaSourceInstance() (*mqlAwsRdsDbinstance, error) {
+	if !a.ReadReplicaSourceInstanceId.IsSet() || a.ReadReplicaSourceInstanceId.Data == "" {
+		a.ReadReplicaSourceInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := a.rdsSourceArn(a.ReadReplicaSourceInstanceId.Data, rdsInstanceArnPattern)
+	res, err := NewResource(a.MqlRuntime, "aws.rds.dbinstance",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.ReadReplicaSourceInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRdsDbinstance), nil
+}
+
+// readReplicaSourceCluster resolves the source DB cluster this read replica
+// replicates from, when it is present in this account. See
+// readReplicaSourceInstance for the null-resolution semantics.
+func (a *mqlAwsRdsDbinstance) readReplicaSourceCluster() (*mqlAwsRdsDbcluster, error) {
+	if !a.ReadReplicaSourceClusterId.IsSet() || a.ReadReplicaSourceClusterId.Data == "" {
+		a.ReadReplicaSourceCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := a.rdsSourceArn(a.ReadReplicaSourceClusterId.Data, "arn:aws:rds:%s:%s:cluster:%s")
+	res, err := NewResource(a.MqlRuntime, "aws.rds.dbcluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.ReadReplicaSourceCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRdsDbcluster), nil
 }
 
 func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
@@ -1200,6 +1252,9 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 			"tags":                  llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
 			"timezone":              llx.StringData(""),
 			"type":                  llx.StringDataPtr(snapshot.SnapshotType),
+			"sourceSnapshot":        llx.StringDataPtr(snapshot.SourceDBClusterSnapshotArn),
+			"sourceRegion":          llx.StringData(""),
+			"originalCreatedAt":     llx.NilData,
 		})
 	if err != nil {
 		return nil, err
@@ -1232,6 +1287,9 @@ func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds
 			"tags":                  llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
 			"timezone":              llx.StringDataPtr(snapshot.Timezone),
 			"type":                  llx.StringDataPtr(snapshot.SnapshotType),
+			"sourceSnapshot":        llx.StringDataPtr(snapshot.SourceDBSnapshotIdentifier),
+			"sourceRegion":          llx.StringDataPtr(snapshot.SourceRegion),
+			"originalCreatedAt":     llx.TimeDataPtr(snapshot.OriginalSnapshotCreateTime),
 		})
 	if err != nil {
 		return nil, err

@@ -994,6 +994,10 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							lastLaunchedAt = &t
 						}
 					}
+					imageProductCodes, err := convert.JsonToDictSlice(image.ProductCodes)
+					if err != nil {
+						return nil, err
+					}
 					mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Image,
 						map[string]*llx.RawData{
 							"arn":                      llx.StringData(imageArn),
@@ -1025,6 +1029,8 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							"rootDeviceName":           llx.StringDataPtr(image.RootDeviceName),
 							"sourceImageId":            llx.StringDataPtr(image.SourceImageId),
 							"sourceImageRegion":        llx.StringDataPtr(image.SourceImageRegion),
+							"sourceInstanceId":         llx.StringDataPtr(image.SourceInstanceId),
+							"productCodes":             llx.ArrayData(imageProductCodes, types.Dict),
 							"watermarks":               llx.ArrayData(watermarks, types.Resource(ResourceAwsEc2ImageWatermark)),
 						})
 					if err != nil {
@@ -1834,6 +1840,50 @@ func (a *mqlAwsEc2ImageEbsBlockDevice) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+// sourceImage resolves the AMI this image was copied from when it is still
+// present in this account. The source may be owned by another account or
+// deregistered; in that case the reference is null and the sourceImageId field
+// carries the lineage id.
+func (i *mqlAwsEc2Image) sourceImage() (*mqlAwsEc2Image, error) {
+	if !i.SourceImageId.IsSet() || i.SourceImageId.Data == "" {
+		i.SourceImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := i.SourceImageRegion.Data
+	if region == "" {
+		region = i.Region.Data
+	}
+	arn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), i.SourceImageId.Data)
+	mqlImage, err := NewResource(i.MqlRuntime, ResourceAwsEc2Image,
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		i.SourceImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return mqlImage.(*mqlAwsEc2Image), nil
+}
+
+// sourceInstance resolves the instance this AMI was created from when it is
+// still present in this account. The instance is frequently terminated; in that
+// case the reference is null and the sourceInstanceId field carries the
+// lineage id.
+func (i *mqlAwsEc2Image) sourceInstance() (*mqlAwsEc2Instance, error) {
+	if !i.SourceInstanceId.IsSet() || i.SourceInstanceId.Data == "" {
+		i.SourceInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := fmt.Sprintf(ec2InstanceArnPattern, i.Region.Data, conn.AccountId(), i.SourceInstanceId.Data)
+	mqlInstance, err := NewResource(i.MqlRuntime, ResourceAwsEc2Instance,
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		i.SourceInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return mqlInstance.(*mqlAwsEc2Instance), nil
+}
+
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1883,6 +1933,8 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["rootDeviceName"] = llx.NilData
 		args["sourceImageId"] = llx.NilData
 		args["sourceImageRegion"] = llx.NilData
+		args["sourceInstanceId"] = llx.NilData
+		args["productCodes"] = llx.NilData
 		args["watermarks"] = llx.NilData
 		return args, nil, nil
 	}
@@ -1928,6 +1980,12 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["rootDeviceName"] = llx.StringDataPtr(image.RootDeviceName)
 		args["sourceImageId"] = llx.StringDataPtr(image.SourceImageId)
 		args["sourceImageRegion"] = llx.StringDataPtr(image.SourceImageRegion)
+		args["sourceInstanceId"] = llx.StringDataPtr(image.SourceInstanceId)
+		imageProductCodes, err := convert.JsonToDictSlice(image.ProductCodes)
+		if err != nil {
+			return nil, nil, err
+		}
+		args["productCodes"] = llx.ArrayData(imageProductCodes, types.Dict)
 		args["watermarks"] = llx.ArrayData(watermarks, types.Resource(ResourceAwsEc2ImageWatermark))
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
@@ -2393,6 +2451,8 @@ func buildVolumeResource(runtime *plugin.Runtime, region, accountID string, vol 
 			"throughput":         llx.IntDataDefault(vol.Throughput, 0),
 			"volumeType":         llx.StringData(string(vol.VolumeType)),
 			"sseType":            llx.StringData(string(vol.SseType)),
+			"fastRestored":       llx.BoolDataPtr(vol.FastRestored),
+			"snapshotId":         llx.StringDataPtr(vol.SnapshotId),
 		})
 	if err != nil {
 		return nil, err
@@ -2404,6 +2464,24 @@ func buildVolumeResource(runtime *plugin.Runtime, region, accountID string, vol 
 
 type mqlAwsEc2VolumeInternal struct {
 	cacheKmsKeyId *string
+}
+
+// snapshot resolves the source snapshot when it is still present in this
+// account. Volumes are frequently created from snapshots owned by Amazon (AMI
+// snapshots) or from since-deleted snapshots, which cannot be fetched; in that
+// case the reference is null and the snapshotId field carries the lineage id.
+func (a *mqlAwsEc2Volume) snapshot() (*mqlAwsEc2Snapshot, error) {
+	if !a.SnapshotId.IsSet() || a.SnapshotId.Data == "" {
+		a.Snapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlSnap, err := NewResource(a.MqlRuntime, ResourceAwsEc2Snapshot,
+		map[string]*llx.RawData{"id": llx.StringData(a.SnapshotId.Data)})
+	if err != nil {
+		a.Snapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return mqlSnap.(*mqlAwsEc2Snapshot), nil
 }
 
 func (a *mqlAwsEc2Volume) kmsKey() (*mqlAwsKmsKey, error) {
@@ -2496,18 +2574,21 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, snapshot ec2types.Snapshot) (*mqlAwsEc2Snapshot, error) {
 	mqlSnap, err := CreateResource(runtime, ResourceAwsEc2Snapshot,
 		map[string]*llx.RawData{
-			"arn":            llx.StringData(fmt.Sprintf(snapshotArnPattern, region, accountID, convert.ToValue(snapshot.SnapshotId))),
-			"completionTime": llx.TimeDataPtr(snapshot.CompletionTime),
-			"description":    llx.StringDataPtr(snapshot.Description),
-			"encrypted":      llx.BoolDataPtr(snapshot.Encrypted),
-			"id":             llx.StringDataPtr(snapshot.SnapshotId),
-			"region":         llx.StringData(region),
-			"startTime":      llx.TimeDataPtr(snapshot.StartTime),
-			"state":          llx.StringData(string(snapshot.State)),
-			"storageTier":    llx.StringData(string(snapshot.StorageTier)),
-			"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(snapshot.Tags)), types.String),
-			"volumeId":       llx.StringDataPtr(snapshot.VolumeId),
-			"volumeSize":     llx.IntDataDefault(snapshot.VolumeSize, 0),
+			"arn":                 llx.StringData(fmt.Sprintf(snapshotArnPattern, region, accountID, convert.ToValue(snapshot.SnapshotId))),
+			"completionTime":      llx.TimeDataPtr(snapshot.CompletionTime),
+			"description":         llx.StringDataPtr(snapshot.Description),
+			"encrypted":           llx.BoolDataPtr(snapshot.Encrypted),
+			"id":                  llx.StringDataPtr(snapshot.SnapshotId),
+			"region":              llx.StringData(region),
+			"startTime":           llx.TimeDataPtr(snapshot.StartTime),
+			"state":               llx.StringData(string(snapshot.State)),
+			"storageTier":         llx.StringData(string(snapshot.StorageTier)),
+			"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(snapshot.Tags)), types.String),
+			"volumeId":            llx.StringDataPtr(snapshot.VolumeId),
+			"volumeSize":          llx.IntDataDefault(snapshot.VolumeSize, 0),
+			"dataEncryptionKeyId": llx.StringDataPtr(snapshot.DataEncryptionKeyId),
+			"ownerAlias":          llx.StringDataPtr(snapshot.OwnerAlias),
+			"outpostArn":          llx.StringDataPtr(snapshot.OutpostArn),
 		})
 	if err != nil {
 		return nil, err
@@ -2723,6 +2804,26 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 
 type mqlAwsEc2SnapshotInternal struct {
 	cacheKmsKeyId *string
+}
+
+// sourceVolume resolves the volume the snapshot was created from when it is
+// still present in this account. Snapshots commonly outlive the volume they
+// were taken from, so the volume is frequently gone; in that case the reference
+// is null and the volumeId field carries the lineage id.
+func (a *mqlAwsEc2Snapshot) sourceVolume() (*mqlAwsEc2Volume, error) {
+	if !a.VolumeId.IsSet() || a.VolumeId.Data == "" {
+		a.SourceVolume.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	volumeArn := fmt.Sprintf(volumeArnPattern, a.Region.Data, conn.AccountId(), a.VolumeId.Data)
+	mqlVol, err := NewResource(a.MqlRuntime, ResourceAwsEc2Volume,
+		map[string]*llx.RawData{"arn": llx.StringData(volumeArn)})
+	if err != nil {
+		a.SourceVolume.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return mqlVol.(*mqlAwsEc2Volume), nil
 }
 
 func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {

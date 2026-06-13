@@ -390,6 +390,7 @@ func newMqlAwsNeptuneSnapshot(runtime *plugin.Runtime, region string, snapshot n
 			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
 			"status":            llx.StringDataPtr(snapshot.Status),
 			"snapshotType":      llx.StringDataPtr(snapshot.SnapshotType),
+			"sourceSnapshot":    llx.StringDataPtr(snapshot.SourceDBClusterSnapshotArn),
 			"port":              llx.IntDataPtr(snapshot.Port),
 			"allocatedStorage":  llx.IntDataPtr(snapshot.AllocatedStorage),
 			"storageEncrypted":  llx.BoolDataPtr(snapshot.StorageEncrypted),

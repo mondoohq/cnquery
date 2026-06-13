@@ -611,6 +611,7 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				"containerName":      llx.StringDataPtr(c.Name),
 				"cpuUnits":           llx.StringDataPtr(c.Cpu),
 				"image":              llx.StringData(convert.ToValue(c.Image)),
+				"imageDigest":        llx.StringDataPtr(c.ImageDigest),
 				"logDriver":          llx.StringData(containerLogDriverMap[convert.ToValue(c.Name)]),
 				"name":               llx.StringData(name),
 				"platformFamily":     llx.StringData(t.PlatformFamily.Data),

@@ -104,6 +104,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -284,6 +285,30 @@ func (t *AwsConnection) Ecr(region string) *ecr.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := ecr.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Signer(region string) *signer.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_signer_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached signer client")
+		return c.Data.(*signer.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := signer.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
