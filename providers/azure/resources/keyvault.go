@@ -79,9 +79,10 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) id() (string, error) {
 }
 
 type mqlAzureSubscriptionKeyVaultServiceVaultInternal struct {
-	fetchVaultOnce sync.Once
-	fetchVaultResp *keyvault.VaultsClientGetResponse
-	fetchVaultErr  error
+	fetchVaultOnce  sync.Once
+	fetchVaultResp  *keyvault.VaultsClientGetResponse
+	fetchVaultErr   error
+	cacheSystemData any
 }
 
 // fetchVault retrieves the full vault from ARM. Cached with sync.Once so that
@@ -161,6 +162,11 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure.(*mqlAzureSubscriptionKeyVaultServiceVault).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}
@@ -1549,6 +1555,11 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 	mqlVault.fetchVaultOnce.Do(func() {
 		mqlVault.fetchVaultResp = &vault
 	})
+	sysData, err := convert.JsonToDict(vault.SystemData)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlVault.cacheSystemData = sysData
 
 	return args, mqlVault, nil
 }

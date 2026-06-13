@@ -176,7 +176,17 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccount), nil
+	mqlAccount := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccount)
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount.cacheSystemData = sysData
+	return mqlAccount, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountInternal struct {
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) id() (string, error) {

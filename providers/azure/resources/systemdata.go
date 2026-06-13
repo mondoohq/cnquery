@@ -53,68 +53,87 @@ func azureSystemData(runtime *plugin.Runtime, parentID string, raw any) (*mqlAzu
 	return res.(*mqlAzureSubscriptionSystemData), nil
 }
 
-func (a *mqlAzureSubscriptionComputeServiceVm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
+// systemMetadataFromRaw builds the typed system-metadata resource from a raw
+// systemData dict and marks the field null when the resource carries none.
+func systemMetadataFromRaw(runtime *plugin.Runtime, parentID string, raw any, field *plugin.TValue[*mqlAzureSubscriptionSystemData]) (*mqlAzureSubscriptionSystemData, error) {
+	sd, err := azureSystemData(runtime, parentID, raw)
 	if err != nil {
 		return nil, err
 	}
 	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
+		field.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return sd, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDisk) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
-	if err != nil {
-		return nil, err
-	}
-	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return sd, nil
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceSnapshot) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
-	if err != nil {
-		return nil, err
-	}
-	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return sd, nil
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
-	if err != nil {
-		return nil, err
-	}
-	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return sd, nil
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceHybridMachine) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
-	if err != nil {
-		return nil, err
-	}
-	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return sd, nil
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceHybridMachineExtension) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
-	sd, err := azureSystemData(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data)
-	if err != nil {
-		return nil, err
-	}
-	if sd == nil {
-		a.SystemMetadata.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return sd, nil
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionKustoServiceCluster) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

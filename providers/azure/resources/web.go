@@ -146,7 +146,22 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		args["identityType"] = llx.StringData(identityType)
 	}
 
-	return CreateResource(runtime, resourceType, args)
+	res, err := CreateResource(runtime, resourceType, args)
+	if err != nil {
+		return nil, err
+	}
+	if resourceType == ResourceAzureSubscriptionWebServiceAppsite {
+		sysData, err := convert.JsonToDict(site.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		res.(*mqlAzureSubscriptionWebServiceAppsite).cacheSystemData = sysData
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionWebServiceAppsiteInternal struct {
+	cacheSystemData any
 }
 
 type runtimeStackDescriptor struct {

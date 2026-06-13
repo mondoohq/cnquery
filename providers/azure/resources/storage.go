@@ -52,6 +52,7 @@ func initAzureSubscriptionStorageService(runtime *plugin.Runtime, args map[strin
 }
 
 type mqlAzureSubscriptionStorageServiceAccountInternal struct {
+	cacheSystemData            any
 	cacheEncryptionKeySource   string
 	cacheEncryptionKeyVaultURI string
 	cacheEncryptionKeyName     string
@@ -970,6 +971,11 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		return nil, err
 	}
 	mqlRes := res.(*mqlAzureSubscriptionStorageServiceAccount)
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlRes.cacheSystemData = sysData
 	if account.Properties != nil && account.Properties.Encryption != nil {
 		enc := account.Properties.Encryption
 		if enc.KeySource != nil {

@@ -153,5 +153,15 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore), nil
+	mqlStore := res.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore)
+	sysData, err := convert.JsonToDict(store.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlStore.cacheSystemData = sysData
+	return mqlStore, nil
+}
+
+type mqlAzureSubscriptionAppConfigurationServiceConfigurationStoreInternal struct {
+	cacheSystemData any
 }

@@ -24,6 +24,7 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryInternal struct {
 	cachePolicies                   *armcontainerregistry.Policies
 	cacheEncryption                 *armcontainerregistry.EncryptionProperty
 	cachePrivateEndpointConnections []*armcontainerregistry.PrivateEndpointConnection
+	cacheSystemData                 any
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryTokenInternal struct {
@@ -213,6 +214,11 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 	mqlReg.cachePolicies = props.Policies
 	mqlReg.cacheEncryption = props.Encryption
 	mqlReg.cachePrivateEndpointConnections = props.PrivateEndpointConnections
+	sysData, err := convert.JsonToDict(reg.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlReg.cacheSystemData = sysData
 
 	return mqlReg, nil
 }

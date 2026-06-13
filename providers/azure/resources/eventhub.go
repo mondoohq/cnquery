@@ -23,6 +23,11 @@ type mqlAzureSubscriptionEventHubServiceNamespaceInternal struct {
 	networkRuleSetFetched bool
 	networkRuleSetProps   *armeventhub.NetworkRuleSetProperties
 	networkRuleSetLock    sync.Mutex
+	cacheSystemData       any
+}
+
+type mqlAzureSubscriptionEventHubServiceNamespaceEventHubInternal struct {
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionEventHubService) id() (string, error) {
@@ -152,6 +157,11 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ns.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace).cacheSystemData = sysData
 			res = append(res, mqlNs)
 		}
 	}
@@ -225,6 +235,11 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(eh.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlEh.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).cacheSystemData = sysData
 			res = append(res, mqlEh)
 		}
 	}

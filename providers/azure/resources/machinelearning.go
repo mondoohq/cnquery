@@ -25,6 +25,7 @@ import (
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceInternal struct {
 	cacheEncryptionKeyUri string
+	cacheSystemData       any
 }
 
 func initAzureSubscriptionMachineLearningService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -164,6 +165,11 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 
 	mqlWs := resource.(*mqlAzureSubscriptionMachineLearningServiceWorkspace)
 	mqlWs.cacheEncryptionKeyUri = encryptionKeyUri
+	sysData, err := convert.JsonToDict(ws.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlWs.cacheSystemData = sysData
 	return mqlWs, nil
 }
 

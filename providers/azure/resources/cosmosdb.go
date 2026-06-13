@@ -115,6 +115,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountInternal struct {
 	cacheBackupIntervalMinutes int64
 	cacheBackupRetentionHours  int64
 	cacheBackupRedundancy      string
+	cacheSystemData            any
 }
 
 func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
@@ -267,6 +268,11 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 	if account.Properties != nil && account.Properties.KeyVaultKeyURI != nil {
 		mqlAccount.cacheKeyVaultKeyUri = *account.Properties.KeyVaultKeyURI
 	}
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount.cacheSystemData = sysData
 	return mqlCosmosDbAccount, nil
 }
 

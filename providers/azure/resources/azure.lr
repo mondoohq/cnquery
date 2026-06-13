@@ -3657,6 +3657,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   //
   // Includes the Microsoft Purview-backed Sensitive Data Discovery feature that classifies blob containers for sensitive data (credit cards, credentials, etc.) and surfaces findings as security alerts.
   defenderForStorage() azure.subscription.storageService.account.defenderForStorageSetting
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage account queue
@@ -4295,6 +4297,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   virtualNetworkSubnetId string
   // Subnet the app is regionally VNet-integrated with; null when no regional VNet integration is configured
   virtualNetworkSubnet() azure.subscription.networkService.subnet
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Web app site outbound VNet routing configuration
@@ -5783,6 +5787,8 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // SQL API databases hosted on the account (Core SQL API)
   sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB account virtual network rule
@@ -6151,6 +6157,8 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   accessPolicies() []azure.subscription.keyVaultService.vault.accessPolicy
   // Vault network ACL rules
   networkAcls() azure.subscription.keyVaultService.vault.networkAcls
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Key Vault vault access policy
@@ -7497,6 +7505,8 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   controlPlaneMetricsEnabled bool
   // Workload identity bindings attached to the cluster
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Kubernetes Service cluster AAD profile
@@ -8339,6 +8349,8 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   credentialSets() []azure.subscription.containerRegistryService.registry.credentialSet
   // Connected (edge/on-prem) registries that mirror this registry
   connectedRegistries() []azure.subscription.containerRegistryService.registry.connectedRegistry
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network rule set for an Azure Container Registry
@@ -9362,6 +9374,8 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Event Hubs namespace network rule set
@@ -9415,6 +9429,8 @@ private azure.subscription.eventHubService.namespace.eventHub @defaults("id name
   partitionIds []string
   // Consumer groups for this Event Hub
   consumerGroups() []azure.subscription.eventHubService.namespace.eventHub.consumerGroup
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Event Hub consumer group
@@ -10777,6 +10793,8 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   computes() []azure.subscription.machineLearningService.workspace.compute
   // Models registered in the workspace
   models() []azure.subscription.machineLearningService.workspace.model
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Real-time inference endpoint in an Azure Machine Learning workspace
@@ -11028,6 +11046,8 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   createMode string
   // Default retention period (seconds) for revisions of every key-value, controlling how far back point-in-time queries can read
   defaultKeyValueRevisionRetentionPeriodInSeconds int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure AI Services
@@ -11113,6 +11133,8 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   projects() []azure.subscription.cognitiveServicesService.account.project
   // Account-scoped connections to external resources, model providers, data sources, and tool servers
   connections() []azure.subscription.cognitiveServicesService.account.connection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Model deployment on an Azure AI Services account
@@ -11653,6 +11675,8 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   privateEndpointConnections() []azure.subscription.kustoService.cluster.privateEndpointConnection
   // Managed private endpoints created by the cluster toward other Azure services
   managedPrivateEndpoints() []azure.subscription.kustoService.cluster.managedPrivateEndpoint
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer database

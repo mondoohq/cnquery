@@ -22,6 +22,7 @@ import (
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
 	cacheKmsKeyId   string
 	cacheProperties *clusters.ManagedClusterProperties
+	cacheSystemData any
 }
 
 type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
@@ -321,6 +322,11 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
 			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
 			mqlCluster.cacheProperties = entry.Properties
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCluster.cacheSystemData = sysData
 			res = append(res, mqlCluster)
 		}
 	}

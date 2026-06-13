@@ -160,7 +160,17 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionKustoServiceCluster), nil
+	mqlCluster := res.(*mqlAzureSubscriptionKustoServiceCluster)
+	sysData, err := convert.JsonToDict(cluster.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlCluster.cacheSystemData = sysData
+	return mqlCluster, nil
+}
+
+type mqlAzureSubscriptionKustoServiceClusterInternal struct {
+	cacheSystemData any
 }
 
 // kustoAccessDenied reports whether the error is a 403 from the Azure API, in
