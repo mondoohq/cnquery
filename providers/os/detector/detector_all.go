@@ -979,6 +979,19 @@ var euleros = &PlatformResolver{
 	},
 }
 
+// CirrOS is a minimal Buildroot-based cloud test image; it self-identifies via
+// /etc/os-release (ID=cirros), populated by the generic linux family detection.
+var cirros = &PlatformResolver{
+	Name:     "cirros",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "cirros" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -1260,7 +1273,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, cirros, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)

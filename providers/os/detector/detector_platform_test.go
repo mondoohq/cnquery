@@ -698,6 +698,17 @@ func TestGentooLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestCirrOSLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-cirros.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "cirros", di.Name, "os name should be identified")
+	assert.Equal(t, "CirrOS 0.6.0", di.Title, "os title should be identified")
+	assert.Equal(t, "0.6.0", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestAlpineLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-alpine.toml")
 	assert.Nil(t, err, "was able to create the provider")
