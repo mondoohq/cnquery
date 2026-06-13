@@ -107,7 +107,7 @@ func TestK8sManagedFields(t *testing.T) {
 	assert.Equal(t, "", apply.Subresource.Data)
 	assert.Nil(t, apply.Time.Data, "missing managed-field time must be null")
 	assert.Nil(t, apply.FieldsV1.Data, "missing field set must be null")
-	assert.Equal(t, "pod-uid-1/managedfield/kubectl/Apply/", apply.__id)
+	assert.Equal(t, "pod-uid-1/managedfield/kubectl/Apply/v1/", apply.__id)
 
 	// Second entry: timestamp + parsed FieldsV1 dict.
 	update := items[1].(*mqlK8sManagedField)
@@ -119,7 +119,30 @@ func TestK8sManagedFields(t *testing.T) {
 	fields, ok := update.FieldsV1.Data.(map[string]any)
 	require.True(t, ok, "fieldsV1 must decode into a dict")
 	assert.Contains(t, fields, "f:status")
-	assert.Equal(t, "pod-uid-1/managedfield/kube-controller-manager/Update/status", update.__id)
+	assert.Equal(t, "pod-uid-1/managedfield/kube-controller-manager/Update/v1/status", update.__id)
+}
+
+// TestK8sManagedFieldsApiVersionNotDeduped guards against a cache collision:
+// two managed-field entries that differ only by apiVersion must both survive
+// rather than the second silently returning the first's cached resource.
+func TestK8sManagedFieldsApiVersionNotDeduped(t *testing.T) {
+	pod := &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "app-pod",
+			UID:  "pod-uid-1",
+			ManagedFields: []metav1.ManagedFieldsEntry{
+				{Manager: "ctrl", Operation: metav1.ManagedFieldsOperationUpdate, APIVersion: "v1", FieldsType: "FieldsV1"},
+				{Manager: "ctrl", Operation: metav1.ManagedFieldsOperationUpdate, APIVersion: "v1beta1", FieldsType: "FieldsV1"},
+			},
+		},
+	}
+
+	items, err := k8sManagedFields(provenanceTestRuntime(), pod)
+	require.NoError(t, err)
+	require.Len(t, items, 2, "entries differing only by apiVersion must not be deduplicated")
+	assert.Equal(t, "v1", items[0].(*mqlK8sManagedField).ApiVersion.Data)
+	assert.Equal(t, "v1beta1", items[1].(*mqlK8sManagedField).ApiVersion.Data)
 }
 
 // TestPodOwnerReferencesTyped guards the pod accessor specifically, since its

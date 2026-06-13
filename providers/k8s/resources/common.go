@@ -384,9 +384,11 @@ func k8sManagedFields(runtime *plugin.Runtime, obj any) ([]any, error) {
 		f := fields[i]
 
 		data := map[string]*llx.RawData{
-			// A manager can appear more than once, keyed by operation and
-			// subresource, so include all three in the synthetic id.
-			"__id":        llx.StringData(objUID + "/managedfield/" + f.Manager + "/" + string(f.Operation) + "/" + f.Subresource),
+			// Kubernetes keys managed-field entries by
+			// (manager, operation, apiVersion, subresource), so the synthetic
+			// id must include all four to avoid silently deduplicating entries
+			// that differ only by apiVersion.
+			"__id":        llx.StringData(objUID + "/managedfield/" + f.Manager + "/" + string(f.Operation) + "/" + f.APIVersion + "/" + f.Subresource),
 			"manager":     llx.StringData(f.Manager),
 			"operation":   llx.StringData(string(f.Operation)),
 			"apiVersion":  llx.StringData(f.APIVersion),
