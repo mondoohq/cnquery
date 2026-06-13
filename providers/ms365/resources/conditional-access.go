@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -619,6 +620,20 @@ func newMqlAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Au
 	}
 
 	return resource.(*mqlMicrosoftConditionalAccessAuthenticationMethodsPolicy), nil
+}
+
+// initMicrosoftConditionalAccessAuthenticationMethodConfiguration rejects a
+// direct query of this resource. It is a member of
+// authenticationMethodsPolicy.authenticationMethodConfigurations and has no
+// standalone identity, so a bare binding resolves to an empty husk whose plain
+// fields (id, state) then fail with "cannot convert primitive with NO type
+// information". When it is built as a list element (with an __id), it passes
+// through unchanged.
+func initMicrosoftConditionalAccessAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	return nil, nil, errors.New("microsoft.conditionalAccess.authenticationMethodConfiguration cannot be queried directly; read it through microsoft.conditionalAccess.authenticationMethodsPolicy.authenticationMethodConfigurations")
 }
 
 func newMqlAuthenticationMethodConfiguration(runtime *plugin.Runtime, config models.AuthenticationMethodConfigurationable) (*mqlMicrosoftConditionalAccessAuthenticationMethodConfiguration, error) {

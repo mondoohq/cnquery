@@ -333,7 +333,7 @@ func init() {
 			Create: createMicrosoftConditionalAccessAuthenticationMethodsPolicy,
 		},
 		"microsoft.conditionalAccess.authenticationMethodConfiguration": {
-			// to override args, implement: initMicrosoftConditionalAccessAuthenticationMethodConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initMicrosoftConditionalAccessAuthenticationMethodConfiguration,
 			Create: createMicrosoftConditionalAccessAuthenticationMethodConfiguration,
 		},
 		"microsoft.conditionalAccess.namedLocations": {
