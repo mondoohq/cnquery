@@ -82,20 +82,30 @@ func initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime 
 	return args, nil, nil
 }
 
+// filterID renders a filter value for embedding in a resource __id, using an
+// explicit sentinel for the empty (no-filter) case so unfiltered instances
+// share one deliberate cache key rather than an empty-suffixed one.
+func filterID(filter string) string {
+	if filter == "" {
+		return "<none>"
+	}
+	return filter
+}
+
 // id derives the resource cache key from the filter so that querying the same
 // resource with different filters yields distinct instances. Without the
 // filter in the __id, the runtime caches the first result and reuses it for
 // every later filter.
 func (a *mqlMicrosoftIdentityAndAccess) id() (string, error) {
-	return "microsoft.identityAndAccess/filter/" + a.Filter.Data, nil
+	return "microsoft.identityAndAccess/filter/" + filterID(a.Filter.Data), nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) id() (string, error) {
-	return identityAndAccessPrivilegedIdentityManagementPoliciesID + "/filter/" + a.Filter.Data, nil
+	return identityAndAccessPrivilegedIdentityManagementPoliciesID + "/filter/" + filterID(a.Filter.Data), nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccessAccessReviews) id() (string, error) {
-	return "microsoft.identityAndAccess.accessReviews/filter/" + a.Filter.Data, nil
+	return "microsoft.identityAndAccess.accessReviews/filter/" + filterID(a.Filter.Data), nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
