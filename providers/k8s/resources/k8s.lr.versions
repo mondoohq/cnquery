@@ -814,7 +814,7 @@ k8s.pod.nodeSelector 13.0.16
 k8s.pod.nominatedNodeName 13.0.16
 k8s.pod.os 13.0.16
 k8s.pod.overhead 13.0.16
-k8s.pod.ownerReferences 13.0.16
+k8s.pod.ownerReferences 13.2.2
 k8s.pod.phase 13.0.16
 k8s.pod.podIP 13.0.16
 k8s.pod.podIPs 13.0.16

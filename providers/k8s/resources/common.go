@@ -337,20 +337,23 @@ func k8sOwnerReferences(runtime *plugin.Runtime, obj any) ([]any, error) {
 		return nil, err
 	}
 
+	parentUID := string(m.GetUID())
 	refs := m.GetOwnerReferences()
 	out := make([]any, 0, len(refs))
 	for i := range refs {
 		ref := refs[i]
 
-		// The referent UID is globally unique and stable; fall back to
-		// kind:name only for the rare reference that omits it.
-		id := string(ref.UID)
-		if id == "" {
-			id = strings.ToLower(ref.Kind) + ":" + ref.Name
+		// Scope the cache key to the owning object. The same referent UID can
+		// appear on different objects with different controller/blockOwnerDeletion
+		// values, so a parent-scoped key avoids a silent cache collision. Fall
+		// back to kind:name only for the rare reference that omits the uid.
+		refKey := string(ref.UID)
+		if refKey == "" {
+			refKey = strings.ToLower(ref.Kind) + ":" + ref.Name
 		}
 
 		r, err := CreateResource(runtime, "k8s.ownerReference", map[string]*llx.RawData{
-			"__id":               llx.StringData(id),
+			"__id":               llx.StringData(parentUID + "/ownerref/" + refKey),
 			"apiVersion":         llx.StringData(ref.APIVersion),
 			"kind":               llx.StringData(ref.Kind),
 			"name":               llx.StringData(ref.Name),
