@@ -2915,6 +2915,13 @@ aws.ec2.image.state 11.15.2
 aws.ec2.image.tags 11.15.2
 aws.ec2.image.tpmSupport 11.15.2
 aws.ec2.image.virtualizationType 11.15.2
+aws.ec2.image.watermark 13.35.2
+aws.ec2.image.watermark.createdAt 13.35.2
+aws.ec2.image.watermark.sourceImageCreatedAt 13.35.2
+aws.ec2.image.watermark.sourceImageId 13.35.2
+aws.ec2.image.watermark.sourceImageRegion 13.35.2
+aws.ec2.image.watermark.watermarkKey 13.35.2
+aws.ec2.image.watermarks 13.35.2
 aws.ec2.imageBlockPublicAccess 13.6.3
 aws.ec2.images 11.15.2
 aws.ec2.instance 11.15.2
@@ -6576,6 +6583,7 @@ aws.neptune.cluster.latestRestorableTime 11.15.2
 aws.neptune.cluster.masterUsername 11.15.2
 aws.neptune.cluster.multiAZ 11.15.2
 aws.neptune.cluster.name 11.15.2
+aws.neptune.cluster.networkType 13.35.2
 aws.neptune.cluster.port 11.15.2
 aws.neptune.cluster.preferredBackupWindow 11.15.2
 aws.neptune.cluster.preferredMaintenanceWindow 11.15.2
@@ -6612,6 +6620,7 @@ aws.neptune.instance.monitoringRole 13.12.1
 aws.neptune.instance.monitoringRoleArn 11.15.2
 aws.neptune.instance.multiAZ 11.15.2
 aws.neptune.instance.name 11.15.2
+aws.neptune.instance.networkType 13.35.2
 aws.neptune.instance.port 11.15.2
 aws.neptune.instance.preferredBackupWindow 11.15.2
 aws.neptune.instance.preferredMaintenanceWindow 11.15.2

@@ -130,6 +130,7 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 			"status":                           llx.StringDataPtr(cluster.Status),
 			"storageEncrypted":                 llx.BoolDataPtr(cluster.StorageEncrypted),
 			"storageType":                      llx.StringDataPtr(cluster.StorageType),
+			"networkType":                      llx.StringDataPtr(cluster.NetworkType),
 		})
 	if err != nil {
 		return nil, err
@@ -295,6 +296,7 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"tdeCredentialArn":                 llx.StringDataPtr(instance.TdeCredentialArn),
 			"publiclyAccessible":               llx.BoolDataPtr(instance.PubliclyAccessible),
 			"certificateAuthority":             llx.StringDataPtr(instance.CACertificateIdentifier),
+			"networkType":                      llx.StringDataPtr(instance.NetworkType),
 		})
 	if err != nil {
 		return nil, err

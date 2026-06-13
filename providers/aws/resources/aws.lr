@@ -15806,6 +15806,29 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   sourceImageId string
   // Source image region if this AMI was copied from another region
   sourceImageRegion string
+  // Provenance watermarks recorded on the image
+  watermarks []aws.ec2.image.watermark
+}
+
+// Amazon EC2 image provenance watermark
+//
+// Examine a provenance watermark recorded on an AMI. Watermarks capture image
+// lineage when an AMI is copied or shared: each one names the source AMI it was
+// derived from through `sourceImageId` and the Region that source lived in, and
+// is identified by `watermarkKey` in `accountId:watermarkName` format — for
+// example `123456789012:approvedAmi`, where the account ID is the watermark
+// creator and the name is customer-provided.
+private aws.ec2.image.watermark @defaults("watermarkKey sourceImageId") {
+  // Watermark identifier in accountId:watermarkName format (for example, 123456789012:approvedAmi)
+  watermarkKey string
+  // Date and time the watermark was attached to the AMI
+  createdAt time
+  // ID of the source AMI the watermark was originally attached to
+  sourceImageId string
+  // Region where the source AMI was located
+  sourceImageRegion string
+  // Creation date of the source AMI
+  sourceImageCreatedAt time
 }
 
 // Amazon EC2 image launch permission
@@ -16609,6 +16632,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   storageEncrypted bool
   // Storage type
   storageType string
+  // Network protocol the cluster is accessible over (IPV4 or DUAL for IPv4/IPv6 dual-stack)
+  networkType string
   // List of VPC security groups associated with the DB cluster
   securityGroups() []aws.ec2.securitygroup
 }
@@ -16687,6 +16712,8 @@ private aws.neptune.instance @defaults("arn name status"){
   publiclyAccessible bool
   // ID of the Certificate Authority
   certificateAuthority string
+  // Network protocol the instance is accessible over (IPV4 or DUAL for IPv4/IPv6 dual-stack)
+  networkType string
 }
 
 // Amazon Neptune DB cluster snapshot

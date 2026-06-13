@@ -596,6 +596,7 @@ const (
 	ResourceAwsEc2Networkinterface                                              string = "aws.ec2.networkinterface"
 	ResourceAwsEc2Keypair                                                       string = "aws.ec2.keypair"
 	ResourceAwsEc2Image                                                         string = "aws.ec2.image"
+	ResourceAwsEc2ImageWatermark                                                string = "aws.ec2.image.watermark"
 	ResourceAwsEc2ImageLaunchPermission                                         string = "aws.ec2.image.launchPermission"
 	ResourceAwsEc2ImageBlockDeviceMapping                                       string = "aws.ec2.image.blockDeviceMapping"
 	ResourceAwsEc2ImageEbsBlockDevice                                           string = "aws.ec2.image.ebsBlockDevice"
@@ -3236,6 +3237,10 @@ func init() {
 		"aws.ec2.image": {
 			Init:   initAwsEc2Image,
 			Create: createAwsEc2Image,
+		},
+		"aws.ec2.image.watermark": {
+			// to override args, implement: initAwsEc2ImageWatermark(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2ImageWatermark,
 		},
 		"aws.ec2.image.launchPermission": {
 			// to override args, implement: initAwsEc2ImageLaunchPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -22133,6 +22138,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.image.sourceImageRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetSourceImageRegion()).ToDataRes(types.String)
 	},
+	"aws.ec2.image.watermarks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetWatermarks()).ToDataRes(types.Array(types.Resource("aws.ec2.image.watermark")))
+	},
+	"aws.ec2.image.watermark.watermarkKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageWatermark).GetWatermarkKey()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.watermark.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageWatermark).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.image.watermark.sourceImageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageWatermark).GetSourceImageId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.watermark.sourceImageRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageWatermark).GetSourceImageRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.watermark.sourceImageCreatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageWatermark).GetSourceImageCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.ec2.image.launchPermission.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageLaunchPermission).GetUserId()).ToDataRes(types.String)
 	},
@@ -23066,6 +23089,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.cluster.storageType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetStorageType()).ToDataRes(types.String)
 	},
+	"aws.neptune.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetNetworkType()).ToDataRes(types.String)
+	},
 	"aws.neptune.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
@@ -23170,6 +23196,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetNetworkType()).ToDataRes(types.String)
 	},
 	"aws.neptune.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneSnapshot).GetArn()).ToDataRes(types.String)
@@ -58079,6 +58108,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Image).SourceImageRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.image.watermarks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).Watermarks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.watermark.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.image.watermark.watermarkKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).WatermarkKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.watermark.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.watermark.sourceImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).SourceImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.watermark.sourceImageRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).SourceImageRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.watermark.sourceImageCreatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageWatermark).SourceImageCreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.image.launchPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ImageLaunchPermission).__id, ok = v.Value.(string)
 		return
@@ -59447,6 +59504,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.neptune.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.neptune.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -59589,6 +59650,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -139707,6 +139772,7 @@ type mqlAwsEc2Image struct {
 	RootDeviceName           plugin.TValue[string]
 	SourceImageId            plugin.TValue[string]
 	SourceImageRegion        plugin.TValue[string]
+	Watermarks               plugin.TValue[[]any]
 }
 
 // createAwsEc2Image creates a new instance of this resource
@@ -139876,6 +139942,74 @@ func (c *mqlAwsEc2Image) GetSourceImageId() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Image) GetSourceImageRegion() *plugin.TValue[string] {
 	return &c.SourceImageRegion
+}
+
+func (c *mqlAwsEc2Image) GetWatermarks() *plugin.TValue[[]any] {
+	return &c.Watermarks
+}
+
+// mqlAwsEc2ImageWatermark for the aws.ec2.image.watermark resource
+type mqlAwsEc2ImageWatermark struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2ImageWatermarkInternal it will be used here
+	WatermarkKey         plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	SourceImageId        plugin.TValue[string]
+	SourceImageRegion    plugin.TValue[string]
+	SourceImageCreatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsEc2ImageWatermark creates a new instance of this resource
+func createAwsEc2ImageWatermark(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2ImageWatermark{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.image.watermark", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2ImageWatermark) MqlName() string {
+	return "aws.ec2.image.watermark"
+}
+
+func (c *mqlAwsEc2ImageWatermark) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2ImageWatermark) GetWatermarkKey() *plugin.TValue[string] {
+	return &c.WatermarkKey
+}
+
+func (c *mqlAwsEc2ImageWatermark) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsEc2ImageWatermark) GetSourceImageId() *plugin.TValue[string] {
+	return &c.SourceImageId
+}
+
+func (c *mqlAwsEc2ImageWatermark) GetSourceImageRegion() *plugin.TValue[string] {
+	return &c.SourceImageRegion
+}
+
+func (c *mqlAwsEc2ImageWatermark) GetSourceImageCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.SourceImageCreatedAt
 }
 
 // mqlAwsEc2ImageLaunchPermission for the aws.ec2.image.launchPermission resource
@@ -143301,6 +143435,7 @@ type mqlAwsNeptuneCluster struct {
 	Status                           plugin.TValue[string]
 	StorageEncrypted                 plugin.TValue[bool]
 	StorageType                      plugin.TValue[string]
+	NetworkType                      plugin.TValue[string]
 	SecurityGroups                   plugin.TValue[[]any]
 }
 
@@ -143488,6 +143623,10 @@ func (c *mqlAwsNeptuneCluster) GetStorageType() *plugin.TValue[string] {
 	return &c.StorageType
 }
 
+func (c *mqlAwsNeptuneCluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
 func (c *mqlAwsNeptuneCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -143543,6 +143682,7 @@ type mqlAwsNeptuneInstance struct {
 	TdeCredentialArn                 plugin.TValue[string]
 	PubliclyAccessible               plugin.TValue[bool]
 	CertificateAuthority             plugin.TValue[string]
+	NetworkType                      plugin.TValue[string]
 }
 
 // createAwsNeptuneInstance creates a new instance of this resource
@@ -143735,6 +143875,10 @@ func (c *mqlAwsNeptuneInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 
 func (c *mqlAwsNeptuneInstance) GetCertificateAuthority() *plugin.TValue[string] {
 	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsNeptuneInstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
 }
 
 // mqlAwsNeptuneSnapshot for the aws.neptune.snapshot resource

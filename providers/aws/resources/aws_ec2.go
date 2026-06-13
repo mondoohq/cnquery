@@ -890,6 +890,28 @@ func createBlockDeviceMappings(runtime *plugin.Runtime, imageArn string, mapping
 	return result, nil
 }
 
+// createImageWatermarks converts the AWS ImageWatermark slice to MQL resources
+func createImageWatermarks(runtime *plugin.Runtime, imageArn string, watermarks []ec2types.ImageWatermark) ([]any, error) {
+	result := make([]any, 0, len(watermarks))
+	for _, watermark := range watermarks {
+		watermarkKey := convert.ToValue(watermark.WatermarkKey)
+		mqlWatermark, err := CreateResource(runtime, ResourceAwsEc2ImageWatermark,
+			map[string]*llx.RawData{
+				"__id":                 llx.StringData(fmt.Sprintf("%s/watermark/%s", imageArn, watermarkKey)),
+				"watermarkKey":         llx.StringDataPtr(watermark.WatermarkKey),
+				"createdAt":            llx.TimeDataPtr(watermark.WatermarkCreationTime),
+				"sourceImageId":        llx.StringDataPtr(watermark.SourceImageId),
+				"sourceImageRegion":    llx.StringDataPtr(watermark.SourceImageRegion),
+				"sourceImageCreatedAt": llx.TimeDataPtr(watermark.SourceImageCreationTime),
+			})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, mqlWatermark)
+	}
+	return result, nil
+}
+
 func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -929,6 +951,12 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 					// Create block device mapping MQL resources
 					imageArn := fmt.Sprintf(imageArnPattern, region, conn.AccountId(), convert.ToValue(image.ImageId))
 					blockDeviceMappings, err := createBlockDeviceMappings(a.MqlRuntime, imageArn, image.BlockDeviceMappings)
+					if err != nil {
+						return nil, err
+					}
+
+					// Create watermark MQL resources
+					watermarks, err := createImageWatermarks(a.MqlRuntime, imageArn, image.ImageWatermarks)
 					if err != nil {
 						return nil, err
 					}
@@ -997,6 +1025,7 @@ func (a *mqlAwsEc2) getImagesJob(conn *connection.AwsConnection) []*jobpool.Job 
 							"rootDeviceName":           llx.StringDataPtr(image.RootDeviceName),
 							"sourceImageId":            llx.StringDataPtr(image.SourceImageId),
 							"sourceImageRegion":        llx.StringDataPtr(image.SourceImageRegion),
+							"watermarks":               llx.ArrayData(watermarks, types.Resource(ResourceAwsEc2ImageWatermark)),
 						})
 					if err != nil {
 						return nil, err
@@ -1854,6 +1883,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["rootDeviceName"] = llx.NilData
 		args["sourceImageId"] = llx.NilData
 		args["sourceImageRegion"] = llx.NilData
+		args["watermarks"] = llx.NilData
 		return args, nil, nil
 	}
 
@@ -1862,6 +1892,12 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 		// Create block device mapping MQL resources
 		blockDeviceMappings, err := createBlockDeviceMappings(runtime, arnVal, image.BlockDeviceMappings)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Create watermark MQL resources
+		watermarks, err := createImageWatermarks(runtime, arnVal, image.ImageWatermarks)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1892,6 +1928,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["rootDeviceName"] = llx.StringDataPtr(image.RootDeviceName)
 		args["sourceImageId"] = llx.StringDataPtr(image.SourceImageId)
 		args["sourceImageRegion"] = llx.StringDataPtr(image.SourceImageRegion)
+		args["watermarks"] = llx.ArrayData(watermarks, types.Resource(ResourceAwsEc2ImageWatermark))
 		if image.CreationDate == nil {
 			args["createdAt"] = llx.NilData
 		} else {
