@@ -426,6 +426,24 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) entries() ([]any, error)
 	return res, nil
 }
 
+// activityLogEntryID returns a stable, unique cache key for an activity log
+// event. EventDataID is the natural unique id, but it (and ID) can be nil for
+// some platform-emitted events; fall back to ID, then to a composite of the
+// operation/correlation ids and timestamp so distinct events never collide.
+func activityLogEntryID(entry *monitor.EventData) string {
+	if entry.EventDataID != nil && *entry.EventDataID != "" {
+		return *entry.EventDataID
+	}
+	if entry.ID != nil && *entry.ID != "" {
+		return *entry.ID
+	}
+	var ts string
+	if entry.EventTimestamp != nil {
+		ts = entry.EventTimestamp.UTC().Format(time.RFC3339Nano)
+	}
+	return fmt.Sprintf("%s/%s/%s", convert.ToValue(entry.OperationID), convert.ToValue(entry.CorrelationID), ts)
+}
+
 func newMqlActivityLogEntry(runtime *plugin.Runtime, entry *monitor.EventData) (*mqlAzureSubscriptionMonitorServiceActivityLogEntry, error) {
 	authorization, err := convert.JsonToDict(entry.Authorization)
 	if err != nil {
@@ -441,10 +459,11 @@ func newMqlActivityLogEntry(runtime *plugin.Runtime, entry *monitor.EventData) (
 		level = string(*entry.Level)
 	}
 
+	id := activityLogEntryID(entry)
 	res, err := CreateResource(runtime, "azure.subscription.monitorService.activityLog.entry",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(entry.EventDataID),
-			"id":                   llx.StringDataPtr(entry.EventDataID),
+			"__id":                 llx.StringData(id),
+			"id":                   llx.StringData(id),
 			"eventTimestamp":       llx.TimeDataPtr(entry.EventTimestamp),
 			"operationName":        llx.StringData(localizableString(entry.OperationName)),
 			"caller":               llx.StringDataPtr(entry.Caller),
