@@ -728,6 +728,19 @@ func (v *mqlVsphereHost) services() ([]any, error) {
 	return mqlServices, nil
 }
 
+func (v *mqlVsphereHost) lockdownExceptions() ([]any, error) {
+	_, host, err := v.pathAndHost()
+	if err != nil {
+		return nil, err
+	}
+
+	exceptions, err := resourceclient.HostLockdownExceptions(host)
+	if err != nil {
+		return nil, err
+	}
+	return convert.SliceAnyToInterface(exceptions), nil
+}
+
 func (v *mqlVsphereHost) timezone() (*mqlVsphereHostTimezone, error) {
 	path, host, err := v.pathAndHost()
 	if err != nil {

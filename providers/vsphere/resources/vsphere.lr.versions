@@ -244,6 +244,7 @@ vsphere.host.kernelModule.signedStatus 13.1.1
 vsphere.host.kernelModule.version 13.1.1
 vsphere.host.kernelModule.vibAcceptanceLevel 13.1.1
 vsphere.host.kernelModules 9.0.0
+vsphere.host.lockdownExceptions 13.5.2
 vsphere.host.lockdownMode 13.0.10
 vsphere.host.memShareForceSalting 13.4.3
 vsphere.host.mobEnabled 13.4.3

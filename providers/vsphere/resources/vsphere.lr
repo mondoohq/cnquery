@@ -492,6 +492,8 @@ private vsphere.host @defaults("moid name") {
   tags []string
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
   lockdownMode string
+  // User and service accounts exempt from lockdown mode; these accounts retain direct host access even while lockdown mode is enabled
+  lockdownExceptions() []string
   // Whether the host firewall blocks unsolicited incoming traffic by default (the host firewall service itself is always running on ESXi)
   firewallIncomingBlocked bool
   // Whether the host firewall blocks unsolicited outgoing traffic by default

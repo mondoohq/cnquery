@@ -13,6 +13,7 @@ import (
 	"github.com/vmware/govmomi/license"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
@@ -52,6 +53,26 @@ func HostOptions(host *object.HostSystem) (map[string]any, error) {
 		advancedProps[key] = value
 	}
 	return advancedProps, nil
+}
+
+// HostLockdownExceptions returns the user and service accounts that are exempt
+// from lockdown mode on the given host. It reads the host's HostAccessManager
+// reference from the config manager and calls QueryLockdownExceptions on it.
+func HostLockdownExceptions(host *object.HostSystem) ([]string, error) {
+	ctx := context.Background()
+	var props mo.HostSystem
+	if err := host.Properties(ctx, host.Reference(), []string{"configManager.hostAccessManager"}, &props); err != nil {
+		return nil, err
+	}
+	ref := props.ConfigManager.HostAccessManager
+	if ref == nil {
+		return nil, nil
+	}
+	res, err := methods.QueryLockdownExceptions(ctx, host.Client(), &types.QueryLockdownExceptions{This: *ref})
+	if err != nil {
+		return nil, err
+	}
+	return res.Returnval, nil
 }
 
 func HostServices(host *object.HostSystem) ([]types.HostService, error) {

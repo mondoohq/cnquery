@@ -870,6 +870,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.lockdownMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetLockdownMode()).ToDataRes(types.String)
 	},
+	"vsphere.host.lockdownExceptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetLockdownExceptions()).ToDataRes(types.Array(types.String))
+	},
 	"vsphere.host.firewallIncomingBlocked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetFirewallIncomingBlocked()).ToDataRes(types.Bool)
 	},
@@ -2727,6 +2730,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.lockdownMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).LockdownMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.lockdownExceptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).LockdownExceptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.firewallIncomingBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6304,6 +6311,7 @@ type mqlVsphereHost struct {
 	Snmp                        plugin.TValue[map[string]any]
 	Tags                        plugin.TValue[[]any]
 	LockdownMode                plugin.TValue[string]
+	LockdownExceptions          plugin.TValue[[]any]
 	FirewallIncomingBlocked     plugin.TValue[bool]
 	FirewallOutgoingBlocked     plugin.TValue[bool]
 	SecureBootEnabled           plugin.TValue[bool]
@@ -6560,6 +6568,12 @@ func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereHost) GetLockdownMode() *plugin.TValue[string] {
 	return &c.LockdownMode
+}
+
+func (c *mqlVsphereHost) GetLockdownExceptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LockdownExceptions, func() ([]any, error) {
+		return c.lockdownExceptions()
+	})
 }
 
 func (c *mqlVsphereHost) GetFirewallIncomingBlocked() *plugin.TValue[bool] {
