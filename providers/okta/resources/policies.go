@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -259,7 +260,7 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 // see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't let you fetch
 // type-specific rules which differ between the different policies. as such, we fetch those manually.
 func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]oktaPolicyRuleRaw, error) {
-	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, policyid)
+	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, url.PathEscape(policyid))
 	client := http.Client{}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlPath, nil)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -34,14 +35,15 @@ type PolicyWrapper struct {
 // http.Response so callers can branch on the status code (e.g. treat 404 or an
 // "invalid policy type" 400 as an empty result).
 func (m *ApiExtension) ListPolicies(ctx context.Context, policyType string, limit int) ([]*PolicyWrapper, *http.Response, error) {
-	url := m.url("/api/v1/policies")
-	url += "?type=" + policyType
+	params := url.Values{}
+	params.Set("type", policyType)
 	if limit > 0 {
-		url += "&limit=" + strconv.Itoa(limit)
+		params.Set("limit", strconv.Itoa(limit))
 	}
+	requestURL := m.url("/api/v1/policies") + "?" + params.Encode()
 
 	var policies []*PolicyWrapper
-	resp, err := m.get(ctx, url, &policies)
+	resp, err := m.get(ctx, requestURL, &policies)
 	if err != nil {
 		return nil, resp, err
 	}
