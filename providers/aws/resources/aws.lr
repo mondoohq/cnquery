@@ -10815,8 +10815,47 @@ private aws.backup.plan @defaults("name region") {
   rules() []aws.backup.plan.rule
   // Advanced backup settings for the plan
   advancedBackupSettings []aws.backup.plan.advancedBackupSetting
-  // Resource selections (which resources are backed up by this plan)
-  selections() []dict
+  // Backup selection summaries (selection ID, name, and IAM role)
+  //
+  // Deprecated in favor of `resourceSelections`, which additionally exposes
+  // the assigned resource ARNs, exclusions, and tag-based conditions.
+  selections() @maturity("deprecated") []dict
+  // Resource selections that assign resources to this backup plan
+  resourceSelections() []aws.backup.plan.selection
+}
+
+// AWS Backup plan resource selection
+//
+// Examine which resources a backup plan protects. The `resources` and
+// `notResources` lists hold the resource ARNs explicitly assigned to or
+// excluded from the plan, while `listOfTags` and `conditions` capture the
+// tag-based rules that assign matching resources. Use it to audit backup
+// coverage — for example, confirm that production databases are targeted by
+// a plan with `aws.backup.plan.selections.any(resources.any(_ == /arn:aws:rds:/))`.
+private aws.backup.plan.selection @defaults("name") {
+  // Selection ID
+  id string
+  // Display name of the resource selection
+  name string
+  // Date the selection was created
+  createdAt time
+  // IAM role that Backup assumes to back up the selected resources
+  iamRole() aws.iam.role
+  // ARNs of the resources assigned to the backup plan
+  resources []string
+  // ARNs of the resources excluded from the backup plan
+  notResources []string
+  // Tag-based conditions that assign resources to the plan
+  //
+  // Each entry has keys `conditionType` (always STRINGEQUALS), `conditionKey`,
+  // and `conditionValue`. Multiple entries are combined with OR logic.
+  listOfTags []dict
+  // Tag-based conditions that assign resources to the plan
+  //
+  // Has keys `stringEquals`, `stringNotEquals`, `stringLike`, and
+  // `stringNotLike`, each a list of `{conditionKey, conditionValue}` pairs.
+  // Multiple conditions are combined with AND logic.
+  conditions dict
 }
 
 // AWS Backup plan advanced backup setting

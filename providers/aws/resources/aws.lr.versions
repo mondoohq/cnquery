@@ -754,6 +754,7 @@ aws.backup.plan.id 11.15.2
 aws.backup.plan.lastExecutionDate 11.15.2
 aws.backup.plan.name 11.15.2
 aws.backup.plan.region 11.15.2
+aws.backup.plan.resourceSelections 13.35.2
 aws.backup.plan.rule 11.15.2
 aws.backup.plan.rule.completionWindowMinutes 11.15.2
 aws.backup.plan.rule.copyAction 11.15.2
@@ -775,6 +776,15 @@ aws.backup.plan.rule.scheduleExpressionTimezone 11.15.2
 aws.backup.plan.rule.startWindowMinutes 11.15.2
 aws.backup.plan.rule.targetBackupVaultName 11.15.2
 aws.backup.plan.rules 11.15.2
+aws.backup.plan.selection 13.35.2
+aws.backup.plan.selection.conditions 13.35.2
+aws.backup.plan.selection.createdAt 13.35.2
+aws.backup.plan.selection.iamRole 13.35.2
+aws.backup.plan.selection.id 13.35.2
+aws.backup.plan.selection.listOfTags 13.35.2
+aws.backup.plan.selection.name 13.35.2
+aws.backup.plan.selection.notResources 13.35.2
+aws.backup.plan.selection.resources 13.35.2
 aws.backup.plan.selections 13.6.3
 aws.backup.plan.versionId 11.15.2
 aws.backup.plans 11.15.2

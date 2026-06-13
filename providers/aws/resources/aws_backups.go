@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
@@ -336,6 +337,139 @@ func (a *mqlAwsBackupPlan) selections() ([]any, error) {
 		nextToken = resp.NextToken
 	}
 	return res, nil
+}
+
+type mqlAwsBackupPlanSelectionInternal struct {
+	cacheIamRoleArn string
+}
+
+func (a *mqlAwsBackupPlan) resourceSelections() ([]any, error) {
+	planId := a.Id.Data
+	planArn := a.Arn.Data
+
+	region, err := GetRegionFromArn(planArn)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListBackupSelections(ctx, &backup.ListBackupSelectionsInput{
+			BackupPlanId: &planId,
+			NextToken:    nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, sel := range resp.BackupSelectionsList {
+			detail, err := svc.GetBackupSelection(ctx, &backup.GetBackupSelectionInput{
+				BackupPlanId: &planId,
+				SelectionId:  sel.SelectionId,
+			})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					continue
+				}
+				return nil, err
+			}
+			if detail.BackupSelection == nil {
+				continue
+			}
+			mqlSel, err := newMqlBackupPlanSelection(a.MqlRuntime, planArn, convert.ToValue(detail.SelectionId), detail.CreationDate, *detail.BackupSelection)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSel)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func newMqlBackupPlanSelection(runtime *plugin.Runtime, planArn, selectionId string, creationDate *time.Time, sel backuptypes.BackupSelection) (*mqlAwsBackupPlanSelection, error) {
+	uniqueId := planArn + "\x00" + selectionId
+
+	resources := make([]any, 0, len(sel.Resources))
+	for _, r := range sel.Resources {
+		resources = append(resources, r)
+	}
+	notResources := make([]any, 0, len(sel.NotResources))
+	for _, r := range sel.NotResources {
+		notResources = append(notResources, r)
+	}
+
+	listOfTags := make([]any, 0, len(sel.ListOfTags))
+	for _, c := range sel.ListOfTags {
+		listOfTags = append(listOfTags, map[string]any{
+			"conditionType":  string(c.ConditionType),
+			"conditionKey":   convert.ToValue(c.ConditionKey),
+			"conditionValue": convert.ToValue(c.ConditionValue),
+		})
+	}
+
+	var conditions any
+	if sel.Conditions != nil {
+		conditions = map[string]any{
+			"stringEquals":    conditionParametersToList(sel.Conditions.StringEquals),
+			"stringNotEquals": conditionParametersToList(sel.Conditions.StringNotEquals),
+			"stringLike":      conditionParametersToList(sel.Conditions.StringLike),
+			"stringNotLike":   conditionParametersToList(sel.Conditions.StringNotLike),
+		}
+	}
+
+	resource, err := CreateResource(runtime, ResourceAwsBackupPlanSelection,
+		map[string]*llx.RawData{
+			"__id":         llx.StringData(uniqueId),
+			"id":           llx.StringData(selectionId),
+			"name":         llx.StringDataPtr(sel.SelectionName),
+			"createdAt":    llx.TimeDataPtr(creationDate),
+			"resources":    llx.ArrayData(resources, types.String),
+			"notResources": llx.ArrayData(notResources, types.String),
+			"listOfTags":   llx.ArrayData(listOfTags, types.Dict),
+			"conditions":   llx.DictData(conditions),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlSel := resource.(*mqlAwsBackupPlanSelection)
+	mqlSel.cacheIamRoleArn = convert.ToValue(sel.IamRoleArn)
+	return mqlSel, nil
+}
+
+func conditionParametersToList(params []backuptypes.ConditionParameter) []any {
+	res := make([]any, 0, len(params))
+	for _, p := range params {
+		res = append(res, map[string]any{
+			"conditionKey":   convert.ToValue(p.ConditionKey),
+			"conditionValue": convert.ToValue(p.ConditionValue),
+		})
+	}
+	return res
+}
+
+func (a *mqlAwsBackupPlanSelection) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheIamRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheIamRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 // ========================

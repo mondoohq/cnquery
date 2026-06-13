@@ -439,6 +439,7 @@ const (
 	ResourceAwsBackupVaultRecoveryPoint                                         string = "aws.backup.vaultRecoveryPoint"
 	ResourceAwsBackupLifecycle                                                  string = "aws.backup.lifecycle"
 	ResourceAwsBackupPlan                                                       string = "aws.backup.plan"
+	ResourceAwsBackupPlanSelection                                              string = "aws.backup.plan.selection"
 	ResourceAwsBackupPlanAdvancedBackupSetting                                  string = "aws.backup.plan.advancedBackupSetting"
 	ResourceAwsBackupPlanRule                                                   string = "aws.backup.plan.rule"
 	ResourceAwsBackupPlanRuleCopyAction                                         string = "aws.backup.plan.rule.copyAction"
@@ -2612,6 +2613,10 @@ func init() {
 		"aws.backup.plan": {
 			// to override args, implement: initAwsBackupPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBackupPlan,
+		},
+		"aws.backup.plan.selection": {
+			// to override args, implement: initAwsBackupPlanSelection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackupPlanSelection,
 		},
 		"aws.backup.plan.advancedBackupSetting": {
 			// to override args, implement: initAwsBackupPlanAdvancedBackupSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -16464,6 +16469,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.backup.plan.selections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupPlan).GetSelections()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.backup.plan.resourceSelections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlan).GetResourceSelections()).ToDataRes(types.Array(types.Resource("aws.backup.plan.selection")))
+	},
+	"aws.backup.plan.selection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetId()).ToDataRes(types.String)
+	},
+	"aws.backup.plan.selection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetName()).ToDataRes(types.String)
+	},
+	"aws.backup.plan.selection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.backup.plan.selection.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.backup.plan.selection.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.backup.plan.selection.notResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetNotResources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.backup.plan.selection.listOfTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetListOfTags()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.backup.plan.selection.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupPlanSelection).GetConditions()).ToDataRes(types.Dict)
 	},
 	"aws.backup.plan.advancedBackupSetting.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupPlanAdvancedBackupSetting).GetId()).ToDataRes(types.String)
@@ -50047,6 +50079,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.backup.plan.selections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupPlan).Selections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.resourceSelections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlan).ResourceSelections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.backup.plan.selection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.notResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).NotResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.listOfTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).ListOfTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.backup.plan.selection.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupPlanSelection).Conditions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.backup.plan.advancedBackupSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -120381,6 +120453,7 @@ type mqlAwsBackupPlan struct {
 	Rules                  plugin.TValue[[]any]
 	AdvancedBackupSettings plugin.TValue[[]any]
 	Selections             plugin.TValue[[]any]
+	ResourceSelections     plugin.TValue[[]any]
 }
 
 // createAwsBackupPlan creates a new instance of this resource
@@ -120476,6 +120549,113 @@ func (c *mqlAwsBackupPlan) GetSelections() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Selections, func() ([]any, error) {
 		return c.selections()
 	})
+}
+
+func (c *mqlAwsBackupPlan) GetResourceSelections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceSelections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.plan", c.__id, "resourceSelections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceSelections()
+	})
+}
+
+// mqlAwsBackupPlanSelection for the aws.backup.plan.selection resource
+type mqlAwsBackupPlanSelection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBackupPlanSelectionInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	IamRole      plugin.TValue[*mqlAwsIamRole]
+	Resources    plugin.TValue[[]any]
+	NotResources plugin.TValue[[]any]
+	ListOfTags   plugin.TValue[[]any]
+	Conditions   plugin.TValue[any]
+}
+
+// createAwsBackupPlanSelection creates a new instance of this resource
+func createAwsBackupPlanSelection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackupPlanSelection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup.plan.selection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackupPlanSelection) MqlName() string {
+	return "aws.backup.plan.selection"
+}
+
+func (c *mqlAwsBackupPlanSelection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackupPlanSelection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBackupPlanSelection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBackupPlanSelection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBackupPlanSelection) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.plan.selection", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBackupPlanSelection) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+func (c *mqlAwsBackupPlanSelection) GetNotResources() *plugin.TValue[[]any] {
+	return &c.NotResources
+}
+
+func (c *mqlAwsBackupPlanSelection) GetListOfTags() *plugin.TValue[[]any] {
+	return &c.ListOfTags
+}
+
+func (c *mqlAwsBackupPlanSelection) GetConditions() *plugin.TValue[any] {
+	return &c.Conditions
 }
 
 // mqlAwsBackupPlanAdvancedBackupSetting for the aws.backup.plan.advancedBackupSetting resource

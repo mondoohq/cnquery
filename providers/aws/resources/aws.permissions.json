@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.35.1",
-  "generated_at": "2026-06-12T17:40:19-07:00",
+  "generated_at": "2026-06-13T14:21:33-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -60,6 +60,7 @@
     "autoscaling:DescribeAutoScalingGroups",
     "autoscaling:DescribeLaunchConfigurations",
     "backup:GetBackupPlan",
+    "backup:GetBackupSelection",
     "backup:GetBackupVaultAccessPolicy",
     "backup:ListBackupPlans",
     "backup:ListBackupSelections",
@@ -1262,6 +1263,12 @@
       "permission": "backup:GetBackupPlan",
       "service": "backup",
       "action": "GetBackupPlan",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:GetBackupSelection",
+      "service": "backup",
+      "action": "GetBackupSelection",
       "source_file": "aws_backups.go"
     },
     {
