@@ -851,6 +851,12 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   id string
   // Whether the user account is enabled
   accountEnabled bool
+  // Administrator status
+  //
+  // True when the user is directly assigned at least one active Microsoft
+  // Entra directory role. Roles held only through group membership or as
+  // not-yet-activated PIM-eligible assignments are not reflected.
+  isAdministrator() bool
   // User city
   city string
   // User company name

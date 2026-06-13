@@ -1736,6 +1736,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.accountEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAccountEnabled()).ToDataRes(types.Bool)
 	},
+	"microsoft.user.isAdministrator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetIsAdministrator()).ToDataRes(types.Bool)
+	},
 	"microsoft.user.city": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetCity()).ToDataRes(types.String)
 	},
@@ -6856,6 +6859,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.user.accountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUser).AccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.isAdministrator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).IsAdministrator, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16441,6 +16448,7 @@ type mqlMicrosoftUser struct {
 	// optional: if you define mqlMicrosoftUserInternal it will be used here
 	Id                         plugin.TValue[string]
 	AccountEnabled             plugin.TValue[bool]
+	IsAdministrator            plugin.TValue[bool]
 	City                       plugin.TValue[string]
 	CompanyName                plugin.TValue[string]
 	Country                    plugin.TValue[string]
@@ -16523,6 +16531,12 @@ func (c *mqlMicrosoftUser) GetId() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftUser) GetAccountEnabled() *plugin.TValue[bool] {
 	return &c.AccountEnabled
+}
+
+func (c *mqlMicrosoftUser) GetIsAdministrator() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsAdministrator, func() (bool, error) {
+		return c.isAdministrator()
+	})
 }
 
 func (c *mqlMicrosoftUser) GetCity() *plugin.TValue[string] {

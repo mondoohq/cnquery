@@ -1161,6 +1161,7 @@ microsoft.user.identity 11.1.0
 microsoft.user.identity.issuer 11.1.0
 microsoft.user.identity.issuerAssignedId 11.1.0
 microsoft.user.identity.signInType 11.1.0
+microsoft.user.isAdministrator 13.7.2
 microsoft.user.job 9.0.0
 microsoft.user.jobTitle 9.0.0
 microsoft.user.lastPasswordChangeDateTime 11.2.1
