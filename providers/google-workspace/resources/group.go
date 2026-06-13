@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"context"
 	"strings"
 
 	"go.mondoo.com/mql/v13/providers/google-workspace/connection"
@@ -16,7 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	directory "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/cloudidentity/v1"
-	"google.golang.org/api/option"
 )
 
 func (g *mqlGoogleworkspace) groups() ([]any, error) {
@@ -73,12 +71,7 @@ func (g *mqlGoogleworkspaceGroup) id() (string, error) {
 
 func (g *mqlGoogleworkspaceGroup) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
-	client, err := conn.Client()
-	if err != nil {
-		return nil, err
-	}
-
-	directoryService, err := directory.NewService(context.Background(), option.WithHTTPClient(client))
+	directoryService, err := directoryService(conn, directory.AdminDirectoryGroupMemberReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
