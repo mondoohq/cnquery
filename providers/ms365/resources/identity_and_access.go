@@ -67,9 +67,7 @@ func (a *mqlMicrosoftIdentityAndAccess) organization() (*mqlMicrosoftTenant, err
 }
 
 func (pim *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) policies() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, error) {
-	resource, err := CreateResource(pim.MqlRuntime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, map[string]*llx.RawData{
-		"__id": llx.StringData(identityAndAccessPrivilegedIdentityManagementPoliciesID),
-	})
+	resource, err := CreateResource(pim.MqlRuntime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +80,22 @@ func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*ll
 
 func initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return args, nil, nil
+}
+
+// id derives the resource cache key from the filter so that querying the same
+// resource with different filters yields distinct instances. Without the
+// filter in the __id, the runtime caches the first result and reuses it for
+// every later filter.
+func (a *mqlMicrosoftIdentityAndAccess) id() (string, error) {
+	return "microsoft.identityAndAccess/filter/" + a.Filter.Data, nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) id() (string, error) {
+	return identityAndAccessPrivilegedIdentityManagementPoliciesID + "/filter/" + a.Filter.Data, nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccessAccessReviews) id() (string, error) {
+	return "microsoft.identityAndAccess.accessReviews/filter/" + a.Filter.Data, nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {

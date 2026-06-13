@@ -12868,7 +12868,12 @@ func createMicrosoftIdentityAndAccessAccessReviews(runtime *plugin.Runtime, args
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.accessReviews", res.__id)
@@ -13880,7 +13885,12 @@ func createMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess", res.__id)
@@ -14061,7 +14071,12 @@ func createMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtim
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.identityAndAccess.privilegedIdentityManagement.policies", res.__id)
