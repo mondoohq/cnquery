@@ -118,6 +118,25 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) fetchVault() (*keyvault.Vault
 	return a.fetchVaultResp, a.fetchVaultErr
 }
 
+// systemDataRaw returns the vault's systemData dict. The vaults() list pager
+// does not return systemData on its entries, so when the cached value is empty
+// fall back to the per-vault Get (shared via fetchVault), which does include it.
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) systemDataRaw() any {
+	if m, ok := a.cacheSystemData.(map[string]any); ok && len(m) > 0 {
+		return a.cacheSystemData
+	}
+	resp, err := a.fetchVault()
+	if err != nil || resp == nil {
+		return a.cacheSystemData
+	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return a.cacheSystemData
+	}
+	a.cacheSystemData = sysData
+	return sysData
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceKey) id() (string, error) {
 	return a.Kid.Data, nil
 }
