@@ -793,12 +793,16 @@ users {
 // SSH authorized_keys file
 //
 // Examine a single `authorized_keys` file: its path, the typed `file`
-// reference, the raw `content` string, and the parsed `[]entry` list
-// where each entry surfaces the line number, key type, key material,
-// label, and any `command=` / `from=` / `no-port-forwarding` SSH
-// options. Used to audit which keys actually grant SSH access to a
-// given user and to detect entries with no source / command
-// restrictions.
+// reference, the raw `content` string, and the parsed `entry` list where
+// each entry surfaces the line number, key type, key material, label, and
+// any `command=` / `from=` / `no-port-forwarding` SSH options. Select the
+// file by absolute path — for example
+// `authorizedkeys(path: "/root/.ssh/authorized_keys")` — or reach it per
+// account through the `user` resource, whose `authorizedkeys` field
+// resolves each user's `~/.ssh/authorized_keys` automatically (for
+// example `users.where(name == "root") { authorizedkeys { list { key } } }`).
+// Used to audit which keys actually grant SSH access to a given user and
+// to detect entries with no source or command restrictions.
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
