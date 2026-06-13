@@ -783,3 +783,65 @@ func (esxi *Esxi) Snmp() (map[string]any, error) {
 	}
 	return snmp, nil
 }
+
+// keyPersistenceUnsupportedRegex matches the esxcli error returned by hosts
+// that predate TPM-backed key persistence (added in ESXi 7.0 Update 2) or that
+// boot without a TPM. On those hosts the `system security keypersistence get`
+// namespace is either absent or reports the feature as unavailable.
+var keyPersistenceUnsupportedRegex = regexp.MustCompile(`(?i)(not supported|unknown command|invalid namespace|tpm)`)
+
+// KeyPersistenceEnabled reports whether TPM-backed key persistence is enabled
+// on the host.
+//
+// ($ESXCli).system.security.keypersistence.get()
+//
+//	Enabled: false
+//
+// Hosts that do not support the feature (pre-7.0 Update 2 or no TPM) make the
+// namespace unavailable; we treat that as "not enabled" rather than failing the
+// whole host query.
+func (esxi *Esxi) KeyPersistenceEnabled() (bool, error) {
+	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
+	if err != nil {
+		return false, err
+	}
+
+	res, err := e.Run(context.Background(), []string{"system", "security", "keypersistence", "get"})
+	if err != nil {
+		if keyPersistenceUnsupportedRegex.MatchString(err.Error()) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	for _, val := range res.Values {
+		for k := range val {
+			if !strings.EqualFold(k, "Enabled") {
+				continue
+			}
+			if len(val[k]) > 0 {
+				return strings.EqualFold(val[k][0], "true"), nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+// CertificateStore lists the trusted CA certificates installed in the host
+// certificate store.
+//
+// ($ESXCli).system.security.certificatestore.list()
+func (esxi *Esxi) CertificateStore() ([]map[string]any, error) {
+	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run(context.Background(), []string{"system", "security", "certificatestore", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiValuesSliceToDict(res.Values), nil
+}

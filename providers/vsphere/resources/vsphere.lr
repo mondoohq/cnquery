@@ -511,6 +511,23 @@ private vsphere.host @defaults("moid name") {
   ipRouteConfig() vsphere.host.ipRouteConfig
   // vSAN host configuration; null when the host does not participate in vSAN
   vsan() vsphere.host.vsan
+  // Host security configuration: TPM key persistence and the trusted certificate store
+  security() vsphere.host.security
+}
+
+// ESXi Host Security Configuration
+//
+// Examine host-level security settings exposed through the esxcli
+// `system security` namespace. `keyPersistenceEnabled` reports whether
+// TPM-backed key persistence is active — available on ESXi 7.0 Update 2
+// and later, and false on hosts that predate or otherwise do not support
+// it. `certificateStore` lists the trusted CA certificates installed in
+// the host certificate store.
+private vsphere.host.security @defaults("keyPersistenceEnabled") {
+  // Whether TPM-backed key persistence is enabled (ESXi 7.0 Update 2 and later); false on hosts that do not support it
+  keyPersistenceEnabled() bool
+  // Trusted CA certificates installed in the host certificate store
+  certificateStore() []dict
 }
 
 // vSAN Cluster Configuration

@@ -34,6 +34,7 @@ const (
 	ResourceVsphereDatastore                  string = "vsphere.datastore"
 	ResourceVsphereCluster                    string = "vsphere.cluster"
 	ResourceVsphereHost                       string = "vsphere.host"
+	ResourceVsphereHostSecurity               string = "vsphere.host.security"
 	ResourceVsphereClusterVsan                string = "vsphere.cluster.vsan"
 	ResourceVsphereHostVsan                   string = "vsphere.host.vsan"
 	ResourceVsphereHostVsanDiskGroup          string = "vsphere.host.vsan.diskGroup"
@@ -157,6 +158,10 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"vsphere.host.security": {
+			// to override args, implement: initVsphereHostSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostSecurity,
 		},
 		"vsphere.cluster.vsan": {
 			// to override args, implement: initVsphereClusterVsan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -904,6 +909,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.vsan": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetVsan()).ToDataRes(types.Resource("vsphere.host.vsan"))
+	},
+	"vsphere.host.security": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSecurity()).ToDataRes(types.Resource("vsphere.host.security"))
+	},
+	"vsphere.host.security.keyPersistenceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSecurity).GetKeyPersistenceEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.security.certificateStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSecurity).GetCertificateStore()).ToDataRes(types.Array(types.Dict))
 	},
 	"vsphere.cluster.vsan.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereClusterVsan).GetUuid()).ToDataRes(types.String)
@@ -2690,6 +2704,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.vsan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Vsan, ok = plugin.RawToTValue[*mqlVsphereHostVsan](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Security, ok = plugin.RawToTValue[*mqlVsphereHostSecurity](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSecurity).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.security.keyPersistenceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSecurity).KeyPersistenceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.security.certificateStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSecurity).CertificateStore, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.cluster.vsan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5939,6 +5969,7 @@ type mqlVsphereHost struct {
 	DnsConfig                   plugin.TValue[*mqlVsphereHostDnsConfig]
 	IpRouteConfig               plugin.TValue[*mqlVsphereHostIpRouteConfig]
 	Vsan                        plugin.TValue[*mqlVsphereHostVsan]
+	Security                    plugin.TValue[*mqlVsphereHostSecurity]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -6421,6 +6452,75 @@ func (c *mqlVsphereHost) GetVsan() *plugin.TValue[*mqlVsphereHostVsan] {
 		}
 
 		return c.vsan()
+	})
+}
+
+func (c *mqlVsphereHost) GetSecurity() *plugin.TValue[*mqlVsphereHostSecurity] {
+	return plugin.GetOrCompute[*mqlVsphereHostSecurity](&c.Security, func() (*mqlVsphereHostSecurity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "security")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostSecurity), nil
+			}
+		}
+
+		return c.security()
+	})
+}
+
+// mqlVsphereHostSecurity for the vsphere.host.security resource
+type mqlVsphereHostSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereHostSecurityInternal
+	KeyPersistenceEnabled plugin.TValue[bool]
+	CertificateStore      plugin.TValue[[]any]
+}
+
+// createVsphereHostSecurity creates a new instance of this resource
+func createVsphereHostSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.security", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostSecurity) MqlName() string {
+	return "vsphere.host.security"
+}
+
+func (c *mqlVsphereHostSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostSecurity) GetKeyPersistenceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KeyPersistenceEnabled, func() (bool, error) {
+		return c.keyPersistenceEnabled()
+	})
+}
+
+func (c *mqlVsphereHostSecurity) GetCertificateStore() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CertificateStore, func() ([]any, error) {
+		return c.certificateStore()
 	})
 }
 

@@ -259,6 +259,9 @@ vsphere.host.packages 9.0.0
 vsphere.host.properties 9.0.0
 vsphere.host.rebootRequired 13.2.5
 vsphere.host.secureBootEnabled 13.0.10
+vsphere.host.security 13.5.2
+vsphere.host.security.certificateStore 13.5.2
+vsphere.host.security.keyPersistenceEnabled 13.5.2
 vsphere.host.service 13.1.1
 vsphere.host.service.key 13.1.1
 vsphere.host.service.label 13.1.1

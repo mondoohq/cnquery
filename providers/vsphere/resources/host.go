@@ -795,6 +795,59 @@ func (v *mqlVsphereHost) snmp() (map[string]any, error) {
 	return esxiClient.Snmp()
 }
 
+func (v *mqlVsphereHost) security() (*mqlVsphereHostSecurity, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(v.MqlRuntime, "vsphere.host.security", map[string]*llx.RawData{
+		"__id": llx.StringData(esxiClient.InventoryPath + "/security"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	security := res.(*mqlVsphereHostSecurity)
+	security.hostInventoryPath = esxiClient.InventoryPath
+	return security, nil
+}
+
+type mqlVsphereHostSecurityInternal struct {
+	hostInventoryPath string
+}
+
+func (v *mqlVsphereHostSecurity) esxiClient() (*resourceclient.Esxi, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	return esxiClient(conn, v.hostInventoryPath)
+}
+
+func (v *mqlVsphereHostSecurity) keyPersistenceEnabled() (bool, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return false, err
+	}
+	return esxiClient.KeyPersistenceEnabled()
+}
+
+func (v *mqlVsphereHostSecurity) certificateStore() ([]any, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	store, err := esxiClient.CertificateStore()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, len(store))
+	for i := range store {
+		res[i] = store[i]
+	}
+	return res, nil
+}
+
 // firewallRulesets exposes the per-service ESXi firewall ruleset definitions
 // from mo.HostSystem.Config.Firewall (already fetched via HostInfo). Each
 // ruleset bundles a per-service rule list, an enabled flag, and the
