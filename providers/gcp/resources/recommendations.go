@@ -127,7 +127,7 @@ func (g *mqlGcpProject) recommendations() ([]any, error) {
 		return nil, err
 	}
 
-	c, err := recommender.NewClient(ctx, option.WithCredentials(credentials))
+	c, err := recommender.NewClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption())
 	if err != nil {
 		log.Info().Err(err).Msg("could not create client")
 		return nil, err

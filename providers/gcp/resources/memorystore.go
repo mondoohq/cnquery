@@ -106,7 +106,7 @@ func (g *mqlGcpProjectMemorystoreService) instances() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -424,7 +424,7 @@ func (g *mqlGcpProjectMemorystoreService) backupCollections() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -504,7 +504,7 @@ func initGcpProjectMemorystoreServiceBackupCollection(runtime *plugin.Runtime, a
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -566,7 +566,7 @@ func (g *mqlGcpProjectMemorystoreServiceBackupCollection) backups() ([]any, erro
 		return nil, err
 	}
 	ctx := context.Background()
-	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

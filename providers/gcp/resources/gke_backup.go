@@ -99,7 +99,7 @@ func (g *mqlGcpProjectGkeBackupService) backupPlans() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := gkebackup.NewBackupForGKEClient(ctx, option.WithCredentials(creds))
+	client, err := gkebackup.NewBackupForGKEClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (g *mqlGcpProjectGkeBackupService) restorePlans() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := gkebackup.NewBackupForGKEClient(ctx, option.WithCredentials(creds))
+	client, err := gkebackup.NewBackupForGKEClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

@@ -50,7 +50,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 
 	ctx := context.Background()
 
-	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds))
+	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +269,7 @@ func (g *mqlGcpProjectCloudFunction) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds))
+	cloudFuncSvc, err := functions.NewCloudFunctionsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

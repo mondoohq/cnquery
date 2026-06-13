@@ -261,7 +261,7 @@ func (g *mqlGcpProjectIamService) serviceAccounts() ([]any, error) {
 
 	ctx := context.Background()
 
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 
 	ctx := context.Background()
 
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -733,7 +733,7 @@ func (g *mqlGcpProjectIamService) denyPolicies() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iamv2.NewPoliciesClient(ctx, option.WithCredentials(creds))
+	client, err := iamv2.NewPoliciesClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -815,7 +815,7 @@ func (g *mqlGcpProjectIamServiceServiceAccount) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

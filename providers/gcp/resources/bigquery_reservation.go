@@ -40,7 +40,7 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := bqreservation.NewClient(ctx, option.WithCredentials(creds))
+	client, err := bqreservation.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

@@ -50,7 +50,7 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := scheduler.NewCloudSchedulerClient(ctx, option.WithCredentials(creds))
+	client, err := scheduler.NewCloudSchedulerClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

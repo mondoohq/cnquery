@@ -31,7 +31,7 @@ func (g *mqlGcpProjectIamService) roles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (g *mqlGcpOrganization) customRoles() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

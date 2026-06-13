@@ -301,7 +301,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 
 	ctx := context.Background()
 
-	containerSvc, err := container.NewClusterManagerClient(ctx, option.WithCredentials(creds))
+	containerSvc, err := container.NewClusterManagerClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

@@ -45,7 +45,7 @@ func newSCCClient(conn *connection.GcpConnection) (*securitycenter.Client, error
 	if err != nil {
 		return nil, err
 	}
-	return securitycenter.NewClient(context.Background(), option.WithCredentials(creds))
+	return securitycenter.NewClient(context.Background(), option.WithCredentials(creds), connection.GRPCClientTraceOption())
 }
 
 // listSCCSources lists Security Command Center sources for a given parent.

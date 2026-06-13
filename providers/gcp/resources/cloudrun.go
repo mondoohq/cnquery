@@ -290,7 +290,7 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
 
 	ctx := context.Background()
 
-	runSvc, err := run.NewServicesClient(ctx, option.WithCredentials(creds))
+	runSvc, err := run.NewServicesClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +363,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 
 	ctx := context.Background()
 
-	runSvc, err := run.NewServicesClient(ctx, option.WithCredentials(creds))
+	runSvc, err := run.NewServicesClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -704,7 +704,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	runSvc, err := run.NewJobsClient(ctx, option.WithCredentials(creds))
+	runSvc, err := run.NewJobsClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

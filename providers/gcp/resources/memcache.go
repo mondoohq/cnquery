@@ -110,7 +110,7 @@ func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[str
 		return nil, nil, err
 	}
 	ctx := context.Background()
-	client, err := memcache.NewCloudMemcacheClient(ctx, option.WithCredentials(creds))
+	client, err := memcache.NewCloudMemcacheClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -181,7 +181,7 @@ func (g *mqlGcpProjectMemcacheService) instances() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := memcache.NewCloudMemcacheClient(ctx, option.WithCredentials(creds))
+	client, err := memcache.NewCloudMemcacheClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

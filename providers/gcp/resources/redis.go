@@ -184,7 +184,7 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	redisSvc, err := redis.NewCloudRedisClient(ctx, option.WithCredentials(creds))
+	redisSvc, err := redis.NewCloudRedisClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +525,7 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	clusterSvc, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithCredentials(creds))
+	clusterSvc, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -1018,7 +1018,7 @@ func (g *mqlGcpProjectRedisServiceCluster) backups() ([]any, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	clusterSvc, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithCredentials(creds))
+	clusterSvc, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

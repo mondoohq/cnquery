@@ -79,7 +79,7 @@ func (g *mqlGcpProjectBackupdrService) managementServers() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds))
+	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (g *mqlGcpProjectBackupdrService) backupVaults() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds))
+	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (g *mqlGcpProjectBackupdrServiceBackupVault) dataSources() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds))
+	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (g *mqlGcpProjectBackupdrService) backupPlans() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds))
+	client, err := backupdr.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

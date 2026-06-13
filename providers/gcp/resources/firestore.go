@@ -112,7 +112,7 @@ func (g *mqlGcpProjectFirestoreService) databases() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds))
+	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) indexes() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds))
+	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) backupSchedules() ([]any, error)
 	}
 
 	ctx := context.Background()
-	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds))
+	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ func (g *mqlGcpProject) binaryAuthorization() (*mqlGcpProjectBinaryAuthorization
 	}
 
 	ctx := context.Background()
-	c, err := binaryauthorization.NewSystemPolicyClient(ctx, option.WithCredentials(credentials), option.WithQuotaProject(projectId))
+	c, err := binaryauthorization.NewSystemPolicyClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption(), option.WithQuotaProject(projectId))
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	c, err := binaryauthorization.NewBinauthzManagementClient(ctx, option.WithCredentials(credentials), option.WithQuotaProject(projectId))
+	c, err := binaryauthorization.NewBinauthzManagementClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption(), option.WithQuotaProject(projectId))
 	if err != nil {
 		return nil, err
 	}

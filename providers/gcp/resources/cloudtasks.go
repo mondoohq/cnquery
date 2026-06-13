@@ -54,7 +54,7 @@ func (g *mqlGcpProjectCloudTasksService) queues() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (g *mqlGcpProjectCloudTasksServiceQueue) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds))
+	client, err := cloudtasks.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

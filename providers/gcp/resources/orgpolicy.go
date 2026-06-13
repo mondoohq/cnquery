@@ -81,7 +81,7 @@ func listOrgPolicies(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 	}
 
 	ctx := context.Background()
-	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds))
+	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (g *mqlGcpProject) orgPolicyConstraints() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds))
+	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +268,7 @@ func (g *mqlGcpOrganization) customConstraints() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds))
+	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

@@ -95,7 +95,7 @@ func (g *mqlGcpProjectIdsService) endpoints() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := ids.NewClient(ctx, option.WithCredentials(creds))
+	client, err := ids.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

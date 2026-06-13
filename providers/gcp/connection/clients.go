@@ -19,6 +19,7 @@ import (
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
+	"google.golang.org/grpc"
 )
 
 // scopeCacheKey builds an order-independent cache key from a scope set so that
@@ -144,6 +145,37 @@ func (t *apiTraceTransport) RoundTrip(req *http.Request) (*http.Response, error)
 		Msg("gcp api call")
 
 	return resp, err
+}
+
+// loggingUnaryInterceptor logs every unary gRPC call (method, target, duration,
+// and error) at Debug level. It is the gRPC counterpart of apiTraceTransport:
+// most cloud.google.com/go client libraries (securitycenter, kms, bigquery,
+// etc.) talk gRPC rather than HTTP, so without this their API calls would be
+// invisible under `-v`. The read-only list/get/pager calls these resources make
+// are all unary, so a unary interceptor covers them.
+func loggingUnaryInterceptor(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	start := time.Now()
+	err := invoker(ctx, method, req, reply, cc, opts...)
+	log.Debug().
+		Str("method", method).
+		Str("target", cc.Target()).
+		Dur("duration", time.Since(start)).
+		Err(err).
+		Msg("gcp grpc call")
+	return err
+}
+
+// GRPCClientTraceOption returns a client option that installs the Debug-level
+// gRPC tracing interceptor. Pass it alongside option.WithCredentials when
+// constructing a cloud.google.com/go (gRPC) client so its API calls are traced
+// the same way HTTP calls are by apiTraceTransport. Example:
+//
+//	c, err := securitycenter.NewClient(ctx,
+//		option.WithCredentials(creds),
+//		connection.GRPCClientTraceOption(),
+//	)
+func GRPCClientTraceOption() option.ClientOption {
+	return option.WithGRPCDialOption(grpc.WithChainUnaryInterceptor(loggingUnaryInterceptor))
 }
 
 // defaultAuth builds an HTTP client from Application Default Credentials.

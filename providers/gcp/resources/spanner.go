@@ -118,7 +118,7 @@ func (g *mqlGcpProjectSpannerService) instances() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) ddl() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +422,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) backups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +542,7 @@ func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +715,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -745,7 +745,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) iamPolicy() ([]any, error)
 	}
 
 	ctx := context.Background()
-	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -783,7 +783,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) databaseRoles() ([]any, er
 	}
 
 	ctx := context.Background()
-	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -852,7 +852,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) backupSchedules() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	dbClient, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	dbClient, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -956,7 +956,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) instancePartitions() ([]any, error
 	}
 
 	ctx := context.Background()
-	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

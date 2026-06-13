@@ -99,7 +99,7 @@ func (g *mqlGcpProjectBatchService) jobs() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := batch.NewClient(ctx, option.WithCredentials(creds))
+	client, err := batch.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

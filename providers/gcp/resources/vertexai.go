@@ -217,7 +217,7 @@ func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewModelClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -319,7 +319,7 @@ func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewEndpointClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -438,7 +438,7 @@ func resolveVertexaiEndpointRef(runtime *plugin.Runtime, field *plugin.TValue[*m
 
 	ctx := context.Background()
 	client, err := aiplatform.NewEndpointClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(vertexaiEndpoint(region)),
 	)
 	if err != nil {
@@ -526,7 +526,7 @@ func resolveVertexaiModelRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlG
 
 	ctx := context.Background()
 	client, err := aiplatform.NewModelClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(vertexaiEndpoint(region)),
 	)
 	if err != nil {
@@ -583,7 +583,7 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewPipelineClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -722,7 +722,7 @@ func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewDatasetClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -798,7 +798,7 @@ func (g *mqlGcpProjectVertexaiService) featureOnlineStores() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewFeatureOnlineStoreAdminClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -890,7 +890,7 @@ func (g *mqlGcpProjectVertexaiService) tensorboards() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewTensorboardClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1038,7 +1038,7 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 	}
 	ctx := context.Background()
 	client, err := aiplatform.NewJobClient(ctx,
-		option.WithCredentials(creds),
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 		option.WithEndpoint(vertexaiEndpoint(region)),
 	)
 	if err != nil {
@@ -1119,7 +1119,7 @@ func (g *mqlGcpProjectVertexaiService) customJobs() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewJobClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1176,7 +1176,7 @@ func (g *mqlGcpProjectVertexaiService) indexes() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewIndexClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1269,7 +1269,7 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewIndexEndpointClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1353,7 +1353,7 @@ func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewMetadataClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1424,7 +1424,7 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimes() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewNotebookClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1533,7 +1533,7 @@ func (g *mqlGcpProjectVertexaiService) notebookRuntimeTemplates() ([]any, error)
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewNotebookClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1634,7 +1634,7 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewNotebookClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1709,7 +1709,7 @@ func (g *mqlGcpProjectVertexaiService) reasoningEngines() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewReasoningEngineClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1806,7 +1806,7 @@ func (g *mqlGcpProjectVertexaiService) ragCorpora() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewVertexRagDataClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1877,7 +1877,7 @@ func (g *mqlGcpProjectVertexaiService) featureGroups() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewFeatureRegistryClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -1943,7 +1943,7 @@ func (g *mqlGcpProjectVertexaiService) persistentResources() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewPersistentResourceClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2028,7 +2028,7 @@ func (g *mqlGcpProjectVertexaiService) schedules() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewScheduleClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2096,7 +2096,7 @@ func (g *mqlGcpProjectVertexaiService) deploymentResourcePools() ([]any, error) 
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewDeploymentResourcePoolClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2168,7 +2168,7 @@ func (g *mqlGcpProjectVertexaiService) cachedContents() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewGenAiCacheClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2240,7 +2240,7 @@ func (g *mqlGcpProjectVertexaiService) batchPredictionJobs() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewJobClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2326,7 +2326,7 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewGenAiTuningClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2411,7 +2411,7 @@ func (g *mqlGcpProjectVertexaiService) trainingPipelines() ([]any, error) {
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewPipelineClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2491,7 +2491,7 @@ func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error)
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewJobClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {
@@ -2573,7 +2573,7 @@ func (g *mqlGcpProjectVertexaiService) modelDeploymentMonitoringJobs() ([]any, e
 
 	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
 		client, err := aiplatform.NewJobClient(ctx,
-			option.WithCredentials(creds),
+			option.WithCredentials(creds), connection.GRPCClientTraceOption(),
 			option.WithEndpoint(vertexaiEndpoint(region)),
 		)
 		if err != nil {

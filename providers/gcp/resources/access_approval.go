@@ -63,7 +63,7 @@ func accessApprovalSettings(runtime *plugin.Runtime, settingsName string) (*mqlG
 	}
 
 	ctx := context.Background()
-	c, err := accessapproval.NewClient(ctx, option.WithCredentials(credentials))
+	c, err := accessapproval.NewClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

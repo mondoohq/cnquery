@@ -69,7 +69,7 @@ func (g *mqlGcpProjectArtifactRegistryService) repositories() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) iamPolicy() ([]any, err
 	}
 
 	ctx := context.Background()
-	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +307,7 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) packages() ([]any, erro
 	}
 
 	ctx := context.Background()
-	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepositoryPackage) versions() ([]an
 	}
 
 	ctx := context.Background()
-	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds))
+	client, err := artifactregistry.NewClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}

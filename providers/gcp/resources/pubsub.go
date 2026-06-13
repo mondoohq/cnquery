@@ -299,7 +299,7 @@ func (g *mqlGcpProjectPubsubService) topics() ([]any, error) {
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +351,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +447,7 @@ func (g *mqlGcpProjectPubsubService) subscriptions() ([]any, error) {
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +499,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -643,7 +643,7 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +715,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -767,7 +767,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 
 	ctx := context.Background()
 
-	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -864,7 +864,7 @@ func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds))
+	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -968,7 +968,7 @@ func initGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]
 	}
 
 	ctx := context.Background()
-	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds))
+	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}

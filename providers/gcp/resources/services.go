@@ -85,7 +85,7 @@ func (g *mqlGcpProject) fetchServices(filter string) ([]any, error) {
 	}
 
 	ctx := context.Background()
-	c, err := serviceusage.NewClient(ctx, option.WithCredentials(credentials))
+	c, err := serviceusage.NewClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption())
 	if err != nil {
 		log.Info().Err(err).Msg("could not create client")
 		return nil, err
@@ -176,7 +176,7 @@ func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	ctx := context.Background()
-	c, err := serviceusage.NewClient(ctx, option.WithCredentials(credentials))
+	c, err := serviceusage.NewClient(ctx, option.WithCredentials(credentials), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, nil, err
 	}

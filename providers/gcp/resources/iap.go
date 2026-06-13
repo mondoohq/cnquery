@@ -54,7 +54,7 @@ func (g *mqlGcpProjectIapService) iamPolicy() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds))
+	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (g *mqlGcpProjectIapService) settings() (any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds))
+	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (g *mqlGcpProjectIapService) brands() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iap.NewIdentityAwareProxyOAuthClient(ctx, option.WithCredentials(creds))
+	client, err := iap.NewIdentityAwareProxyOAuthClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (g *mqlGcpProjectIapServiceBrand) clients() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iap.NewIdentityAwareProxyOAuthClient(ctx, option.WithCredentials(creds))
+	client, err := iap.NewIdentityAwareProxyOAuthClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (g *mqlGcpProjectIapService) tunnelDestGroups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds))
+	client, err := iap.NewIdentityAwareProxyAdminClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
 	if err != nil {
 		return nil, err
 	}
