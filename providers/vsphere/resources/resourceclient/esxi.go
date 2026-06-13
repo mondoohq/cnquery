@@ -850,7 +850,9 @@ func (esxi *Esxi) CertificateStore() ([]map[string]any, error) {
 
 // esxcliKeyValueList runs an esxcli command that returns rows of Key/Value
 // pairs (the shape used by `system ssh server config list` and friends) and
-// flattens them into a single map.
+// flattens them into a single map. Hosts whose ESXi release lacks the
+// namespace report an empty map rather than failing the whole host query, the
+// same way TlsServerProfile and KeyPersistenceEnabled handle older releases.
 func (esxi *Esxi) esxcliKeyValueList(args []string) (map[string]string, error) {
 	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
 	if err != nil {
@@ -859,6 +861,9 @@ func (esxi *Esxi) esxcliKeyValueList(args []string) (map[string]string, error) {
 
 	res, err := e.Run(context.Background(), args)
 	if err != nil {
+		if esxcliNamespaceUnavailableRegex.MatchString(err.Error()) {
+			return map[string]string{}, nil
+		}
 		return nil, err
 	}
 

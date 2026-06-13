@@ -115,7 +115,7 @@ func (v *mqlVsphere) loggingForwarding() ([]any, error) {
 	res := make([]any, 0, len(forwarding))
 	for _, f := range forwarding {
 		mqlForwarding, err := CreateResource(v.MqlRuntime, "vsphere.logging.forwarding", map[string]*llx.RawData{
-			"__id":     llx.StringData(fmt.Sprintf("%s:%d", f.Hostname, f.Port)),
+			"__id":     llx.StringData(fmt.Sprintf("%s:%d/%s", f.Hostname, f.Port, f.Protocol)),
 			"hostname": llx.StringData(f.Hostname),
 			"port":     llx.IntData(int64(f.Port)),
 			"protocol": llx.StringData(f.Protocol),
