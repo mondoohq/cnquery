@@ -5,34 +5,48 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
+	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// authzServerPolicyRaw captures the authorization-server policy fields we
+// expose. v5 keeps these scalars in the model's AdditionalProperties map, so we
+// decode the canonical JSON into this shared shape instead.
+type authzServerPolicyRaw struct {
+	Id          string          `json:"id,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Description string          `json:"description,omitempty"`
+	Priority    int64           `json:"priority,omitempty"`
+	Status      string          `json:"status,omitempty"`
+	System      *bool           `json:"system,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Conditions  json.RawMessage `json:"conditions,omitempty"`
+	Created     *time.Time      `json:"created,omitempty"`
+	LastUpdated *time.Time      `json:"lastUpdated,omitempty"`
+}
 
 func (o *mqlOkta) authorizationServers() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	servers, resp, err := client.AuthorizationServer.ListAuthorizationServers(
-		ctx,
-		query.NewQueryParams(query.WithLimit(queryLimit)),
-	)
+	servers, resp, err := client.AuthorizationServerAPI.ListAuthorizationServers(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.AuthorizationServer) error {
+	appendEntry := func(entries []okta.AuthorizationServer) error {
 		for i := range entries {
-			r, err := newMqlOktaAuthorizationServer(o.MqlRuntime, entries[i])
+			r, err := newMqlOktaAuthorizationServer(o.MqlRuntime, &entries[i])
 			if err != nil {
 				return err
 			}
@@ -46,8 +60,8 @@ func (o *mqlOkta) authorizationServers() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.AuthorizationServer
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.AuthorizationServer
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -59,30 +73,32 @@ func (o *mqlOkta) authorizationServers() ([]any, error) {
 }
 
 func newMqlOktaAuthorizationServer(runtime *plugin.Runtime, entry *okta.AuthorizationServer) (any, error) {
+	// v5 no longer types the `default` flag on the authorization server; it is
+	// returned as an additional property, so read it from there.
 	defaultValue := false
-	if entry.Default != nil {
-		defaultValue = *entry.Default
+	if v, ok := entry.AdditionalProperties["default"].(bool); ok {
+		defaultValue = v
 	}
 
 	var signingKid, signingRotationMode, signingUse string
 	var signingLastRotated, signingNextRotation *time.Time
 	if entry.Credentials != nil && entry.Credentials.Signing != nil {
 		s := entry.Credentials.Signing
-		signingKid = s.Kid
-		signingRotationMode = s.RotationMode
-		signingUse = s.Use
+		signingKid = oktaStr(s.Kid)
+		signingRotationMode = oktaStr(s.RotationMode)
+		signingUse = oktaStr(s.Use)
 		signingLastRotated = s.LastRotated
 		signingNextRotation = s.NextRotation
 	}
 
 	return CreateResource(runtime, "okta.authorizationServer", map[string]*llx.RawData{
-		"id":                  llx.StringData(entry.Id),
-		"name":                llx.StringData(entry.Name),
-		"description":         llx.StringData(entry.Description),
-		"status":              llx.StringData(entry.Status),
+		"id":                  llx.StringData(oktaStr(entry.Id)),
+		"name":                llx.StringData(oktaStr(entry.Name)),
+		"description":         llx.StringData(oktaStr(entry.Description)),
+		"status":              llx.StringData(oktaStr(entry.Status)),
 		"default":             llx.BoolData(defaultValue),
-		"issuer":              llx.StringData(entry.Issuer),
-		"issuerMode":          llx.StringData(entry.IssuerMode),
+		"issuer":              llx.StringData(oktaStr(entry.Issuer)),
+		"issuerMode":          llx.StringData(oktaStr(entry.IssuerMode)),
 		"audiences":           llx.ArrayData(convert.SliceAnyToInterface(entry.Audiences), types.String),
 		"signingKid":          llx.StringData(signingKid),
 		"signingRotationMode": llx.StringData(signingRotationMode),
@@ -110,15 +126,23 @@ func (o *mqlOktaAuthorizationServer) policies() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	policies, resp, err := client.AuthorizationServer.ListAuthorizationServerPolicies(ctx, o.Id.Data)
+	policies, resp, err := client.AuthorizationServerPoliciesAPI.ListAuthorizationServerPolicies(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.AuthorizationServerPolicy) error {
+	appendEntry := func(entries []okta.AuthorizationServerPolicy) error {
 		for i := range entries {
-			r, err := newMqlOktaAuthorizationServerPolicy(o.MqlRuntime, o.Id.Data, entries[i])
+			raw, err := json.Marshal(entries[i])
+			if err != nil {
+				return err
+			}
+			var entry authzServerPolicyRaw
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				return err
+			}
+			r, err := newMqlOktaAuthorizationServerPolicy(o.MqlRuntime, o.Id.Data, &entry)
 			if err != nil {
 				return err
 			}
@@ -132,8 +156,8 @@ func (o *mqlOktaAuthorizationServer) policies() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.AuthorizationServerPolicy
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.AuthorizationServerPolicy
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -156,19 +180,15 @@ func (o *mqlOktaAuthorizationServer) scopes() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	scopes, resp, err := client.AuthorizationServer.ListOAuth2Scopes(
-		ctx,
-		o.Id.Data,
-		query.NewQueryParams(query.WithLimit(queryLimit)),
-	)
+	scopes, resp, err := client.AuthorizationServerScopesAPI.ListOAuth2Scopes(ctx, o.Id.Data).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.OAuth2Scope) error {
+	appendEntry := func(entries []okta.OAuth2Scope) error {
 		for i := range entries {
-			r, err := newMqlOktaAuthorizationServerScope(o.MqlRuntime, o.Id.Data, entries[i])
+			r, err := newMqlOktaAuthorizationServerScope(o.MqlRuntime, o.Id.Data, &entries[i])
 			if err != nil {
 				return err
 			}
@@ -182,8 +202,8 @@ func (o *mqlOktaAuthorizationServer) scopes() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.OAuth2Scope
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.OAuth2Scope
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -206,15 +226,15 @@ func (o *mqlOktaAuthorizationServer) claims() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	claims, resp, err := client.AuthorizationServer.ListOAuth2Claims(ctx, o.Id.Data)
+	claims, resp, err := client.AuthorizationServerClaimsAPI.ListOAuth2Claims(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.OAuth2Claim) error {
+	appendEntry := func(entries []okta.OAuth2Claim) error {
 		for i := range entries {
-			r, err := newMqlOktaAuthorizationServerClaim(o.MqlRuntime, o.Id.Data, entries[i])
+			r, err := newMqlOktaAuthorizationServerClaim(o.MqlRuntime, o.Id.Data, &entries[i])
 			if err != nil {
 				return err
 			}
@@ -228,8 +248,8 @@ func (o *mqlOktaAuthorizationServer) claims() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.OAuth2Claim
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.OAuth2Claim
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -249,10 +269,16 @@ func (o *mqlOktaAuthorizationServer) keys() ([]any, error) {
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 	ctx := context.Background()
 
-	keys, _, err := client.AuthorizationServer.ListAuthorizationServerKeys(ctx, o.Id.Data)
+	// v5's typed AuthorizationServerJsonWebKey drops created/lastUpdated/
+	// expiresAt/keyOps/x5c/x5t/x5tS256, so fetch the keys directly to retain the
+	// full JWK shape the v2 SDK exposed.
+	apiSupplement := &sdk.ApiExtension{
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
+	}
+	keys, err := apiSupplement.ListAuthorizationServerKeys(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -292,15 +318,10 @@ func (o *mqlOktaAuthorizationServerKey) id() (string, error) {
 	return "okta.authorizationServer.key/" + o.AuthorizationServerId.Data + "/" + o.Kid.Data, o.Kid.Error
 }
 
-func newMqlOktaAuthorizationServerPolicy(runtime *plugin.Runtime, authServerId string, entry *okta.AuthorizationServerPolicy) (any, error) {
+func newMqlOktaAuthorizationServerPolicy(runtime *plugin.Runtime, authServerId string, entry *authzServerPolicyRaw) (any, error) {
 	conditions, err := convert.JsonToDict(entry.Conditions)
 	if err != nil {
 		return nil, err
-	}
-
-	system := false
-	if entry.System != nil {
-		system = *entry.System
 	}
 
 	return CreateResource(runtime, "okta.authorizationServer.policy", map[string]*llx.RawData{
@@ -310,7 +331,7 @@ func newMqlOktaAuthorizationServerPolicy(runtime *plugin.Runtime, authServerId s
 		"description":           llx.StringData(entry.Description),
 		"priority":              llx.IntData(entry.Priority),
 		"status":                llx.StringData(entry.Status),
-		"system":                llx.BoolData(system),
+		"system":                llx.BoolData(oktaBool(entry.System)),
 		"type":                  llx.StringData(entry.Type),
 		"conditions":            llx.DictData(conditions),
 		"created":               llx.TimeDataPtr(entry.Created),
@@ -334,17 +355,24 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 	client := conn.Client()
 	ctx := context.Background()
 
-	rules, resp, err := client.AuthorizationServer.ListAuthorizationServerPolicyRules(
+	rules, resp, err := client.AuthorizationServerRulesAPI.ListAuthorizationServerPolicyRules(
 		ctx, o.AuthorizationServerId.Data, o.Id.Data,
-	)
+	).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.AuthorizationServerPolicyRule) error {
+	appendEntry := func(entries []okta.AuthorizationServerPolicyRule) error {
 		for i := range entries {
-			entry := entries[i]
+			raw, err := json.Marshal(entries[i])
+			if err != nil {
+				return err
+			}
+			var entry oktaPolicyRuleRaw
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				return err
+			}
 			actions, err := convert.JsonToDict(entry.Actions)
 			if err != nil {
 				return err
@@ -352,10 +380,6 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 			conditions, err := convert.JsonToDict(entry.Conditions)
 			if err != nil {
 				return err
-			}
-			system := false
-			if entry.System != nil {
-				system = *entry.System
 			}
 
 			r, err := CreateResource(o.MqlRuntime, "okta.authorizationServer.policyRule", map[string]*llx.RawData{
@@ -365,7 +389,7 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 				"name":                  llx.StringData(entry.Name),
 				"priority":              llx.IntData(entry.Priority),
 				"status":                llx.StringData(entry.Status),
-				"system":                llx.BoolData(system),
+				"system":                llx.BoolData(oktaBool(entry.System)),
 				"type":                  llx.StringData(entry.Type),
 				"actions":               llx.DictData(actions),
 				"conditions":            llx.DictData(conditions),
@@ -385,8 +409,8 @@ func (o *mqlOktaAuthorizationServerPolicy) rules() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.AuthorizationServerPolicyRule
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.AuthorizationServerPolicyRule
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -402,25 +426,16 @@ func (o *mqlOktaAuthorizationServerPolicyRule) id() (string, error) {
 }
 
 func newMqlOktaAuthorizationServerScope(runtime *plugin.Runtime, authServerId string, entry *okta.OAuth2Scope) (any, error) {
-	defaultValue := false
-	if entry.Default != nil {
-		defaultValue = *entry.Default
-	}
-	system := false
-	if entry.System != nil {
-		system = *entry.System
-	}
-
 	return CreateResource(runtime, "okta.authorizationServer.scope", map[string]*llx.RawData{
 		"authorizationServerId": llx.StringData(authServerId),
-		"id":                    llx.StringData(entry.Id),
-		"name":                  llx.StringData(entry.Name),
-		"displayName":           llx.StringData(entry.DisplayName),
-		"description":           llx.StringData(entry.Description),
-		"consent":               llx.StringData(entry.Consent),
-		"default":               llx.BoolData(defaultValue),
-		"metadataPublish":       llx.StringData(entry.MetadataPublish),
-		"system":                llx.BoolData(system),
+		"id":                    llx.StringData(oktaStr(entry.Id)),
+		"name":                  llx.StringData(oktaStr(entry.Name)),
+		"displayName":           llx.StringData(oktaStr(entry.DisplayName)),
+		"description":           llx.StringData(oktaStr(entry.Description)),
+		"consent":               llx.StringData(oktaStr(entry.Consent)),
+		"default":               llx.BoolData(oktaBool(entry.Default)),
+		"metadataPublish":       llx.StringData(oktaStr(entry.MetadataPublish)),
+		"system":                llx.BoolData(oktaBool(entry.System)),
 	})
 }
 
@@ -429,15 +444,6 @@ func (o *mqlOktaAuthorizationServerScope) id() (string, error) {
 }
 
 func newMqlOktaAuthorizationServerClaim(runtime *plugin.Runtime, authServerId string, entry *okta.OAuth2Claim) (any, error) {
-	alwaysInclude := false
-	if entry.AlwaysIncludeInToken != nil {
-		alwaysInclude = *entry.AlwaysIncludeInToken
-	}
-	system := false
-	if entry.System != nil {
-		system = *entry.System
-	}
-
 	var scopes []string
 	if entry.Conditions != nil {
 		scopes = entry.Conditions.Scopes
@@ -445,15 +451,15 @@ func newMqlOktaAuthorizationServerClaim(runtime *plugin.Runtime, authServerId st
 
 	return CreateResource(runtime, "okta.authorizationServer.claim", map[string]*llx.RawData{
 		"authorizationServerId": llx.StringData(authServerId),
-		"id":                    llx.StringData(entry.Id),
-		"name":                  llx.StringData(entry.Name),
-		"status":                llx.StringData(entry.Status),
-		"system":                llx.BoolData(system),
-		"claimType":             llx.StringData(entry.ClaimType),
-		"valueType":             llx.StringData(entry.ValueType),
-		"value":                 llx.StringData(entry.Value),
-		"alwaysIncludeInToken":  llx.BoolData(alwaysInclude),
-		"groupFilterType":       llx.StringData(entry.GroupFilterType),
+		"id":                    llx.StringData(oktaStr(entry.Id)),
+		"name":                  llx.StringData(oktaStr(entry.Name)),
+		"status":                llx.StringData(oktaStr(entry.Status)),
+		"system":                llx.BoolData(oktaBool(entry.System)),
+		"claimType":             llx.StringData(oktaStr(entry.ClaimType)),
+		"valueType":             llx.StringData(oktaStr(entry.ValueType)),
+		"value":                 llx.StringData(oktaStr(entry.Value)),
+		"alwaysIncludeInToken":  llx.BoolData(oktaBool(entry.AlwaysIncludeInToken)),
+		"groupFilterType":       llx.StringData(oktaStr(entry.GroupFilterType)),
 		"scopes":                llx.ArrayData(convert.SliceAnyToInterface(scopes), types.String),
 	})
 }

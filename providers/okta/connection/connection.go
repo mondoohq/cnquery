@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -20,7 +20,7 @@ type OktaConnection struct {
 	asset *inventory.Asset
 	// custom connection fields
 	organization string
-	client       *okta.Client
+	client       *okta.APIClient
 	token        string
 }
 
@@ -58,14 +58,14 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		return nil, errors.New("a valid Okta token is required, pass --token '<yourtoken>' or set OKTA_API_TOKEN environment variable")
 	}
 
-	_, client, err := okta.NewClient(
-		context.Background(),
+	config, err := okta.NewConfiguration(
 		okta.WithOrgUrl("https://"+org),
 		okta.WithToken(token),
 	)
 	if err != nil {
 		return nil, err
 	}
+	client := okta.NewAPIClient(config)
 
 	conn.organization = org
 	conn.client = client
@@ -86,7 +86,7 @@ func (c *OktaConnection) OrganizationID() string {
 	return c.organization
 }
 
-func (c *OktaConnection) Client() *okta.Client {
+func (c *OktaConnection) Client() *okta.APIClient {
 	return c.client
 }
 
@@ -95,10 +95,13 @@ func (c *OktaConnection) Token() string {
 }
 
 func (c *OktaConnection) Identifier() (string, error) {
-	settings, _, err := c.client.OrgSetting.GetOrgSettings(context.Background())
+	settings, _, err := c.client.OrgSettingAPI.GetOrgSettings(context.Background()).Execute()
 	if err != nil {
 		return "", errors.Join(errors.New("failed to get Okta org ID"), err)
 	}
+	if settings == nil || settings.Id == nil {
+		return "", errors.New("failed to get Okta org ID: empty response")
+	}
 
-	return settings.Id, nil
+	return *settings.Id, nil
 }

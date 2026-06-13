@@ -5,7 +5,10 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -42,23 +45,38 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
-	rq := client.CloneRequestExecutor()
 
-	endpoint := fmt.Sprintf("/api/v1/users/%s/factors", url.PathEscape(o.Id.Data))
-	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", endpoint, nil)
+	// The factors endpoint returns all enrolled factors in a single response;
+	// we issue the request directly (rather than client.UserFactorAPI.ListFactors)
+	// to capture the per-factorType `profile` object that the SDK's typed
+	// UserFactor union discards.
+	endpoint := fmt.Sprintf("https://%s/api/v1/users/%s/factors", conn.OrganizationID(), url.PathEscape(o.Id.Data))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "SSWS "+conn.Token())
 
-	// The factors endpoint returns all enrolled factors in a single response;
-	// we use the raw request executor (rather than client.UserFactor.ListFactors)
-	// to capture the per-factorType `profile` object that the SDK's typed
-	// UserFactor struct discards.
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch user factors: %s: %s", resp.Status, string(body))
+	}
+
 	var page []userFactorRaw
-	if _, err := rq.Do(ctx, req, &page); err != nil {
+	if err := json.Unmarshal(body, &page); err != nil {
 		return nil, err
 	}
 

@@ -7,11 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"strconv"
 	"time"
-
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 )
 
 // NetworkZone replaces okta.NetworkZone to handle the polymorphic API response.
@@ -101,52 +98,37 @@ func truncateJSON(raw json.RawMessage) string {
 	return s
 }
 
-// ListNetworkZones fetches all network zones with pagination.
-func (m *ApiExtension) ListNetworkZones(ctx context.Context, qp *query.Params) ([]*NetworkZone, error) {
-	url := "/api/v1/zones"
-	if qp != nil {
-		url += qp.String()
+// ListNetworkZones fetches all network zones, following Okta's
+// `Link: <url>; rel="next"` pagination.
+func (m *ApiExtension) ListNetworkZones(ctx context.Context, limit int) ([]*NetworkZone, error) {
+	path := "/api/v1/zones"
+	if limit > 0 {
+		path += "?limit=" + strconv.Itoa(limit)
 	}
-
-	rq := m.RequestExecutor
-	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
+	nextURL := m.url(path)
 
 	var zones []*NetworkZone
-	resp, err := rq.Do(ctx, req, &zones)
-	if err != nil {
-		return nil, err
-	}
-
-	for resp != nil && resp.HasNextPage() {
-		var nextPage []*NetworkZone
-		resp, err = resp.Next(ctx, &nextPage)
+	for nextURL != "" {
+		var page []*NetworkZone
+		resp, err := m.get(ctx, nextURL, &page)
 		if err != nil {
 			return nil, err
 		}
-		zones = append(zones, nextPage...)
+		zones = append(zones, page...)
+		if resp == nil {
+			break
+		}
+		nextURL = nextLinkURL(resp.Header.Values("Link"))
 	}
 
 	return zones, nil
 }
 
 // GetNetworkZone fetches a single network zone by ID.
-func (m *ApiExtension) GetNetworkZone(ctx context.Context, zoneId string) (*NetworkZone, *okta.Response, error) {
-	url := fmt.Sprintf("/api/v1/zones/%v", zoneId)
-
-	rq := m.RequestExecutor
-	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (m *ApiExtension) GetNetworkZone(ctx context.Context, zoneId string) (*NetworkZone, error) {
 	var zone *NetworkZone
-	resp, err := rq.Do(ctx, req, &zone)
-	if err != nil {
-		return nil, resp, err
+	if _, err := m.get(ctx, m.url(fmt.Sprintf("/api/v1/zones/%v", zoneId)), &zone); err != nil {
+		return nil, err
 	}
-
-	return zone, resp, nil
+	return zone, nil
 }

@@ -5,17 +5,46 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
+// mqlOktaAuthenticatorInternal caches the provider and settings sub-objects of
+// the authenticator so the typed accessors can resolve them lazily. v5 returns
+// authenticators as a discriminated union, so we decode the shared fields from
+// the canonical JSON instead of reading SDK structs directly.
 type mqlOktaAuthenticatorInternal struct {
-	provider *okta.AuthenticatorProvider
-	settings *okta.AuthenticatorSettings
+	provider *oktaAuthenticatorProvider
+	settings *oktaAuthenticatorSettings
+}
+
+type oktaAuthenticatorRaw struct {
+	Id          string          `json:"id,omitempty"`
+	Key         string          `json:"key,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Status      string          `json:"status,omitempty"`
+	Created     *time.Time      `json:"created,omitempty"`
+	LastUpdated *time.Time      `json:"lastUpdated,omitempty"`
+	Settings    json.RawMessage `json:"settings,omitempty"`
+	Provider    json.RawMessage `json:"provider,omitempty"`
+}
+
+type oktaAuthenticatorSettings struct {
+	AllowedFor             string `json:"allowedFor,omitempty"`
+	TokenLifetimeInMinutes *int64 `json:"tokenLifetimeInMinutes,omitempty"`
+	UserVerification       string `json:"userVerification,omitempty"`
+}
+
+type oktaAuthenticatorProvider struct {
+	Type          string          `json:"type,omitempty"`
+	Configuration json.RawMessage `json:"configuration,omitempty"`
 }
 
 func (o *mqlOkta) authenticators() ([]any, error) {
@@ -23,15 +52,23 @@ func (o *mqlOkta) authenticators() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	authenticators, resp, err := client.Authenticator.ListAuthenticators(ctx)
+	authenticators, resp, err := client.AuthenticatorAPI.ListAuthenticators(ctx).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntries := func(entries []*okta.Authenticator) error {
+	appendEntries := func(entries []okta.ListAuthenticators200ResponseInner) error {
 		for i := range entries {
-			r, err := newMqlOktaAuthenticator(o.MqlRuntime, entries[i])
+			raw, err := json.Marshal(entries[i])
+			if err != nil {
+				return err
+			}
+			var entry oktaAuthenticatorRaw
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				return err
+			}
+			r, err := newMqlOktaAuthenticator(o.MqlRuntime, &entry)
 			if err != nil {
 				return err
 			}
@@ -45,8 +82,8 @@ func (o *mqlOkta) authenticators() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.Authenticator
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.ListAuthenticators200ResponseInner
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +94,7 @@ func (o *mqlOkta) authenticators() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaAuthenticator(runtime *plugin.Runtime, entry *okta.Authenticator) (*mqlOktaAuthenticator, error) {
+func newMqlOktaAuthenticator(runtime *plugin.Runtime, entry *oktaAuthenticatorRaw) (*mqlOktaAuthenticator, error) {
 	args := map[string]*llx.RawData{
 		"id":          llx.StringData(entry.Id),
 		"key":         llx.StringData(entry.Key),
@@ -68,14 +105,28 @@ func newMqlOktaAuthenticator(runtime *plugin.Runtime, entry *okta.Authenticator)
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 	}
 
-	if entry.Settings != nil {
-		settings, err := convert.JsonToDict(entry.Settings)
+	var settings *oktaAuthenticatorSettings
+	if len(entry.Settings) > 0 {
+		dict, err := convert.JsonToDict(entry.Settings)
 		if err != nil {
 			return nil, err
 		}
-		args["settings"] = llx.DictData(settings)
+		args["settings"] = llx.DictData(dict)
+
+		settings = &oktaAuthenticatorSettings{}
+		if err := json.Unmarshal(entry.Settings, settings); err != nil {
+			return nil, err
+		}
 	} else {
 		args["settings"] = llx.DictData(map[string]any{})
+	}
+
+	var provider *oktaAuthenticatorProvider
+	if len(entry.Provider) > 0 {
+		provider = &oktaAuthenticatorProvider{}
+		if err := json.Unmarshal(entry.Provider, provider); err != nil {
+			return nil, err
+		}
 	}
 
 	r, err := CreateResource(runtime, "okta.authenticator", args)
@@ -83,8 +134,8 @@ func newMqlOktaAuthenticator(runtime *plugin.Runtime, entry *okta.Authenticator)
 		return nil, err
 	}
 	mqlAuth := r.(*mqlOktaAuthenticator)
-	mqlAuth.provider = entry.Provider
-	mqlAuth.settings = entry.Settings
+	mqlAuth.provider = provider
+	mqlAuth.settings = settings
 	return mqlAuth, nil
 }
 
@@ -101,7 +152,7 @@ func (o *mqlOktaAuthenticator) providerType() (string, error) {
 }
 
 func (o *mqlOktaAuthenticator) providerConfiguration() (any, error) {
-	if o.provider == nil || o.provider.Configuration == nil {
+	if o.provider == nil || len(o.provider.Configuration) == 0 {
 		o.ProviderConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -117,11 +168,11 @@ func (o *mqlOktaAuthenticator) allowedFor() (string, error) {
 }
 
 func (o *mqlOktaAuthenticator) tokenLifetimeInMinutes() (int64, error) {
-	if o.settings == nil || o.settings.TokenLifetimeInMinutesPtr == nil {
+	if o.settings == nil || o.settings.TokenLifetimeInMinutes == nil {
 		o.TokenLifetimeInMinutes.State = plugin.StateIsSet | plugin.StateIsNull
 		return 0, nil
 	}
-	return *o.settings.TokenLifetimeInMinutesPtr, nil
+	return *o.settings.TokenLifetimeInMinutes, nil
 }
 
 func (o *mqlOktaAuthenticator) userVerification() (string, error) {

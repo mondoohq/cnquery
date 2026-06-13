@@ -11,8 +11,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,33 +22,27 @@ const (
 )
 
 func TestOkta(t *testing.T) {
-	ctx, client, err := okta.NewClient(
-		context.TODO(),
+	config, err := okta.NewConfiguration(
 		okta.WithOrgUrl("https://"+org),
 		okta.WithToken(token),
 	)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
+	require.NoError(t, err)
+	client := okta.NewAPIClient(config)
 
-	fmt.Printf("Context: %+v\n Client: %+v\n", ctx, client)
+	fmt.Printf("Client: %+v\n", client)
 
-	users, _, err := client.User.ListUsers(context.Background(), nil)
+	ctx := context.Background()
+	users, _, err := client.UserAPI.ListUsers(ctx).Execute()
 	require.NoError(t, err)
 	assert.NotNil(t, users)
 
 	// second call
-	users, resp, err := client.User.ListUsers(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(200),
-		),
-	)
+	_, resp, err := client.UserAPI.ListUsers(ctx).Limit(200).Execute()
 	require.NoError(t, err)
 
 	for resp != nil && resp.HasNextPage() {
-		var userSetSlice []*okta.User
-		resp, err = resp.Next(ctx, &userSetSlice)
+		var userSetSlice []okta.User
+		resp, err = resp.Next(&userSetSlice)
 		require.NoError(t, err)
 	}
 }

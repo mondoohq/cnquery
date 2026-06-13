@@ -6,8 +6,7 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -20,18 +19,15 @@ func (o *mqlOkta) identityProviders() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	idps, resp, err := client.IdentityProvider.ListIdentityProviders(
-		ctx,
-		query.NewQueryParams(query.WithLimit(queryLimit)),
-	)
+	idps, resp, err := client.IdentityProviderAPI.ListIdentityProviders(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendEntry := func(entries []*okta.IdentityProvider) error {
+	appendEntry := func(entries []okta.IdentityProvider) error {
 		for i := range entries {
-			r, err := newMqlOktaIdentityProvider(o.MqlRuntime, entries[i])
+			r, err := newMqlOktaIdentityProvider(o.MqlRuntime, &entries[i])
 			if err != nil {
 				return err
 			}
@@ -45,8 +41,8 @@ func (o *mqlOkta) identityProviders() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.IdentityProvider
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.IdentityProvider
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
@@ -69,14 +65,14 @@ func newMqlOktaIdentityProvider(runtime *plugin.Runtime, entry *okta.IdentityPro
 	}
 
 	return CreateResource(runtime, "okta.identityProvider", map[string]*llx.RawData{
-		"id":          llx.StringData(entry.Id),
-		"name":        llx.StringData(entry.Name),
-		"type":        llx.StringData(entry.Type),
-		"status":      llx.StringData(entry.Status),
-		"issuerMode":  llx.StringData(entry.IssuerMode),
+		"id":          llx.StringData(oktaStr(entry.Id)),
+		"name":        llx.StringData(oktaStr(entry.Name)),
+		"type":        llx.StringData(oktaStr(entry.Type)),
+		"status":      llx.StringData(oktaStr(entry.Status)),
+		"issuerMode":  llx.StringData(oktaStr(entry.IssuerMode)),
 		"protocol":    llx.DictData(protocol),
 		"policy":      llx.DictData(policy),
-		"created":     llx.TimeDataPtr(entry.Created),
+		"created":     llx.TimeDataPtr(entry.Created.Get()),
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 	})
 }
@@ -97,34 +93,31 @@ func (o *mqlOktaIdentityProvider) signingKeys() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	keys, resp, err := client.IdentityProvider.ListIdentityProviderSigningKeys(ctx, o.Id.Data)
+	keys, resp, err := client.IdentityProviderAPI.ListIdentityProviderSigningKeys(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendKeys := func(entries []*okta.JsonWebKey) error {
+	appendKeys := func(entries []okta.JsonWebKey) error {
 		for i := range entries {
 			k := entries[i]
-			if k == nil {
-				continue
-			}
 			r, err := CreateResource(o.MqlRuntime, "okta.identityProvider.key", map[string]*llx.RawData{
 				"identityProviderId": llx.StringData(o.Id.Data),
-				"kid":                llx.StringData(k.Kid),
-				"status":             llx.StringData(k.Status),
-				"alg":                llx.StringData(k.Alg),
-				"kty":                llx.StringData(k.Kty),
-				"use":                llx.StringData(k.Use),
+				"kid":                llx.StringData(oktaStr(k.Kid)),
+				"status":             llx.StringData(oktaStr(k.Status)),
+				"alg":                llx.StringData(oktaStr(k.Alg)),
+				"kty":                llx.StringData(oktaStr(k.Kty)),
+				"use":                llx.StringData(oktaStr(k.Use)),
 				"keyOps":             llx.ArrayData(convert.SliceAnyToInterface(k.KeyOps), types.String),
 				"created":            llx.TimeDataPtr(k.Created),
 				"lastUpdated":        llx.TimeDataPtr(k.LastUpdated),
 				"expiresAt":          llx.TimeDataPtr(k.ExpiresAt),
 				"x5c":                llx.ArrayData(convert.SliceAnyToInterface(k.X5c), types.String),
-				"x5t":                llx.StringData(k.X5t),
-				"x5tS256":            llx.StringData(k.X5tS256),
-				"n":                  llx.StringData(k.N),
-				"e":                  llx.StringData(k.E),
+				"x5t":                llx.StringData(oktaStr(k.X5t)),
+				"x5tS256":            llx.StringData(oktaStr(k.X5tS256)),
+				"n":                  llx.StringData(oktaStr(k.N)),
+				"e":                  llx.StringData(oktaStr(k.E)),
 			})
 			if err != nil {
 				return err
@@ -139,8 +132,8 @@ func (o *mqlOktaIdentityProvider) signingKeys() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.JsonWebKey
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.JsonWebKey
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}

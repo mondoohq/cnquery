@@ -6,8 +6,7 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -19,12 +18,7 @@ func (o *mqlOkta) groups() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.Group.ListGroups(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	slice, resp, err := client.GroupAPI.ListGroups(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +28,9 @@ func (o *mqlOkta) groups() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.Group) error {
+	appendEntry := func(datalist []okta.Group) error {
 		for i := range datalist {
-			entry := datalist[i]
-			r, err := newMqlOktaGroup(o.MqlRuntime, entry)
+			r, err := newMqlOktaGroup(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -53,8 +46,8 @@ func (o *mqlOkta) groups() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []*okta.Group
-		resp, err = resp.Next(ctx, &slice)
+		var slice []okta.Group
+		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
 		}
@@ -72,11 +65,17 @@ func newMqlOktaGroup(runtime *plugin.Runtime, entry *okta.Group) (any, error) {
 		return nil, err
 	}
 
+	var name, description string
+	if entry.Profile != nil {
+		name = oktaStr(entry.Profile.Name)
+		description = oktaStr(entry.Profile.Description)
+	}
+
 	return CreateResource(runtime, "okta.group", map[string]*llx.RawData{
-		"id":                    llx.StringData(entry.Id),
-		"name":                  llx.StringData(entry.Profile.Name),
-		"description":           llx.StringData(entry.Profile.Description),
-		"type":                  llx.StringData(entry.Type),
+		"id":                    llx.StringData(oktaStr(entry.Id)),
+		"name":                  llx.StringData(name),
+		"description":           llx.StringData(description),
+		"type":                  llx.StringData(oktaStr(entry.Type)),
 		"created":               llx.TimeDataPtr(entry.Created),
 		"lastMembershipUpdated": llx.TimeDataPtr(entry.LastMembershipUpdated),
 		"lastUpdated":           llx.TimeDataPtr(entry.LastUpdated),
@@ -94,17 +93,19 @@ func (o *mqlOktaGroup) members() ([]any, error) {
 
 	ctx := context.Background()
 	groupID := o.Id.Data
-	slice, resp, err := client.Group.ListGroupUsers(ctx, groupID, query.NewQueryParams(query.WithLimit(queryLimit)))
+	slice, resp, err := client.GroupAPI.ListGroupUsers(ctx, groupID).Limit(queryLimit).Execute()
+	if err != nil {
+		return nil, err
+	}
 
 	if len(slice) == 0 {
 		return nil, nil
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.User) error {
+	appendEntry := func(datalist []okta.GroupMember) error {
 		for i := range datalist {
-			entry := datalist[i]
-			r, err := newMqlOktaUser(o.MqlRuntime, entry)
+			r, err := newMqlOktaUser(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -120,8 +121,8 @@ func (o *mqlOktaGroup) members() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []*okta.User
-		resp, err = resp.Next(ctx, &slice)
+		var slice []okta.GroupMember
+		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
 		}
@@ -140,17 +141,19 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 
 	ctx := context.Background()
 	groupID := o.Id.Data
-	slice, resp, err := client.Group.ListGroupAssignedRoles(ctx, groupID, query.NewQueryParams(query.WithLimit(queryLimit)))
+	slice, resp, err := client.RoleAssignmentAPI.ListGroupAssignedRoles(ctx, groupID).Execute()
+	if err != nil {
+		return nil, err
+	}
 
 	if len(slice) == 0 {
 		return nil, nil
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.Role) error {
+	appendEntry := func(datalist []okta.Role) error {
 		for i := range datalist {
-			entry := datalist[i]
-			r, err := newMqlOktaRole(o.MqlRuntime, entry)
+			r, err := newMqlOktaRole(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -166,8 +169,8 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []*okta.Role
-		resp, err = resp.Next(ctx, &slice)
+		var slice []okta.Role
+		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
 		}
@@ -184,12 +187,7 @@ func (o *mqlOkta) groupRules() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.Group.ListGroupRules(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	slice, resp, err := client.GroupAPI.ListGroupRules(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -199,10 +197,9 @@ func (o *mqlOkta) groupRules() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.GroupRule) error {
+	appendEntry := func(datalist []okta.GroupRule) error {
 		for i := range datalist {
-			entry := datalist[i]
-			r, err := newMqlOktaGroupRule(o.MqlRuntime, entry)
+			r, err := newMqlOktaGroupRule(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -218,8 +215,8 @@ func (o *mqlOkta) groupRules() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []*okta.GroupRule
-		resp, err = resp.Next(ctx, &slice)
+		var slice []okta.GroupRule
+		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
 		}
@@ -232,11 +229,10 @@ func (o *mqlOkta) groupRules() ([]any, error) {
 }
 
 func newMqlOktaGroupRule(runtime *plugin.Runtime, entry *okta.GroupRule) (any, error) {
-
 	return CreateResource(runtime, "okta.groupRule", map[string]*llx.RawData{
-		"id":     llx.StringData(entry.Id),
-		"name":   llx.StringData(entry.Name),
-		"status": llx.StringData(entry.Status),
-		"type":   llx.StringData(entry.Type),
+		"id":     llx.StringData(oktaStr(entry.Id)),
+		"name":   llx.StringData(oktaStr(entry.Name)),
+		"status": llx.StringData(oktaStr(entry.Status)),
+		"type":   llx.StringData(oktaStr(entry.Type)),
 	})
 }

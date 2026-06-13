@@ -5,9 +5,9 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -36,43 +36,18 @@ func initOktaUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	conn := runtime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 	ctx := context.Background()
-	user, _, err := client.User.GetUser(ctx, id)
+	user, _, err := client.UserAPI.GetUser(ctx, id).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	userType, err := convert.JsonToDict(user.Type)
+	userArgs, err := oktaUserArgs(user)
 	if err != nil {
 		return nil, nil, err
 	}
-	var userTypeId string
-	if user.Type != nil {
-		userTypeId = user.Type.Id
+	for k, v := range userArgs {
+		args[k] = v
 	}
-	credentials, err := convert.JsonToDict(user.Credentials)
-	if err != nil {
-		return nil, nil, err
-	}
-	profileDict := map[string]any{}
-	if user.Profile != nil {
-		for k, v := range *user.Profile {
-			profileDict[k] = v
-		}
-	}
-
-	args["id"] = llx.StringData(user.Id)
-	args["type"] = llx.DictData(userType)
-	args["typeId"] = llx.StringData(userTypeId)
-	args["credentials"] = llx.DictData(credentials)
-	args["activated"] = llx.TimeDataPtr(user.Activated)
-	args["created"] = llx.TimeDataPtr(user.Created)
-	args["lastLogin"] = llx.TimeDataPtr(user.LastLogin)
-	args["lastUpdated"] = llx.TimeDataPtr(user.LastUpdated)
-	args["passwordChanged"] = llx.TimeDataPtr(user.PasswordChanged)
-	args["profile"] = llx.DictData(profileDict)
-	args["status"] = llx.StringData(user.Status)
-	args["statusChanged"] = llx.TimeDataPtr(user.StatusChanged)
-	args["transitioningToStatus"] = llx.StringData(user.TransitioningToStatus)
 	return args, nil, nil
 }
 
@@ -81,12 +56,7 @@ func (o *mqlOkta) users() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	userSetSlice, resp, err := client.User.ListUsers(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	userSetSlice, resp, err := client.UserAPI.ListUsers(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +66,9 @@ func (o *mqlOkta) users() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.User) error {
+	appendEntry := func(datalist []okta.User) error {
 		for i := range datalist {
-			user := datalist[i]
-			r, err := newMqlOktaUser(o.MqlRuntime, user)
+			r, err := newMqlOktaUser(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -114,8 +83,8 @@ func (o *mqlOkta) users() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var userSetSlice []*okta.User
-		resp, err = resp.Next(ctx, &userSetSlice)
+		var userSetSlice []okta.User
+		resp, err = resp.Next(&userSetSlice)
 		if err != nil {
 			return nil, err
 		}
@@ -127,42 +96,65 @@ func (o *mqlOkta) users() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaUser(runtime *plugin.Runtime, user *okta.User) (*mqlOktaUser, error) {
-	// FUTURE: change this to actually fetch the whole type and put it in the dict
+// oktaUserArgs builds the okta.user resource fields from any of the v5 SDK's
+// user-shaped types (User, UserGetSingleton, GroupMember). They share the same
+// JSON shape, so we normalize through JSON into a single okta.User before
+// mapping — this keeps one code path for every place a user is materialized.
+func oktaUserArgs(src any) (map[string]*llx.RawData, error) {
+	var user okta.User
+	switch v := src.(type) {
+	case *okta.User:
+		user = *v
+	default:
+		raw, err := json.Marshal(src)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(raw, &user); err != nil {
+			return nil, err
+		}
+	}
+
 	userType, err := convert.JsonToDict(user.Type)
 	if err != nil {
 		return nil, err
 	}
 	var userTypeId string
 	if user.Type != nil {
-		userTypeId = user.Type.Id
+		userTypeId = oktaStr(user.Type.Id)
 	}
 	credentials, err := convert.JsonToDict(user.Credentials)
 	if err != nil {
 		return nil, err
 	}
-
-	profileDict := map[string]any{}
-	if user.Profile != nil {
-		for k, v := range *user.Profile {
-			profileDict[k] = v
-		}
+	profileDict, err := convert.JsonToDict(user.Profile)
+	if err != nil {
+		return nil, err
 	}
-	r, err := CreateResource(runtime, "okta.user", map[string]*llx.RawData{
-		"id":                    llx.StringData(user.Id),
+
+	return map[string]*llx.RawData{
+		"id":                    llx.StringData(oktaStr(user.Id)),
 		"type":                  llx.DictData(userType),
 		"typeId":                llx.StringData(userTypeId),
 		"credentials":           llx.DictData(credentials),
-		"activated":             llx.TimeDataPtr(user.Activated),
+		"activated":             llx.TimeDataPtr(user.Activated.Get()),
 		"created":               llx.TimeDataPtr(user.Created),
-		"lastLogin":             llx.TimeDataPtr(user.LastLogin),
+		"lastLogin":             llx.TimeDataPtr(user.LastLogin.Get()),
 		"lastUpdated":           llx.TimeDataPtr(user.LastUpdated),
-		"passwordChanged":       llx.TimeDataPtr(user.PasswordChanged),
+		"passwordChanged":       llx.TimeDataPtr(user.PasswordChanged.Get()),
 		"profile":               llx.DictData(profileDict),
-		"status":                llx.StringData(user.Status),
-		"statusChanged":         llx.TimeDataPtr(user.StatusChanged),
-		"transitioningToStatus": llx.StringData(user.TransitioningToStatus),
-	})
+		"status":                llx.StringData(oktaStr(user.Status)),
+		"statusChanged":         llx.TimeDataPtr(user.StatusChanged.Get()),
+		"transitioningToStatus": llx.StringData(oktaStr(user.TransitioningToStatus.Get())),
+	}, nil
+}
+
+func newMqlOktaUser(runtime *plugin.Runtime, src any) (*mqlOktaUser, error) {
+	args, err := oktaUserArgs(src)
+	if err != nil {
+		return nil, err
+	}
+	r, err := CreateResource(runtime, "okta.user", args)
 	if err != nil {
 		return nil, err
 	}
@@ -181,15 +173,15 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 	if o.Id.Error != nil {
 		return nil, o.Id.Error
 	}
-	roles, resp, err := client.User.ListAssignedRolesForUser(ctx, o.Id.Data, query.NewQueryParams(query.WithLimit(queryLimit)))
+	roles, resp, err := client.RoleAssignmentAPI.ListAssignedRolesForUser(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 	res := []any{}
 
-	appendEntry := func(datalist []*okta.Role) error {
-		for _, r := range datalist {
-			mqlOktaRole, err := newMqlOktaRole(o.MqlRuntime, r)
+	appendEntry := func(datalist []okta.Role) error {
+		for i := range datalist {
+			mqlOktaRole, err := newMqlOktaRole(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -202,8 +194,8 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 		return nil, err
 	}
 	for resp != nil && resp.HasNextPage() {
-		var userRoles []*okta.Role
-		resp, err = resp.Next(ctx, &userRoles)
+		var userRoles []okta.Role
+		resp, err = resp.Next(&userRoles)
 		if err != nil {
 			return nil, err
 		}
@@ -217,13 +209,13 @@ func (o *mqlOktaUser) roles() ([]any, error) {
 
 func newMqlOktaRole(runtime *plugin.Runtime, role *okta.Role) (*mqlOktaRole, error) {
 	r, err := CreateResource(runtime, "okta.role", map[string]*llx.RawData{
-		"id":             llx.StringData(role.Id),
-		"assignmentType": llx.StringData(role.AssignmentType),
+		"id":             llx.StringData(oktaStr(role.Id)),
+		"assignmentType": llx.StringData(oktaStr(role.AssignmentType)),
 		"created":        llx.TimeDataPtr(role.Created),
 		"lastUpdated":    llx.TimeDataPtr(role.LastUpdated),
-		"label":          llx.StringData(role.Label),
-		"status":         llx.StringData(role.Status),
-		"type":           llx.StringData(role.Type),
+		"label":          llx.StringData(oktaStr(role.Label)),
+		"status":         llx.StringData(oktaStr(role.Status)),
+		"type":           llx.StringData(oktaStr(role.Type)),
 	})
 	if err != nil {
 		return nil, err

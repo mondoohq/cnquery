@@ -28,25 +28,25 @@ func initOktaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	ctx := context.Background()
 	client := conn.Client()
-	settings, _, err := client.OrgSetting.GetOrgSettings(ctx)
+	settings, _, err := client.OrgSettingAPI.GetOrgSettings(ctx).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	args["id"] = llx.StringData(settings.Id)
-	args["companyName"] = llx.StringData(settings.CompanyName)
-	args["status"] = llx.StringData(settings.Status)
-	args["subdomain"] = llx.StringData(settings.Subdomain)
-	args["address1"] = llx.StringData(settings.Address1)
-	args["address2"] = llx.StringData(settings.Address2)
-	args["city"] = llx.StringData(settings.City)
-	args["state"] = llx.StringData(settings.State)
-	args["phoneNumber"] = llx.StringData(settings.PhoneNumber)
-	args["postalCode"] = llx.StringData(settings.PostalCode)
-	args["country"] = llx.StringData(settings.Country)
-	args["supportPhoneNumber"] = llx.StringData(settings.SupportPhoneNumber)
-	args["website"] = llx.StringData(settings.Website)
-	args["endUserSupportHelpURL"] = llx.StringData(settings.EndUserSupportHelpURL)
+	args["id"] = llx.StringData(oktaStr(settings.Id))
+	args["companyName"] = llx.StringData(oktaStr(settings.CompanyName))
+	args["status"] = llx.StringData(oktaStr(settings.Status))
+	args["subdomain"] = llx.StringData(oktaStr(settings.Subdomain))
+	args["address1"] = llx.StringData(oktaStr(settings.Address1))
+	args["address2"] = llx.StringData(oktaStr(settings.Address2))
+	args["city"] = llx.StringData(oktaStr(settings.City))
+	args["state"] = llx.StringData(oktaStr(settings.State))
+	args["phoneNumber"] = llx.StringData(oktaStr(settings.PhoneNumber))
+	args["postalCode"] = llx.StringData(oktaStr(settings.PostalCode))
+	args["country"] = llx.StringData(oktaStr(settings.Country))
+	args["supportPhoneNumber"] = llx.StringData(oktaStr(settings.SupportPhoneNumber))
+	args["website"] = llx.StringData(oktaStr(settings.Website))
+	args["endUserSupportHelpURL"] = llx.StringData(oktaStr(settings.EndUserSupportHelpURL))
 	args["created"] = llx.TimeDataPtr(settings.Created)
 	args["lastUpdated"] = llx.TimeDataPtr(settings.LastUpdated)
 	args["expiresAt"] = llx.TimeDataPtr(settings.ExpiresAt)
@@ -59,12 +59,12 @@ func (o *mqlOktaOrganization) optOutCommunicationEmails() (bool, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	settings, _, err := client.OrgSetting.GetOktaCommunicationSettings(ctx)
+	settings, _, err := client.OrgSettingAPI.GetOktaCommunicationSettings(ctx).Execute()
 	if err != nil {
 		return false, err
 	}
 
-	if settings.OptOutEmailUsers == nil {
+	if settings != nil && settings.OptOutEmailUsers != nil {
 		return *settings.OptOutEmailUsers, nil
 	}
 
@@ -72,43 +72,25 @@ func (o *mqlOktaOrganization) optOutCommunicationEmails() (bool, error) {
 }
 
 func (o *mqlOktaOrganization) billingContact() (*mqlOktaUser, error) {
-	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
-
-	ctx := context.Background()
-	contactUser, _, err := client.OrgSetting.GetOrgContactUser(ctx, "BILLING")
-	if err != nil {
-		return nil, err
-	}
-	uid := contactUser.UserId
-
-	usr, _, err := client.User.GetUser(
-		ctx,
-		uid,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return newMqlOktaUser(o.MqlRuntime, usr)
+	return o.contactUser("BILLING")
 }
 
 func (o *mqlOktaOrganization) technicalContact() (*mqlOktaUser, error) {
+	return o.contactUser("TECHNICAL")
+}
+
+func (o *mqlOktaOrganization) contactUser(contactType string) (*mqlOktaUser, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	contactUser, _, err := client.OrgSetting.GetOrgContactUser(ctx, "TECHNICAL")
+	contactUser, _, err := client.OrgSettingAPI.GetOrgContactUser(ctx, contactType).Execute()
 	if err != nil {
 		return nil, err
 	}
+	uid := oktaStr(contactUser.UserId)
 
-	uid := contactUser.UserId
-
-	usr, _, err := client.User.GetUser(
-		ctx,
-		uid,
-	)
+	usr, _, err := client.UserAPI.GetUser(ctx, uid).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +100,11 @@ func (o *mqlOktaOrganization) technicalContact() (*mqlOktaUser, error) {
 
 func (o *mqlOktaOrganization) securityNotificationEmails() (any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
 	apiSupplement := &sdk.ApiExtension{
-		RequestExecutor: client.CloneRequestExecutor(),
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
 	emails, err := apiSupplement.GetSecurityNotificationEmails(
@@ -190,18 +172,19 @@ func (o *mqlOktaOrganization) threatInsightSettings() (*mqlOktaThreatsConfigurat
 	client := conn.Client()
 
 	ctx := context.Background()
-	config, _, err := client.ThreatInsightConfiguration.GetCurrentConfiguration(ctx)
+	config, _, err := client.ThreatInsightAPI.GetCurrentConfiguration(ctx).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	apiSupplement := &sdk.ApiExtension{
-		RequestExecutor: client.CloneRequestExecutor(),
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
 	excludesZones := []any{}
 	for i := range config.ExcludeZones {
-		zone, _, err := apiSupplement.GetNetworkZone(ctx, config.ExcludeZones[i])
+		zone, err := apiSupplement.GetNetworkZone(ctx, config.ExcludeZones[i])
 		if err != nil {
 			return nil, err
 		}

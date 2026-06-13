@@ -5,8 +5,6 @@ package sdk
 
 import (
 	"context"
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"net/http"
 )
 
@@ -22,21 +20,30 @@ type CustomRole struct {
 	Links       any      `json:"_links,omitempty"`
 }
 
-// ListCustomRoles Gets all customRoles based on the query params
-func (m *ApiExtension) ListCustomRoles(ctx context.Context, qp *query.Params) (*ListCustomRolesResponse, *okta.Response, error) {
-	url := "/api/v1/iam/roles"
-	if qp != nil {
-		url += qp.String()
+// ListCustomRoles fetches all custom IAM roles, following Okta's
+// `Link: <url>; rel="next"` pagination. The returned http.Response is the first
+// page's response, so callers can branch on its status code (e.g. treat 404 as
+// an empty result).
+func (m *ApiExtension) ListCustomRoles(ctx context.Context) ([]*CustomRole, *http.Response, error) {
+	roles := []*CustomRole{}
+	nextURL := m.url("/api/v1/iam/roles")
+	var firstResp *http.Response
+
+	for nextURL != "" {
+		var page ListCustomRolesResponse
+		resp, err := m.get(ctx, nextURL, &page)
+		if firstResp == nil {
+			firstResp = resp
+		}
+		if err != nil {
+			return nil, resp, err
+		}
+		roles = append(roles, page.Roles...)
+		if resp == nil {
+			break
+		}
+		nextURL = nextLinkURL(resp.Header.Values("Link"))
 	}
-	rq := m.RequestExecutor
-	req, err := rq.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	var response *ListCustomRolesResponse
-	resp, err := rq.Do(ctx, req, &response)
-	if err != nil {
-		return nil, resp, err
-	}
-	return response, resp, nil
+
+	return roles, firstResp, nil
 }

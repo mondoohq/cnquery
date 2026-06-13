@@ -49,7 +49,8 @@ func TestPoliciesParsing(t *testing.T) {
 	decoder := json.NewDecoder(strings.NewReader(data))
 	err := decoder.Decode(&policies)
 	require.NoError(t, err)
-	assert.NotNil(t, policies[0].Settings.Password)
+	require.NotEmpty(t, policies[0].Settings)
+	assert.Contains(t, string(policies[0].Settings), "\"password\"")
 
 	jData, err := json.Marshal(policies)
 	require.NoError(t, err)

@@ -11,9 +11,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -34,36 +34,45 @@ const (
 	PROFILE_ENROLLMENT                    = "PROFILE_ENROLLMENT"
 )
 
+// oktaPolicyRuleRaw captures the policy-rule fields we expose. Okta models
+// policy rules as a discriminated union whose common fields live in different
+// places per variant, so we decode the canonical JSON into this shared shape.
+type oktaPolicyRuleRaw struct {
+	Id          string          `json:"id,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Priority    int64           `json:"priority,omitempty"`
+	Status      string          `json:"status,omitempty"`
+	System      *bool           `json:"system,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Actions     json.RawMessage `json:"actions,omitempty"`
+	Conditions  json.RawMessage `json:"conditions,omitempty"`
+	Created     *time.Time      `json:"created,omitempty"`
+	LastUpdated *time.Time      `json:"lastUpdated,omitempty"`
+}
+
 func (o *mqlOktaPolicies) id() (string, error) {
 	return "okta.policies", nil
 }
 
 func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error) {
 	conn := runtime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
 	apiSupplement := &sdk.ApiExtension{
-		RequestExecutor: client.CloneRequestExecutor(),
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
-	respList, resp, err := apiSupplement.ListPolicies(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-			query.WithType(string(policyType)),
-		),
-	)
-	// handle case where no policy exists
-	if err != nil && resp.StatusCode == http.StatusNotFound {
-		return nil, nil
-	}
-	// handle special case where the policy type does not exist
-	if err != nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(strings.ToLower(err.Error()), "invalid policy type") {
-		return nil, nil
-	}
-
+	respList, resp, err := apiSupplement.ListPolicies(ctx, string(policyType), queryLimit)
 	if err != nil {
+		// handle case where no policy exists
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		// handle special case where the policy type does not exist
+		if resp != nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(strings.ToLower(err.Error()), "invalid policy type") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -72,37 +81,14 @@ func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error)
 	}
 
 	list := []any{}
-	appendEntry := func(datalist ...*sdk.PolicyWrapper) error {
-		for i := range datalist {
-			r, err := newMqlOktaPolicy(runtime, datalist[i])
-			if err != nil {
-				return err
-			}
-			list = append(list, r)
-		}
-		return nil
-	}
-
 	for i := range respList {
-		err = appendEntry(respList[i])
+		r, err := newMqlOktaPolicy(runtime, respList[i])
 		if err != nil {
 			return nil, err
 		}
-
+		list = append(list, r)
 	}
 
-	// TODO: pagination not working properly for that call, need to chat with Okta
-	//for resp.HasNextPage() {
-	//	var slice []*okta.Policy
-	//	resp, err = resp.Next(ctx, &slice)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	//	//	err = appendEntry(slice...)
-	//	//	//	if err != nil {
-	//	//	//		return nil, err
-	//	//	//	}
-	//}
 	return list, nil
 }
 
@@ -140,11 +126,6 @@ func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (any, e
 		return nil, err
 	}
 
-	system := false
-	if entry.System != nil {
-		system = *entry.System
-	}
-
 	settings, err := convert.JsonToDict(entry.Settings)
 	if err != nil {
 		return nil, err
@@ -156,7 +137,7 @@ func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (any, e
 		"description": llx.StringData(entry.Description),
 		"priority":    llx.IntData(entry.Priority),
 		"status":      llx.StringData(entry.Status),
-		"system":      llx.BoolData(system),
+		"system":      llx.BoolData(oktaBool(entry.System)),
 		"type":        llx.StringData(entry.Type),
 		"conditions":  llx.DictData(conditions),
 		"settings":    llx.DictData(settings),
@@ -182,7 +163,7 @@ func (o mqlOktaPolicy) rules() ([]any, error) {
 		return getAccessPolicyRules(ctx, o.MqlRuntime, o.Id.Data, conn.OrganizationID(), conn.Token())
 	}
 
-	rules, resp, err := client.Policy.ListPolicyRules(ctx, o.Id.Data)
+	rules, resp, err := client.PolicyAPI.ListPolicyRules(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -192,9 +173,17 @@ func (o mqlOktaPolicy) rules() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.PolicyRule) error {
+	appendEntry := func(datalist []okta.ListPolicyRules200ResponseInner) error {
 		for i := range datalist {
-			r, err := newMqlOktaPolicyRule(o.MqlRuntime, datalist[i])
+			raw, err := json.Marshal(datalist[i])
+			if err != nil {
+				return err
+			}
+			var entry oktaPolicyRuleRaw
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				return err
+			}
+			r, err := newMqlOktaPolicyRule(o.MqlRuntime, &entry)
 			if err != nil {
 				return err
 			}
@@ -208,9 +197,9 @@ func (o mqlOktaPolicy) rules() ([]any, error) {
 		return nil, err
 	}
 
-	for resp.HasNextPage() {
-		var rules []*okta.PolicyRule
-		resp, err = resp.Next(ctx, &rules)
+	for resp != nil && resp.HasNextPage() {
+		var rules []okta.ListPolicyRules200ResponseInner
+		resp, err = resp.Next(&rules)
 		if err != nil {
 			return nil, err
 		}
@@ -228,34 +217,8 @@ func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId
 		return nil, err
 	}
 	res := []any{}
-	for _, entry := range rules {
-		actions, err := convert.JsonToDict(entry.Actions)
-		if err != nil {
-			return nil, err
-		}
-
-		conditions, err := convert.JsonToDict(entry.Conditions)
-		if err != nil {
-			return nil, err
-		}
-
-		system := false
-		if entry.System != nil {
-			system = *entry.System
-		}
-
-		mqlRule, err := CreateResource(runtime, "okta.policyRule", map[string]*llx.RawData{
-			"id":          llx.StringData(entry.Id),
-			"name":        llx.StringData(entry.Name),
-			"priority":    llx.IntData(entry.Priority),
-			"status":      llx.StringData(entry.Status),
-			"system":      llx.BoolData(system),
-			"type":        llx.StringData(entry.Type),
-			"actions":     llx.DictData(actions),
-			"conditions":  llx.DictData(conditions),
-			"created":     llx.TimeDataPtr(entry.Created),
-			"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
-		})
+	for i := range rules {
+		mqlRule, err := newMqlOktaPolicyRule(runtime, &rules[i])
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +227,7 @@ func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId
 	return res, nil
 }
 
-func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *okta.PolicyRule) (any, error) {
+func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *oktaPolicyRuleRaw) (any, error) {
 	actions, err := convert.JsonToDict(entry.Actions)
 	if err != nil {
 		return nil, err
@@ -275,17 +238,12 @@ func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *okta.PolicyRule) (any,
 		return nil, err
 	}
 
-	system := false
-	if entry.System != nil {
-		system = *entry.System
-	}
-
 	return CreateResource(runtime, "okta.policyRule", map[string]*llx.RawData{
 		"id":          llx.StringData(entry.Id),
 		"name":        llx.StringData(entry.Name),
 		"priority":    llx.IntData(entry.Priority),
 		"status":      llx.StringData(entry.Status),
-		"system":      llx.BoolData(system),
+		"system":      llx.BoolData(oktaBool(entry.System)),
 		"type":        llx.StringData(entry.Type),
 		"actions":     llx.DictData(actions),
 		"conditions":  llx.DictData(conditions),
@@ -298,33 +256,33 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 	return "okta.policyRule/" + o.Id.Data, o.Id.Error
 }
 
-// see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't letch you fetch
-// type-specific rules which differ between the different policies. as such, we fetch those manually until the sdk allows us to
-func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]okta.AccessPolicyRule, error) {
+// see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't let you fetch
+// type-specific rules which differ between the different policies. as such, we fetch those manually.
+func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]oktaPolicyRuleRaw, error) {
 	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, policyid)
 	client := http.Client{}
-	req, err := http.NewRequest("GET", urlPath, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlPath, nil)
 	if err != nil {
-		return []okta.AccessPolicyRule{}, err
+		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("SSWS %s", token))
 	resp, err := client.Do(req)
 	if err != nil {
-		return []okta.AccessPolicyRule{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return []okta.AccessPolicyRule{}, errors.New("failed to fetch access policy rules from " + urlPath + ": " + resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("failed to fetch access policy rules from " + urlPath + ": " + resp.Status)
 	}
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []okta.AccessPolicyRule{}, err
+		return nil, err
 	}
-	result := []okta.AccessPolicyRule{}
+	result := []oktaPolicyRuleRaw{}
 	err = json.Unmarshal(raw, &result)
 	return result, err
 }

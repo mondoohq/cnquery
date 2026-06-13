@@ -6,8 +6,7 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -20,12 +19,7 @@ func (o *mqlOkta) trustedOrigins() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	slice, resp, err := client.TrustedOrigin.ListOrigins(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	slice, resp, err := client.TrustedOriginAPI.ListTrustedOrigins(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -35,10 +29,9 @@ func (o *mqlOkta) trustedOrigins() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*okta.TrustedOrigin) error {
+	appendEntry := func(datalist []okta.TrustedOrigin) error {
 		for i := range datalist {
-			entry := datalist[i]
-			r, err := newMqlOktaTrustedOrigin(o.MqlRuntime, entry)
+			r, err := newMqlOktaTrustedOrigin(o.MqlRuntime, &datalist[i])
 			if err != nil {
 				return err
 			}
@@ -53,8 +46,8 @@ func (o *mqlOkta) trustedOrigins() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var slice []*okta.TrustedOrigin
-		resp, err = resp.Next(ctx, &slice)
+		var slice []okta.TrustedOrigin
+		resp, err = resp.Next(&slice)
 		if err != nil {
 			return nil, err
 		}
@@ -73,15 +66,15 @@ func newMqlOktaTrustedOrigin(runtime *plugin.Runtime, entry *okta.TrustedOrigin)
 	}
 
 	return CreateResource(runtime, "okta.trustedOrigin", map[string]*llx.RawData{
-		"id":            llx.StringData(entry.Id),
-		"name":          llx.StringData(entry.Name),
-		"origin":        llx.StringData(entry.Origin),
+		"id":            llx.StringData(oktaStr(entry.Id)),
+		"name":          llx.StringData(oktaStr(entry.Name)),
+		"origin":        llx.StringData(oktaStr(entry.Origin)),
 		"created":       llx.TimeDataPtr(entry.Created),
-		"createdBy":     llx.StringData(entry.CreatedBy),
+		"createdBy":     llx.StringData(oktaStr(entry.CreatedBy)),
 		"lastUpdated":   llx.TimeDataPtr(entry.LastUpdated),
-		"lastUpdatedBy": llx.StringData(entry.LastUpdatedBy),
+		"lastUpdatedBy": llx.StringData(oktaStr(entry.LastUpdatedBy)),
 		"scopes":        llx.ArrayData(scopes, types.Dict),
-		"status":        llx.StringData(entry.Status),
+		"status":        llx.StringData(oktaStr(entry.Status)),
 	})
 }
 

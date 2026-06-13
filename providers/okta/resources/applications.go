@@ -5,9 +5,10 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -15,17 +16,45 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// oktaApplicationRaw captures the fields we expose from Okta's polymorphic
+// application response. v5 returns a discriminated union
+// (ListApplications200ResponseInner) whose concrete variants differ per app
+// type; rather than switch on every variant we re-marshal each entry to its
+// canonical JSON and decode the shared fields here.
+type oktaApplicationRaw struct {
+	Id          string          `json:"id,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Label       string          `json:"label,omitempty"`
+	Created     *time.Time      `json:"created,omitempty"`
+	LastUpdated *time.Time      `json:"lastUpdated,omitempty"`
+	SignOnMode  string          `json:"signOnMode,omitempty"`
+	Status      string          `json:"status,omitempty"`
+	Features    []string        `json:"features,omitempty"`
+	Credentials json.RawMessage `json:"credentials,omitempty"`
+	Licensing   json.RawMessage `json:"licensing,omitempty"`
+	Profile     json.RawMessage `json:"profile,omitempty"`
+	Settings    json.RawMessage `json:"settings,omitempty"`
+	Visibility  json.RawMessage `json:"visibility,omitempty"`
+}
+
+func oktaApplicationFromUnion(item okta.ListApplications200ResponseInner) (*oktaApplicationRaw, error) {
+	raw, err := json.Marshal(item)
+	if err != nil {
+		return nil, err
+	}
+	var app oktaApplicationRaw
+	if err := json.Unmarshal(raw, &app); err != nil {
+		return nil, err
+	}
+	return &app, nil
+}
+
 func (o *mqlOkta) applications() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	appSetSlice, resp, err := client.Application.ListApplications(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	appSetSlice, resp, err := client.ApplicationAPI.ListApplications(ctx).Limit(queryLimit).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -35,17 +64,17 @@ func (o *mqlOkta) applications() ([]any, error) {
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []okta.App) error {
+	appendEntry := func(datalist []okta.ListApplications200ResponseInner) error {
 		for i := range datalist {
-			entry := datalist[i]
-			if entry.IsApplicationInstance() {
-				app := entry.(*okta.Application)
-				r, err := newMqlOktaApplication(o.MqlRuntime, app)
-				if err != nil {
-					return err
-				}
-				list = append(list, r)
+			app, err := oktaApplicationFromUnion(datalist[i])
+			if err != nil {
+				return err
 			}
+			r, err := newMqlOktaApplication(o.MqlRuntime, app)
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
 		}
 		return nil
 	}
@@ -56,12 +85,12 @@ func (o *mqlOkta) applications() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var userSetSlice []okta.App
-		resp, err = resp.Next(ctx, &userSetSlice)
+		var page []okta.ListApplications200ResponseInner
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}
-		err = appendEntry(userSetSlice)
+		err = appendEntry(page)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +98,7 @@ func (o *mqlOkta) applications() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaApplication(runtime *plugin.Runtime, entry *okta.Application) (any, error) {
+func newMqlOktaApplication(runtime *plugin.Runtime, entry *oktaApplicationRaw) (any, error) {
 	credentials, err := convert.JsonToDict(entry.Credentials)
 	if err != nil {
 		return nil, err
@@ -131,34 +160,31 @@ func (o *mqlOktaApplication) signingKeys() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	keys, resp, err := client.Application.ListApplicationKeys(ctx, o.Id.Data)
+	keys, resp, err := client.ApplicationCredentialsAPI.ListApplicationKeys(ctx, o.Id.Data).Execute()
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	appendKeys := func(entries []*okta.JsonWebKey) error {
+	appendKeys := func(entries []okta.JsonWebKey) error {
 		for i := range entries {
 			k := entries[i]
-			if k == nil {
-				continue
-			}
 			r, err := CreateResource(o.MqlRuntime, "okta.application.key", map[string]*llx.RawData{
 				"applicationId": llx.StringData(o.Id.Data),
-				"kid":           llx.StringData(k.Kid),
-				"status":        llx.StringData(k.Status),
-				"alg":           llx.StringData(k.Alg),
-				"kty":           llx.StringData(k.Kty),
-				"use":           llx.StringData(k.Use),
+				"kid":           llx.StringData(oktaStr(k.Kid)),
+				"status":        llx.StringData(oktaStr(k.Status)),
+				"alg":           llx.StringData(oktaStr(k.Alg)),
+				"kty":           llx.StringData(oktaStr(k.Kty)),
+				"use":           llx.StringData(oktaStr(k.Use)),
 				"keyOps":        llx.ArrayData(convert.SliceAnyToInterface(k.KeyOps), types.String),
 				"created":       llx.TimeDataPtr(k.Created),
 				"lastUpdated":   llx.TimeDataPtr(k.LastUpdated),
 				"expiresAt":     llx.TimeDataPtr(k.ExpiresAt),
 				"x5c":           llx.ArrayData(convert.SliceAnyToInterface(k.X5c), types.String),
-				"x5t":           llx.StringData(k.X5t),
-				"x5tS256":       llx.StringData(k.X5tS256),
-				"n":             llx.StringData(k.N),
-				"e":             llx.StringData(k.E),
+				"x5t":           llx.StringData(oktaStr(k.X5t)),
+				"x5tS256":       llx.StringData(oktaStr(k.X5tS256)),
+				"n":             llx.StringData(oktaStr(k.N)),
+				"e":             llx.StringData(oktaStr(k.E)),
 			})
 			if err != nil {
 				return err
@@ -173,8 +199,8 @@ func (o *mqlOktaApplication) signingKeys() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []*okta.JsonWebKey
-		resp, err = resp.Next(ctx, &page)
+		var page []okta.JsonWebKey
+		resp, err = resp.Next(&page)
 		if err != nil {
 			return nil, err
 		}

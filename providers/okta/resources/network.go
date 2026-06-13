@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -17,19 +16,14 @@ import (
 
 func (o *mqlOkta) networks() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
 	apiSupplement := &sdk.ApiExtension{
-		RequestExecutor: client.CloneRequestExecutor(),
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
-	zones, err := apiSupplement.ListNetworkZones(
-		ctx,
-		query.NewQueryParams(
-			query.WithLimit(queryLimit),
-		),
-	)
+	zones, err := apiSupplement.ListNetworkZones(ctx, queryLimit)
 	if err != nil {
 		return nil, err
 	}

@@ -5,76 +5,50 @@ package resources
 
 import (
 	"context"
+	"net/http"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
-	"net/http"
-	"strings"
 )
 
 func (o *mqlOkta) customRoles() ([]any, error) {
 	runtime := o.MqlRuntime
 
 	conn := runtime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
 
 	ctx := context.Background()
 	apiSupplement := &sdk.ApiExtension{
-		RequestExecutor: client.CloneRequestExecutor(),
+		Host:  conn.OrganizationID(),
+		Token: conn.Token(),
 	}
 
-	respList, resp, err := apiSupplement.ListCustomRoles(
-		ctx,
-		nil,
-	)
-
-	// handle case where no policy exists
-	if err != nil && resp.StatusCode == http.StatusNotFound {
-		return nil, nil
-	}
-	// handle special case where the policy type does not exist
-	if err != nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(strings.ToLower(err.Error()), "invalid policy type") {
-		return nil, nil
+	respList, resp, err := apiSupplement.ListCustomRoles(ctx)
+	if err != nil {
+		// handle case where no custom roles exist
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	if len(respList.Roles) == 0 {
+	if len(respList) == 0 {
 		return nil, nil
 	}
 
 	list := []any{}
-	appendEntry := func(datalist []*sdk.CustomRole) error {
-		for i := range datalist {
-			r, err := newMqlOktaCustomRole(o.MqlRuntime, datalist[i])
-			if err != nil {
-				return err
-			}
-			list = append(list, r)
-		}
-		return nil
-	}
-
-	err = appendEntry(respList.Roles)
-	if err != nil {
-		return nil, err
-	}
-
-	for resp.HasNextPage() {
-		var roles []*sdk.CustomRole
-		resp, err = resp.Next(ctx, &roles)
+	for i := range respList {
+		r, err := newMqlOktaCustomRole(o.MqlRuntime, respList[i])
 		if err != nil {
 			return nil, err
 		}
-		err = appendEntry(roles)
-		if err != nil {
-			return nil, err
-		}
+		list = append(list, r)
 	}
 
 	return list, nil
-
 }
 
 func newMqlOktaCustomRole(runtime *plugin.Runtime, entry *sdk.CustomRole) (any, error) {
