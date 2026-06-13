@@ -91,25 +91,29 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 }
 
 type mqlAwsElasticacheInternal struct {
-	rgKmsLock     sync.Mutex
-	rgKmsByRegion map[string]map[string]*string
+	// rgKms holds one *rgKmsRegion per region, each resolved at most once.
+	// Keying per region (rather than a single mutex) keeps DescribeReplicationGroups
+	// calls for different regions running concurrently when kmsKey is queried.
+	rgKms sync.Map
+}
+
+type rgKmsRegion struct {
+	once sync.Once
+	keys map[string]*string
+	err  error
 }
 
 // kmsKeyIdForReplicationGroup resolves the KMS key ID for a replication group,
 // fetching all replication groups for a region with a single call the first time
 // the region is queried and caching the result. Queries that never access a
 // cluster's kmsKey pay nothing, while a scan that walks every cluster's kmsKey
-// still makes at most one DescribeReplicationGroups call per region.
+// makes at most one DescribeReplicationGroups call per region, concurrently
+// across regions.
 func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConnection, region, replicationGroupId string) (*string, error) {
-	a.rgKmsLock.Lock()
-	defer a.rgKmsLock.Unlock()
-
-	if a.rgKmsByRegion == nil {
-		a.rgKmsByRegion = map[string]map[string]*string{}
-	}
-	regionMap, ok := a.rgKmsByRegion[region]
-	if !ok {
-		regionMap = map[string]*string{}
+	v, _ := a.rgKms.LoadOrStore(region, &rgKmsRegion{})
+	entry := v.(*rgKmsRegion)
+	entry.once.Do(func() {
+		keys := map[string]*string{}
 		svc := conn.Elasticache(region)
 		ctx := context.Background()
 		paginator := elasticache.NewDescribeReplicationGroupsPaginator(svc, &elasticache.DescribeReplicationGroupsInput{})
@@ -119,17 +123,21 @@ func (a *mqlAwsElasticache) kmsKeyIdForReplicationGroup(conn *connection.AwsConn
 				if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 					break
 				}
-				return nil, err
+				entry.err = err
+				return
 			}
 			for _, rg := range page.ReplicationGroups {
 				if rg.ReplicationGroupId != nil {
-					regionMap[*rg.ReplicationGroupId] = rg.KmsKeyId
+					keys[*rg.ReplicationGroupId] = rg.KmsKeyId
 				}
 			}
 		}
-		a.rgKmsByRegion[region] = regionMap
+		entry.keys = keys
+	})
+	if entry.err != nil {
+		return nil, entry.err
 	}
-	return regionMap[replicationGroupId], nil
+	return entry.keys[replicationGroupId], nil
 }
 
 type mqlAwsElasticacheClusterInternal struct {
