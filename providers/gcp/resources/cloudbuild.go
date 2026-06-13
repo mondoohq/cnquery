@@ -571,7 +571,7 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 	// locations individually, which is not yet implemented.
 	it := client.ListBuilds(ctx, &cloudbuildpb.ListBuildsRequest{
 		ProjectId: projectId,
-		PageSize:  1000,
+		PageSize:  maxCloudBuilds,
 	})
 
 	// ListBuilds returns builds newest-first and is unbounded — active projects
@@ -611,7 +611,7 @@ func (g *mqlGcpProjectCloudBuildService) builds() ([]any, error) {
 
 // maxCloudBuilds bounds how many of the most recent builds builds() returns, to
 // keep the query responsive on projects with very long build histories.
-const maxCloudBuilds = 2000
+const maxCloudBuilds = 500
 
 func newCloudBuild(runtime *plugin.Runtime, projectId string, b *cloudbuildpb.Build) (*mqlGcpProjectCloudBuildServiceBuild, error) {
 	source, err := protoToDict(b.GetSource())
