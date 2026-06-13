@@ -12,6 +12,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 )
 
 func (c *Client) GetDistributedVirtualSwitches(ctx context.Context, path string) ([]*object.DistributedVirtualSwitch, error) {
@@ -67,6 +68,17 @@ func (c *Client) GetDistributedVirtualSwitchConfig(ctx context.Context, obj *obj
 
 func DistributedVirtualSwitchConfig(dvSwitch *mo.DistributedVirtualSwitch) (map[string]any, error) {
 	return PropertiesToDict(dvSwitch)
+}
+
+// VspanSessions returns the port-mirroring (SPAN) sessions configured on a
+// distributed virtual switch. Only VMware DVS switches carry VSPAN config;
+// for any other switch type (or a switch with no sessions) the result is nil.
+func VspanSessions(dvSwitch *mo.DistributedVirtualSwitch) []types.VMwareVspanSession {
+	cfg, ok := dvSwitch.Config.(*types.VMwareDVSConfigInfo)
+	if !ok || cfg == nil {
+		return nil
+	}
+	return cfg.VspanSession
 }
 
 func (c *Client) GetDistributedVirtualPortgroups(ctx context.Context, path string) ([]*object.DistributedVirtualPortgroup, error) {

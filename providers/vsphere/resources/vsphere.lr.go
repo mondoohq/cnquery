@@ -23,6 +23,8 @@ const (
 	ResourceVulnPackage                       string = "vuln.package"
 	ResourceAuditCvss                         string = "audit.cvss"
 	ResourceVsphere                           string = "vsphere"
+	ResourceVsphereSsoLockoutPolicy           string = "vsphere.sso.lockoutPolicy"
+	ResourceVsphereLoggingForwarding          string = "vsphere.logging.forwarding"
 	ResourceVspherePermission                 string = "vsphere.permission"
 	ResourceVsphereFolder                     string = "vsphere.folder"
 	ResourceVsphereIdentitysource             string = "vsphere.identitysource"
@@ -34,6 +36,7 @@ const (
 	ResourceVsphereDatastore                  string = "vsphere.datastore"
 	ResourceVsphereCluster                    string = "vsphere.cluster"
 	ResourceVsphereHost                       string = "vsphere.host"
+	ResourceVsphereHostSsh                    string = "vsphere.host.ssh"
 	ResourceVsphereHostSecurity               string = "vsphere.host.security"
 	ResourceVsphereClusterVsan                string = "vsphere.cluster.vsan"
 	ResourceVsphereHostVsan                   string = "vsphere.host.vsan"
@@ -61,6 +64,7 @@ const (
 	ResourceVsphereVswitchStandard            string = "vsphere.vswitch.standard"
 	ResourceVsphereVswitchStandardPortgroup   string = "vsphere.vswitch.standard.portgroup"
 	ResourceVsphereVswitchDvs                 string = "vsphere.vswitch.dvs"
+	ResourceVsphereVswitchDvsVspanSession     string = "vsphere.vswitch.dvs.vspanSession"
 	ResourceVsphereVswitchPortgroup           string = "vsphere.vswitch.portgroup"
 	ResourceVsphereVswitchMacManagementPolicy string = "vsphere.vswitch.macManagementPolicy"
 	ResourceVsphereVswitchSecurityPolicy      string = "vsphere.vswitch.securityPolicy"
@@ -115,6 +119,14 @@ func init() {
 			// to override args, implement: initVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphere,
 		},
+		"vsphere.sso.lockoutPolicy": {
+			// to override args, implement: initVsphereSsoLockoutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereSsoLockoutPolicy,
+		},
+		"vsphere.logging.forwarding": {
+			// to override args, implement: initVsphereLoggingForwarding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereLoggingForwarding,
+		},
 		"vsphere.permission": {
 			// to override args, implement: initVspherePermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVspherePermission,
@@ -158,6 +170,10 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"vsphere.host.ssh": {
+			// to override args, implement: initVsphereHostSsh(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostSsh,
 		},
 		"vsphere.host.security": {
 			// to override args, implement: initVsphereHostSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -266,6 +282,10 @@ func init() {
 		"vsphere.vswitch.dvs": {
 			// to override args, implement: initVsphereVswitchDvs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVswitchDvs,
+		},
+		"vsphere.vswitch.dvs.vspanSession": {
+			// to override args, implement: initVsphereVswitchDvsVspanSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchDvsVspanSession,
 		},
 		"vsphere.vswitch.portgroup": {
 			// to override args, implement: initVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -516,6 +536,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.kmsClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetKmsClusters()).ToDataRes(types.Array(types.Resource("vsphere.kmsCluster")))
+	},
+	"vsphere.advancedSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetAdvancedSettings()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"vsphere.ssoLockoutPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetSsoLockoutPolicy()).ToDataRes(types.Resource("vsphere.sso.lockoutPolicy"))
+	},
+	"vsphere.loggingForwarding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetLoggingForwarding()).ToDataRes(types.Array(types.Resource("vsphere.logging.forwarding")))
+	},
+	"vsphere.sso.lockoutPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereSsoLockoutPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.sso.lockoutPolicy.maxFailedAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereSsoLockoutPolicy).GetMaxFailedAttempts()).ToDataRes(types.Int)
+	},
+	"vsphere.sso.lockoutPolicy.failedAttemptIntervalSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereSsoLockoutPolicy).GetFailedAttemptIntervalSec()).ToDataRes(types.Int)
+	},
+	"vsphere.sso.lockoutPolicy.autoUnlockIntervalSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereSsoLockoutPolicy).GetAutoUnlockIntervalSec()).ToDataRes(types.Int)
+	},
+	"vsphere.logging.forwarding.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereLoggingForwarding).GetHostname()).ToDataRes(types.String)
+	},
+	"vsphere.logging.forwarding.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereLoggingForwarding).GetPort()).ToDataRes(types.Int)
+	},
+	"vsphere.logging.forwarding.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereLoggingForwarding).GetProtocol()).ToDataRes(types.String)
 	},
 	"vsphere.permission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVspherePermission).GetId()).ToDataRes(types.String)
@@ -912,6 +962,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.security": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSecurity()).ToDataRes(types.Resource("vsphere.host.security"))
+	},
+	"vsphere.host.ssh": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSsh()).ToDataRes(types.Resource("vsphere.host.ssh"))
+	},
+	"vsphere.host.tlsServerProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetTlsServerProfile()).ToDataRes(types.String)
+	},
+	"vsphere.host.ssh.serverConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSsh).GetServerConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"vsphere.host.ssh.clientConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSsh).GetClientConfig()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"vsphere.host.security.keyPersistenceEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHostSecurity).GetKeyPersistenceEnabled()).ToDataRes(types.Bool)
@@ -1609,6 +1671,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
 	},
+	"vsphere.vswitch.dvs.vspanSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvs).GetVspanSessions()).ToDataRes(types.Array(types.Resource("vsphere.vswitch.dvs.vspanSession")))
+	},
+	"vsphere.vswitch.dvs.vspanSession.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.dvs.vspanSession.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.dvs.vspanSession.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.dvs.vspanSession.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.dvs.vspanSession.sessionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetSessionType()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.dvs.vspanSession.normalTrafficAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetNormalTrafficAllowed()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.dvs.vspanSession.stripOriginalVlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetStripOriginalVlan()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.dvs.vspanSession.encapsulationVlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetEncapsulationVlanId()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.dvs.vspanSession.mirroredPacketLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetMirroredPacketLength()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.dvs.vspanSession.samplingRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvsVspanSession).GetSamplingRate()).ToDataRes(types.Int)
+	},
 	"vsphere.vswitch.portgroup.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetMoid()).ToDataRes(types.String)
 	},
@@ -2136,6 +2231,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.kmsClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphere).KmsClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.advancedSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).AdvancedSettings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.ssoLockoutPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).SsoLockoutPolicy, ok = plugin.RawToTValue[*mqlVsphereSsoLockoutPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.loggingForwarding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).LoggingForwarding, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.sso.lockoutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereSsoLockoutPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.sso.lockoutPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereSsoLockoutPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.sso.lockoutPolicy.maxFailedAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereSsoLockoutPolicy).MaxFailedAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.sso.lockoutPolicy.failedAttemptIntervalSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereSsoLockoutPolicy).FailedAttemptIntervalSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.sso.lockoutPolicy.autoUnlockIntervalSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereSsoLockoutPolicy).AutoUnlockIntervalSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.logging.forwarding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereLoggingForwarding).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.logging.forwarding.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereLoggingForwarding).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.logging.forwarding.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereLoggingForwarding).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.logging.forwarding.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereLoggingForwarding).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2708,6 +2851,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Security, ok = plugin.RawToTValue[*mqlVsphereHostSecurity](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ssh": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Ssh, ok = plugin.RawToTValue[*mqlVsphereHostSsh](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.tlsServerProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).TlsServerProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ssh.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSsh).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.ssh.serverConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSsh).ServerConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ssh.clientConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSsh).ClientConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3746,6 +3909,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVswitchDvs).Uplinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.vswitch.dvs.vspanSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvs).VspanSessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.sessionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).SessionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.normalTrafficAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).NormalTrafficAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.stripOriginalVlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).StripOriginalVlan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.encapsulationVlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).EncapsulationVlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.mirroredPacketLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).MirroredPacketLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.vspanSession.samplingRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvsVspanSession).SamplingRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"vsphere.vswitch.portgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).__id, ok = v.Value.(string)
 		return
@@ -4762,14 +4973,17 @@ type mqlVsphere struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereInternal
-	About           plugin.TValue[any]
-	Licenses        plugin.TValue[[]any]
-	Datacenters     plugin.TValue[[]any]
-	Roles           plugin.TValue[[]any]
-	Permissions     plugin.TValue[[]any]
-	Folders         plugin.TValue[[]any]
-	IdentitySources plugin.TValue[[]any]
-	KmsClusters     plugin.TValue[[]any]
+	About             plugin.TValue[any]
+	Licenses          plugin.TValue[[]any]
+	Datacenters       plugin.TValue[[]any]
+	Roles             plugin.TValue[[]any]
+	Permissions       plugin.TValue[[]any]
+	Folders           plugin.TValue[[]any]
+	IdentitySources   plugin.TValue[[]any]
+	KmsClusters       plugin.TValue[[]any]
+	AdvancedSettings  plugin.TValue[map[string]any]
+	SsoLockoutPolicy  plugin.TValue[*mqlVsphereSsoLockoutPolicy]
+	LoggingForwarding plugin.TValue[[]any]
 }
 
 // createVsphere creates a new instance of this resource
@@ -4925,6 +5139,157 @@ func (c *mqlVsphere) GetKmsClusters() *plugin.TValue[[]any] {
 
 		return c.kmsClusters()
 	})
+}
+
+func (c *mqlVsphere) GetAdvancedSettings() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AdvancedSettings, func() (map[string]any, error) {
+		return c.advancedSettings()
+	})
+}
+
+func (c *mqlVsphere) GetSsoLockoutPolicy() *plugin.TValue[*mqlVsphereSsoLockoutPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereSsoLockoutPolicy](&c.SsoLockoutPolicy, func() (*mqlVsphereSsoLockoutPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "ssoLockoutPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereSsoLockoutPolicy), nil
+			}
+		}
+
+		return c.ssoLockoutPolicy()
+	})
+}
+
+func (c *mqlVsphere) GetLoggingForwarding() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingForwarding, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "loggingForwarding")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loggingForwarding()
+	})
+}
+
+// mqlVsphereSsoLockoutPolicy for the vsphere.sso.lockoutPolicy resource
+type mqlVsphereSsoLockoutPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereSsoLockoutPolicyInternal it will be used here
+	Description              plugin.TValue[string]
+	MaxFailedAttempts        plugin.TValue[int64]
+	FailedAttemptIntervalSec plugin.TValue[int64]
+	AutoUnlockIntervalSec    plugin.TValue[int64]
+}
+
+// createVsphereSsoLockoutPolicy creates a new instance of this resource
+func createVsphereSsoLockoutPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereSsoLockoutPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.sso.lockoutPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) MqlName() string {
+	return "vsphere.sso.lockoutPolicy"
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) GetMaxFailedAttempts() *plugin.TValue[int64] {
+	return &c.MaxFailedAttempts
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) GetFailedAttemptIntervalSec() *plugin.TValue[int64] {
+	return &c.FailedAttemptIntervalSec
+}
+
+func (c *mqlVsphereSsoLockoutPolicy) GetAutoUnlockIntervalSec() *plugin.TValue[int64] {
+	return &c.AutoUnlockIntervalSec
+}
+
+// mqlVsphereLoggingForwarding for the vsphere.logging.forwarding resource
+type mqlVsphereLoggingForwarding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereLoggingForwardingInternal it will be used here
+	Hostname plugin.TValue[string]
+	Port     plugin.TValue[int64]
+	Protocol plugin.TValue[string]
+}
+
+// createVsphereLoggingForwarding creates a new instance of this resource
+func createVsphereLoggingForwarding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereLoggingForwarding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.logging.forwarding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereLoggingForwarding) MqlName() string {
+	return "vsphere.logging.forwarding"
+}
+
+func (c *mqlVsphereLoggingForwarding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereLoggingForwarding) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlVsphereLoggingForwarding) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlVsphereLoggingForwarding) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
 }
 
 // mqlVspherePermission for the vsphere.permission resource
@@ -5970,6 +6335,8 @@ type mqlVsphereHost struct {
 	IpRouteConfig               plugin.TValue[*mqlVsphereHostIpRouteConfig]
 	Vsan                        plugin.TValue[*mqlVsphereHostVsan]
 	Security                    plugin.TValue[*mqlVsphereHostSecurity]
+	Ssh                         plugin.TValue[*mqlVsphereHostSsh]
+	TlsServerProfile            plugin.TValue[string]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -6468,6 +6835,81 @@ func (c *mqlVsphereHost) GetSecurity() *plugin.TValue[*mqlVsphereHostSecurity] {
 		}
 
 		return c.security()
+	})
+}
+
+func (c *mqlVsphereHost) GetSsh() *plugin.TValue[*mqlVsphereHostSsh] {
+	return plugin.GetOrCompute[*mqlVsphereHostSsh](&c.Ssh, func() (*mqlVsphereHostSsh, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "ssh")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostSsh), nil
+			}
+		}
+
+		return c.ssh()
+	})
+}
+
+func (c *mqlVsphereHost) GetTlsServerProfile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsServerProfile, func() (string, error) {
+		return c.tlsServerProfile()
+	})
+}
+
+// mqlVsphereHostSsh for the vsphere.host.ssh resource
+type mqlVsphereHostSsh struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereHostSshInternal
+	ServerConfig plugin.TValue[map[string]any]
+	ClientConfig plugin.TValue[map[string]any]
+}
+
+// createVsphereHostSsh creates a new instance of this resource
+func createVsphereHostSsh(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostSsh{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.ssh", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostSsh) MqlName() string {
+	return "vsphere.host.ssh"
+}
+
+func (c *mqlVsphereHostSsh) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostSsh) GetServerConfig() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ServerConfig, func() (map[string]any, error) {
+		return c.serverConfig()
+	})
+}
+
+func (c *mqlVsphereHostSsh) GetClientConfig() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ClientConfig, func() (map[string]any, error) {
+		return c.clientConfig()
 	})
 }
 
@@ -9007,10 +9449,11 @@ type mqlVsphereVswitchDvs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereVswitchDvsInternal
-	Moid       plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Properties plugin.TValue[any]
-	Uplinks    plugin.TValue[[]any]
+	Moid          plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Properties    plugin.TValue[any]
+	Uplinks       plugin.TValue[[]any]
+	VspanSessions plugin.TValue[[]any]
 }
 
 // createVsphereVswitchDvs creates a new instance of this resource
@@ -9076,6 +9519,111 @@ func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]any] {
 
 		return c.uplinks()
 	})
+}
+
+func (c *mqlVsphereVswitchDvs) GetVspanSessions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VspanSessions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.dvs", c.__id, "vspanSessions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vspanSessions()
+	})
+}
+
+// mqlVsphereVswitchDvsVspanSession for the vsphere.vswitch.dvs.vspanSession resource
+type mqlVsphereVswitchDvsVspanSession struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVswitchDvsVspanSessionInternal it will be used here
+	Key                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+	SessionType          plugin.TValue[string]
+	NormalTrafficAllowed plugin.TValue[bool]
+	StripOriginalVlan    plugin.TValue[bool]
+	EncapsulationVlanId  plugin.TValue[int64]
+	MirroredPacketLength plugin.TValue[int64]
+	SamplingRate         plugin.TValue[int64]
+}
+
+// createVsphereVswitchDvsVspanSession creates a new instance of this resource
+func createVsphereVswitchDvsVspanSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchDvsVspanSession{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.dvs.vspanSession", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) MqlName() string {
+	return "vsphere.vswitch.dvs.vspanSession"
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetSessionType() *plugin.TValue[string] {
+	return &c.SessionType
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetNormalTrafficAllowed() *plugin.TValue[bool] {
+	return &c.NormalTrafficAllowed
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetStripOriginalVlan() *plugin.TValue[bool] {
+	return &c.StripOriginalVlan
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetEncapsulationVlanId() *plugin.TValue[int64] {
+	return &c.EncapsulationVlanId
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetMirroredPacketLength() *plugin.TValue[int64] {
+	return &c.MirroredPacketLength
+}
+
+func (c *mqlVsphereVswitchDvsVspanSession) GetSamplingRate() *plugin.TValue[int64] {
+	return &c.SamplingRate
 }
 
 // mqlVsphereVswitchPortgroup for the vsphere.vswitch.portgroup resource

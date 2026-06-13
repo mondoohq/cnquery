@@ -507,6 +507,7 @@ func (v *mqlVsphereDatacenter) distributedSwitches() ([]any, error) {
 		// store host inventory path, so that sub resources can use that to quickly query more
 		r := mqlVswitch.(*mqlVsphereVswitchDvs)
 		r.hostInventoryPath = s.InventoryPath
+		r.cacheVspanSessions = resourceclient.VspanSessions(config)
 
 		mqlVswitches[i] = mqlVswitch
 	}

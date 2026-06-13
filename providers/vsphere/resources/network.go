@@ -7,6 +7,8 @@ import (
 	"errors"
 	"reflect"
 
+	vimtypes "github.com/vmware/govmomi/vim25/types"
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
 )
@@ -133,10 +135,42 @@ func findHostAdapter(host *mqlVsphereHost, uplinkNames []any) ([]any, error) {
 type mqlVsphereVswitchDvsInternal struct {
 	hostInventoryPath string
 	parentResource    *mqlVsphereHost
+	// cacheVspanSessions captured during vCenter discovery; nil for host-observed switches
+	cacheVspanSessions []vimtypes.VMwareVspanSession
 }
 
 func (v *mqlVsphereVswitchDvs) id() (string, error) {
 	return v.Name.Data, v.Name.Error
+}
+
+func (v *mqlVsphereVswitchDvs) vspanSessions() ([]any, error) {
+	moid := ""
+	if v.Moid.IsSet() {
+		moid = v.Moid.Data
+	}
+
+	res := make([]any, 0, len(v.cacheVspanSessions))
+	for i := range v.cacheVspanSessions {
+		s := v.cacheVspanSessions[i]
+		mqlSession, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs.vspanSession", map[string]*llx.RawData{
+			"__id":                 llx.StringData(moid + "/vspan/" + s.Key),
+			"key":                  llx.StringData(s.Key),
+			"name":                 llx.StringData(s.Name),
+			"description":          llx.StringData(s.Description),
+			"enabled":              llx.BoolData(s.Enabled),
+			"sessionType":          llx.StringData(s.SessionType),
+			"normalTrafficAllowed": llx.BoolData(s.NormalTrafficAllowed),
+			"stripOriginalVlan":    llx.BoolData(s.StripOriginalVlan),
+			"encapsulationVlanId":  llx.IntData(int64(s.EncapsulationVlanId)),
+			"mirroredPacketLength": llx.IntData(int64(s.MirroredPacketLength)),
+			"samplingRate":         llx.IntData(int64(s.SamplingRate)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSession)
+	}
+	return res, nil
 }
 
 func (v *mqlVsphereVswitchDvs) uplinks() ([]any, error) {

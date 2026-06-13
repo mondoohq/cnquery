@@ -848,6 +848,65 @@ func (v *mqlVsphereHostSecurity) certificateStore() ([]any, error) {
 	return res, nil
 }
 
+func (v *mqlVsphereHost) ssh() (*mqlVsphereHostSsh, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(v.MqlRuntime, "vsphere.host.ssh", map[string]*llx.RawData{
+		"__id": llx.StringData(esxiClient.InventoryPath + "/ssh"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ssh := res.(*mqlVsphereHostSsh)
+	ssh.hostInventoryPath = esxiClient.InventoryPath
+	return ssh, nil
+}
+
+func (v *mqlVsphereHost) tlsServerProfile() (string, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return "", err
+	}
+	return esxiClient.TlsServerProfile()
+}
+
+type mqlVsphereHostSshInternal struct {
+	hostInventoryPath string
+}
+
+func (v *mqlVsphereHostSsh) esxiClient() (*resourceclient.Esxi, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	return esxiClient(conn, v.hostInventoryPath)
+}
+
+func (v *mqlVsphereHostSsh) serverConfig() (map[string]any, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	config, err := esxiClient.SshServerConfig()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(config), nil
+}
+
+func (v *mqlVsphereHostSsh) clientConfig() (map[string]any, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	config, err := esxiClient.SshClientConfig()
+	if err != nil {
+		return nil, err
+	}
+	return convert.MapToInterfaceMap(config), nil
+}
+
 // firewallRulesets exposes the per-service ESXi firewall ruleset definitions
 // from mo.HostSystem.Config.Firewall (already fetched via HostInfo). Each
 // ruleset bundles a per-service rule list, an enabled flag, and the

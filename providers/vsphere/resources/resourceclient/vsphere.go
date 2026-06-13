@@ -12,6 +12,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/license"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
@@ -29,6 +30,29 @@ type Client struct {
 
 func (c *Client) AboutInfo() (map[string]any, error) {
 	return PropertiesToDict(c.Client.ServiceContent.About)
+}
+
+// VcenterAdvancedSettings returns the vCenter Server advanced settings
+// (the vpxd OptionManager exposed via PowerCLI as `Get-AdvancedSetting -Entity
+// $VC`). This is distinct from per-host advanced settings, which come from each
+// host's own OptionManager.
+func (c *Client) VcenterAdvancedSettings(ctx context.Context) (map[string]string, error) {
+	if c.Client.ServiceContent.Setting == nil {
+		return map[string]string{}, nil
+	}
+
+	m := object.NewOptionManager(c.Client.Client, *c.Client.ServiceContent.Setting)
+	var om mo.OptionManager
+	if err := m.Properties(ctx, m.Reference(), []string{"setting"}, &om); err != nil {
+		return nil, err
+	}
+
+	settings := map[string]string{}
+	for i := range om.Setting {
+		ov := om.Setting[i].GetOptionValue()
+		settings[ov.Key] = fmt.Sprintf("%v", ov.Value)
+	}
+	return settings, nil
 }
 
 func (c *Client) ListLicenses() ([]types.LicenseManagerLicenseInfo, error) {

@@ -131,6 +131,47 @@ vsphere {
   identitySources() []vsphere.identitysource
   // KMIP key-management clusters registered with vCenter (drive VM encryption / vTPM)
   kmsClusters() []vsphere.kmsCluster
+  // vCenter Server advanced settings (the vpxd OptionManager); distinct from per-host advancedSettings
+  //
+  // Keyed by setting name, e.g. advancedSettings["vpxd.event.syslog.enabled"] or advancedSettings["VirtualCenter.VimPasswordExpirationInDays"].
+  advancedSettings() map[string]string
+  // SSO account lockout policy enforced by vCenter Single Sign-On
+  ssoLockoutPolicy() vsphere.sso.lockoutPolicy
+  // Remote syslog forwarding targets configured on the vCenter Server Appliance
+  loggingForwarding() []vsphere.logging.forwarding
+}
+
+// vCenter SSO Lockout Policy
+//
+// Examine the Single Sign-On account lockout policy: how many failed
+// authentication attempts trigger a lockout (`maxFailedAttempts`), the rolling
+// window those attempts are counted over (`failedAttemptIntervalSec`), and how
+// long an account stays locked before it unlocks automatically
+// (`autoUnlockIntervalSec`).
+private vsphere.sso.lockoutPolicy @defaults("maxFailedAttempts autoUnlockIntervalSec") {
+  // Human-readable policy description
+  description string
+  // Failed authentication attempts that trigger an account lockout
+  maxFailedAttempts int
+  // Rolling window in seconds over which failed attempts are counted toward the lockout threshold
+  failedAttemptIntervalSec int
+  // Seconds a locked account stays locked before it unlocks automatically; 0 means an administrator must unlock it
+  autoUnlockIntervalSec int
+}
+
+// vCenter Appliance Remote Syslog Forwarding
+//
+// Examine a single remote syslog forwarding target configured on the vCenter
+// Server Appliance: the destination `hostname`, `port`, and transport
+// `protocol` (TCP, UDP, TLS, or RELP). When no targets are configured, vCenter
+// is not forwarding its logs off-box.
+private vsphere.logging.forwarding @defaults("hostname port protocol") {
+  // Destination host that vCenter forwards syslog messages to
+  hostname string
+  // Destination port on the syslog target
+  port int
+  // Transport protocol: TCP, UDP, TLS, or RELP
+  protocol string
 }
 
 // vSphere RBAC Permission Grant
@@ -513,6 +554,25 @@ private vsphere.host @defaults("moid name") {
   vsan() vsphere.host.vsan
   // Host security configuration: TPM key persistence and the trusted certificate store
   security() vsphere.host.security
+  // Host SSH daemon configuration (esxcli system ssh)
+  ssh() vsphere.host.ssh
+  // Configured TLS security profile (esxcli system tls server); empty on hosts that predate the system tls namespace (pre-8.0)
+  tlsServerProfile() string
+}
+
+// ESXi Host SSH Daemon Configuration
+//
+// Examine the ESXi SSH daemon configuration exposed through the esxcli
+// `system ssh` namespace. `serverConfig` holds the full set of SSH server
+// settings keyed by name — query individual hardening keys such as
+// serverConfig["ciphers"], serverConfig["hostbasedauthentication"],
+// serverConfig["gatewayports"], or serverConfig["permitrootlogin"].
+// `clientConfig` holds the equivalent client-side settings.
+private vsphere.host.ssh @defaults("serverConfig") {
+  // SSH server settings from `system ssh server config list`, keyed by setting name
+  serverConfig() map[string]string
+  // SSH client settings from `system ssh client config list`, keyed by setting name
+  clientConfig() map[string]string
 }
 
 // ESXi Host Security Configuration
@@ -1262,6 +1322,44 @@ private vsphere.vswitch.dvs @defaults("name") {
   properties dict
   // Physical NICs the host (or all member hosts) contribute as uplinks to this DVS
   uplinks() []vsphere.vmnic
+  // Port-mirroring (SPAN) sessions configured on the switch
+  //
+  // Populated for vCenter-discovered switches (iterated from
+  // `vsphere.datacenter.distributedSwitches`); empty for switches observed
+  // directly from a host. Mirroring sessions can copy traffic off the switch,
+  // so auditing them matters.
+  vspanSessions() []vsphere.vswitch.dvs.vspanSession
+}
+
+// Distributed Switch Port-Mirroring Session
+//
+// Examine a port-mirroring (SPAN) session on a distributed virtual switch.
+// `enabled` reports whether the session is active, `sessionType` distinguishes
+// the mirror mode (`dvPortMirror`, `remoteMirrorSource`, `remoteMirrorDest`,
+// `encapsulatedRemoteMirrorSource`), and `normalTrafficAllowed`,
+// `stripOriginalVlan`, and `encapsulationVlanId` describe how mirrored traffic
+// is handled. The `key` field selects the session within its switch.
+private vsphere.vswitch.dvs.vspanSession @defaults("name enabled sessionType") {
+  // Session key, unique within the distributed switch
+  key string
+  // Display name of the mirroring session
+  name string
+  // Description of the mirroring session
+  description string
+  // Whether the mirroring session is active
+  enabled bool
+  // Mirror mode: dvPortMirror, remoteMirrorSource, remoteMirrorDest, or encapsulatedRemoteMirrorSource
+  sessionType string
+  // Whether normal IO is allowed on destination ports while mirroring
+  normalTrafficAllowed bool
+  // Whether the original VLAN of mirrored frames is stripped
+  stripOriginalVlan bool
+  // VLAN ID used to encapsulate mirrored packets; 0 when encapsulation is not configured
+  encapsulationVlanId int
+  // Maximum length in bytes each mirrored packet is truncated to; 0 means no truncation
+  mirroredPacketLength int
+  // Sampling rate — one of every N packets is mirrored
+  samplingRate int
 }
 
 // vSphere Distributed Virtual Port Group

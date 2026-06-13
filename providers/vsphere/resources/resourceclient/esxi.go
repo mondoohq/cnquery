@@ -784,11 +784,13 @@ func (esxi *Esxi) Snmp() (map[string]any, error) {
 	return snmp, nil
 }
 
-// keyPersistenceUnsupportedRegex matches the esxcli error returned by hosts
-// that predate TPM-backed key persistence (added in ESXi 7.0 Update 2) or that
-// boot without a TPM. On those hosts the `system security keypersistence get`
-// namespace is either absent or reports the feature as unavailable.
-var keyPersistenceUnsupportedRegex = regexp.MustCompile(`(?i)(not supported|unknown command|invalid namespace|tpm)`)
+// esxcliNamespaceUnavailableRegex matches the esxcli error returned by hosts
+// where a namespace is absent because the feature is too new for the running
+// ESXi release (e.g. `system security keypersistence` needs 7.0 Update 2,
+// `system tls server` needs 8.0) or the hardware lacks a prerequisite such as
+// a TPM. On those hosts we treat the namespace as "not configured" rather than
+// failing the whole host query.
+var esxcliNamespaceUnavailableRegex = regexp.MustCompile(`(?i)(not supported|unknown command|invalid namespace|tpm)`)
 
 // KeyPersistenceEnabled reports whether TPM-backed key persistence is enabled
 // on the host.
@@ -808,7 +810,7 @@ func (esxi *Esxi) KeyPersistenceEnabled() (bool, error) {
 
 	res, err := e.Run(context.Background(), []string{"system", "security", "keypersistence", "get"})
 	if err != nil {
-		if keyPersistenceUnsupportedRegex.MatchString(err.Error()) {
+		if esxcliNamespaceUnavailableRegex.MatchString(err.Error()) {
 			return false, nil
 		}
 		return false, err
@@ -844,4 +846,86 @@ func (esxi *Esxi) CertificateStore() ([]map[string]any, error) {
 	}
 
 	return esxiValuesSliceToDict(res.Values), nil
+}
+
+// esxcliKeyValueList runs an esxcli command that returns rows of Key/Value
+// pairs (the shape used by `system ssh server config list` and friends) and
+// flattens them into a single map.
+func (esxi *Esxi) esxcliKeyValueList(args []string) (map[string]string, error) {
+	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run(context.Background(), args)
+	if err != nil {
+		return nil, err
+	}
+
+	config := map[string]string{}
+	for _, val := range res.Values {
+		keyCol := val["Key"]
+		valueCol := val["Value"]
+		if len(keyCol) == 0 || keyCol[0] == "" {
+			continue
+		}
+		value := ""
+		if len(valueCol) > 0 {
+			value = valueCol[0]
+		}
+		config[keyCol[0]] = value
+	}
+	return config, nil
+}
+
+// SshServerConfig returns the ESXi SSH server configuration as a key/value map
+// (ciphers, gatewayports, hostbasedauthentication, permitrootlogin, banner, …).
+//
+// ($ESXCli).system.ssh.server.config.list()
+func (esxi *Esxi) SshServerConfig() (map[string]string, error) {
+	return esxi.esxcliKeyValueList([]string{"system", "ssh", "server", "config", "list"})
+}
+
+// SshClientConfig returns the ESXi SSH client configuration as a key/value map.
+//
+// ($ESXCli).system.ssh.client.config.list()
+func (esxi *Esxi) SshClientConfig() (map[string]string, error) {
+	return esxi.esxcliKeyValueList([]string{"system", "ssh", "client", "config", "list"})
+}
+
+// TlsServerProfile returns the configured TLS security profile for the host.
+//
+// ($ESXCli).system.tls.server.get()
+//
+//	Profile: NIST_2024
+//
+// The `system tls server` namespace was introduced in ESXi 8.0; on older
+// hosts it is unavailable, which we report as an empty profile rather than an
+// error.
+func (esxi *Esxi) TlsServerProfile() (string, error) {
+	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := e.Run(context.Background(), []string{"system", "tls", "server", "get"})
+	if err != nil {
+		if esxcliNamespaceUnavailableRegex.MatchString(err.Error()) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	for _, val := range res.Values {
+		for k := range val {
+			if !strings.EqualFold(k, "Profile") {
+				continue
+			}
+			if len(val[k]) > 0 {
+				return val[k][0], nil
+			}
+		}
+	}
+
+	return "", nil
 }

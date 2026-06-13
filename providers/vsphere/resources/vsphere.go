@@ -12,7 +12,9 @@ import (
 	"github.com/vmware/govmomi/crypto"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
+	ssoadminmethods "github.com/vmware/govmomi/ssoadmin/methods"
 	ssoadmintypes "github.com/vmware/govmomi/ssoadmin/types"
+	"github.com/vmware/govmomi/vapi/appliance/logging"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/mql/v13/llx"
@@ -48,6 +50,82 @@ func (v *mqlVsphere) about() (map[string]any, error) {
 	client := getClientInstance(conn)
 
 	return client.AboutInfo()
+}
+
+func (v *mqlVsphere) advancedSettings() (map[string]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	client := getClientInstance(conn)
+
+	settings, err := client.VcenterAdvancedSettings(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]any, len(settings))
+	for k, val := range settings {
+		res[k] = val
+	}
+	return res, nil
+}
+
+func (v *mqlVsphere) ssoLockoutPolicy() (*mqlVsphereSsoLockoutPolicy, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+
+	admin, err := conn.SsoAdminClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SSO admin: %w", err)
+	}
+
+	resp, err := ssoadminmethods.GetLockoutPolicy(ctx, admin, &ssoadmintypes.GetLockoutPolicy{
+		This: admin.ServiceContent.LockoutPolicyService,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SSO lockout policy: %w", err)
+	}
+	policy := resp.Returnval
+
+	res, err := CreateResource(v.MqlRuntime, "vsphere.sso.lockoutPolicy", map[string]*llx.RawData{
+		"__id":                     llx.StringData("vsphere.sso.lockoutPolicy"),
+		"description":              llx.StringData(policy.Description),
+		"maxFailedAttempts":        llx.IntData(int64(policy.MaxFailedAttempts)),
+		"failedAttemptIntervalSec": llx.IntData(policy.FailedAttemptIntervalSec),
+		"autoUnlockIntervalSec":    llx.IntData(policy.AutoUnlockIntervalSec),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereSsoLockoutPolicy), nil
+}
+
+func (v *mqlVsphere) loggingForwarding() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+
+	rc, err := conn.RestClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to vAPI: %w", err)
+	}
+
+	forwarding, err := logging.NewManager(rc).Forwarding(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logging forwarding config: %w", err)
+	}
+
+	res := make([]any, 0, len(forwarding))
+	for _, f := range forwarding {
+		mqlForwarding, err := CreateResource(v.MqlRuntime, "vsphere.logging.forwarding", map[string]*llx.RawData{
+			"__id":     llx.StringData(fmt.Sprintf("%s:%d", f.Hostname, f.Port)),
+			"hostname": llx.StringData(f.Hostname),
+			"port":     llx.IntData(int64(f.Port)),
+			"protocol": llx.StringData(f.Protocol),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlForwarding)
+	}
+	return res, nil
 }
 
 func (v *mqlVsphere) datacenters() ([]any, error) {
