@@ -3787,20 +3787,21 @@ ports {
 
 // Windows audit policies
 //
-// Examine inclusion and exclusion settings for every audit subcategory
-auditpol {
+// Deprecated in favor of windows.auditPolicy, which reports subcategory
+// names and categories in English regardless of the OS display language
+// and supports looking up a single subcategory by name or GUID.
+auditpol @maturity("deprecated") {
   []auditpol.entry
 }
 
 // Windows audit policy entry
 //
-// Examine a single Windows audit-policy entry: the machine name, policy
-// target, subcategory name and GUID, inclusion setting, and exclusion
-// setting, plus the `success` and `failure` booleans derived from the
-// inclusion setting. Iterated from `auditpol` to assert that specific
-// subcategories (e.g., Logon, Account Management) have the expected audit
-// settings.
-auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
+// Deprecated in favor of windows.auditPolicy.subcategory, which reports
+// subcategory names and categories in English regardless of the OS display
+// language. This entry carries the subcategory name, GUID, inclusion
+// setting, and exclusion setting as reported by the system, plus the
+// `success` and `failure` booleans derived from the inclusion setting.
+auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") @maturity("deprecated") {
   // Machine name
   machinename string
   // Policy target
@@ -6916,6 +6917,55 @@ windows.tpm {
   specVersion() string
   // TPM manufacturer version string
   manufacturerVersion() string
+}
+
+// Windows advanced audit policy
+//
+// Examine the effective Windows advanced audit policy: every audit
+// subcategory together with whether success and failure events are
+// audited. Subcategory names and categories are reported in English
+// regardless of the OS display language, so the same audit works
+// unchanged on localized systems. Iterate the subcategories to assert
+// audit coverage — for example
+// `windows.auditPolicy.where(category == "Account Logon").all(success)` —
+// or select a single subcategory with windows.auditPolicy.subcategory.
+windows.auditPolicy {
+  []windows.auditPolicy.subcategory
+}
+
+// Windows audit policy subcategory
+//
+// Examine the audit settings of a single advanced audit policy
+// subcategory. The `name` field selects the subcategory by its English
+// name — for example `windows.auditPolicy.subcategory(name: "Logon")` —
+// and also accepts a subcategory GUID or the localized name the system
+// reports. `success` and `failure` indicate whether the subcategory
+// audits success and failure events, derived from the reported audit
+// setting independent of the OS display language. A subcategory that is
+// not present on the system audits nothing — `success` and `failure` are
+// false and the reported fields are null — so checks against it fail
+// rather than error.
+windows.auditPolicy.subcategory @defaults("name success failure") {
+  init(name string)
+  // Subcategory name in English (e.g. `Logon`), stable across OS display languages
+  name string
+  // GUID that identifies the subcategory across Windows versions and languages
+  guid string
+  // Audit category the subcategory belongs to (e.g. `Logon/Logoff`)
+  category string
+  // Subcategory name as reported by the system in its display language
+  localizedName string
+  // Whether success events are audited
+  success bool
+  // Whether failure events are audited
+  failure bool
+  // Audit setting as reported by the system in its display language
+  //
+  // One of `Success`, `Failure`, `Success and Failure`, or `No Auditing`,
+  // localized to the OS display language.
+  inclusionSetting string
+  // Per-user audit exclusion setting as reported by the system
+  exclusionSetting string
 }
 
 // Windows Firewall (Advanced Security)

@@ -336,6 +336,8 @@ const (
 	ResourceWindowsEventlog               string = "windows.eventlog"
 	ResourceWindowsRdp                    string = "windows.rdp"
 	ResourceWindowsTpm                    string = "windows.tpm"
+	ResourceWindowsAuditPolicy            string = "windows.auditPolicy"
+	ResourceWindowsAuditPolicySubcategory string = "windows.auditPolicy.subcategory"
 	ResourceWindowsFirewall               string = "windows.firewall"
 	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
 	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
@@ -1727,6 +1729,14 @@ func init() {
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsTpm,
+		},
+		"windows.auditPolicy": {
+			// to override args, implement: initWindowsAuditPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsAuditPolicy,
+		},
+		"windows.auditPolicy.subcategory": {
+			Init:   initWindowsAuditPolicySubcategory,
+			Create: createWindowsAuditPolicySubcategory,
 		},
 		"windows.firewall": {
 			// to override args, implement: initWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8195,6 +8205,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.tpm.manufacturerVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetManufacturerVersion()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicy).GetList()).ToDataRes(types.Array(types.Resource("windows.auditPolicy.subcategory")))
+	},
+	"windows.auditPolicy.subcategory.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetName()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.subcategory.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetGuid()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.subcategory.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetCategory()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.subcategory.localizedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetLocalizedName()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.subcategory.success": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetSuccess()).ToDataRes(types.Bool)
+	},
+	"windows.auditPolicy.subcategory.failure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetFailure()).ToDataRes(types.Bool)
+	},
+	"windows.auditPolicy.subcategory.inclusionSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetInclusionSetting()).ToDataRes(types.String)
+	},
+	"windows.auditPolicy.subcategory.exclusionSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAuditPolicySubcategory).GetExclusionSetting()).ToDataRes(types.String)
 	},
 	"windows.firewall.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewall).GetSettings()).ToDataRes(types.Dict)
@@ -19289,6 +19326,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.tpm.manufacturerVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsTpm).ManufacturerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.auditPolicy.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicy).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.auditPolicy.subcategory.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).Guid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.localizedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).LocalizedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.success": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).Success, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.failure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).Failure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.inclusionSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).InclusionSetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.auditPolicy.subcategory.exclusionSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAuditPolicySubcategory).ExclusionSetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51175,6 +51256,146 @@ func (c *mqlWindowsTpm) GetManufacturerVersion() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ManufacturerVersion, func() (string, error) {
 		return c.manufacturerVersion()
 	})
+}
+
+// mqlWindowsAuditPolicy for the windows.auditPolicy resource
+type mqlWindowsAuditPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsAuditPolicyInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createWindowsAuditPolicy creates a new instance of this resource
+func createWindowsAuditPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsAuditPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.auditPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsAuditPolicy) MqlName() string {
+	return "windows.auditPolicy"
+}
+
+func (c *mqlWindowsAuditPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsAuditPolicy) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.auditPolicy", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlWindowsAuditPolicySubcategory for the windows.auditPolicy.subcategory resource
+type mqlWindowsAuditPolicySubcategory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsAuditPolicySubcategoryInternal it will be used here
+	Name             plugin.TValue[string]
+	Guid             plugin.TValue[string]
+	Category         plugin.TValue[string]
+	LocalizedName    plugin.TValue[string]
+	Success          plugin.TValue[bool]
+	Failure          plugin.TValue[bool]
+	InclusionSetting plugin.TValue[string]
+	ExclusionSetting plugin.TValue[string]
+}
+
+// createWindowsAuditPolicySubcategory creates a new instance of this resource
+func createWindowsAuditPolicySubcategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsAuditPolicySubcategory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.auditPolicy.subcategory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) MqlName() string {
+	return "windows.auditPolicy.subcategory"
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetGuid() *plugin.TValue[string] {
+	return &c.Guid
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetLocalizedName() *plugin.TValue[string] {
+	return &c.LocalizedName
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetSuccess() *plugin.TValue[bool] {
+	return &c.Success
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetFailure() *plugin.TValue[bool] {
+	return &c.Failure
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetInclusionSetting() *plugin.TValue[string] {
+	return &c.InclusionSetting
+}
+
+func (c *mqlWindowsAuditPolicySubcategory) GetExclusionSetting() *plugin.TValue[string] {
+	return &c.ExclusionSetting
 }
 
 // mqlWindowsFirewall for the windows.firewall resource

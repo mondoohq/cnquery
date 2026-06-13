@@ -24,7 +24,8 @@ func TestParseAuditpol(t *testing.T) {
 	auditpol, err := windows.ParseAuditpol(f.Stdout)
 	require.NoError(t, err)
 
-	assert.Equal(t, 60, len(auditpol))
+	// 59 policy rows; the CSV header row is not an entry
+	assert.Equal(t, 59, len(auditpol))
 
 	expected := &windows.AuditpolEntry{
 		MachineName:      "Test",
@@ -53,6 +54,61 @@ func TestParseAuditpol_NonCSVOutput(t *testing.T) {
 			_, err := windows.ParseAuditpol(strings.NewReader(in))
 			require.NoError(t, err)
 		})
+	}
+}
+
+// The header row is six comma-separated column titles and previously parsed
+// as a policy entry with subcategory "Subcategory".
+func TestParseAuditpol_SkipsHeaderRow(t *testing.T) {
+	in := "Machine Name,Policy Target,Subcategory,Subcategory GUID,Inclusion Setting,Exclusion Setting\n" +
+		"Test,System,Logon,{0CCE9215-69AE-11D9-BED3-505054503030},Success,\n"
+	auditpol, err := windows.ParseAuditpol(strings.NewReader(in))
+	require.NoError(t, err)
+	require.Len(t, auditpol, 1)
+	assert.Equal(t, "Logon", auditpol[0].Subcategory)
+}
+
+func TestLookupAuditpolSubcategory(t *testing.T) {
+	cases := []struct {
+		guid     string
+		name     string
+		category string
+	}{
+		{"0CCE9215-69AE-11D9-BED3-505054503030", "Logon", "Logon/Logoff"},
+		{"{0CCE922B-69AE-11D9-BED3-505054503030}", "Process Creation", "Detailed Tracking"},
+		{"0cce923f-69ae-11d9-bed3-505054503030", "Credential Validation", "Account Logon"},
+		{"0CCE9245-69AE-11D9-BED3-505054503030", "Removable Storage", "Object Access"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.guid, func(t *testing.T) {
+			sub, ok := windows.LookupAuditpolSubcategory(tc.guid)
+			require.True(t, ok)
+			assert.Equal(t, tc.name, sub.Name)
+			assert.Equal(t, tc.category, sub.Category)
+		})
+	}
+
+	_, ok := windows.LookupAuditpolSubcategory("00000000-0000-0000-0000-000000000000")
+	assert.False(t, ok)
+}
+
+// Every subcategory the auditpol recording reports must resolve through the
+// well-known table, and vice versa — the table and a real system agree on
+// all 59 subcategories and their English names.
+func TestAuditpolSubcategoryTableMatchesSystem(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/auditpol.toml"))
+	require.NoError(t, err)
+	f, err := mock.RunCommand("auditpol /get /category:* /r")
+	require.NoError(t, err)
+	auditpol, err := windows.ParseAuditpol(f.Stdout)
+	require.NoError(t, err)
+	require.Len(t, auditpol, 59)
+
+	for _, entry := range auditpol {
+		sub, ok := windows.LookupAuditpolSubcategory(entry.SubcategoryGUID)
+		require.True(t, ok, "GUID %s missing from table", entry.SubcategoryGUID)
+		assert.Equal(t, entry.Subcategory, sub.Name, "name mismatch for %s", entry.SubcategoryGUID)
+		assert.NotEmpty(t, sub.Category)
 	}
 }
 

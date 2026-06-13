@@ -18,6 +18,13 @@ func TestResource_Auditpol(t *testing.T) {
 		assert.NotEmpty(t, res)
 	})
 
+	t.Run("list contains the policy rows, not the CSV header", func(t *testing.T) {
+		res := testWindowsQuery(t, "auditpol.length")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(59), res[0].Data.Value)
+	})
+
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
 		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation')[0].subcategory")
 		assert.NotEmpty(t, res)

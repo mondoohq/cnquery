@@ -2693,6 +2693,17 @@ warp.skill.sha256 13.13.1
 warp.skill.source 13.13.1
 warp.skills 13.13.1
 windows 9.0.1
+windows.auditPolicy 13.28.2
+windows.auditPolicy.list 13.28.2
+windows.auditPolicy.subcategory 13.28.2
+windows.auditPolicy.subcategory.category 13.28.2
+windows.auditPolicy.subcategory.exclusionSetting 13.28.2
+windows.auditPolicy.subcategory.failure 13.28.2
+windows.auditPolicy.subcategory.guid 13.28.2
+windows.auditPolicy.subcategory.inclusionSetting 13.28.2
+windows.auditPolicy.subcategory.localizedName 13.28.2
+windows.auditPolicy.subcategory.name 13.28.2
+windows.auditPolicy.subcategory.success 13.28.2
 windows.bitlocker 9.0.1
 windows.bitlocker.volume 9.0.1
 windows.bitlocker.volume.conversionStatus 9.0.1

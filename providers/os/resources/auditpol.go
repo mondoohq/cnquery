@@ -4,31 +4,13 @@
 package resources
 
 import (
-	"fmt"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
 
 func (p *mqlAuditpol) list() ([]any, error) {
-	o, err := CreateResource(p.MqlRuntime, "powershell", map[string]*llx.RawData{
-		"script": llx.StringData("[Console]::OutputEncoding = [Text.Encoding]::UTF8;auditpol /get /category:* /r"),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := o.(*mqlPowershell)
-	out := cmd.GetStdout()
-	if out.Error != nil {
-		return nil, fmt.Errorf("could not run auditpol: %w", out.Error)
-	}
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		return nil, fmt.Errorf("could not run auditpol: %s", strings.TrimSpace(cmd.Stderr.Data))
-	}
-
-	entries, err := windows.ParseAuditpol(strings.NewReader(out.Data))
+	entries, err := fetchAuditpolEntries(p.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
