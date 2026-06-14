@@ -279,6 +279,13 @@ func (sc *SnapshotCreator) createSnapshotDisk(snapshotUrl, projectID, zone, disk
 
 // cloneDisk clones a provided disk
 func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName string) (string, error) {
+	// A zonal disk can only be cloned directly within the same zone. If the
+	// source disk lives in a different zone than the target, bridge through a
+	// temporary snapshot (snapshots are global) so cross-zone scanning works.
+	if _, srcZone, _, err := parseDiskUrl(sourceDisk); err == nil && srcZone != "" && srcZone != zone {
+		return sc.cloneDiskViaSnapshot(sourceDisk, projectID, zone, diskName)
+	}
+
 	// create a new disk clone
 	disk := &compute.Disk{
 		Name:       diskName,
@@ -286,6 +293,90 @@ func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName strin
 		Labels:     sc.labels,
 	}
 	return sc.createDisk(disk, projectID, zone, diskName)
+}
+
+// cloneDiskViaSnapshot clones a disk across zones by bridging through a
+// temporary global snapshot. GCP requires the source disk and the target disk
+// to be in the same zone for a direct disk clone, so when the scanner zone
+// differs from the source disk's zone we first snapshot the source disk
+// (snapshots are a global resource), create the scanner disk from that
+// snapshot, and best-effort delete the temporary snapshot afterwards.
+func (sc *SnapshotCreator) cloneDiskViaSnapshot(sourceDisk, projectID, zone, diskName string) (string, error) {
+	ctx := context.Background()
+
+	computeService, err := sc.computeServiceClient(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	srcProject, srcZone, srcDiskName, err := parseDiskUrl(sourceDisk)
+	if err != nil {
+		return "", err
+	}
+
+	// build a valid temporary snapshot name. GCP requires names to match
+	// [a-z]([-a-z0-9]{0,61}[a-z0-9])? and be at most 63 characters. The disk
+	// name we are handed already follows this convention, so derive from it and
+	// truncate to stay within the limit.
+	snapName := diskName
+	if len(snapName) > 63 {
+		snapName = snapName[:63]
+	}
+	// avoid a trailing hyphen after truncation, which is invalid
+	snapName = strings.TrimRight(snapName, "-")
+
+	// create a snapshot from the source disk in the source project/zone
+	op, err := computeService.Disks.CreateSnapshot(srcProject, srcZone, srcDiskName, &compute.Snapshot{
+		Name:   snapName,
+		Labels: sc.labels,
+	}).Context(ctx).Do()
+	if err != nil {
+		return "", err
+	}
+
+	if err := sc.waitForZoneOperation(ctx, computeService, srcProject, srcZone, op.Name, "create snapshot"); err != nil {
+		return "", err
+	}
+
+	// fetch the snapshot to get its SelfLink, which is required to create a disk
+	snap, err := computeService.Snapshots.Get(srcProject, snapName).Context(ctx).Do()
+	if err != nil {
+		return "", err
+	}
+
+	// create the scanner disk from the snapshot in the target project/zone
+	clonedDiskUrl, err := sc.createSnapshotDisk(snap.SelfLink, projectID, zone, diskName)
+
+	// best-effort cleanup: the scanner disk no longer needs the snapshot once it
+	// has been created, so delete the temporary snapshot. Do not fail the clone
+	// if cleanup fails.
+	if _, delErr := computeService.Snapshots.Delete(srcProject, snapName).Context(ctx).Do(); delErr != nil {
+		log.Warn().Err(delErr).Str("snapshot", snapName).Msg("could not delete temporary snapshot created for cross-zone clone")
+	}
+
+	return clonedDiskUrl, err
+}
+
+// waitForZoneOperation blocks until the given zonal operation reaches the DONE
+// state, returning an error if the operation reported one.
+func (sc *SnapshotCreator) waitForZoneOperation(ctx context.Context, computeService *compute.Service, projectID, zone, opName, action string) error {
+	for {
+		operation, err := computeService.ZoneOperations.Get(projectID, zone, opName).Context(ctx).Do()
+		if err != nil {
+			return err
+		}
+		if operation.Status == "DONE" {
+			if operation.Error != nil {
+				errMessage, _ := operation.Error.MarshalJSON()
+				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
+				if len(operation.Error.Errors) > 0 {
+					errMessage = []byte(operation.Error.Errors[0].Message)
+				}
+				return fmt.Errorf("%s failed: %s", action, errMessage)
+			}
+			return nil
+		}
+	}
 }
 
 // attachDisk attaches a disk to an instance
