@@ -140,7 +140,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 			} else if err == nil && time.Now().Sub(created).Hours() < 8 {
 				// use the snapshot if it was created less than 8 hours ago
 				log.Debug().Str("snapshot", snapshotUrl).Msg("found latest snapshot")
-				diskUrl, err = sc.createSnapshotDisk(snapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+				diskUrl, err = sc.createSnapshotDisk(snapshotUrl, scanner.projectID, scanner.zone, newDiskName(target.InstanceName))
 				if err != nil {
 					log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
 					return nil, errors.Wrap(err, "could not create disk from snapshot")
@@ -156,7 +156,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 		if mi.diskUrl == "" {
 			// clone the disk of the instance to the zone where the scanner runs
 			// disk name does not allow colons, therefore we need a custom format
-			diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSourceURL, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+			diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSourceURL, scanner.projectID, scanner.zone, newDiskName(target.InstanceName))
 			if err != nil {
 				log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot creation")
 				return nil, errors.Wrap(err, "could not create gcp instance snapshot")
@@ -173,7 +173,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 			return nil, err
 		}
 
-		diskUrl, err = sc.createSnapshotDisk(snapshotInfo.SnapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+		diskUrl, err = sc.createSnapshotDisk(snapshotInfo.SnapshotUrl, scanner.projectID, scanner.zone, newDiskName(target.InstanceName))
 		if err != nil {
 			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
 			return nil, errors.Wrap(err, "could not create disk from snapshot")

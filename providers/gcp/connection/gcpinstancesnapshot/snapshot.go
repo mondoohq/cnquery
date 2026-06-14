@@ -39,6 +39,61 @@ func NewSourceDiskUrl(projectID, zone, diskName string) string {
 	)
 }
 
+// newDiskName builds a GCP-compliant temporary disk name for the scanner's
+// clone/snapshot disk. See buildDiskName.
+func newDiskName(instanceName string) string {
+	return buildDiskName(instanceName, time.Now())
+}
+
+// buildDiskName produces a name matching GCP's rule
+// [a-z]([-a-z0-9]{0,61}[a-z0-9])? with a max length of 63. It lowercases and
+// replaces invalid characters in the instance name and truncates it so the
+// full "cnspec-<instance>-<timestamp>" name fits.
+func buildDiskName(instanceName string, t time.Time) string {
+	const (
+		prefix     = "cnspec-"
+		maxLen     = 63
+		timeLayout = "20060102t150405" // 15 chars, all valid characters
+	)
+	timestamp := t.Format(timeLayout)
+
+	// sanitize the instance name: lowercase, and replace any character that is
+	// not in [a-z0-9-] with '-'
+	sanitized := strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z':
+			return r
+		case r >= '0' && r <= '9':
+			return r
+		case r == '-':
+			return r
+		case r >= 'A' && r <= 'Z':
+			return r + ('a' - 'A')
+		default:
+			return '-'
+		}
+	}, instanceName)
+
+	// reserve room for the prefix and the "-"+timestamp suffix, then truncate
+	// the sanitized instance name so the assembled name fits within maxLen
+	avail := maxLen - len(prefix) - 1 - len(timestamp)
+	if avail < 0 {
+		avail = 0
+	}
+	if len(sanitized) > avail {
+		sanitized = sanitized[:avail]
+	}
+
+	// trim trailing '-' from the (possibly truncated) instance name so the
+	// assembled name reads cleanly
+	sanitized = strings.TrimRight(sanitized, "-")
+
+	// the timestamp always ends in a digit, so the assembled name ends in
+	// [a-z0-9] and starts with the "cnspec-" prefix (a letter) — both required
+	// by GCP's rule
+	return prefix + sanitized + "-" + timestamp
+}
+
 func NewSnapshotCreator() (*SnapshotCreator, error) {
 	scope := []string{cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope}
 	client, err := googleoauth.DefaultClient(context.Background(), scope...)
