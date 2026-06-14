@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -187,8 +188,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 // validateInstanceTarget ensures the required flags for instance scanning are
 // present. Both project-id and zone are needed to locate the instance.
 func validateInstanceTarget(projectId, zone string) error {
-	if projectId == "" || zone == "" {
-		return status.Error(codes.InvalidArgument, "the --project-id and --zone flags are required for gcp instance scanning")
+	var missing []string
+	if projectId == "" {
+		missing = append(missing, "--project-id")
+	}
+	if zone == "" {
+		missing = append(missing, "--zone")
+	}
+	if len(missing) > 0 {
+		return status.Errorf(codes.InvalidArgument, "the %s flag(s) are required for gcp instance scanning", strings.Join(missing, " and "))
 	}
 	return nil
 }
