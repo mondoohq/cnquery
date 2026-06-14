@@ -155,6 +155,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["repository"] = string(flags["repository"].Value)
 		conf.Runtime = "gcp-gcr"
 	case "snapshot":
+		if err := validateSnapshotTarget(projectId); err != nil {
+			return nil, err
+		}
 		conf.Options["snapshot-name"] = req.Args[1]
 		conf.Options["project-id"] = projectId
 		conf.Options["zone"] = zone
@@ -162,6 +165,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Type = string(gcpinstancesnapshot.SnapshotConnectionType)
 		conf.Discover = nil
 	case "instance":
+		if err := validateInstanceTarget(projectId, zone); err != nil {
+			return nil, err
+		}
 		conf.Options["instance-name"] = req.Args[1]
 		conf.Options["type"] = "instance"
 		conf.Options["project-id"] = projectId
@@ -176,6 +182,24 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+// validateInstanceTarget ensures the required flags for instance scanning are
+// present. Both project-id and zone are needed to locate the instance.
+func validateInstanceTarget(projectId, zone string) error {
+	if projectId == "" || zone == "" {
+		return status.Error(codes.InvalidArgument, "the --project-id and --zone flags are required for gcp instance scanning")
+	}
+	return nil
+}
+
+// validateSnapshotTarget ensures the required flags for snapshot scanning are
+// present. The project-id is needed to locate the snapshot.
+func validateSnapshotTarget(projectId string) error {
+	if projectId == "" {
+		return status.Error(codes.InvalidArgument, "the --project-id flag is required for gcp snapshot scanning")
+	}
+	return nil
 }
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
