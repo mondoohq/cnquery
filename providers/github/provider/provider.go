@@ -74,8 +74,27 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		installId := req.Flags[connection.OPTION_APP_INSTALLATION_ID]
 		conf.Options[connection.OPTION_APP_INSTALLATION_ID] = string(installId.Value)
 
-		pk := req.Flags[connection.OPTION_APP_PRIVATE_KEY]
-		conf.Options[connection.OPTION_APP_PRIVATE_KEY] = string(pk.Value)
+		// The GitHub App private key may be provided three ways: as a file path
+		// (--app-private-key), as inline PEM content (--app-private-key-content),
+		// or via the GITHUB_APP_PRIVATE_KEY environment variable. Inline content
+		// takes precedence and is passed as a private_key credential so the
+		// connection can authenticate without reading from the filesystem.
+		appPrivateKey := ""
+		if x, ok := flags[connection.OPTION_APP_PRIVATE_KEY_CONTENT]; ok && len(x.Value) != 0 {
+			appPrivateKey = string(x.Value)
+			log.Debug().Msg("loaded GitHub App private key from flag")
+		}
+		if appPrivateKey == "" && len(os.Getenv("GITHUB_APP_PRIVATE_KEY")) != 0 {
+			appPrivateKey = os.Getenv("GITHUB_APP_PRIVATE_KEY")
+			log.Debug().Msg("loaded GitHub App private key from GITHUB_APP_PRIVATE_KEY env variable")
+		}
+		if appPrivateKey != "" {
+			conf.Credentials = append(conf.Credentials,
+				vault.NewPrivateKeyCredential("", []byte(appPrivateKey), ""))
+		} else if pk, ok := flags[connection.OPTION_APP_PRIVATE_KEY]; ok && len(pk.Value) != 0 {
+			conf.Options[connection.OPTION_APP_PRIVATE_KEY] = string(pk.Value)
+		}
+
 		isAppAuth = true
 		log.Debug().Msg("application credentials provided")
 	}

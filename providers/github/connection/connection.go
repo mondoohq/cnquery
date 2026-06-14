@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	OPTION_TOKEN               = "token"
-	OPTION_REPOS               = "repos"
-	OPTION_REPOS_EXCLUDE       = "repos-exclude"
-	OPTION_APP_ID              = "app-id"
-	OPTION_APP_INSTALLATION_ID = "app-installation-id"
-	OPTION_APP_PRIVATE_KEY     = "app-private-key"
-	OPTION_ENTERPRISE_URL      = "enterprise-url"
+	OPTION_TOKEN                   = "token"
+	OPTION_REPOS                   = "repos"
+	OPTION_REPOS_EXCLUDE           = "repos-exclude"
+	OPTION_APP_ID                  = "app-id"
+	OPTION_APP_INSTALLATION_ID     = "app-installation-id"
+	OPTION_APP_PRIVATE_KEY         = "app-private-key"
+	OPTION_APP_PRIVATE_KEY_CONTENT = "app-private-key-content"
+	OPTION_ENTERPRISE_URL          = "enterprise-url"
 )
 
 type GithubConnection struct {
