@@ -69,3 +69,15 @@ func TestEqual_NilOperands(t *testing.T) {
 		assert.True(t, eq(nil, nil), "%s: nil == nil", c.typ.Label())
 	}
 }
+
+func TestUnderlying_EmptyType(t *testing.T) {
+	// An empty Type with a non-nil RawData value reaches Underlying via
+	// isSuccess. Underlying must not index into the empty slice and panic,
+	// which would crash the whole scan. It returns the empty type, so callers
+	// fall through to their undetermined branch.
+	var got Type
+	assert.NotPanics(t, func() {
+		got = Type("").Underlying()
+	})
+	assert.Equal(t, Type(""), got)
+}

@@ -216,6 +216,9 @@ func (typ Type) IsFunction() bool {
 
 // Underlying returns the basic type, e.g. types.MapLike instead of types.Map(..)
 func (typ Type) Underlying() Type {
+	if len(typ) == 0 {
+		return typ
+	}
 	return Type(typ[0])
 }
 
