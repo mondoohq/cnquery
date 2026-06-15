@@ -7079,6 +7079,70 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
+// Windows SMB (Server Message Block) server
+//
+// Examine SMB shares published by the host, active inbound client sessions,
+// and outbound connections to other SMB servers. Backed by the `Get-SmbShare`,
+// `Get-SmbSession`, and `Get-SmbConnection` PowerShell cmdlets.
+windows.smb {
+  // SMB shares published by this host
+  shares() []windows.smb.share
+  // Active inbound SMB sessions (clients connected to this host)
+  sessions() []windows.smb.session
+  // Outbound SMB connections (this host connected to other SMB servers)
+  connections() []windows.smb.connection
+}
+
+// Windows SMB share
+//
+// A single SMB share published by the host: its `name`, the local filesystem
+// `path` it exposes, a `description`, the `scopeName` it is published under,
+// and its `shareType`. Iterated from `windows.smb.shares`.
+private windows.smb.share @defaults("name path") {
+  // Share name (e.g. C$, SYSVOL, or a custom share name)
+  name string
+  // Local filesystem path backing the share
+  path string
+  // Share description
+  description string
+  // Scope name the share is published under (e.g. * for the default scope)
+  scopeName string
+  // Share type (e.g. FileSystemDirectory)
+  shareType string
+}
+
+// Windows SMB session
+//
+// A single inbound SMB session: the connecting client's computer name and
+// user, the SMB `dialect` negotiated, and the number of files the client has
+// open. Iterated from `windows.smb.sessions`.
+private windows.smb.session @defaults("clientComputerName clientUserName") {
+  // Client computer name or IP address
+  clientComputerName string
+  // User account the session authenticated as
+  clientUserName string
+  // SMB dialect negotiated for the session (e.g. 3.1.1)
+  dialect string
+  // Number of files the client currently has open
+  numOpens int
+}
+
+// Windows SMB connection
+//
+// A single outbound SMB connection from this host to an SMB server: the
+// `serverName`, `shareName`, authenticated `userName`, and negotiated
+// `dialect`. Iterated from `windows.smb.connections`.
+private windows.smb.connection @defaults("serverName shareName") {
+  // SMB server name the host is connected to
+  serverName string
+  // Share name on the server
+  shareName string
+  // User account used for the connection
+  userName string
+  // SMB dialect negotiated for the connection (e.g. 3.1.1)
+  dialect string
+}
+
 // Windows BitLocker drive encryption
 //
 // Examine encryption, lock, and protection status across BitLocker volumes
@@ -7226,6 +7290,28 @@ network {
 
   // Primary IPv6 address determined by the default route
   primaryIPv6() ip
+
+  // ARP (IPv4) / NDP (IPv6) neighbor cache entries
+  neighbors() []networkNeighbor
+}
+
+// Network neighbor (ARP / NDP cache entry)
+//
+// A single entry from the system's ARP (IPv4) or NDP (IPv6) neighbor cache:
+// the neighbor's `ip`, its `mac` (link-layer address, empty for incomplete
+// entries), the `interface` it was observed on, and the cache `state`
+// (e.g. reachable, stale, permanent, incomplete). Backed by `ip -j neigh` /
+// `/proc/net/arp` on Linux, `arp -an` on macOS, and `Get-NetNeighbor` on
+// Windows. Iterated from `network.neighbors`.
+private networkNeighbor @defaults("ip mac interface state") {
+  // Neighbor IP address (v4 or v6)
+  ip ip
+  // Link-layer (MAC) address; empty for incomplete or failed entries
+  mac string
+  // Network interface the neighbor was observed on
+  interface string
+  // Neighbor cache state (e.g. reachable, stale, permanent, incomplete)
+  state string
 }
 
 // Detailed information of a network interface

@@ -341,6 +341,10 @@ const (
 	ResourceWindowsFirewall               string = "windows.firewall"
 	ResourceWindowsFirewallProfile        string = "windows.firewall.profile"
 	ResourceWindowsFirewallRule           string = "windows.firewall.rule"
+	ResourceWindowsSmb                    string = "windows.smb"
+	ResourceWindowsSmbShare               string = "windows.smb.share"
+	ResourceWindowsSmbSession             string = "windows.smb.session"
+	ResourceWindowsSmbConnection          string = "windows.smb.connection"
 	ResourceWindowsBitlocker              string = "windows.bitlocker"
 	ResourceWindowsBitlockerVolume        string = "windows.bitlocker.volume"
 	ResourceWindowsSecurity               string = "windows.security"
@@ -350,6 +354,7 @@ const (
 	ResourceCloudInstance                 string = "cloudInstance"
 	ResourceIpAddress                     string = "ipAddress"
 	ResourceNetwork                       string = "network"
+	ResourceNetworkNeighbor               string = "networkNeighbor"
 	ResourceNetworkInterface              string = "networkInterface"
 	ResourceNetworkRoutes                 string = "networkRoutes"
 	ResourceNetworkRoute                  string = "networkRoute"
@@ -1750,6 +1755,22 @@ func init() {
 			// to override args, implement: initWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsFirewallRule,
 		},
+		"windows.smb": {
+			// to override args, implement: initWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmb,
+		},
+		"windows.smb.share": {
+			// to override args, implement: initWindowsSmbShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbShare,
+		},
+		"windows.smb.session": {
+			// to override args, implement: initWindowsSmbSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbSession,
+		},
+		"windows.smb.connection": {
+			// to override args, implement: initWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbConnection,
+		},
 		"windows.bitlocker": {
 			// to override args, implement: initWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsBitlocker,
@@ -1785,6 +1806,10 @@ func init() {
 		"network": {
 			// to override args, implement: initNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetwork,
+		},
+		"networkNeighbor": {
+			// to override args, implement: initNetworkNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetworkNeighbor,
 		},
 		"networkInterface": {
 			// to override args, implement: initNetworkInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8344,6 +8369,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewallRule).GetPolicyStoreSourceType()).ToDataRes(types.Int)
 	},
+	"windows.smb.shares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetShares()).ToDataRes(types.Array(types.Resource("windows.smb.share")))
+	},
+	"windows.smb.sessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetSessions()).ToDataRes(types.Array(types.Resource("windows.smb.session")))
+	},
+	"windows.smb.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetConnections()).ToDataRes(types.Array(types.Resource("windows.smb.connection")))
+	},
+	"windows.smb.share.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetName()).ToDataRes(types.String)
+	},
+	"windows.smb.share.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetPath()).ToDataRes(types.String)
+	},
+	"windows.smb.share.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.smb.share.scopeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetScopeName()).ToDataRes(types.String)
+	},
+	"windows.smb.share.shareType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbShare).GetShareType()).ToDataRes(types.String)
+	},
+	"windows.smb.session.clientComputerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetClientComputerName()).ToDataRes(types.String)
+	},
+	"windows.smb.session.clientUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetClientUserName()).ToDataRes(types.String)
+	},
+	"windows.smb.session.dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetDialect()).ToDataRes(types.String)
+	},
+	"windows.smb.session.numOpens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbSession).GetNumOpens()).ToDataRes(types.Int)
+	},
+	"windows.smb.connection.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetServerName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.shareName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetShareName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetUserName()).ToDataRes(types.String)
+	},
+	"windows.smb.connection.dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbConnection).GetDialect()).ToDataRes(types.String)
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
 	},
@@ -8469,6 +8542,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"network.primaryIPv6": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetwork).GetPrimaryIPv6()).ToDataRes(types.IP)
+	},
+	"network.neighbors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetNeighbors()).ToDataRes(types.Array(types.Resource("networkNeighbor")))
+	},
+	"networkNeighbor.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetIp()).ToDataRes(types.IP)
+	},
+	"networkNeighbor.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetMac()).ToDataRes(types.String)
+	},
+	"networkNeighbor.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetInterface()).ToDataRes(types.String)
+	},
+	"networkNeighbor.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetworkNeighbor).GetState()).ToDataRes(types.String)
 	},
 	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
@@ -19532,6 +19620,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsFirewallRule).PolicyStoreSourceType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"windows.smb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.shares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Shares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.sessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Sessions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.share.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.scopeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).ScopeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.share.shareType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbShare).ShareType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.session.clientComputerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).ClientComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.clientUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).ClientUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.session.numOpens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbSession).NumOpens, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.connection.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.shareName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).ShareName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smb.connection.dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbConnection).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
 		return
@@ -19734,6 +19902,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"network.primaryIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetwork).PrimaryIPv6, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"network.neighbors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Neighbors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).__id, ok = v.Value.(string)
+		return
+	},
+	"networkNeighbor.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Ip, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"networkNeighbor.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetworkNeighbor).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51736,6 +51928,278 @@ func (c *mqlWindowsFirewallRule) GetPolicyStoreSourceType() *plugin.TValue[int64
 	return &c.PolicyStoreSourceType
 }
 
+// mqlWindowsSmb for the windows.smb resource
+type mqlWindowsSmb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbInternal it will be used here
+	Shares      plugin.TValue[[]any]
+	Sessions    plugin.TValue[[]any]
+	Connections plugin.TValue[[]any]
+}
+
+// createWindowsSmb creates a new instance of this resource
+func createWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmb) MqlName() string {
+	return "windows.smb"
+}
+
+func (c *mqlWindowsSmb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmb) GetShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Shares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "shares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.shares()
+	})
+}
+
+func (c *mqlWindowsSmb) GetSessions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sessions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "sessions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sessions()
+	})
+}
+
+func (c *mqlWindowsSmb) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+// mqlWindowsSmbShare for the windows.smb.share resource
+type mqlWindowsSmbShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbShareInternal it will be used here
+	Name        plugin.TValue[string]
+	Path        plugin.TValue[string]
+	Description plugin.TValue[string]
+	ScopeName   plugin.TValue[string]
+	ShareType   plugin.TValue[string]
+}
+
+// createWindowsSmbShare creates a new instance of this resource
+func createWindowsSmbShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.share", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbShare) MqlName() string {
+	return "windows.smb.share"
+}
+
+func (c *mqlWindowsSmbShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSmbShare) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsSmbShare) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsSmbShare) GetScopeName() *plugin.TValue[string] {
+	return &c.ScopeName
+}
+
+func (c *mqlWindowsSmbShare) GetShareType() *plugin.TValue[string] {
+	return &c.ShareType
+}
+
+// mqlWindowsSmbSession for the windows.smb.session resource
+type mqlWindowsSmbSession struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbSessionInternal it will be used here
+	ClientComputerName plugin.TValue[string]
+	ClientUserName     plugin.TValue[string]
+	Dialect            plugin.TValue[string]
+	NumOpens           plugin.TValue[int64]
+}
+
+// createWindowsSmbSession creates a new instance of this resource
+func createWindowsSmbSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbSession{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.session", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbSession) MqlName() string {
+	return "windows.smb.session"
+}
+
+func (c *mqlWindowsSmbSession) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbSession) GetClientComputerName() *plugin.TValue[string] {
+	return &c.ClientComputerName
+}
+
+func (c *mqlWindowsSmbSession) GetClientUserName() *plugin.TValue[string] {
+	return &c.ClientUserName
+}
+
+func (c *mqlWindowsSmbSession) GetDialect() *plugin.TValue[string] {
+	return &c.Dialect
+}
+
+func (c *mqlWindowsSmbSession) GetNumOpens() *plugin.TValue[int64] {
+	return &c.NumOpens
+}
+
+// mqlWindowsSmbConnection for the windows.smb.connection resource
+type mqlWindowsSmbConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbConnectionInternal it will be used here
+	ServerName plugin.TValue[string]
+	ShareName  plugin.TValue[string]
+	UserName   plugin.TValue[string]
+	Dialect    plugin.TValue[string]
+}
+
+// createWindowsSmbConnection creates a new instance of this resource
+func createWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbConnection) MqlName() string {
+	return "windows.smb.connection"
+}
+
+func (c *mqlWindowsSmbConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbConnection) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlWindowsSmbConnection) GetShareName() *plugin.TValue[string] {
+	return &c.ShareName
+}
+
+func (c *mqlWindowsSmbConnection) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlWindowsSmbConnection) GetDialect() *plugin.TValue[string] {
+	return &c.Dialect
+}
+
 // mqlWindowsBitlocker for the windows.bitlocker resource
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
@@ -52322,6 +52786,7 @@ type mqlNetwork struct {
 	Ipv6        plugin.TValue[[]any]
 	PrimaryIPv4 plugin.TValue[llx.RawIP]
 	PrimaryIPv6 plugin.TValue[llx.RawIP]
+	Neighbors   plugin.TValue[[]any]
 }
 
 // createNetwork creates a new instance of this resource
@@ -52410,6 +52875,81 @@ func (c *mqlNetwork) GetPrimaryIPv6() *plugin.TValue[llx.RawIP] {
 	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv6, func() (llx.RawIP, error) {
 		return c.primaryIPv6()
 	})
+}
+
+func (c *mqlNetwork) GetNeighbors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Neighbors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "neighbors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.neighbors()
+	})
+}
+
+// mqlNetworkNeighbor for the networkNeighbor resource
+type mqlNetworkNeighbor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetworkNeighborInternal it will be used here
+	Ip        plugin.TValue[llx.RawIP]
+	Mac       plugin.TValue[string]
+	Interface plugin.TValue[string]
+	State     plugin.TValue[string]
+}
+
+// createNetworkNeighbor creates a new instance of this resource
+func createNetworkNeighbor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetworkNeighbor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("networkNeighbor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetworkNeighbor) MqlName() string {
+	return "networkNeighbor"
+}
+
+func (c *mqlNetworkNeighbor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetworkNeighbor) GetIp() *plugin.TValue[llx.RawIP] {
+	return &c.Ip
+}
+
+func (c *mqlNetworkNeighbor) GetMac() *plugin.TValue[string] {
+	return &c.Mac
+}
+
+func (c *mqlNetworkNeighbor) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlNetworkNeighbor) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 // mqlNetworkInterface for the networkInterface resource
