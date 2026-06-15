@@ -101,11 +101,14 @@ func (w *mqlWindowsSmb) connections() ([]any, error) {
 	}
 
 	res := make([]any, 0, len(connections))
-	for i, c := range connections {
+	for _, c := range connections {
 		r, err := CreateResource(w.MqlRuntime, "windows.smb.connection", map[string]*llx.RawData{
-			// Get-SmbConnection exposes no unique id; the index keeps multiple
-			// connections to the same server+share+user distinct.
-			"__id":       llx.StringData(fmt.Sprintf("windows.smb.connection/%d/%s/%s/%s", i, c.ServerName, c.ShareName, c.UserName)),
+			// Get-SmbConnection exposes no unique per-connection id, so key on the
+			// stable connection attributes (server + share + user + dialect)
+			// rather than the list index — identity then survives output-order
+			// changes between refreshes. These four fields together identify a
+			// distinct client->server SMB connection in practice.
+			"__id":       llx.StringData(fmt.Sprintf("windows.smb.connection/%s/%s/%s/%s", c.ServerName, c.ShareName, c.UserName, c.Dialect)),
 			"serverName": llx.StringData(c.ServerName),
 			"shareName":  llx.StringData(c.ShareName),
 			"userName":   llx.StringData(c.UserName),
