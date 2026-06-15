@@ -30,7 +30,8 @@ get_physical_cores() {
       ;;
   esac
 }
-MAX_PARALLEL=${MAX_PARALLEL:-$(get_physical_cores)}
+_cores=$(get_physical_cores)
+MAX_PARALLEL=${MAX_PARALLEL:-$(( _cores > 1 ? _cores - 1 : 1 ))}
 
 cd $REPOROOT
 
