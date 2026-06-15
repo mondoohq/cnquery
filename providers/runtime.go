@@ -935,10 +935,12 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 	// prioritize ids
 	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
+	priorityMatched := false
 	for i := len(priority) - 1; i >= 0; i-- {
 		id := priority[i]
 		if s := fieldsPerProvider[id]; s != nil {
 			fieldInfo = s
+			priorityMatched = true
 		}
 	}
 
@@ -959,7 +961,17 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	// the sbom provider initializes the os provider this way), so it is
 	// known-compatible with the asset. Prefer it over an as-yet-unstarted
 	// provider when neither priority entry matched.
-	if r.providers[fieldInfo.Provider] == nil {
+	//
+	// Only runs when the priority loop didn't pick anything — if core or the
+	// active connector was an explicit match, that selection is intentional
+	// and must not be overridden.
+	if !priorityMatched && r.providers[fieldInfo.Provider] == nil {
+		// Sort for determinism only; alphabetical order carries no semantic
+		// preference between sibling providers. The selection still has to
+		// satisfy "already running on this runtime", so the tie-breaker only
+		// matters when two compatible siblings are both initialized — rare in
+		// practice. Schema aggregation should ideally make this case
+		// impossible, but until then a stable order beats map iteration.
 		providerIDs := make([]string, 0, len(fieldsPerProvider))
 		for id := range fieldsPerProvider {
 			providerIDs = append(providerIDs, id)
