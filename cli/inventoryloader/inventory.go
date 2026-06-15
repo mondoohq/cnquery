@@ -141,6 +141,15 @@ func parseDomainListInventory(data []byte) (*inventory.Inventory, error) {
 	return inventory.ToV1Inventory(), nil
 }
 
+// explicitInventorySource returns the file path or template path the user
+// asked us to load, or "" if no inventory source was set on the command line.
+func explicitInventorySource() string {
+	if p := viper.GetString("inventory-file"); p != "" {
+		return p
+	}
+	return viper.GetString("inventory-template")
+}
+
 // ParseOrUse tries to load the inventory and if nothing exists it
 // will instead use the provided asset.
 func ParseOrUse(asset *inventory.Asset, insecure bool, annotations map[string]string) (*inventory.Inventory, error) {
@@ -153,8 +162,14 @@ func ParseOrUse(asset *inventory.Asset, insecure bool, annotations map[string]st
 		return nil, errors.Wrap(err, "could not parse inventory")
 	}
 
-	// add asset from cli to inventory
+	// add asset from cli to inventory. When the user explicitly pointed us at
+	// an inventory source that produced zero assets, warn before falling back.
 	if len(v1inventory.Spec.GetAssets()) == 0 && asset != nil {
+		if src := explicitInventorySource(); src != "" {
+			log.Warn().
+				Str("source", src).
+				Msg("inventory source produced 0 assets; falling back to the CLI target.")
+		}
 		v1inventory.AddAssets(asset)
 	}
 
