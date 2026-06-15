@@ -14,6 +14,7 @@ Available Commands:
   completion    Generate the autocompletion script for the specified shell
   discover      Discover assets
   help          Help about any command
+  inventory     Work with inventory files
   login         Register with Mondoo Platform
   logout        Log out from Mondoo Platform
   providers     Providers add connectivity to all assets
