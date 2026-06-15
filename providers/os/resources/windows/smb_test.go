@@ -34,12 +34,16 @@ func TestParseWindowsSmbShares(t *testing.T) {
 }
 
 func TestParseWindowsSmbSessions(t *testing.T) {
+	// Two concurrent sessions from the same client+user — distinguished only
+	// by SessionId, which the resource uses to key them apart.
 	sessions, err := ParseWindowsSmbSessions(strings.NewReader(`[
-		{"ClientComputerName":"192.168.1.50","ClientUserName":"CORP\\alice","Dialect":"3.1.1","NumOpens":3}
+		{"SessionId":4123456789012345,"ClientComputerName":"192.168.1.50","ClientUserName":"CORP\\alice","Dialect":"3.1.1","NumOpens":3},
+		{"SessionId":4123456789012346,"ClientComputerName":"192.168.1.50","ClientUserName":"CORP\\alice","Dialect":"3.1.1","NumOpens":1}
 	]`))
 	require.NoError(t, err)
-	require.Len(t, sessions, 1)
-	require.Equal(t, WindowsSmbSession{ClientComputerName: "192.168.1.50", ClientUserName: "CORP\\alice", Dialect: "3.1.1", NumOpens: 3}, sessions[0])
+	require.Len(t, sessions, 2)
+	require.Equal(t, WindowsSmbSession{SessionId: 4123456789012345, ClientComputerName: "192.168.1.50", ClientUserName: "CORP\\alice", Dialect: "3.1.1", NumOpens: 3}, sessions[0])
+	require.NotEqual(t, sessions[0].SessionId, sessions[1].SessionId)
 }
 
 func TestParseWindowsSmbConnections(t *testing.T) {

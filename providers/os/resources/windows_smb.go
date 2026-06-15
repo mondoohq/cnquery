@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -73,7 +74,8 @@ func (w *mqlWindowsSmb) sessions() ([]any, error) {
 	res := make([]any, 0, len(sessions))
 	for _, s := range sessions {
 		r, err := CreateResource(w.MqlRuntime, "windows.smb.session", map[string]*llx.RawData{
-			"__id":               llx.StringData("windows.smb.session/" + s.ClientComputerName + "/" + s.ClientUserName),
+			// SessionId keeps concurrent sessions from the same client+user distinct.
+			"__id":               llx.StringData(fmt.Sprintf("windows.smb.session/%s/%s/%d", s.ClientComputerName, s.ClientUserName, s.SessionId)),
 			"clientComputerName": llx.StringData(s.ClientComputerName),
 			"clientUserName":     llx.StringData(s.ClientUserName),
 			"dialect":            llx.StringData(s.Dialect),
@@ -99,9 +101,11 @@ func (w *mqlWindowsSmb) connections() ([]any, error) {
 	}
 
 	res := make([]any, 0, len(connections))
-	for _, c := range connections {
+	for i, c := range connections {
 		r, err := CreateResource(w.MqlRuntime, "windows.smb.connection", map[string]*llx.RawData{
-			"__id":       llx.StringData("windows.smb.connection/" + c.ServerName + "/" + c.ShareName + "/" + c.UserName),
+			// Get-SmbConnection exposes no unique id; the index keeps multiple
+			// connections to the same server+share+user distinct.
+			"__id":       llx.StringData(fmt.Sprintf("windows.smb.connection/%d/%s/%s/%s", i, c.ServerName, c.ShareName, c.UserName)),
 			"serverName": llx.StringData(c.ServerName),
 			"shareName":  llx.StringData(c.ShareName),
 			"userName":   llx.StringData(c.UserName),
