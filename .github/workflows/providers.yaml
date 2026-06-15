@@ -21,6 +21,10 @@ on:
         required: false
         default: false
         type: boolean
+      max_parallel:
+        description: "Max parallel arch builds per provider (leave empty to auto-detect from physical cores)"
+        type: number
+        required: false
 
 permissions:
   contents: read
@@ -185,6 +189,7 @@ jobs:
           TSIGN_ACCOUNT_NAME: ${{ vars.TSIGN_ACCOUNT_NAME }}
           TSIGN_CERT_PROFILE_NAME: ${{ github.event.inputs.use-test-cert == 'true' && vars.TSIGN_TEST_CERT_PROFILE_NAME || vars.TSIGN_CERT_PROFILE_NAME }}
           TSIGN_ACCESS_TOKEN: ${{ steps.get_token.outputs.TSIGN_ACCESS_TOKEN }}
+          MAX_PARALLEL: ${{ inputs.max_parallel }}
 
       - name: "Publish Provider"
         if: ${{ ! inputs.skip_publish }}
