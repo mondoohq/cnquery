@@ -38,6 +38,8 @@ when the scan runs.
 
 Option keys are matched against each provider's connector flag names, so the
 set of valid options always reflects the providers you have installed.`,
+	Example: `  mql inventory validate inventory.yml
+  mql inventory validate inventory.yml --strict`,
 	Args:         cobra.ExactArgs(1),
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
