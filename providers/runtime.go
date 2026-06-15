@@ -5,6 +5,7 @@ package providers
 
 import (
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -938,6 +939,37 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 		id := priority[i]
 		if s := fieldsPerProvider[id]; s != nil {
 			fieldInfo = s
+		}
+	}
+
+	// Fallback: prefer a provider already running on this runtime over
+	// spawning a new one whose connection type may not match the asset.
+	//
+	// When multiple providers define the same top-level resource (e.g. both
+	// `os` and `vsphere` declare a `vulnmgmt` resource), schema aggregation
+	// is non-deterministic — Schema.LookupField documents that "which
+	// provider becomes the primary [is] non-deterministic". If the loser
+	// gets picked here, Connect() below will be invoked on this runtime's
+	// asset with the wrong provider, which typically rejects with
+	// ErrUnsupportedProvider and surfaces to users as "unsupported platform"
+	// even when the asset is fully supported by the sibling provider.
+	//
+	// A provider that's already in r.providers has been initialized for this
+	// runtime (either as the primary or via a connector's MockConnect — e.g.
+	// the sbom provider initializes the os provider this way), so it is
+	// known-compatible with the asset. Prefer it over an as-yet-unstarted
+	// provider when neither priority entry matched.
+	if r.providers[fieldInfo.Provider] == nil {
+		providerIDs := make([]string, 0, len(fieldsPerProvider))
+		for id := range fieldsPerProvider {
+			providerIDs = append(providerIDs, id)
+		}
+		sort.Strings(providerIDs)
+		for _, id := range providerIDs {
+			if r.providers[id] != nil {
+				fieldInfo = fieldsPerProvider[id]
+				break
+			}
 		}
 	}
 

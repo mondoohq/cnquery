@@ -387,6 +387,65 @@ func TestRuntime_LookupFieldProvider_ProviderOverridesOthers_ResourceInfo(t *tes
 	assert.Equal(t, "test", field.Provider)
 }
 
+// When two sibling providers both declare the same top-level resource
+// (e.g. `vulnmgmt` is defined by both `os` and `vsphere`) and the active
+// connector is a third provider whose ID matches neither — for example,
+// the `sbom` connector spawning `os` via MockConnect — the schema merge
+// picks a non-deterministic "primary". If the primary doesn't match an
+// already-running provider on this runtime, lookupFieldProvider would
+// previously fall through to spawning the unrelated provider and calling
+// Connect() on the asset, which gets rejected with ErrUnsupportedProvider.
+// The fix prefers any already-running provider over starting a new one,
+// because a provider in r.providers is known-compatible with the asset.
+func TestRuntime_LookupFieldProvider_PrefersRunningProviderForCrossProviderResource(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockC := NewMockProvidersCoordinator(ctrl)
+	mockSchema := NewMockResourcesSchema(ctrl)
+
+	// Active connector ("sbom") does not implement the resource itself; it
+	// has initialized "os" via MockConnect, so "os" is in r.providers.
+	connector := &ConnectedProvider{
+		Instance: &RunningProvider{ID: "sbom", Name: "sbom"},
+	}
+	osProvider := &ConnectedProvider{
+		Instance: &RunningProvider{ID: "os", Name: "os"},
+	}
+	r := &Runtime{
+		coordinator: mockC,
+		recording:   recording.Null{},
+		providers: map[string]*ConnectedProvider{
+			"sbom": connector,
+			"os":   osProvider,
+		},
+		Provider: connector,
+	}
+
+	resName := "vulnmgmt"
+	fieldName := "advisories"
+	// Simulate the non-deterministic case where "vsphere" wins as primary
+	// during schema aggregation. "os" is present as an Other.
+	mockC.EXPECT().Schema().Times(1).Return(mockSchema)
+	mockSchema.EXPECT().Lookup(resName).Times(1).Return(&resources.ResourceInfo{
+		Name:     resName,
+		Provider: "vsphere",
+		Fields: map[string]*resources.Field{
+			fieldName: {
+				Name:     fieldName,
+				Provider: "vsphere",
+				Others: []*resources.Field{
+					{Name: fieldName, Provider: "os"},
+				},
+			},
+		},
+	})
+
+	provider, _, field, err := r.lookupFieldProvider(resName, fieldName)
+	require.NoError(t, err)
+	assert.Equal(t, "os", field.Provider,
+		"should route to the already-running provider, not the non-running primary")
+	assert.Equal(t, osProvider, provider)
+}
+
 func TestRuntime_CriticalErrors_Empty(t *testing.T) {
 	r := &Runtime{}
 	assert.Empty(t, r.CriticalErrors())
