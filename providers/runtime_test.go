@@ -446,6 +446,193 @@ func TestRuntime_LookupFieldProvider_PrefersRunningProviderForCrossProviderResou
 	assert.Equal(t, osProvider, provider)
 }
 
+// When the priority loop matches an entry (core or the active connector),
+// the running-provider fallback must not override that intentional choice
+// — even if another provider that happens to be in r.providers also
+// implements the field. This guards against the case where core is the
+// declared owner of a field but is handled by the static-provider branch
+// (not via r.providers): without the priorityMatched guard, the fallback
+// would silently swap in the running sibling.
+//
+// We verify by setting up the scenario where the priority pick (core) is
+// not in r.providers, so the function falls through to addProvider. By
+// stubbing GetRunningProvider to error, we can inspect which provider ID
+// the runtime tried to spawn — it must be the priority-matched one, never
+// the running sibling.
+func TestRuntime_LookupFieldProvider_DoesNotOverridePriorityMatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockC := NewMockProvidersCoordinator(ctrl)
+	mockSchema := NewMockResourcesSchema(ctrl)
+
+	connector := &ConnectedProvider{
+		Instance: &RunningProvider{ID: "connector", Name: "connector"},
+	}
+	siblingProvider := &ConnectedProvider{
+		Instance: &RunningProvider{ID: "sibling", Name: "sibling"},
+	}
+	r := &Runtime{
+		coordinator: mockC,
+		recording:   recording.Null{},
+		providers: map[string]*ConnectedProvider{
+			"connector": connector,
+			"sibling":   siblingProvider,
+			// BuiltinCoreID intentionally NOT in r.providers — simulates core
+			// being served by the static-provider path.
+		},
+		Provider: connector,
+	}
+
+	resName := "testResource"
+	fieldName := "testField"
+	mockC.EXPECT().Schema().Times(1).Return(mockSchema)
+	mockSchema.EXPECT().Lookup(resName).Times(1).Return(&resources.ResourceInfo{
+		Name:     resName,
+		Provider: "another",
+		Fields: map[string]*resources.Field{
+			fieldName: {
+				Name:     fieldName,
+				Provider: "another",
+				Others: []*resources.Field{
+					{Name: fieldName, Provider: BuiltinCoreID}, // wins priority
+					{Name: fieldName, Provider: "sibling"},     // would win fallback if unguarded
+				},
+			},
+		},
+	})
+	// Capture which provider ID the runtime tries to spawn after priority
+	// resolution. The expectation only matches BuiltinCoreID — if the guard
+	// were missing and "sibling" replaced the priority pick, the call would
+	// be GetRunningProvider("sibling", ...) and the mock would fail with an
+	// unexpected-call error.
+	mockC.EXPECT().
+		GetRunningProvider(BuiltinCoreID, gomock.Any()).
+		Times(1).
+		Return(nil, errors.New("simulated: not exercising real spawn"))
+
+	_, _, _, err := r.lookupFieldProvider(resName, fieldName)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to start provider '"+BuiltinCoreID+"'",
+		"priority match must not be overridden by the running-provider fallback")
+}
+
+// When two sibling providers are both initialized and neither matches the
+// priority entries, the tie-breaker must be deterministic. We sort by
+// provider ID and pick the first; without the sort, Go map iteration would
+// make the choice randomly per process and reintroduce the exact flake this
+// PR fixes. Run the lookup repeatedly with a fresh controller each iteration
+// to verify the choice is stable across Go's randomized map order.
+//
+// To exercise the fallback, the primary fieldInfo.Provider must NOT itself
+// be running on the runtime — otherwise the early-return at "provider in
+// r.providers" short-circuits before the fallback runs. So the field's
+// declared primary here is `gamma` (unloaded), with `alpha` and `beta` as
+// running siblings; the tie-breaker chooses between them.
+func TestRuntime_LookupFieldProvider_TieBreakerIsDeterministic(t *testing.T) {
+	const iterations = 50
+
+	runOnce := func(t *testing.T) string {
+		ctrl := gomock.NewController(t)
+		mockC := NewMockProvidersCoordinator(ctrl)
+		mockSchema := NewMockResourcesSchema(ctrl)
+
+		connector := &ConnectedProvider{
+			Instance: &RunningProvider{ID: "connector", Name: "connector"},
+		}
+		alpha := &ConnectedProvider{
+			Instance: &RunningProvider{ID: "alpha", Name: "alpha"},
+		}
+		beta := &ConnectedProvider{
+			Instance: &RunningProvider{ID: "beta", Name: "beta"},
+		}
+		r := &Runtime{
+			coordinator: mockC,
+			recording:   recording.Null{},
+			providers: map[string]*ConnectedProvider{
+				"connector": connector,
+				"alpha":     alpha,
+				"beta":      beta,
+				// "gamma" intentionally NOT here — forces the fallback path.
+			},
+			Provider: connector,
+		}
+
+		mockC.EXPECT().Schema().Times(1).Return(mockSchema)
+		mockSchema.EXPECT().Lookup("testResource").Times(1).Return(&resources.ResourceInfo{
+			Name:     "testResource",
+			Provider: "gamma",
+			Fields: map[string]*resources.Field{
+				"testField": {
+					Name:     "testField",
+					Provider: "gamma",
+					Others: []*resources.Field{
+						{Name: "testField", Provider: "alpha"},
+						{Name: "testField", Provider: "beta"},
+					},
+				},
+			},
+		})
+
+		_, _, field, err := r.lookupFieldProvider("testResource", "testField")
+		require.NoError(t, err)
+		return field.Provider
+	}
+
+	for i := range iterations {
+		if got := runOnce(t); got != "alpha" {
+			t.Fatalf("iteration %d: tie-breaker should pick alphabetically-first running sibling, got %q", i, got)
+		}
+	}
+}
+
+// When no entry in fieldsPerProvider corresponds to an already-running
+// provider, the fallback is a no-op: fieldInfo stays as the primary and
+// the existing code path proceeds to spawn the new provider. This verifies
+// the fallback doesn't change behavior in the "actually need to spawn"
+// case — a regression here would silently break previously-working queries.
+func TestRuntime_LookupFieldProvider_FallsThroughWhenNoSiblingRunning(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockC := NewMockProvidersCoordinator(ctrl)
+	mockSchema := NewMockResourcesSchema(ctrl)
+
+	connector := &ConnectedProvider{
+		Instance: &RunningProvider{ID: "connector", Name: "connector"},
+	}
+	r := &Runtime{
+		coordinator: mockC,
+		recording:   recording.Null{},
+		providers: map[string]*ConnectedProvider{
+			"connector": connector,
+			// "needed" provider is NOT in r.providers — fallback should
+			// retain fieldInfo.Provider = "needed" and the existing code
+			// path will try to spawn it.
+		},
+		Provider: connector,
+	}
+
+	mockC.EXPECT().Schema().Times(1).Return(mockSchema)
+	mockSchema.EXPECT().Lookup("testResource").Times(1).Return(&resources.ResourceInfo{
+		Name:     "testResource",
+		Provider: "needed",
+		Fields: map[string]*resources.Field{
+			"testField": {Name: "testField", Provider: "needed"},
+		},
+	})
+
+	// Spawn path: GetRunningProvider is called for "needed". Returning an
+	// error short-circuits the test without exercising real connection
+	// machinery — we just want to confirm fieldInfo wasn't mutated and the
+	// existing addProvider path is reached.
+	mockC.EXPECT().
+		GetRunningProvider("needed", gomock.Any()).
+		Times(1).
+		Return(nil, errors.New("simulated: not exercising real spawn"))
+
+	_, _, _, err := r.lookupFieldProvider("testResource", "testField")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to start provider 'needed'",
+		"the fallback should leave fieldInfo.Provider == 'needed' and reach the existing spawn path")
+}
+
 func TestRuntime_CriticalErrors_Empty(t *testing.T) {
 	r := &Runtime{}
 	assert.Empty(t, r.CriticalErrors())
