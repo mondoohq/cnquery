@@ -393,10 +393,11 @@ func getFlagValueFromConfig(flag plugin.Flag) *llx.Primitive {
 // bypassing viper. This avoids picking up config-file values that happen
 // to share the same key name (e.g. a provider's --token flag vs. the
 // platform SA token in mondoo.yml).
-func lookupFlagEnv(flag plugin.Flag) (string, bool) {
+func lookupFlagEnv(flag plugin.Flag) (envKey string, val string, ok bool) {
 	replacer := strings.NewReplacer("-", "_", ".", "_")
-	envKey := "MONDOO_" + strings.ToUpper(replacer.Replace(flag.Long))
-	return os.LookupEnv(envKey)
+	envKey = "MONDOO_" + strings.ToUpper(replacer.Replace(flag.Long))
+	val, ok = os.LookupEnv(envKey)
+	return envKey, val, ok
 }
 
 func getFlagValueFromCobra(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
@@ -530,8 +531,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 					if v := getFlagValueFromCobra(flag, cmd); v != nil {
 						flagVals[flag.Long] = v
 					}
-				} else if envVal, ok := lookupFlagEnv(flag); ok {
-					_ = cmd.Flags().Set(flag.Long, envVal)
+				} else if envKey, envVal, ok := lookupFlagEnv(flag); ok {
+					if err := cmd.Flags().Set(flag.Long, envVal); err != nil {
+						log.Warn().Err(err).Str("flag", flag.Long).Str("env", envKey).Msg("invalid env value for flag")
+					}
 					if v := getFlagValueFromCobra(flag, cmd); v != nil {
 						flagVals[flag.Long] = v
 					}
