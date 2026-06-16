@@ -437,17 +437,18 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		// Flags are provided by the connector.
 		for i := range allFlags {
 			flag := allFlags[i]
-			if flag.ConfigEntry == "-" {
+			// Skip flags that opt out of config binding ("-") and flags
+			// that have no explicit config entry. Binding flags with no
+			// ConfigEntry would use the flag name as the viper key, which
+			// can collide with top-level config keys (e.g. a provider's
+			// --token flag overwrites the platform service-account token,
+			// causing 401 on upstream API calls).
+			if flag.ConfigEntry == "-" || flag.ConfigEntry == "" {
 				log.Debug().Msg("skipping config binding for " + flag.Long)
 				continue
 			}
 
-			flagName := flag.ConfigEntry
-			if flagName == "" {
-				flagName = flag.Long
-			}
-
-			_ = viper.BindPFlag(flagName, cmd.Flags().Lookup(flag.Long))
+			_ = viper.BindPFlag(flag.ConfigEntry, cmd.Flags().Lookup(flag.Long))
 		}
 	}
 
@@ -504,9 +505,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			// if the provider flag was configured to avoid using the config,
-			// we should instead fetch the flag value from `cobra` directly.
-			if flag.ConfigEntry == "-" {
+			// Flags with no explicit config entry or opted-out ("-") are
+			// read directly from cobra to avoid viper key collisions with
+			// top-level config fields (see PreRun comment above).
+			if flag.ConfigEntry == "-" || flag.ConfigEntry == "" {
 				if v := getFlagValueFromCobra(flag, cmd); v != nil {
 					flagVals[flag.Long] = v
 				}
