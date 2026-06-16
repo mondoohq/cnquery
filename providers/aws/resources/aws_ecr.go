@@ -51,6 +51,19 @@ type ecrLifecyclePolicyAction struct {
 	Type string `json:"type"`
 }
 
+// the max amount of retries for the ECR Describe* calls (1 initial + 7 retries).
+const ecrDescribeMaxAttempts = 8
+
+// raises the per-operation retry ceiling for private ECR Describe* calls.
+func withEcrDescribeRetries(o *ecr.Options) {
+	o.RetryMaxAttempts = ecrDescribeMaxAttempts
+}
+
+// raises the per-operation retry ceiling for public ECR Describe* calls.
+func withEcrPublicDescribeRetries(o *ecrpublic.Options) {
+	o.RetryMaxAttempts = ecrDescribeMaxAttempts
+}
+
 func (a *mqlAwsEcr) id() (string, error) {
 	return "aws.ecr", nil
 }
@@ -175,7 +188,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 
 				paginator := ecr.NewDescribeRepositoriesPaginator(svc, req)
 				for paginator.HasMorePages() {
-					repoResp, err := paginator.NextPage(ctx)
+					repoResp, err := paginator.NextPage(ctx, withEcrDescribeRetries)
 					if err != nil {
 						if Is400AccessDeniedError(err) {
 							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -263,7 +276,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 		svc := conn.EcrPublic(region)
 		paginator := ecrpublic.NewDescribeImagesPaginator(svc, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
 		for paginator.HasMorePages() {
-			res, err := paginator.NextPage(ctx)
+			res, err := paginator.NextPage(ctx, withEcrPublicDescribeRetries)
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -301,7 +314,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 	svc := conn.Ecr(region)
 	paginator := ecr.NewDescribeImagesPaginator(svc, &ecr.DescribeImagesInput{RepositoryName: &name})
 	for paginator.HasMorePages() {
-		res, err := paginator.NextPage(ctx)
+		res, err := paginator.NextPage(ctx, withEcrDescribeRetries)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -553,7 +566,7 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 
 		paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, req)
 		for paginator.HasMorePages() {
-			repoResp, err := paginator.NextPage(context.TODO())
+			repoResp, err := paginator.NextPage(context.TODO(), withEcrPublicDescribeRetries)
 			if err != nil {
 				return nil, err
 			}
