@@ -505,12 +505,25 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			// Flags with no explicit config entry or opted-out ("-") are
-			// read directly from cobra to avoid viper key collisions with
-			// top-level config fields (see PreRun comment above).
-			if flag.ConfigEntry == "-" || flag.ConfigEntry == "" {
+			if flag.ConfigEntry == "-" {
+				// Opted out of config entirely — read from cobra only.
 				if v := getFlagValueFromCobra(flag, cmd); v != nil {
 					flagVals[flag.Long] = v
+				}
+			} else if flag.ConfigEntry == "" {
+				// No explicit config mapping. Use cobra when the user
+				// passed the flag on the CLI; otherwise fall back to
+				// viper so that env vars (MONDOO_<FLAG>) still work.
+				// We do NOT bind the cobra flag to viper (see PreRun)
+				// to avoid overwriting top-level config keys.
+				if cmd.Flags().Changed(flag.Long) {
+					if v := getFlagValueFromCobra(flag, cmd); v != nil {
+						flagVals[flag.Long] = v
+					}
+				} else {
+					if v := getFlagValueFromConfig(flag); v != nil {
+						flagVals[flag.Long] = v
+					}
 				}
 			} else {
 				if v := getFlagValueFromConfig(flag); v != nil {
