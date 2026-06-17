@@ -97,7 +97,7 @@ type AdditionalDeviceSupport struct {
 	SDRRepositoryDevice bool `json:"sdrRepositoryDevice"`
 	SELDevice           bool `json:"selDevice"`
 	FRUInventoryDevice  bool `json:"fruInventoryDevice"`
-	IPMBEventReceiver   bool `json:"ipmbEventReceiver"`
+	IPMBEventReceiver   bool `json:"ipmbEventReciever"`
 	IPMBEventGenerator  bool `json:"ipmbEventGenerator"`
 	Bridge              bool `json:"bridge"`
 	ChassisDevice       bool `json:"chassisDevice"`

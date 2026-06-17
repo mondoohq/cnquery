@@ -68,6 +68,9 @@ tre = "tre"
 ue = "ue"
 # Company name.
 automattic = "automattic"
+# Misspelled JSON serialization tag kept for wire/persisted-data compatibility
+# (the Go field itself is spelled correctly).
+reciever = "reciever"
 # Intentional values in test fixtures (character names, test input strings)
 # that must stay verbatim.
 yor = "yor"

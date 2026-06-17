@@ -52,13 +52,13 @@ func parseSearch(search string) (string, error) {
 	}
 
 	if strings.Contains(search, "\"") {
-		// the search filter is already scaped
+		// the search filter is already escaped
 		return search, nil
 	}
 
 	if len(strings.Split(search, ":")) > 2 {
 		// special case for multi field search like `displayName:foo or mail:bar`
-		// without scaping the filters on their own
+		// without escaping the filters on their own
 		return "", errors.New("search with multiple fields is not of right format: " +
 			"'\"property:value\" [AND | OR] \"property:value\"'")
 	}
