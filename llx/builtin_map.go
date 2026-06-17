@@ -1538,24 +1538,85 @@ func dictContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 }
 
 func dictIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
 	switch bind.Value.(type) {
-	case string:
-		return stringInArray(e, bind, chunk, ref)
 	case []any:
 		return anyArrayInStringArray(e, bind, chunk, ref)
+	case string, int32, int64, float64, bool:
+		return dictScalarInArray(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `in`")
 	}
 }
 
 func dictNotIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
 	switch bind.Value.(type) {
-	case string:
-		return stringNotInArray(e, bind, chunk, ref)
 	case []any:
 		return anyArrayNotInStringArray(e, bind, chunk, ref)
+	case string, int32, int64, float64, bool:
+		return dictScalarNotInArray(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `in`")
+	}
+}
+
+// loose cross-type equality: same semantics as the dict ==/!= operators
+// (e.g. a DWORD-backed int64 matches both 2 and "2").
+func dictScalarInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	arr := arg.Value.([]any)
+	for i := range arr {
+		if dictScalarEqual(bind.Value, arr[i]) {
+			return BoolTrue, 0, nil
+		}
+	}
+	return BoolFalse, 0, nil
+}
+
+func dictScalarNotInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	res, rref, err := dictScalarInArray(e, bind, chunk, ref)
+	if res == BoolTrue {
+		return BoolFalse, rref, err
+	}
+	if res == BoolFalse {
+		return BoolTrue, rref, err
+	}
+	return res, rref, err
+}
+
+func dictScalarEqual(bindVal, arrVal any) bool {
+	if bindVal == nil || arrVal == nil {
+		return bindVal == arrVal
+	}
+	switch arrVal.(type) {
+	case string:
+		return opDictCmpString(bindVal, arrVal)
+	case int32, int64:
+		if v, ok := arrVal.(int32); ok {
+			arrVal = int64(v)
+		}
+		return opDictCmpInt(bindVal, arrVal)
+	case float64:
+		return opDictCmpFloat(bindVal, arrVal)
+	case bool:
+		return opDictCmpBool(bindVal, arrVal)
+	default:
+		return false
 	}
 }
 
