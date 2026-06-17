@@ -95,11 +95,10 @@ func InitViperConfig() {
 	} else {
 		Source = "default"
 	}
-	if strings.HasPrefix(Path, AWS_SSM_PARAMETERSTORE_PREFIX) {
-		err := loadAwsSSMParameterStore(Path)
+	if matched, err := loadRemoteConfig(Path); matched {
 		if err != nil {
 			LoadedConfig = false
-			log.Error().Err(err).Str("path", Path).Msg("could not load aws parameter store config")
+			log.Error().Err(err).Str("path", Path).Msg("could not load remote config")
 		} else {
 			LoadedConfig = true
 		}
