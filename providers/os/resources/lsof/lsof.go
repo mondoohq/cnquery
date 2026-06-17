@@ -340,7 +340,7 @@ func Parse(r io.Reader) ([]Process, error) {
 		processData = append(processData, line)
 	}
 
-	// handle the last process because there is no additional 'p' that tiggers it
+	// handle the last process because there is no additional 'p' that triggers it
 	if len(processData) > 0 {
 		process, err := parseProcessLines(processData)
 		if err != nil {

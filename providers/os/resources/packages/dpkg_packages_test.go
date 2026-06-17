@@ -49,7 +49,7 @@ your hard disk. The utilities supports both modern and legacy
 partition tables (eg. GPT, MBR, etc).
 .
 The fdisk utility is the classical text-mode utility.
-The cfdisk utilitity gives a more userfriendly curses based interface.
+The cfdisk utility gives a more userfriendly curses based interface.
 The sfdisk utility is mostly for automation and scripting uses.`,
 		PUrl: "pkg:deb/ubuntu/fdisk@2.31.1-0.4ubuntu3.1?arch=amd64&distro=ubuntu-18.04",
 		CPEs: []string{

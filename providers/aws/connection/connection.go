@@ -338,7 +338,7 @@ func (h *AwsConnection) Regions() ([]string, error) {
 		return c.Data.([]string), nil
 	}
 
-	// include filters have precedense over exclude filters. in any normal situation they should be mutually exclusive.
+	// include filters have precedence over exclude filters. in any normal situation they should be mutually exclusive.
 	regionLimits := h.Filters.General.Regions
 	if len(regionLimits) > 0 {
 		log.Debug().Interface("regions", regionLimits).Msg("using region limits")

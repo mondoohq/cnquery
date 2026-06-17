@@ -157,7 +157,7 @@ func (s *Service) assetName(asset *inventory.Asset, conn shared.Connection) {
 }
 
 // RemoveNonASCII removes all non-ASCII characters
-// macOS may use non ASCII charaters for the computer name. This breaks the progress bar until v12.13.0
+// macOS may use non ASCII characters for the computer name. This breaks the progress bar until v12.13.0
 func RemoveNonASCII(s string) string {
 	var result strings.Builder
 	for _, c := range s {

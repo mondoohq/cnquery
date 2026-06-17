@@ -98,7 +98,7 @@ func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLef
 	if bind.Value != nil && !fLeft(bind.Value) {
 		// if the left side is false, we can return false immediately
 		// We need to write a nil result for the right side to avoid
-		// it being excecuted, for example to get its data for the
+		// it being executed, for example to get its data for the
 		// datapoints
 		typ := types.Type(arg.Type)
 		switch typ.Underlying() {

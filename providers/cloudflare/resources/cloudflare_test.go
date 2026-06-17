@@ -148,7 +148,7 @@ func TestAccountsPagination(t *testing.T) {
 }
 
 // TestAccountsNilSettings asserts that an account whose `settings` field is
-// missing from the API response does not panic. The previous code derefenced
+// missing from the API response does not panic. The previous code dereferenced
 // acc.Settings.EnforceTwoFactor unconditionally.
 func TestAccountsNilSettings(t *testing.T) {
 	env := setupTestEnv(t)

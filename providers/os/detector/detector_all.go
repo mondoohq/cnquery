@@ -758,7 +758,7 @@ var busybox = &PlatformResolver{
 		}
 
 		// we need to read this file because all others show up as zero size
-		// This fille seems to be the "original"
+		// This file seems to be the "original"
 		// all others are hardlinks
 		f, err := conn.FileSystem().Open("/bin/[")
 		if err != nil {
@@ -1200,7 +1200,7 @@ var redhatFamily = &PlatformResolver{
 			modules := getActivatedRhelModules(conn)
 			pf.Metadata["redhat/modules"] = strings.Join(modules, ",")
 
-			// RHEL has mutliple support levels, identify them via repository files
+			// RHEL has multiple support levels, identify them via repository files
 			pf.Metadata["redhat/support-type"] = strings.Join(getActivatedRhelSupportLevels(conn), ",")
 
 			return true, nil

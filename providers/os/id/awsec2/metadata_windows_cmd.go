@@ -27,13 +27,13 @@ Invoke-RestMethod -Method Put -Uri "http://169.254.169.254/latest/api/token" -He
 
 func windowsCurlCmd(token, path string) string {
 	pipe := ""
-	if windowsPathNeedsJSONConvertion(path) {
+	if windowsPathNeedsJSONConversion(path) {
 		pipe = "| ConvertTo-Json"
 	}
 	return fmt.Sprintf(baseWindows, token, path, pipe)
 }
 
-func windowsPathNeedsJSONConvertion(path string) bool {
+func windowsPathNeedsJSONConversion(path string) bool {
 	return strings.Contains(path, identityURLPath) ||
 		strings.Contains(path, "meta-data/iam/info")
 }

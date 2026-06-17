@@ -385,7 +385,7 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlMicrsoftResource := msResource.(*mqlMicrosoft)
+	mqlMicrosoftResource := msResource.(*mqlMicrosoft)
 
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -417,7 +417,7 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 		}
 
 		// if the user is already indexed, we can reuse it
-		userResource, ok := mqlMicrsoftResource.userById(*ownerId)
+		userResource, ok := mqlMicrosoftResource.userById(*ownerId)
 		if ok {
 			res = append(res, userResource)
 			continue
@@ -431,7 +431,7 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlMicrsoftResource.indexUser(newUser)
+			mqlMicrosoftResource.indexUser(newUser)
 			res = append(res, newUser)
 			continue
 		}
@@ -444,7 +444,7 @@ func (a *mqlMicrosoftApplication) owners() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlMicrsoftResource.indexUser(newUserResource.(*mqlMicrosoftUser))
+		mqlMicrosoftResource.indexUser(newUserResource.(*mqlMicrosoftUser))
 		res = append(res, newUserResource)
 	}
 	return res, nil

@@ -177,7 +177,7 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, errors.New("arn or name required to fetch aws s3 bucket")
 	}
 
-	// construct arn of bucket name if misssing
+	// construct arn of bucket name if missing
 	var arnVal string
 	if args["arn"] != nil {
 		arnVal = args["arn"].Value.(string)

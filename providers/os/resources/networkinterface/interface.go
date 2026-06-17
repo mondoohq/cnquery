@@ -526,7 +526,7 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows ip addresses")
 	}
-	winIpAddresses, err := i.ParseNetIpAdresses(cmd.Stdout)
+	winIpAddresses, err := i.ParseNetIpAddresses(cmd.Stdout)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse windows ip addresses")
 	}
@@ -573,7 +573,7 @@ func (i *WindowsInterfaceHandler) ParseNetAdapter(r io.Reader) ([]WindowsInterfa
 	return winInterfaces, nil
 }
 
-func (i *WindowsInterfaceHandler) ParseNetIpAdresses(r io.Reader) ([]WindowsNetIp, error) {
+func (i *WindowsInterfaceHandler) ParseNetIpAddresses(r io.Reader) ([]WindowsNetIp, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err

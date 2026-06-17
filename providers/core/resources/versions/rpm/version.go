@@ -194,7 +194,7 @@ func rpmvercmp(strA, strB string) int {
 		return 0
 	}
 
-	// get alpha/numeric segements
+	// get alpha/numeric segments
 	segsa := alphanumPattern.FindAllString(strA, -1)
 	segsb := alphanumPattern.FindAllString(strB, -1)
 	segs := int(math.Min(float64(len(segsa)), float64(len(segsb))))

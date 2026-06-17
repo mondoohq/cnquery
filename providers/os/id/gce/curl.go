@@ -38,7 +38,7 @@ func unixMetadataCmdString(metadataPath string) string {
 
 func windowsMetadataCmdString(metadataPath string) string {
 	pipe := ""
-	if windowsPathNeedsJSONConvertion(metadataPath) {
+	if windowsPathNeedsJSONConversion(metadataPath) {
 		pipe = "| ConvertTo-Json"
 	}
 	return fmt.Sprintf(`
@@ -49,7 +49,7 @@ Invoke-RestMethod -TimeoutSec 1 -Headers $Headers -URI "%s%s" -UseBasicParsing %
 `, metadataSvcURL, strings.TrimPrefix(metadataPath, "/"), pipe)
 }
 
-func windowsPathNeedsJSONConvertion(path string) bool {
+func windowsPathNeedsJSONConversion(path string) bool {
 	return strings.HasSuffix(path, "/token") ||
 		strings.HasSuffix(path, "instance/tags")
 }

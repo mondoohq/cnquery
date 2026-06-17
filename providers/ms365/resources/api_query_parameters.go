@@ -58,7 +58,7 @@ func parseSearch(search string) (string, error) {
 
 	if len(strings.Split(search, ":")) > 2 {
 		// special case for multi field search like `displayName:foo or mail:bar`
-		// witout scaping the filters on their own
+		// without scaping the filters on their own
 		return "", errors.New("search with multiple fields is not of right format: " +
 			"'\"property:value\" [AND | OR] \"property:value\"'")
 	}

@@ -578,7 +578,7 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 			return false, errors.New("No body in TLS/SSL response (type: '" + typ + "')")
 		}
 		if msgLen > 1<<20 {
-			return false, errors.New("TLS/SSL response body is too larget (type: '" + typ + "')")
+			return false, errors.New("TLS/SSL response body is too large (type: '" + typ + "')")
 		}
 
 		msg := make([]byte, msgLen)

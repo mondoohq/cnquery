@@ -75,7 +75,7 @@ func TestSpdxJsonDecoder(t *testing.T) {
 	assert.Equal(t, "3.19.1", sbomReport.Asset.Platform.Version)
 }
 
-func TestSpdxJsonDecoder_GitHub_DependecyGraph(t *testing.T) {
+func TestSpdxJsonDecoder_GitHub_DependencyGraph(t *testing.T) {
 	f, err := os.Open("testdata/vercel_next.js_937412.json")
 	require.NoError(t, err)
 

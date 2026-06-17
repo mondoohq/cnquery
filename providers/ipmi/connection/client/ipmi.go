@@ -32,7 +32,7 @@ type IpmiClient struct {
 	*ipmiTransport.Client
 }
 
-// NewIpmiClient is a high-level api to acces the data of a Ipmi instance
+// NewIpmiClient is a high-level api to access the data of a Ipmi instance
 func NewIpmiClient(c *Connection) (*IpmiClient, error) {
 	if c == nil {
 		return nil, errors.New("no connection details provided")
@@ -97,7 +97,7 @@ type AdditionalDeviceSupport struct {
 	SDRRepositoryDevice bool `json:"sdrRepositoryDevice"`
 	SELDevice           bool `json:"selDevice"`
 	FRUInventoryDevice  bool `json:"fruInventoryDevice"`
-	IPMBEventReceiver   bool `json:"ipmbEventReciever"`
+	IPMBEventReceiver   bool `json:"ipmbEventReceiver"`
 	IPMBEventGenerator  bool `json:"ipmbEventGenerator"`
 	Bridge              bool `json:"bridge"`
 	ChassisDevice       bool `json:"chassisDevice"`

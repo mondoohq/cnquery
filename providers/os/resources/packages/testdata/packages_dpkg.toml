@@ -22,7 +22,7 @@ Description: collection of partitioning utilities
  partition tables (eg. GPT, MBR, etc).
  .
  The fdisk utility is the classical text-mode utility.
- The cfdisk utilitity gives a more userfriendly curses based interface.
+ The cfdisk utility gives a more userfriendly curses based interface.
  The sfdisk utility is mostly for automation and scripting uses.
 Important: yes
 Original-Maintainer: LaMont Jones <lamont@debian.org>

@@ -113,7 +113,7 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 }
 
 type mqlTlsInternal struct {
-	// This mutex is used to protect the tls resource from doing multiple dections at once
+	// This mutex is used to protect the tls resource from doing multiple detections at once
 	lock sync.Mutex
 	// we only detect once if the a socket is running on TLS or not, once the detection runs,
 	// this boolean gets set and tells other functions if the socket has tls enabled or not

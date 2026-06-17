@@ -364,7 +364,7 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 			params := &rds.DescribePendingMaintenanceActionsInput{}
 			paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
 			for paginator.HasMorePages() {
-				pendingMaintainanceList, err := paginator.NextPage(ctx)
+				pendingMaintenanceList, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -372,7 +372,7 @@ func (a *mqlAwsRds) getPendingMaintenanceActions(conn *connection.AwsConnection)
 					}
 					return nil, err
 				}
-				for _, resp := range pendingMaintainanceList.PendingMaintenanceActions {
+				for _, resp := range pendingMaintenanceList.PendingMaintenanceActions {
 					if resp.ResourceIdentifier == nil {
 						continue
 					}
@@ -882,11 +882,11 @@ func (a *mqlAwsRdsDbinstance) pendingMaintenanceActions() ([]any, error) {
 	}
 	paginator := rds.NewDescribePendingMaintenanceActionsPaginator(svc, params)
 	for paginator.HasMorePages() {
-		pendingMaintainanceList, err := paginator.NextPage(ctx)
+		pendingMaintenanceList, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		for _, resp := range pendingMaintainanceList.PendingMaintenanceActions {
+		for _, resp := range pendingMaintenanceList.PendingMaintenanceActions {
 			if resp.ResourceIdentifier == nil {
 				continue
 			}

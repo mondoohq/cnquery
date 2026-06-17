@@ -1,0 +1,90 @@
+# Configuration for the `typos` spell checker (https://github.com/crate-ci/typos).
+# Run locally with `typos` (and `typos --write-changes` to auto-fix).
+
+[files]
+extend-exclude = [
+  # Generated code — owned by code generators, not hand-edited.
+  "*.pb.go",
+  "*.lr.go",
+  "*.lr.versions",
+  "*.ranger.go",
+  "*.resources.json",
+  "*.permissions.json",
+  # Test fixtures and recordings often contain captured real-world data.
+  "**/testdata/**",
+  # Lockfiles and binary-ish assets.
+  "go.sum",
+  "*.svg",
+]
+
+# Words typos must not flag. Each maps to itself (i.e. "this spelling is fine").
+# Three groups: real technical terms/abbreviations, a company name, and
+# pre-existing misspellings that are baked into MQL schema field names or
+# exported Go identifiers — renaming those is a breaking change, so they are
+# baselined here and left for a separate, deliberate cleanup.
+[default.extend-words]
+# Technical terms, abbreviations, command names, and short identifier fragments.
+aks = "aks"
+nd = "nd"
+hashi = "hashi"
+udid = "udid"
+writeable = "writeable"
+unparseable = "unparseable"
+unparented = "unparented"
+signins = "signins"
+copywrite = "copywrite"
+exportfs = "exportfs"
+xwindows = "xwindows"
+snet = "snet"
+aci = "aci"
+afe = "afe"
+ags = "ags"
+anc = "anc"
+aso = "aso"
+ba = "ba"
+caf = "caf"
+cound = "cound"
+cpy = "cpy"
+daa = "daa"
+ded = "ded"
+dne = "dne"
+ede = "ede"
+ein = "ein"
+fo = "fo"
+gae = "gae"
+hda = "hda"
+hel = "hel"
+hpe = "hpe"
+inh = "inh"
+ist = "ist"
+mak = "mak"
+mis = "mis"
+ot = "ot"
+pn = "pn"
+sie = "sie"
+sur = "sur"
+thr = "thr"
+tre = "tre"
+ue = "ue"
+# Company name.
+automattic = "automattic"
+# Intentional values in test fixtures (character names, test input strings)
+# that must stay verbatim.
+yor = "yor"
+yoman = "yoman"
+# Pre-existing misspellings in MQL schema fields / exported Go identifiers.
+# Renaming these would break the schema or API, so they are baselined.
+appliable = "appliable"
+applyable = "applyable"
+setable = "setable"
+valueable = "valueable"
+accessable = "accessable"
+policys = "policys"
+inable = "inable"
+compleated = "compleated"
+deliminated = "deliminated"
+datas = "datas"
+childs = "childs"
+setings = "setings"
+softwares = "softwares"
+splitted = "splitted"

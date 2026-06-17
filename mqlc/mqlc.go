@@ -1925,7 +1925,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	assessmentBlockTree := blockToFieldTree(assessmentBlock, func(chunkIdx int, chunk *llx.Chunk) bool {
 		if chunk.Id == "$whereNot" || chunk.Id == "where" {
 			return false
-		} else if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
+		} else if _, comparable := llx.ComparableLabel(chunk.Id); comparable {
 			return false
 		} else if chunk.Function != nil && len(chunk.Function.Args) > 0 {
 			// filter out nested function block that require other blocks

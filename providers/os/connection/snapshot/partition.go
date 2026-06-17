@@ -58,7 +58,7 @@ type MountedPartition struct {
 type MountPartitionInput struct {
 	Partition    *Partition
 	MountOptions []string
-	// if specfied, mount the partition at this directory
+	// if specified, mount the partition at this directory
 	MountDir string
 }
 
