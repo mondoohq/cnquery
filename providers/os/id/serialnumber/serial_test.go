@@ -15,10 +15,8 @@ func TestIsValidSerialNumber(t *testing.T) {
 		valid  bool
 	}{
 		{"", false},
-		{"   ", false},
 		{"System Serial Number", false},
 		{"system serial number", false},
-		{"  System Serial Number  ", false},
 		{"Base Board Serial Number", false},
 		{"Chassis Serial Number", false},
 		{"To Be Filled By O.E.M.", false},

@@ -36,8 +36,8 @@ var knownSentinels = []string{
 }
 
 // isValidSerialNumber checks that the serial is not empty and not a known placeholder.
+// It expects a pre-trimmed value.
 func isValidSerialNumber(serial string) bool {
-	serial = strings.TrimSpace(serial)
 	if len(serial) == 0 {
 		return false
 	}
@@ -58,6 +58,10 @@ func SerialNumber(conn shared.Connection, p *inventory.Platform) (string, error)
 		return "", errors.New("cannot determine platform serial number")
 	}
 
+	// A placeholder or empty serial returns ("", nil) — not an error — so the
+	// caller (gatherPlatformInfo) treats it the same as "no serial available"
+	// and falls through to the next ID strategy, rather than building a
+	// non-unique platform ID from an OEM default. This matches biosuuid.BiosUUID.
 	serial := strings.TrimSpace(info.SysInfo.SerialNumber)
 	if !isValidSerialNumber(serial) {
 		return "", nil
