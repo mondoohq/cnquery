@@ -193,6 +193,10 @@ func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
 	if err != nil {
 		return err
 	}
+	if resp.Cluster == nil {
+		a.clusterDetailsFetched = true
+		return nil
+	}
 
 	if resp.Cluster.SecurityConfiguration != nil {
 		a.cacheSecurityConfig = *resp.Cluster.SecurityConfiguration

@@ -303,7 +303,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 				}
 				for _, dbInstance := range dbInstances.DBInstances {
 					// we cannot filter it in the api call since the api does not support it negative filters
-					if slices.Contains(nonRdsEngines, *dbInstance.Engine) {
+					if dbInstance.Engine != nil && slices.Contains(nonRdsEngines, *dbInstance.Engine) {
 						log.Debug().Str("engine", *dbInstance.Engine).Msg("skipping non-RDS engine")
 						continue
 					}
@@ -999,7 +999,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 
 				for _, cluster := range dbClusters.DBClusters {
 					// we cannot filter it in the api call since the api does not support it negative filters
-					if slices.Contains(nonRdsEngines, *cluster.Engine) {
+					if cluster.Engine != nil && slices.Contains(nonRdsEngines, *cluster.Engine) {
 						log.Debug().Str("engine", *cluster.Engine).Msg("skipping non-RDS engine")
 						continue
 					}

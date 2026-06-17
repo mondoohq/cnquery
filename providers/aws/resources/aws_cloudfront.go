@@ -50,6 +50,9 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 			return nil, errors.Wrap(err, "could not gather aws cloudfront distributions")
 		}
 
+		if distributions.DistributionList == nil {
+			continue
+		}
 		for _, distribution := range distributions.DistributionList.Items {
 			origins := []any{}
 			if or := distribution.Origins; or != nil {

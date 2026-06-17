@@ -794,6 +794,9 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
+		if grant.Grantee == nil {
+			continue
+		}
 		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToValue(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToValue(grant.Grantee.URI) == s3AllUsersGroup) {
 			return true, nil
 		}

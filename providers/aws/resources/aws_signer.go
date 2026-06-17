@@ -30,6 +30,9 @@ func (a *mqlAwsSigner) signingProfiles() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 

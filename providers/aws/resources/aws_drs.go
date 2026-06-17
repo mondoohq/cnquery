@@ -94,6 +94,9 @@ func (a *mqlAwsDrs) sourceServers() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
@@ -481,6 +484,9 @@ func (a *mqlAwsDrs) recoveryInstances() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
@@ -698,6 +704,9 @@ func (a *mqlAwsDrs) jobs() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 
@@ -825,6 +834,9 @@ func (a *mqlAwsDrs) replicationConfigurationTemplates() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
 	}
 

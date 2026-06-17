@@ -319,7 +319,7 @@ func (a *mqlAwsConfigRule) complianceStatus() (string, error) {
 		}
 		return "", err
 	}
-	if len(resp.ComplianceByConfigRules) > 0 {
+	if len(resp.ComplianceByConfigRules) > 0 && resp.ComplianceByConfigRules[0].Compliance != nil {
 		return string(resp.ComplianceByConfigRules[0].Compliance.ComplianceType), nil
 	}
 	return "INSUFFICIENT_DATA", nil

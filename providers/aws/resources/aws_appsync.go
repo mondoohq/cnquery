@@ -46,6 +46,9 @@ func (a *mqlAwsAppsync) apis() ([]any, error) {
 		return nil, pool.GetErrors()
 	}
 	for i := range pool.Jobs {
+		if pool.Jobs[i].Result == nil {
+			continue
+		}
 		res = append(res, pool.Jobs[i].Result.([]any)...)
 	}
 	return res, nil

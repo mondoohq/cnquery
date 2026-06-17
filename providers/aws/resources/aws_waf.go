@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -477,9 +478,8 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 
 		if ruleAction.Block != nil {
 			action = "block"
-			if ruleAction.Block.CustomResponse != nil {
-				responseCodeNumber := *ruleAction.Block.CustomResponse.ResponseCode
-				responseCode = string(responseCodeNumber)
+			if ruleAction.Block.CustomResponse != nil && ruleAction.Block.CustomResponse.ResponseCode != nil {
+				responseCode = strconv.Itoa(int(*ruleAction.Block.CustomResponse.ResponseCode))
 			} else {
 				responseCode = "403" // Default for Block
 			}

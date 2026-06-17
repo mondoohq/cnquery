@@ -370,6 +370,9 @@ func (h *AwsConnection) Regions() ([]string, error) {
 		regions = enabledRegions
 	} else {
 		for _, region := range res.Regions {
+			if region.RegionName == nil {
+				continue
+			}
 			regions = append(regions, *region.RegionName)
 		}
 	}

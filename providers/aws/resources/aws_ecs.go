@@ -639,14 +639,18 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 func getContainerIP(eniPublicIPs map[string]string, attachments []ecstypes.Attachment, c ecstypes.Container) string {
 	containerAttachmentIds := []string{}
 	for _, ca := range c.NetworkInterfaces {
-		containerAttachmentIds = append(containerAttachmentIds, *ca.AttachmentId)
+		if ca.AttachmentId != nil {
+			containerAttachmentIds = append(containerAttachmentIds, *ca.AttachmentId)
+		}
 	}
 	for _, a := range attachments {
-		if stringx.Contains(containerAttachmentIds, *a.Id) {
+		if a.Id != nil && stringx.Contains(containerAttachmentIds, *a.Id) {
 			for _, detail := range a.Details {
-				if *detail.Name == "networkInterfaceId" {
-					if ip, ok := eniPublicIPs[*detail.Value]; ok {
-						return ip
+				if detail.Name != nil && *detail.Name == "networkInterfaceId" {
+					if detail.Value != nil {
+						if ip, ok := eniPublicIPs[*detail.Value]; ok {
+							return ip
+						}
 					}
 				}
 			}

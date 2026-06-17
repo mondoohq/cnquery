@@ -70,6 +70,10 @@ func (a *mqlAwsDynamodbExport) fetchExport() (*ddtypes.ExportDescription, error)
 	svc := conn.Dynamodb(a.region)
 	desc, err := svc.DescribeExport(ctx, &dynamodb.DescribeExportInput{ExportArn: aws.String(a.arn)})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.fetched = true
+			return nil, nil
+		}
 		return nil, err
 	}
 	a.exportCache = desc.ExportDescription
@@ -134,7 +138,7 @@ func (a *mqlAwsDynamodbExport) s3Prefix() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if exp.S3Prefix != nil {
+	if exp != nil && exp.S3Prefix != nil {
 		return *exp.S3Prefix, nil
 	}
 	return "", nil
@@ -145,7 +149,7 @@ func (a *mqlAwsDynamodbExport) itemCount() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if exp.ItemCount != nil {
+	if exp != nil && exp.ItemCount != nil {
 		return *exp.ItemCount, nil
 	}
 	return 0, nil
@@ -156,6 +160,9 @@ func (a *mqlAwsDynamodbExport) format() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if exp == nil {
+		return "", nil
+	}
 	return string(exp.ExportFormat), nil
 }
 
@@ -163,6 +170,9 @@ func (a *mqlAwsDynamodbExport) startTime() (*time.Time, error) {
 	exp, err := a.fetchExport()
 	if err != nil {
 		return nil, err
+	}
+	if exp == nil {
+		return nil, nil
 	}
 	return exp.StartTime, nil
 }
@@ -172,6 +182,9 @@ func (a *mqlAwsDynamodbExport) endTime() (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
+	if exp == nil {
+		return nil, nil
+	}
 	return exp.EndTime, nil
 }
 
@@ -179,6 +192,9 @@ func (a *mqlAwsDynamodbExport) s3SseAlgorithm() (string, error) {
 	exp, err := a.fetchExport()
 	if err != nil {
 		return "", err
+	}
+	if exp == nil {
+		return "", nil
 	}
 	return string(exp.S3SseAlgorithm), nil
 }
@@ -188,7 +204,7 @@ func (a *mqlAwsDynamodbExport) s3Bucket() (*mqlAwsS3Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
-	if exp.S3Bucket == nil || *exp.S3Bucket == "" {
+	if exp == nil || exp.S3Bucket == nil || *exp.S3Bucket == "" {
 		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -207,7 +223,7 @@ func (a *mqlAwsDynamodbExport) kmsKey() (*mqlAwsKmsKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	if exp.S3SseKmsKeyId == nil {
+	if exp == nil || exp.S3SseKmsKeyId == nil {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}

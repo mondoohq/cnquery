@@ -162,6 +162,10 @@ func (a *mqlAwsEksCluster) fetchDetail() error {
 		a.fetchErr = err
 		return err
 	}
+	if descResp.Cluster == nil {
+		a.fetched = true
+		return nil
+	}
 	if err := a.populateFromDescribe(descResp.Cluster); err != nil {
 		a.fetched = true
 		a.fetchErr = err
