@@ -112,6 +112,14 @@ func ParseSystemdListUnits(input io.Reader) (map[string]*Service, error) {
 }
 
 func applySystemdUnitFileState(service *Service, unitFileState string) {
+	// A unit that is not installed (LoadState=not-found or empty) can still
+	// report a leftover UnitFileState such as "enabled" — for example a dangling
+	// enablement symlink left behind by a removed package. Reporting it as
+	// enabled/masked/static would contradict installed=false, so skip applying
+	// the unit-file state for units that are not installed.
+	if !service.Installed {
+		return
+	}
 	service.Enabled = unitFileState == "enabled" || unitFileState == "enabled-runtime"
 	service.Masked = strings.HasPrefix(unitFileState, "masked")
 	service.Static = unitFileState == "static"

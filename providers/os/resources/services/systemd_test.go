@@ -233,6 +233,34 @@ func TestParseServiceSystemDShow(t *testing.T) {
 	}, services["systemd-journald"])
 }
 
+func TestParseServiceSystemDShowNotFoundIsNotEnabled(t *testing.T) {
+	// A unit whose definition no longer exists (LoadState=not-found) can still
+	// report a leftover UnitFileState such as "enabled" (e.g. a dangling
+	// enablement symlink left behind by a removed package). It must not be
+	// reported as enabled/masked/static, which would contradict installed=false.
+	services, err := ParseServiceSystemDShow(strings.NewReader(strings.Join([]string{
+		"Id=systemd-journal-upload.service",
+		"Description=Journal Remote Upload Service",
+		"LoadState=not-found",
+		"ActiveState=inactive",
+		"UnitFileState=enabled",
+		"",
+	}, "\n")))
+	require.NoError(t, err)
+	require.Len(t, services, 1)
+
+	assert.Equal(t, &Service{
+		Name:        "systemd-journal-upload",
+		Description: "Journal Remote Upload Service",
+		Installed:   false,
+		Running:     false,
+		Enabled:     false,
+		Masked:      false,
+		Static:      false,
+		Type:        "systemd",
+	}, services["systemd-journal-upload"])
+}
+
 func TestSystemDServiceManagerGetUsesTargetedShow(t *testing.T) {
 	const showCmd = "systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description dbus.service"
 
