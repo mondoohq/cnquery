@@ -252,7 +252,15 @@ func (a *mqlAwsS3Bucket) accessPoints() ([]any, error) {
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	bucketName := a.Name.Data
-	region := a.GetLocation().Data
+	// surface a location lookup failure instead of silently defaulting to
+	// us-east-1, which would list access points in the wrong region and miss
+	// them for buckets that actually live elsewhere. An empty (but error-free)
+	// location is legitimately us-east-1.
+	location := a.GetLocation()
+	if location.Error != nil {
+		return nil, location.Error
+	}
+	region := location.Data
 	if region == "" {
 		region = "us-east-1"
 	}
