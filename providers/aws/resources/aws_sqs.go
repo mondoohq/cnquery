@@ -188,6 +188,9 @@ func (a *mqlAwsSqsQueue) createdAt() (*time.Time, error) {
 		return nil, err
 	}
 	i, err := strconv.ParseInt(atts["CreatedTimestamp"], 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	t := time.Unix(i, 0)
 	return &t, nil
 }
@@ -210,6 +213,9 @@ func (a *mqlAwsSqsQueue) lastModified() (*time.Time, error) {
 		return nil, err
 	}
 	i, err := strconv.ParseInt(atts["LastModifiedTimestamp"], 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	t := time.Unix(i, 0)
 	return &t, nil
 }

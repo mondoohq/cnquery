@@ -124,6 +124,11 @@ func (a *mqlAwsIam) credentialReport() ([]any, error) {
 			if maxRetries == 5 {
 				return nil, errors.Wrap(err, "timed out trying to gather aws iam credential report")
 			}
+			// re-extract the API error so the loop condition reflects the latest
+			// response; without this it keeps testing the original error code.
+			if !errors.As(err, &ae) {
+				return nil, errors.Wrap(err, "could not gather aws iam credential report")
+			}
 			time.Sleep(200 * time.Millisecond)
 			maxRetries++
 		}
