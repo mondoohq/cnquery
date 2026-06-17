@@ -71,6 +71,14 @@ func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error)
 	return &plugin.ShutdownRes{}, nil
 }
 
+// Disconnect releases a connection. This provider tracks its own runtimes
+// map, so it overrides the embedded plugin.Service.Disconnect (which operates
+// on a separate, uninitialized map and would otherwise flush a nil memoizer).
+func (s *Service) Disconnect(req *plugin.DisconnectReq) (*plugin.DisconnectRes, error) {
+	delete(s.runtimes, req.Connection)
+	return &plugin.DisconnectRes{}, nil
+}
+
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {

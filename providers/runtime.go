@@ -158,10 +158,83 @@ func (r *Runtime) UseProvider(id string) error {
 	return nil
 }
 
+// UseBuiltinProvider sets a builtin (in-process) provider as the runtime's
+// main provider and connects it, so its resources resolve without spawning a
+// subprocess and without any real connection. Unlike a bare UseProvider +
+// plugin.Connect, the connection is backed by the runtime's callbacks, so the
+// provider can create or resolve resources through the runtime — matching how
+// Connect wires every other provider. Used for the core provider when running
+// MQL as a pure expression engine.
+func (r *Runtime) UseBuiltinProvider(id string, features []byte) error {
+	if err := r.UseProvider(id); err != nil {
+		return err
+	}
+	r.features = features
+
+	callbacks := &providerCallbacks{runtime: r}
+	conn, err := r.Provider.Instance.Plugin.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{{Type: "in-process"}},
+		},
+		Features: features,
+	}, callbacks)
+	if err != nil {
+		return errors.New("failed to connect builtin provider '" + id + "': " + err.Error())
+	}
+
+	r.Provider.Connection = conn
+	r.AddConnectedProvider(r.Provider)
+	return nil
+}
+
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.mu.Lock()
 	r.providers[c.Instance.ID] = c
 	r.mu.Unlock()
+}
+
+// UseInProcessProvider registers a caller-supplied, in-process provider plugin
+// with this runtime and connects it, so its resources can be created and their
+// fields resolved on demand without spawning a provider subprocess. The
+// connection is backed by the runtime's callbacks, so a custom resource's
+// field resolvers may reference other resources just like any built-in
+// provider.
+//
+// The provider's schema is what queries compile against; register it with the
+// coordinator (e.g. via the ExtensibleSchema interface) before compiling. The
+// config ID must match the provider ID recorded on that schema's resources.
+func (r *Runtime) UseInProcessProvider(config plugin.Provider, schema resources.ResourcesSchema, plug plugin.ProviderPlugin, features []byte) error {
+	if plug == nil {
+		return errors.New("cannot register in-process provider '" + config.Name + "': no plugin provided")
+	}
+
+	if r.features == nil {
+		r.features = features
+	}
+
+	running := &RunningProvider{
+		Name:    config.Name,
+		ID:      config.ID,
+		Version: config.Version,
+		Plugin:  plug,
+		Schema:  schema,
+	}
+	connected := &ConnectedProvider{Instance: running}
+
+	callbacks := &providerCallbacks{runtime: r}
+	conn, err := plug.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{{Type: config.Name}},
+		},
+		Features: features,
+	}, callbacks)
+	if err != nil {
+		return errors.New("failed to connect in-process provider '" + config.Name + "': " + err.Error())
+	}
+
+	connected.Connection = conn
+	r.AddConnectedProvider(connected)
+	return nil
 }
 
 // ConnectedProviderIDs returns the IDs of all connected providers
