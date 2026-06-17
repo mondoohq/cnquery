@@ -97,7 +97,11 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 }
 
 func (a *mqlAwsEc2Eip) id() (string, error) {
-	return a.NetworkInterfaceId.Data, nil
+	// publicIp is always present and globally unique for an Elastic IP, whereas
+	// networkInterfaceId is empty for unattached EIPs (which would collide them
+	// all to a single cache entry). region+publicIp also matches the key used
+	// when EIPs are resolved by cross-references (nat gateway, network interface).
+	return "aws.ec2.eip/" + a.Region.Data + "/" + a.PublicIp.Data, nil
 }
 
 type mqlAwsEc2EipInternal struct {
@@ -274,6 +278,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 					for _, association := range acl.Associations {
 						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclAssociation,
 							map[string]*llx.RawData{
+								"__id":          llx.StringDataPtr(association.NetworkAclAssociationId),
 								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
 								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
 								"subnetId":      llx.StringDataPtr(association.SubnetId),
