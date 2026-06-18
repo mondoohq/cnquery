@@ -278,7 +278,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 					for _, association := range acl.Associations {
 						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, ResourceAwsEc2NetworkaclAssociation,
 							map[string]*llx.RawData{
-								"__id":          llx.StringDataPtr(association.NetworkAclAssociationId),
+								"__id":          llx.StringData("aws.ec2.networkacl.association/" + convert.ToValue(association.NetworkAclAssociationId)),
 								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
 								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
 								"subnetId":      llx.StringDataPtr(association.SubnetId),
