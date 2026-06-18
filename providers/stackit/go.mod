@@ -14,6 +14,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.11.1
 	github.com/stackitcloud/stackit-sdk-go/services/kms v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.12.2
+	github.com/stackitcloud/stackit-sdk-go/services/logme v0.29.0
 	github.com/stackitcloud/stackit-sdk-go/services/mariadb v0.28.2
 	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.8.3
 	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.0
@@ -26,6 +27,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.18.1
 	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.19.0
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.14.0
+	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.11.0
 	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
 )
 

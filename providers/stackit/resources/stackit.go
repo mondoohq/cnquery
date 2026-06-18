@@ -163,6 +163,22 @@ func (r *mqlStackit) openSearch() (*mqlStackitOpenSearch, error) {
 	return res.(*mqlStackitOpenSearch), nil
 }
 
+func (r *mqlStackit) sqlServerFlex() (*mqlStackitSqlServerFlex, error) {
+	res, err := makeNamespace(r.MqlRuntime, "stackit.sqlServerFlex")
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitSqlServerFlex), nil
+}
+
+func (r *mqlStackit) logMe() (*mqlStackitLogMe, error) {
+	res, err := makeNamespace(r.MqlRuntime, "stackit.logMe")
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitLogMe), nil
+}
+
 func (r *mqlStackit) mariaDb() (*mqlStackitMariaDb, error) {
 	res, err := makeNamespace(r.MqlRuntime, "stackit.mariaDb")
 	if err != nil {

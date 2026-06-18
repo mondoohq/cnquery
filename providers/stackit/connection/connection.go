@@ -19,6 +19,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/iaas"
 	"github.com/stackitcloud/stackit-sdk-go/services/kms"
 	"github.com/stackitcloud/stackit-sdk-go/services/loadbalancer"
+	"github.com/stackitcloud/stackit-sdk-go/services/logme"
 	"github.com/stackitcloud/stackit-sdk-go/services/mariadb"
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
@@ -31,6 +32,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/secretsmanager"
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
+	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -92,6 +94,12 @@ type StackitConnection struct {
 	rabbitMqOnce         sync.Once
 	rabbitMqClient       *rabbitmq.APIClient
 	rabbitMqErr          error
+	logMeOnce            sync.Once
+	logMeClient          *logme.APIClient
+	logMeErr             error
+	sqlServerFlexOnce    sync.Once
+	sqlServerFlexClient  *sqlserverflex.APIClient
+	sqlServerFlexErr     error
 	secretsManagerOnce   sync.Once
 	secretsManagerClient *secretsmanager.APIClient
 	secretsManagerErr    error
@@ -294,6 +302,20 @@ func (c *StackitConnection) RabbitMq() (*rabbitmq.APIClient, error) {
 		c.rabbitMqClient, c.rabbitMqErr = rabbitmq.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.rabbitMqClient, c.rabbitMqErr
+}
+
+func (c *StackitConnection) LogMe() (*logme.APIClient, error) {
+	c.logMeOnce.Do(func() {
+		c.logMeClient, c.logMeErr = logme.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.logMeClient, c.logMeErr
+}
+
+func (c *StackitConnection) SqlServerFlex() (*sqlserverflex.APIClient, error) {
+	c.sqlServerFlexOnce.Do(func() {
+		c.sqlServerFlexClient, c.sqlServerFlexErr = sqlserverflex.NewAPIClient(c.configOpts...)
+	})
+	return c.sqlServerFlexClient, c.sqlServerFlexErr
 }
 
 func (c *StackitConnection) SecretsManager() (*secretsmanager.APIClient, error) {

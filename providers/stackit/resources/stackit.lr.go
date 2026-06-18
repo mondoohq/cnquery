@@ -42,6 +42,8 @@ const (
 	ResourceStackitPostgresFlexInstance   string = "stackit.postgresFlex.instance"
 	ResourceStackitMongoDbFlex            string = "stackit.mongoDbFlex"
 	ResourceStackitMongoDbFlexInstance    string = "stackit.mongoDbFlex.instance"
+	ResourceStackitSqlServerFlex          string = "stackit.sqlServerFlex"
+	ResourceStackitSqlServerFlexInstance  string = "stackit.sqlServerFlex.instance"
 	ResourceStackitOpenSearch             string = "stackit.openSearch"
 	ResourceStackitOpenSearchInstance     string = "stackit.openSearch.instance"
 	ResourceStackitMariaDb                string = "stackit.mariaDb"
@@ -50,6 +52,8 @@ const (
 	ResourceStackitRedisInstance          string = "stackit.redis.instance"
 	ResourceStackitRabbitMq               string = "stackit.rabbitMq"
 	ResourceStackitRabbitMqInstance       string = "stackit.rabbitMq.instance"
+	ResourceStackitLogMe                  string = "stackit.logMe"
+	ResourceStackitLogMeInstance          string = "stackit.logMe.instance"
 	ResourceStackitSecretsManager         string = "stackit.secretsManager"
 	ResourceStackitSecretsManagerInstance string = "stackit.secretsManager.instance"
 	ResourceStackitObservability          string = "stackit.observability"
@@ -173,6 +177,14 @@ func init() {
 			Init:   initStackitMongoDbFlexInstance,
 			Create: createStackitMongoDbFlexInstance,
 		},
+		"stackit.sqlServerFlex": {
+			// to override args, implement: initStackitSqlServerFlex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitSqlServerFlex,
+		},
+		"stackit.sqlServerFlex.instance": {
+			Init:   initStackitSqlServerFlexInstance,
+			Create: createStackitSqlServerFlexInstance,
+		},
 		"stackit.openSearch": {
 			// to override args, implement: initStackitOpenSearch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitOpenSearch,
@@ -204,6 +216,14 @@ func init() {
 		"stackit.rabbitMq.instance": {
 			Init:   initStackitRabbitMqInstance,
 			Create: createStackitRabbitMqInstance,
+		},
+		"stackit.logMe": {
+			// to override args, implement: initStackitLogMe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitLogMe,
+		},
+		"stackit.logMe.instance": {
+			Init:   initStackitLogMeInstance,
+			Create: createStackitLogMeInstance,
 		},
 		"stackit.secretsManager": {
 			// to override args, implement: initStackitSecretsManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -376,6 +396,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mongoDbFlex": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetMongoDbFlex()).ToDataRes(types.Resource("stackit.mongoDbFlex"))
 	},
+	"stackit.sqlServerFlex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetSqlServerFlex()).ToDataRes(types.Resource("stackit.sqlServerFlex"))
+	},
 	"stackit.openSearch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetOpenSearch()).ToDataRes(types.Resource("stackit.openSearch"))
 	},
@@ -387,6 +410,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.rabbitMq": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetRabbitMq()).ToDataRes(types.Resource("stackit.rabbitMq"))
+	},
+	"stackit.logMe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetLogMe()).ToDataRes(types.Resource("stackit.logMe"))
 	},
 	"stackit.secretsManager": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetSecretsManager()).ToDataRes(types.Resource("stackit.secretsManager"))
@@ -1108,6 +1134,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mongoDbFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.sqlServerFlex.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance")))
+	},
+	"stackit.sqlServerFlex.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetId()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetName()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.flavor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetFlavor()).ToDataRes(types.Dict)
+	},
+	"stackit.sqlServerFlex.instance.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetAcl()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.sqlServerFlex.instance.replicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetReplicas()).ToDataRes(types.Int)
+	},
+	"stackit.sqlServerFlex.instance.storage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetStorage()).ToDataRes(types.Dict)
+	},
+	"stackit.sqlServerFlex.instance.backupSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetBackupSchedule()).ToDataRes(types.String)
+	},
+	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"stackit.openSearch.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearch).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.openSearch.instance")))
 	},
@@ -1251,6 +1313,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.rabbitMq.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.logMe.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMe).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance")))
+	},
+	"stackit.logMe.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetId()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.planName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetPlanName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.planId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetPlanId()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetOfferingName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.cfSpaceGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetCfSpaceGuid()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.dashboardUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetDashboardUrl()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.imageUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetImageUrl()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetParameters()).ToDataRes(types.Dict)
 	},
 	"stackit.secretsManager.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManager).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.instance")))
@@ -1539,6 +1637,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackit).MongoDbFlex, ok = plugin.RawToTValue[*mqlStackitMongoDbFlex](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).SqlServerFlex, ok = plugin.RawToTValue[*mqlStackitSqlServerFlex](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).OpenSearch, ok = plugin.RawToTValue[*mqlStackitOpenSearch](v.Value, v.Error)
 		return
@@ -1553,6 +1655,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.rabbitMq": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).RabbitMq, ok = plugin.RawToTValue[*mqlStackitRabbitMq](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).LogMe, ok = plugin.RawToTValue[*mqlStackitLogMe](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2615,6 +2721,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMongoDbFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlex).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.sqlServerFlex.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlex).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.sqlServerFlex.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.flavor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Flavor, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Acl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.replicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Replicas, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.storage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Storage, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.backupSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).BackupSchedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearch).__id, ok = v.Value.(string)
 		return
@@ -2837,6 +2999,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.rabbitMq.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMqInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMe).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logMe.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMe).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.logMe.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.planName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).PlanName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.planId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).PlanId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.offeringName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).CfOrganizationGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.cfSpaceGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).CfSpaceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.dashboardUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).DashboardUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.imageUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).ImageUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3212,10 +3430,12 @@ type mqlStackit struct {
 	Dns              plugin.TValue[*mqlStackitDns]
 	PostgresFlex     plugin.TValue[*mqlStackitPostgresFlex]
 	MongoDbFlex      plugin.TValue[*mqlStackitMongoDbFlex]
+	SqlServerFlex    plugin.TValue[*mqlStackitSqlServerFlex]
 	OpenSearch       plugin.TValue[*mqlStackitOpenSearch]
 	MariaDb          plugin.TValue[*mqlStackitMariaDb]
 	Redis            plugin.TValue[*mqlStackitRedis]
 	RabbitMq         plugin.TValue[*mqlStackitRabbitMq]
+	LogMe            plugin.TValue[*mqlStackitLogMe]
 	SecretsManager   plugin.TValue[*mqlStackitSecretsManager]
 	Observability    plugin.TValue[*mqlStackitObservability]
 	ServiceAccounts  plugin.TValue[[]any]
@@ -3506,6 +3726,22 @@ func (c *mqlStackit) GetMongoDbFlex() *plugin.TValue[*mqlStackitMongoDbFlex] {
 	})
 }
 
+func (c *mqlStackit) GetSqlServerFlex() *plugin.TValue[*mqlStackitSqlServerFlex] {
+	return plugin.GetOrCompute[*mqlStackitSqlServerFlex](&c.SqlServerFlex, func() (*mqlStackitSqlServerFlex, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "sqlServerFlex")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSqlServerFlex), nil
+			}
+		}
+
+		return c.sqlServerFlex()
+	})
+}
+
 func (c *mqlStackit) GetOpenSearch() *plugin.TValue[*mqlStackitOpenSearch] {
 	return plugin.GetOrCompute[*mqlStackitOpenSearch](&c.OpenSearch, func() (*mqlStackitOpenSearch, error) {
 		if c.MqlRuntime.HasRecording {
@@ -3567,6 +3803,22 @@ func (c *mqlStackit) GetRabbitMq() *plugin.TValue[*mqlStackitRabbitMq] {
 		}
 
 		return c.rabbitMq()
+	})
+}
+
+func (c *mqlStackit) GetLogMe() *plugin.TValue[*mqlStackitLogMe] {
+	return plugin.GetOrCompute[*mqlStackitLogMe](&c.LogMe, func() (*mqlStackitLogMe, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "logMe")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitLogMe), nil
+			}
+		}
+
+		return c.logMe()
 	})
 }
 
@@ -6183,6 +6435,175 @@ func (c *mqlStackitMongoDbFlexInstance) GetOptions() *plugin.TValue[map[string]a
 	})
 }
 
+// mqlStackitSqlServerFlex for the stackit.sqlServerFlex resource
+type mqlStackitSqlServerFlex struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitSqlServerFlexInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createStackitSqlServerFlex creates a new instance of this resource
+func createStackitSqlServerFlex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitSqlServerFlex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.sqlServerFlex", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitSqlServerFlex) MqlName() string {
+	return "stackit.sqlServerFlex"
+}
+
+func (c *mqlStackitSqlServerFlex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitSqlServerFlex) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.sqlServerFlex", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlStackitSqlServerFlexInstance for the stackit.sqlServerFlex.instance resource
+type mqlStackitSqlServerFlexInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitSqlServerFlexInstanceInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Status         plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Version        plugin.TValue[string]
+	Flavor         plugin.TValue[any]
+	Acl            plugin.TValue[[]any]
+	Replicas       plugin.TValue[int64]
+	Storage        plugin.TValue[any]
+	BackupSchedule plugin.TValue[string]
+	Options        plugin.TValue[map[string]any]
+}
+
+// createStackitSqlServerFlexInstance creates a new instance of this resource
+func createStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitSqlServerFlexInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.sqlServerFlex.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitSqlServerFlexInstance) MqlName() string {
+	return "stackit.sqlServerFlex.instance"
+}
+
+func (c *mqlStackitSqlServerFlexInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetFlavor() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Flavor, func() (any, error) {
+		return c.flavor()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acl, func() ([]any, error) {
+		return c.acl()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetReplicas() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Replicas, func() (int64, error) {
+		return c.replicas()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetStorage() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Storage, func() (any, error) {
+		return c.storage()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetBackupSchedule() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BackupSchedule, func() (string, error) {
+		return c.backupSchedule()
+	})
+}
+
+func (c *mqlStackitSqlServerFlexInstance) GetOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Options, func() (map[string]any, error) {
+		return c.options()
+	})
+}
+
 // mqlStackitOpenSearch for the stackit.openSearch resource
 type mqlStackitOpenSearch struct {
 	MqlRuntime *plugin.Runtime
@@ -6820,6 +7241,161 @@ func (c *mqlStackitRabbitMqInstance) GetImageUrl() *plugin.TValue[string] {
 }
 
 func (c *mqlStackitRabbitMqInstance) GetParameters() *plugin.TValue[any] {
+	return &c.Parameters
+}
+
+// mqlStackitLogMe for the stackit.logMe resource
+type mqlStackitLogMe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitLogMeInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createStackitLogMe creates a new instance of this resource
+func createStackitLogMe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogMe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logMe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogMe) MqlName() string {
+	return "stackit.logMe"
+}
+
+func (c *mqlStackitLogMe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogMe) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.logMe", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlStackitLogMeInstance for the stackit.logMe.instance resource
+type mqlStackitLogMeInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitLogMeInstanceInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Status             plugin.TValue[string]
+	PlanName           plugin.TValue[string]
+	PlanId             plugin.TValue[string]
+	OfferingName       plugin.TValue[string]
+	CfOrganizationGuid plugin.TValue[string]
+	CfSpaceGuid        plugin.TValue[string]
+	DashboardUrl       plugin.TValue[string]
+	ImageUrl           plugin.TValue[string]
+	Parameters         plugin.TValue[any]
+}
+
+// createStackitLogMeInstance creates a new instance of this resource
+func createStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitLogMeInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.logMe.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitLogMeInstance) MqlName() string {
+	return "stackit.logMe.instance"
+}
+
+func (c *mqlStackitLogMeInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitLogMeInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitLogMeInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitLogMeInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitLogMeInstance) GetPlanName() *plugin.TValue[string] {
+	return &c.PlanName
+}
+
+func (c *mqlStackitLogMeInstance) GetPlanId() *plugin.TValue[string] {
+	return &c.PlanId
+}
+
+func (c *mqlStackitLogMeInstance) GetOfferingName() *plugin.TValue[string] {
+	return &c.OfferingName
+}
+
+func (c *mqlStackitLogMeInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
+	return &c.CfOrganizationGuid
+}
+
+func (c *mqlStackitLogMeInstance) GetCfSpaceGuid() *plugin.TValue[string] {
+	return &c.CfSpaceGuid
+}
+
+func (c *mqlStackitLogMeInstance) GetDashboardUrl() *plugin.TValue[string] {
+	return &c.DashboardUrl
+}
+
+func (c *mqlStackitLogMeInstance) GetImageUrl() *plugin.TValue[string] {
+	return &c.ImageUrl
+}
+
+func (c *mqlStackitLogMeInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 

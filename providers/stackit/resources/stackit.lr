@@ -53,6 +53,8 @@ stackit {
   postgresFlex() stackit.postgresFlex
   // MongoDB Flex managed database namespace
   mongoDbFlex() stackit.mongoDbFlex
+  // SQLServer Flex managed database namespace
+  sqlServerFlex() stackit.sqlServerFlex
   // OpenSearch managed namespace
   openSearch() stackit.openSearch
   // MariaDB managed namespace
@@ -61,6 +63,8 @@ stackit {
   redis() stackit.redis
   // RabbitMQ managed namespace
   rabbitMq() stackit.rabbitMq
+  // LogMe (managed Grafana Loki/OpenSearch logging) namespace
+  logMe() stackit.logMe
   // Secrets Manager namespace
   secretsManager() stackit.secretsManager
   // Observability (managed Prometheus/Alertmanager) namespace
@@ -778,6 +782,47 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   options() map[string]string
 }
 
+// STACKIT SQLServer Flex namespace
+//
+// Use the SQLServer-Flex namespace to enumerate managed Microsoft SQL
+// Server instances in the project via `instances()`.
+stackit.sqlServerFlex {
+  // SQLServer Flex instances
+  instances() []stackit.sqlServerFlex.instance
+}
+
+// STACKIT SQLServer Flex managed database instance
+//
+// Examine a single managed Microsoft SQL Server instance. The instance
+// is keyed by its UUID `id` and exposes the `name`, `version`, status,
+// flavor, replicas, backup schedule, storage, region, ACL, and the
+// configured options.
+private stackit.sqlServerFlex.instance @defaults("id name version status") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (READY, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Region the instance runs in
+  region string
+  // SQLServer version (lazy-loaded from the detail API)
+  version() string
+  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  flavor() dict
+  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  acl() []string
+  // Number of replicas (lazy-loaded from the detail API)
+  replicas() int
+  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  storage() dict
+  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  backupSchedule() string
+  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  options() map[string]string
+}
+
 // STACKIT OpenSearch namespace
 //
 // Use the OpenSearch namespace to enumerate managed OpenSearch
@@ -915,6 +960,46 @@ stackit.rabbitMq {
 // by its UUID `id` and exposes the same plan / offering / parameter
 // surface as the other DBaaS services in the project.
 private stackit.rabbitMq.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Plan UUID
+  planId string
+  // Service offering name
+  offeringName string
+  // Cloud-Foundry-style organization GUID
+  cfOrganizationGuid string
+  // Cloud-Foundry-style space GUID
+  cfSpaceGuid string
+  // Dashboard URL for the DBaaS UI (empty if not provisioned)
+  dashboardUrl string
+  // Image / engine version
+  imageUrl string
+  // Connection parameters returned by the API
+  parameters dict
+}
+
+// STACKIT LogMe namespace
+//
+// Use the LogMe namespace to enumerate managed LogMe (log aggregation)
+// instances in the project via `instances()`.
+stackit.logMe {
+  // LogMe instances
+  instances() []stackit.logMe.instance
+}
+
+// STACKIT LogMe managed instance
+//
+// Examine a single managed LogMe instance. The instance is keyed by
+// its UUID `id` and exposes the same plan / offering / parameter
+// surface as the other DBaaS services in the project.
+private stackit.logMe.instance @defaults("id name status planName") {
   init(id? string)
   // Instance UUID
   id string
