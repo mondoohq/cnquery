@@ -756,7 +756,11 @@ func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
 	}
 
 	resource := fmt.Sprintf("projects/%s/regions/%s/clusters/%s", projectId, location, name)
-	policy, err := dataprocSvc.Projects.Regions.Clusters.GetIamPolicy(resource, &dataproc.GetIamPolicyRequest{}).Do()
+	// Request policy schema v3 so conditional bindings are returned; the
+	// default v1 omits any binding carrying an IAM condition.
+	policy, err := dataprocSvc.Projects.Regions.Clusters.GetIamPolicy(resource, &dataproc.GetIamPolicyRequest{
+		Options: &dataproc.GetPolicyOptions{RequestedPolicyVersion: 3},
+	}).Do()
 	if err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 403 {
 			log.Warn().Str("cluster", resource).Msg("not authorized to retrieve dataproc cluster iam policy")
