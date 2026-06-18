@@ -1077,7 +1077,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				return storage.Error
 			}
 			buckets := storage.Data.GetBuckets()
-			if buckets == nil {
+			if buckets.Error != nil {
 				return buckets.Error
 			}
 			for i := range buckets.Data {

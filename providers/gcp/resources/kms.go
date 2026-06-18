@@ -352,7 +352,7 @@ func (g *mqlGcpProjectKmsService) keyrings() ([]any, error) {
 					break
 				}
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Str("location", location).Msg("could not list kms keyrings")
 					return
 				}
 
@@ -365,7 +365,7 @@ func (g *mqlGcpProjectKmsService) keyrings() ([]any, error) {
 					"location":     llx.StringData(location),
 				})
 				if err != nil {
-					log.Error().Err(err)
+					log.Error().Err(err).Str("location", location).Msg("could not create kms keyring resource")
 					return
 				}
 				mux.Lock()
@@ -520,6 +520,9 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]any, error) {
 		}
 
 		mqlVersion, err := cryptoKeyVersionToMql(g.MqlRuntime, v)
+		if err != nil {
+			return nil, err
+		}
 		versions = append(versions, mqlVersion)
 	}
 	return versions, nil

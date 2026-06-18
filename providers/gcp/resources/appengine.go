@@ -8,10 +8,12 @@ import (
 	"fmt"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/appengine/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -57,6 +59,13 @@ func (g *mqlGcpProjectAppEngineService) application() (*mqlGcpProjectAppEngineSe
 
 	app, err := svc.Apps.Get(projectId).Do()
 	if err != nil {
+		// App Engine returns 404 when the project has no application and 403
+		// when the API is disabled; treat both as "no application" so a
+		// project-wide scan doesn't fail on the common no-app case.
+		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
+			g.Application.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
