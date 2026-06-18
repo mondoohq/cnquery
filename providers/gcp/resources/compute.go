@@ -3948,7 +3948,7 @@ func (g *mqlGcpProjectComputeServiceBackendService) iapEnabled() (bool, error) {
 	if !ok {
 		return false, nil
 	}
-	enabled, _ := iapMap["enabled"].(bool)
+	enabled, _ := iapMap["serviceEnabled"].(bool)
 	return enabled, nil
 }
 

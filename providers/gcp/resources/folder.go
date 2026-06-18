@@ -94,7 +94,7 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	args["id"] = llx.StringData(retrievedFolderID)
 	args["name"] = llx.StringData(folder.DisplayName)
 	args["created"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
-	args["updated"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
+	args["updated"] = llx.TimeDataPtr(parseTime(folder.UpdateTime))
 	args["parentId"] = llx.StringData(folder.Parent)
 	args["state"] = llx.StringData(folder.State)
 	return args, nil, nil
