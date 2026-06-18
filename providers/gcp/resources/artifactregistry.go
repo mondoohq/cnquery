@@ -260,7 +260,7 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) iamPolicy() ([]any, err
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: repoPath})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: repoPath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		return nil, err
 	}

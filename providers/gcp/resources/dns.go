@@ -590,7 +590,7 @@ func (g *mqlGcpProjectDnsServiceManagedzone) iamPolicy() ([]any, error) {
 	}
 
 	resourcePath := "projects/" + projectId + "/managedZones/" + zoneName
-	policy, err := dnsSvc.ManagedZones.GetIamPolicy(resourcePath, &dns.GoogleIamV1GetIamPolicyRequest{}).Context(ctx).Do()
+	policy, err := dnsSvc.ManagedZones.GetIamPolicy(resourcePath, &dns.GoogleIamV1GetIamPolicyRequest{Options: &dns.GoogleIamV1GetPolicyOptions{RequestedPolicyVersion: 3}}).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

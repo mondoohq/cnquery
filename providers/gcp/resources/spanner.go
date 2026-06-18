@@ -721,7 +721,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) iamPolicy() ([]any, error) {
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: instanceName})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: instanceName, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if isGRPCSkippable(err) {
 			log.Warn().Err(err).Msg("could not read Spanner instance IAM policy")
@@ -751,7 +751,7 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) iamPolicy() ([]any, error)
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: dbName})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: dbName, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if isGRPCSkippable(err) {
 			log.Warn().Err(err).Msg("could not read Spanner database IAM policy")

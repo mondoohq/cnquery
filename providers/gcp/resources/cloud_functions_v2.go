@@ -182,7 +182,7 @@ func (g *mqlGcpProjectCloudFunctionV2) iamPolicy() ([]any, error) {
 	}
 	defer client.Close()
 
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("function", resourcePath).Err(err).Msg("could not retrieve cloud function IAM policy")

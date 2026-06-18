@@ -247,7 +247,7 @@ func (g *mqlGcpFolder) fetchIamPolicy() (*cloudresourcemanager.Policy, error) {
 			return
 		}
 
-		g.iamPolicyCache, g.iamPolicyErr = svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+		g.iamPolicyCache, g.iamPolicyErr = svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{Options: &cloudresourcemanager.GetPolicyOptions{RequestedPolicyVersion: 3}}).Do()
 	})
 	return g.iamPolicyCache, g.iamPolicyErr
 }

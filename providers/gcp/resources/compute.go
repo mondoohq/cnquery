@@ -3537,7 +3537,7 @@ func (g *mqlGcpProjectComputeServiceImage) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policy, err := svc.Images.GetIamPolicy(projectId, name).Context(ctx).Do()
+	policy, err := svc.Images.GetIamPolicy(projectId, name).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -3619,7 +3619,7 @@ func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	policy, err := svc.Snapshots.GetIamPolicy(projectId, name).Context(ctx).Do()
+	policy, err := svc.Snapshots.GetIamPolicy(projectId, name).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

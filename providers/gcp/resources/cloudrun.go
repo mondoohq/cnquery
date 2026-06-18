@@ -589,7 +589,7 @@ func (g *mqlGcpProjectCloudRunServiceService) iamPolicy() ([]any, error) {
 	}
 
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/services/%s", projectId, region, name)
-	policy, err := runSvc.Projects.Locations.Services.GetIamPolicy(resourcePath).Context(ctx).Do()
+	policy, err := runSvc.Projects.Locations.Services.GetIamPolicy(resourcePath).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -623,7 +623,7 @@ func (g *mqlGcpProjectCloudRunServiceJob) iamPolicy() ([]any, error) {
 	}
 
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/jobs/%s", projectId, region, name)
-	policy, err := runSvc.Projects.Locations.Jobs.GetIamPolicy(resourcePath).Context(ctx).Do()
+	policy, err := runSvc.Projects.Locations.Jobs.GetIamPolicy(resourcePath).OptionsRequestedPolicyVersion(3).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

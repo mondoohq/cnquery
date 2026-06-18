@@ -722,7 +722,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 	defer pubsubSvc.Close()
 
 	resourcePath := topicPath(projectId, name)
-	policy, err := pubsubSvc.TopicAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	policy, err := pubsubSvc.TopicAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("topic", name).Err(err).Msg("could not retrieve topic IAM policy")
@@ -774,7 +774,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 	defer pubsubSvc.Close()
 
 	resourcePath := subscriptionPath(projectId, name)
-	policy, err := pubsubSvc.SubscriptionAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	policy, err := pubsubSvc.SubscriptionAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("subscription", name).Err(err).Msg("could not retrieve subscription IAM policy")

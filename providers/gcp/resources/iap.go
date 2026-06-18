@@ -61,7 +61,7 @@ func (g *mqlGcpProjectIapService) iamPolicy() ([]any, error) {
 	defer client.Close()
 
 	resource := fmt.Sprintf("projects/%s/iap_web", projectId)
-	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resource})
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resource, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		return nil, err
 	}

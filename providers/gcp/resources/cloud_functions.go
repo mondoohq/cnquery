@@ -276,7 +276,7 @@ func (g *mqlGcpProjectCloudFunction) iamPolicy() ([]any, error) {
 	defer cloudFuncSvc.Close()
 
 	resourcePath := fmt.Sprintf("projects/%s/locations/%s/functions/%s", projectId, location, name)
-	policy, err := cloudFuncSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
+	policy, err := cloudFuncSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath, Options: &iampb.GetPolicyOptions{RequestedPolicyVersion: 3}})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("function", name).Err(err).Msg("could not retrieve cloud function IAM policy")
