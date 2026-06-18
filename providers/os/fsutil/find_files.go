@@ -13,6 +13,12 @@ import (
 func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string, perm *uint32, depth *int) ([]string, error) {
 	matcher := createFindFilesMatcher(iofs, typ, from, r, perm, depth)
 	matchedPaths := []string{}
+	// Note: matcher.Match resolves a symlink to its target type so a symlink is
+	// reported under the type it points at (mirroring `find -L`), but WalkDir
+	// itself does not follow symlinks during traversal. So a symlinked directory
+	// is reported for type:"directory" yet its contents are not walked. Full
+	// `find -L` recursion would need explicit symlink following with loop
+	// detection; it isn't required for the config-file discovery this powers.
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
 		if d != nil && d.IsDir() && matcher.DepthReached(p) {
 			return fs.SkipDir
