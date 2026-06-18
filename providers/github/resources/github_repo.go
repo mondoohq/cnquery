@@ -808,9 +808,24 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 }
 
 func (g *mqlGithubBranch) headCommit() (*mqlGithubCommit, error) {
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	// newMqlGithubRepository sets owner to null for owner-less repos, so
+	// g.Owner.Data can be nil; guard before dereferencing it.
 	ownerName := g.Owner.Data
+	if ownerName == nil {
+		g.HeadCommit.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	if ownerName.Login.Error != nil {
 		return nil, ownerName.Login.Error
+	}
+	if g.HeadCommitSha.Error != nil {
+		return nil, g.HeadCommitSha.Error
+	}
+	if g.RepoName.Error != nil {
+		return nil, g.RepoName.Error
 	}
 	ownerLogin := ownerName.Login.Data
 
