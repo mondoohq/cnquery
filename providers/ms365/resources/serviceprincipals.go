@@ -319,7 +319,7 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 
 		// also fill up the index
 		if permissionIndexer != nil {
-			permissionIndexer.IndexAppName(convert.ToValue(sp.GetId()), *sp.GetDisplayName())
+			permissionIndexer.IndexAppName(convert.ToValue(sp.GetId()), convert.ToValue(sp.GetDisplayName()))
 			permissionIndexer.IndexAppRole(convert.ToValue(sp.GetId()), sp.GetAppRoles()...)
 			permissionIndexer.IndexOauthScope(convert.ToValue(sp.GetId()), sp.GetOauth2PermissionScopes()...)
 		}

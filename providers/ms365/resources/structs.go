@@ -36,7 +36,7 @@ func newAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 		AssignedDateTime: p.GetAssignedDateTime(),
 		CapabilityStatus: convert.ToValue(p.GetCapabilityStatus()),
 		Service:          convert.ToValue(p.GetService()),
-		ServicePlanId:    p.GetServicePlanId().String(),
+		ServicePlanId:    convert.ToValue(newUuidString(p.GetServicePlanId())),
 	}
 }
 
@@ -557,7 +557,13 @@ type PermissionGrantConditionSet struct {
 }
 
 func newPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) PermissionGrantConditionSet {
-	t := PermissionType(*p.GetPermissionType())
+	if p == nil {
+		return PermissionGrantConditionSet{}
+	}
+	var t PermissionType
+	if pt := p.GetPermissionType(); pt != nil {
+		t = PermissionType(*pt)
+	}
 
 	return PermissionGrantConditionSet{
 		Entity: Entity{
