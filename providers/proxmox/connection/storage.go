@@ -10,11 +10,16 @@ import "fmt"
 // ---------------------------------------------------------------------------
 
 type StorageInfo struct {
-	Storage  string  `json:"storage"`
-	Type     string  `json:"type"`
-	Content  string  `json:"content"`
-	Path     string  `json:"path"`
-	Enabled  int     `json:"enabled"`
+	Storage string `json:"storage"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
+	Path    string `json:"path"`
+	Enabled int    `json:"enabled"`
+	// Disable is the cluster /storage config key (1 = disabled). The
+	// cluster endpoint reports config (disable), while /nodes/<n>/storage
+	// reports runtime status (enabled); GetStorages normalizes Enabled from
+	// Disable so the shared mapper is correct for both.
+	Disable  int     `json:"disable"`
 	Shared   int     `json:"shared"`
 	Total    int64   `json:"total"`
 	Used     int64   `json:"used"`
@@ -30,6 +35,17 @@ func (c *PveConnection) GetStorages() ([]StorageInfo, error) {
 	var storages []StorageInfo
 	if err := c.apiGet("/storage", &storages); err != nil {
 		return nil, fmt.Errorf("failed to get storages: %w", err)
+	}
+	// The cluster /storage endpoint reports config (a "disable" key), not the
+	// runtime "enabled" key that /nodes/<n>/storage returns. Normalize Enabled
+	// from Disable so the shared mapper reports a correct value — without this,
+	// every cluster-level storage was reported as enabled=false.
+	for i := range storages {
+		if storages[i].Disable != 0 {
+			storages[i].Enabled = 0
+		} else {
+			storages[i].Enabled = 1
+		}
 	}
 	return storages, nil
 }

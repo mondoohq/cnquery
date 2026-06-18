@@ -305,7 +305,11 @@ func (r *mqlProxmoxVm) updates() ([]any, error) {
 	})
 	if r.osInfoErr != nil {
 		if errors.Is(r.osInfoErr, connection.ErrQGANotRunning) {
-			return nil, fmt.Errorf("guest agent not reachable for VM %d", vmid)
+			// Without the guest agent we can't enumerate updates; return an
+			// empty list rather than failing the field, so iterating
+			// `vms { updates }` doesn't error on the first agent-less VM
+			// (consistent with the Windows-update path).
+			return []any{}, nil
 		}
 		return nil, r.osInfoErr
 	}
