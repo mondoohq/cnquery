@@ -31,8 +31,12 @@ const (
 	arcClusterDefenderExtensionDefinitionId        string = "/providers/Microsoft.Authorization/policyDefinitions/708b60a6-d253-4fe0-9114-4be4c00f012c"
 	kubernetesClusterDefenderExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/64def556-fbad-4622-930e-72d1d5589bf5"
 
+	// 0adc5395-... is the Arc-enabled Kubernetes "Azure Policy extension" definition;
+	// a8eff44f-... is the AKS "Azure Policy Add-on" definition. They were previously
+	// both set to the Arc GUID, so azurePolicyForKubernetes never reflected the AKS
+	// add-on assignment.
 	arcClusterPolicyExtensionDefinitionId        string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
-	kubernetesClusterPolicyExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
+	kubernetesClusterPolicyExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/a8eff44f-8c92-45c3-a3fb-9880802d67a7"
 )
 
 func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
@@ -220,7 +224,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 	// Override enabled based on policy assignments and vulnerability assessment settings
 	vulnToolName := ""
 	for _, it := range list.PolicyAssignments {
-		if it.Properties.PolicyDefinitionID == vaQualysPolicyDefinitionId {
+		// Scope the assignment to this subscription; the unfiltered list also
+		// returns management-group-inherited assignments, which would otherwise
+		// report enabled even when VA is not configured on this subscription
+		// (mirrors the scope check in the Defender-for-Containers detection).
+		if it.Properties.PolicyDefinitionID == vaQualysPolicyDefinitionId &&
+			it.Properties.Scope == fmt.Sprintf("/subscriptions/%s", subId) {
 			args["enabled"] = llx.BoolData(true)
 			vulnToolName = "Microsoft Defender for Cloud integrated Qualys scanner"
 		}

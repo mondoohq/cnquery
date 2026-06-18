@@ -582,7 +582,14 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdOnlyAuthentication() (bool
 	}
 	result, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.AuthenticationNameDefault, &sql.ServerAzureADOnlyAuthenticationsClientGetOptions{})
 	if err != nil {
-		return false, nil
+		// Only tolerate access-denied: swallowing every error would report a
+		// transient/permission failure as Azure-AD-only-auth disabled, which is
+		// the insecure value for a security check.
+		var rerr *azcore.ResponseError
+		if errors.As(err, &rerr) && rerr.StatusCode == http.StatusForbidden {
+			return false, nil
+		}
+		return false, err
 	}
 	if result.Properties != nil && result.Properties.AzureADOnlyAuthentication != nil {
 		return *result.Properties.AzureADOnlyAuthentication, nil
