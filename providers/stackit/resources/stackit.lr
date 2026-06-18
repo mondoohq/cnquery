@@ -73,6 +73,8 @@ stackit {
   observability() stackit.observability
   // Telemetry routing and federation namespace
   telemetry() stackit.telemetry
+  // Managed AI Model Serving namespace
+  modelServing() stackit.modelServing
   // Project service accounts
   serviceAccounts() []stackit.serviceAccount
   // TLS server certificates managed by STACKIT Certificates
@@ -1383,6 +1385,72 @@ private stackit.telemetry.link @defaults("id displayName enabled status") {
   createdAt time
   // Telemetry router this link forwards data to
   router() stackit.telemetry.router
+}
+
+// STACKIT Model Serving namespace
+//
+// Use the Model Serving namespace to enumerate the project's
+// authentication `tokens()` for the managed AI inference API, and the
+// catalog of `models()` (chat and embedding) available in the region.
+stackit.modelServing {
+  // Authentication tokens for the Model Serving API in the project
+  tokens() []stackit.modelServing.token
+  // Models (chat and embedding) available in the region
+  models() []stackit.modelServing.model
+}
+
+// STACKIT Model Serving authentication token
+//
+// Examine the metadata of a single Model Serving auth token. The token
+// is keyed by its UUID `id` — for example
+// `stackit.modelServing.token(id: "fa1d2…")` — and exposes the `name`,
+// `description`, lifecycle `state`, region, and the `validUntil` expiry
+// time. The secret token value is only returned once at creation and is
+// not exposed here.
+private stackit.modelServing.token @defaults("id name state validUntil") {
+  init(id? string)
+  // Token UUID
+  id string
+  // Token name
+  name string
+  // Description
+  description string
+  // Lifecycle state (active, …)
+  state string
+  // Region the token is valid in
+  region string
+  // Expiry timestamp
+  validUntil time
+}
+
+// STACKIT Model Serving model
+//
+// Examine a single model offered by the Model Serving catalog. The
+// model is keyed by its UUID `id` and exposes the API `name`, the
+// `displayedName`, a `description`, the `type` (for example chat or
+// embedding), the `category`, the region, the inference `url`, free-form
+// `tags`, and the available pricing `skus`.
+private stackit.modelServing.model @defaults("name type category") {
+  // Model UUID
+  id string
+  // API model name
+  name string
+  // Human-readable display name
+  displayedName string
+  // Description
+  description string
+  // Model type (for example chat, embedding)
+  type string
+  // Model category
+  category string
+  // Region the model is served in
+  region string
+  // Inference endpoint URL
+  url string
+  // Free-form tags attached to the model
+  tags []string
+  // Available pricing SKUs ({id, type, description} entries)
+  skus []dict
 }
 
 // STACKIT project service account

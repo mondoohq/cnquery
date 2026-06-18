@@ -21,6 +21,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/loadbalancer"
 	"github.com/stackitcloud/stackit-sdk-go/services/logme"
 	"github.com/stackitcloud/stackit-sdk-go/services/mariadb"
+	"github.com/stackitcloud/stackit-sdk-go/services/modelserving"
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/objectstorage"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
@@ -121,6 +122,9 @@ type StackitConnection struct {
 	telemetryLinkOnce    sync.Once
 	telemetryLinkClient  *telemetrylink.APIClient
 	telemetryLinkErr     error
+	modelServingOnce     sync.Once
+	modelServingClient   *modelserving.APIClient
+	modelServingErr      error
 	albOnce              sync.Once
 	albClient            *alb.APIClient
 	albErr               error
@@ -356,6 +360,13 @@ func (c *StackitConnection) Sfs() (*sfs.APIClient, error) {
 		c.sfsClient, c.sfsErr = sfs.NewAPIClient(c.configOpts...)
 	})
 	return c.sfsClient, c.sfsErr
+}
+
+func (c *StackitConnection) ModelServing() (*modelserving.APIClient, error) {
+	c.modelServingOnce.Do(func() {
+		c.modelServingClient, c.modelServingErr = modelserving.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.modelServingClient, c.modelServingErr
 }
 
 func (c *StackitConnection) TelemetryRouter() (*telemetryrouter.APIClient, error) {

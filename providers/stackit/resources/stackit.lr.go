@@ -69,6 +69,9 @@ const (
 	ResourceStackitTelemetryRouterDestination string = "stackit.telemetry.router.destination"
 	ResourceStackitTelemetryRouterAccessToken string = "stackit.telemetry.router.accessToken"
 	ResourceStackitTelemetryLink              string = "stackit.telemetry.link"
+	ResourceStackitModelServing               string = "stackit.modelServing"
+	ResourceStackitModelServingToken          string = "stackit.modelServing.token"
+	ResourceStackitModelServingModel          string = "stackit.modelServing.model"
 	ResourceStackitServiceAccount             string = "stackit.serviceAccount"
 	ResourceStackitCertificate                string = "stackit.certificate"
 	ResourceStackitAlbLoadBalancer            string = "stackit.alb.loadBalancer"
@@ -296,6 +299,18 @@ func init() {
 			// to override args, implement: initStackitTelemetryLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitTelemetryLink,
 		},
+		"stackit.modelServing": {
+			// to override args, implement: initStackitModelServing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitModelServing,
+		},
+		"stackit.modelServing.token": {
+			Init:   initStackitModelServingToken,
+			Create: createStackitModelServingToken,
+		},
+		"stackit.modelServing.model": {
+			// to override args, implement: initStackitModelServingModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitModelServingModel,
+		},
 		"stackit.serviceAccount": {
 			Init:   initStackitServiceAccount,
 			Create: createStackitServiceAccount,
@@ -480,6 +495,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.telemetry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetTelemetry()).ToDataRes(types.Resource("stackit.telemetry"))
+	},
+	"stackit.modelServing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetModelServing()).ToDataRes(types.Resource("stackit.modelServing"))
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount")))
@@ -1714,6 +1732,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.telemetry.link.router": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitTelemetryLink).GetRouter()).ToDataRes(types.Resource("stackit.telemetry.router"))
 	},
+	"stackit.modelServing.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServing).GetTokens()).ToDataRes(types.Array(types.Resource("stackit.modelServing.token")))
+	},
+	"stackit.modelServing.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServing).GetModels()).ToDataRes(types.Array(types.Resource("stackit.modelServing.model")))
+	},
+	"stackit.modelServing.token.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetId()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetState()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.token.validUntil": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingToken).GetValidUntil()).ToDataRes(types.Time)
+	},
+	"stackit.modelServing.model.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetId()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.displayedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetDisplayedName()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetType()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetCategory()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetUrl()).ToDataRes(types.String)
+	},
+	"stackit.modelServing.model.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.modelServing.model.skus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitModelServingModel).GetSkus()).ToDataRes(types.Array(types.Dict))
+	},
 	"stackit.serviceAccount.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetEmail()).ToDataRes(types.String)
 	},
@@ -1985,6 +2057,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.telemetry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).Telemetry, ok = plugin.RawToTValue[*mqlStackitTelemetry](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).ModelServing, ok = plugin.RawToTValue[*mqlStackitModelServing](v.Value, v.Error)
 		return
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3839,6 +3915,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitTelemetryLink).Router, ok = plugin.RawToTValue[*mqlStackitTelemetryRouter](v.Value, v.Error)
 		return
 	},
+	"stackit.modelServing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServing).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.token.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.token.validUntil": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingToken).ValidUntil, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.modelServing.model.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.displayedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).DisplayedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.modelServing.model.skus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitModelServingModel).Skus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServiceAccount).__id, ok = v.Value.(string)
 		return
@@ -4134,6 +4294,7 @@ type mqlStackit struct {
 	SecretsManager   plugin.TValue[*mqlStackitSecretsManager]
 	Observability    plugin.TValue[*mqlStackitObservability]
 	Telemetry        plugin.TValue[*mqlStackitTelemetry]
+	ModelServing     plugin.TValue[*mqlStackitModelServing]
 	ServiceAccounts  plugin.TValue[[]any]
 	Certificates     plugin.TValue[[]any]
 	AlbLoadBalancers plugin.TValue[[]any]
@@ -4579,6 +4740,22 @@ func (c *mqlStackit) GetTelemetry() *plugin.TValue[*mqlStackitTelemetry] {
 		}
 
 		return c.telemetry()
+	})
+}
+
+func (c *mqlStackit) GetModelServing() *plugin.TValue[*mqlStackitModelServing] {
+	return plugin.GetOrCompute[*mqlStackitModelServing](&c.ModelServing, func() (*mqlStackitModelServing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "modelServing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitModelServing), nil
+			}
+		}
+
+		return c.modelServing()
 	})
 }
 
@@ -9443,6 +9620,247 @@ func (c *mqlStackitTelemetryLink) GetRouter() *plugin.TValue[*mqlStackitTelemetr
 
 		return c.router()
 	})
+}
+
+// mqlStackitModelServing for the stackit.modelServing resource
+type mqlStackitModelServing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingInternal it will be used here
+	Tokens plugin.TValue[[]any]
+	Models plugin.TValue[[]any]
+}
+
+// createStackitModelServing creates a new instance of this resource
+func createStackitModelServing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServing) MqlName() string {
+	return "stackit.modelServing"
+}
+
+func (c *mqlStackitModelServing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServing) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.modelServing", c.__id, "tokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokens()
+	})
+}
+
+func (c *mqlStackitModelServing) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.modelServing", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+// mqlStackitModelServingToken for the stackit.modelServing.token resource
+type mqlStackitModelServingToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingTokenInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	State       plugin.TValue[string]
+	Region      plugin.TValue[string]
+	ValidUntil  plugin.TValue[*time.Time]
+}
+
+// createStackitModelServingToken creates a new instance of this resource
+func createStackitModelServingToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServingToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing.token", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServingToken) MqlName() string {
+	return "stackit.modelServing.token"
+}
+
+func (c *mqlStackitModelServingToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServingToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitModelServingToken) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitModelServingToken) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitModelServingToken) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlStackitModelServingToken) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitModelServingToken) GetValidUntil() *plugin.TValue[*time.Time] {
+	return &c.ValidUntil
+}
+
+// mqlStackitModelServingModel for the stackit.modelServing.model resource
+type mqlStackitModelServingModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitModelServingModelInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayedName plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Category      plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Url           plugin.TValue[string]
+	Tags          plugin.TValue[[]any]
+	Skus          plugin.TValue[[]any]
+}
+
+// createStackitModelServingModel creates a new instance of this resource
+func createStackitModelServingModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitModelServingModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.modelServing.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitModelServingModel) MqlName() string {
+	return "stackit.modelServing.model"
+}
+
+func (c *mqlStackitModelServingModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitModelServingModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitModelServingModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitModelServingModel) GetDisplayedName() *plugin.TValue[string] {
+	return &c.DisplayedName
+}
+
+func (c *mqlStackitModelServingModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitModelServingModel) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStackitModelServingModel) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlStackitModelServingModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitModelServingModel) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlStackitModelServingModel) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlStackitModelServingModel) GetSkus() *plugin.TValue[[]any] {
+	return &c.Skus
 }
 
 // mqlStackitServiceAccount for the stackit.serviceAccount resource
