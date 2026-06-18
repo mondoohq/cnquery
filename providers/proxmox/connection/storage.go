@@ -34,12 +34,17 @@ func (c *PveConnection) GetStorages() ([]StorageInfo, error) {
 	if err := c.apiGet("/storage", &storages); err != nil {
 		return nil, fmt.Errorf("failed to get storages: %w", err)
 	}
-	// The cluster /storage endpoint reports config (a "disable" key), not the
-	// runtime "enabled" key that /nodes/<n>/storage returns. Normalize Enabled
-	// from Disable so the shared mapper reports a correct value — without this,
-	// every cluster-level storage was reported as enabled=false. Only infer
-	// Enabled when the response didn't already provide it, so a future endpoint
-	// that returns both keys keeps its explicit value.
+	normalizeClusterStorageEnabled(storages)
+	return storages, nil
+}
+
+// normalizeClusterStorageEnabled derives Enabled from the cluster /storage
+// "disable" config key. That endpoint reports config (disable), not the runtime
+// "enabled" key that /nodes/<n>/storage returns, so without this every
+// cluster-level storage reads as enabled=false. Enabled is only inferred when
+// the response didn't already provide it, so an endpoint returning both keys
+// keeps its explicit value.
+func normalizeClusterStorageEnabled(storages []StorageInfo) {
 	for i := range storages {
 		if storages[i].Disable != 0 {
 			storages[i].Enabled = 0
@@ -47,7 +52,6 @@ func (c *PveConnection) GetStorages() ([]StorageInfo, error) {
 			storages[i].Enabled = 1
 		}
 	}
-	return storages, nil
 }
 
 // ---------------------------------------------------------------------------
