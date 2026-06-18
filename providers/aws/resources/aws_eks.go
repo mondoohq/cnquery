@@ -164,7 +164,8 @@ func (a *mqlAwsEksCluster) fetchDetail() error {
 	}
 	if descResp.Cluster == nil {
 		a.fetched = true
-		return nil
+		a.fetchErr = fmt.Errorf("eks DescribeCluster returned no cluster for %q in %q", a.Name.Data, a.Region.Data)
+		return a.fetchErr
 	}
 	if err := a.populateFromDescribe(descResp.Cluster); err != nil {
 		a.fetched = true
