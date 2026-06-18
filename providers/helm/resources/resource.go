@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// yamlDocSeparator matches a YAML document separator: `---` alone on a line
+// (optionally with trailing whitespace), at column 0.
+var yamlDocSeparator = regexp.MustCompile(`(?m)^---[ \t]*$`)
+
+// splitYAMLDocuments splits a multi-document YAML stream on real document
+// separators only. The previous strings.Split(content, "---") split on ANY
+// occurrence of "---" — including inside a string value, an indented block
+// scalar (e.g. a ConfigMap data payload), or a comment — which silently
+// corrupted or dropped valid Kubernetes resources.
+func splitYAMLDocuments(content string) []string {
+	return yamlDocSeparator.Split(content, -1)
+}
+
 type mqlHelmResourceInternal struct {
 	cacheTemplateKey string
 }
@@ -25,8 +39,8 @@ type mqlHelmResourceInternal struct {
 func parseK8sResources(runtime *plugin.Runtime, templateKey string, content string, isCRD bool) ([]any, error) {
 	var mqlResources []any
 
-	// Split on YAML document separator
-	docs := strings.Split(content, "---")
+	// Split on YAML document separators only (not on `---` inside values)
+	docs := splitYAMLDocuments(content)
 	docIndex := 0
 	for _, doc := range docs {
 		doc = strings.TrimSpace(doc)

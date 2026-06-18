@@ -391,3 +391,38 @@ metadata:
 		assert.NotEqual(t, id0, id1, "duplicate resources should have different IDs due to docIndex")
 	})
 }
+
+func TestParseK8sResourcesDocumentSeparatorInValue(t *testing.T) {
+	t.Run("--- inside a quoted scalar must not split the document", func(t *testing.T) {
+		// The previous strings.Split(content, "---") split this into an
+		// unterminated-quote chunk that failed to unmarshal, dropping the whole
+		// resource (0 results). Splitting only on real separators keeps it whole.
+		yaml := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: inline-sep\ndata:\n  note: \"a --- b\"\n"
+
+		runtime := newTestRuntime()
+		resources, err := parseK8sResources(runtime, "mychart/templates/cm.yaml", yaml, false)
+		require.NoError(t, err)
+		require.Len(t, resources, 1, "a `---` inside a quoted value must not split (or drop) the document")
+		assert.Equal(t, "inline-sep", resources[0].(*mqlHelmResource).Name.Data)
+	})
+
+	t.Run("--- inside an indented block scalar must not split the document", func(t *testing.T) {
+		// strings.Split would cut the block scalar at the indented `---`,
+		// truncating the resource. Real separators are column-0 only.
+		yaml := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: block-sep\ndata:\n  readme: |\n    intro\n    ---\n    outro\n"
+
+		runtime := newTestRuntime()
+		resources, err := parseK8sResources(runtime, "mychart/templates/cm.yaml", yaml, false)
+		require.NoError(t, err)
+		require.Len(t, resources, 1)
+		assert.Equal(t, "block-sep", resources[0].(*mqlHelmResource).Name.Data)
+	})
+
+	t.Run("genuine separators still split", func(t *testing.T) {
+		yaml := "kind: ConfigMap\nmetadata:\n  name: a\n---\nkind: ConfigMap\nmetadata:\n  name: b\n"
+		runtime := newTestRuntime()
+		resources, err := parseK8sResources(runtime, "mychart/templates/cm.yaml", yaml, false)
+		require.NoError(t, err)
+		require.Len(t, resources, 2)
+	})
+}
