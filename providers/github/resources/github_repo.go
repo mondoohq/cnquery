@@ -623,6 +623,9 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	var err error
 
 	// if the branch is not protected, we don't need to fetch the protection rules
+	if g.IsProtected.Error != nil {
+		return nil, g.IsProtected.Error
+	}
 	if !g.IsProtected.Data {
 		g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

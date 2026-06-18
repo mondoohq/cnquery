@@ -88,7 +88,7 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 	if userId == "" {
 		userId = conf.Options["owner"]
 	}
-	if conf.Options["user"] != "" {
+	if userId != "" {
 		userAssets, err := user(runtime, userId, conn)
 		if err != nil {
 			return nil, err
