@@ -24,7 +24,7 @@ stackit {
   // STACKIT project the connection is scoped to
   project() stackit.project
   // Region the connection targets (e.g., eu01)
-  region string
+  region() string
   // Compute servers (virtual machines)
   servers() []stackit.server
   // Block storage volumes

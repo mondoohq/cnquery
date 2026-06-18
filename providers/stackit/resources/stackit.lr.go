@@ -4356,7 +4356,9 @@ func (c *mqlStackit) GetProject() *plugin.TValue[*mqlStackitProject] {
 }
 
 func (c *mqlStackit) GetRegion() *plugin.TValue[string] {
-	return &c.Region
+	return plugin.GetOrCompute[string](&c.Region, func() (string, error) {
+		return c.region()
+	})
 }
 
 func (c *mqlStackit) GetServers() *plugin.TValue[[]any] {

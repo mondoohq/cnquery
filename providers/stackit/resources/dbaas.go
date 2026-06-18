@@ -172,7 +172,11 @@ func (r *mqlStackitMongoDbFlex) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	// Unlike the other Flex engines, the MongoDB Flex ListInstances endpoint
+	// requires a `tag` query parameter. An empty tag returns all instances in
+	// the project, so use the request builder rather than the convenience
+	// ListInstancesExecute (which cannot set a tag).
+	resp, err := client.ListInstances(bgctx(), c.ProjectID(), c.Region()).Tag("").Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil

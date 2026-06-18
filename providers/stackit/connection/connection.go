@@ -238,14 +238,19 @@ func (c *StackitConnection) Verify(ctx context.Context) error {
 
 func (c *StackitConnection) IaaS() (*iaas.APIClient, error) {
 	c.iaasOnce.Do(func() {
-		c.iaasClient, c.iaasErr = iaas.NewAPIClient(c.configOpts...)
+		// The IaaS API rejects WithRegion in the client config and requires the
+		// region as a per-call function parameter (which every IaaS resource
+		// method supplies), so build the client without a bound region.
+		c.iaasClient, c.iaasErr = iaas.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.iaasClient, c.iaasErr
 }
 
 func (c *StackitConnection) SKE() (*ske.APIClient, error) {
 	c.skeOnce.Do(func() {
-		c.skeClient, c.skeErr = ske.NewAPIClient(c.configOpts...)
+		// SKE likewise rejects WithRegion in the client config; the region is
+		// passed as a per-call function parameter.
+		c.skeClient, c.skeErr = ske.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.skeClient, c.skeErr
 }
@@ -287,7 +292,9 @@ func (c *StackitConnection) PostgresFlex() (*postgresflex.APIClient, error) {
 
 func (c *StackitConnection) MongoDbFlex() (*mongodbflex.APIClient, error) {
 	c.mongoDbFlexOnce.Do(func() {
-		c.mongoDbFlexClient, c.mongoDbFlexErr = mongodbflex.NewAPIClient(c.configOpts...)
+		// MongoDB Flex rejects WithRegion in the client config; the region is
+		// passed as a per-call function parameter.
+		c.mongoDbFlexClient, c.mongoDbFlexErr = mongodbflex.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.mongoDbFlexClient, c.mongoDbFlexErr
 }
@@ -357,7 +364,9 @@ func (c *StackitConnection) ServiceAccount() (*serviceaccount.APIClient, error) 
 
 func (c *StackitConnection) Sfs() (*sfs.APIClient, error) {
 	c.sfsOnce.Do(func() {
-		c.sfsClient, c.sfsErr = sfs.NewAPIClient(c.configOpts...)
+		// SFS rejects WithRegion in the client config; every SFS resource method
+		// passes the region as a per-call function parameter.
+		c.sfsClient, c.sfsErr = sfs.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.sfsClient, c.sfsErr
 }
