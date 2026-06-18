@@ -31,6 +31,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"
 	"github.com/stackitcloud/stackit-sdk-go/services/secretsmanager"
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
+	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
 	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -109,6 +110,9 @@ type StackitConnection struct {
 	serviceAccountOnce   sync.Once
 	serviceAccountClient *serviceaccount.APIClient
 	serviceAccountErr    error
+	sfsOnce              sync.Once
+	sfsClient            *sfs.APIClient
+	sfsErr               error
 	albOnce              sync.Once
 	albClient            *alb.APIClient
 	albErr               error
@@ -337,6 +341,13 @@ func (c *StackitConnection) ServiceAccount() (*serviceaccount.APIClient, error) 
 		c.serviceAccountClient, c.serviceAccountErr = serviceaccount.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.serviceAccountClient, c.serviceAccountErr
+}
+
+func (c *StackitConnection) Sfs() (*sfs.APIClient, error) {
+	c.sfsOnce.Do(func() {
+		c.sfsClient, c.sfsErr = sfs.NewAPIClient(c.configOpts...)
+	})
+	return c.sfsClient, c.sfsErr
 }
 
 func (c *StackitConnection) ALB() (*alb.APIClient, error) {

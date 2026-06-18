@@ -47,6 +47,8 @@ stackit {
   ske() stackit.ske
   // S3-compatible object storage namespace
   objectStorage() stackit.objectStorage
+  // Managed NFS file storage (SFS) namespace
+  sfs() stackit.sfs
   // Managed DNS namespace
   dns() stackit.dns
   // Postgres Flex managed database namespace
@@ -604,6 +606,173 @@ private stackit.objectStorage.bucket @defaults("name region urlPathStyle") {
   defaultRetentionDays() int
   // Default-retention mode; COMPLIANCE or GOVERNANCE, empty when unconfigured
   defaultRetentionMode() string
+}
+
+// STACKIT File Storage namespace
+//
+// Use the SFS (STACKIT File Storage) namespace to enumerate managed NFS
+// storage in the project: the `resourcePools()` that provide capacity,
+// the `exportPolicies()` that govern NFS client access, and the
+// SnapLock project lock (`lockId`). Individual file shares and pool
+// snapshots hang off each resource pool.
+stackit.sfs {
+  // File-storage resource pools (capacity pools) in the project
+  resourcePools() []stackit.sfs.resourcePool
+  // Share export policies (NFS export rule sets) defined in the project
+  exportPolicies() []stackit.sfs.exportPolicy
+  // SnapLock project lock ID; empty when the project is not locked
+  lockId() string
+}
+
+// STACKIT File Storage resource pool
+//
+// Examine a single SFS capacity pool. The pool is keyed by its UUID
+// `id` — for example `stackit.sfs.resourcePool(id: "fa1d2…")` — and
+// exposes the `name`, lifecycle `state`, `performanceClass` (with peak
+// IOPS and throughput), availability zone, NFS `mountPath`, the
+// `ipAcl` of CIDRs allowed to mount, capacity accounting in gigabytes
+// (`sizeGigabytes`, `usedGigabytes`, `availableGigabytes`,
+// `usedBySnapshotsGigabytes`), the attached snapshot policy, labels,
+// and creation time. The shares hosted in the pool are available
+// through `shares()` and point-in-time copies through `snapshots()`.
+private stackit.sfs.resourcePool @defaults("id name state performanceClass") {
+  init(id? string)
+  // Resource pool UUID
+  id string
+  // Resource pool name
+  name string
+  // Lifecycle state (CREATING, READY, UPDATING, DELETING, FAILED, …)
+  state string
+  // Region the pool runs in
+  region string
+  // Performance class name (sizing/quota tier)
+  performanceClass string
+  // Performance class peak IOPS
+  performanceClassPeakIops int
+  // Performance class throughput in MiB/s
+  performanceClassThroughput int
+  // Availability zone hosting the pool
+  availabilityZone string
+  // Base NFS mount path exported by the pool
+  mountPath string
+  // Number of shares hosted in the pool
+  countShares int
+  // Provisioned capacity in gigabytes
+  sizeGigabytes int
+  // Used capacity in gigabytes
+  usedGigabytes float
+  // Available capacity in gigabytes
+  availableGigabytes float
+  // Capacity consumed by snapshots in gigabytes
+  usedBySnapshotsGigabytes float
+  // CIDRs allowed to mount shares in this pool
+  ipAcl []string
+  // Whether snapshots are visible to clients under the share mount
+  snapshotsAreVisible bool
+  // Attached snapshot policy UUID; empty when none is attached
+  snapshotPolicyId string
+  // Attached snapshot policy name; empty when none is attached
+  snapshotPolicyName string
+  // User-defined labels attached to the pool
+  labels map[string]string
+  // Creation timestamp
+  createdAt time
+  // File shares hosted in this pool
+  shares() []stackit.sfs.share
+  // Point-in-time snapshots of this pool
+  snapshots() []stackit.sfs.snapshot
+}
+
+// STACKIT File Storage share
+//
+// Examine a single NFS file share within a resource pool. The share is
+// keyed by its UUID `id` and exposes the `name`, lifecycle `state`, the
+// NFS `mountPath` clients use, the per-share hard quota
+// (`spaceHardLimitGigabytes`), labels, and creation time. The NFS
+// export rules governing client access are available through the typed
+// `exportPolicy()` accessor.
+private stackit.sfs.share @defaults("id name state") {
+  // Share UUID
+  id string
+  // Share name
+  name string
+  // Lifecycle state (CREATING, READY, UPDATING, DELETING, FAILED, …)
+  state string
+  // NFS mount path clients use to mount the share
+  mountPath string
+  // Per-share hard quota in gigabytes
+  spaceHardLimitGigabytes int
+  // User-defined labels attached to the share
+  labels map[string]string
+  // Creation timestamp
+  createdAt time
+  // Export policy (NFS export rule set) applied to this share
+  exportPolicy() stackit.sfs.exportPolicy
+}
+
+// STACKIT File Storage share export policy
+//
+// Examine a single NFS export policy — the rule set that controls which
+// clients may mount shares and with what access. The policy is keyed by
+// its UUID `id` — for example `stackit.sfs.exportPolicy(id: "fa1d2…")` —
+// and exposes the `name`, the count of shares referencing it
+// (`sharesUsingExportPolicy`), labels, creation time, and the ordered
+// list of `rules()`.
+private stackit.sfs.exportPolicy @defaults("id name sharesUsingExportPolicy") {
+  init(id? string)
+  // Export policy UUID
+  id string
+  // Export policy name
+  name string
+  // Number of shares currently referencing this policy
+  sharesUsingExportPolicy int
+  // User-defined labels attached to the policy
+  labels map[string]string
+  // Creation timestamp
+  createdAt time
+  // Ordered NFS export rules
+  rules() []stackit.sfs.exportPolicy.rule
+}
+
+// STACKIT File Storage export policy rule
+//
+// Examine a single NFS export rule within an export policy. Each rule
+// grants the CIDRs in `ipAcl` access at the given evaluation `order`,
+// keyed by its UUID `id`, with an optional `description` and creation
+// time.
+private stackit.sfs.exportPolicy.rule @defaults("order ipAcl") {
+  // Rule UUID
+  id string
+  // Evaluation order (lower numbers are evaluated first)
+  order int
+  // CIDRs granted access by this rule
+  ipAcl []string
+  // Optional rule description
+  description string
+  // Creation timestamp
+  createdAt time
+}
+
+// STACKIT File Storage resource pool snapshot
+//
+// Examine a single point-in-time snapshot of a resource pool. The
+// snapshot is selected by its `name` within the pool and exposes the
+// logical and physical sizes in gigabytes (`logicalSizeGigabytes`,
+// `sizeGigabytes`), an optional `comment`, the SnapLock expiry time
+// (`snaplockExpiryTime`, when WORM-protected), and the creation time.
+private stackit.sfs.snapshot @defaults("name sizeGigabytes createdAt") {
+  // Snapshot name (unique within the pool)
+  name string
+  // Physical size in gigabytes
+  sizeGigabytes int
+  // Logical size in gigabytes
+  logicalSizeGigabytes int
+  // Optional snapshot comment
+  comment string
+  // SnapLock expiry time; null when the snapshot is not WORM-protected
+  snaplockExpiryTime time
+  // Creation timestamp
+  createdAt time
 }
 
 // STACKIT DNS namespace
