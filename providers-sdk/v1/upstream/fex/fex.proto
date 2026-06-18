@@ -344,7 +344,8 @@ message FindingDetail {
   map<string, string> properties = 6;
 }
 
-// Experimental. Evidence shares details about the facts that lead to the finding
+// Experimental. Evidence shares details about the facts that lead to the
+// finding
 message Evidence {
   // Attack tactic used
   AttackTactic tactic = 1;

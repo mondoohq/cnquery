@@ -1809,7 +1809,8 @@ func (x *FindingDetail) GetProperties() map[string]string {
 	return nil
 }
 
-// Experimental. Evidence shares details about the facts that lead to the finding
+// Experimental. Evidence shares details about the facts that lead to the
+// finding
 type Evidence struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Attack tactic used
