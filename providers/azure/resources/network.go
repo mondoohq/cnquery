@@ -472,10 +472,10 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 		RetentionDays int  `json:"retentionDays"`
 	}
 	type mqlFlowLogAnalytics struct {
-		Enabled             bool   `json:"allowedApplications"`
+		Enabled             bool   `json:"enabled"`
 		AnalyticsInterval   int    `json:"analyticsInterval"`
-		WorkspaceId         string `json:"workspaceResourceId"`
-		WorkspaceResourceId string `json:"workspaceId"`
+		WorkspaceId         string `json:"workspaceId"`
+		WorkspaceResourceId string `json:"workspaceResourceId"`
 		WorkspaceRegion     string `json:"workspaceRegion"`
 	}
 

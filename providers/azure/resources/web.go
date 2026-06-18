@@ -502,67 +502,10 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			properties, err := convert.JsonToDict(entry.Properties)
-			if err != nil {
-				return nil, err
-			}
-
-			identity, err := convert.JsonToDict(entry.Identity)
-			if err != nil {
-				return nil, err
-			}
-
-			args := map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(entry.ID),
-				"name":       llx.StringDataPtr(entry.Name),
-				"location":   llx.StringDataPtr(entry.Location),
-				"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-				"type":       llx.StringDataPtr(entry.Type),
-				"kind":       llx.StringDataPtr(entry.Kind),
-				"properties": llx.DictData(properties),
-				"identity":   llx.DictData(identity),
-			}
-
-			if entry.Properties != nil {
-				args["httpsOnly"] = llx.BoolDataPtr(entry.Properties.HTTPSOnly)
-				args["clientCertEnabled"] = llx.BoolDataPtr(entry.Properties.ClientCertEnabled)
-				if entry.Properties.ClientCertMode != nil {
-					args["clientCertMode"] = llx.StringData(string(*entry.Properties.ClientCertMode))
-				}
-				args["enabled"] = llx.BoolDataPtr(entry.Properties.Enabled)
-				args["state"] = llx.StringDataPtr(entry.Properties.State)
-				args["sshEnabled"] = llx.BoolDataPtr(entry.Properties.SSHEnabled)
-				args["publicNetworkAccess"] = llx.StringDataPtr(entry.Properties.PublicNetworkAccess)
-				args["virtualNetworkSubnetId"] = llx.StringDataPtr(entry.Properties.VirtualNetworkSubnetID)
-				if entry.Properties.IPMode != nil {
-					args["ipMode"] = llx.StringData(string(*entry.Properties.IPMode))
-				}
-				if entry.Properties.RedundancyMode != nil {
-					args["redundancyMode"] = llx.StringData(string(*entry.Properties.RedundancyMode))
-				}
-
-				// Create outbound VNet routing sub-resource
-				var outboundVnetRoutingData *llx.RawData = llx.NilData
-				if entry.Properties.OutboundVnetRouting != nil {
-					ovr := entry.Properties.OutboundVnetRouting
-					ovrRes, ovrErr := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.outboundVnetRouting",
-						map[string]*llx.RawData{
-							"id":                          llx.StringData(*entry.ID + "/outboundVnetRouting"),
-							"allTrafficEnabled":           llx.BoolDataPtr(ovr.AllTraffic),
-							"applicationTrafficEnabled":   llx.BoolDataPtr(ovr.ApplicationTraffic),
-							"backupRestoreTrafficEnabled": llx.BoolDataPtr(ovr.BackupRestoreTraffic),
-							"contentShareTrafficEnabled":  llx.BoolDataPtr(ovr.ContentShareTraffic),
-							"imagePullTrafficEnabled":     llx.BoolDataPtr(ovr.ImagePullTraffic),
-						})
-					if ovrErr != nil {
-						return nil, ovrErr
-					}
-					outboundVnetRoutingData = llx.ResourceData(ovrRes, "azure.subscription.webService.appsite.outboundVnetRouting")
-				}
-				args["outboundVnetRouting"] = outboundVnetRoutingData
-			}
-
-			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite, args)
+			// Delegate to the shared builder so listed appsites carry the same
+			// fields (defaultHostName, enabledHostNames, identityType, …) and
+			// cached systemData as appsites reached via a slot's parent.
+			mqlAzure, err := createWebAppResourceFromSite(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite, entry)
 			if err != nil {
 				return nil, err
 			}
