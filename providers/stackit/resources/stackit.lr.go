@@ -16,63 +16,68 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceStackit                       string = "stackit"
-	ResourceStackitProject                string = "stackit.project"
-	ResourceStackitServer                 string = "stackit.server"
-	ResourceStackitVolume                 string = "stackit.volume"
-	ResourceStackitSnapshot               string = "stackit.snapshot"
-	ResourceStackitImage                  string = "stackit.image"
-	ResourceStackitNetwork                string = "stackit.network"
-	ResourceStackitPublicIp               string = "stackit.publicIp"
-	ResourceStackitSecurityGroup          string = "stackit.securityGroup"
-	ResourceStackitSecurityGroupRule      string = "stackit.securityGroup.rule"
-	ResourceStackitKeyPair                string = "stackit.keyPair"
-	ResourceStackitLoadBalancer           string = "stackit.loadBalancer"
-	ResourceStackitLoadBalancerListener   string = "stackit.loadBalancer.listener"
-	ResourceStackitLoadBalancerTargetPool string = "stackit.loadBalancer.targetPool"
-	ResourceStackitSke                    string = "stackit.ske"
-	ResourceStackitSkeCluster             string = "stackit.ske.cluster"
-	ResourceStackitSkeClusterNodePool     string = "stackit.ske.cluster.nodePool"
-	ResourceStackitObjectStorage          string = "stackit.objectStorage"
-	ResourceStackitObjectStorageBucket    string = "stackit.objectStorage.bucket"
-	ResourceStackitSfs                    string = "stackit.sfs"
-	ResourceStackitSfsResourcePool        string = "stackit.sfs.resourcePool"
-	ResourceStackitSfsShare               string = "stackit.sfs.share"
-	ResourceStackitSfsExportPolicy        string = "stackit.sfs.exportPolicy"
-	ResourceStackitSfsExportPolicyRule    string = "stackit.sfs.exportPolicy.rule"
-	ResourceStackitSfsSnapshot            string = "stackit.sfs.snapshot"
-	ResourceStackitDns                    string = "stackit.dns"
-	ResourceStackitDnsZone                string = "stackit.dns.zone"
-	ResourceStackitDnsRecordSet           string = "stackit.dns.recordSet"
-	ResourceStackitPostgresFlex           string = "stackit.postgresFlex"
-	ResourceStackitPostgresFlexInstance   string = "stackit.postgresFlex.instance"
-	ResourceStackitMongoDbFlex            string = "stackit.mongoDbFlex"
-	ResourceStackitMongoDbFlexInstance    string = "stackit.mongoDbFlex.instance"
-	ResourceStackitSqlServerFlex          string = "stackit.sqlServerFlex"
-	ResourceStackitSqlServerFlexInstance  string = "stackit.sqlServerFlex.instance"
-	ResourceStackitOpenSearch             string = "stackit.openSearch"
-	ResourceStackitOpenSearchInstance     string = "stackit.openSearch.instance"
-	ResourceStackitMariaDb                string = "stackit.mariaDb"
-	ResourceStackitMariaDbInstance        string = "stackit.mariaDb.instance"
-	ResourceStackitRedis                  string = "stackit.redis"
-	ResourceStackitRedisInstance          string = "stackit.redis.instance"
-	ResourceStackitRabbitMq               string = "stackit.rabbitMq"
-	ResourceStackitRabbitMqInstance       string = "stackit.rabbitMq.instance"
-	ResourceStackitLogMe                  string = "stackit.logMe"
-	ResourceStackitLogMeInstance          string = "stackit.logMe.instance"
-	ResourceStackitSecretsManager         string = "stackit.secretsManager"
-	ResourceStackitSecretsManagerInstance string = "stackit.secretsManager.instance"
-	ResourceStackitObservability          string = "stackit.observability"
-	ResourceStackitObservabilityInstance  string = "stackit.observability.instance"
-	ResourceStackitServiceAccount         string = "stackit.serviceAccount"
-	ResourceStackitCertificate            string = "stackit.certificate"
-	ResourceStackitAlbLoadBalancer        string = "stackit.alb.loadBalancer"
-	ResourceStackitKms                    string = "stackit.kms"
-	ResourceStackitKmsKeyRing             string = "stackit.kms.keyRing"
-	ResourceStackitKmsKey                 string = "stackit.kms.key"
-	ResourceStackitIam                    string = "stackit.iam"
-	ResourceStackitIamMember              string = "stackit.iam.member"
-	ResourceStackitIamRole                string = "stackit.iam.role"
+	ResourceStackit                           string = "stackit"
+	ResourceStackitProject                    string = "stackit.project"
+	ResourceStackitServer                     string = "stackit.server"
+	ResourceStackitVolume                     string = "stackit.volume"
+	ResourceStackitSnapshot                   string = "stackit.snapshot"
+	ResourceStackitImage                      string = "stackit.image"
+	ResourceStackitNetwork                    string = "stackit.network"
+	ResourceStackitPublicIp                   string = "stackit.publicIp"
+	ResourceStackitSecurityGroup              string = "stackit.securityGroup"
+	ResourceStackitSecurityGroupRule          string = "stackit.securityGroup.rule"
+	ResourceStackitKeyPair                    string = "stackit.keyPair"
+	ResourceStackitLoadBalancer               string = "stackit.loadBalancer"
+	ResourceStackitLoadBalancerListener       string = "stackit.loadBalancer.listener"
+	ResourceStackitLoadBalancerTargetPool     string = "stackit.loadBalancer.targetPool"
+	ResourceStackitSke                        string = "stackit.ske"
+	ResourceStackitSkeCluster                 string = "stackit.ske.cluster"
+	ResourceStackitSkeClusterNodePool         string = "stackit.ske.cluster.nodePool"
+	ResourceStackitObjectStorage              string = "stackit.objectStorage"
+	ResourceStackitObjectStorageBucket        string = "stackit.objectStorage.bucket"
+	ResourceStackitSfs                        string = "stackit.sfs"
+	ResourceStackitSfsResourcePool            string = "stackit.sfs.resourcePool"
+	ResourceStackitSfsShare                   string = "stackit.sfs.share"
+	ResourceStackitSfsExportPolicy            string = "stackit.sfs.exportPolicy"
+	ResourceStackitSfsExportPolicyRule        string = "stackit.sfs.exportPolicy.rule"
+	ResourceStackitSfsSnapshot                string = "stackit.sfs.snapshot"
+	ResourceStackitDns                        string = "stackit.dns"
+	ResourceStackitDnsZone                    string = "stackit.dns.zone"
+	ResourceStackitDnsRecordSet               string = "stackit.dns.recordSet"
+	ResourceStackitPostgresFlex               string = "stackit.postgresFlex"
+	ResourceStackitPostgresFlexInstance       string = "stackit.postgresFlex.instance"
+	ResourceStackitMongoDbFlex                string = "stackit.mongoDbFlex"
+	ResourceStackitMongoDbFlexInstance        string = "stackit.mongoDbFlex.instance"
+	ResourceStackitSqlServerFlex              string = "stackit.sqlServerFlex"
+	ResourceStackitSqlServerFlexInstance      string = "stackit.sqlServerFlex.instance"
+	ResourceStackitOpenSearch                 string = "stackit.openSearch"
+	ResourceStackitOpenSearchInstance         string = "stackit.openSearch.instance"
+	ResourceStackitMariaDb                    string = "stackit.mariaDb"
+	ResourceStackitMariaDbInstance            string = "stackit.mariaDb.instance"
+	ResourceStackitRedis                      string = "stackit.redis"
+	ResourceStackitRedisInstance              string = "stackit.redis.instance"
+	ResourceStackitRabbitMq                   string = "stackit.rabbitMq"
+	ResourceStackitRabbitMqInstance           string = "stackit.rabbitMq.instance"
+	ResourceStackitLogMe                      string = "stackit.logMe"
+	ResourceStackitLogMeInstance              string = "stackit.logMe.instance"
+	ResourceStackitSecretsManager             string = "stackit.secretsManager"
+	ResourceStackitSecretsManagerInstance     string = "stackit.secretsManager.instance"
+	ResourceStackitObservability              string = "stackit.observability"
+	ResourceStackitObservabilityInstance      string = "stackit.observability.instance"
+	ResourceStackitTelemetry                  string = "stackit.telemetry"
+	ResourceStackitTelemetryRouter            string = "stackit.telemetry.router"
+	ResourceStackitTelemetryRouterDestination string = "stackit.telemetry.router.destination"
+	ResourceStackitTelemetryRouterAccessToken string = "stackit.telemetry.router.accessToken"
+	ResourceStackitTelemetryLink              string = "stackit.telemetry.link"
+	ResourceStackitServiceAccount             string = "stackit.serviceAccount"
+	ResourceStackitCertificate                string = "stackit.certificate"
+	ResourceStackitAlbLoadBalancer            string = "stackit.alb.loadBalancer"
+	ResourceStackitKms                        string = "stackit.kms"
+	ResourceStackitKmsKeyRing                 string = "stackit.kms.keyRing"
+	ResourceStackitKmsKey                     string = "stackit.kms.key"
+	ResourceStackitIam                        string = "stackit.iam"
+	ResourceStackitIamMember                  string = "stackit.iam.member"
+	ResourceStackitIamRole                    string = "stackit.iam.role"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -271,6 +276,26 @@ func init() {
 			Init:   initStackitObservabilityInstance,
 			Create: createStackitObservabilityInstance,
 		},
+		"stackit.telemetry": {
+			// to override args, implement: initStackitTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitTelemetry,
+		},
+		"stackit.telemetry.router": {
+			Init:   initStackitTelemetryRouter,
+			Create: createStackitTelemetryRouter,
+		},
+		"stackit.telemetry.router.destination": {
+			// to override args, implement: initStackitTelemetryRouterDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitTelemetryRouterDestination,
+		},
+		"stackit.telemetry.router.accessToken": {
+			// to override args, implement: initStackitTelemetryRouterAccessToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitTelemetryRouterAccessToken,
+		},
+		"stackit.telemetry.link": {
+			// to override args, implement: initStackitTelemetryLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitTelemetryLink,
+		},
 		"stackit.serviceAccount": {
 			Init:   initStackitServiceAccount,
 			Create: createStackitServiceAccount,
@@ -452,6 +477,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.observability": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetObservability()).ToDataRes(types.Resource("stackit.observability"))
+	},
+	"stackit.telemetry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetTelemetry()).ToDataRes(types.Resource("stackit.telemetry"))
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("stackit.serviceAccount")))
@@ -1587,6 +1615,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.observability.instance.isUpdatable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObservabilityInstance).GetIsUpdatable()).ToDataRes(types.Bool)
 	},
+	"stackit.telemetry.routers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetry).GetRouters()).ToDataRes(types.Array(types.Resource("stackit.telemetry.router")))
+	},
+	"stackit.telemetry.link": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetry).GetLink()).ToDataRes(types.Resource("stackit.telemetry.link"))
+	},
+	"stackit.telemetry.router.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetId()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetUri()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetFilter()).ToDataRes(types.Dict)
+	},
+	"stackit.telemetry.router.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.telemetry.router.destinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetDestinations()).ToDataRes(types.Array(types.Resource("stackit.telemetry.router.destination")))
+	},
+	"stackit.telemetry.router.accessTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouter).GetAccessTokens()).ToDataRes(types.Array(types.Resource("stackit.telemetry.router.accessToken")))
+	},
+	"stackit.telemetry.router.destination.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetId()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.destination.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.destination.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.destination.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.destination.credentialType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetCredentialType()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.destination.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetConfig()).ToDataRes(types.Dict)
+	},
+	"stackit.telemetry.router.destination.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterDestination).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.telemetry.router.accessToken.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetId()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.accessToken.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.accessToken.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.accessToken.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.accessToken.creatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetCreatorId()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.router.accessToken.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryRouterAccessToken).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"stackit.telemetry.link.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetId()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.link.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetDisplayName()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.link.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.link.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.telemetry.link.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetStatus()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.link.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetRegion()).ToDataRes(types.String)
+	},
+	"stackit.telemetry.link.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"stackit.telemetry.link.router": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitTelemetryLink).GetRouter()).ToDataRes(types.Resource("stackit.telemetry.router"))
+	},
 	"stackit.serviceAccount.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServiceAccount).GetEmail()).ToDataRes(types.String)
 	},
@@ -1854,6 +1981,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.observability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).Observability, ok = plugin.RawToTValue[*mqlStackitObservability](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).Telemetry, ok = plugin.RawToTValue[*mqlStackitTelemetry](v.Value, v.Error)
 		return
 	},
 	"stackit.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3556,6 +3687,158 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitObservabilityInstance).IsUpdatable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.telemetry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetry).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.telemetry.routers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetry).Routers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetry).Link, ok = plugin.RawToTValue[*mqlStackitTelemetryLink](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.telemetry.router.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Filter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouter).AccessTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.telemetry.router.destination.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.credentialType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).CredentialType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.destination.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterDestination).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.telemetry.router.accessToken.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.creatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).CreatorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.router.accessToken.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryRouterAccessToken).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.telemetry.link.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.telemetry.link.router": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitTelemetryLink).Router, ok = plugin.RawToTValue[*mqlStackitTelemetryRouter](v.Value, v.Error)
+		return
+	},
 	"stackit.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServiceAccount).__id, ok = v.Value.(string)
 		return
@@ -3850,6 +4133,7 @@ type mqlStackit struct {
 	LogMe            plugin.TValue[*mqlStackitLogMe]
 	SecretsManager   plugin.TValue[*mqlStackitSecretsManager]
 	Observability    plugin.TValue[*mqlStackitObservability]
+	Telemetry        plugin.TValue[*mqlStackitTelemetry]
 	ServiceAccounts  plugin.TValue[[]any]
 	Certificates     plugin.TValue[[]any]
 	AlbLoadBalancers plugin.TValue[[]any]
@@ -4279,6 +4563,22 @@ func (c *mqlStackit) GetObservability() *plugin.TValue[*mqlStackitObservability]
 		}
 
 		return c.observability()
+	})
+}
+
+func (c *mqlStackit) GetTelemetry() *plugin.TValue[*mqlStackitTelemetry] {
+	return plugin.GetOrCompute[*mqlStackitTelemetry](&c.Telemetry, func() (*mqlStackitTelemetry, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "telemetry")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitTelemetry), nil
+			}
+		}
+
+		return c.telemetry()
 	})
 }
 
@@ -8702,6 +9002,446 @@ func (c *mqlStackitObservabilityInstance) GetParameters() *plugin.TValue[any] {
 func (c *mqlStackitObservabilityInstance) GetIsUpdatable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsUpdatable, func() (bool, error) {
 		return c.isUpdatable()
+	})
+}
+
+// mqlStackitTelemetry for the stackit.telemetry resource
+type mqlStackitTelemetry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitTelemetryInternal it will be used here
+	Routers plugin.TValue[[]any]
+	Link    plugin.TValue[*mqlStackitTelemetryLink]
+}
+
+// createStackitTelemetry creates a new instance of this resource
+func createStackitTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitTelemetry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.telemetry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitTelemetry) MqlName() string {
+	return "stackit.telemetry"
+}
+
+func (c *mqlStackitTelemetry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitTelemetry) GetRouters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.telemetry", c.__id, "routers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routers()
+	})
+}
+
+func (c *mqlStackitTelemetry) GetLink() *plugin.TValue[*mqlStackitTelemetryLink] {
+	return plugin.GetOrCompute[*mqlStackitTelemetryLink](&c.Link, func() (*mqlStackitTelemetryLink, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.telemetry", c.__id, "link")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitTelemetryLink), nil
+			}
+		}
+
+		return c.link()
+	})
+}
+
+// mqlStackitTelemetryRouter for the stackit.telemetry.router resource
+type mqlStackitTelemetryRouter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitTelemetryRouterInternal it will be used here
+	Id           plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Uri          plugin.TValue[string]
+	Region       plugin.TValue[string]
+	Filter       plugin.TValue[any]
+	CreatedAt    plugin.TValue[*time.Time]
+	Destinations plugin.TValue[[]any]
+	AccessTokens plugin.TValue[[]any]
+}
+
+// createStackitTelemetryRouter creates a new instance of this resource
+func createStackitTelemetryRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitTelemetryRouter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.telemetry.router", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitTelemetryRouter) MqlName() string {
+	return "stackit.telemetry.router"
+}
+
+func (c *mqlStackitTelemetryRouter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitTelemetryRouter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitTelemetryRouter) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitTelemetryRouter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitTelemetryRouter) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitTelemetryRouter) GetUri() *plugin.TValue[string] {
+	return &c.Uri
+}
+
+func (c *mqlStackitTelemetryRouter) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitTelemetryRouter) GetFilter() *plugin.TValue[any] {
+	return &c.Filter
+}
+
+func (c *mqlStackitTelemetryRouter) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlStackitTelemetryRouter) GetDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Destinations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.telemetry.router", c.__id, "destinations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinations()
+	})
+}
+
+func (c *mqlStackitTelemetryRouter) GetAccessTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessTokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.telemetry.router", c.__id, "accessTokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessTokens()
+	})
+}
+
+// mqlStackitTelemetryRouterDestination for the stackit.telemetry.router.destination resource
+type mqlStackitTelemetryRouterDestination struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitTelemetryRouterDestinationInternal it will be used here
+	Id             plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Status         plugin.TValue[string]
+	CredentialType plugin.TValue[string]
+	Config         plugin.TValue[any]
+	CreatedAt      plugin.TValue[*time.Time]
+}
+
+// createStackitTelemetryRouterDestination creates a new instance of this resource
+func createStackitTelemetryRouterDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitTelemetryRouterDestination{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.telemetry.router.destination", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitTelemetryRouterDestination) MqlName() string {
+	return "stackit.telemetry.router.destination"
+}
+
+func (c *mqlStackitTelemetryRouterDestination) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetCredentialType() *plugin.TValue[string] {
+	return &c.CredentialType
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetConfig() *plugin.TValue[any] {
+	return &c.Config
+}
+
+func (c *mqlStackitTelemetryRouterDestination) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlStackitTelemetryRouterAccessToken for the stackit.telemetry.router.accessToken resource
+type mqlStackitTelemetryRouterAccessToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitTelemetryRouterAccessTokenInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Status      plugin.TValue[string]
+	CreatorId   plugin.TValue[string]
+	ExpiresAt   plugin.TValue[*time.Time]
+}
+
+// createStackitTelemetryRouterAccessToken creates a new instance of this resource
+func createStackitTelemetryRouterAccessToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitTelemetryRouterAccessToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.telemetry.router.accessToken", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) MqlName() string {
+	return "stackit.telemetry.router.accessToken"
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetCreatorId() *plugin.TValue[string] {
+	return &c.CreatorId
+}
+
+func (c *mqlStackitTelemetryRouterAccessToken) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+// mqlStackitTelemetryLink for the stackit.telemetry.link resource
+type mqlStackitTelemetryLink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitTelemetryLinkInternal
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	Status      plugin.TValue[string]
+	Region      plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Router      plugin.TValue[*mqlStackitTelemetryRouter]
+}
+
+// createStackitTelemetryLink creates a new instance of this resource
+func createStackitTelemetryLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitTelemetryLink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.telemetry.link", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitTelemetryLink) MqlName() string {
+	return "stackit.telemetry.link"
+}
+
+func (c *mqlStackitTelemetryLink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitTelemetryLink) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlStackitTelemetryLink) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlStackitTelemetryLink) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitTelemetryLink) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlStackitTelemetryLink) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlStackitTelemetryLink) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlStackitTelemetryLink) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlStackitTelemetryLink) GetRouter() *plugin.TValue[*mqlStackitTelemetryRouter] {
+	return plugin.GetOrCompute[*mqlStackitTelemetryRouter](&c.Router, func() (*mqlStackitTelemetryRouter, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.telemetry.link", c.__id, "router")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitTelemetryRouter), nil
+			}
+		}
+
+		return c.router()
 	})
 }
 

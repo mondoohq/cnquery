@@ -448,6 +448,10 @@ github.com/stackitcloud/stackit-sdk-go/services/ske v1.14.0 h1:Zy3yxmHzW+ydu1nae
 github.com/stackitcloud/stackit-sdk-go/services/ske v1.14.0/go.mod h1:TbqmZhLMofmfl+HhVl6oHYcI3zvXTm1vRjN3A/fOkM4=
 github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.11.0 h1:PwjQeupEnXxhu+uWCUzO/hUfL4yqNblOcZbP2jvaQtU=
 github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.11.0/go.mod h1:AiUoMAqQcOlMgDtkVJlqI7P/VGD5xjN3dYjERGnwN/M=
+github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0 h1:U1mQoCk0TXc8NsSc/Sl9PKMdEyJpWNU2zLnsqmx6wEc=
+github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0/go.mod h1:hgw8janWmDfP2bnuZensxqcAePr49BX5ug8Rq85o+h8=
+github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0 h1:MEvzGItcbig+9A4JvK2E5W6/mqXDPafiGkDZ1BprBAI=
+github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0/go.mod h1:WUmgKtwpe90Yq3YbgNxc2clTTULVxCu0ha6lMTjUnII=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=

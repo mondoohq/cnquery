@@ -15,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "stackit",
 	ID:              "go.mondoo.com/mql/providers/stackit",
-	Version:         "13.0.2",
+	Version:         "13.0.3",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{

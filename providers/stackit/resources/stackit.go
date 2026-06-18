@@ -219,6 +219,14 @@ func (r *mqlStackit) observability() (*mqlStackitObservability, error) {
 	return res.(*mqlStackitObservability), nil
 }
 
+func (r *mqlStackit) telemetry() (*mqlStackitTelemetry, error) {
+	res, err := makeNamespace(r.MqlRuntime, "stackit.telemetry")
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitTelemetry), nil
+}
+
 func (r *mqlStackit) sfs() (*mqlStackitSfs, error) {
 	res, err := makeNamespace(r.MqlRuntime, "stackit.sfs")
 	if err != nil {

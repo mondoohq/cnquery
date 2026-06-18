@@ -34,6 +34,8 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
 	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
+	telemetrylink "github.com/stackitcloud/stackit-sdk-go/services/telemetrylink/v1betaapi"
+	telemetryrouter "github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter/v1betaapi"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -113,6 +115,12 @@ type StackitConnection struct {
 	sfsOnce              sync.Once
 	sfsClient            *sfs.APIClient
 	sfsErr               error
+	telemetryRouterOnce  sync.Once
+	telemetryRouterClnt  *telemetryrouter.APIClient
+	telemetryRouterErr   error
+	telemetryLinkOnce    sync.Once
+	telemetryLinkClient  *telemetrylink.APIClient
+	telemetryLinkErr     error
 	albOnce              sync.Once
 	albClient            *alb.APIClient
 	albErr               error
@@ -348,6 +356,20 @@ func (c *StackitConnection) Sfs() (*sfs.APIClient, error) {
 		c.sfsClient, c.sfsErr = sfs.NewAPIClient(c.configOpts...)
 	})
 	return c.sfsClient, c.sfsErr
+}
+
+func (c *StackitConnection) TelemetryRouter() (*telemetryrouter.APIClient, error) {
+	c.telemetryRouterOnce.Do(func() {
+		c.telemetryRouterClnt, c.telemetryRouterErr = telemetryrouter.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.telemetryRouterClnt, c.telemetryRouterErr
+}
+
+func (c *StackitConnection) TelemetryLink() (*telemetrylink.APIClient, error) {
+	c.telemetryLinkOnce.Do(func() {
+		c.telemetryLinkClient, c.telemetryLinkErr = telemetrylink.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.telemetryLinkClient, c.telemetryLinkErr
 }
 
 func (c *StackitConnection) ALB() (*alb.APIClient, error) {

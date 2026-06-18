@@ -71,6 +71,8 @@ stackit {
   secretsManager() stackit.secretsManager
   // Observability (managed Prometheus/Alertmanager) namespace
   observability() stackit.observability
+  // Telemetry routing and federation namespace
+  telemetry() stackit.telemetry
   // Project service accounts
   serviceAccounts() []stackit.serviceAccount
   // TLS server certificates managed by STACKIT Certificates
@@ -1261,6 +1263,126 @@ private stackit.observability.instance @defaults("id name status planName") {
   parameters() dict
   // Whether the instance can be updated
   isUpdatable() bool
+}
+
+// STACKIT Telemetry namespace
+//
+// Use the Telemetry namespace to enumerate the project's telemetry
+// routers (`routers()`) — which receive, filter, and forward
+// observability data to external destinations — and the project
+// telemetry `link()` that federates the project to a router.
+stackit.telemetry {
+  // Telemetry routers defined in the project
+  routers() []stackit.telemetry.router
+  // Project telemetry link (federation to a telemetry router)
+  link() stackit.telemetry.link
+}
+
+// STACKIT telemetry router
+//
+// Examine a single telemetry router — the pipeline that ingests
+// observability data, applies a `filter`, and forwards it to
+// configured destinations. The router is keyed by its UUID `id` — for
+// example `stackit.telemetry.router(id: "fa1d2…")` — and exposes the
+// `displayName`, `description`, lifecycle `status`, ingest `uri`, the
+// routing `filter`, and creation time. Forwarding targets are exposed
+// through `destinations()` and the issued credentials through
+// `accessTokens()`.
+private stackit.telemetry.router @defaults("id displayName status") {
+  init(id? string)
+  // Router UUID
+  id string
+  // Human-readable display name
+  displayName string
+  // Description
+  description string
+  // Lifecycle status (reconciling, active, deleting, …)
+  status string
+  // Ingest URI clients send telemetry to
+  uri string
+  // Region the router runs in
+  region string
+  // Routing filter applied to ingested telemetry
+  filter dict
+  // Creation timestamp
+  createdAt time
+  // Forwarding destinations configured on the router
+  destinations() []stackit.telemetry.router.destination
+  // Access tokens issued for the router (metadata only; secrets are not exposed)
+  accessTokens() []stackit.telemetry.router.accessToken
+}
+
+// STACKIT telemetry router destination
+//
+// Examine a single forwarding destination on a telemetry router. The
+// destination is keyed by its UUID `id` and exposes the `displayName`,
+// `description`, lifecycle `status`, the `credentialType` used to
+// authenticate to the target, the destination `config` (target type,
+// filter, and protocol settings), and creation time.
+private stackit.telemetry.router.destination @defaults("id displayName status credentialType") {
+  // Destination UUID
+  id string
+  // Human-readable display name
+  displayName string
+  // Description
+  description string
+  // Lifecycle status
+  status string
+  // Credential type used to authenticate to the destination
+  credentialType string
+  // Destination configuration (target type, filter, protocol settings)
+  config dict
+  // Creation timestamp
+  createdAt time
+}
+
+// STACKIT telemetry router access token
+//
+// Examine the metadata of a single access token issued for a telemetry
+// router. The token is keyed by its UUID `id` and exposes the
+// `displayName`, `description`, lifecycle `status`, the `creatorId`,
+// and the `expiresAt` expiry time. The secret token value is never
+// returned by the API after creation and is not exposed here.
+private stackit.telemetry.router.accessToken @defaults("id displayName status expiresAt") {
+  // Access token UUID
+  id string
+  // Human-readable display name
+  displayName string
+  // Description
+  description string
+  // Lifecycle status
+  status string
+  // ID of the principal that created the token
+  creatorId string
+  // Expiry timestamp
+  expiresAt time
+}
+
+// STACKIT project telemetry link
+//
+// Examine the project's telemetry link — the federation binding that
+// forwards the project's observability data to a telemetry router. The
+// link exposes its `id`, `displayName`, `description`, whether it is
+// `enabled`, the lifecycle `status`, the region, and creation time, and
+// resolves the target router through the typed `router()` accessor. The
+// link's access token is a secret and is not exposed.
+private stackit.telemetry.link @defaults("id displayName enabled status") {
+  // Link UUID
+  id string
+  // Human-readable display name
+  displayName string
+  // Description
+  description string
+  // Whether the telemetry link is enabled
+  enabled bool
+  // Lifecycle status
+  status string
+  // Region the link applies to
+  region string
+  // Creation timestamp
+  createdAt time
+  // Telemetry router this link forwards data to
+  router() stackit.telemetry.router
 }
 
 // STACKIT project service account
