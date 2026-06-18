@@ -280,7 +280,12 @@ func (g *mqlGcpProjectLoggingserviceMetric) alertPolicies() ([]any, error) {
 }
 
 func parseAlertPolicyConditionFilterMetricName(condition map[string]any) string {
-	filter := condition["filter"].(string)
+	// Not every alert-policy condition carries a "filter" (e.g. monitoringQueryLanguage
+	// conditions only have a "query"), so guard the assertion to avoid a panic.
+	filter, ok := condition["filter"].(string)
+	if !ok {
+		return ""
+	}
 	// The filter is composed of multiple statements split by AND or OR and spaces in between
 	parts := strings.Split(filter, " ")
 	for _, p := range parts {

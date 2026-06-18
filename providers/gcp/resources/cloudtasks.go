@@ -96,16 +96,22 @@ func (g *mqlGcpProjectCloudTasksService) queues() ([]any, error) {
 				return nil, err
 			}
 
-			mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", map[string]*llx.RawData{
+			queueArgs := map[string]*llx.RawData{
 				"projectId":                llx.StringData(projectId),
 				"name":                     llx.StringData(queue.Name),
 				"state":                    llx.StringData(queue.State.String()),
 				"rateLimits":               llx.DictData(rateLimits),
-				"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
 				"appEngineRoutingOverride": llx.DictData(appEngineRouting),
-			})
+			}
+			if retryConfig != nil {
+				queueArgs["retryConfig"] = llx.ResourceData(retryConfig, "gcp.retryConfig")
+			}
+			mqlQueue, err := CreateResource(g.MqlRuntime, "gcp.project.cloudTasksService.queue", queueArgs)
 			if err != nil {
 				return nil, err
+			}
+			if retryConfig == nil {
+				mqlQueue.(*mqlGcpProjectCloudTasksServiceQueue).RetryConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			}
 			res = append(res, mqlQueue)
 		}

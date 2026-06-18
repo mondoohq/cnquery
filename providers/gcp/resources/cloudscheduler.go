@@ -107,7 +107,7 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 			userUpdateTime = &t
 		}
 
-		mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.cloudSchedulerService.job", map[string]*llx.RawData{
+		jobArgs := map[string]*llx.RawData{
 			"projectId":                llx.StringData(projectId),
 			"name":                     llx.StringData(job.Name),
 			"schedule":                 llx.StringData(job.Schedule),
@@ -117,13 +117,19 @@ func (g *mqlGcpProjectCloudSchedulerService) jobs() ([]any, error) {
 			"lastAttemptTime":          llx.TimeDataPtr(lastAttemptTime),
 			"scheduleTime":             llx.TimeDataPtr(scheduleTime),
 			"userUpdateTime":           llx.TimeDataPtr(userUpdateTime),
-			"retryConfig":              llx.ResourceData(retryConfig, "gcp.retryConfig"),
 			"targetType":               llx.StringData(targetType),
 			"oidcServiceAccountEmail":  llx.StringData(oidcServiceAccountEmail),
 			"oauthServiceAccountEmail": llx.StringData(oauthServiceAccountEmail),
-		})
+		}
+		if retryConfig != nil {
+			jobArgs["retryConfig"] = llx.ResourceData(retryConfig, "gcp.retryConfig")
+		}
+		mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.cloudSchedulerService.job", jobArgs)
 		if err != nil {
 			return nil, err
+		}
+		if retryConfig == nil {
+			mqlJob.(*mqlGcpProjectCloudSchedulerServiceJob).RetryConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		}
 		res = append(res, mqlJob)
 	}

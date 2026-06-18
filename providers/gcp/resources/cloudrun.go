@@ -311,6 +311,7 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
 				}
 				if err != nil {
 					log.Error().Err(err).Send()
+					break
 				}
 				mqlOp, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.operation", map[string]*llx.RawData{
 					"projectId": llx.StringData(projectId),
@@ -429,7 +430,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 						"scaling":                       llx.DictData(scalingCfg),
 						"vpcAccess":                     llx.DictData(vpcCfg),
 						"vpcAccessConfig":               llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
-						"timeout":                       llx.TimeData(llx.DurationToTime((s.Template.Timeout.Seconds))),
+						"timeout":                       llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
 						"serviceAccountEmail":           llx.StringData(s.Template.ServiceAccount),
 						"containers":                    llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
 						"volumes":                       llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
@@ -756,7 +757,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 							"projectId":            llx.StringData(projectId),
 							"vpcAccess":            llx.DictData(vpcAccess),
 							"vpcAccessConfig":      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
-							"timeout":              llx.TimeData(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
+							"timeout":              llx.TimeData(llx.DurationToTime(j.Template.Template.GetTimeout().GetSeconds())),
 							"serviceAccountEmail":  llx.StringData(j.Template.Template.ServiceAccount),
 							"containers":           llx.ArrayData(mqlContainers, types.Resource("gcp.project.cloudRunService.container")),
 							"volumes":              llx.ArrayData(mqlVolumes(j.Template.Template.Volumes), types.Dict),
@@ -941,11 +942,11 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 		for _, e := range c.Env {
 			valueSource := e.GetValueSource()
 			var mqlValueSource map[string]any
-			if valueSource != nil {
+			if skr := valueSource.GetSecretKeyRef(); skr != nil {
 				mqlValueSource = map[string]any{
 					"secretKeyRef": map[string]any{
-						"secret":  valueSource.SecretKeyRef.Secret,
-						"version": valueSource.SecretKeyRef.Version,
+						"secret":  skr.Secret,
+						"version": skr.Version,
 					},
 				}
 			}

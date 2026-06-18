@@ -61,6 +61,9 @@ func initGcpProjectAssetService(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
 	args["projectId"] = llx.StringData(conn.ResourceID())
 	return args, nil, nil
 }
