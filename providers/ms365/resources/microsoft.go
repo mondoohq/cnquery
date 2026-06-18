@@ -195,53 +195,46 @@ func (a *mqlMicrosoft) loadMfaResp() *mfaResp {
 	return &a.mfaResp
 }
 
-// initIndex ensures the user indexes are initialized,
-// can be called multiple times without side effects
-func (a *mqlMicrosoft) initIndex() {
+// indexUser adds a user to the internal indexes. The map is created lazily
+// under the write lock so concurrent indexing can't race on the nil check.
+func (a *mqlMicrosoft) indexUser(user *mqlMicrosoftUser) {
+	idxUsersById.Lock()
 	if a.idxUsersById == nil {
 		a.idxUsersById = make(map[string]*mqlMicrosoftUser)
 	}
-	if a.idxDevicesById == nil {
-		a.idxDevicesById = make(map[string]*mqlMicrosoftDevice)
-	}
-}
-
-// indexUser adds a user to the internal indexes
-func (a *mqlMicrosoft) indexUser(user *mqlMicrosoftUser) {
-	a.initIndex()
-	idxUsersById.Lock()
 	a.idxUsersById[user.Id.Data] = user
 	idxUsersById.Unlock()
 }
 
 // userById returns a user by id if it exists in the indexUser
 func (a *mqlMicrosoft) userById(id string) (*mqlMicrosoftUser, bool) {
+	idxUsersById.RLock()
+	defer idxUsersById.RUnlock()
 	if a.idxUsersById == nil {
 		return nil, false
 	}
-
-	idxUsersById.RLock()
 	res, ok := a.idxUsersById[id]
-	idxUsersById.RUnlock()
 	return res, ok
 }
 
-// indexDevice adds a device to the internal indexes
+// indexDevice adds a device to the internal indexes. The map is created lazily
+// under the write lock so concurrent indexing can't race on the nil check.
 func (a *mqlMicrosoft) indexDevice(device *mqlMicrosoftDevice) {
-	a.initIndex()
 	idxDevicesById.Lock()
+	if a.idxDevicesById == nil {
+		a.idxDevicesById = make(map[string]*mqlMicrosoftDevice)
+	}
 	a.idxDevicesById[device.Id.Data] = device
 	idxDevicesById.Unlock()
 }
 
 // deviceById returns a device by id if it exists in the indexDevice
 func (a *mqlMicrosoft) deviceById(id string) (*mqlMicrosoftDevice, bool) {
+	idxDevicesById.RLock()
+	defer idxDevicesById.RUnlock()
 	if a.idxDevicesById == nil {
 		return nil, false
 	}
-
-	idxDevicesById.RLock()
 	res, ok := a.idxDevicesById[id]
-	idxDevicesById.RUnlock()
 	return res, ok
 }

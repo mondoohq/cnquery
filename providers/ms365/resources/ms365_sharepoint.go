@@ -172,7 +172,10 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	}
 
 	tenant, err := r.getTenant()
-	if tenant == "" || err != nil {
+	if err != nil {
+		return errHandler(fmt.Errorf("cannot fetch sharepoint online report: %w", err))
+	}
+	if tenant == "" {
 		return errHandler(fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report"))
 	}
 

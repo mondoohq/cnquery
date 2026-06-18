@@ -367,6 +367,9 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftExternal
 	if err != nil {
 		return nil, transformError(err)
 	}
+	if policy == nil {
+		return nil, fmt.Errorf("external identities policy not found")
+	}
 
 	mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceMicrosoftExternalIdentitiesPolicy,
 		map[string]*llx.RawData{
@@ -451,6 +454,9 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy(
 	policy, err := graphClient.Policies().CrossTenantAccessPolicy().DefaultEscaped().Get(context.Background(), nil)
 	if err != nil {
 		return errHandler(transformError(err))
+	}
+	if policy == nil {
+		return errHandler(fmt.Errorf("cross-tenant access policy not found"))
 	}
 
 	a.policy = policy
@@ -631,6 +637,9 @@ func (a *mqlMicrosoftPolicies) defaultAppManagementPolicy() (*mqlMicrosoftDefaul
 	policy, err := graphClient.Policies().DefaultAppManagementPolicy().Get(context.Background(), nil)
 	if err != nil {
 		return nil, transformError(err)
+	}
+	if policy == nil {
+		return nil, fmt.Errorf("default app management policy not found")
 	}
 
 	policyId := ""
