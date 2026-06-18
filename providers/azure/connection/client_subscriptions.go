@@ -36,7 +36,6 @@ func (client *subscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) 
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
 	subs := []subscriptions.Subscription{}
 	res := subscriptionsC.NewListPager(&subscriptions.ClientListOptions{})
