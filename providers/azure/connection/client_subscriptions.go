@@ -33,13 +33,13 @@ func (client *subscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) 
 	subscriptionsC, err := subscriptions.NewClient(client.token, &arm.ClientOptions{
 		ClientOptions: client.clientOptions,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	ctx := context.Background()
 	subs := []subscriptions.Subscription{}
 	res := subscriptionsC.NewListPager(&subscriptions.ClientListOptions{})
-	if err != nil {
-		return nil, err
-	}
 	for res.More() {
 		page, err := res.NextPage(ctx)
 		if err != nil {

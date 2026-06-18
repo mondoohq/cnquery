@@ -1365,6 +1365,16 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 				return nil, err
 			}
 			for _, vng := range page.Value {
+				// Properties and the nested SKU are nullable pointers; a gateway
+				// in a transient/failed state can return either as nil. The args
+				// map below dereferences them throughout, so normalize to empty
+				// structs to avoid a scan-killing panic.
+				if vng.Properties == nil {
+					vng.Properties = &network.VirtualNetworkGatewayPropertiesFormat{}
+				}
+				if vng.Properties.SKU == nil {
+					vng.Properties.SKU = &network.VirtualNetworkGatewaySKU{}
+				}
 				props, err := convert.JsonToDict(vng.Properties)
 				if err != nil {
 					return nil, err
@@ -2506,15 +2516,18 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			return nil, err
 		}
 		for _, c := range page.Value {
+			if c.Properties == nil {
+				continue
+			}
 			// the API does not let us get connections, applicable to a given gateway.
 			// Therefore we filter them manually here.
 			filter := []string{}
 			// primary gateway
-			if c.Properties.VirtualNetworkGateway1 != nil {
+			if c.Properties.VirtualNetworkGateway1 != nil && c.Properties.VirtualNetworkGateway1.ID != nil {
 				filter = append(filter, *c.Properties.VirtualNetworkGateway1.ID)
 			}
 			// secondary, optional (only if Vnet2Vnet connection)
-			if c.Properties.VirtualNetworkGateway2 != nil {
+			if c.Properties.VirtualNetworkGateway2 != nil && c.Properties.VirtualNetworkGateway2.ID != nil {
 				filter = append(filter, *c.Properties.VirtualNetworkGateway2.ID)
 			}
 			if !stringx.Contains(filter, id) {

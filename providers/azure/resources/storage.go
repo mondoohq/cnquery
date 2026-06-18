@@ -429,13 +429,17 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 	var blobRetentionDays *int32
 	var containerSoftDeletionEnabled bool
 	var containerRetentionDays *int32
-	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
-		blobSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Enabled)
-		blobRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Days
-	}
-	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
-		containerSoftDeletionEnabled = convert.ToValue(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Enabled)
-		containerRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days
+	// The inner BlobServiceProperties pointer is nullable (empty body for an
+	// account with no blob service settings); guard before dereferencing.
+	if inner := properties.BlobServiceProperties.BlobServiceProperties; inner != nil {
+		if inner.DeleteRetentionPolicy != nil {
+			blobSoftDeletionEnabled = convert.ToValue(inner.DeleteRetentionPolicy.Enabled)
+			blobRetentionDays = inner.DeleteRetentionPolicy.Days
+		}
+		if inner.ContainerDeleteRetentionPolicy != nil {
+			containerSoftDeletionEnabled = convert.ToValue(inner.ContainerDeleteRetentionPolicy.Enabled)
+			containerRetentionDays = inner.ContainerDeleteRetentionPolicy.Days
+		}
 	}
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountDataProtection,
@@ -573,7 +577,33 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) getServiceStorageProperties(
 	return props, nil
 }
 
+// normalizeServiceProperties fills in empty structs for the nullable
+// logging/metrics pointers (and their retention policies) so the callers that
+// dereference them unconditionally cannot panic on an account whose analytics
+// settings were never configured.
+func normalizeServiceProperties(props *table.ServiceProperties) {
+	if props.Logging == nil {
+		props.Logging = &table.Logging{}
+	}
+	if props.Logging.RetentionPolicy == nil {
+		props.Logging.RetentionPolicy = &table.RetentionPolicy{}
+	}
+	if props.MinuteMetrics == nil {
+		props.MinuteMetrics = &table.Metrics{}
+	}
+	if props.MinuteMetrics.RetentionPolicy == nil {
+		props.MinuteMetrics.RetentionPolicy = &table.RetentionPolicy{}
+	}
+	if props.HourMetrics == nil {
+		props.HourMetrics = &table.Metrics{}
+	}
+	if props.HourMetrics.RetentionPolicy == nil {
+		props.HourMetrics.RetentionPolicy = &table.RetentionPolicy{}
+	}
+}
+
 func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
+	normalizeServiceProperties(&props)
 	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
@@ -649,6 +679,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 }
 
 func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, blobProps storage.BlobServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
+	normalizeServiceProperties(&props)
 	loggingRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),

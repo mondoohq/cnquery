@@ -147,7 +147,9 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 				return nil, err
 			}
 			mqlRedis := cacheData.(*mqlAzureSubscriptionCacheServiceRedisInstance)
-			mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			if cache.Properties != nil {
+				mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			}
 			caches = append(caches, mqlRedis)
 		}
 	}

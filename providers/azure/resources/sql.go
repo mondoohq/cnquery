@@ -243,6 +243,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
+			// Properties is a nullable pointer; the args map below dereferences
+			// it throughout, so normalize to an empty struct to avoid a panic.
+			if entry.Properties == nil {
+				entry.Properties = &sql.DatabaseProperties{}
+			}
 			var editionTier *string
 			if entry.SKU != nil {
 				editionTier = entry.SKU.Tier
@@ -614,6 +619,15 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	vaSettings, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.VulnerabilityAssessmentNameDefault, &sql.ServerVulnerabilityAssessmentsClientGetOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// Properties and the nested RecurringScans are nullable; a server with VA
+	// configured but no recurring scans returns RecurringScans == nil. The args
+	// map dereferences both, so normalize to empty structs to avoid a panic.
+	if vaSettings.Properties == nil {
+		vaSettings.Properties = &sql.ServerVulnerabilityAssessmentProperties{}
+	}
+	if vaSettings.Properties.RecurringScans == nil {
+		vaSettings.Properties.RecurringScans = &sql.VulnerabilityAssessmentRecurringScansProperties{}
 	}
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
 		map[string]*llx.RawData{

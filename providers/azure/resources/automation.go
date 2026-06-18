@@ -92,7 +92,13 @@ func (a *mqlAzureSubscriptionAutomationService) accounts() ([]any, error) {
 }
 
 func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account) (*mqlAzureSubscriptionAutomationServiceAccount, error) {
-	sku, err := convert.JsonToDict(acct.Properties.SKU)
+	// Properties is a nullable pointer; guard before reading SKU (the nil guard
+	// for the remaining property reads is already below).
+	var skuRaw any
+	if acct.Properties != nil {
+		skuRaw = acct.Properties.SKU
+	}
+	sku, err := convert.JsonToDict(skuRaw)
 	if err != nil {
 		return nil, err
 	}
