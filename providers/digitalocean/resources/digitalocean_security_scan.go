@@ -49,6 +49,12 @@ func (r *mqlDigitalocean) securityScans() ([]interface{}, error) {
 	for {
 		scans, resp, err := client.Security.ListScans(context.Background(), opt)
 		if err != nil {
+			// CSPM scan endpoints 404 on accounts that have never run a scan;
+			// treat that as an empty list rather than failing (mirrors the
+			// container-registry accessors).
+			if isDoNotFound(err) {
+				return []interface{}{}, nil
+			}
 			return nil, err
 		}
 		for _, s := range scans {
@@ -78,6 +84,11 @@ func (r *mqlDigitalocean) latestSecurityScan() (*mqlDigitaloceanSecurityScan, er
 
 	scan, _, err := client.Security.GetLatestScan(context.Background(), nil)
 	if err != nil {
+		// 404 when no scan has ever run; return a null field rather than error.
+		if isDoNotFound(err) {
+			r.LatestSecurityScan.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	if scan == nil {

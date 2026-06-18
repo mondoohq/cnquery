@@ -891,8 +891,13 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 	for {
 		keys, resp, err := client.SpacesKeys.List(context.Background(), opt)
 		if err != nil {
-			// Spaces Keys API may not be available if Spaces is not enabled
-			return []interface{}{}, nil
+			// Spaces Keys API 404s if Spaces isn't enabled; tolerate that, but
+			// surface real failures (auth, rate-limit, network) instead of
+			// masking them as "no keys".
+			if isDoNotFound(err) {
+				return []interface{}{}, nil
+			}
+			return nil, err
 		}
 		for _, k := range keys {
 			grants := make([]interface{}, len(k.Grants))
