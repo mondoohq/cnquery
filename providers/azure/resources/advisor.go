@@ -175,24 +175,40 @@ func (a *mqlAzureSubscriptionAdvisorService) scores() ([]any, error) {
 	return res, nil
 }
 
+// meanOfPresentScores averages the non-nil values, dividing by the count of
+// values actually summed (not the input length) so the average isn't skewed
+// toward zero by unresolved/absent scores. Returns 0 when none are present.
+func meanOfPresentScores(values []*float64) float64 {
+	sum := float64(0)
+	count := 0
+	for _, v := range values {
+		if v == nil {
+			continue
+		}
+		sum += *v
+		count++
+	}
+	if count == 0 {
+		return 0
+	}
+	return sum / float64(count)
+}
+
 func (a *mqlAzureSubscriptionAdvisorService) averageScore() (float64, error) {
 	scores := a.GetScores()
 	if scores.Error != nil {
 		return 0, scores.Error
 	}
-	if len(scores.Data) == 0 {
-		return 0, nil
-	}
-	avg := float64(0)
+	values := make([]*float64, 0, len(scores.Data))
 	for _, s := range scores.Data {
 		score := s.(*mqlAzureSubscriptionAdvisorServiceScore)
 		if score.CurrentScore.Data == nil {
 			continue
 		}
-		avg += score.CurrentScore.Data.Score.Data
+		v := score.CurrentScore.Data.Score.Data
+		values = append(values, &v)
 	}
-
-	return avg / float64(len(scores.Data)), nil
+	return meanOfPresentScores(values), nil
 }
 
 func (a *mqlAzureSubscriptionAdvisorServiceRecommendation) id() (string, error) {

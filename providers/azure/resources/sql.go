@@ -587,11 +587,12 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdOnlyAuthentication() (bool
 	}
 	result, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.AuthenticationNameDefault, &sql.ServerAzureADOnlyAuthenticationsClientGetOptions{})
 	if err != nil {
-		// Only tolerate access-denied: swallowing every error would report a
-		// transient/permission failure as Azure-AD-only-auth disabled, which is
-		// the insecure value for a security check.
+		// Only tolerate access-denied / not-found: swallowing every error would
+		// report a transient/permission failure as Azure-AD-only-auth disabled,
+		// which is the insecure value for a security check. Some server SKUs
+		// don't support the endpoint and return 404 rather than 403.
 		var rerr *azcore.ResponseError
-		if errors.As(err, &rerr) && rerr.StatusCode == http.StatusForbidden {
+		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
 			return false, nil
 		}
 		return false, err

@@ -466,19 +466,25 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 	return res, nil
 }
 
-func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSubscriptionNetworkServiceWatcherFlowlog, error) {
-	type mqlRetentionPolicy struct {
-		Enabled       bool `json:"enabled"`
-		RetentionDays int  `json:"retentionDays"`
-	}
-	type mqlFlowLogAnalytics struct {
-		Enabled             bool   `json:"enabled"`
-		AnalyticsInterval   int    `json:"analyticsInterval"`
-		WorkspaceId         string `json:"workspaceId"`
-		WorkspaceResourceId string `json:"workspaceResourceId"`
-		WorkspaceRegion     string `json:"workspaceRegion"`
-	}
+// flowLogRetentionPolicy and flowLogAnalyticsConfig mirror the Azure flow-log
+// sub-objects, carrying the JSON tags used to build the resource's dict fields.
+// They are package-level (not function-local) so the tag mapping can be
+// unit-tested — the tags were previously scrambled, serializing values under
+// the wrong keys.
+type flowLogRetentionPolicy struct {
+	Enabled       bool `json:"enabled"`
+	RetentionDays int  `json:"retentionDays"`
+}
 
+type flowLogAnalyticsConfig struct {
+	Enabled             bool   `json:"enabled"`
+	AnalyticsInterval   int    `json:"analyticsInterval"`
+	WorkspaceId         string `json:"workspaceId"`
+	WorkspaceResourceId string `json:"workspaceResourceId"`
+	WorkspaceRegion     string `json:"workspaceRegion"`
+}
+
+func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSubscriptionNetworkServiceWatcherFlowlog, error) {
 	args := map[string]*llx.RawData{
 		"id":       llx.StringDataPtr(flowLog.ID),
 		"name":     llx.StringDataPtr(flowLog.Name),
@@ -489,9 +495,9 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 	}
 
 	if props := flowLog.Properties; props != nil {
-		var retentionPolicy mqlRetentionPolicy
+		var retentionPolicy flowLogRetentionPolicy
 		if rp := props.RetentionPolicy; rp != nil {
-			retentionPolicy = mqlRetentionPolicy{
+			retentionPolicy = flowLogRetentionPolicy{
 				Enabled:       convert.ToValue(rp.Enabled),
 				RetentionDays: int(convert.ToValue(rp.Days)),
 			}
@@ -500,10 +506,10 @@ func flowLogToMql(runtime *plugin.Runtime, flowLog network.FlowLog) (*mqlAzureSu
 		if err != nil {
 			return nil, err
 		}
-		var flowLogAnalytics mqlFlowLogAnalytics
+		var flowLogAnalytics flowLogAnalyticsConfig
 		if fac := props.FlowAnalyticsConfiguration; fac != nil && fac.NetworkWatcherFlowAnalyticsConfiguration != nil {
 			nwfac := fac.NetworkWatcherFlowAnalyticsConfiguration
-			flowLogAnalytics = mqlFlowLogAnalytics{
+			flowLogAnalytics = flowLogAnalyticsConfig{
 				Enabled:             convert.ToValue(nwfac.Enabled),
 				AnalyticsInterval:   int(convert.ToValue(nwfac.TrafficAnalyticsInterval)),
 				WorkspaceRegion:     convert.ToValue(nwfac.WorkspaceRegion),
