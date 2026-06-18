@@ -69,6 +69,11 @@ func (g *mqlGoogleworkspace) connectedApps() ([]any, error) {
 				return nil, tk.ClientId.Error
 			}
 			clientID := tk.ClientId.Data
+			// Skip tokens without a clientId: they would all collapse into one
+			// phantom connected-app under the empty-string key.
+			if clientID == "" {
+				continue
+			}
 
 			cApp, ok := connectedApps[clientID]
 			if !ok {
