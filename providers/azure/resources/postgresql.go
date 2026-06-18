@@ -265,7 +265,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]any, error)
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
-		return nil, &json.MarshalerError{}
+		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.DatabasesClientListByServerOptions{})
 	res := []any{}
@@ -312,7 +312,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) databases() ([]any
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
-		return nil, &json.MarshalerError{}
+		return nil, err
 	}
 	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &flexible.DatabasesClientListByServerOptions{})
 	res := []any{}

@@ -1353,7 +1353,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 	azureSub := sub.(*mqlAzureSubscription)
 	rgs := azureSub.GetResourceGroups()
 	if rgs.Error != nil {
-		return nil, err
+		return nil, rgs.Error
 	}
 	res := []any{}
 	for _, rg := range rgs.Data {
@@ -2714,7 +2714,7 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]any, er
 	// no API to fetch this so we fetch the gateways and iterate through them
 	gateways := mqlNetwork.GetVirtualNetworkGateways()
 	if gateways.Error != nil {
-		return nil, err
+		return nil, gateways.Error
 	}
 	for _, gw := range gateways.Data {
 		mqlGw := gw.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway)

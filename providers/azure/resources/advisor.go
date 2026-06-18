@@ -180,9 +180,15 @@ func (a *mqlAzureSubscriptionAdvisorService) averageScore() (float64, error) {
 	if scores.Error != nil {
 		return 0, scores.Error
 	}
+	if len(scores.Data) == 0 {
+		return 0, nil
+	}
 	avg := float64(0)
 	for _, s := range scores.Data {
 		score := s.(*mqlAzureSubscriptionAdvisorServiceScore)
+		if score.CurrentScore.Data == nil {
+			continue
+		}
 		avg += score.CurrentScore.Data.Score.Data
 	}
 

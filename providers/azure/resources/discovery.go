@@ -202,12 +202,9 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		return All
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
-		}
+		// remove the auto keyword (DeleteFunc handles every occurrence; mutating
+		// the slice inside a range loop would skip elements after a deletion)
+		targets = slices.DeleteFunc(targets, func(s string) bool { return s == DiscoveryAuto })
 		// add in the required discovery targets
 		return append(targets, Auto...)
 	}
