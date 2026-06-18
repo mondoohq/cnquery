@@ -1029,42 +1029,59 @@ func TestCompiler_NamedBindingScope(t *testing.T) {
 // into an anonymous `{}` block, flipping the body's type from `[]file` to
 // `[]block`. The mapped (and later flattened) elements then lost their `file`
 // type, so a `.path`/`.size`/`.permissions` access on the result failed at
-// runtime with "cannot find functions for type 'block'".
+// runtime with "cannot find functions for type 'block'". This covers both the
+// array map (compileArrayMap) and the resource-list map (compileResourceMap).
 func TestCompiler_MapBodyKeepsResourceType(t *testing.T) {
-	compileT(t, `["/etc/pam.d"].map(files.find(from: _, type: "file").list).flat()`, func(res *llx.CodeBundle) {
-		code := res.CodeV2
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{"array map", `["/etc/pam.d"].map(files.find(from: _, type: "file").list).flat()`},
+		{"resource-list map", `users.map(file("/etc/hosts")).flat()`},
+	}
 
-		var mapChunk *llx.Chunk
-		for _, b := range code.Blocks {
-			for _, ch := range b.Chunks {
-				if ch.Id == "map" && ch.Call == llx.Chunk_FUNCTION {
-					mapChunk = ch
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			compileT(t, tc.query, func(res *llx.CodeBundle) {
+				code := res.CodeV2
+
+				var mapChunk *llx.Chunk
+				for _, b := range code.Blocks {
+					for _, ch := range b.Chunks {
+						if ch.Id == "map" && ch.Call == llx.Chunk_FUNCTION {
+							mapChunk = ch
+						}
+					}
 				}
-			}
-		}
-		require.NotNil(t, mapChunk, "expected a map chunk")
+				require.NotNil(t, mapChunk, "expected a map chunk")
 
-		// map over a list of dirs, each body yielding []file, is [][]file. The
-		// innermost element type must stay a resource, never anonymous `block`.
-		mapType := types.Type(mapChunk.Function.Type)
-		require.True(t, mapType.IsArray() && mapType.Child().IsArray(),
-			"map result should be a nested array, got "+mapType.Label())
-		assert.True(t, mapType.Child().Child().IsResource(),
-			"map element type must stay a resource array, got "+mapType.Label())
+				// The mapped element type must stay a resource (the map collects
+				// `file`/`[]file`), never the anonymous `block` type.
+				elem := types.Type(mapChunk.Function.Type).Child()
+				for elem.IsArray() {
+					elem = elem.Child()
+				}
+				assert.True(t, elem.IsResource(),
+					"map element type must stay a resource, got "+types.Type(mapChunk.Function.Type).Label())
 
-		// The map body block's single entrypoint must still be the collected
-		// value (`list`), not a display `{}` block that strips the type.
-		bodyRef, ok := mapChunk.Function.Args[1].RefV2()
-		require.True(t, ok, "map should carry a function block reference")
-		body := code.Block(bodyRef)
-		require.Len(t, body.Entrypoints, 1)
-		ep := code.Chunk(body.Entrypoints[0])
-		assert.NotEqual(t, "{}", ep.Id,
-			"map body entrypoint must not be an auto-expanded display block")
-		epType := ep.Type()
-		assert.True(t, epType.IsArray() && epType.Child().IsResource(),
-			"map body entrypoint must stay []file, got "+epType.Label())
-	})
+				// The map body block's single entrypoint must still be the
+				// collected value, not a display `{}` block that strips the type.
+				bodyRef, ok := mapChunk.Function.Args[1].RefV2()
+				require.True(t, ok, "map should carry a function block reference")
+				body := code.Block(bodyRef)
+				require.Len(t, body.Entrypoints, 1)
+				ep := code.Chunk(body.Entrypoints[0])
+				assert.NotEqual(t, "{}", ep.Id,
+					"map body entrypoint must not be an auto-expanded display block")
+				epType := ep.Type()
+				for epType.IsArray() {
+					epType = epType.Child()
+				}
+				assert.True(t, epType.IsResource(),
+					"map body entrypoint must keep its resource type, got "+ep.Type().Label())
+			})
+		})
+	}
 }
 
 func TestCompiler_ArrayContains(t *testing.T) {

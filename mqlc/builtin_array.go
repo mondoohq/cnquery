@@ -520,9 +520,7 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 	// display-expand a resource(-list) entrypoint into an anonymous `{}` block,
 	// which would otherwise make the mapped elements lose their resource type.
 	// See https://github.com/mondoohq/mql/issues/8474
-	if c.valueBodyBlocks != nil {
-		c.valueBodyBlocks[refs.block] = struct{}{}
-	}
+	c.valueBodyBlocks[refs.block] = struct{}{}
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(ref),
