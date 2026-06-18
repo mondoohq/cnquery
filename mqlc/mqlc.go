@@ -201,6 +201,17 @@ type compiler struct {
 	// overrideTailDataRef is set by `having` so that subsequent chained calls
 	// bind to the where-filtered list instead of the $any boolean chunk.
 	overrideTailDataRef uint64
+
+	// valueBodyBlocks holds the refs of blocks whose single entrypoint is a
+	// value consumed by a parent builtin (the function body of `.map(...)`).
+	// postCompile must not display-expand those entrypoints: replacing the real
+	// value (e.g. the `[]file` from `.list`) with an anonymous `{}` display
+	// block (`[]block`) makes the parent collect `block`-typed elements, which
+	// breaks any later field access on the result.
+	// See https://github.com/mondoohq/mql/issues/8474
+	// The map is shared across the whole compiler tree (allocated once on the
+	// root compiler and handed to every newBlockCompiler).
+	valueBodyBlocks map[uint64]struct{}
 }
 
 func (c *compiler) isInMyBlock(ref uint64) bool {
@@ -249,16 +260,17 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 	}
 
 	return compiler{
-		CompilerConfig: c.CompilerConfig,
-		Result:         c.Result,
-		Binding:        binding,
-		blockDeps:      blockDeps,
-		vars:           newvarmap(ref, c.vars),
-		parent:         c,
-		block:          block,
-		blockRef:       ref,
-		props:          c.props,
-		standalone:     true,
+		CompilerConfig:  c.CompilerConfig,
+		Result:          c.Result,
+		Binding:         binding,
+		blockDeps:       blockDeps,
+		vars:            newvarmap(ref, c.vars),
+		parent:          c,
+		block:           block,
+		blockRef:        ref,
+		props:           c.props,
+		standalone:      true,
+		valueBodyBlocks: c.valueBodyBlocks,
 	}
 }
 
@@ -1742,6 +1754,15 @@ func (c *compiler) postCompile() {
 	// expandResourceFields (nested @defaults) are visited in the same pass.
 	for i := 0; i < len(code.Blocks); i++ {
 		block := code.Blocks[i]
+
+		// Skip blocks whose entrypoint is a value consumed by a parent builtin
+		// (e.g. a `.map(...)` body). Display-expanding such an entrypoint would
+		// replace the collected value with an anonymous `{}` block and strip its
+		// resource type. See https://github.com/mondoohq/mql/issues/8474
+		if _, ok := c.valueBodyBlocks[uint64(i+1)<<32]; ok {
+			continue
+		}
+
 		eps := block.Entrypoints
 
 		for _, ref := range eps {
@@ -2219,14 +2240,15 @@ func CompileAST(ast *parser.AST, props PropsHandler, conf CompilerConfig) (*llx.
 	}
 
 	c := compiler{
-		CompilerConfig: conf,
-		Result:         codeBundle,
-		vars:           newvarmap(1<<32, nil),
-		parent:         nil,
-		blockRef:       1 << 32,
-		block:          codeBundle.CodeV2.Blocks[0],
-		props:          props,
-		standalone:     true,
+		CompilerConfig:  conf,
+		Result:          codeBundle,
+		vars:            newvarmap(1<<32, nil),
+		parent:          nil,
+		blockRef:        1 << 32,
+		block:           codeBundle.CodeV2.Blocks[0],
+		props:           props,
+		standalone:      true,
+		valueBodyBlocks: map[uint64]struct{}{},
 	}
 
 	return c.Result, c.CompileParsed(ast)
