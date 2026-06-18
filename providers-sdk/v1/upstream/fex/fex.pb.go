@@ -1572,7 +1572,7 @@ type FindingExchange struct {
 	Details *FindingDetail `protobuf:"bytes,6,opt,name=details,proto3" json:"details,omitempty"`
 	// Required. Timestamp when the finding was first detected
 	FirstSeenAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=first_seen_at,json=firstSeenAt,proto3" json:"first_seen_at,omitempty"`
-	// Optional. Timestamp when the finding wa last seen
+	// Optional. Timestamp when the finding was last seen
 	LastSeenAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=last_seen_at,json=lastSeenAt,proto3" json:"last_seen_at,omitempty"`
 	// Optional. Timestamp when the finding was remediated
 	RemediatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=remediated_at,json=remediatedAt,proto3" json:"remediated_at,omitempty"`

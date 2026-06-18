@@ -292,7 +292,7 @@ message FindingExchange {
 
   // Required. Timestamp when the finding was first detected
   google.protobuf.Timestamp first_seen_at = 7;
-  // Optional. Timestamp when the finding wa last seen
+  // Optional. Timestamp when the finding was last seen
   google.protobuf.Timestamp last_seen_at = 8;
   // Optional. Timestamp when the finding was remediated
   google.protobuf.Timestamp remediated_at = 9;
@@ -344,7 +344,7 @@ message FindingDetail {
   map<string, string> properties = 6;
 }
 
-//Experimental. Evidence shares details about the facts that lead to the finding
+// Experimental. Evidence shares details about the facts that lead to the finding
 message Evidence {
   // Attack tactic used
   AttackTactic tactic = 1;
