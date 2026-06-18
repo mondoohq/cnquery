@@ -15,10 +15,8 @@ type StorageInfo struct {
 	Content string `json:"content"`
 	Path    string `json:"path"`
 	Enabled int    `json:"enabled"`
-	// Disable is the cluster /storage config key (1 = disabled). The
-	// cluster endpoint reports config (disable), while /nodes/<n>/storage
-	// reports runtime status (enabled); GetStorages normalizes Enabled from
-	// Disable so the shared mapper is correct for both.
+	// Disable is the cluster /storage config key (1 = disabled); /nodes/<n>/storage
+	// uses "enabled" instead. GetStorages normalizes Enabled from Disable.
 	Disable  int     `json:"disable"`
 	Shared   int     `json:"shared"`
 	Total    int64   `json:"total"`
@@ -39,11 +37,13 @@ func (c *PveConnection) GetStorages() ([]StorageInfo, error) {
 	// The cluster /storage endpoint reports config (a "disable" key), not the
 	// runtime "enabled" key that /nodes/<n>/storage returns. Normalize Enabled
 	// from Disable so the shared mapper reports a correct value — without this,
-	// every cluster-level storage was reported as enabled=false.
+	// every cluster-level storage was reported as enabled=false. Only infer
+	// Enabled when the response didn't already provide it, so a future endpoint
+	// that returns both keys keeps its explicit value.
 	for i := range storages {
 		if storages[i].Disable != 0 {
 			storages[i].Enabled = 0
-		} else {
+		} else if storages[i].Enabled == 0 {
 			storages[i].Enabled = 1
 		}
 	}
