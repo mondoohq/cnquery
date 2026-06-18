@@ -157,15 +157,20 @@ func flattenConfigurationSetting(inst betamodels.DeviceManagementConfigurationSe
 }
 
 func simpleConfigurationSettingValue(sv betamodels.DeviceManagementConfigurationSimpleSettingValueable) any {
+	// The Secret case must come before the String case: the concrete secret
+	// type also satisfies the StringSettingValueable interface, and a Go type
+	// switch matches interface cases in source order — so with String first,
+	// secret values fell through to it and were returned in cleartext instead
+	// of being masked.
 	switch v := sv.(type) {
+	case betamodels.DeviceManagementConfigurationSecretSettingValueable:
+		return "***"
 	case betamodels.DeviceManagementConfigurationStringSettingValueable:
 		return convert.ToValue(v.GetValue())
 	case betamodels.DeviceManagementConfigurationIntegerSettingValueable:
 		if v.GetValue() != nil {
 			return int64(*v.GetValue())
 		}
-	case betamodels.DeviceManagementConfigurationSecretSettingValueable:
-		return "***"
 	}
 	return nil
 }
