@@ -16,6 +16,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.12.2
 	github.com/stackitcloud/stackit-sdk-go/services/logme v0.29.0
 	github.com/stackitcloud/stackit-sdk-go/services/mariadb v0.28.2
+	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.10.0
 	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.8.3
 	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/observability v0.21.2
@@ -29,6 +30,8 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.10.1
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.14.0
 	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0
+	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0
 	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
 )
 
@@ -100,9 +103,6 @@ require (
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.10.0 // indirect
-	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0 // indirect
-	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.mondoo.com/ranger-rpc v0.8.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

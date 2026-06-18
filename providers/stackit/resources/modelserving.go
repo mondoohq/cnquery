@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/stackitcloud/stackit-sdk-go/services/modelserving"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -68,7 +70,7 @@ func initStackitModelServingToken(runtime *plugin.Runtime, args map[string]*llx.
 	}
 	token, ok := resp.GetTokenOk()
 	if !ok {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("stackit model serving token %q not found", id)
 	}
 	res, err := CreateResource(runtime, "stackit.modelServing.token", modelServingTokenArgs(&token))
 	if err != nil {
