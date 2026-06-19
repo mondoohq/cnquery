@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,6 +27,10 @@ const (
 	createdByLabel = "created-by"
 	createdValue   = "cnspec"
 )
+
+// invalidDiskNameChars matches any character that is not allowed in a GCP disk
+// name (i.e. anything outside [a-z0-9-]).
+var invalidDiskNameChars = regexp.MustCompile(`[^a-z0-9-]`)
 
 func NewInstanceUrl(projectID, zone, instanceName string) string {
 	return fmt.Sprintf(
@@ -50,36 +55,16 @@ func newDiskName(instanceName string) string {
 // replaces invalid characters in the instance name and truncates it so the
 // full "cnspec-<instance>-<timestamp>" name fits.
 func buildDiskName(instanceName string, t time.Time) string {
-	const (
-		prefix     = "cnspec-"
-		maxLen     = 63
-		timeLayout = "20060102t150405" // 15 chars, all valid characters
-	)
-	timestamp := t.Format(timeLayout)
+	prefix := "cnspec-"
+	timestamp := t.Format("20060102t150405") // 15 chars, all valid characters
 
 	// sanitize the instance name: lowercase, and replace any character that is
 	// not in [a-z0-9-] with '-'
-	sanitized := strings.Map(func(r rune) rune {
-		switch {
-		case r >= 'a' && r <= 'z':
-			return r
-		case r >= '0' && r <= '9':
-			return r
-		case r == '-':
-			return r
-		case r >= 'A' && r <= 'Z':
-			return r + ('a' - 'A')
-		default:
-			return '-'
-		}
-	}, instanceName)
+	sanitized := invalidDiskNameChars.ReplaceAllString(strings.ToLower(instanceName), "-")
 
 	// reserve room for the prefix and the "-"+timestamp suffix, then truncate
-	// the sanitized instance name so the assembled name fits within maxLen
-	avail := maxLen - len(prefix) - 1 - len(timestamp)
-	if avail < 0 {
-		avail = 0
-	}
+	// the sanitized instance name so the assembled name fits within 63 chars
+	avail := max(63-len(prefix)-1-len(timestamp), 0)
 	if len(sanitized) > avail {
 		sanitized = sanitized[:avail]
 	}
@@ -87,6 +72,11 @@ func buildDiskName(instanceName string, t time.Time) string {
 	// trim trailing '-' from the (possibly truncated) instance name so the
 	// assembled name reads cleanly
 	sanitized = strings.TrimRight(sanitized, "-")
+
+	// if nothing usable remains, drop the separator to avoid a double dash
+	if sanitized == "" {
+		return prefix + timestamp
+	}
 
 	// the timestamp always ends in a digit, so the assembled name ends in
 	// [a-z0-9] and starts with the "cnspec-" prefix (a letter) — both required
