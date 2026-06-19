@@ -4,6 +4,7 @@
 package llx
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,6 +57,47 @@ func TestMapAssertions_NullReceiver(t *testing.T) {
 			require.Equal(t, types.Bool, res.Type)
 			require.Nil(t, res.Value)
 			require.NoError(t, res.Error)
+		})
+
+		t.Run(c.name+" preserves a genuine upstream error", func(t *testing.T) {
+			boom := errors.New("upstream boom")
+			res, _, err := c.fn(nil, &RawData{Type: types.Map(types.String, types.String), Value: nil, Error: boom}, nil, 0)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Equal(t, boom, res.Error)
+		})
+	}
+}
+
+// The dict assertion variants behave the same as the array/map ones on a null
+// receiver: a graceful null bool, with any genuine upstream error preserved.
+func TestDictAssertions_NullReceiver(t *testing.T) {
+	cases := []struct {
+		name string
+		fn   func(*blockExecutor, *RawData, *Chunk, uint64) (*RawData, uint64, error)
+	}{
+		{"all", dictAllV2},
+		{"any", dictAnyV2},
+		{"none", dictNoneV2},
+		{"one", dictOneV2},
+	}
+	for _, c := range cases {
+		t.Run(c.name+" on null dict returns null bool, no error", func(t *testing.T) {
+			res, ref, err := c.fn(nil, &RawData{Type: types.Dict, Value: nil}, nil, 0)
+			require.NoError(t, err)
+			require.Equal(t, uint64(0), ref)
+			require.NotNil(t, res)
+			require.Equal(t, types.Bool, res.Type)
+			require.Nil(t, res.Value)
+			require.NoError(t, res.Error)
+		})
+
+		t.Run(c.name+" preserves a genuine upstream error", func(t *testing.T) {
+			boom := errors.New("upstream boom")
+			res, _, err := c.fn(nil, &RawData{Type: types.Dict, Value: nil, Error: boom}, nil, 0)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Equal(t, boom, res.Error)
 		})
 	}
 }

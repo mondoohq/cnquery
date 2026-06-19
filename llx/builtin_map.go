@@ -1036,7 +1036,9 @@ func dictRecurse(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 func dictAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool}, 0, nil
+		// Null receiver fails cleanly as a null bool; a genuine upstream error
+		// is preserved (consistent with the array/map variants).
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	if filteredList, ok := bind.Value.([]any); ok {
@@ -1058,7 +1060,9 @@ func dictAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 
 func dictNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool}, 0, nil
+		// Null receiver fails cleanly as a null bool; a genuine upstream error
+		// is preserved (consistent with the array/map variants).
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	if filteredList, ok := bind.Value.([]any); ok {
@@ -1080,7 +1084,9 @@ func dictNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 func dictAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool}, 0, nil
+		// Null receiver fails cleanly as a null bool; a genuine upstream error
+		// is preserved (consistent with the array/map variants).
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	if filteredList, ok := bind.Value.([]any); ok {
@@ -1102,7 +1108,9 @@ func dictAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 
 func dictOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool}, 0, nil
+		// Null receiver fails cleanly as a null bool; a genuine upstream error
+		// is preserved (consistent with the array/map variants).
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	if filteredList, ok := bind.Value.([]any); ok {
