@@ -4,6 +4,7 @@
 package eos
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/aristanetworks/goeapi"
@@ -197,11 +198,20 @@ func (eos *Eos) Stp() (map[string]SptMstInstance, error) {
 }
 
 type showSpanningTreeMstInstanceDetail struct {
+	cmd                      string
 	SpanningTreeMstInterface SptMestInterfaceDetail
 }
 
 func (s *showSpanningTreeMstInstanceDetail) GetCmd() string {
-	return "show spanning-tree mst 0 interface Ethernet1 detail"
+	return s.cmd
+}
+
+// stpInterfaceDetailCmd builds the EOS command for a given MST instance and
+// interface. Previously the command was hardcoded to `mst 0 ... Ethernet1`, so
+// every call returned details for that one interface regardless of the
+// requested instance/interface arguments.
+func stpInterfaceDetailCmd(mstInstanceID, iface string) string {
+	return fmt.Sprintf("show spanning-tree mst %s interface %s detail", mstInstanceID, iface)
 }
 
 type SptMestInterfaceDetail struct {
@@ -230,9 +240,9 @@ type SptMestInterfaceDetail struct {
 	} `json:"counters"`
 }
 
-// show spanning-tree mst 0 interface Ethernet1 detail
+// show spanning-tree mst <instance> interface <iface> detail
 func (eos *Eos) StpInterfaceDetails(mstInstanceID string, iface string) (SptMestInterfaceDetail, error) {
-	shRsp := &showSpanningTreeMstInstanceDetail{}
+	shRsp := &showSpanningTreeMstInstanceDetail{cmd: stpInterfaceDetailCmd(mstInstanceID, iface)}
 
 	handle, err := eos.node.GetHandle("json")
 	if err != nil {
