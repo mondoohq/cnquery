@@ -121,6 +121,17 @@ func TestManifestDiscovery(t *testing.T) {
 	inv, err = resources.Discover(pluginRuntime, mql.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 1)
+
+	conn.InventoryConfig().Discover.Targets = []string{"kyverno"}
+	pluginRuntime = &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
+		Connection:     conn,
+		HasRecording:   false,
+		CreateResource: resources.CreateResource,
+	}
+	inv, err = resources.Discover(pluginRuntime, mql.Features{})
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 1)
 }
 
 func TestOperatorManifest(t *testing.T) {
