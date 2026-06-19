@@ -3831,6 +3831,39 @@ func (a *mqlAwsEc2Securitygroup) instances() ([]any, error) {
 	return instancesFromNetworkInterfaces(nis.Data)
 }
 
+// securityGroupsAllowPublicIngress reports whether any of the given security
+// groups permits inbound traffic from 0.0.0.0/0 or ::/0. It is shared by the
+// resource-level internetReachable fields that gate on network reachability.
+func securityGroupsAllowPublicIngress(sgs *plugin.TValue[[]any]) (bool, error) {
+	if sgs.Error != nil {
+		return false, sgs.Error
+	}
+	for _, s := range sgs.Data {
+		sg, ok := s.(*mqlAwsEc2Securitygroup)
+		if !ok {
+			continue
+		}
+		perms := sg.GetIpPermissions()
+		if perms.Error != nil {
+			return false, perms.Error
+		}
+		for _, p := range perms.Data {
+			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
+			if !ok {
+				continue
+			}
+			public := perm.GetIncludesPublicSource()
+			if public.Error != nil {
+				return false, public.Error
+			}
+			if public.Data {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 // subnet returns the subnet of the instance's primary network interface, which
 // is what ec2types.Instance.SubnetId reports. Instances with additional ENIs in
 // other subnets are not represented here.
@@ -3904,31 +3937,7 @@ func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
 		return false, nil
 	}
 
-	sgs := i.GetSecurityGroups()
-	if sgs.Error != nil {
-		return false, sgs.Error
-	}
-	for _, s := range sgs.Data {
-		sg, ok := s.(*mqlAwsEc2Securitygroup)
-		if !ok {
-			continue
-		}
-		perms := sg.GetIpPermissions()
-		if perms.Error != nil {
-			return false, perms.Error
-		}
-		for _, p := range perms.Data {
-			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
-			if !ok {
-				continue
-			}
-			pub := perm.GetIncludesPublicSource()
-			if pub.Error == nil && pub.Data {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
+	return securityGroupsAllowPublicIngress(i.GetSecurityGroups())
 }
 
 // loadBalancers returns the load balancers that route traffic to this instance.

@@ -3488,6 +3488,7 @@ aws.ecr.repository.encryptionType 11.15.2
 aws.ecr.repository.imageScanOnPush 11.15.2
 aws.ecr.repository.imageTagMutability 11.15.2
 aws.ecr.repository.images 11.15.2
+aws.ecr.repository.isPublic 13.37.1
 aws.ecr.repository.lifecyclePolicy 11.15.2
 aws.ecr.repository.name 11.15.2
 aws.ecr.repository.operatingSystems 11.16.1
@@ -5269,6 +5270,7 @@ aws.iam.policyStatement 13.32.2
 aws.iam.policyStatement.actions 13.32.2
 aws.iam.policyStatement.conditions 13.32.2
 aws.iam.policyStatement.effect 13.32.2
+aws.iam.policyStatement.hasPublicPrincipal 13.37.1
 aws.iam.policyStatement.hasWildcardAction 13.33.2
 aws.iam.policyStatement.hasWildcardResource 13.33.2
 aws.iam.policyStatement.notActions 13.32.2
@@ -5744,6 +5746,7 @@ aws.kms.key.encryptionAlgorithms 13.12.1
 aws.kms.key.expirationModel 13.12.1
 aws.kms.key.grants 11.15.2
 aws.kms.key.id 11.15.2
+aws.kms.key.isPublic 13.37.1
 aws.kms.key.keyAgreementAlgorithms 13.12.1
 aws.kms.key.keyManager 13.2.7
 aws.kms.key.keyRotationEnabled 11.15.2
@@ -5861,6 +5864,7 @@ aws.lambda.function.eventSourceMappings 11.15.2
 aws.lambda.function.fileSystemConfigs 11.15.2
 aws.lambda.function.handler 11.15.2
 aws.lambda.function.imageUri 13.26.2
+aws.lambda.function.isPublic 13.37.1
 aws.lambda.function.kmsKey 11.16.1
 aws.lambda.function.kmsKeyArn 11.15.2
 aws.lambda.function.lastModifiedAt 11.15.2
@@ -7134,6 +7138,7 @@ aws.rds.dbinstance.engineVersion 11.15.2
 aws.rds.dbinstance.enhancedMonitoringResourceArn 11.15.2
 aws.rds.dbinstance.iamDatabaseAuthentication 11.15.2
 aws.rds.dbinstance.id 11.15.2
+aws.rds.dbinstance.internetReachable 13.37.1
 aws.rds.dbinstance.kmsKey 11.15.2
 aws.rds.dbinstance.latestRestorableTime 11.15.2
 aws.rds.dbinstance.licenseModel 11.15.2
@@ -9095,6 +9100,7 @@ aws.sns.topic.dataProtectionPolicy 13.12.1
 aws.sns.topic.deliveryPolicy 13.12.1
 aws.sns.topic.displayName 13.12.1
 aws.sns.topic.fifoTopic 13.12.1
+aws.sns.topic.isPublic 13.37.1
 aws.sns.topic.kmsMasterKey 11.15.2
 aws.sns.topic.policy 13.6.3
 aws.sns.topic.policyStatements 13.32.2
@@ -9113,6 +9119,7 @@ aws.sqs.queue.deadLetterQueue 11.15.2
 aws.sqs.queue.deduplicationScope 11.15.2
 aws.sqs.queue.deliveryDelaySeconds 11.15.2
 aws.sqs.queue.fifoThroughputLimit 11.15.2
+aws.sqs.queue.isPublic 13.37.1
 aws.sqs.queue.kmsKey 11.15.2
 aws.sqs.queue.lastModified 11.15.2
 aws.sqs.queue.maxReceiveCount 11.15.2

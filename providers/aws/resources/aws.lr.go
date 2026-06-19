@@ -6417,6 +6417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.kms.key.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetKeySpec()).ToDataRes(types.String)
 	},
@@ -6827,6 +6830,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.policyStatement.hasWildcardAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicyStatement).GetHasWildcardAction()).ToDataRes(types.Bool)
+	},
+	"aws.iam.policyStatement.hasPublicPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyStatement).GetHasPublicPrincipal()).ToDataRes(types.Bool)
 	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
@@ -9869,6 +9875,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sns.topic.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.sns.topic.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetFifoTopic()).ToDataRes(types.Bool)
@@ -16911,6 +16920,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sqs.queue.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.sqs.queue.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.sqs.queue.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -17342,6 +17354,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
@@ -19110,6 +19125,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.ecr.repository.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetLifecyclePolicy()).ToDataRes(types.Resource("aws.ecr.lifecyclePolicy"))
 	},
@@ -20084,6 +20102,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.lambda.function.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.lambda.function.allowsPublicAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetAllowsPublicAccess()).ToDataRes(types.Bool)
@@ -35337,6 +35358,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).KeySpec, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -35927,6 +35952,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.policyStatement.hasWildcardAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicyStatement).HasWildcardAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyStatement.hasPublicPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyStatement).HasPublicPrincipal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40403,6 +40432,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sns.topic.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSnsTopic).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50781,6 +50814,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSqsQueue).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sqs.queue.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.sqs.queue.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSqsQueue).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -51383,6 +51420,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53917,6 +53958,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrRepository).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.repository.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).LifecyclePolicy, ok = plugin.RawToTValue[*mqlAwsEcrLifecyclePolicy](v.Value, v.Error)
 		return
@@ -55339,6 +55384,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.allowsPublicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80862,6 +80911,7 @@ type mqlAwsKmsKey struct {
 	KeyManager                plugin.TValue[string]
 	Policy                    plugin.TValue[string]
 	PolicyStatements          plugin.TValue[[]any]
+	IsPublic                  plugin.TValue[bool]
 	KeySpec                   plugin.TValue[string]
 	KeyUsage                  plugin.TValue[string]
 	MultiRegion               plugin.TValue[bool]
@@ -81026,6 +81076,12 @@ func (c *mqlAwsKmsKey) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -82432,6 +82488,7 @@ type mqlAwsIamPolicyStatement struct {
 	Conditions          plugin.TValue[any]
 	HasWildcardResource plugin.TValue[bool]
 	HasWildcardAction   plugin.TValue[bool]
+	HasPublicPrincipal  plugin.TValue[bool]
 }
 
 // createAwsIamPolicyStatement creates a new instance of this resource
@@ -82511,6 +82568,12 @@ func (c *mqlAwsIamPolicyStatement) GetHasWildcardResource() *plugin.TValue[bool]
 func (c *mqlAwsIamPolicyStatement) GetHasWildcardAction() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasWildcardAction, func() (bool, error) {
 		return c.hasWildcardAction()
+	})
+}
+
+func (c *mqlAwsIamPolicyStatement) GetHasPublicPrincipal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasPublicPrincipal, func() (bool, error) {
+		return c.hasPublicPrincipal()
 	})
 }
 
@@ -94986,6 +95049,7 @@ type mqlAwsSnsTopic struct {
 	KmsMasterKey              plugin.TValue[*mqlAwsKmsKey]
 	Policy                    plugin.TValue[any]
 	PolicyStatements          plugin.TValue[[]any]
+	IsPublic                  plugin.TValue[bool]
 	FifoTopic                 plugin.TValue[bool]
 	ContentBasedDeduplication plugin.TValue[bool]
 	DataProtectionPolicy      plugin.TValue[any]
@@ -95108,6 +95172,12 @@ func (c *mqlAwsSnsTopic) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -122243,6 +122313,7 @@ type mqlAwsSqsQueue struct {
 	FifoThroughputLimit           plugin.TValue[string]
 	Policy                        plugin.TValue[any]
 	PolicyStatements              plugin.TValue[[]any]
+	IsPublic                      plugin.TValue[bool]
 	Tags                          plugin.TValue[map[string]any]
 	ContentBasedDeduplication     plugin.TValue[bool]
 	RedriveAllowPolicy            plugin.TValue[any]
@@ -122422,6 +122493,12 @@ func (c *mqlAwsSqsQueue) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -123599,6 +123676,7 @@ type mqlAwsRdsDbinstance struct {
 	Region                             plugin.TValue[string]
 	AvailabilityZone                   plugin.TValue[string]
 	PubliclyAccessible                 plugin.TValue[bool]
+	InternetReachable                  plugin.TValue[bool]
 	EnabledCloudwatchLogsExports       plugin.TValue[[]any]
 	DeletionProtection                 plugin.TValue[bool]
 	MultiAZ                            plugin.TValue[bool]
@@ -123755,6 +123833,12 @@ func (c *mqlAwsRdsDbinstance) GetAvailabilityZone() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbinstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRdsDbinstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 func (c *mqlAwsRdsDbinstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
@@ -129571,6 +129655,7 @@ type mqlAwsEcrRepository struct {
 	ScanningFrequency  plugin.TValue[string]
 	Policy             plugin.TValue[any]
 	PolicyStatements   plugin.TValue[[]any]
+	IsPublic           plugin.TValue[bool]
 	LifecyclePolicy    plugin.TValue[*mqlAwsEcrLifecyclePolicy]
 	AboutText          plugin.TValue[string]
 	UsageText          plugin.TValue[string]
@@ -129698,6 +129783,12 @@ func (c *mqlAwsEcrRepository) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsEcrRepository) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -133141,6 +133232,7 @@ type mqlAwsLambdaFunction struct {
 	RecursiveLoop                 plugin.TValue[string]
 	Policy                        plugin.TValue[any]
 	PolicyStatements              plugin.TValue[[]any]
+	IsPublic                      plugin.TValue[bool]
 	AllowsPublicAccess            plugin.TValue[bool]
 	VpcConfig                     plugin.TValue[any]
 	Vpc                           plugin.TValue[*mqlAwsVpc]
@@ -133270,6 +133362,12 @@ func (c *mqlAwsLambdaFunction) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 

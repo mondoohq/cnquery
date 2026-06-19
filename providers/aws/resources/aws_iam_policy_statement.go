@@ -264,3 +264,111 @@ func (a *mqlAwsS3Bucket) policyStatements() ([]any, error) {
 	}
 	return policyStatementsFromString(a.MqlRuntime, a.Name.Data, policy.Data.GetDocument())
 }
+
+// hasPublicPrincipal reports whether an Allow statement grants access to a
+// wildcard principal ("*"). It is a structural predicate — it does not evaluate
+// conditions — mirroring hasWildcardAction and hasWildcardResource. Callers that
+// need "effectively public" should also check that conditions do not scope the
+// grant (see the resource-level isPublic fields, which do).
+func (a *mqlAwsIamPolicyStatement) hasPublicPrincipal() (bool, error) {
+	effect := a.GetEffect()
+	if effect.Error != nil {
+		return false, effect.Error
+	}
+	if !strings.EqualFold(effect.Data, "Allow") {
+		return false, nil
+	}
+	principals := a.GetPrincipals()
+	if principals.Error != nil {
+		return false, principals.Error
+	}
+	return principalsIncludeWildcard(principals.Data), nil
+}
+
+// principalsIncludeWildcard reports whether a parsed principal map grants to "*"
+// — either as a key (the bare `"Principal": "*"` form) or as a value under a
+// type such as AWS (`"Principal": {"AWS": "*"}`).
+func principalsIncludeWildcard(principals map[string]any) bool {
+	for key, v := range principals {
+		if key == "*" {
+			return true
+		}
+		vals, ok := v.([]any)
+		if !ok {
+			continue
+		}
+		for _, x := range vals {
+			if s, ok := x.(string); ok && s == "*" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// statementsAllowPublic reports whether any statement grants access to a
+// wildcard principal without scoping conditions. A wildcard principal narrowed
+// by a condition (organization id, source account/ARN, VPC, and so on) is the
+// standard cross-account sharing pattern rather than public exposure, so
+// conditioned statements are excluded.
+func statementsAllowPublic(statements []any) (bool, error) {
+	for _, s := range statements {
+		stmt, ok := s.(*mqlAwsIamPolicyStatement)
+		if !ok {
+			continue
+		}
+		public := stmt.GetHasPublicPrincipal()
+		if public.Error != nil {
+			return false, public.Error
+		}
+		if !public.Data {
+			continue
+		}
+		conditions := stmt.GetConditions()
+		if conditions.Error != nil {
+			return false, conditions.Error
+		}
+		if dictIsEmpty(conditions.Data) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func dictIsEmpty(d any) bool {
+	if d == nil {
+		return true
+	}
+	m, ok := d.(map[string]any)
+	return ok && len(m) == 0
+}
+
+// resourceIsPublic is shared by the resource-level isPublic fields: a resource
+// is public when its policy contains a statement that grants to a wildcard
+// principal without scoping conditions.
+func resourceIsPublic(statements *plugin.TValue[[]any]) (bool, error) {
+	if statements.Error != nil {
+		return false, statements.Error
+	}
+	return statementsAllowPublic(statements.Data)
+}
+
+func (a *mqlAwsKmsKey) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsSnsTopic) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsSqsQueue) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsEcrRepository) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}
+
+func (a *mqlAwsLambdaFunction) isPublic() (bool, error) {
+	return resourceIsPublic(a.GetPolicyStatements())
+}

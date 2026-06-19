@@ -1940,3 +1940,17 @@ func (a *mqlAwsRdsDbcluster) globalCluster() (*mqlAwsRdsGlobalCluster, error) {
 	}
 	return newMqlAwsRdsGlobalCluster(a.MqlRuntime, resp.GlobalClusters[0])
 }
+
+// internetReachable reports whether the database is reachable from the internet:
+// it is publicly accessible (AWS assigns it a public endpoint) and an attached
+// security group permits inbound traffic from 0.0.0.0/0 or ::/0.
+func (a *mqlAwsRdsDbinstance) internetReachable() (bool, error) {
+	public := a.GetPubliclyAccessible()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if !public.Data {
+		return false, nil
+	}
+	return securityGroupsAllowPublicIngress(a.GetSecurityGroups())
+}

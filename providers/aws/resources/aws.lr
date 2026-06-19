@@ -1716,6 +1716,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   policy() string
   // Parsed statements from the key policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  isPublic() bool
   // Describes the type of key material in the key
   //
   // One of: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, ECC_SECG_P256K1, HMAC_224, HMAC_256, HMAC_384, HMAC_512, SM2.
@@ -2127,6 +2129,8 @@ private aws.iam.policyStatement @defaults("effect") {
   // True when the statement includes the global `*` action or any service-wide
   // wildcard such as `s3:*` or `ec2:*`.
   hasWildcardAction() bool
+  // Whether the statement grants access to a wildcard principal ("*")
+  hasPublicPrincipal() bool
 }
 
 // AWS IAM policy
@@ -4657,6 +4661,8 @@ private aws.sns.topic @defaults("arn") {
   policy() dict
   // Parsed statements from the topic access policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  isPublic() bool
   // Whether the topic is a FIFO topic
   fifoTopic() bool
   // Whether content-based deduplication is enabled (FIFO topics only)
@@ -11223,6 +11229,8 @@ private aws.sqs.queue {
   policy() dict
   // Parsed statements from the queue access policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  isPublic() bool
   // Resource tags for the queue
   tags() map[string]string
   // Whether content-based deduplication is enabled (FIFO queues only)
@@ -11592,6 +11600,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   availabilityZone string
   // Whether the instance is publicly accessible
   publiclyAccessible bool
+  // Whether the database is reachable from the internet (publicly accessible with a security group open to 0.0.0.0/0 or ::/0)
+  internetReachable() bool
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
   // Whether deletion protection is enabled
@@ -13216,6 +13226,8 @@ private aws.ecr.repository @defaults("uri region") {
   policy() dict
   // Parsed statements from the repository access policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  isPublic() bool
   // Lifecycle policy for the repository
   lifecyclePolicy() aws.ecr.lifecyclePolicy
   // About text from catalog data (public repositories only)
@@ -14116,6 +14128,8 @@ private aws.lambda.function @defaults("arn") {
   policy() dict
   // Parsed statements from the function resource policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
+  isPublic() bool
   // Whether the resource policy grants access to any principal
   //
   // True when an Allow statement grants a wildcard principal (`*`) without a
