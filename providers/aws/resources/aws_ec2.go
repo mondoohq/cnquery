@@ -3852,7 +3852,8 @@ func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 // loadBalancers returns the load balancers that route traffic to this instance.
 // AWS has no "describe load balancers by instance" API, so this scans the
 // account's load balancers (a cross-region list cached after first use) and
-// matches on the instances each one targets.
+// matches on the instances each one targets — directly for classic ELBs, and
+// through target groups for Application and Network Load Balancers.
 func (i *mqlAwsEc2Instance) loadBalancers() ([]any, error) {
 	obj, err := CreateResource(i.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
 	if err != nil {
@@ -3869,19 +3870,52 @@ func (i *mqlAwsEc2Instance) loadBalancers() ([]any, error) {
 		if !ok {
 			continue
 		}
-		insts := lb.GetInstances()
-		if insts.Error != nil {
-			return nil, insts.Error
+		targets, err := loadBalancerTargetsInstance(lb, instanceArn)
+		if err != nil {
+			return nil, err
 		}
-		for _, x := range insts.Data {
-			inst, ok := x.(*mqlAwsEc2Instance)
-			if ok && inst.Arn.Data == instanceArn {
-				res = append(res, lb)
-				break
-			}
+		if targets {
+			res = append(res, lb)
 		}
 	}
 	return res, nil
+}
+
+// loadBalancerTargetsInstance reports whether a load balancer routes traffic to
+// the given instance. Classic ELBs register instances directly; Application and
+// Network Load Balancers register them through target groups, so both paths are
+// checked.
+func loadBalancerTargetsInstance(lb *mqlAwsElbLoadbalancer, instanceArn string) (bool, error) {
+	insts := lb.GetInstances()
+	if insts.Error != nil {
+		return false, insts.Error
+	}
+	for _, x := range insts.Data {
+		if inst, ok := x.(*mqlAwsEc2Instance); ok && inst.Arn.Data == instanceArn {
+			return true, nil
+		}
+	}
+
+	tgs := lb.GetTargetGroups()
+	if tgs.Error != nil {
+		return false, tgs.Error
+	}
+	for _, t := range tgs.Data {
+		tg, ok := t.(*mqlAwsElbTargetgroup)
+		if !ok {
+			continue
+		}
+		ec2Targets := tg.GetEc2Targets()
+		if ec2Targets.Error != nil {
+			return false, ec2Targets.Error
+		}
+		for _, x := range ec2Targets.Data {
+			if inst, ok := x.(*mqlAwsEc2Instance); ok && inst.Arn.Data == instanceArn {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 func (i *mqlAwsEc2Instance) cloudformationStack() (*mqlAwsCloudformationStack, error) {
