@@ -2113,6 +2113,7 @@ aws.cognito.userPoolDomain.domain 13.21.4
 aws.cognito.userPoolDomain.region 13.21.4
 aws.cognito.userPoolDomain.s3Bucket 13.21.4
 aws.cognito.userPoolDomain.status 13.21.4
+aws.cognito.userPoolDomain.tlsSecurityPolicy 13.37.1
 aws.cognito.userPoolDomain.userPool 13.21.4
 aws.cognito.userPoolDomain.userPoolId 13.21.4
 aws.cognito.userPoolDomain.version 13.21.4
@@ -3889,6 +3890,7 @@ aws.eks.cluster.clusterSecurityGroup 13.12.1
 aws.eks.cluster.clusterSecurityGroups 13.12.1
 aws.eks.cluster.clusterSubnets 13.12.1
 aws.eks.cluster.computeConfig 13.12.1
+aws.eks.cluster.controlPlaneEgressMode 13.37.1
 aws.eks.cluster.createdAt 11.15.2
 aws.eks.cluster.deletionProtection 11.15.2
 aws.eks.cluster.encryptionConfig 11.15.2

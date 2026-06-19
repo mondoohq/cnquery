@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.4
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.61.4
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.65.1
@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.86.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.87.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.34.6

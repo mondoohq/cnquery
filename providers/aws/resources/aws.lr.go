@@ -22836,6 +22836,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.networkConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetNetworkConfig()).ToDataRes(types.Dict)
 	},
+	"aws.eks.cluster.controlPlaneEgressMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetControlPlaneEgressMode()).ToDataRes(types.String)
+	},
 	"aws.eks.cluster.resourcesVpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetResourcesVpcConfig()).ToDataRes(types.Dict)
 	},
@@ -23579,6 +23582,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cognito.userPoolDomain.customDomainConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolDomain).GetCustomDomainConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPoolDomain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
 	},
 	"aws.cognito.userPoolDomain.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolDomain).GetVersion()).ToDataRes(types.String)
@@ -59301,6 +59307,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksCluster).NetworkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.cluster.controlPlaneEgressMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ControlPlaneEgressMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.resourcesVpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).ResourcesVpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -60351,6 +60361,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cognito.userPoolDomain.customDomainConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPoolDomain).CustomDomainConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.tlsSecurityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPoolDomain.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -142945,6 +142959,7 @@ type mqlAwsEksCluster struct {
 	EncryptionResources     plugin.TValue[[]any]
 	Logging                 plugin.TValue[any]
 	NetworkConfig           plugin.TValue[any]
+	ControlPlaneEgressMode  plugin.TValue[string]
 	ResourcesVpcConfig      plugin.TValue[any]
 	CreatedAt               plugin.TValue[*time.Time]
 	NodeGroups              plugin.TValue[[]any]
@@ -143091,6 +143106,12 @@ func (c *mqlAwsEksCluster) GetLogging() *plugin.TValue[any] {
 func (c *mqlAwsEksCluster) GetNetworkConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.NetworkConfig, func() (any, error) {
 		return c.networkConfig()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetControlPlaneEgressMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ControlPlaneEgressMode, func() (string, error) {
+		return c.controlPlaneEgressMode()
 	})
 }
 
@@ -145390,6 +145411,7 @@ type mqlAwsCognitoUserPoolDomain struct {
 	CloudFrontDistribution plugin.TValue[string]
 	S3Bucket               plugin.TValue[string]
 	CustomDomainConfig     plugin.TValue[any]
+	TlsSecurityPolicy      plugin.TValue[string]
 	Version                plugin.TValue[string]
 }
 
@@ -145472,6 +145494,10 @@ func (c *mqlAwsCognitoUserPoolDomain) GetS3Bucket() *plugin.TValue[string] {
 
 func (c *mqlAwsCognitoUserPoolDomain) GetCustomDomainConfig() *plugin.TValue[any] {
 	return &c.CustomDomainConfig
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
+	return &c.TlsSecurityPolicy
 }
 
 func (c *mqlAwsCognitoUserPoolDomain) GetVersion() *plugin.TValue[string] {

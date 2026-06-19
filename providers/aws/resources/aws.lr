@@ -16435,6 +16435,13 @@ aws.eks.cluster @defaults("arn version status") {
   logging() dict
   // Kubernetes network configuration
   networkConfig() dict
+  // Control plane egress routing mode
+  //
+  // `AWS_MANAGED` lets Amazon EKS manage the egress path from the control
+  // plane. `CUSTOMER_ROUTED` means egress is routed through your VPC subnets,
+  // making you responsible for ensuring the control plane can reach endpoints
+  // such as webhook servers and OIDC providers.
+  controlPlaneEgressMode() string
   // Raw VPC configuration dict for the cluster resources
   //
   // Deprecated in favor of `vpc()`, `clusterSubnets()`,
@@ -17067,6 +17074,13 @@ private aws.cognito.userPoolDomain @defaults("domain userPoolId status") {
   s3Bucket string
   // Configuration for a custom domain (ACM cert ARN), or null for prefix-style domains
   customDomainConfig dict
+  // Minimum TLS version enforced on a custom domain
+  //
+  // Defines the lowest TLS version and cipher suites CloudFront accepts from
+  // clients connecting to the custom-domain login endpoint. One of `TLS_V1`,
+  // `TLS_V1_2_2021`, or `TLS_V1_3_2025`. Empty for prefix-style domains, which
+  // do not carry a configurable security policy.
+  tlsSecurityPolicy string
   // Hosted UI version configured on the domain
   version string
 }

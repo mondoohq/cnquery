@@ -183,8 +183,8 @@ github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.4 h1:v/pmsep1Vs+QfSghyBH
 github.com/aws/aws-sdk-go-v2/service/codepipeline v1.47.4/go.mod h1:WX3sF7RcrXTLTXld80dBMBD0AvtZfWeloP8iX8VaGdw=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.4 h1:xsQKaFhM90DS2gTAyNhG29xZ2tT/utyCmF1k2G7QJ4g=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.4/go.mod h1:bCX6lcNB2cluVdICB1gzNckz2GH3V6lwrD2cVTMo9fY=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.61.4 h1:KDPcknxnbdpcAU04wq+9wfDW4Yoo9h0tsO8Uv+oES4c=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.61.4/go.mod h1:fhiInRlq2MkbUqzDYoWLF+dE/NdEg24s9TML5FcSwhA=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.62.0 h1:gkhS82QWXx9E2Y1Mimks8P50JTtlEQGR+bWamli5PE0=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.62.0/go.mod h1:fhiInRlq2MkbUqzDYoWLF+dE/NdEg24s9TML5FcSwhA=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.64.1 h1:CJ6YcGJiXPJIz6ICOcGBumi2TcUSldUESHeF243WvVo=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.64.1/go.mod h1:oqVF/7XFqk3GY0/zlvY3Dj2+42ynOx4x/Sp875yKcxE=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.29.6 h1:SRziHSEbM6suFdIB8veHXWzj7Uw2pkOfSiFHDuyLik4=
@@ -221,8 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0 h1:LQKIHuVHqdbU9LUt5c2G9f+CcQAz
 github.com/aws/aws-sdk-go-v2/service/ecs v1.83.0/go.mod h1:0vahPCh3slyORHbSuAP8YDyJKLEUQAMX7+bzYGxEnVI=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1 h1:Ii4N3TQ2wa18cOlFR2Kxcji4wVsaySku+ygiBeKGqTU=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1/go.mod h1:AMhRvE41tgqPUU9hqtyCw8ektaKSnKbm10kyX9xL+FQ=
-github.com/aws/aws-sdk-go-v2/service/eks v1.86.0 h1:RYiM/XcRljyvfTKlrldQCAZ0iL3sGmI4JuiJMbiKa+M=
-github.com/aws/aws-sdk-go-v2/service/eks v1.86.0/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
+github.com/aws/aws-sdk-go-v2/service/eks v1.87.0 h1:bftLltXNWmNr9ed3CaQnVlzNPTNTFdHguNhIsZF6DxM=
+github.com/aws/aws-sdk-go-v2/service/eks v1.87.0/go.mod h1:rbIASs+SfCDUXx2EdfMkNpDGptlW8hvMZ9AawRiUBqE=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3 h1:KZDlMf8V5riU8xBCMJLWhfa+RP/MIagz2qJFwRg/b1g=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3/go.mod h1:nsMdHtF/ned4F5GCAfoerJaa/Q6cx+G+WYNsb/TFN7Q=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.35.4 h1:hS5ilJrr1xgHvrw0pwb+xKwZDx0KA1LULHbN+OzwBDM=

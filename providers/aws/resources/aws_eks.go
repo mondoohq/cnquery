@@ -194,6 +194,12 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
 	a.NetworkConfig = plugin.TValue[any]{Data: kubernetesNetworkConfig, State: plugin.StateIsSet}
 
+	controlPlaneEgressMode := ""
+	if cluster.ResourcesVpcConfig != nil {
+		controlPlaneEgressMode = string(cluster.ResourcesVpcConfig.ControlPlaneEgressMode)
+	}
+	a.ControlPlaneEgressMode = plugin.TValue[string]{Data: controlPlaneEgressMode, State: plugin.StateIsSet}
+
 	vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
 	a.ResourcesVpcConfig = plugin.TValue[any]{Data: vpcConfig, State: plugin.StateIsSet}
 
@@ -360,6 +366,10 @@ func (a *mqlAwsEksCluster) logging() (map[string]any, error) {
 
 func (a *mqlAwsEksCluster) networkConfig() (map[string]any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) controlPlaneEgressMode() (string, error) {
+	return "", a.fetchDetail()
 }
 
 func (a *mqlAwsEksCluster) resourcesVpcConfig() (map[string]any, error) {
