@@ -13,15 +13,19 @@ import (
 )
 
 func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.workers", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.workers@" + c.GetAccount().Data.GetId().Data),
+		"__id": llx.StringData("cloudflare.workers@" + accountID),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	workers := res.(*mqlCloudflareWorkers)
-	workers.AccountID = c.GetAccount().Data.GetId().Data
+	workers.AccountID = accountID
 
 	return workers, nil
 }

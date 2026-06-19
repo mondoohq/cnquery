@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -14,6 +15,20 @@ import (
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
+// zoneAccountID returns the parent account id, guarding the nullable account
+// field so the R2/Workers/Stream accessors don't nil-deref on a zone whose
+// account wasn't resolved (e.g. a zone reached by id without discovery).
+func (c *mqlCloudflareZone) zoneAccountID() (string, error) {
+	acc := c.GetAccount()
+	if acc.Error != nil {
+		return "", acc.Error
+	}
+	if acc.Data == nil {
+		return "", errors.New("cloudflare zone has no associated account")
+	}
+	return acc.Data.GetId().Data, nil
+}
+
 func (c *mqlCloudflareR2) id() (string, error) {
 	return "cloudflare.r2", nil
 }
@@ -23,15 +38,19 @@ type mqlCloudflareR2Internal struct {
 }
 
 func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
+	accountID, err := c.zoneAccountID()
+	if err != nil {
+		return nil, err
+	}
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.r2", map[string]*llx.RawData{
-		"__id": llx.StringData("cloudflare.r2@" + c.GetAccount().Data.GetId().Data),
+		"__id": llx.StringData("cloudflare.r2@" + accountID),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	r2 := res.(*mqlCloudflareR2)
-	r2.AccountID = c.GetAccount().Data.GetId().Data
+	r2.AccountID = accountID
 
 	return r2, nil
 }
