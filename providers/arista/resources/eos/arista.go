@@ -206,12 +206,29 @@ func (s *showSpanningTreeMstInstanceDetail) GetCmd() string {
 	return s.cmd
 }
 
+var (
+	// An MST instance id is a non-negative integer.
+	aristaMstInstanceIDRe = regexp.MustCompile(`^[0-9]+$`)
+	// EOS interface names are alphanumeric with `/`, `-`, and `.` separators
+	// (e.g. Ethernet1, Ethernet1/1, Port-Channel3, Ethernet1.100). Notably
+	// they never contain spaces.
+	aristaInterfaceNameRe = regexp.MustCompile(`^[A-Za-z0-9/.\-]+$`)
+)
+
 // stpInterfaceDetailCmd builds the EOS command for a given MST instance and
 // interface. Previously the command was hardcoded to `mst 0 ... Ethernet1`, so
 // every call returned details for that one interface regardless of the
-// requested instance/interface arguments.
-func stpInterfaceDetailCmd(mstInstanceID, iface string) string {
-	return fmt.Sprintf("show spanning-tree mst %s interface %s detail", mstInstanceID, iface)
+// requested instance/interface arguments. Both arguments are validated against
+// an allowlist before interpolation so a malformed identifier can't produce a
+// corrupt command on the device.
+func stpInterfaceDetailCmd(mstInstanceID, iface string) (string, error) {
+	if !aristaMstInstanceIDRe.MatchString(mstInstanceID) {
+		return "", fmt.Errorf("invalid MST instance id %q", mstInstanceID)
+	}
+	if !aristaInterfaceNameRe.MatchString(iface) {
+		return "", fmt.Errorf("invalid interface name %q", iface)
+	}
+	return fmt.Sprintf("show spanning-tree mst %s interface %s detail", mstInstanceID, iface), nil
 }
 
 type SptMestInterfaceDetail struct {
@@ -242,7 +259,11 @@ type SptMestInterfaceDetail struct {
 
 // show spanning-tree mst <instance> interface <iface> detail
 func (eos *Eos) StpInterfaceDetails(mstInstanceID string, iface string) (SptMestInterfaceDetail, error) {
-	shRsp := &showSpanningTreeMstInstanceDetail{cmd: stpInterfaceDetailCmd(mstInstanceID, iface)}
+	cmd, err := stpInterfaceDetailCmd(mstInstanceID, iface)
+	if err != nil {
+		return SptMestInterfaceDetail{}, err
+	}
+	shRsp := &showSpanningTreeMstInstanceDetail{cmd: cmd}
 
 	handle, err := eos.node.GetHandle("json")
 	if err != nil {
