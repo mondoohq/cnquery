@@ -1078,35 +1078,28 @@ func parseMetadataDecl(text string) (string, string, bool) {
 }
 
 // extractBlock extracts a brace-delimited block starting from startIdx by
-// counting '{' and '}' characters to track nesting depth.
-//
-// Known limitation: the depth counter scans the entire line without skipping
-// string literals (e.g., Bicep string interpolation '...${expr}...') or
-// comments that may contain braces. A full lexer would be needed to handle
-// these cases correctly, but the regex/line-scanning approach used by the
-// Bicep parser is intentionally lightweight. In practice, mismatched depth
-// from braces inside strings or comments is rare in typical Bicep files and
-// the impact is a slightly shifted block boundary rather than a hard failure.
+// tracking '{'/'}' nesting depth. It walks the source through the shared
+// `scanState` lexer so braces that live inside string literals (including
+// `${...}` interpolation and triple-quoted multi-line strings) or `//`
+// comments do not move the depth counter — a `}` inside a string can't close
+// the block early, and a `{` inside one can't extend it.
 func extractBlock(lines []string, startIdx int) (string, int) {
-	depth := 0
+	st := scanState{}
 	started := false
 	var blockLines []string
 
 	for i := startIdx; i < len(lines); i++ {
 		line := lines[i]
-		for _, ch := range line {
-			if ch == '{' {
-				depth++
+		for j := 0; j < len(line); {
+			j = st.stepAt(line, j)
+			if st.brace > 0 {
 				started = true
-			}
-			if ch == '}' {
-				depth--
 			}
 		}
 		if started {
 			blockLines = append(blockLines, line)
 		}
-		if started && depth == 0 {
+		if started && st.brace == 0 {
 			return strings.Join(blockLines, "\n"), i + 1
 		}
 	}

@@ -552,6 +552,35 @@ func TestExtractBlock(t *testing.T) {
 		assert.Contains(t, block, "name: 'test'")
 		assert.Equal(t, 2, consumed)
 	})
+
+	t.Run("brace inside string literal does not close the block early", func(t *testing.T) {
+		// The `}` inside the string must not be counted as the block's
+		// closing brace, otherwise the block boundary shifts to line 2 and
+		// the `sku` field below it is lost.
+		lines := splitLines("resource sa 'Type@ver' = {\n  name: 'pre}post'\n  sku: 'Standard'\n}")
+		block, consumed := extractBlock(lines, 0)
+		assert.Contains(t, block, "sku: 'Standard'")
+		assert.Equal(t, 4, consumed)
+	})
+
+	t.Run("brace inside line comment does not affect depth", func(t *testing.T) {
+		// The lone `}` in the comment would, with naive counting, close the
+		// block at line 2 and drop the `name` field that follows.
+		lines := splitLines("resource sa 'Type@ver' = {\n  // closing brace } in a comment\n  name: 'test'\n}")
+		block, consumed := extractBlock(lines, 0)
+		assert.Contains(t, block, "name: 'test'")
+		assert.Equal(t, 4, consumed)
+	})
+
+	t.Run("brace inside interpolation does not open a phantom block", func(t *testing.T) {
+		// `${...}` interpolation contains a `}`; with naive counting the
+		// opening `{` of `${` would push depth to 2 and the real closing
+		// brace would drop it to 1, leaving the block unterminated.
+		lines := splitLines("resource sa 'Type@ver' = {\n  name: 'sa${env}001'\n}")
+		block, consumed := extractBlock(lines, 0)
+		assert.Contains(t, block, "name: 'sa${env}001'")
+		assert.Equal(t, 3, consumed)
+	})
 }
 
 func TestExtractFieldValue(t *testing.T) {
