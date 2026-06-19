@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.35.1",
-  "generated_at": "2026-06-13T14:21:33-07:00",
+  "version": "13.37.0",
+  "generated_at": "2026-06-18T18:56:52-06:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -471,6 +471,7 @@
     "iam:ListGroups",
     "iam:ListGroupsForUser",
     "iam:ListInstanceProfiles",
+    "iam:ListInstanceProfilesForRole",
     "iam:ListMFADevices",
     "iam:ListOpenIDConnectProviders",
     "iam:ListPolicies",
@@ -3783,6 +3784,12 @@
       "permission": "iam:ListInstanceProfiles",
       "service": "iam",
       "action": "ListInstanceProfiles",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListInstanceProfilesForRole",
+      "service": "iam",
+      "action": "ListInstanceProfilesForRole",
       "source_file": "aws_iam.go"
     },
     {

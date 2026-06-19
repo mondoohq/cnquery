@@ -1235,3 +1235,31 @@ func initAwsKmsCustomKeyStore(runtime *plugin.Runtime, args map[string]*llx.RawD
 func extractKmsKeyId(resource string) string {
 	return strings.TrimPrefix(resource, kmsKeyResourcePrefix)
 }
+
+// encryptedVolumes returns the EBS volumes encrypted with this key. AWS exposes
+// no "list resources by KMS key" API, so this scans the account's volumes (a
+// cross-region list that is cached after first use) and matches on the volume's
+// KMS key ARN.
+func (a *mqlAwsKmsKey) encryptedVolumes() ([]any, error) {
+	keyArn := a.Arn.Data
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	volumes := obj.(*mqlAwsEc2).GetVolumes()
+	if volumes.Error != nil {
+		return nil, volumes.Error
+	}
+	res := []any{}
+	for _, v := range volumes.Data {
+		vol, ok := v.(*mqlAwsEc2Volume)
+		if !ok {
+			continue
+		}
+		// KmsKeyId from the EC2 API is already a full key ARN.
+		if vol.cacheKmsKeyId != nil && *vol.cacheKmsKeyId == keyArn {
+			res = append(res, vol)
+		}
+	}
+	return res, nil
+}

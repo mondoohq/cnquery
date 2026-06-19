@@ -1807,6 +1807,59 @@ func (a *mqlAwsIamRole) inlinePolicies() ([]any, error) {
 	return res, nil
 }
 
+// usedByInstances returns the EC2 instances that use this role through an
+// instance profile. EC2 references an instance *profile*, which in turn contains
+// roles, so this first resolves the role's instance profiles, then scans the
+// account's instances (a cross-region list, cached after first use) for ones
+// whose instance profile is among them.
+func (a *mqlAwsIamRole) usedByInstances() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+	rolename := a.Name.Data
+
+	profileArns := map[string]struct{}{}
+	paginator := iam.NewListInstanceProfilesForRolePaginator(svc, &iam.ListInstanceProfilesForRoleInput{RoleName: &rolename})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range page.InstanceProfiles {
+			if page.InstanceProfiles[i].Arn != nil {
+				profileArns[*page.InstanceProfiles[i].Arn] = struct{}{}
+			}
+		}
+	}
+	if len(profileArns) == 0 {
+		return []any{}, nil
+	}
+
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	instances := obj.(*mqlAwsEc2).GetInstances()
+	if instances.Error != nil {
+		return nil, instances.Error
+	}
+	res := []any{}
+	for _, it := range instances.Data {
+		inst, ok := it.(*mqlAwsEc2Instance)
+		if !ok {
+			continue
+		}
+		prof := inst.instanceCache.IamInstanceProfile
+		if prof == nil || prof.Arn == nil {
+			continue
+		}
+		if _, match := profileArns[*prof.Arn]; match {
+			res = append(res, inst)
+		}
+	}
+	return res, nil
+}
+
 func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil

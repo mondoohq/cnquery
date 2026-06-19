@@ -3749,3 +3749,91 @@ func (a *mqlAwsEc2Launchtemplate) imageId() (string, error) {
 	}
 	return *data.ImageId, nil
 }
+
+// networkInterfacesByFilter fetches the network interfaces in a region that match
+// a single server-side EC2 filter and returns them as typed
+// aws.ec2.networkinterface resources. It backs the security-group and subnet
+// backreferences, which both reduce to "which ENIs reference me".
+func networkInterfacesByFilter(runtime *plugin.Runtime, region, filterName, filterValue string) ([]any, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	filters := conn.Filters.General.ToServerSideEc2Filters()
+	filters = append(filters, ec2types.Filter{Name: aws.String(filterName), Values: []string{filterValue}})
+	params := &ec2.DescribeNetworkInterfacesInput{Filters: filters}
+	res := []any{}
+	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		nis, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ni := range nis.NetworkInterfaces {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(ni.TagSet)) {
+				log.Debug().Interface("networkInterface", ni.NetworkInterfaceId).Msg("excluding network interface due to filters")
+				continue
+			}
+			_, mqlEni, err := buildNetworkInterfaceResource(runtime, region, ni)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlEni)
+		}
+	}
+	return res, nil
+}
+
+// instancesFromNetworkInterfaces projects a set of network interfaces onto the
+// distinct EC2 instances they are attached to, dropping interfaces that are not
+// attached to an instance (for example load balancer, RDS, or Lambda ENIs).
+func instancesFromNetworkInterfaces(enis []any) ([]any, error) {
+	seen := map[string]struct{}{}
+	res := []any{}
+	for _, e := range enis {
+		eni, ok := e.(*mqlAwsEc2Networkinterface)
+		if !ok {
+			continue
+		}
+		inst := eni.GetInstance()
+		if inst.Error != nil {
+			return nil, inst.Error
+		}
+		if inst.Data == nil {
+			continue
+		}
+		arn := inst.Data.Arn.Data
+		if _, dup := seen[arn]; dup {
+			continue
+		}
+		seen[arn] = struct{}{}
+		res = append(res, inst.Data)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2Securitygroup) networkInterfaces() ([]any, error) {
+	return networkInterfacesByFilter(a.MqlRuntime, a.Region.Data, "group-id", a.Id.Data)
+}
+
+func (a *mqlAwsEc2Securitygroup) instances() ([]any, error) {
+	nis := a.GetNetworkInterfaces()
+	if nis.Error != nil {
+		return nil, nis.Error
+	}
+	return instancesFromNetworkInterfaces(nis.Data)
+}
+
+func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
+	subnetId := i.instanceCache.SubnetId
+	if subnetId == nil || *subnetId == "" {
+		i.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := fmt.Sprintf(subnetArnPattern, i.Region.Data, conn.AccountId(), *subnetId)
+	res, err := NewResource(i.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
+}

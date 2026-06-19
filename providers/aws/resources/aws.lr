@@ -485,6 +485,10 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   flowLogs() []aws.vpc.flowlog
   // IPv6 CIDR block associated with the subnet
   ipv6CidrBlock string
+  // Network interfaces attached within this subnet
+  networkInterfaces() []aws.ec2.networkinterface
+  // EC2 instances running in this subnet, resolved through their network interfaces
+  instances() []aws.ec2.instance
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -1746,6 +1750,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   lastUsageOperation() string
   // Date the key was last used for a successful cryptographic operation. Null if the key has not been used since KMS began tracking.
   lastUsedAt() time
+  // EBS volumes encrypted with this key
+  encryptedVolumes() []aws.ec2.volume
 }
 
 // AWS KMS key grant
@@ -2201,6 +2207,8 @@ private aws.iam.role @defaults("arn name") {
   permissionsBoundaryArn @maturity("deprecated") string
   // Permissions boundary policy attached to the role
   permissionsBoundary() aws.iam.policy
+  // EC2 instances that use this role through an instance profile
+  usedByInstances() []aws.ec2.instance
   // Path to the role
   path string
   // Whether this is a service-linked role
@@ -15761,6 +15769,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   tpmSupport string
   // List of network interfaces for the instance
   networkInterfaces() []aws.ec2.networkinterface
+  // Subnet the instance is launched in
+  subnet() aws.vpc.subnet
   // Whether API termination protection is enabled for the instance
   disableApiTermination() bool
   // Boot mode of the instance (undefined, legacy-bios, uefi, uefi-preferred)
@@ -16066,6 +16076,10 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   region string
   // Whether the security group is attached to Amazon Elastic Compute Cloud
   isAttachedToNetworkInterface() bool
+  // Network interfaces this security group is attached to
+  networkInterfaces() []aws.ec2.networkinterface
+  // EC2 instances this security group is attached to, resolved through their network interfaces
+  instances() []aws.ec2.instance
 }
 
 // Amazon EC2 security group IP permission

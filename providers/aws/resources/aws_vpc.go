@@ -1877,6 +1877,18 @@ func (a *mqlAwsVpcSubnet) flowLogs() ([]any, error) {
 	return flowLogs, nil
 }
 
+func (a *mqlAwsVpcSubnet) networkInterfaces() ([]any, error) {
+	return networkInterfacesByFilter(a.MqlRuntime, a.Region.Data, "subnet-id", a.Id.Data)
+}
+
+func (a *mqlAwsVpcSubnet) instances() ([]any, error) {
+	nis := a.GetNetworkInterfaces()
+	if nis.Error != nil {
+		return nil, nis.Error
+	}
+	return instancesFromNetworkInterfaces(nis.Data)
+}
+
 // VPN Gateway methods (#40)
 
 type mqlAwsVpcVpnGatewayInternal struct {

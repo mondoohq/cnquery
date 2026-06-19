@@ -5064,6 +5064,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.subnet.ipv6CidrBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetIpv6CidrBlock()).ToDataRes(types.String)
 	},
+	"aws.vpc.subnet.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
+	},
+	"aws.vpc.subnet.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
 	},
@@ -6456,6 +6462,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetLastUsedAt()).ToDataRes(types.Time)
 	},
+	"aws.kms.key.encryptedVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetEncryptedVolumes()).ToDataRes(types.Array(types.Resource("aws.ec2.volume")))
+	},
 	"aws.kms.grant.grantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetGrantId()).ToDataRes(types.String)
 	},
@@ -6917,6 +6926,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.role.permissionsBoundary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetPermissionsBoundary()).ToDataRes(types.Resource("aws.iam.policy"))
+	},
+	"aws.iam.role.usedByInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetUsedByInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
 	},
 	"aws.iam.role.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetPath()).ToDataRes(types.String)
@@ -22059,6 +22071,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
 	},
+	"aws.ec2.instance.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
 	},
@@ -22430,6 +22445,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.isAttachedToNetworkInterface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetIsAttachedToNetworkInterface()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.securitygroup.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("aws.ec2.networkinterface")))
+	},
+	"aws.ec2.securitygroup.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
 	},
 	"aws.ec2.securitygroup.ippermission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetId()).ToDataRes(types.String)
@@ -33241,6 +33262,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcSubnet).Ipv6CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.subnet.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcEndpoint).__id, ok = v.Value.(string)
 		return
@@ -35329,6 +35358,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.encryptedVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).EncryptedVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).__id, ok = v.Value.(string)
 		return
@@ -35999,6 +36032,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.permissionsBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).PermissionsBoundary, ok = plugin.RawToTValue[*mqlAwsIamPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.usedByInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).UsedByInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58161,6 +58198,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -58695,6 +58736,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.isAttachedToNetworkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Securitygroup).IsAttachedToNetworkInterface, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75189,6 +75238,8 @@ type mqlAwsVpcSubnet struct {
 	NatGateway                  plugin.TValue[*mqlAwsVpcNatgateway]
 	FlowLogs                    plugin.TValue[[]any]
 	Ipv6CidrBlock               plugin.TValue[string]
+	NetworkInterfaces           plugin.TValue[[]any]
+	Instances                   plugin.TValue[[]any]
 }
 
 // createAwsVpcSubnet creates a new instance of this resource
@@ -75346,6 +75397,38 @@ func (c *mqlAwsVpcSubnet) GetFlowLogs() *plugin.TValue[[]any] {
 
 func (c *mqlAwsVpcSubnet) GetIpv6CidrBlock() *plugin.TValue[string] {
 	return &c.Ipv6CidrBlock
+}
+
+func (c *mqlAwsVpcSubnet) GetNetworkInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkInterfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.subnet", c.__id, "networkInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsVpcSubnet) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.subnet", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
 }
 
 // mqlAwsVpcEndpoint for the aws.vpc.endpoint resource
@@ -80681,6 +80764,7 @@ type mqlAwsKmsKey struct {
 	ValidTo                   plugin.TValue[*time.Time]
 	LastUsageOperation        plugin.TValue[string]
 	LastUsedAt                plugin.TValue[*time.Time]
+	EncryptedVolumes          plugin.TValue[[]any]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -80949,6 +81033,22 @@ func (c *mqlAwsKmsKey) GetLastUsageOperation() *plugin.TValue[string] {
 func (c *mqlAwsKmsKey) GetLastUsedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LastUsedAt, func() (*time.Time, error) {
 		return c.lastUsedAt()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetEncryptedVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EncryptedVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "encryptedVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.encryptedVolumes()
 	})
 }
 
@@ -82614,6 +82714,7 @@ type mqlAwsIamRole struct {
 	MaxSessionDuration         plugin.TValue[int64]
 	PermissionsBoundaryArn     plugin.TValue[string]
 	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
+	UsedByInstances            plugin.TValue[[]any]
 	Path                       plugin.TValue[string]
 	IsServiceLinked            plugin.TValue[bool]
 	AttachedPolicies           plugin.TValue[[]any]
@@ -82730,6 +82831,22 @@ func (c *mqlAwsIamRole) GetPermissionsBoundary() *plugin.TValue[*mqlAwsIamPolicy
 		}
 
 		return c.permissionsBoundary()
+	})
+}
+
+func (c *mqlAwsIamRole) GetUsedByInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsedByInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "usedByInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usedByInstances()
 	})
 }
 
@@ -139923,6 +140040,7 @@ type mqlAwsEc2Instance struct {
 	Architecture            plugin.TValue[string]
 	TpmSupport              plugin.TValue[string]
 	NetworkInterfaces       plugin.TValue[[]any]
+	Subnet                  plugin.TValue[*mqlAwsVpcSubnet]
 	DisableApiTermination   plugin.TValue[bool]
 	BootMode                plugin.TValue[string]
 	SourceDestCheck         plugin.TValue[bool]
@@ -140213,6 +140331,22 @@ func (c *mqlAwsEc2Instance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 		}
 
 		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
 	})
 }
 
@@ -141265,6 +141399,8 @@ type mqlAwsEc2Securitygroup struct {
 	IpPermissionsEgress          plugin.TValue[[]any]
 	Region                       plugin.TValue[string]
 	IsAttachedToNetworkInterface plugin.TValue[bool]
+	NetworkInterfaces            plugin.TValue[[]any]
+	Instances                    plugin.TValue[[]any]
 }
 
 // createAwsEc2Securitygroup creates a new instance of this resource
@@ -141379,6 +141515,38 @@ func (c *mqlAwsEc2Securitygroup) GetRegion() *plugin.TValue[string] {
 func (c *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsAttachedToNetworkInterface, func() (bool, error) {
 		return c.isAttachedToNetworkInterface()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetNetworkInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkInterfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "networkInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkInterfaces()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
 	})
 }
 

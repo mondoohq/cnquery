@@ -3013,6 +3013,7 @@ aws.ec2.instance.state 11.15.2
 aws.ec2.instance.stateReason 11.15.2
 aws.ec2.instance.stateTransitionReason 11.15.2
 aws.ec2.instance.stateTransitionTime 11.15.2
+aws.ec2.instance.subnet 13.37.1
 aws.ec2.instance.tags 11.15.2
 aws.ec2.instance.tpmSupport 11.15.2
 aws.ec2.instance.virtualizationType 11.15.3
@@ -3256,6 +3257,7 @@ aws.ec2.securitygroup 11.15.2
 aws.ec2.securitygroup.arn 11.15.2
 aws.ec2.securitygroup.description 11.15.2
 aws.ec2.securitygroup.id 11.15.2
+aws.ec2.securitygroup.instances 13.37.1
 aws.ec2.securitygroup.ipPermissions 11.15.2
 aws.ec2.securitygroup.ipPermissionsEgress 11.15.2
 aws.ec2.securitygroup.ippermission 11.15.2
@@ -3273,6 +3275,7 @@ aws.ec2.securitygroup.ippermission.toPort 11.15.2
 aws.ec2.securitygroup.ippermission.userIdGroupPairs 11.15.2
 aws.ec2.securitygroup.isAttachedToNetworkInterface 11.15.2
 aws.ec2.securitygroup.name 11.15.2
+aws.ec2.securitygroup.networkInterfaces 13.37.1
 aws.ec2.securitygroup.region 11.15.2
 aws.ec2.securitygroup.tags 11.15.2
 aws.ec2.securitygroup.vpc 11.15.2
@@ -5290,6 +5293,7 @@ aws.iam.role.path 11.15.2
 aws.iam.role.permissionsBoundary 13.12.1
 aws.iam.role.permissionsBoundaryArn 11.15.2
 aws.iam.role.tags 11.15.2
+aws.iam.role.usedByInstances 13.37.1
 aws.iam.roles 11.15.2
 aws.iam.samlProvider 11.15.2
 aws.iam.samlProvider.arn 11.15.2
@@ -5726,6 +5730,7 @@ aws.kms.key.customKeyStore 13.26.3
 aws.kms.key.deletedAt 11.15.2
 aws.kms.key.description 11.15.2
 aws.kms.key.enabled 11.15.2
+aws.kms.key.encryptedVolumes 13.37.1
 aws.kms.key.encryptionAlgorithms 13.12.1
 aws.kms.key.expirationModel 13.12.1
 aws.kms.key.grants 11.15.2
@@ -9679,12 +9684,14 @@ aws.vpc.subnet.cidrs 11.15.2
 aws.vpc.subnet.defaultForAvailabilityZone 11.15.2
 aws.vpc.subnet.flowLogs 13.6.3
 aws.vpc.subnet.id 11.15.2
+aws.vpc.subnet.instances 13.37.1
 aws.vpc.subnet.internetGatewayBlockMode 11.15.2
 aws.vpc.subnet.ipv6CidrBlock 13.6.3
 aws.vpc.subnet.mapPublicIpOnLaunch 11.15.2
 aws.vpc.subnet.name 11.15.2
 aws.vpc.subnet.natGateway 13.6.3
 aws.vpc.subnet.networkAcl 13.6.3
+aws.vpc.subnet.networkInterfaces 13.37.1
 aws.vpc.subnet.region 11.15.2
 aws.vpc.subnet.routeTable 11.15.2
 aws.vpc.subnet.state 11.15.2
