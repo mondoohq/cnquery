@@ -2978,10 +2978,12 @@ aws.ec2.instance.hypervisor 11.15.2
 aws.ec2.instance.iamInstanceProfile 11.15.2
 aws.ec2.instance.image 11.15.2
 aws.ec2.instance.imdsv2Required 13.29.1
+aws.ec2.instance.inPublicSubnet 13.37.1
 aws.ec2.instance.instanceId 11.15.2
 aws.ec2.instance.instanceLifecycle 11.15.2
 aws.ec2.instance.instanceStatus 11.15.2
 aws.ec2.instance.instanceType 11.15.2
+aws.ec2.instance.internetReachable 13.37.1
 aws.ec2.instance.ipv6Address 11.15.2
 aws.ec2.instance.keypair 11.15.2
 aws.ec2.instance.launchTime 11.15.2

@@ -15779,6 +15779,12 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   subnet() aws.vpc.subnet
   // Load balancers that route traffic to this instance
   loadBalancers() []aws.elb.loadbalancer
+  // Whether the instance's subnet routes to an internet gateway (a public subnet)
+  inPublicSubnet() bool
+  // Whether the instance is directly reachable from the internet
+  //
+  // True when the instance has a public IP, sits in a public subnet (its subnet's route table has an internet gateway route), and an attached security group permits inbound traffic from 0.0.0.0/0 or ::/0. Exposure through an internet-facing load balancer is a separate path — query `loadBalancers` and their `scheme` for that.
+  internetReachable() bool
   // CloudFormation stack that manages this instance, if any
   cloudformationStack() aws.cloudformation.stack
   // Whether API termination protection is enabled for the instance

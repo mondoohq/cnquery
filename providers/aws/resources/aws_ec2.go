@@ -3849,6 +3849,88 @@ func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 	return res.(*mqlAwsVpcSubnet), nil
 }
 
+// inPublicSubnet reports whether the instance's subnet routes to an internet
+// gateway, which is the defining property of a public subnet.
+func (i *mqlAwsEc2Instance) inPublicSubnet() (bool, error) {
+	subnet := i.GetSubnet()
+	if subnet.Error != nil {
+		return false, subnet.Error
+	}
+	if subnet.Data == nil {
+		return false, nil
+	}
+	rt := subnet.Data.GetRouteTable()
+	if rt.Error != nil {
+		return false, rt.Error
+	}
+	if rt.Data == nil {
+		return false, nil
+	}
+	entries := rt.Data.GetRouteEntries()
+	if entries.Error != nil {
+		return false, entries.Error
+	}
+	for _, e := range entries.Data {
+		route, ok := e.(*mqlAwsVpcRoutetableRoute)
+		if !ok {
+			continue
+		}
+		gw := route.GetGatewayId()
+		if gw.Error == nil && strings.HasPrefix(gw.Data, "igw-") {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// internetReachable reports whether the instance is directly reachable from the
+// internet: it has a public IP, sits in a public subnet, and an attached
+// security group permits inbound traffic from 0.0.0.0/0 or ::/0. Load-balancer-
+// fronted exposure is a separate path (see loadBalancers).
+func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
+	publicIp := i.GetPublicIp()
+	if publicIp.Error != nil {
+		return false, publicIp.Error
+	}
+	if publicIp.Data == "" {
+		return false, nil
+	}
+
+	public := i.GetInPublicSubnet()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if !public.Data {
+		return false, nil
+	}
+
+	sgs := i.GetSecurityGroups()
+	if sgs.Error != nil {
+		return false, sgs.Error
+	}
+	for _, s := range sgs.Data {
+		sg, ok := s.(*mqlAwsEc2Securitygroup)
+		if !ok {
+			continue
+		}
+		perms := sg.GetIpPermissions()
+		if perms.Error != nil {
+			return false, perms.Error
+		}
+		for _, p := range perms.Data {
+			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
+			if !ok {
+				continue
+			}
+			pub := perm.GetIncludesPublicSource()
+			if pub.Error == nil && pub.Data {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 // loadBalancers returns the load balancers that route traffic to this instance.
 // AWS has no "describe load balancers by instance" API, so this scans the
 // account's load balancers (a cross-region list cached after first use) and
