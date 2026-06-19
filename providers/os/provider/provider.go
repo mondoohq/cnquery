@@ -504,6 +504,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		case shared.Type_RegistryImage.String():
 			conn, err = container.NewRegistryImage(connId, conf, asset)
 
+		case shared.Type_RuntimeImage.String():
+			conn, err = container.NewRuntimeImage(connId, conf, asset)
+
 		case shared.Type_FileSystem.String():
 			conn, err = fs.NewConnection(connId, conf, asset)
 			if err != nil {
