@@ -587,6 +587,14 @@ func (a *mqlAwsS3Bucket) cloudformationStack() (*mqlAwsCloudformationStack, erro
 	return stack, nil
 }
 
+func (a *mqlAwsS3Bucket) managedBy() (string, error) {
+	tags := a.GetTags()
+	if tags.Error != nil {
+		return "", tags.Error
+	}
+	return managedByFromTags(tags.Data), nil
+}
+
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	if !a.Exists.Data {

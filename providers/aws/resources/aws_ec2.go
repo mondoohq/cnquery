@@ -3941,3 +3941,11 @@ func (a *mqlAwsEc2Securitygroup) cloudformationStack() (*mqlAwsCloudformationSta
 	}
 	return stack, nil
 }
+
+func (i *mqlAwsEc2Instance) managedBy() (string, error) {
+	return managedByFromTags(i.Tags.Data), nil
+}
+
+func (a *mqlAwsEc2Securitygroup) managedBy() (string, error) {
+	return managedByFromTags(a.Tags.Data), nil
+}

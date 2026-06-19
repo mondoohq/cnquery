@@ -2988,6 +2988,7 @@ aws.ec2.instance.launchTime 11.15.2
 aws.ec2.instance.launchedAt 11.15.2
 aws.ec2.instance.loadBalancers 13.37.1
 aws.ec2.instance.maintenanceAutoRecovery 11.15.3
+aws.ec2.instance.managedBy 13.37.1
 aws.ec2.instance.networkInterfaces 11.15.2
 aws.ec2.instance.patchState 11.15.2
 aws.ec2.instance.placement 11.15.3
@@ -3278,6 +3279,7 @@ aws.ec2.securitygroup.ippermission.prefixLists 13.23.2
 aws.ec2.securitygroup.ippermission.toPort 11.15.2
 aws.ec2.securitygroup.ippermission.userIdGroupPairs 11.15.2
 aws.ec2.securitygroup.isAttachedToNetworkInterface 11.15.2
+aws.ec2.securitygroup.managedBy 13.37.1
 aws.ec2.securitygroup.name 11.15.2
 aws.ec2.securitygroup.networkInterfaces 13.37.1
 aws.ec2.securitygroup.region 11.15.2
@@ -7758,6 +7760,7 @@ aws.s3.bucket.lifecycleRules 13.6.3
 aws.s3.bucket.location 11.15.2
 aws.s3.bucket.logging 11.15.2
 aws.s3.bucket.macieCoverage 13.23.2
+aws.s3.bucket.managedBy 13.37.1
 aws.s3.bucket.metricsConfiguration 13.6.3
 aws.s3.bucket.metricsConfiguration.filter 13.6.3
 aws.s3.bucket.metricsConfiguration.id 13.6.3
@@ -9594,6 +9597,7 @@ aws.vpc.internetGatewayBlockMode 11.15.2
 aws.vpc.internetGateways 11.15.2
 aws.vpc.ipv6CidrBlockAssociations 13.6.3
 aws.vpc.isDefault 11.15.2
+aws.vpc.managedBy 13.37.1
 aws.vpc.name 11.15.2
 aws.vpc.natGateways 11.15.2
 aws.vpc.natgateway 11.15.2

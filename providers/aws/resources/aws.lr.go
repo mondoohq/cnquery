@@ -4923,6 +4923,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
 	},
+	"aws.vpc.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.vpc.routetable.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetArn()).ToDataRes(types.String)
 	},
@@ -15690,6 +15693,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
 	},
+	"aws.s3.bucket.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.s3.bucket.eventNotification.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketEventNotification).GetId()).ToDataRes(types.String)
 	},
@@ -22086,6 +22092,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
 	},
+	"aws.ec2.instance.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
 	},
@@ -22466,6 +22475,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
+	"aws.ec2.securitygroup.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetManagedBy()).ToDataRes(types.String)
 	},
 	"aws.ec2.securitygroup.ippermission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetId()).ToDataRes(types.String)
@@ -33077,6 +33089,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48963,6 +48979,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.eventNotification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketEventNotification).__id, ok = v.Value.(string)
 		return
@@ -58239,6 +58259,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -58785,6 +58809,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Securitygroup).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74615,6 +74643,7 @@ type mqlAwsVpc struct {
 	CidrBlockAssociations     plugin.TValue[[]any]
 	Ipv6CidrBlockAssociations plugin.TValue[[]any]
 	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                 plugin.TValue[string]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -74965,6 +74994,12 @@ func (c *mqlAwsVpc) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformatio
 		}
 
 		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsVpc) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -117315,6 +117350,7 @@ type mqlAwsS3Bucket struct {
 	MacieCoverage                    plugin.TValue[*mqlAwsMacieBucket]
 	AccessPoints                     plugin.TValue[[]any]
 	CloudformationStack              plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                        plugin.TValue[string]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -117719,6 +117755,12 @@ func (c *mqlAwsS3Bucket) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudfor
 		}
 
 		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -140126,6 +140168,7 @@ type mqlAwsEc2Instance struct {
 	Subnet                  plugin.TValue[*mqlAwsVpcSubnet]
 	LoadBalancers           plugin.TValue[[]any]
 	CloudformationStack     plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy               plugin.TValue[string]
 	DisableApiTermination   plugin.TValue[bool]
 	BootMode                plugin.TValue[string]
 	SourceDestCheck         plugin.TValue[bool]
@@ -140464,6 +140507,12 @@ func (c *mqlAwsEc2Instance) GetCloudformationStack() *plugin.TValue[*mqlAwsCloud
 		}
 
 		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -141519,6 +141568,7 @@ type mqlAwsEc2Securitygroup struct {
 	NetworkInterfaces            plugin.TValue[[]any]
 	Instances                    plugin.TValue[[]any]
 	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                    plugin.TValue[string]
 }
 
 // createAwsEc2Securitygroup creates a new instance of this resource
@@ -141681,6 +141731,12 @@ func (c *mqlAwsEc2Securitygroup) GetCloudformationStack() *plugin.TValue[*mqlAws
 		}
 
 		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 

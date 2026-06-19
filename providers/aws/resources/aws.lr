@@ -373,6 +373,10 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   ipv6CidrBlockAssociations() []dict
   // CloudFormation stack that manages this VPC, if any
   cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this VPC
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the VPC is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -10101,6 +10105,10 @@ private aws.s3.bucket @defaults("name location public") {
   accessPoints() []aws.s3.bucket.accessPoint
   // CloudFormation stack that manages this bucket, if any
   cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this bucket
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the bucket is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon S3 bucket event notification
@@ -15781,6 +15789,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   loadBalancers() []aws.elb.loadbalancer
   // CloudFormation stack that manages this instance, if any
   cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Whether API termination protection is enabled for the instance
   disableApiTermination() bool
   // Boot mode of the instance (undefined, legacy-bios, uefi, uefi-preferred)
@@ -16092,6 +16104,10 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   instances() []aws.ec2.instance
   // CloudFormation stack that manages this security group, if any
   cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this security group
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the security group is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon EC2 security group IP permission

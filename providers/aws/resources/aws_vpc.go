@@ -1930,3 +1930,7 @@ func (a *mqlAwsVpc) cloudformationStack() (*mqlAwsCloudformationStack, error) {
 	}
 	return stack, nil
 }
+
+func (a *mqlAwsVpc) managedBy() (string, error) {
+	return managedByFromTags(a.Tags.Data), nil
+}
