@@ -3766,6 +3766,10 @@ func networkInterfacesByFilter(runtime *plugin.Runtime, region, filterName, filt
 	for paginator.HasMorePages() {
 		nis, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Msg("access denied for DescribeNetworkInterfaces")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, ni := range nis.NetworkInterfaces {
@@ -3796,7 +3800,11 @@ func instancesFromNetworkInterfaces(enis []any) ([]any, error) {
 		}
 		inst := eni.GetInstance()
 		if inst.Error != nil {
-			return nil, inst.Error
+			// An ENI can reference an instance that is terminated or otherwise
+			// no longer resolvable. A single missing instance should not break
+			// the whole backref scan, so log and skip it.
+			log.Warn().Err(inst.Error).Msg("skipping network interface whose instance could not be resolved")
+			continue
 		}
 		if inst.Data == nil {
 			continue
@@ -3823,6 +3831,9 @@ func (a *mqlAwsEc2Securitygroup) instances() ([]any, error) {
 	return instancesFromNetworkInterfaces(nis.Data)
 }
 
+// subnet returns the subnet of the instance's primary network interface, which
+// is what ec2types.Instance.SubnetId reports. Instances with additional ENIs in
+// other subnets are not represented here.
 func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 	subnetId := i.instanceCache.SubnetId
 	if subnetId == nil || *subnetId == "" {

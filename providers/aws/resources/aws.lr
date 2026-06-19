@@ -1751,6 +1751,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Date the key was last used for a successful cryptographic operation. Null if the key has not been used since KMS began tracking.
   lastUsedAt() time
   // EBS volumes encrypted with this key
+  //
+  // AWS has no API to list resources by KMS key, so first access may enumerate all EBS volumes across regions (cached after first use).
   encryptedVolumes() []aws.ec2.volume
 }
 
