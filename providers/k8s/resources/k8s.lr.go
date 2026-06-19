@@ -51,6 +51,10 @@ const (
 	ResourceK8sRbacRole                                  string = "k8s.rbac.role"
 	ResourceK8sRbacRolebinding                           string = "k8s.rbac.rolebinding"
 	ResourceK8sNetworkpolicy                             string = "k8s.networkpolicy"
+	ResourceK8sNetworkExposure                           string = "k8s.networkExposure"
+	ResourceK8sEgressRoute                               string = "k8s.egressRoute"
+	ResourceK8sEgressNat                                 string = "k8s.egressNat"
+	ResourceK8sNetworkPolicyCoverage                     string = "k8s.networkPolicyCoverage"
 	ResourceK8sCustomresource                            string = "k8s.customresource"
 	ResourceK8sPersistentvolume                          string = "k8s.persistentvolume"
 	ResourceK8sStorageclass                              string = "k8s.storageclass"
@@ -69,6 +73,9 @@ const (
 	ResourceK8sGateway                                   string = "k8s.gateway"
 	ResourceK8sHttproute                                 string = "k8s.httproute"
 	ResourceK8sGrpcroute                                 string = "k8s.grpcroute"
+	ResourceK8sTlsroute                                  string = "k8s.tlsroute"
+	ResourceK8sTcproute                                  string = "k8s.tcproute"
+	ResourceK8sUdproute                                  string = "k8s.udproute"
 	ResourceK8sReferencegrant                            string = "k8s.referencegrant"
 	ResourceK8sAdmissionMutatingwebhookconfiguration     string = "k8s.admission.mutatingwebhookconfiguration"
 	ResourceK8sAdmissionValidatingadmissionpolicy        string = "k8s.admission.validatingadmissionpolicy"
@@ -227,6 +234,22 @@ func init() {
 			Init:   initK8sNetworkpolicy,
 			Create: createK8sNetworkpolicy,
 		},
+		"k8s.networkExposure": {
+			// to override args, implement: initK8sNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNetworkExposure,
+		},
+		"k8s.egressRoute": {
+			// to override args, implement: initK8sEgressRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sEgressRoute,
+		},
+		"k8s.egressNat": {
+			// to override args, implement: initK8sEgressNat(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sEgressNat,
+		},
+		"k8s.networkPolicyCoverage": {
+			// to override args, implement: initK8sNetworkPolicyCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNetworkPolicyCoverage,
+		},
 		"k8s.customresource": {
 			// to override args, implement: initK8sCustomresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sCustomresource,
@@ -298,6 +321,18 @@ func init() {
 		"k8s.grpcroute": {
 			Init:   initK8sGrpcroute,
 			Create: createK8sGrpcroute,
+		},
+		"k8s.tlsroute": {
+			Init:   initK8sTlsroute,
+			Create: createK8sTlsroute,
+		},
+		"k8s.tcproute": {
+			Init:   initK8sTcproute,
+			Create: createK8sTcproute,
+		},
+		"k8s.udproute": {
+			Init:   initK8sUdproute,
+			Create: createK8sUdproute,
 		},
 		"k8s.referencegrant": {
 			Init:   initK8sReferencegrant,
@@ -481,6 +516,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.networkPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetNetworkPolicies()).ToDataRes(types.Array(types.Resource("k8s.networkpolicy")))
 	},
+	"k8s.networkExposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
+	"k8s.egressRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetEgressRoutes()).ToDataRes(types.Array(types.Resource("k8s.egressRoute")))
+	},
+	"k8s.egressNats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetEgressNats()).ToDataRes(types.Array(types.Resource("k8s.egressNat")))
+	},
+	"k8s.networkPolicyCoverages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetNetworkPolicyCoverages()).ToDataRes(types.Array(types.Resource("k8s.networkPolicyCoverage")))
+	},
 	"k8s.customresources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetCustomresources()).ToDataRes(types.Array(types.Resource("k8s.customresource")))
 	},
@@ -525,6 +572,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.grpcRoutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetGrpcRoutes()).ToDataRes(types.Array(types.Resource("k8s.grpcroute")))
+	},
+	"k8s.tlsRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetTlsRoutes()).ToDataRes(types.Array(types.Resource("k8s.tlsroute")))
+	},
+	"k8s.tcpRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetTcpRoutes()).ToDataRes(types.Array(types.Resource("k8s.tcproute")))
+	},
+	"k8s.udpRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetUdpRoutes()).ToDataRes(types.Array(types.Resource("k8s.udproute")))
 	},
 	"k8s.referenceGrants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetReferenceGrants()).ToDataRes(types.Array(types.Resource("k8s.referencegrant")))
@@ -639,6 +695,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.namespace.networkPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetNetworkPolicies()).ToDataRes(types.Array(types.Resource("k8s.networkpolicy")))
+	},
+	"k8s.namespace.networkExposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
+	"k8s.namespace.networkPolicyCoverages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetNetworkPolicyCoverages()).ToDataRes(types.Array(types.Resource("k8s.networkPolicyCoverage")))
 	},
 	"k8s.namespace.secrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetSecrets()).ToDataRes(types.Array(types.Resource("k8s.secret")))
@@ -2743,6 +2805,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.service.endpointSlices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetEndpointSlices()).ToDataRes(types.Array(types.Resource("k8s.endpointslice")))
 	},
+	"k8s.service.networkExposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
 	"k8s.ingressresourceref.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressresourceref).GetId()).ToDataRes(types.String)
 	},
@@ -2856,6 +2921,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ingress.loadBalancerIngress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetLoadBalancerIngress()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.ingress.networkExposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
 	"k8s.serviceaccount.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetId()).ToDataRes(types.String)
@@ -3219,6 +3287,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.networkpolicy.egress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetEgress()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.networkpolicy.coverage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetCoverage()).ToDataRes(types.Resource("k8s.networkPolicyCoverage"))
+	},
+	"k8s.networkExposure.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetId()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.sourceKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetSourceKind()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.sourceRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetSourceRef()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetName()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkExposure.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.networkExposure.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkExposure.internetExposed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetInternetExposed()).ToDataRes(types.Bool)
+	},
+	"k8s.networkExposure.exposureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetExposureReason()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.networkClassifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetNetworkClassifications()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkExposure.metadataClassification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetMetadataClassification()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetOwner()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetVrf()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetNetwork()).ToDataRes(types.String)
+	},
+	"k8s.networkExposure.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetRoutes()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkExposure.policyCoverage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetPolicyCoverage()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkExposure.confidence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkExposure).GetConfidence()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.sourceRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetSourceRef()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetVrf()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetNetwork()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.destinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetDestinations()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressRoute.cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressRoute.publicCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetPublicCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressRoute.nat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetNat()).ToDataRes(types.Bool)
+	},
+	"k8s.egressRoute.nodeStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetNodeStatuses()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressRoute.bgpPeerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetBgpPeerings()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressRoute.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetClassification()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.metadataClassification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetMetadataClassification()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetOwner()).ToDataRes(types.String)
+	},
+	"k8s.egressRoute.confidence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressRoute).GetConfidence()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetId()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.sourceRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetSourceRef()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetVrf()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetNetwork()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressNat.cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressNat.publicCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetPublicCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressNat.nodeStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetNodeStatuses()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.egressNat.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetClassification()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.metadataClassification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetMetadataClassification()).ToDataRes(types.String)
+	},
+	"k8s.egressNat.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEgressNat).GetOwner()).ToDataRes(types.String)
+	},
+	"k8s.networkPolicyCoverage.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetId()).ToDataRes(types.String)
+	},
+	"k8s.networkPolicyCoverage.workloadRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetWorkloadRef()).ToDataRes(types.String)
+	},
+	"k8s.networkPolicyCoverage.policyRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetPolicyRef()).ToDataRes(types.String)
+	},
+	"k8s.networkPolicyCoverage.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.networkPolicyCoverage.podSelector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetPodSelector()).ToDataRes(types.Dict)
+	},
+	"k8s.networkPolicyCoverage.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.nativeNetworkPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetNativeNetworkPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.adminNetworkPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetAdminNetworkPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.multiNetworkPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetMultiNetworkPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.calicoPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetCalicoPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.ciliumPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetCiliumPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.networkPolicyCoverage.defaultDenyIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetDefaultDenyIngress()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.defaultDenyEgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetDefaultDenyEgress()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.adminDefaultDenyIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetAdminDefaultDenyIngress()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.adminDefaultDenyEgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetAdminDefaultDenyEgress()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.secondaryInterfaceIngressCovered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetSecondaryInterfaceIngressCovered()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.secondaryInterfaceEgressCovered": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetSecondaryInterfaceEgressCovered()).ToDataRes(types.Bool)
+	},
+	"k8s.networkPolicyCoverage.coverageGaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkPolicyCoverage).GetCoverageGaps()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.customresource.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetId()).ToDataRes(types.String)
@@ -3940,6 +4194,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.gateway.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGateway).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.gateway.networkExposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
 	"k8s.httproute.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHttproute).GetId()).ToDataRes(types.String)
 	},
@@ -4035,6 +4292,150 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.grpcroute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGrpcroute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tlsroute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.tlsroute.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.tlsroute.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.tlsroute.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.tlsroute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetName()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.tlsroute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.tlsroute.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.tlsroute.parentRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetParentRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tlsroute.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.tlsroute.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tlsroute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTlsroute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tcproute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.tcproute.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.tcproute.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.tcproute.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.tcproute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetName()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.tcproute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.tcproute.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.tcproute.parentRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetParentRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tcproute.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.tcproute.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.tcproute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sTcproute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.udproute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetId()).ToDataRes(types.String)
+	},
+	"k8s.udproute.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.udproute.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.udproute.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.udproute.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.udproute.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.udproute.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.udproute.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetName()).ToDataRes(types.String)
+	},
+	"k8s.udproute.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.udproute.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.udproute.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.udproute.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.udproute.parentRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetParentRefs()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.udproute.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.udproute.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.udproute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUdproute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
 	},
 	"k8s.referencegrant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReferencegrant).GetId()).ToDataRes(types.String)
@@ -4673,6 +5074,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8s).NetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).EgressRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).EgressNats, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).NetworkPolicyCoverages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.customresources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Customresources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4731,6 +5148,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.grpcRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).GrpcRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).TlsRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcpRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).TcpRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udpRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).UdpRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.referenceGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4891,6 +5320,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.namespace.networkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNamespace).NetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.networkPolicyCoverages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).NetworkPolicyCoverages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.namespace.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7769,6 +8206,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sService).EndpointSlices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.service.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressresourceref).__id, ok = v.Value.(string)
 		return
@@ -7947,6 +8388,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.ingress.loadBalancerIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngress).LoadBalancerIngress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8459,6 +8904,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.networkpolicy.egress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkpolicy).Egress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.coverage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Coverage, ok = plugin.RawToTValue[*mqlK8sNetworkPolicyCoverage](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.networkExposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.sourceKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).SourceKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).SourceRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.internetExposed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).InternetExposed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.exposureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).ExposureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.networkClassifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).NetworkClassifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.metadataClassification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).MetadataClassification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.policyCoverage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).PolicyCoverage, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkExposure.confidence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkExposure).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.egressRoute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).SourceRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Cidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.publicCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).PublicCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.nat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Nat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.nodeStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).NodeStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.bgpPeerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).BgpPeerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.metadataClassification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).MetadataClassification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressRoute.confidence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressRoute).Confidence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.egressNat.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).SourceRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Network, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Cidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.publicCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).PublicCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.nodeStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).NodeStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.metadataClassification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).MetadataClassification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.egressNat.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEgressNat).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.networkPolicyCoverage.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.workloadRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).WorkloadRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.policyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).PolicyRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.podSelector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).PodSelector, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.nativeNetworkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).NativeNetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.adminNetworkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).AdminNetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.multiNetworkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).MultiNetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.calicoPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).CalicoPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.ciliumPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).CiliumPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.defaultDenyIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).DefaultDenyIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.defaultDenyEgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).DefaultDenyEgress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.adminDefaultDenyIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).AdminDefaultDenyIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.adminDefaultDenyEgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).AdminDefaultDenyEgress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.secondaryInterfaceIngressCovered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).SecondaryInterfaceIngressCovered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.secondaryInterfaceEgressCovered": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).SecondaryInterfaceEgressCovered, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicyCoverage.coverageGaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkPolicyCoverage).CoverageGaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.customresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9485,6 +10194,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sGateway).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.gateway.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.httproute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sHttproute).__id, ok = v.Value.(string)
 		return
@@ -9619,6 +10332,210 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.grpcroute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGrpcroute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.tlsroute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.parentRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).ParentRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tlsroute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTlsroute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.tcproute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.parentRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).ParentRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.tcproute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sTcproute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.udproute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.parentRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).ParentRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.udproute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUdproute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.referencegrant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10435,6 +11352,10 @@ type mqlK8s struct {
 	Roles                             plugin.TValue[[]any]
 	Rolebindings                      plugin.TValue[[]any]
 	NetworkPolicies                   plugin.TValue[[]any]
+	NetworkExposures                  plugin.TValue[[]any]
+	EgressRoutes                      plugin.TValue[[]any]
+	EgressNats                        plugin.TValue[[]any]
+	NetworkPolicyCoverages            plugin.TValue[[]any]
 	Customresources                   plugin.TValue[[]any]
 	ValidatingWebhookConfigurations   plugin.TValue[[]any]
 	Apps                              plugin.TValue[[]any]
@@ -10450,6 +11371,9 @@ type mqlK8s struct {
 	Gateways                          plugin.TValue[[]any]
 	HttpRoutes                        plugin.TValue[[]any]
 	GrpcRoutes                        plugin.TValue[[]any]
+	TlsRoutes                         plugin.TValue[[]any]
+	TcpRoutes                         plugin.TValue[[]any]
+	UdpRoutes                         plugin.TValue[[]any]
 	ReferenceGrants                   plugin.TValue[[]any]
 	MutatingWebhookConfigurations     plugin.TValue[[]any]
 	ValidatingAdmissionPolicies       plugin.TValue[[]any]
@@ -10819,6 +11743,70 @@ func (c *mqlK8s) GetNetworkPolicies() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8s) GetNetworkExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkExposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "networkExposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkExposures()
+	})
+}
+
+func (c *mqlK8s) GetEgressRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EgressRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "egressRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.egressRoutes()
+	})
+}
+
+func (c *mqlK8s) GetEgressNats() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EgressNats, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "egressNats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.egressNats()
+	})
+}
+
+func (c *mqlK8s) GetNetworkPolicyCoverages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPolicyCoverages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "networkPolicyCoverages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkPolicyCoverages()
+	})
+}
+
 func (c *mqlK8s) GetCustomresources() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Customresources, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -11056,6 +12044,54 @@ func (c *mqlK8s) GetGrpcRoutes() *plugin.TValue[[]any] {
 		}
 
 		return c.grpcRoutes()
+	})
+}
+
+func (c *mqlK8s) GetTlsRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "tlsRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tlsRoutes()
+	})
+}
+
+func (c *mqlK8s) GetTcpRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TcpRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "tcpRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tcpRoutes()
+	})
+}
+
+func (c *mqlK8s) GetUdpRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UdpRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "udpRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.udpRoutes()
 	})
 }
 
@@ -11313,6 +12349,8 @@ type mqlK8sNamespace struct {
 	Ingresses                 plugin.TValue[[]any]
 	EndpointSlices            plugin.TValue[[]any]
 	NetworkPolicies           plugin.TValue[[]any]
+	NetworkExposures          plugin.TValue[[]any]
+	NetworkPolicyCoverages    plugin.TValue[[]any]
 	Secrets                   plugin.TValue[[]any]
 	Configmaps                plugin.TValue[[]any]
 	Serviceaccounts           plugin.TValue[[]any]
@@ -11612,6 +12650,38 @@ func (c *mqlK8sNamespace) GetNetworkPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.networkPolicies()
+	})
+}
+
+func (c *mqlK8sNamespace) GetNetworkExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkExposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.namespace", c.__id, "networkExposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkExposures()
+	})
+}
+
+func (c *mqlK8sNamespace) GetNetworkPolicyCoverages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPolicyCoverages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.namespace", c.__id, "networkPolicyCoverages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkPolicyCoverages()
 	})
 }
 
@@ -17354,6 +18424,7 @@ type mqlK8sService struct {
 	Ports                         plugin.TValue[[]any]
 	LoadBalancerIngress           plugin.TValue[[]any]
 	EndpointSlices                plugin.TValue[[]any]
+	NetworkExposures              plugin.TValue[[]any]
 }
 
 // createK8sService creates a new instance of this resource
@@ -17610,6 +18681,22 @@ func (c *mqlK8sService) GetEndpointSlices() *plugin.TValue[[]any] {
 		}
 
 		return c.endpointSlices()
+	})
+}
+
+func (c *mqlK8sService) GetNetworkExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkExposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.service", c.__id, "networkExposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkExposures()
 	})
 }
 
@@ -18004,6 +19091,7 @@ type mqlK8sIngress struct {
 	IngressClassName    plugin.TValue[string]
 	IngressClass        plugin.TValue[*mqlK8sIngressclass]
 	LoadBalancerIngress plugin.TValue[[]any]
+	NetworkExposures    plugin.TValue[[]any]
 }
 
 // createK8sIngress creates a new instance of this resource
@@ -18166,6 +19254,22 @@ func (c *mqlK8sIngress) GetIngressClass() *plugin.TValue[*mqlK8sIngressclass] {
 func (c *mqlK8sIngress) GetLoadBalancerIngress() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.LoadBalancerIngress, func() ([]any, error) {
 		return c.loadBalancerIngress()
+	})
+}
+
+func (c *mqlK8sIngress) GetNetworkExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkExposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "networkExposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkExposures()
 	})
 }
 
@@ -19292,6 +20396,7 @@ type mqlK8sNetworkpolicy struct {
 	PolicyTypes     plugin.TValue[[]any]
 	Ingress         plugin.TValue[[]any]
 	Egress          plugin.TValue[[]any]
+	Coverage        plugin.TValue[*mqlK8sNetworkPolicyCoverage]
 }
 
 // createK8sNetworkpolicy creates a new instance of this resource
@@ -19437,6 +20542,503 @@ func (c *mqlK8sNetworkpolicy) GetEgress() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Egress, func() ([]any, error) {
 		return c.egress()
 	})
+}
+
+func (c *mqlK8sNetworkpolicy) GetCoverage() *plugin.TValue[*mqlK8sNetworkPolicyCoverage] {
+	return plugin.GetOrCompute[*mqlK8sNetworkPolicyCoverage](&c.Coverage, func() (*mqlK8sNetworkPolicyCoverage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.networkpolicy", c.__id, "coverage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sNetworkPolicyCoverage), nil
+			}
+		}
+
+		return c.coverage()
+	})
+}
+
+// mqlK8sNetworkExposure for the k8s.networkExposure resource
+type mqlK8sNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sNetworkExposureInternal it will be used here
+	Id                     plugin.TValue[string]
+	SourceKind             plugin.TValue[string]
+	SourceRef              plugin.TValue[string]
+	Namespace              plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Addresses              plugin.TValue[[]any]
+	Ports                  plugin.TValue[[]any]
+	Protocols              plugin.TValue[[]any]
+	InternetExposed        plugin.TValue[bool]
+	ExposureReason         plugin.TValue[string]
+	NetworkClassifications plugin.TValue[[]any]
+	MetadataClassification plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	Vrf                    plugin.TValue[string]
+	Network                plugin.TValue[string]
+	Routes                 plugin.TValue[[]any]
+	PolicyCoverage         plugin.TValue[[]any]
+	Confidence             plugin.TValue[string]
+}
+
+// createK8sNetworkExposure creates a new instance of this resource
+func createK8sNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.networkExposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNetworkExposure) MqlName() string {
+	return "k8s.networkExposure"
+}
+
+func (c *mqlK8sNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNetworkExposure) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sNetworkExposure) GetSourceKind() *plugin.TValue[string] {
+	return &c.SourceKind
+}
+
+func (c *mqlK8sNetworkExposure) GetSourceRef() *plugin.TValue[string] {
+	return &c.SourceRef
+}
+
+func (c *mqlK8sNetworkExposure) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sNetworkExposure) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sNetworkExposure) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlK8sNetworkExposure) GetPorts() *plugin.TValue[[]any] {
+	return &c.Ports
+}
+
+func (c *mqlK8sNetworkExposure) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+func (c *mqlK8sNetworkExposure) GetInternetExposed() *plugin.TValue[bool] {
+	return &c.InternetExposed
+}
+
+func (c *mqlK8sNetworkExposure) GetExposureReason() *plugin.TValue[string] {
+	return &c.ExposureReason
+}
+
+func (c *mqlK8sNetworkExposure) GetNetworkClassifications() *plugin.TValue[[]any] {
+	return &c.NetworkClassifications
+}
+
+func (c *mqlK8sNetworkExposure) GetMetadataClassification() *plugin.TValue[string] {
+	return &c.MetadataClassification
+}
+
+func (c *mqlK8sNetworkExposure) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlK8sNetworkExposure) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlK8sNetworkExposure) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlK8sNetworkExposure) GetRoutes() *plugin.TValue[[]any] {
+	return &c.Routes
+}
+
+func (c *mqlK8sNetworkExposure) GetPolicyCoverage() *plugin.TValue[[]any] {
+	return &c.PolicyCoverage
+}
+
+func (c *mqlK8sNetworkExposure) GetConfidence() *plugin.TValue[string] {
+	return &c.Confidence
+}
+
+// mqlK8sEgressRoute for the k8s.egressRoute resource
+type mqlK8sEgressRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sEgressRouteInternal it will be used here
+	Id                     plugin.TValue[string]
+	SourceRef              plugin.TValue[string]
+	Vrf                    plugin.TValue[string]
+	Network                plugin.TValue[string]
+	Destinations           plugin.TValue[[]any]
+	Cidrs                  plugin.TValue[[]any]
+	PublicCidrs            plugin.TValue[[]any]
+	Nat                    plugin.TValue[bool]
+	NodeStatuses           plugin.TValue[[]any]
+	BgpPeerings            plugin.TValue[[]any]
+	Classification         plugin.TValue[string]
+	MetadataClassification plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	Confidence             plugin.TValue[string]
+}
+
+// createK8sEgressRoute creates a new instance of this resource
+func createK8sEgressRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sEgressRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.egressRoute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sEgressRoute) MqlName() string {
+	return "k8s.egressRoute"
+}
+
+func (c *mqlK8sEgressRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sEgressRoute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sEgressRoute) GetSourceRef() *plugin.TValue[string] {
+	return &c.SourceRef
+}
+
+func (c *mqlK8sEgressRoute) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlK8sEgressRoute) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlK8sEgressRoute) GetDestinations() *plugin.TValue[[]any] {
+	return &c.Destinations
+}
+
+func (c *mqlK8sEgressRoute) GetCidrs() *plugin.TValue[[]any] {
+	return &c.Cidrs
+}
+
+func (c *mqlK8sEgressRoute) GetPublicCidrs() *plugin.TValue[[]any] {
+	return &c.PublicCidrs
+}
+
+func (c *mqlK8sEgressRoute) GetNat() *plugin.TValue[bool] {
+	return &c.Nat
+}
+
+func (c *mqlK8sEgressRoute) GetNodeStatuses() *plugin.TValue[[]any] {
+	return &c.NodeStatuses
+}
+
+func (c *mqlK8sEgressRoute) GetBgpPeerings() *plugin.TValue[[]any] {
+	return &c.BgpPeerings
+}
+
+func (c *mqlK8sEgressRoute) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlK8sEgressRoute) GetMetadataClassification() *plugin.TValue[string] {
+	return &c.MetadataClassification
+}
+
+func (c *mqlK8sEgressRoute) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlK8sEgressRoute) GetConfidence() *plugin.TValue[string] {
+	return &c.Confidence
+}
+
+// mqlK8sEgressNat for the k8s.egressNat resource
+type mqlK8sEgressNat struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sEgressNatInternal it will be used here
+	Id                     plugin.TValue[string]
+	SourceRef              plugin.TValue[string]
+	Vrf                    plugin.TValue[string]
+	Network                plugin.TValue[string]
+	Addresses              plugin.TValue[[]any]
+	Cidrs                  plugin.TValue[[]any]
+	PublicCidrs            plugin.TValue[[]any]
+	NodeStatuses           plugin.TValue[[]any]
+	Classification         plugin.TValue[string]
+	MetadataClassification plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+}
+
+// createK8sEgressNat creates a new instance of this resource
+func createK8sEgressNat(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sEgressNat{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.egressNat", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sEgressNat) MqlName() string {
+	return "k8s.egressNat"
+}
+
+func (c *mqlK8sEgressNat) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sEgressNat) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sEgressNat) GetSourceRef() *plugin.TValue[string] {
+	return &c.SourceRef
+}
+
+func (c *mqlK8sEgressNat) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlK8sEgressNat) GetNetwork() *plugin.TValue[string] {
+	return &c.Network
+}
+
+func (c *mqlK8sEgressNat) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlK8sEgressNat) GetCidrs() *plugin.TValue[[]any] {
+	return &c.Cidrs
+}
+
+func (c *mqlK8sEgressNat) GetPublicCidrs() *plugin.TValue[[]any] {
+	return &c.PublicCidrs
+}
+
+func (c *mqlK8sEgressNat) GetNodeStatuses() *plugin.TValue[[]any] {
+	return &c.NodeStatuses
+}
+
+func (c *mqlK8sEgressNat) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlK8sEgressNat) GetMetadataClassification() *plugin.TValue[string] {
+	return &c.MetadataClassification
+}
+
+func (c *mqlK8sEgressNat) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+// mqlK8sNetworkPolicyCoverage for the k8s.networkPolicyCoverage resource
+type mqlK8sNetworkPolicyCoverage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sNetworkPolicyCoverageInternal it will be used here
+	Id                               plugin.TValue[string]
+	WorkloadRef                      plugin.TValue[string]
+	PolicyRef                        plugin.TValue[string]
+	Namespace                        plugin.TValue[string]
+	PodSelector                      plugin.TValue[any]
+	Interfaces                       plugin.TValue[[]any]
+	NativeNetworkPolicies            plugin.TValue[[]any]
+	AdminNetworkPolicies             plugin.TValue[[]any]
+	MultiNetworkPolicies             plugin.TValue[[]any]
+	CalicoPolicies                   plugin.TValue[[]any]
+	CiliumPolicies                   plugin.TValue[[]any]
+	DefaultDenyIngress               plugin.TValue[bool]
+	DefaultDenyEgress                plugin.TValue[bool]
+	AdminDefaultDenyIngress          plugin.TValue[bool]
+	AdminDefaultDenyEgress           plugin.TValue[bool]
+	SecondaryInterfaceIngressCovered plugin.TValue[bool]
+	SecondaryInterfaceEgressCovered  plugin.TValue[bool]
+	CoverageGaps                     plugin.TValue[[]any]
+}
+
+// createK8sNetworkPolicyCoverage creates a new instance of this resource
+func createK8sNetworkPolicyCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNetworkPolicyCoverage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.networkPolicyCoverage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) MqlName() string {
+	return "k8s.networkPolicyCoverage"
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetWorkloadRef() *plugin.TValue[string] {
+	return &c.WorkloadRef
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetPolicyRef() *plugin.TValue[string] {
+	return &c.PolicyRef
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetPodSelector() *plugin.TValue[any] {
+	return &c.PodSelector
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetInterfaces() *plugin.TValue[[]any] {
+	return &c.Interfaces
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetNativeNetworkPolicies() *plugin.TValue[[]any] {
+	return &c.NativeNetworkPolicies
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetAdminNetworkPolicies() *plugin.TValue[[]any] {
+	return &c.AdminNetworkPolicies
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetMultiNetworkPolicies() *plugin.TValue[[]any] {
+	return &c.MultiNetworkPolicies
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetCalicoPolicies() *plugin.TValue[[]any] {
+	return &c.CalicoPolicies
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetCiliumPolicies() *plugin.TValue[[]any] {
+	return &c.CiliumPolicies
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetDefaultDenyIngress() *plugin.TValue[bool] {
+	return &c.DefaultDenyIngress
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetDefaultDenyEgress() *plugin.TValue[bool] {
+	return &c.DefaultDenyEgress
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetAdminDefaultDenyIngress() *plugin.TValue[bool] {
+	return &c.AdminDefaultDenyIngress
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetAdminDefaultDenyEgress() *plugin.TValue[bool] {
+	return &c.AdminDefaultDenyEgress
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetSecondaryInterfaceIngressCovered() *plugin.TValue[bool] {
+	return &c.SecondaryInterfaceIngressCovered
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetSecondaryInterfaceEgressCovered() *plugin.TValue[bool] {
+	return &c.SecondaryInterfaceEgressCovered
+}
+
+func (c *mqlK8sNetworkPolicyCoverage) GetCoverageGaps() *plugin.TValue[[]any] {
+	return &c.CoverageGaps
 }
 
 // mqlK8sCustomresource for the k8s.customresource resource
@@ -21778,6 +23380,7 @@ type mqlK8sGateway struct {
 	StatusAddresses  plugin.TValue[[]any]
 	ListenerStatus   plugin.TValue[[]any]
 	Conditions       plugin.TValue[[]any]
+	NetworkExposures plugin.TValue[[]any]
 }
 
 // createK8sGateway creates a new instance of this resource
@@ -21937,6 +23540,22 @@ func (c *mqlK8sGateway) GetListenerStatus() *plugin.TValue[[]any] {
 
 func (c *mqlK8sGateway) GetConditions() *plugin.TValue[[]any] {
 	return &c.Conditions
+}
+
+func (c *mqlK8sGateway) GetNetworkExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkExposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gateway", c.__id, "networkExposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkExposures()
+	})
 }
 
 // mqlK8sHttproute for the k8s.httproute resource
@@ -22244,6 +23863,468 @@ func (c *mqlK8sGrpcroute) GetRules() *plugin.TValue[[]any] {
 }
 
 func (c *mqlK8sGrpcroute) GetParentStatus() *plugin.TValue[[]any] {
+	return &c.ParentStatus
+}
+
+// mqlK8sTlsroute for the k8s.tlsroute resource
+type mqlK8sTlsroute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sTlsrouteInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ParentRefs      plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	ParentStatus    plugin.TValue[[]any]
+}
+
+// createK8sTlsroute creates a new instance of this resource
+func createK8sTlsroute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sTlsroute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.tlsroute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sTlsroute) MqlName() string {
+	return "k8s.tlsroute"
+}
+
+func (c *mqlK8sTlsroute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sTlsroute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sTlsroute) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sTlsroute) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sTlsroute) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sTlsroute) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sTlsroute) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.tlsroute", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sTlsroute) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.tlsroute", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sTlsroute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sTlsroute) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sTlsroute) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sTlsroute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sTlsroute) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sTlsroute) GetParentRefs() *plugin.TValue[[]any] {
+	return &c.ParentRefs
+}
+
+func (c *mqlK8sTlsroute) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlK8sTlsroute) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlK8sTlsroute) GetParentStatus() *plugin.TValue[[]any] {
+	return &c.ParentStatus
+}
+
+// mqlK8sTcproute for the k8s.tcproute resource
+type mqlK8sTcproute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sTcprouteInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ParentRefs      plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	ParentStatus    plugin.TValue[[]any]
+}
+
+// createK8sTcproute creates a new instance of this resource
+func createK8sTcproute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sTcproute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.tcproute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sTcproute) MqlName() string {
+	return "k8s.tcproute"
+}
+
+func (c *mqlK8sTcproute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sTcproute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sTcproute) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sTcproute) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sTcproute) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sTcproute) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sTcproute) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.tcproute", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sTcproute) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.tcproute", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sTcproute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sTcproute) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sTcproute) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sTcproute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sTcproute) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sTcproute) GetParentRefs() *plugin.TValue[[]any] {
+	return &c.ParentRefs
+}
+
+func (c *mqlK8sTcproute) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlK8sTcproute) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlK8sTcproute) GetParentStatus() *plugin.TValue[[]any] {
+	return &c.ParentStatus
+}
+
+// mqlK8sUdproute for the k8s.udproute resource
+type mqlK8sUdproute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sUdprouteInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	OwnerReferences plugin.TValue[[]any]
+	ManagedFields   plugin.TValue[[]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	ParentRefs      plugin.TValue[[]any]
+	Hostnames       plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	ParentStatus    plugin.TValue[[]any]
+}
+
+// createK8sUdproute creates a new instance of this resource
+func createK8sUdproute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sUdproute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.udproute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sUdproute) MqlName() string {
+	return "k8s.udproute"
+}
+
+func (c *mqlK8sUdproute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sUdproute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sUdproute) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sUdproute) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sUdproute) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sUdproute) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sUdproute) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.udproute", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sUdproute) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.udproute", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sUdproute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sUdproute) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sUdproute) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sUdproute) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sUdproute) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sUdproute) GetParentRefs() *plugin.TValue[[]any] {
+	return &c.ParentRefs
+}
+
+func (c *mqlK8sUdproute) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlK8sUdproute) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlK8sUdproute) GetParentStatus() *plugin.TValue[[]any] {
 	return &c.ParentStatus
 }
 

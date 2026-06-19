@@ -68,6 +68,14 @@ k8s {
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes network policies
   networkPolicies() []k8s.networkpolicy
+  // Normalized network exposures from Services, Ingresses, Gateways, and network intent sources
+  networkExposures() []k8s.networkExposure
+  // Normalized egress routes from HBN/network intent sources
+  egressRoutes() []k8s.egressRoute
+  // Normalized egress NAT entries from HBN/network intent sources
+  egressNats() []k8s.egressNat
+  // Normalized network policy coverage summaries
+  networkPolicyCoverages() []k8s.networkPolicyCoverage
   // Kubernetes custom resources
   customresources() []k8s.customresource
   // Kubernetes admission webhook configurations
@@ -98,6 +106,12 @@ k8s {
   httpRoutes() []k8s.httproute
   // Kubernetes Gateway API GRPCRoutes
   grpcRoutes() []k8s.grpcroute
+  // Kubernetes Gateway API TLSRoutes
+  tlsRoutes() []k8s.tlsroute
+  // Kubernetes Gateway API TCPRoutes
+  tcpRoutes() []k8s.tcproute
+  // Kubernetes Gateway API UDPRoutes
+  udpRoutes() []k8s.udproute
   // Kubernetes Gateway API ReferenceGrants
   referenceGrants() []k8s.referencegrant
   // Kubernetes admission mutating webhook configurations
@@ -198,6 +212,10 @@ private k8s.namespace @defaults("name created") {
   endpointSlices() []k8s.endpointslice
   // NetworkPolicies in this namespace
   networkPolicies() []k8s.networkpolicy
+  // Normalized network exposures in this namespace
+  networkExposures() []k8s.networkExposure
+  // Normalized network policy coverage summaries in this namespace
+  networkPolicyCoverages() []k8s.networkPolicyCoverage
   // Secrets in this namespace
   secrets() []k8s.secret
   // ConfigMaps in this namespace
@@ -2024,6 +2042,8 @@ private k8s.service @defaults("namespace name created") {
   loadBalancerIngress() []dict
   // EndpointSlices that back this service (filtered by the kubernetes.io/service-name label)
   endpointSlices() []k8s.endpointslice
+  // Normalized network exposure records for this Service
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes Ingress resource backend
@@ -2135,6 +2155,8 @@ private k8s.ingress @defaults("namespace name created") {
   ingressClass() k8s.ingressclass
   // Load-balancer ingress entries published in status (ip, hostname, ports)
   loadBalancerIngress() []dict
+  // Normalized network exposure records for this Ingress
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes service account
@@ -2454,6 +2476,164 @@ private k8s.networkpolicy @defaults("namespace name created") {
   ingress() []dict
   // Egress rules; each rule lists `to` peers and `ports`
   egress() []dict
+  // Normalized policy coverage summary for this NetworkPolicy
+  coverage() k8s.networkPolicyCoverage
+}
+
+// Normalized Kubernetes network exposure
+//
+// Represents an inbound exposure signal from Kubernetes Services, Ingresses,
+// Gateway API resources, and HBN/network intent sources when they are
+// available. The `confidence` field describes static-analysis confidence, not
+// packet-level reachability.
+private k8s.networkExposure @defaults("sourceKind namespace name internetExposed exposureReason") {
+  // Stable exposure identifier
+  id string
+  // Source kind that produced the exposure, for example Service, Ingress, Gateway, HBNInbound, or LegacyHBN
+  sourceKind string
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // Source namespace
+  namespace string
+  // Source name
+  name string
+  // Published IPs or hostnames
+  addresses []string
+  // Published ports with protocol and optional name metadata
+  ports []dict
+  // Published protocols such as TCP, UDP, HTTP, HTTPS, or TLS
+  protocols []string
+  // Whether this exposure appears reachable from the public Internet
+  internetExposed bool
+  // Classification reason, for example publicLoadBalancerAddress, nodePortPublicNode, publicIngressAddress, or gatewayPublicAddress
+  exposureReason string
+  // Network classifications such as internet, private, hostname, restrictedSourceRange, or internalOnly
+  networkClassifications []string
+  // Explicit classification metadata from source object annotations or labels
+  metadataClassification string
+  // Explicit owner metadata from source object annotations or labels
+  owner string
+  // VRF associated with the exposure when HBN intent is available
+  vrf string
+  // Network associated with the exposure when HBN intent is available
+  network string
+  // Route identifiers associated with the exposure when HBN intent is available
+  routes []string
+  // Policy coverage identifiers associated with the exposure
+  policyCoverage []string
+  // Static-analysis confidence: high, medium, or low
+  confidence string
+}
+
+// Normalized Kubernetes egress route
+//
+// Represents egress routing intent or observed compiled routing state from
+// HBN network CRDs, Coil Egress resources, and compatible integrations.
+// Kubernetes-only clusters without those integrations expose an empty list.
+private k8s.egressRoute @defaults("sourceRef vrf network classification confidence") {
+  // Stable route identifier
+  id string
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // VRF associated with this route
+  vrf string
+  // Network associated with this route
+  network string
+  // Destination references
+  destinations []string
+  // Route CIDRs
+  cidrs []string
+  // Public CIDRs included in the route
+  publicCidrs []string
+  // Whether NAT is configured or inferred for this route
+  nat bool
+  // Node status references that reported this route
+  nodeStatuses []string
+  // BGP peering references associated with this route
+  bgpPeerings []string
+  // Route classification
+  classification string
+  // Explicit classification metadata from the source object
+  metadataClassification string
+  // Explicit owner metadata from the source object
+  owner string
+  // Static-analysis confidence: high, medium, or low
+  confidence string
+}
+
+// Normalized Kubernetes egress NAT
+//
+// Represents NAT intent or observed compiled NAT state from Coil Egress,
+// Calico IPPool, HBN, and compatible network integrations. Kubernetes-only
+// clusters without those integrations expose an empty list.
+private k8s.egressNat @defaults("sourceRef vrf network classification") {
+  // Stable NAT identifier
+  id string
+  // Source object reference in kind:namespace:name or kind:name form
+  sourceRef string
+  // VRF associated with this NAT entry
+  vrf string
+  // Network associated with this NAT entry
+  network string
+  // NAT addresses
+  addresses []string
+  // NAT CIDRs
+  cidrs []string
+  // Public CIDRs included in the NAT entry
+  publicCidrs []string
+  // Node status references that reported this NAT entry
+  nodeStatuses []string
+  // NAT classification
+  classification string
+  // Explicit classification metadata from the source object
+  metadataClassification string
+  // Owning object reference
+  owner string
+}
+
+// Normalized Kubernetes network policy coverage
+//
+// Represents policy coverage for a workload selector and network interfaces.
+// Native Kubernetes NetworkPolicy applies to primary pod networking unless the
+// CNI explicitly extends it; secondary-interface policy coverage is tracked
+// separately through MultiNetworkPolicy and compatible integrations.
+private k8s.networkPolicyCoverage @defaults("namespace policyRef defaultDenyIngress defaultDenyEgress") {
+  // Stable coverage identifier
+  id string
+  // Workload reference when coverage is tied to a specific workload
+  workloadRef string
+  // Policy object reference
+  policyRef string
+  // Policy namespace
+  namespace string
+  // Pod selector covered by the policy
+  podSelector dict
+  // Interfaces covered by this summary, for example primary or secondary network names
+  interfaces []string
+  // Native Kubernetes NetworkPolicy references
+  nativeNetworkPolicies []string
+  // Kubernetes AdminNetworkPolicy and BaselineAdminNetworkPolicy references
+  adminNetworkPolicies []string
+  // MultiNetworkPolicy references
+  multiNetworkPolicies []string
+  // Calico policy references
+  calicoPolicies []string
+  // Cilium policy references
+  ciliumPolicies []string
+  // Whether selected pods have ingress default-deny semantics
+  defaultDenyIngress bool
+  // Whether selected pods have egress default-deny semantics
+  defaultDenyEgress bool
+  // Whether admin network policy coverage supplies ingress catch-all deny semantics
+  adminDefaultDenyIngress bool
+  // Whether admin network policy coverage supplies egress catch-all deny semantics
+  adminDefaultDenyEgress bool
+  // Whether secondary interface ingress is covered
+  secondaryInterfaceIngressCovered bool
+  // Whether secondary interface egress is covered
+  secondaryInterfaceEgressCovered bool
+  // Coverage gaps that should be shown to users
+  coverageGaps []string
 }
 
 // Kubernetes CustomResource
@@ -3087,6 +3267,8 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
   listenerStatus []dict
   // Status conditions
   conditions []dict
+  // Normalized network exposure records for this Gateway
+  networkExposures() []k8s.networkExposure
 }
 
 // Kubernetes Gateway API HTTPRoute
@@ -3168,6 +3350,114 @@ private k8s.grpcroute @defaults("namespace name created") {
   // Parent resources this route is associated with (Gateways, Services, etc.)
   parentRefs []dict
   // Hostnames this route should respond to
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API TLSRoute
+private k8s.tlsroute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API TCPRoute
+private k8s.tcproute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to, empty for TCPRoute
+  hostnames []string
+  // Rules describing matches, filters, and backend forwarding
+  rules []dict
+  // Status of the route per parent reference
+  parentStatus []dict
+}
+
+// Kubernetes Gateway API UDPRoute
+private k8s.udproute @defaults("namespace name created") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object namespace
+  namespace string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Parent resources this route is associated with (Gateways, Services, etc.)
+  parentRefs []dict
+  // Hostnames this route should respond to, empty for UDPRoute
   hostnames []string
   // Rules describing matches, filters, and backend forwarding
   rules []dict
