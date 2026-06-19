@@ -34,6 +34,32 @@ func runIndexHandler(t *testing.T, bind *RawData, operator string) (*RawData, ui
 	return handler.f(newTestBlockExecutor(), bind, newStringKeyChunk(), 0)
 }
 
+// A null map receiver must not error when the all/any/none/one assertion
+// builtins are called on it; it propagates as a null bool so the check fails
+// cleanly instead of crashing the scan. Mirrors the array variants.
+func TestMapAssertions_NullReceiver(t *testing.T) {
+	cases := []struct {
+		name string
+		fn   func(*blockExecutor, *RawData, *Chunk, uint64) (*RawData, uint64, error)
+	}{
+		{"all", mapAll},
+		{"any", mapAny},
+		{"none", mapNone},
+		{"one", mapOne},
+	}
+	for _, c := range cases {
+		t.Run(c.name+" on null map returns null bool, no error", func(t *testing.T) {
+			res, ref, err := c.fn(nil, &RawData{Type: types.Map(types.String, types.String), Value: nil}, nil, 0)
+			require.NoError(t, err)
+			require.Equal(t, uint64(0), ref)
+			require.NotNil(t, res)
+			require.Equal(t, types.Bool, res.Type)
+			require.Nil(t, res.Value)
+			require.NoError(t, res.Error)
+		})
+	}
+}
+
 func TestDictGetIndex_NilValue(t *testing.T) {
 	for _, operator := range []string{"[]", "[]?"} {
 		t.Run(operator+" returns typed null when parent dict is nil", func(t *testing.T) {

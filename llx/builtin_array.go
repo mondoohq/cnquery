@@ -340,7 +340,13 @@ func arraySample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 func arrayAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+		// A null receiver (e.g. a missing map key resolving to a typed null
+		// array, like secpol.privilegerights["SeMissing"]) propagates as a
+		// null bool rather than erroring. The check then resolves to a clean
+		// pass/fail instead of crashing the whole scan with an error. This
+		// mirrors the dict variants (dictAllV2 etc.) and arrayLengthV2, which
+		// already null-propagate. A genuine upstream error is preserved.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.([]any)
@@ -353,7 +359,9 @@ func arrayAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 func arrayNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+		// See arrayAllV2: a null receiver propagates as a null bool so the
+		// check fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.([]any)
@@ -366,7 +374,9 @@ func arrayNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 
 func arrayAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+		// See arrayAllV2: a null receiver propagates as a null bool so the
+		// check fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.([]any)
@@ -379,7 +389,9 @@ func arrayAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 
 func arrayOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+		// See arrayAllV2: a null receiver propagates as a null bool so the
+		// check fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.([]any)

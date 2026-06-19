@@ -249,7 +249,11 @@ func mapSample(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 
 func mapAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+		// A null receiver propagates as a null bool so the check fails cleanly
+		// instead of erroring the whole scan. Matches the array variants
+		// (arrayAllV2 etc.) and the dict variants (dictAllV2 etc.). A genuine
+		// upstream error is preserved.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.(map[string]any)
@@ -262,7 +266,9 @@ func mapAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 
 func mapNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+		// See mapAll: a null receiver propagates as a null bool so the check
+		// fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.(map[string]any)
@@ -275,7 +281,9 @@ func mapNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDat
 
 func mapAny(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+		// See mapAll: a null receiver propagates as a null bool so the check
+		// fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.(map[string]any)
@@ -288,7 +296,9 @@ func mapAny(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 
 func mapOne(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+		// See mapAll: a null receiver propagates as a null bool so the check
+		// fails cleanly instead of erroring the whole scan.
+		return &RawData{Type: types.Bool, Error: bind.Error}, 0, nil
 	}
 
 	filteredList := bind.Value.(map[string]any)
