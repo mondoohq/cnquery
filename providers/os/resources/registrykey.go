@@ -239,10 +239,12 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 	key := obj.(*mqlRegistrykey)
 
+	// An unreadable key (exists.Error != nil) is intentionally treated the same
+	// as a missing one: the defaults below mark the property absent so the
+	// lookup fails cleanly instead of erroring the whole check. (The previous
+	// `if err != nil` here inspected a stale, always-nil err from the
+	// CreateResource above and was dead code.)
 	exists := key.GetExists()
-	if err != nil {
-		return nil, nil, err
-	}
 
 	// set default values
 	args["exists"] = llx.BoolFalse
@@ -273,22 +275,26 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
+// The fields below are normally populated by initRegistrykeyProperty. These
+// compute fallbacks are only reached when the resource was created without
+// those fields pre-set — e.g. replaying a recording that did not capture them.
+// In that case the property is treated as absent and the fields fail cleanly
+// (false / null) rather than erroring the whole check, mirroring the leniency
+// of init (which already defaults a missing property to exists=false, data=nil)
+// and matching how a missing key on an array/map now fails gracefully.
+
 func (p *mqlRegistrykeyProperty) exists() (bool, error) {
-	// NOTE: will not be called since it will always be set in init
-	return false, errors.New("could not determine if the property exists")
+	return false, nil
 }
 
 func (p *mqlRegistrykeyProperty) compute_type() (string, error) {
-	// NOTE: if we reach here the value has not been set in init, therefore we return an error
-	return "", errors.New("requested property does not exist")
+	return "", nil
 }
 
 func (p *mqlRegistrykeyProperty) data() (any, error) {
-	// NOTE: if we reach here the value has not been set in init, therefore we return an error
-	return "", errors.New("requested property does not exist")
+	return nil, nil
 }
 
 func (p *mqlRegistrykeyProperty) value() (string, error) {
-	// NOTE: if we reach here the value has not been set in init, therefore we return an error
-	return "", errors.New("requested property does not exist")
+	return "", nil
 }

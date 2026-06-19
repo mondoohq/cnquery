@@ -60,4 +60,29 @@ func TestResource_Registrykey(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Nil(t, res[0].Data.Value)
 	})
+
+	// A missing registry property must not error when its fields are read or
+	// compared — this is what lets policies drop the
+	// `switch(x) { case _ != empty: ... default: false }` workaround around
+	// registrykey.property(...).data.
+	t.Run("missing property does not error on field access or comparison", func(t *testing.T) {
+		existPath := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+		queries := []string{
+			// missing property on an existing key path
+			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').exists",
+			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data > 0",
+			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data > 0 && registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data <= 30",
+			// missing property on a non-existent key path
+			"registrykey.property(path: 'HKEY_LOCAL_MACHINE\\Nope\\Nope', name: 'DoesNotExist').data > 0",
+		}
+		for _, q := range queries {
+			t.Run(q, func(t *testing.T) {
+				res := testWindowsQuery(t, q)
+				assert.NotEmpty(t, res)
+				last := res[len(res)-1]
+				assert.NoError(t, last.Data.Error)
+				assert.Equal(t, false, last.Data.Value)
+			})
+		}
+	})
 }
