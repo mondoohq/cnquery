@@ -511,3 +511,38 @@ func (a *mqlAwsCloudformationStackSet) organizationalUnitIds() ([]any, error) {
 	}
 	return res, nil
 }
+
+// cloudformationStackForTags resolves the CloudFormation stack that manages a
+// resource from the AWS-injected `aws:cloudformation:stack-name` tag. It scans
+// the account's stacks (a cross-region list cached after first use) and matches
+// on stack name and region. Returns (nil, nil) when the resource is not part of
+// a stack; callers set the field's null state before returning.
+func cloudformationStackForTags(runtime *plugin.Runtime, region string, tags map[string]any) (*mqlAwsCloudformationStack, error) {
+	raw, ok := tags["aws:cloudformation:stack-name"]
+	if !ok {
+		return nil, nil
+	}
+	name, ok := raw.(string)
+	if !ok || name == "" {
+		return nil, nil
+	}
+
+	obj, err := CreateResource(runtime, ResourceAwsCloudformation, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	stacks := obj.(*mqlAwsCloudformation).GetStacks()
+	if stacks.Error != nil {
+		return nil, stacks.Error
+	}
+	for _, s := range stacks.Data {
+		st, ok := s.(*mqlAwsCloudformationStack)
+		if !ok {
+			continue
+		}
+		if st.Name.Data == name && st.Region.Data == region {
+			return st, nil
+		}
+	}
+	return nil, nil
+}

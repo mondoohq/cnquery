@@ -2955,6 +2955,7 @@ aws.ec2.instance 11.15.2
 aws.ec2.instance.architecture 11.15.2
 aws.ec2.instance.arn 11.15.2
 aws.ec2.instance.bootMode 11.15.2
+aws.ec2.instance.cloudformationStack 13.37.1
 aws.ec2.instance.cpuCoreCount 11.15.3
 aws.ec2.instance.cpuThreadsPerCore 11.15.3
 aws.ec2.instance.currentInstanceBootMode 11.15.3
@@ -2985,6 +2986,7 @@ aws.ec2.instance.ipv6Address 11.15.2
 aws.ec2.instance.keypair 11.15.2
 aws.ec2.instance.launchTime 11.15.2
 aws.ec2.instance.launchedAt 11.15.2
+aws.ec2.instance.loadBalancers 13.37.1
 aws.ec2.instance.maintenanceAutoRecovery 11.15.3
 aws.ec2.instance.networkInterfaces 11.15.2
 aws.ec2.instance.patchState 11.15.2
@@ -3256,6 +3258,7 @@ aws.ec2.placementGroups 13.6.3
 aws.ec2.securityGroups 11.15.2
 aws.ec2.securitygroup 11.15.2
 aws.ec2.securitygroup.arn 11.15.2
+aws.ec2.securitygroup.cloudformationStack 13.37.1
 aws.ec2.securitygroup.description 11.15.2
 aws.ec2.securitygroup.id 11.15.2
 aws.ec2.securitygroup.instances 13.37.1
@@ -7703,6 +7706,7 @@ aws.s3.bucket.analyticsConfigurations 13.29.1
 aws.s3.bucket.arn 11.15.2
 aws.s3.bucket.blockPublicAcls 13.32.2
 aws.s3.bucket.blockPublicPolicy 13.32.2
+aws.s3.bucket.cloudformationStack 13.37.1
 aws.s3.bucket.cors 11.15.2
 aws.s3.bucket.corsrule 11.15.2
 aws.s3.bucket.corsrule.allowedHeaders 11.15.2
@@ -9539,6 +9543,7 @@ aws.vpc.arn 11.15.2
 aws.vpc.blockPublicAccessOptions 13.29.1
 aws.vpc.cidrBlock 11.15.2
 aws.vpc.cidrBlockAssociations 13.6.3
+aws.vpc.cloudformationStack 13.37.1
 aws.vpc.defaultNetworkAcl 13.29.1
 aws.vpc.defaultSecurityGroup 13.29.1
 aws.vpc.dhcpOptions 13.6.3

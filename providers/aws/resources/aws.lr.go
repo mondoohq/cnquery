@@ -4920,6 +4920,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.ipv6CidrBlockAssociations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetIpv6CidrBlockAssociations()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.vpc.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
 	"aws.vpc.routetable.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetArn()).ToDataRes(types.String)
 	},
@@ -15684,6 +15687,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.accessPoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.accessPoint")))
 	},
+	"aws.s3.bucket.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
 	"aws.s3.bucket.eventNotification.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketEventNotification).GetId()).ToDataRes(types.String)
 	},
@@ -22074,6 +22080,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
 	},
+	"aws.ec2.instance.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
+	},
+	"aws.ec2.instance.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetDisableApiTermination()).ToDataRes(types.Bool)
 	},
@@ -22451,6 +22463,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
+	"aws.ec2.securitygroup.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
 	},
 	"aws.ec2.securitygroup.ippermission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2SecuritygroupIppermission).GetId()).ToDataRes(types.String)
@@ -33058,6 +33073,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.ipv6CidrBlockAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).Ipv6CidrBlockAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48940,6 +48959,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.eventNotification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketEventNotification).__id, ok = v.Value.(string)
 		return
@@ -58208,6 +58231,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.disableApiTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).DisableApiTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -58750,6 +58781,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Securitygroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.ippermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74579,6 +74614,7 @@ type mqlAwsVpc struct {
 	EnableDnsHostnames        plugin.TValue[bool]
 	CidrBlockAssociations     plugin.TValue[[]any]
 	Ipv6CidrBlockAssociations plugin.TValue[[]any]
+	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -74913,6 +74949,22 @@ func (c *mqlAwsVpc) GetCidrBlockAssociations() *plugin.TValue[[]any] {
 func (c *mqlAwsVpc) GetIpv6CidrBlockAssociations() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Ipv6CidrBlockAssociations, func() ([]any, error) {
 		return c.ipv6CidrBlockAssociations()
+	})
+}
+
+func (c *mqlAwsVpc) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
 	})
 }
 
@@ -117262,6 +117314,7 @@ type mqlAwsS3Bucket struct {
 	TransferAcceleration             plugin.TValue[string]
 	MacieCoverage                    plugin.TValue[*mqlAwsMacieBucket]
 	AccessPoints                     plugin.TValue[[]any]
+	CloudformationStack              plugin.TValue[*mqlAwsCloudformationStack]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -117650,6 +117703,22 @@ func (c *mqlAwsS3Bucket) GetAccessPoints() *plugin.TValue[[]any] {
 		}
 
 		return c.accessPoints()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
 	})
 }
 
@@ -140055,6 +140124,8 @@ type mqlAwsEc2Instance struct {
 	TpmSupport              plugin.TValue[string]
 	NetworkInterfaces       plugin.TValue[[]any]
 	Subnet                  plugin.TValue[*mqlAwsVpcSubnet]
+	LoadBalancers           plugin.TValue[[]any]
+	CloudformationStack     plugin.TValue[*mqlAwsCloudformationStack]
 	DisableApiTermination   plugin.TValue[bool]
 	BootMode                plugin.TValue[string]
 	SourceDestCheck         plugin.TValue[bool]
@@ -140361,6 +140432,38 @@ func (c *mqlAwsEc2Instance) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
 		}
 
 		return c.subnet()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
 	})
 }
 
@@ -141415,6 +141518,7 @@ type mqlAwsEc2Securitygroup struct {
 	IsAttachedToNetworkInterface plugin.TValue[bool]
 	NetworkInterfaces            plugin.TValue[[]any]
 	Instances                    plugin.TValue[[]any]
+	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
 }
 
 // createAwsEc2Securitygroup creates a new instance of this resource
@@ -141561,6 +141665,22 @@ func (c *mqlAwsEc2Securitygroup) GetInstances() *plugin.TValue[[]any] {
 		}
 
 		return c.instances()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.securitygroup", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
 	})
 }
 

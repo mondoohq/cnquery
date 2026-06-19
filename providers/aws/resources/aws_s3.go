@@ -567,6 +567,26 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 	return region, nil
 }
 
+func (a *mqlAwsS3Bucket) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	tags := a.GetTags()
+	if tags.Error != nil {
+		return nil, tags.Error
+	}
+	loc := a.GetLocation()
+	if loc.Error != nil {
+		return nil, loc.Error
+	}
+	stack, err := cloudformationStackForTags(a.MqlRuntime, loc.Data, tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	if !a.Exists.Data {

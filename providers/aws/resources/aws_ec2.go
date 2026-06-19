@@ -3848,3 +3848,62 @@ func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 	}
 	return res.(*mqlAwsVpcSubnet), nil
 }
+
+// loadBalancers returns the load balancers that route traffic to this instance.
+// AWS has no "describe load balancers by instance" API, so this scans the
+// account's load balancers (a cross-region list cached after first use) and
+// matches on the instances each one targets.
+func (i *mqlAwsEc2Instance) loadBalancers() ([]any, error) {
+	obj, err := CreateResource(i.MqlRuntime, ResourceAwsElb, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	lbs := obj.(*mqlAwsElb).GetLoadBalancers()
+	if lbs.Error != nil {
+		return nil, lbs.Error
+	}
+	instanceArn := i.Arn.Data
+	res := []any{}
+	for _, l := range lbs.Data {
+		lb, ok := l.(*mqlAwsElbLoadbalancer)
+		if !ok {
+			continue
+		}
+		insts := lb.GetInstances()
+		if insts.Error != nil {
+			return nil, insts.Error
+		}
+		for _, x := range insts.Data {
+			inst, ok := x.(*mqlAwsEc2Instance)
+			if ok && inst.Arn.Data == instanceArn {
+				res = append(res, lb)
+				break
+			}
+		}
+	}
+	return res, nil
+}
+
+func (i *mqlAwsEc2Instance) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(i.MqlRuntime, i.Region.Data, i.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		i.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (a *mqlAwsEc2Securitygroup) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(a.MqlRuntime, a.Region.Data, a.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}

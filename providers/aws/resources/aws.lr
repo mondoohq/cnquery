@@ -371,6 +371,8 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   cidrBlockAssociations() []dict
   // IPv6 CIDR block associations for the VPC
   ipv6CidrBlockAssociations() []dict
+  // CloudFormation stack that manages this VPC, if any
+  cloudformationStack() aws.cloudformation.stack
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -10097,6 +10099,8 @@ private aws.s3.bucket @defaults("name location public") {
   macieCoverage() aws.macie.bucket
   // S3 access points attached to the bucket
   accessPoints() []aws.s3.bucket.accessPoint
+  // CloudFormation stack that manages this bucket, if any
+  cloudformationStack() aws.cloudformation.stack
 }
 
 // Amazon S3 bucket event notification
@@ -15773,6 +15777,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   networkInterfaces() []aws.ec2.networkinterface
   // Subnet the instance is launched in
   subnet() aws.vpc.subnet
+  // Load balancers that route traffic to this instance
+  loadBalancers() []aws.elb.loadbalancer
+  // CloudFormation stack that manages this instance, if any
+  cloudformationStack() aws.cloudformation.stack
   // Whether API termination protection is enabled for the instance
   disableApiTermination() bool
   // Boot mode of the instance (undefined, legacy-bios, uefi, uefi-preferred)
@@ -16082,6 +16090,8 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   networkInterfaces() []aws.ec2.networkinterface
   // EC2 instances this security group is attached to, resolved through their network interfaces
   instances() []aws.ec2.instance
+  // CloudFormation stack that manages this security group, if any
+  cloudformationStack() aws.cloudformation.stack
 }
 
 // Amazon EC2 security group IP permission

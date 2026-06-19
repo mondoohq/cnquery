@@ -1918,3 +1918,15 @@ func (a *mqlAwsVpcVpnGateway) vpnConnections() ([]any, error) {
 	}
 	return vpnConns, nil
 }
+
+func (a *mqlAwsVpc) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := cloudformationStackForTags(a.MqlRuntime, a.Region.Data, a.Tags.Data)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.CloudformationStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
