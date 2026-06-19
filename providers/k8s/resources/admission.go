@@ -73,19 +73,19 @@ func (k *mqlK8sAdmissionreview) request() (*mqlK8sAdmissionrequest, error) {
 		args["object"] = llx.NilData
 	}
 
-	oldObj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.OldObject.Raw))
-	if err != nil {
-		return nil, err
-	}
-
-	if len(oldObj) == 1 {
-		oldObjDict, err := convert.JsonToDict(oldObj[0])
+	args["oldObject"] = llx.NilData
+	if len(aRequest.OldObject.Raw) > 0 {
+		oldObj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.OldObject.Raw))
 		if err != nil {
 			return nil, err
 		}
-		args["oldObject"] = llx.DictData(oldObjDict)
-	} else {
-		args["oldObject"] = llx.NilData
+		if len(oldObj) == 1 {
+			oldObjDict, err := convert.JsonToDict(oldObj[0])
+			if err != nil {
+				return nil, err
+			}
+			args["oldObject"] = llx.DictData(oldObjDict)
+		}
 	}
 
 	r, err := CreateResource(k.MqlRuntime, "k8s.admissionrequest", args)

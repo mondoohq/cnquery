@@ -69,6 +69,18 @@ Examples:
 					Desc:    "Only include Kubernetes objects in the matching namespaces",
 				},
 				{
+					Long:    "namespace-label-selector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include Kubernetes namespaces matching the label selector, along with all objects discovered within those namespaces",
+				},
+				{
+					Long:    "object-label-selector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include Kubernetes objects matching the label selector; for container image discovery this matches the pod that references the image",
+				},
+				{
 					Long:    "container-proxy",
 					Type:    plugin.FlagType_String,
 					Default: "",

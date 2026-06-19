@@ -267,6 +267,12 @@ func TestParseCLI(t *testing.T) {
 				"namespaces": {
 					Value: []byte("my-namespace"),
 				},
+				"namespace-label-selector": {
+					Value: []byte("tenant=t1"),
+				},
+				"object-label-selector": {
+					Value: []byte("app in (api,worker)"),
+				},
 			},
 		}
 
@@ -279,8 +285,10 @@ func TestParseCLI(t *testing.T) {
 			},
 			Type: "k8s",
 			Options: map[string]string{
-				shared.OPTION_NAMESPACE:         "my-namespace",
-				shared.OPTION_NAMESPACE_EXCLUDE: "excluded-namespace",
+				shared.OPTION_NAMESPACE:                "my-namespace",
+				shared.OPTION_NAMESPACE_EXCLUDE:        "excluded-namespace",
+				shared.OPTION_NAMESPACE_LABEL_SELECTOR: "tenant=t1",
+				shared.OPTION_OBJECT_LABEL_SELECTOR:    "app in (api,worker)",
 			},
 		}
 

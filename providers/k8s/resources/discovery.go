@@ -22,6 +22,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -72,6 +73,36 @@ func (f *FilterOpts) skip(value string) bool {
 		return !matchesAny(f.include, value)
 	}
 	return matchesAny(f.exclude, value)
+}
+
+// LabelSelectorFilters filters discovered Kubernetes objects by labels.
+// Object selectors match the Kubernetes object being discovered; for container
+// image discovery this is the pod that references the image, not the image asset.
+type LabelSelectorFilters struct {
+	namespace labels.Selector
+	object    labels.Selector
+}
+
+func (f *LabelSelectorFilters) MatchNamespace(obj metav1.Object) bool {
+	if f == nil || f.namespace == nil || f.namespace.Empty() {
+		return true
+	}
+	return f.namespace.Matches(labels.Set(obj.GetLabels()))
+}
+
+func (f *LabelSelectorFilters) HasNamespaceSelector() bool {
+	return f != nil && f.namespace != nil && !f.namespace.Empty()
+}
+
+func (f *LabelSelectorFilters) IsEmpty() bool {
+	return f == nil || ((f.namespace == nil || f.namespace.Empty()) && (f.object == nil || f.object.Empty()))
+}
+
+func (f *LabelSelectorFilters) MatchObject(obj metav1.Object) bool {
+	if f == nil || f.object == nil || f.object.Empty() {
+		return true
+	}
+	return f.object.Matches(labels.Set(obj.GetLabels()))
 }
 
 // Discover routes to the appropriate discovery path based on whether the client
@@ -130,11 +161,16 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		return nil, err
 	}
 
+	labelFilters, err := labelSelectorFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// If we can discover the cluster asset, then we use that as root and build all
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -150,7 +186,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
 	}
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +203,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
 
 		// We don't want to discover the namespaces again since we have already done this above
-		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, imgFilter)
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, labelFilters, od, imgFilter)
 		if err != nil {
 			return nil, err
 		}
@@ -204,11 +240,16 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		return nil, err
 	}
 
+	labelFilters, err := labelSelectorFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// If we can discover the cluster asset, then we use that as root and build all
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 && labelFilters.IsEmpty() {
 		assetId, err := conn.AssetId()
 		if err == nil {
 			root := &inventory.Asset{
@@ -228,7 +269,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 	// Discover namespaces and emit them as scannable assets with platform IDs
 	// and discovery targets. Override each namespace's connection config to
 	// route to stage 2 when the client connects to it later.
-	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter, labelFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +335,11 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 		return nil, err
 	}
 
+	labelFilters, err := labelSelectorFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// Resolve the namespace's platform ID for use as the ownership root
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
@@ -303,11 +349,14 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	if err != nil {
 		return nil, fmt.Errorf("failed to get namespace %q: %w", nsName, err)
 	}
+	if !labelFilters.MatchNamespace(nsObj) {
+		return in, nil
+	}
 	namespacePlatformId := shared.NewNamespacePlatformId(basePlatformId, nsName, string(nsObj.UID))
 
 	od := NewPlatformIdOwnershipIndex(namespacePlatformId)
 
-	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od, imgFilter)
+	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, labelFilters, od, imgFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -324,6 +373,7 @@ func discoverAssets(
 	k8s *mqlK8s,
 	nsFilter FilterOpts,
 	resFilters *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 	od *PlatformIdOwnershipIndex,
 	imgFilter FilterOpts,
 ) ([]*inventory.Asset, error) {
@@ -332,77 +382,77 @@ func discoverAssets(
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
 		if target == DiscoveryPods || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryJobs || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryCronJobs || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryServices || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverServices(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverServices(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryStatefulSets || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDeployments || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryReplicaSets || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDaemonSets || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryIngresses || target == DiscoveryAuto || target == DiscoveryAll {
-			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
+			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryAdmissionReviews {
-			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, od, nsFilter, labelFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryContainerImages || target == DiscoveryAll {
-			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter, imgFilter)
+			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter, labelFilters, imgFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -420,6 +470,7 @@ func discoverPods(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
@@ -446,6 +497,10 @@ func discoverPods(
 
 		k8sMeta, err := meta.Accessor(pod.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -489,6 +544,7 @@ func discoverJobs(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	jobs := k8s.GetJobs()
 	if jobs.Error != nil {
@@ -515,6 +571,10 @@ func discoverJobs(
 
 		k8sMeta, err := meta.Accessor(job.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -558,6 +618,7 @@ func discoverServices(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	cjs := k8s.GetServices()
 	if cjs.Error != nil {
@@ -588,6 +649,10 @@ func discoverServices(
 
 		k8sMeta, err := meta.Accessor(serv.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -623,6 +688,7 @@ func discoverCronJobs(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	cjs := k8s.GetCronjobs()
 	if cjs.Error != nil {
@@ -653,6 +719,10 @@ func discoverCronJobs(
 
 		k8sMeta, err := meta.Accessor(cjob.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -688,6 +758,7 @@ func discoverStatefulSets(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	ss := k8s.GetStatefulsets()
 	if ss.Error != nil {
@@ -718,6 +789,10 @@ func discoverStatefulSets(
 
 		k8sMeta, err := meta.Accessor(statefulset.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -753,6 +828,7 @@ func discoverDeployments(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDeployments()
 	if ds.Error != nil {
@@ -783,6 +859,10 @@ func discoverDeployments(
 
 		k8sMeta, err := meta.Accessor(deployment.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -818,6 +898,7 @@ func discoverReplicaSets(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	rs := k8s.GetReplicasets()
 	if rs.Error != nil {
@@ -844,6 +925,10 @@ func discoverReplicaSets(
 
 		k8sMeta, err := meta.Accessor(replicaset.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -887,6 +972,7 @@ func discoverDaemonSets(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDaemonsets()
 	if ds.Error != nil {
@@ -917,6 +1003,10 @@ func discoverDaemonSets(
 
 		k8sMeta, err := meta.Accessor(daemonset.obj)
 		if err != nil {
+			continue
+		}
+
+		if !labelFilters.MatchObject(k8sMeta) {
 			continue
 		}
 
@@ -951,6 +1041,7 @@ func discoverAdmissionReviews(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	admissionReviews, err := conn.AdmissionReviews()
 	if err != nil {
@@ -961,9 +1052,12 @@ func discoverAdmissionReviews(
 	for i := range admissionReviews {
 		aReview := admissionReviews[i]
 
-		asset, err := assetFromAdmissionReview(conn, aReview, conn.Runtime(), invConfig, clusterId)
+		asset, matched, err := assetFromAdmissionReview(conn, aReview, conn.Runtime(), invConfig, clusterId, nsFilter, labelFilters)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from admission review")
+		}
+		if !matched {
+			continue
 		}
 
 		log.Debug().Str("connection", asset.Connections[0].Host).Msg("resolved AdmissionReview")
@@ -982,6 +1076,7 @@ func discoverIngresses(
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	is := k8s.GetIngresses()
 	if is.Error != nil {
@@ -1015,6 +1110,10 @@ func discoverIngresses(
 			continue
 		}
 
+		if !labelFilters.MatchObject(k8sMeta) {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range ingress.GetLabels().Data {
 			labels[k] = v.(string)
@@ -1045,6 +1144,7 @@ func discoverNamespaces(
 	clusterId string,
 	od *PlatformIdOwnershipIndex,
 	nsFilter FilterOpts,
+	labelFilters *LabelSelectorFilters,
 ) ([]*inventory.Asset, error) {
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
@@ -1077,6 +1177,10 @@ func discoverNamespaces(
 			continue
 		}
 
+		if !labelFilters.MatchNamespace(&ns) {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range ns.Labels {
 			labels[k] = v
@@ -1103,7 +1207,7 @@ func discoverNamespaces(
 	return assetList, nil
 }
 
-func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, imgFilter FilterOpts) ([]*inventory.Asset, error) {
+func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, labelFilters *LabelSelectorFilters, imgFilter FilterOpts) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -1119,6 +1223,9 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 
 		podObj, err := pod.getPod()
 		if err != nil {
+			continue
+		}
+		if !labelFilters.MatchObject(podObj) {
 			continue
 		}
 
@@ -1184,34 +1291,62 @@ func addMondooAssetLabels(assetLabels map[string]string, objMeta metav1.Object, 
 	}
 }
 
-func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionReview, runtime string, connection *inventory.Config, clusterIdentifier string) (*inventory.Asset, error) {
+func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionReview, runtime string, connection *inventory.Config, clusterIdentifier string, nsFilter FilterOpts, labelFilters *LabelSelectorFilters) (*inventory.Asset, bool, error) {
 	// Use the meta from the request object.
+	if a.Request == nil {
+		return nil, false, errors.New("admission review request is nil")
+	}
+	if len(a.Request.Object.Raw) == 0 {
+		return nil, false, errors.New("admission review request object is empty")
+	}
 	obj, err := resources.ResourcesFromManifest(bytes.NewReader(a.Request.Object.Raw))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse object from admission review")
-		return nil, err
+		return nil, false, err
+	}
+	if len(obj) == 0 {
+		return nil, false, errors.New("admission review request object did not contain any resources")
 	}
 	objMeta, err := meta.Accessor(obj[0])
 	if err != nil {
 		log.Error().Err(err).Msg("could not access object attributes")
-		return nil, err
+		return nil, false, err
 	}
-	objType, err := meta.TypeAccessor(&a)
+	objType, err := meta.TypeAccessor(obj[0])
 	if err != nil {
 		log.Error().Err(err).Msg("could not access object attributes")
-		return nil, err
+		return nil, false, err
+	}
+	objNamespace := admissionReviewObjectNamespace(a, objMeta)
+	if skip := nsFilter.skip(objNamespace); skip {
+		return nil, false, nil
+	}
+	if labelFilters.HasNamespaceSelector() {
+		switch {
+		case objType.GetKind() == "Namespace":
+			if !labelFilters.MatchNamespace(objMeta) {
+				return nil, false, nil
+			}
+		case objNamespace != "":
+			log.Warn().
+				Str("namespace", objNamespace).
+				Str("kind", objType.GetKind()).
+				Str("object", objMeta.GetName()).
+				Msg("skipping admission review object because namespace labels are unavailable for namespace-label-selector filtering")
+			return nil, false, nil
+		}
+	}
+	if !labelFilters.MatchObject(objMeta) {
+		return nil, false, nil
 	}
 
 	basePlatformId, err := conn.BasePlatformId()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	objectKind := objType.GetKind()
-	platformData, err := createPlatformData(a.Kind, runtime)
-	if err != nil {
-		return nil, err
-	}
+	platformData := createAdmissionReviewObjectPlatformData(objectKind, runtime)
 	platformData.Version = objType.GetAPIVersion()
 	platformData.Build = objMeta.GetResourceVersion()
 	platformData.Labels = map[string]string{
@@ -1243,7 +1378,34 @@ func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionRev
 		Category:    conn.Asset().Category,
 	}
 
-	return asset, nil
+	return asset, true, nil
+}
+
+func createAdmissionReviewObjectPlatformData(objectKind, runtime string) *inventory.Platform {
+	platformData, err := createPlatformData(objectKind, runtime)
+	if err == nil {
+		return platformData
+	}
+
+	platformName := "k8s-object"
+	return &inventory.Platform{
+		Family:                []string{"k8s"},
+		Kind:                  "k8s-object",
+		Runtime:               runtime,
+		Name:                  platformName,
+		Title:                 "Kubernetes " + objectKind,
+		TechnologyUrlSegments: []string{"k8s", platformName},
+	}
+}
+
+func admissionReviewObjectNamespace(a admissionv1.AdmissionReview, objMeta metav1.Object) string {
+	if objMeta != nil && objMeta.GetNamespace() != "" {
+		return objMeta.GetNamespace()
+	}
+	if a.Request != nil {
+		return a.Request.Namespace
+	}
+	return ""
 }
 
 func createPlatformData(objectKind, runtime string) (*inventory.Platform, error) {
@@ -1416,6 +1578,44 @@ func setImageFilters(cfg *inventory.Config) (FilterOpts, error) {
 		return FilterOpts{}, fmt.Errorf("--images and --images-exclude are mutually exclusive")
 	}
 	return newFilterOpts(includeVals, excludeVals)
+}
+
+func labelSelectorFilters(cfg *inventory.Config) (*LabelSelectorFilters, error) {
+	filters := &LabelSelectorFilters{
+		namespace: labels.Everything(),
+		object:    labels.Everything(),
+	}
+
+	if raw, ok := cfg.Options[shared.OPTION_NAMESPACE_LABEL_SELECTOR]; ok {
+		selector, err := parseLabelSelectorOption(shared.OPTION_NAMESPACE_LABEL_SELECTOR, raw)
+		if err != nil {
+			return nil, err
+		}
+		filters.namespace = selector
+	}
+
+	if raw, ok := cfg.Options[shared.OPTION_OBJECT_LABEL_SELECTOR]; ok {
+		selector, err := parseLabelSelectorOption(shared.OPTION_OBJECT_LABEL_SELECTOR, raw)
+		if err != nil {
+			return nil, err
+		}
+		filters.object = selector
+	}
+
+	return filters, nil
+}
+
+func parseLabelSelectorOption(option, raw string) (labels.Selector, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return labels.Everything(), nil
+	}
+
+	selector, err := labels.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid %s label selector: %w", option, err)
+	}
+	return selector, nil
 }
 
 func setNamespaceFilters(cfg *inventory.Config) (FilterOpts, error) {

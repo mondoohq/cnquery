@@ -17,18 +17,20 @@ import (
 )
 
 const (
-	OPTION_GIT_HTTP          = "http-url"
-	OPTION_MANIFEST          = "path"
-	OPTION_IMMEMORY_CONTENT  = "manifest-content"
-	OPTION_NAMESPACE         = "namespaces"
-	OPTION_NAMESPACE_EXCLUDE = "namespaces-exclude"
-	OPTION_IMAGES            = "images"
-	OPTION_IMAGES_EXCLUDE    = "images-exclude"
-	OPTION_ADMISSION         = "k8s-admission-review"
-	OPTION_OBJECT_KIND       = "object-kind"
-	OPTION_CONTEXT           = "context"
-	OPTION_KUBELOGIN         = "kubelogin"
-	IdPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
+	OPTION_GIT_HTTP                 = "http-url"
+	OPTION_MANIFEST                 = "path"
+	OPTION_IMMEMORY_CONTENT         = "manifest-content"
+	OPTION_NAMESPACE                = "namespaces"
+	OPTION_NAMESPACE_EXCLUDE        = "namespaces-exclude"
+	OPTION_NAMESPACE_LABEL_SELECTOR = "namespace-label-selector"
+	OPTION_OBJECT_LABEL_SELECTOR    = "object-label-selector"
+	OPTION_IMAGES                   = "images"
+	OPTION_IMAGES_EXCLUDE           = "images-exclude"
+	OPTION_ADMISSION                = "k8s-admission-review"
+	OPTION_OBJECT_KIND              = "object-kind"
+	OPTION_CONTEXT                  = "context"
+	OPTION_KUBELOGIN                = "kubelogin"
+	IdPrefix                        = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 
 type ConnectionType string
