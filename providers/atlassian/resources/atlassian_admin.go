@@ -45,6 +45,13 @@ func parseAtlassianTime(s string) *time.Time {
 	return &t
 }
 
+// productAccess is one entry of a managed user's product-access list,
+// flattened to the name and the (nullable) last-active timestamp.
+type productAccess struct {
+	Name       string
+	LastActive *time.Time
+}
+
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn, ok := runtime.Connection.(*admin.AdminConnection)
 	if !ok {
@@ -62,7 +69,7 @@ func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, errors.New("no organization found for this API key")
 	}
 	if len(organization.Data) > 1 {
-		return nil, nil, errors.New("Unexpectedly received more than 1 organization")
+		return nil, nil, errors.New("unexpectedly received more than 1 organization")
 	}
 	org := organization.Data[0]
 
@@ -89,15 +96,10 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]any, error) {
 			return nil, err
 		}
 		for _, user := range managedUsers.Data {
-
-			type ProductAccess struct {
-				Name       string
-				LastActive *time.Time
-			}
-			var products []ProductAccess
+			var products []productAccess
 
 			for i := range user.ProductAccess {
-				products = append(products, ProductAccess{
+				products = append(products, productAccess{
 					Name:       user.ProductAccess[i].Name,
 					LastActive: parseAtlassianTime(user.ProductAccess[i].LastActive),
 				})
