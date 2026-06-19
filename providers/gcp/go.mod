@@ -14,7 +14,7 @@ require (
 	cloud.google.com/go/backupdr v1.14.0
 	cloud.google.com/go/batch v1.19.0
 	cloud.google.com/go/bigquery v1.77.0
-	cloud.google.com/go/bigtable v1.49.0
+	cloud.google.com/go/bigtable v1.50.0
 	cloud.google.com/go/certificatemanager v1.14.0
 	cloud.google.com/go/cloudbuild v1.30.0
 	cloud.google.com/go/cloudtasks v1.18.0
@@ -49,7 +49,7 @@ require (
 	cloud.google.com/go/security v1.25.0
 	cloud.google.com/go/securitycenter v1.44.0
 	cloud.google.com/go/serviceusage v1.14.0
-	cloud.google.com/go/spanner v1.91.0
+	cloud.google.com/go/spanner v1.92.0
 	github.com/aws/smithy-go v1.27.2
 	github.com/cockroachdb/errors v1.13.0
 	github.com/google/go-containerregistry v0.21.6
