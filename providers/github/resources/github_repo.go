@@ -1438,8 +1438,15 @@ func (g *mqlGithubRepository) workflows() ([]any, error) {
 	for {
 		workflows, resp, err := conn.Client().Actions.ListWorkflows(conn.Context(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
+			// The Actions API returns 404/403 when the token lacks the "Actions"
+			// (read) permission on a fine-grained PAT, or the full "repo" scope on
+			// a classic PAT (and also when Actions is disabled on the repository).
+			// Surface this instead of returning an empty list: an empty list makes
+			// a security check (e.g. "packages are scanned for vulnerabilities")
+			// silently FAIL as if no scanning workflow were configured, when in
+			// fact the scanner simply could not read the workflows.
+			if isAccessDeniedOrNotFound(err) {
+				return nil, fmt.Errorf("cannot list workflows for %q: %w; grant the scanning token the \"Actions\" read permission (fine-grained PAT) or the full \"repo\" scope (classic PAT)", fullName, err)
 			}
 			return nil, err
 		}
