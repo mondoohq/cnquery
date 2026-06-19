@@ -215,3 +215,38 @@ func TestTaskDecoding(t *testing.T) {
 		assert.Equal(t, 5, len(task.Vars))
 	})
 }
+
+func TestMaxFailPercentageValue(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  any
+		want int64
+	}{
+		{"absent", nil, 0},
+		{"plain int", 30, 30},
+		{"int64", int64(45), 45},
+		{"float", 33.3, 33},
+		{"percent string", "30%", 30},
+		{"percent string with spaces", " 50 % ", 50},
+		{"bare numeric string", "20", 20},
+		{"empty string", "", 0},
+		{"garbage string", "abc", 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Play{MaxFailPercentage: tt.raw}
+			assert.Equal(t, tt.want, p.MaxFailPercentageValue())
+		})
+	}
+}
+
+// A percent-suffixed max_fail_percentage is valid Ansible (the field is typed
+// as a percent). It must not fail the whole playbook decode the way it would
+// when the struct field was a plain int.
+func TestMaxFailPercentagePercentStringDecodes(t *testing.T) {
+	data := []byte("- name: percent play\n  hosts: all\n  max_fail_percentage: 30%\n")
+	pb, err := DecodePlaybook(data)
+	require.NoError(t, err)
+	require.Len(t, pb, 1)
+	assert.Equal(t, int64(30), pb[0].MaxFailPercentageValue())
+}
