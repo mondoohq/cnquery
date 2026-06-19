@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/users"
 	"go.mondoo.com/mql/v13/utils/multierr"
@@ -181,7 +182,7 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 
 	res, ok := x.usersByID[id]
 	if !ok {
-		return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(id)))
+		return nil, resources.NotFoundError{Resource: "user", ID: strconv.Itoa(int(id))}
 	}
 	return res, nil
 }

@@ -174,11 +174,22 @@ func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {
 
 	user, err := users.findID(stat.Uid)
 	if err != nil {
-		return err
-	}
-	s.User = plugin.TValue[*mqlUser]{
-		Data:  user,
-		State: plugin.StateIsSet,
+		// A file owned by a uid with no passwd entry (a deleted user, or a
+		// minimal container image) resolves the owner to null and fails
+		// cleanly, rather than erroring the whole check. Other errors (e.g. the
+		// users list could not be loaded) still propagate.
+		var notFound resources.NotFoundError
+		if !errors.As(err, &notFound) {
+			return err
+		}
+		s.User = plugin.TValue[*mqlUser]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+	} else {
+		s.User = plugin.TValue[*mqlUser]{
+			Data:  user,
+			State: plugin.StateIsSet,
+		}
 	}
 
 	raw, err = CreateResource(s.MqlRuntime, "groups", nil)
@@ -189,11 +200,20 @@ func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {
 
 	group, err := groups.findID(stat.Gid)
 	if err != nil {
-		return err
-	}
-	s.Group = plugin.TValue[*mqlGroup]{
-		Data:  group,
-		State: plugin.StateIsSet,
+		// See the user lookup above: an unknown gid resolves to a null group
+		// rather than erroring the whole check.
+		var notFound resources.NotFoundError
+		if !errors.As(err, &notFound) {
+			return err
+		}
+		s.Group = plugin.TValue[*mqlGroup]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+	} else {
+		s.Group = plugin.TValue[*mqlGroup]{
+			Data:  group,
+			State: plugin.StateIsSet,
+		}
 	}
 
 	return nil
