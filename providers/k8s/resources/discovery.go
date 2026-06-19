@@ -42,6 +42,7 @@ const (
 	DiscoveryIngresses        = "ingresses"
 	DiscoveryNamespaces       = "namespaces"
 	DiscoveryServices         = "services"
+	DiscoveryKyverno          = "kyverno"
 )
 
 type FilterOpts struct {
@@ -208,7 +209,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 				Platform:    conn.Platform(),
 				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			}
-			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
+			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters, DiscoveryKyverno) && resFilters.IsEmpty() {
 				in.Spec.Assets = append(in.Spec.Assets, root)
 			}
 		} else {
@@ -287,7 +288,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 				Platform:    conn.Platform(),
 				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			}
-			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
+			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters, DiscoveryKyverno) && resFilters.IsEmpty() {
 				in.Spec.Assets = append(in.Spec.Assets, root)
 			}
 		} else {

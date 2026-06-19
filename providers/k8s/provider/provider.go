@@ -19,9 +19,28 @@ import (
 	"go.mondoo.com/mql/providers/k8s/connection/shared"
 	connectionResources "go.mondoo.com/mql/providers/k8s/connection/shared/resources"
 	"go.mondoo.com/mql/providers/k8s/resources"
+	"go.mondoo.com/mql/types"
 )
 
 const ConnectionType = "k8s"
+
+var kyvernoCLIOptions = []string{
+	shared.OPTION_KYVERNO_DEFAULT_MAPPINGS,
+	shared.OPTION_KYVERNO_MAPPING_ANNOTATION_CHECK_UIDS,
+	shared.OPTION_KYVERNO_MAPPING_ANNOTATION_CHECK_MRNS,
+	shared.OPTION_KYVERNO_MAPPING_ANNOTATION_POLICY_UIDS,
+	shared.OPTION_KYVERNO_MAPPING_ANNOTATION_REASONS,
+	shared.OPTION_KYVERNO_EXCEPTION_ANNOTATION_VALID_UNTIL,
+	shared.OPTION_KYVERNO_EXCEPTION_ANNOTATION_JUSTIFICATIONS,
+	shared.OPTION_KYVERNO_EXCEPTION_ANNOTATION_OWNERS,
+	shared.OPTION_KYVERNO_EXCEPTION_ANNOTATION_TICKETS,
+	shared.OPTION_KYVERNO_MIRROR_POLICY_EXCEPTIONS,
+	shared.OPTION_KYVERNO_MIRRORED_EXCEPTION_APPROVAL,
+	shared.OPTION_KYVERNO_MIRRORED_EXCEPTION_ACTION,
+	shared.OPTION_KYVERNO_FAIL_EXPIRED_POLICY_EXCEPTIONS,
+	shared.OPTION_KYVERNO_REPORT_UNMAPPED_POLICY_EXCEPTIONS,
+	shared.OPTION_KYVERNO_REPORT_UNMAPPED_POLICY_RESULTS,
+}
 
 type Service struct {
 	*plugin.Service
@@ -104,6 +123,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			conf.Options["container-proxy"] = proxyVal
 		}
 	}
+	for _, key := range kyvernoCLIOptions {
+		if flag, ok := flags[key]; ok {
+			conf.Options[key] = primitiveStringValue(flag)
+		}
+	}
 
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
@@ -122,6 +146,30 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &res, nil
+}
+
+func primitiveStringValue(flag *llx.Primitive) string {
+	if flag == nil {
+		return ""
+	}
+	if flag.Type == "bool" {
+		return string(flag.Value)
+	}
+	if flag.Type != "" && flag.Type != string(types.Bool) && flag.Type != string(types.String) {
+		return string(flag.Value)
+	}
+	raw := flag.RawData()
+	if raw == nil || raw.Error != nil {
+		return string(flag.Value)
+	}
+	switch v := raw.Value.(type) {
+	case bool:
+		return strconv.FormatBool(v)
+	case string:
+		return v
+	default:
+		return string(flag.Value)
+	}
 }
 
 func (s *Service) MockConnect(_ *plugin.ConnectReq, _ plugin.ProviderCallback) (*plugin.ConnectRes, error) {
