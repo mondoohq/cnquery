@@ -435,8 +435,17 @@ func (r *mqlCloudformationTemplate) types() ([]any, error) {
 	}
 	// GetTypes iterates the Resources section assuming an even mapping and
 	// dereferences Content[0]; skip when the template/Resources body is
-	// degenerate or malformed so the upstream stride-2 access can't panic.
-	if _, body, err := gatherMapValue(template.Node.Content[0], string(cft.Resources)); err != nil || !isEvenMappingNode(body) {
+	// degenerate or malformed so the upstream stride-2 access can't panic. A
+	// missing Resources section is a valid empty state, but any other
+	// gatherMapValue error is a real parse failure and must surface rather than
+	// be swallowed as "no types."
+	_, body, err := gatherMapValue(template.Node.Content[0], string(cft.Resources))
+	if err != nil && status.Code(err) == codes.NotFound {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	if !isEvenMappingNode(body) {
 		return nil, nil
 	}
 
