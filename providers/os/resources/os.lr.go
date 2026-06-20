@@ -355,6 +355,9 @@ const (
 	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
 	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
 	ResourceWindowsTelemetry                              string = "windows.telemetry"
+	ResourceWindowsTcpip                                  string = "windows.tcpip"
+	ResourceWindowsTcpipIpv6                              string = "windows.tcpip.ipv6"
+	ResourceWindowsTcpipNetbios                           string = "windows.tcpip.netbios"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1852,6 +1855,18 @@ func init() {
 		"windows.telemetry": {
 			// to override args, implement: initWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsTelemetry,
+		},
+		"windows.tcpip": {
+			Init:   initWindowsTcpip,
+			Create: createWindowsTcpip,
+		},
+		"windows.tcpip.ipv6": {
+			// to override args, implement: initWindowsTcpipIpv6(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsTcpipIpv6,
+		},
+		"windows.tcpip.netbios": {
+			// to override args, implement: initWindowsTcpipNetbios(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsTcpipNetbios,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8836,6 +8851,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.disableIpSourceRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetDisableIpSourceRouting()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.enableIcmpRedirect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetEnableIcmpRedirect()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.keepAliveTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetKeepAliveTime()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.performRouterDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetPerformRouterDiscovery()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.tcpMaxDataRetransmissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetTcpMaxDataRetransmissions()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetIpv6()).ToDataRes(types.Resource("windows.tcpip.ipv6"))
+	},
+	"windows.tcpip.netbios": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpip).GetNetbios()).ToDataRes(types.Resource("windows.tcpip.netbios"))
+	},
+	"windows.tcpip.ipv6.disableIpSourceRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpipIpv6).GetDisableIpSourceRouting()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.netbios.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpipNetbios).GetNodeType()).ToDataRes(types.Int)
+	},
+	"windows.tcpip.netbios.noNameReleaseOnDemand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTcpipNetbios).GetNoNameReleaseOnDemand()).ToDataRes(types.Int)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -21326,6 +21371,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.tcpip.disableIpSourceRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).DisableIpSourceRouting, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.enableIcmpRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).EnableIcmpRedirect, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.keepAliveTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).KeepAliveTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.performRouterDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).PerformRouterDiscovery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.tcpMaxDataRetransmissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).TcpMaxDataRetransmissions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).Ipv6, ok = plugin.RawToTValue[*mqlWindowsTcpipIpv6](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.netbios": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpip).Netbios, ok = plugin.RawToTValue[*mqlWindowsTcpipNetbios](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.ipv6.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpipIpv6).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.tcpip.ipv6.disableIpSourceRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpipIpv6).DisableIpSourceRouting, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.netbios.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpipNetbios).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.tcpip.netbios.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpipNetbios).NodeType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tcpip.netbios.noNameReleaseOnDemand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTcpipNetbios).NoNameReleaseOnDemand, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56138,6 +56235,212 @@ func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue
 	return plugin.GetOrCompute[int64](&c.DisableWindowsConsumerFeatures, func() (int64, error) {
 		return c.disableWindowsConsumerFeatures()
 	})
+}
+
+// mqlWindowsTcpip for the windows.tcpip resource
+type mqlWindowsTcpip struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsTcpipInternal it will be used here
+	DisableIpSourceRouting    plugin.TValue[int64]
+	EnableIcmpRedirect        plugin.TValue[int64]
+	KeepAliveTime             plugin.TValue[int64]
+	PerformRouterDiscovery    plugin.TValue[int64]
+	TcpMaxDataRetransmissions plugin.TValue[int64]
+	Ipv6                      plugin.TValue[*mqlWindowsTcpipIpv6]
+	Netbios                   plugin.TValue[*mqlWindowsTcpipNetbios]
+}
+
+// createWindowsTcpip creates a new instance of this resource
+func createWindowsTcpip(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsTcpip{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.tcpip", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsTcpip) MqlName() string {
+	return "windows.tcpip"
+}
+
+func (c *mqlWindowsTcpip) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsTcpip) GetDisableIpSourceRouting() *plugin.TValue[int64] {
+	return &c.DisableIpSourceRouting
+}
+
+func (c *mqlWindowsTcpip) GetEnableIcmpRedirect() *plugin.TValue[int64] {
+	return &c.EnableIcmpRedirect
+}
+
+func (c *mqlWindowsTcpip) GetKeepAliveTime() *plugin.TValue[int64] {
+	return &c.KeepAliveTime
+}
+
+func (c *mqlWindowsTcpip) GetPerformRouterDiscovery() *plugin.TValue[int64] {
+	return &c.PerformRouterDiscovery
+}
+
+func (c *mqlWindowsTcpip) GetTcpMaxDataRetransmissions() *plugin.TValue[int64] {
+	return &c.TcpMaxDataRetransmissions
+}
+
+func (c *mqlWindowsTcpip) GetIpv6() *plugin.TValue[*mqlWindowsTcpipIpv6] {
+	return plugin.GetOrCompute[*mqlWindowsTcpipIpv6](&c.Ipv6, func() (*mqlWindowsTcpipIpv6, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.tcpip", c.__id, "ipv6")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsTcpipIpv6), nil
+			}
+		}
+
+		return c.ipv6()
+	})
+}
+
+func (c *mqlWindowsTcpip) GetNetbios() *plugin.TValue[*mqlWindowsTcpipNetbios] {
+	return plugin.GetOrCompute[*mqlWindowsTcpipNetbios](&c.Netbios, func() (*mqlWindowsTcpipNetbios, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.tcpip", c.__id, "netbios")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsTcpipNetbios), nil
+			}
+		}
+
+		return c.netbios()
+	})
+}
+
+// mqlWindowsTcpipIpv6 for the windows.tcpip.ipv6 resource
+type mqlWindowsTcpipIpv6 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsTcpipIpv6Internal it will be used here
+	DisableIpSourceRouting plugin.TValue[int64]
+}
+
+// createWindowsTcpipIpv6 creates a new instance of this resource
+func createWindowsTcpipIpv6(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsTcpipIpv6{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.tcpip.ipv6", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsTcpipIpv6) MqlName() string {
+	return "windows.tcpip.ipv6"
+}
+
+func (c *mqlWindowsTcpipIpv6) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsTcpipIpv6) GetDisableIpSourceRouting() *plugin.TValue[int64] {
+	return &c.DisableIpSourceRouting
+}
+
+// mqlWindowsTcpipNetbios for the windows.tcpip.netbios resource
+type mqlWindowsTcpipNetbios struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsTcpipNetbiosInternal it will be used here
+	NodeType              plugin.TValue[int64]
+	NoNameReleaseOnDemand plugin.TValue[int64]
+}
+
+// createWindowsTcpipNetbios creates a new instance of this resource
+func createWindowsTcpipNetbios(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsTcpipNetbios{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.tcpip.netbios", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsTcpipNetbios) MqlName() string {
+	return "windows.tcpip.netbios"
+}
+
+func (c *mqlWindowsTcpipNetbios) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsTcpipNetbios) GetNodeType() *plugin.TValue[int64] {
+	return &c.NodeType
+}
+
+func (c *mqlWindowsTcpipNetbios) GetNoNameReleaseOnDemand() *plugin.TValue[int64] {
+	return &c.NoNameReleaseOnDemand
 }
 
 // mqlWindowsTpm for the windows.tpm resource

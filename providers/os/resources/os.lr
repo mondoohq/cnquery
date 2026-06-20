@@ -7507,6 +7507,81 @@ windows.telemetry {
   disableWindowsConsumerFeatures() int
 }
 
+// Windows TCP/IP and NetBIOS-over-TCP/IP network-hardening settings
+//
+// Examine the TCP/IP stack hardening DWORDs under HKLM\SYSTEM
+// \CurrentControlSet\Services\Tcpip\Parameters, the IPv6 equivalents under
+// Tcpip6\Parameters, and the NetBIOS-over-TCP/IP (NetBT) values under
+// NetBT\Parameters. These back the CIS Windows MSS and network controls. The
+// values are read directly from the registry, so this resource is available on
+// connections that cannot run commands. Each numeric field is null when the
+// underlying value is absent so that an explicit 0 can be distinguished from an
+// unconfigured value (Windows applies its built-in default in that case).
+windows.tcpip {
+  // Whether IPv4 source routing is disabled (Tcpip\Parameters\DisableIPSourceRouting)
+  //
+  // DWORD: 0=forward all packets, 1=do not forward source-routed packets,
+  // 2=highest protection, source routing is completely disabled. Null when the
+  // value is absent.
+  disableIpSourceRouting int
+  // Whether ICMP redirects override OSPF-generated routes (Tcpip\Parameters\EnableICMPRedirect)
+  //
+  // DWORD: 0=disabled (do not allow ICMP redirects), 1=enabled. Null when the
+  // value is absent.
+  enableIcmpRedirect int
+  // How often TCP sends keep-alive packets, in milliseconds (Tcpip\Parameters\KeepAliveTime)
+  //
+  // DWORD measured in milliseconds. Null when the value is absent.
+  keepAliveTime int
+  // Whether router discovery (ICMP Router Discovery Protocol) is enabled (Tcpip\Parameters\PerformRouterDiscovery)
+  //
+  // DWORD: 0=disabled, 1=enabled, 2=enable only if DHCP sends the option. Null
+  // when the value is absent.
+  performRouterDiscovery int
+  // How many times TCP retransmits an unacknowledged data segment (Tcpip\Parameters\TcpMaxDataRetransmissions)
+  //
+  // DWORD count of retransmission attempts. The value name is stored
+  // lower-cased on some systems; the lookup is case-insensitive. Null when the
+  // value is absent.
+  tcpMaxDataRetransmissions int
+  // IPv6 (Tcpip6) network-hardening settings
+  ipv6() windows.tcpip.ipv6
+  // NetBIOS-over-TCP/IP (NetBT) settings
+  netbios() windows.tcpip.netbios
+}
+
+// Windows IPv6 (Tcpip6) network-hardening settings
+//
+// Examine the IPv6 TCP/IP hardening DWORDs under HKLM\SYSTEM
+// \CurrentControlSet\Services\Tcpip6\Parameters. Each numeric field is null
+// when the underlying value is absent.
+private windows.tcpip.ipv6 @defaults("disableIpSourceRouting") {
+  // Whether IPv6 source routing is disabled (Tcpip6\Parameters\DisableIPSourceRouting)
+  //
+  // DWORD: 0=forward all packets, 1=do not forward source-routed packets,
+  // 2=highest protection, source routing is completely disabled. Null when the
+  // value is absent.
+  disableIpSourceRouting int
+}
+
+// Windows NetBIOS-over-TCP/IP (NetBT) settings
+//
+// Examine the NetBIOS-over-TCP/IP DWORDs under HKLM\SYSTEM
+// \CurrentControlSet\Services\NetBT\Parameters. Each numeric field is null when
+// the underlying value is absent.
+private windows.tcpip.netbios @defaults("nodeType noNameReleaseOnDemand") {
+  // The NetBIOS name resolution node type (NetBT\Parameters\NodeType)
+  //
+  // DWORD: 1=B-node (broadcast), 2=P-node (point-to-point), 4=M-node (mixed),
+  // 8=H-node (hybrid). Null when the value is absent.
+  nodeType int
+  // Whether the computer ignores NetBIOS name-release requests except from WINS servers (NetBT\Parameters\NoNameReleaseOnDemand)
+  //
+  // DWORD: 0=respond to all release requests, 1=ignore release requests except
+  // from WINS servers. Null when the value is absent.
+  noNameReleaseOnDemand int
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,

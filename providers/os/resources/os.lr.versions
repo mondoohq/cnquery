@@ -3261,6 +3261,17 @@ windows.spooler.rpcAuthnLevelPrivacyEnabled 13.29.1
 windows.spooler.startMode 13.29.1
 windows.spooler.webPnpDownloadDisabled 13.29.1
 windows.spooler.windowsProtectedPrintGroupPolicyState 13.29.1
+windows.tcpip 13.29.1
+windows.tcpip.disableIpSourceRouting 13.29.1
+windows.tcpip.enableIcmpRedirect 13.29.1
+windows.tcpip.ipv6 13.29.1
+windows.tcpip.ipv6.disableIpSourceRouting 13.29.1
+windows.tcpip.keepAliveTime 13.29.1
+windows.tcpip.netbios 13.29.1
+windows.tcpip.netbios.noNameReleaseOnDemand 13.29.1
+windows.tcpip.netbios.nodeType 13.29.1
+windows.tcpip.performRouterDiscovery 13.29.1
+windows.tcpip.tcpMaxDataRetransmissions 13.29.1
 windows.telemetry 13.29.1
 windows.telemetry.allowTelemetry 13.29.1
 windows.telemetry.disableCloudOptimizedContent 13.29.1
