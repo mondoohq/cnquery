@@ -26,36 +26,6 @@ func setDict(v any) plugin.TValue[any] {
 	return plugin.TValue[any]{Data: v, State: plugin.StateIsSet}
 }
 
-func TestPrincipalsIncludeWildcard(t *testing.T) {
-	tests := []struct {
-		name       string
-		principals map[string]any
-		want       bool
-	}{
-		{"AWS wildcard", map[string]any{"AWS": []any{"*"}}, true},
-		{"bare wildcard key", map[string]any{"*": []any{"*"}}, true},
-		{"mixed with wildcard", map[string]any{"AWS": []any{"arn:aws:iam::123456789012:root", "*"}}, true},
-		{"specific account only", map[string]any{"AWS": []any{"arn:aws:iam::123456789012:root"}}, false},
-		{"service principal", map[string]any{"Service": []any{"s3.amazonaws.com"}}, false},
-		{"empty", map[string]any{}, false},
-		{"nil", nil, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, principalsIncludeWildcard(tt.principals))
-		})
-	}
-}
-
-func TestDictIsEmpty(t *testing.T) {
-	assert.True(t, dictIsEmpty(nil))
-	assert.True(t, dictIsEmpty(map[string]any{}))
-	assert.False(t, dictIsEmpty(map[string]any{"StringEquals": map[string]any{"aws:PrincipalOrgID": "o-123"}}))
-	// A non-map condition value is treated as "not empty" — we can't prove it
-	// scopes nothing, so we don't claim the statement is unconditionally public.
-	assert.False(t, dictIsEmpty("unexpected"))
-}
-
 func TestPolicyStatementHasPublicPrincipal(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -84,7 +54,11 @@ func TestPolicyStatementHasPublicPrincipal(t *testing.T) {
 func TestStatementsAllowPublic(t *testing.T) {
 	wildcard := map[string]any{"AWS": []any{"*"}}
 	specific := map[string]any{"AWS": []any{"arn:aws:iam::123456789012:root"}}
+	// A condition on a source-scoping key makes a wildcard grant private.
 	scopingCondition := map[string]any{"StringEquals": map[string]any{"aws:PrincipalOrgID": "o-123"}}
+	// A condition that does NOT scope the principal (region) leaves the grant
+	// effectively public — this is the behaviour shared with allowsPublicAccess.
+	regionCondition := map[string]any{"StringEquals": map[string]any{"aws:RequestedRegion": "us-east-1"}}
 
 	newStmt := func(effect string, principals map[string]any, conditions any) *mqlAwsIamPolicyStatement {
 		return &mqlAwsIamPolicyStatement{
@@ -100,7 +74,8 @@ func TestStatementsAllowPublic(t *testing.T) {
 		want       bool
 	}{
 		{"public, no conditions", []any{newStmt("Allow", wildcard, nil)}, true},
-		{"public but scoped by condition", []any{newStmt("Allow", wildcard, scopingCondition)}, false},
+		{"public scoped by source condition", []any{newStmt("Allow", wildcard, scopingCondition)}, false},
+		{"public with non-scoping region condition", []any{newStmt("Allow", wildcard, regionCondition)}, true},
 		{"wildcard but denied", []any{newStmt("Deny", wildcard, nil)}, false},
 		{"specific principal", []any{newStmt("Allow", specific, nil)}, false},
 		{"no statements", []any{}, false},

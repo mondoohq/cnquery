@@ -269,7 +269,7 @@ func (a *mqlAwsS3Bucket) policyStatements() ([]any, error) {
 // wildcard principal ("*"). It is a structural predicate — it does not evaluate
 // conditions — mirroring hasWildcardAction and hasWildcardResource. Callers that
 // need "effectively public" should also check that conditions do not scope the
-// grant (see the resource-level isPublic fields, which do).
+// grant (see statementsAllowPublic / the resource-level isPublic fields).
 func (a *mqlAwsIamPolicyStatement) hasPublicPrincipal() (bool, error) {
 	effect := a.GetEffect()
 	if effect.Error != nil {
@@ -282,70 +282,42 @@ func (a *mqlAwsIamPolicyStatement) hasPublicPrincipal() (bool, error) {
 	if principals.Error != nil {
 		return false, principals.Error
 	}
-	return principalsIncludeWildcard(principals.Data), nil
+	return hasWildcardPrincipal(principals.Data), nil
 }
 
-// principalsIncludeWildcard reports whether a parsed principal map grants to "*"
-// — either as a key (the bare `"Principal": "*"` form) or as a value under a
-// type such as AWS (`"Principal": {"AWS": "*"}`).
-func principalsIncludeWildcard(principals map[string]any) bool {
-	for key, v := range principals {
-		if key == "*" {
-			return true
-		}
-		vals, ok := v.([]any)
-		if !ok {
-			continue
-		}
-		for _, x := range vals {
-			if s, ok := x.(string); ok && s == "*" {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// statementsAllowPublic reports whether any statement grants access to a
-// wildcard principal without scoping conditions. A wildcard principal narrowed
-// by a condition (organization id, source account/ARN, VPC, and so on) is the
-// standard cross-account sharing pattern rather than public exposure, so
-// conditioned statements are excluded.
+// statementsAllowPublic reports whether any statement grants a wildcard
+// principal access that is not scoped by a condition on aws:SourceArn,
+// aws:SourceAccount, or aws:PrincipalOrgID. It shares hasWildcardPrincipal and
+// hasSourceScopingCondition with aws.lambda.function.allowsPublicAccess so the
+// two predicates cannot disagree; conditions that don't scope the principal
+// (for example aws:RequestedRegion) do not make a public grant private.
 func statementsAllowPublic(statements []any) (bool, error) {
 	for _, s := range statements {
 		stmt, ok := s.(*mqlAwsIamPolicyStatement)
 		if !ok {
 			continue
 		}
-		public := stmt.GetHasPublicPrincipal()
-		if public.Error != nil {
-			return false, public.Error
+		public, err := stmt.hasPublicPrincipal()
+		if err != nil {
+			return false, err
 		}
-		if !public.Data {
+		if !public {
 			continue
 		}
 		conditions := stmt.GetConditions()
 		if conditions.Error != nil {
 			return false, conditions.Error
 		}
-		if dictIsEmpty(conditions.Data) {
+		if !hasSourceScopingCondition(conditions.Data) {
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-func dictIsEmpty(d any) bool {
-	if d == nil {
-		return true
-	}
-	m, ok := d.(map[string]any)
-	return ok && len(m) == 0
-}
-
 // resourceIsPublic is shared by the resource-level isPublic fields: a resource
 // is public when its policy contains a statement that grants to a wildcard
-// principal without scoping conditions.
+// principal without a source-scoping condition.
 func resourceIsPublic(statements *plugin.TValue[[]any]) (bool, error) {
 	if statements.Error != nil {
 		return false, statements.Error
