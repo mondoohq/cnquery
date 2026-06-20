@@ -151,19 +151,28 @@ private hetzner.server.firewallBinding @defaults("status") {
   status string
 }
 
-// Server internet-exposure breakdown
+// Internet-exposure breakdown
 //
-// Explains whether a server is reachable from the internet: whether it has a
-// public IP and whether its firewalls admit inbound traffic from any address —
-// including the case where no firewall is attached, which leaves it open.
+// Explains whether a resource is reachable from the internet: whether it has a
+// public IP and whether inbound traffic from any address is admitted. For a
+// server that means a firewall inbound rule open to the internet (or no firewall
+// attached at all); for a load balancer it means an enabled public network with
+// at least one forwarding service.
 private hetzner.network.exposure @defaults("internetReachable hasPublicIp") {
-  // Whether the server is reachable from the internet (a public IP and firewall ingress that admits any address)
+  // Whether the resource is reachable from the internet (a public IP and ingress that admits any address)
   internetReachable bool
-  // Whether the server has a public IPv4 or IPv6 address
+  // Whether the resource has a public IPv4 or IPv6 address
   hasPublicIp bool
-  // Whether inbound traffic from any address is admitted — a firewall inbound rule open to the internet, or no firewall attached at all
+  // Whether inbound traffic from any address is admitted
+  //
+  // For a server, a firewall inbound rule open to the internet or no firewall
+  // attached at all; for a load balancer, an enabled public network with at
+  // least one forwarding service.
   firewallAllowsIngress bool
-  // Firewall inbound rules that admit traffic from any address (0.0.0.0/0 or ::/0)
+  // Ingress rules or services that admit traffic from any address
+  //
+  // For a server, firewall inbound rules whose source is 0.0.0.0/0 or ::/0; for
+  // a load balancer, the forwarding services reachable on the public network.
   openIngressRules []dict
 }
 
@@ -415,6 +424,8 @@ hetzner.loadBalancer @defaults("id name") {
   services() []hetzner.loadBalancer.service
   // Targets behind the load balancer
   targets() []hetzner.loadBalancer.target
+  // Internet-exposure breakdown (public network combined with forwarding services)
+  exposure() hetzner.network.exposure
   // Resource protection (delete)
   protection dict
   // User-defined labels for organizing the resource

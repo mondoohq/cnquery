@@ -80,6 +80,7 @@ hetzner.isos 13.0.1
 hetzner.loadBalancer 13.0.1
 hetzner.loadBalancer.algorithm 13.0.1
 hetzner.loadBalancer.created 13.0.1
+hetzner.loadBalancer.exposure 13.3.1
 hetzner.loadBalancer.id 13.0.1
 hetzner.loadBalancer.includedTraffic 13.0.1
 hetzner.loadBalancer.ingoingTraffic 13.0.1

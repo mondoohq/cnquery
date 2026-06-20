@@ -4,8 +4,10 @@
 package resources
 
 import (
+	"net"
 	"testing"
 
+	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,4 +30,37 @@ func TestFirewallRuleOpenToInternet(t *testing.T) {
 			assert.Equal(t, tt.want, firewallRuleOpenToInternet(tt.rule))
 		})
 	}
+}
+
+func TestLoadBalancerHasPublicIp(t *testing.T) {
+	ipv4 := net.ParseIP("203.0.113.10")
+	ipv6 := net.ParseIP("2001:db8::1")
+	tests := []struct {
+		name string
+		pn   hcloud.LoadBalancerPublicNet
+		want bool
+	}{
+		{"disabled with ipv4", hcloud.LoadBalancerPublicNet{Enabled: false, IPv4: hcloud.LoadBalancerPublicNetIPv4{IP: ipv4}}, false},
+		{"enabled with ipv4", hcloud.LoadBalancerPublicNet{Enabled: true, IPv4: hcloud.LoadBalancerPublicNetIPv4{IP: ipv4}}, true},
+		{"enabled with ipv6 only", hcloud.LoadBalancerPublicNet{Enabled: true, IPv6: hcloud.LoadBalancerPublicNetIPv6{IP: ipv6}}, true},
+		{"enabled no ip", hcloud.LoadBalancerPublicNet{Enabled: true}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, loadBalancerHasPublicIp(tt.pn))
+		})
+	}
+}
+
+func TestLoadBalancerServiceDicts(t *testing.T) {
+	got := loadBalancerServiceDicts([]hcloud.LoadBalancerService{
+		{Protocol: hcloud.LoadBalancerServiceProtocolHTTPS, ListenPort: 443, DestinationPort: 8443},
+	})
+	assert.Len(t, got, 1)
+	d := got[0].(map[string]any)
+	assert.Equal(t, "https", d["protocol"])
+	assert.Equal(t, int64(443), d["listenPort"])
+	assert.Equal(t, int64(8443), d["destinationPort"])
+
+	assert.Empty(t, loadBalancerServiceDicts(nil))
 }

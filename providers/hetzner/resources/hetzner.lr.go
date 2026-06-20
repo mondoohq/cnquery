@@ -699,6 +699,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.loadBalancer.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetTargets()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.target")))
 	},
+	"hetzner.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancer).GetExposure()).ToDataRes(types.Resource("hetzner.network.exposure"))
+	},
 	"hetzner.loadBalancer.protection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetProtection()).ToDataRes(types.Dict)
 	},
@@ -1653,6 +1656,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.loadBalancer.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancer).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlHetznerNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"hetzner.loadBalancer.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3937,6 +3944,7 @@ type mqlHetznerLoadBalancer struct {
 	Algorithm        plugin.TValue[string]
 	Services         plugin.TValue[[]any]
 	Targets          plugin.TValue[[]any]
+	Exposure         plugin.TValue[*mqlHetznerNetworkExposure]
 	Protection       plugin.TValue[any]
 	Labels           plugin.TValue[map[string]any]
 	Created          plugin.TValue[*time.Time]
@@ -4075,6 +4083,22 @@ func (c *mqlHetznerLoadBalancer) GetTargets() *plugin.TValue[[]any] {
 		}
 
 		return c.targets()
+	})
+}
+
+func (c *mqlHetznerLoadBalancer) GetExposure() *plugin.TValue[*mqlHetznerNetworkExposure] {
+	return plugin.GetOrCompute[*mqlHetznerNetworkExposure](&c.Exposure, func() (*mqlHetznerNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 

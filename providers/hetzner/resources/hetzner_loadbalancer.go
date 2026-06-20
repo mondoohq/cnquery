@@ -18,6 +18,7 @@ type mqlHetznerLoadBalancerInternal struct {
 	cacheServices         []hcloud.LoadBalancerService
 	cacheTargets          []hcloud.LoadBalancerTarget
 	cachePrivateNet       []hcloud.LoadBalancerPrivateNet
+	cachePublicNet        hcloud.LoadBalancerPublicNet
 }
 
 func (r *mqlHetznerLoadBalancer) id() (string, error) {
@@ -72,6 +73,7 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 	m.cacheServices = lb.Services
 	m.cacheTargets = lb.Targets
 	m.cachePrivateNet = lb.PrivateNet
+	m.cachePublicNet = lb.PublicNet
 	return m, nil
 }
 
