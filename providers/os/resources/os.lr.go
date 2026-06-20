@@ -331,6 +331,7 @@ const (
 	ResourceWindowsUpdate                                 string = "windows.update"
 	ResourceWindowsUpdateEntry                            string = "windows.update.entry"
 	ResourceWindowsUpdateConfig                           string = "windows.update.config"
+	ResourceWindowsUpdatePolicy                           string = "windows.update.policy"
 	ResourceWindowsServerFeature                          string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature                        string = "windows.optionalFeature"
 	ResourceWindowsEventlog                               string = "windows.eventlog"
@@ -1736,6 +1737,10 @@ func init() {
 		"windows.update.config": {
 			// to override args, implement: initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsUpdateConfig,
+		},
+		"windows.update.policy": {
+			// to override args, implement: initWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsUpdatePolicy,
 		},
 		"windows.serverFeature": {
 			Init:   initWindowsServerFeature,
@@ -8167,6 +8172,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.update.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdate).GetConfig()).ToDataRes(types.Resource("windows.update.config"))
 	},
+	"windows.update.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdate).GetPolicy()).ToDataRes(types.Resource("windows.update.policy"))
+	},
 	"windows.update.installed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdate).GetInstalled()).ToDataRes(types.Array(types.Resource("windows.update.entry")))
 	},
@@ -8241,6 +8249,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.update.config.policyState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdateConfig).GetPolicyState()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.automaticUpdatesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAutomaticUpdatesEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.update.policy.noAutoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoUpdate()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallDay()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.scheduledInstallTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallTime()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoRebootWithLoggedOnUsers()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetManagePreviewBuilds()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdates()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdatesPeriodInDays()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdates()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdatesPeriodInDays()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAllowTemporaryEnterpriseFeatureControl()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.allowOptionalContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetAllowOptionalContent()).ToDataRes(types.Int)
+	},
+	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdatePolicy).GetDisablePauseUXAccess()).ToDataRes(types.Int)
 	},
 	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
@@ -19851,6 +19898,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsUpdate).Config, ok = plugin.RawToTValue[*mqlWindowsUpdateConfig](v.Value, v.Error)
 		return
 	},
+	"windows.update.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).Policy, ok = plugin.RawToTValue[*mqlWindowsUpdatePolicy](v.Value, v.Error)
+		return
+	},
 	"windows.update.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsUpdate).Installed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -19957,6 +20008,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.update.config.policyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsUpdateConfig).PolicyState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.update.policy.automaticUpdatesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AutomaticUpdatesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.noAutoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).NoAutoUpdate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ScheduledInstallDay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.scheduledInstallTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ScheduledInstallTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).NoAutoRebootWithLoggedOnUsers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).ManagePreviewBuilds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdatesPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdatesPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AllowTemporaryEnterpriseFeatureControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.allowOptionalContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).AllowOptionalContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdatePolicy).DisablePauseUXAccess, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52292,6 +52399,7 @@ type mqlWindowsUpdate struct {
 	__id       string
 	// optional: if you define mqlWindowsUpdateInternal it will be used here
 	Config    plugin.TValue[*mqlWindowsUpdateConfig]
+	Policy    plugin.TValue[*mqlWindowsUpdatePolicy]
 	Installed plugin.TValue[[]any]
 	Available plugin.TValue[[]any]
 }
@@ -52346,6 +52454,22 @@ func (c *mqlWindowsUpdate) GetConfig() *plugin.TValue[*mqlWindowsUpdateConfig] {
 		}
 
 		return c.config()
+	})
+}
+
+func (c *mqlWindowsUpdate) GetPolicy() *plugin.TValue[*mqlWindowsUpdatePolicy] {
+	return plugin.GetOrCompute[*mqlWindowsUpdatePolicy](&c.Policy, func() (*mqlWindowsUpdatePolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsUpdatePolicy), nil
+			}
+		}
+
+		return c.policy()
 	})
 }
 
@@ -52594,6 +52718,115 @@ func (c *mqlWindowsUpdateConfig) GetRebootPending() *plugin.TValue[bool] {
 
 func (c *mqlWindowsUpdateConfig) GetPolicyState() *plugin.TValue[int64] {
 	return &c.PolicyState
+}
+
+// mqlWindowsUpdatePolicy for the windows.update.policy resource
+type mqlWindowsUpdatePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsUpdatePolicyInternal it will be used here
+	AutomaticUpdatesEnabled                plugin.TValue[bool]
+	NoAutoUpdate                           plugin.TValue[int64]
+	ScheduledInstallDay                    plugin.TValue[int64]
+	ScheduledInstallTime                   plugin.TValue[int64]
+	NoAutoRebootWithLoggedOnUsers          plugin.TValue[int64]
+	ManagePreviewBuilds                    plugin.TValue[int64]
+	DeferFeatureUpdates                    plugin.TValue[int64]
+	DeferFeatureUpdatesPeriodInDays        plugin.TValue[int64]
+	DeferQualityUpdates                    plugin.TValue[int64]
+	DeferQualityUpdatesPeriodInDays        plugin.TValue[int64]
+	AllowTemporaryEnterpriseFeatureControl plugin.TValue[int64]
+	AllowOptionalContent                   plugin.TValue[int64]
+	DisablePauseUXAccess                   plugin.TValue[int64]
+}
+
+// createWindowsUpdatePolicy creates a new instance of this resource
+func createWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsUpdatePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.update.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsUpdatePolicy) MqlName() string {
+	return "windows.update.policy"
+}
+
+func (c *mqlWindowsUpdatePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAutomaticUpdatesEnabled() *plugin.TValue[bool] {
+	return &c.AutomaticUpdatesEnabled
+}
+
+func (c *mqlWindowsUpdatePolicy) GetNoAutoUpdate() *plugin.TValue[int64] {
+	return &c.NoAutoUpdate
+}
+
+func (c *mqlWindowsUpdatePolicy) GetScheduledInstallDay() *plugin.TValue[int64] {
+	return &c.ScheduledInstallDay
+}
+
+func (c *mqlWindowsUpdatePolicy) GetScheduledInstallTime() *plugin.TValue[int64] {
+	return &c.ScheduledInstallTime
+}
+
+func (c *mqlWindowsUpdatePolicy) GetNoAutoRebootWithLoggedOnUsers() *plugin.TValue[int64] {
+	return &c.NoAutoRebootWithLoggedOnUsers
+}
+
+func (c *mqlWindowsUpdatePolicy) GetManagePreviewBuilds() *plugin.TValue[int64] {
+	return &c.ManagePreviewBuilds
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdates() *plugin.TValue[int64] {
+	return &c.DeferFeatureUpdates
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdatesPeriodInDays() *plugin.TValue[int64] {
+	return &c.DeferFeatureUpdatesPeriodInDays
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdates() *plugin.TValue[int64] {
+	return &c.DeferQualityUpdates
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdatesPeriodInDays() *plugin.TValue[int64] {
+	return &c.DeferQualityUpdatesPeriodInDays
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAllowTemporaryEnterpriseFeatureControl() *plugin.TValue[int64] {
+	return &c.AllowTemporaryEnterpriseFeatureControl
+}
+
+func (c *mqlWindowsUpdatePolicy) GetAllowOptionalContent() *plugin.TValue[int64] {
+	return &c.AllowOptionalContent
+}
+
+func (c *mqlWindowsUpdatePolicy) GetDisablePauseUXAccess() *plugin.TValue[int64] {
+	return &c.DisablePauseUXAccess
 }
 
 // mqlWindowsServerFeature for the windows.serverFeature resource

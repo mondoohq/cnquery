@@ -6710,6 +6710,8 @@ windows.hotfix {
 windows.update {
   // Windows Update Agent configuration and freshness
   config() windows.update.config
+  // Windows Update for Business and Automatic Updates group policy configuration
+  policy() windows.update.policy
   // Updates that have been installed (Windows Update Agent history)
   installed() []windows.update.entry
   // Updates that are available but not yet installed
@@ -6799,6 +6801,50 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   rebootPending bool
   // Windows Update for Business policy state (HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState)
   policyState int
+}
+
+// Windows Update for Business and Automatic Updates group policy
+//
+// Examine the managed Windows Update policy as configured through group
+// policy (the "Windows Components > Windows Update" administrative templates).
+// Every value is read directly from the registry under
+// `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate` and its `AU`
+// subkey, so this resource works on any connection where the registry is
+// readable, including filesystem scans. Integer fields mirror the underlying
+// REG_DWORD policy values and are null when the corresponding policy is not
+// configured, which lets checks tell "explicitly set to 0" apart from "left
+// at the default".
+private windows.update.policy @defaults("automaticUpdatesEnabled noAutoUpdate scheduledInstallDay") {
+  // Whether automatic updates are configured and enabled (AU\NoAutoUpdate is present and 0)
+  automaticUpdatesEnabled bool
+  // Configure Automatic Updates state (AU\NoAutoUpdate): 0 = automatic updates enabled, 1 = disabled; null when not configured
+  noAutoUpdate int
+  // Scheduled install day (AU\ScheduledInstallDay): 0 = every day, 1-7 = Sunday-Saturday; null when not configured
+  scheduledInstallDay int
+  // Scheduled install time as the hour of day (AU\ScheduledInstallTime), 0-23; null when not configured
+  scheduledInstallTime int
+  // No auto-restart with logged on users for scheduled installations (AU\NoAutoRebootWithLoggedOnUsers)
+  //
+  // 1 = do not auto-restart while users are logged on, 0 = allow auto-restart; null when not configured.
+  noAutoRebootWithLoggedOnUsers int
+  // Manage preview builds (WindowsUpdate\ManagePreviewBuildsPolicyValue)
+  //
+  // 0 = disable preview builds, 1 = enable, 2 = enable for next release; null when not configured.
+  managePreviewBuilds int
+  // Whether feature update deferral is enabled (WindowsUpdate\DeferFeatureUpdates): 1 = enabled, 0 = disabled; null when not configured
+  deferFeatureUpdates int
+  // Number of days feature updates are deferred (WindowsUpdate\DeferFeatureUpdatesPeriodInDays); null when not configured
+  deferFeatureUpdatesPeriodInDays int
+  // Whether quality update deferral is enabled (WindowsUpdate\DeferQualityUpdates): 1 = enabled, 0 = disabled; null when not configured
+  deferQualityUpdates int
+  // Number of days quality updates are deferred (WindowsUpdate\DeferQualityUpdatesPeriodInDays); null when not configured
+  deferQualityUpdatesPeriodInDays int
+  // Allow temporary enterprise feature control (WindowsUpdate\AllowTemporaryEnterpriseFeatureControl): 0 = disabled, 1 = enabled; null when not configured
+  allowTemporaryEnterpriseFeatureControl int
+  // Enable optional updates / optional content (WindowsUpdate\SetAllowOptionalContent); null when not configured
+  allowOptionalContent int
+  // Remove access to pause updates (WindowsUpdate\SetDisablePauseUXAccess): 1 = remove the pause option, 0 = keep it; null when not configured
+  disablePauseUXAccess int
 }
 
 // Windows Server feature resource
