@@ -606,10 +606,32 @@ func (a *mqlAwsCloudfrontDistribution) protectedByWaf() (bool, error) {
 	return webAclId.Data != "", nil
 }
 
+// enforcesHttps reports whether every cache behavior — the default plus any
+// additional behaviors — requires viewers to use HTTPS. A single allow-all
+// behavior leaves a plaintext path open, so all are checked.
 func (a *mqlAwsCloudfrontDistribution) enforcesHttps() (bool, error) {
 	policy := a.GetViewerProtocolPolicy()
 	if policy.Error != nil {
 		return false, policy.Error
 	}
-	return viewerPolicyEnforcesHttps(policy.Data), nil
+	if !viewerPolicyEnforcesHttps(policy.Data) {
+		return false, nil
+	}
+
+	cacheBehaviors := a.GetCacheBehaviors()
+	if cacheBehaviors.Error != nil {
+		return false, cacheBehaviors.Error
+	}
+	for _, cb := range cacheBehaviors.Data {
+		behavior, ok := cb.(map[string]any)
+		if !ok {
+			continue
+		}
+		// aws-sdk-go-v2 types carry no json tags, so JsonToDict preserves the
+		// Go field name "ViewerProtocolPolicy".
+		if vp, ok := behavior["ViewerProtocolPolicy"].(string); ok && !viewerPolicyEnforcesHttps(vp) {
+			return false, nil
+		}
+	}
+	return true, nil
 }

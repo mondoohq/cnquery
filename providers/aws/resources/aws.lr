@@ -9291,7 +9291,7 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   webAcl() aws.waf.acl
   // Whether a WAF web ACL is associated with the distribution
   protectedByWaf() bool
-  // Whether viewers are required to use HTTPS (viewer protocol policy is not allow-all)
+  // Whether every cache behavior requires viewers to use HTTPS (no behavior uses the allow-all viewer protocol policy)
   enforcesHttps() bool
   // ID of the continuous deployment policy associated with the distribution (empty string when none)
   continuousDeploymentPolicyId() string

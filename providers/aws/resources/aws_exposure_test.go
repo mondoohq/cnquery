@@ -25,3 +25,13 @@ func TestListenerProtocolIsPlaintext(t *testing.T) {
 		assert.False(t, listenerProtocolIsPlaintext(p), p)
 	}
 }
+
+func TestListenerDescriptionProtocol(t *testing.T) {
+	// ALB/NLB shape: protocol at the top level.
+	assert.Equal(t, "HTTPS", listenerDescriptionProtocol(map[string]any{"Protocol": "HTTPS"}))
+	// Classic ELB shape: protocol nested under "Listener".
+	assert.Equal(t, "HTTP", listenerDescriptionProtocol(map[string]any{"Listener": map[string]any{"Protocol": "HTTP"}}))
+	// Neither shape present.
+	assert.Equal(t, "", listenerDescriptionProtocol(map[string]any{"PolicyNames": []any{}}))
+	assert.Equal(t, "", listenerDescriptionProtocol(map[string]any{}))
+}
