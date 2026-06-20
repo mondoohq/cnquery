@@ -8326,6 +8326,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetMaxDisconnectionTimeMs()).ToDataRes(types.Int)
 	},
+	"windows.rdp.connectionsDenied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetConnectionsDenied()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.singleSessionPerUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSingleSessionPerUser()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.perSessionTempDirsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetPerSessionTempDirsUsed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.solicitedRemoteAssistanceAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetSolicitedRemoteAssistanceAllowed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.offerRemoteAssistanceAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetOfferRemoteAssistanceAllowed()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.webAuthnRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetWebAuthnRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.locationRedirectionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetLocationRedirectionDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.uiAutomationRedirectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetUiAutomationRedirectionEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetClipboardServerToClientLevel()).ToDataRes(types.Int)
+	},
 	"windows.winrm.client": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrm).GetClient()).ToDataRes(types.Resource("windows.winrm.client"))
 	},
@@ -20085,6 +20112,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).MaxDisconnectionTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.connectionsDenied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).ConnectionsDenied, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.singleSessionPerUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SingleSessionPerUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.perSessionTempDirsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).PerSessionTempDirsUsed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.solicitedRemoteAssistanceAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).SolicitedRemoteAssistanceAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.offerRemoteAssistanceAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).OfferRemoteAssistanceAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.webAuthnRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).WebAuthnRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.locationRedirectionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).LocationRedirectionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.uiAutomationRedirectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).UiAutomationRedirectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).ClipboardServerToClientLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.winrm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52814,19 +52877,28 @@ type mqlWindowsRdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlWindowsRdpInternal
-	NetworkLevelAuthentication   plugin.TValue[bool]
-	AlwaysPromptForPassword      plugin.TValue[bool]
-	DriveRedirectionDisabled     plugin.TValue[bool]
-	ComPortRedirectionDisabled   plugin.TValue[bool]
-	LptPortRedirectionDisabled   plugin.TValue[bool]
-	PnpDeviceRedirectionDisabled plugin.TValue[bool]
-	PasswordSavingDisabled       plugin.TValue[bool]
-	DeleteTempDirsOnExit         plugin.TValue[bool]
-	SecureRpcRequired            plugin.TValue[bool]
-	SecurityLayer                plugin.TValue[int64]
-	MinEncryptionLevel           plugin.TValue[int64]
-	MaxIdleTimeMs                plugin.TValue[int64]
-	MaxDisconnectionTimeMs       plugin.TValue[int64]
+	NetworkLevelAuthentication       plugin.TValue[bool]
+	AlwaysPromptForPassword          plugin.TValue[bool]
+	DriveRedirectionDisabled         plugin.TValue[bool]
+	ComPortRedirectionDisabled       plugin.TValue[bool]
+	LptPortRedirectionDisabled       plugin.TValue[bool]
+	PnpDeviceRedirectionDisabled     plugin.TValue[bool]
+	PasswordSavingDisabled           plugin.TValue[bool]
+	DeleteTempDirsOnExit             plugin.TValue[bool]
+	SecureRpcRequired                plugin.TValue[bool]
+	SecurityLayer                    plugin.TValue[int64]
+	MinEncryptionLevel               plugin.TValue[int64]
+	MaxIdleTimeMs                    plugin.TValue[int64]
+	MaxDisconnectionTimeMs           plugin.TValue[int64]
+	ConnectionsDenied                plugin.TValue[bool]
+	SingleSessionPerUser             plugin.TValue[bool]
+	PerSessionTempDirsUsed           plugin.TValue[bool]
+	SolicitedRemoteAssistanceAllowed plugin.TValue[bool]
+	OfferRemoteAssistanceAllowed     plugin.TValue[bool]
+	WebAuthnRedirectionDisabled      plugin.TValue[bool]
+	LocationRedirectionDisabled      plugin.TValue[bool]
+	UiAutomationRedirectionEnabled   plugin.TValue[bool]
+	ClipboardServerToClientLevel     plugin.TValue[int64]
 }
 
 // createWindowsRdp creates a new instance of this resource
@@ -52941,6 +53013,60 @@ func (c *mqlWindowsRdp) GetMaxIdleTimeMs() *plugin.TValue[int64] {
 func (c *mqlWindowsRdp) GetMaxDisconnectionTimeMs() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.MaxDisconnectionTimeMs, func() (int64, error) {
 		return c.maxDisconnectionTimeMs()
+	})
+}
+
+func (c *mqlWindowsRdp) GetConnectionsDenied() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ConnectionsDenied, func() (bool, error) {
+		return c.connectionsDenied()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSingleSessionPerUser() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SingleSessionPerUser, func() (bool, error) {
+		return c.singleSessionPerUser()
+	})
+}
+
+func (c *mqlWindowsRdp) GetPerSessionTempDirsUsed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PerSessionTempDirsUsed, func() (bool, error) {
+		return c.perSessionTempDirsUsed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetSolicitedRemoteAssistanceAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SolicitedRemoteAssistanceAllowed, func() (bool, error) {
+		return c.solicitedRemoteAssistanceAllowed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetOfferRemoteAssistanceAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OfferRemoteAssistanceAllowed, func() (bool, error) {
+		return c.offerRemoteAssistanceAllowed()
+	})
+}
+
+func (c *mqlWindowsRdp) GetWebAuthnRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WebAuthnRedirectionDisabled, func() (bool, error) {
+		return c.webAuthnRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetLocationRedirectionDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocationRedirectionDisabled, func() (bool, error) {
+		return c.locationRedirectionDisabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetUiAutomationRedirectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UiAutomationRedirectionEnabled, func() (bool, error) {
+		return c.uiAutomationRedirectionEnabled()
+	})
+}
+
+func (c *mqlWindowsRdp) GetClipboardServerToClientLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ClipboardServerToClientLevel, func() (int64, error) {
+		return c.clipboardServerToClientLevel()
 	})
 }
 

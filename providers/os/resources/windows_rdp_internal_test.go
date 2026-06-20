@@ -36,3 +36,41 @@ func TestResolveRdpValue(t *testing.T) {
 		assert.Equal(t, int64(0), resolveRdpValue(policy, nil, "fEncryptRPCTraffic", 1))
 	})
 }
+
+// TestRdpSettingDefaults locks in the Windows default each newly added field
+// resolves to when neither group policy nor the effective key is configured.
+func TestRdpSettingDefaults(t *testing.T) {
+	cases := []struct {
+		name string
+		def  int64
+	}{
+		{"fDenyTSConnections", 1},
+		{"fSingleSessionPerUser", 1},
+		{"PerSessionTempDir", 1},
+		{"fAllowToGetHelp", 0},
+		{"fAllowUnsolicited", 0},
+		{"fDisableWebAuthn", 0},
+		{"fDisableLocationRedir", 0},
+		{"EnableUiaRedirection", 0},
+		{"SCClipLevel", 3},
+	}
+	for _, c := range cases {
+		t.Run(c.name+" default", func(t *testing.T) {
+			assert.Equal(t, c.def, resolveRdpValue(nil, nil, c.name, c.def))
+		})
+		t.Run(c.name+" policy overrides default", func(t *testing.T) {
+			policy := map[string]int64{toLowerASCII(c.name): 2}
+			assert.Equal(t, int64(2), resolveRdpValue(policy, nil, c.name, c.def))
+		})
+	}
+}
+
+func toLowerASCII(s string) string {
+	b := []byte(s)
+	for i := range b {
+		if b[i] >= 'A' && b[i] <= 'Z' {
+			b[i] += 'a' - 'A'
+		}
+	}
+	return string(b)
+}

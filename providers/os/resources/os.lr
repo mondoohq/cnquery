@@ -6901,6 +6901,28 @@ windows.rdp {
   maxIdleTimeMs() int
   // Time limit in milliseconds for disconnected sessions, 0 to never end them (MaxDisconnectionTime)
   maxDisconnectionTimeMs() int
+  // Whether Remote Desktop connections to this host are denied (fDenyTSConnections)
+  connectionsDenied() bool
+  // Whether each user is restricted to a single Remote Desktop session (fSingleSessionPerUser)
+  singleSessionPerUser() bool
+  // Whether per-session temporary folders are used (PerSessionTempDir)
+  perSessionTempDirsUsed() bool
+  // Whether solicited Remote Assistance (users requesting help) is allowed (fAllowToGetHelp)
+  solicitedRemoteAssistanceAllowed() bool
+  // Whether offer (unsolicited) Remote Assistance is allowed (fAllowUnsolicited)
+  offerRemoteAssistanceAllowed() bool
+  // Whether WebAuthn (FIDO2 security key) redirection is disabled (fDisableWebAuthn)
+  webAuthnRedirectionDisabled() bool
+  // Whether client location redirection is disabled (fDisableLocationRedir)
+  locationRedirectionDisabled() bool
+  // Whether UI Automation redirection is enabled (EnableUiaRedirection)
+  uiAutomationRedirectionEnabled() bool
+  // Server-to-client clipboard redirection level (SCClipLevel)
+  //
+  // The raw SCClipLevel DWORD. 0 disables clipboard transfers from the server
+  // to the client; higher values permit progressively more content. Resolves
+  // to 3 (unrestricted) when the policy is not configured.
+  clipboardServerToClientLevel() int
 }
 
 // Windows Remote Management (WinRM)

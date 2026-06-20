@@ -206,3 +206,49 @@ func (r *mqlWindowsRdp) maxDisconnectionTimeMs() (int64, error) {
 	// 0 == disconnected sessions are never ended
 	return r.resolve("MaxDisconnectionTime", rdpWinStations, 0)
 }
+
+func (r *mqlWindowsRdp) connectionsDenied() (bool, error) {
+	// Remote Desktop is denied by default until an administrator enables it
+	return r.resolveBool("fDenyTSConnections", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) singleSessionPerUser() (bool, error) {
+	// each user is restricted to a single session by default
+	return r.resolveBool("fSingleSessionPerUser", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) perSessionTempDirsUsed() (bool, error) {
+	// per-session temporary folders are used by default
+	return r.resolveBool("PerSessionTempDir", rdpTerminalServer, 1)
+}
+
+func (r *mqlWindowsRdp) solicitedRemoteAssistanceAllowed() (bool, error) {
+	// Remote Assistance is a policy-only setting; off when not configured
+	return r.resolveBool("fAllowToGetHelp", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) offerRemoteAssistanceAllowed() (bool, error) {
+	// offering unsolicited Remote Assistance is off when not configured
+	return r.resolveBool("fAllowUnsolicited", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) webAuthnRedirectionDisabled() (bool, error) {
+	// WebAuthn redirection is allowed (not disabled) when not configured
+	return r.resolveBool("fDisableWebAuthn", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) locationRedirectionDisabled() (bool, error) {
+	// location redirection is allowed (not disabled) when not configured
+	return r.resolveBool("fDisableLocationRedir", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) uiAutomationRedirectionEnabled() (bool, error) {
+	// UI Automation redirection is off when not configured
+	return r.resolveBool("EnableUiaRedirection", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) clipboardServerToClientLevel() (int64, error) {
+	// 3 == unrestricted server-to-client clipboard, the behavior when the
+	// "Restrict clipboard transfer from server to client" policy is not set
+	return r.resolve("SCClipLevel", rdpWinStations, 3)
+}
