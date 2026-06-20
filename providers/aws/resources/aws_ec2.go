@@ -4010,6 +4010,11 @@ func instanceInternetFacingLoadBalancers(i *mqlAwsEc2Instance) ([]any, error) {
 }
 
 func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
+	arn := i.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+
 	publicIp := i.GetPublicIp()
 	if publicIp.Error != nil {
 		return nil, publicIp.Error
@@ -4040,7 +4045,7 @@ func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
 	internetReachable := hasPublicIp && inPublicSubnet && sgAllows && naclAllows
 
 	res, err := CreateResource(i.MqlRuntime, "aws.ec2.instance.exposure", map[string]*llx.RawData{
-		"__id":                        llx.StringData(i.Arn.Data + "/exposure"),
+		"__id":                        llx.StringData(arn.Data + "/exposure"),
 		"internetReachable":           llx.BoolData(internetReachable),
 		"hasPublicIp":                 llx.BoolData(hasPublicIp),
 		"inPublicSubnet":              llx.BoolData(inPublicSubnet),
