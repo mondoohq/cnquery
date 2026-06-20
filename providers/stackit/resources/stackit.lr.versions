@@ -212,6 +212,11 @@ stackit.mongoDbFlex.instance.storage 13.0.0
 stackit.mongoDbFlex.instance.version 13.0.0
 stackit.mongoDbFlex.instances 13.0.0
 stackit.network 13.0.0
+stackit.network.exposure 13.0.6
+stackit.network.exposure.hasPublicIp 13.0.6
+stackit.network.exposure.internetReachable 13.0.6
+stackit.network.exposure.openIngressRules 13.0.6
+stackit.network.exposure.securityGroupAllowsIngress 13.0.6
 stackit.network.id 13.0.0
 stackit.network.ipv4Gateway 13.0.0
 stackit.network.ipv4Nameservers 13.0.0
@@ -356,6 +361,7 @@ stackit.server.availabilityZone 13.0.0
 stackit.server.configDrive 13.0.0
 stackit.server.createdAt 13.0.0
 stackit.server.errorMessage 13.0.0
+stackit.server.exposure 13.0.6
 stackit.server.id 13.0.0
 stackit.server.image 13.0.0
 stackit.server.imageId 13.0.0

@@ -158,6 +158,8 @@ private stackit.server @defaults("id name status machineType") {
   securityGroupIds []string
   // Security groups attached to the server
   securityGroups() []stackit.securityGroup
+  // Internet-exposure breakdown (public IP combined with security group ingress)
+  exposure() stackit.network.exposure
   // Service account mail addresses attached to the server
   serviceAccountMails []string
   // Network interfaces: [{nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}]
@@ -391,6 +393,22 @@ private stackit.securityGroup.rule @defaults("id direction protocol") {
   ipRange string
   // Remote security group UUID (empty if remote is a CIDR)
   remoteSecurityGroupId string
+}
+
+// Server internet-exposure breakdown
+//
+// Explains whether a server is reachable from the internet: whether one of its
+// network interfaces has a public IP and whether an attached security group
+// admits inbound traffic from any address.
+private stackit.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the server is reachable from the internet (a public IP and a security group ingress rule that admits any address)
+  internetReachable bool
+  // Whether any network interface has a public IP
+  hasPublicIp bool
+  // Whether an attached security group permits inbound traffic from any address (0.0.0.0/0 or ::/0)
+  securityGroupAllowsIngress bool
+  // Security group ingress rules that admit traffic from any address
+  openIngressRules []stackit.securityGroup.rule
 }
 
 // STACKIT SSH key pair

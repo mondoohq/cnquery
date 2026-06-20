@@ -26,6 +26,7 @@ const (
 	ResourceStackitPublicIp                   string = "stackit.publicIp"
 	ResourceStackitSecurityGroup              string = "stackit.securityGroup"
 	ResourceStackitSecurityGroupRule          string = "stackit.securityGroup.rule"
+	ResourceStackitNetworkExposure            string = "stackit.network.exposure"
 	ResourceStackitKeyPair                    string = "stackit.keyPair"
 	ResourceStackitLoadBalancer               string = "stackit.loadBalancer"
 	ResourceStackitLoadBalancerListener       string = "stackit.loadBalancer.listener"
@@ -126,6 +127,10 @@ func init() {
 		"stackit.securityGroup.rule": {
 			// to override args, implement: initStackitSecurityGroupRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitSecurityGroupRule,
+		},
+		"stackit.network.exposure": {
+			// to override args, implement: initStackitNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitNetworkExposure,
 		},
 		"stackit.keyPair": {
 			Init:   initStackitKeyPair,
@@ -589,6 +594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.server.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("stackit.securityGroup")))
 	},
+	"stackit.server.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
+	},
 	"stackit.server.serviceAccountMails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetServiceAccountMails()).ToDataRes(types.Array(types.String))
 	},
@@ -840,6 +848,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.securityGroup.rule.remoteSecurityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecurityGroupRule).GetRemoteSecurityGroupId()).ToDataRes(types.String)
+	},
+	"stackit.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"stackit.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("stackit.securityGroup.rule")))
 	},
 	"stackit.keyPair.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKeyPair).GetName()).ToDataRes(types.String)
@@ -2191,6 +2211,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.server.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"stackit.server.serviceAccountMails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).ServiceAccountMails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2553,6 +2577,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.securityGroup.rule.remoteSecurityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecurityGroupRule).RemoteSecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.keyPair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4939,6 +4983,7 @@ type mqlStackitServer struct {
 	Volumes             plugin.TValue[[]any]
 	SecurityGroupIds    plugin.TValue[[]any]
 	SecurityGroups      plugin.TValue[[]any]
+	Exposure            plugin.TValue[*mqlStackitNetworkExposure]
 	ServiceAccountMails plugin.TValue[[]any]
 	Nics                plugin.TValue[[]any]
 	UserData            plugin.TValue[string]
@@ -5104,6 +5149,22 @@ func (c *mqlStackitServer) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlStackitServer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.server", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -5876,6 +5937,65 @@ func (c *mqlStackitSecurityGroupRule) GetIpRange() *plugin.TValue[string] {
 
 func (c *mqlStackitSecurityGroupRule) GetRemoteSecurityGroupId() *plugin.TValue[string] {
 	return &c.RemoteSecurityGroupId
+}
+
+// mqlStackitNetworkExposure for the stackit.network.exposure resource
+type mqlStackitNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitNetworkExposureInternal it will be used here
+	InternetReachable          plugin.TValue[bool]
+	HasPublicIp                plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+}
+
+// createStackitNetworkExposure creates a new instance of this resource
+func createStackitNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitNetworkExposure) MqlName() string {
+	return "stackit.network.exposure"
+}
+
+func (c *mqlStackitNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlStackitNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlStackitNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlStackitNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
 }
 
 // mqlStackitKeyPair for the stackit.keyPair resource
