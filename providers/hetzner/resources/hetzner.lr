@@ -97,6 +97,8 @@ private hetzner.server @defaults("id name status") {
   firewalls() []hetzner.firewall
   // Firewalls applied to the server, with per-binding application status (applied, pending)
   firewallBindings() []hetzner.server.firewallBinding
+  // Internet-exposure breakdown (public IP combined with firewall ingress)
+  exposure() hetzner.network.exposure
   // Load balancers attached to the server
   loadBalancers() []hetzner.loadBalancer
   // Backup window (e.g., "22-02"); empty if backups disabled
@@ -147,6 +149,22 @@ private hetzner.server.firewallBinding @defaults("status") {
   firewall() hetzner.firewall
   // Application status (applied, pending)
   status string
+}
+
+// Server internet-exposure breakdown
+//
+// Explains whether a server is reachable from the internet: whether it has a
+// public IP and whether its firewalls admit inbound traffic from any address —
+// including the case where no firewall is attached, which leaves it open.
+private hetzner.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the server is reachable from the internet (a public IP and firewall ingress that admits any address)
+  internetReachable bool
+  // Whether the server has a public IPv4 or IPv6 address
+  hasPublicIp bool
+  // Whether inbound traffic from any address is admitted — a firewall inbound rule open to the internet, or no firewall attached at all
+  firewallAllowsIngress bool
+  // Firewall inbound rules that admit traffic from any address (0.0.0.0/0 or ::/0)
+  openIngressRules []dict
 }
 
 // Hetzner Cloud server type (VM size)

@@ -138,6 +138,11 @@ hetzner.locations 13.0.1
 hetzner.network 13.0.1
 hetzner.network.created 13.0.1
 hetzner.network.exposeRoutesToVswitch 13.0.1
+hetzner.network.exposure 13.3.1
+hetzner.network.exposure.firewallAllowsIngress 13.3.1
+hetzner.network.exposure.hasPublicIp 13.3.1
+hetzner.network.exposure.internetReachable 13.3.1
+hetzner.network.exposure.openIngressRules 13.3.1
 hetzner.network.id 13.0.1
 hetzner.network.ipRange 13.0.1
 hetzner.network.labels 13.0.1
@@ -177,6 +182,7 @@ hetzner.server 13.0.1
 hetzner.server.backupWindow 13.0.1
 hetzner.server.created 13.0.1
 hetzner.server.datacenter 13.0.1
+hetzner.server.exposure 13.3.1
 hetzner.server.firewallBinding 13.1.2
 hetzner.server.firewallBinding.firewall 13.1.2
 hetzner.server.firewallBinding.firewallId 13.1.2
