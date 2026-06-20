@@ -9,6 +9,7 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/hetzner/connection"
 )
 
 type mqlHetznerLoadBalancerInternal struct {
@@ -77,7 +78,12 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 func initHetznerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return args, nil, nil
+		// Fall back to a connected hetzner-loadbalancer asset, whose id
+		// the discovery step stamped on the connection options.
+		id, ok = connection.AssetID(conn(runtime).Conf, connection.OptionLoadBalancer)
+		if !ok {
+			return args, nil, nil
+		}
 	}
 	lb, _, err := conn(runtime).Client().LoadBalancer.GetByID(ctx(), id)
 	if err != nil {

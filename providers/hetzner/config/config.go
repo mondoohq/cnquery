@@ -31,9 +31,14 @@ Authenticate with a Hetzner Cloud API token:
 
 You can also pass the token via the %s environment variable.
 `, connection.HCLOUD_TOKEN_VAR),
-			MinArgs:   0,
-			MaxArgs:   0,
-			Discovery: []string{},
+			MinArgs: 0,
+			MaxArgs: 0,
+			Discovery: []string{
+				connection.DiscoveryAuto,
+				connection.DiscoveryAll,
+				connection.DiscoveryFirewalls,
+				connection.DiscoveryLoadBalancers,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    connection.OPTION_TOKEN,

@@ -369,7 +369,15 @@ private hetzner.primaryIp @defaults("id ip type") {
 }
 
 // Hetzner Cloud load balancer
-private hetzner.loadBalancer @defaults("id name") {
+//
+// A managed L4/L7 load balancer. Surfaces the routing `algorithm`, the
+// public network configuration, the `services()` it exposes (listen and
+// destination ports, health checks, the HTTP redirect flag, and attached
+// `certificates`), the backend `targets()`, the `privateNet`
+// attachments, the traffic counters, resource protection, applied
+// `labels`, and the creation timestamp. Select a load balancer by id
+// with `hetzner.loadBalancer(id: 123)`.
+hetzner.loadBalancer @defaults("id name") {
   init(id? int)
   // Load balancer ID
   id int
@@ -475,7 +483,14 @@ private hetzner.loadBalancerType @defaults("id name") {
 }
 
 // Hetzner Cloud firewall
-private hetzner.firewall @defaults("id name") {
+//
+// A stateful, project-level firewall rule set applied to servers
+// directly or by label selector. Surfaces the firewall `rules` (each
+// with direction, protocol, port, and the `sourceIps`/`destinationIps`
+// CIDRs), the `servers()` the firewall is directly applied to, the
+// `labelSelectors` it targets, applied `labels`, and the creation
+// timestamp. Select a firewall by id with `hetzner.firewall(id: 123)`.
+hetzner.firewall @defaults("id name") {
   init(id? int)
   // Firewall ID
   id int

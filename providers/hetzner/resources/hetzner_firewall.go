@@ -9,6 +9,7 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/hetzner/connection"
 )
 
 type mqlHetznerFirewallInternal struct {
@@ -95,7 +96,12 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 func initHetznerFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return args, nil, nil
+		// Fall back to a connected hetzner-firewall asset, whose id the
+		// discovery step stamped on the connection options.
+		id, ok = connection.AssetID(conn(runtime).Conf, connection.OptionFirewall)
+		if !ok {
+			return args, nil, nil
+		}
 	}
 	fw, _, err := conn(runtime).Client().Firewall.GetByID(ctx(), id)
 	if err != nil {
