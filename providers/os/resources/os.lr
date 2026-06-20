@@ -7661,6 +7661,76 @@ private windows.smb.connection @defaults("serverName shareName") {
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
+  // BitLocker Group Policy (FVE) settings configured for this system
+  policy() windows.bitlocker.policy
+}
+
+// Windows BitLocker Group Policy (FVE) settings
+//
+// Examine the BitLocker Drive Encryption Group Policy settings stored under
+// `HKLM\SOFTWARE\Policies\Microsoft\FVE`. Global settings are exposed
+// directly; per-drive-type settings are grouped under `operatingSystemDrives`,
+// `fixedDataDrives`, and `removableDataDrives`. A field is null when the
+// corresponding policy value is not configured.
+windows.bitlocker.policy {
+  // Require additional authentication at startup (UseAdvancedStartup)
+  useAdvancedStartup int
+  // Allow enhanced PINs for startup (UseEnhancedPin)
+  useEnhancedPin int
+  // Allow BitLocker without a compatible TPM (EnableBDEWithNoTPM)
+  enableBdeWithNoTpm int
+  // Disable new DMA devices when this computer is locked (DisableExternalDMAUnderLock)
+  disableExternalDmaUnderLock int
+  // Allow Secure Boot for integrity validation on operating system drives (OSAllowSecureBootForIntegrity)
+  osAllowSecureBootForIntegrity int
+  // BitLocker policy settings for operating system drives (OS* values)
+  operatingSystemDrives() windows.bitlocker.policy.driveSettings
+  // BitLocker policy settings for fixed data drives (FDV* values)
+  fixedDataDrives() windows.bitlocker.policy.driveSettings
+  // BitLocker policy settings for removable data drives (RDV* values)
+  removableDataDrives() windows.bitlocker.policy.driveSettings
+}
+
+// Windows BitLocker per-drive-type Group Policy (FVE) settings
+//
+// Examine the BitLocker policy values that apply to a single drive type
+// (operating system, fixed data, or removable data). Fields that the drive
+// type does not define, or that are not configured, are null. For example,
+// operating system drives have no `allowUserCert`, and only removable data
+// drives define `denyCrossOrg` and `denyWriteAccess`.
+windows.bitlocker.policy.driveSettings {
+  // Drive type these settings apply to: operatingSystem, fixedData, or removableData
+  driveType string
+  // Choose how BitLocker-protected drives can be recovered (*Recovery)
+  recovery int
+  // Allow data recovery agent (*ManageDRA)
+  manageDRA int
+  // Allow 48-digit recovery password (*RecoveryPassword)
+  recoveryPassword int
+  // Allow 256-bit recovery key (*RecoveryKey)
+  recoveryKey int
+  // Omit recovery options from the BitLocker setup wizard (*HideRecoveryPage)
+  hideRecoveryPage int
+  // Save BitLocker recovery information to Active Directory Domain Services (*ActiveDirectoryBackup)
+  activeDirectoryBackup int
+  // Configure what BitLocker recovery information is stored in AD DS (*ActiveDirectoryInfoToStore)
+  activeDirectoryInfoToStore int
+  // Do not enable BitLocker until recovery information is stored in AD DS (*RequireActiveDirectoryBackup)
+  requireActiveDirectoryBackup int
+  // Configure use of hardware-based encryption (*HardwareEncryption)
+  hardwareEncryption int
+  // Configure use of passwords (*Passphrase)
+  passphrase int
+  // Allow certificate-based data recovery agent / smart card (*AllowUserCert)
+  allowUserCert int
+  // Enforce certificate-based data recovery agent / smart card (*EnforceUserCert)
+  enforceUserCert int
+  // Configure the format used when a drive is auto-unlocked / discovery volume type (*DiscoveryVolumeType)
+  discoveryVolumeType string
+  // Deny write access to removable drives not protected by BitLocker (RDVDenyWriteAccess)
+  denyWriteAccess int
+  // Deny write access to devices configured in another organization (RDVDenyCrossOrg)
+  denyCrossOrg int
 }
 
 // Windows BitLocker volume

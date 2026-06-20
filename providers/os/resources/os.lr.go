@@ -362,6 +362,8 @@ const (
 	ResourceWindowsSmbSession                             string = "windows.smb.session"
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
 	ResourceWindowsBitlocker                              string = "windows.bitlocker"
+	ResourceWindowsBitlockerPolicy                        string = "windows.bitlocker.policy"
+	ResourceWindowsBitlockerPolicyDriveSettings           string = "windows.bitlocker.policy.driveSettings"
 	ResourceWindowsBitlockerVolume                        string = "windows.bitlocker.volume"
 	ResourceWindowsSecurity                               string = "windows.security"
 	ResourceWindowsSecurityProduct                        string = "windows.security.product"
@@ -1872,6 +1874,14 @@ func init() {
 		"windows.bitlocker": {
 			// to override args, implement: initWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsBitlocker,
+		},
+		"windows.bitlocker.policy": {
+			// to override args, implement: initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerPolicy,
+		},
+		"windows.bitlocker.policy.driveSettings": {
+			// to override args, implement: initWindowsBitlockerPolicyDriveSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerPolicyDriveSettings,
 		},
 		"windows.bitlocker.volume": {
 			// to override args, implement: initWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8925,6 +8935,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
+	},
+	"windows.bitlocker.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlocker).GetPolicy()).ToDataRes(types.Resource("windows.bitlocker.policy"))
+	},
+	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseAdvancedStartup()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseEnhancedPin()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetEnableBdeWithNoTpm()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetDisableExternalDmaUnderLock()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetOsAllowSecureBootForIntegrity()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetOperatingSystemDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.fixedDataDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetFixedDataDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.removableDataDrives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicy).GetRemovableDataDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
+	},
+	"windows.bitlocker.policy.driveSettings.driveType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDriveType()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.policy.driveSettings.recovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecovery()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetManageDRA()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryPassword()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryKey()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHideRecoveryPage()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryBackup()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryInfoToStore()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRequireActiveDirectoryBackup()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHardwareEncryption()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.passphrase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetPassphrase()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetAllowUserCert()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetEnforceUserCert()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDiscoveryVolumeType()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyWriteAccess()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyCrossOrg()).ToDataRes(types.Int)
 	},
 	"windows.bitlocker.volume.deviceID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerVolume).GetDeviceID()).ToDataRes(types.String)
@@ -21252,6 +21337,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlocker).Policy, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicy](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).UseAdvancedStartup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).UseEnhancedPin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).EnableBdeWithNoTpm, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).DisableExternalDmaUnderLock, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).OsAllowSecureBootForIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).OperatingSystemDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.fixedDataDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).FixedDataDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.removableDataDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicy).RemovableDataDrives, ok = plugin.RawToTValue[*mqlWindowsBitlockerPolicyDriveSettings](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.driveType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DriveType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).Recovery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ManageDRA, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RecoveryPassword, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.recoveryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RecoveryKey, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).HideRecoveryPage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryBackup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryInfoToStore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RequireActiveDirectoryBackup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).HardwareEncryption, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.passphrase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).Passphrase, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).AllowUserCert, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).EnforceUserCert, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DiscoveryVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyWriteAccess, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyCrossOrg, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55969,6 +56162,7 @@ type mqlWindowsBitlocker struct {
 	__id       string
 	// optional: if you define mqlWindowsBitlockerInternal it will be used here
 	Volumes plugin.TValue[[]any]
+	Policy  plugin.TValue[*mqlWindowsBitlockerPolicy]
 }
 
 // createWindowsBitlocker creates a new instance of this resource
@@ -56017,6 +56211,266 @@ func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]any] {
 
 		return c.volumes()
 	})
+}
+
+func (c *mqlWindowsBitlocker) GetPolicy() *plugin.TValue[*mqlWindowsBitlockerPolicy] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicy](&c.Policy, func() (*mqlWindowsBitlockerPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+// mqlWindowsBitlockerPolicy for the windows.bitlocker.policy resource
+type mqlWindowsBitlockerPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsBitlockerPolicyInternal it will be used here
+	UseAdvancedStartup            plugin.TValue[int64]
+	UseEnhancedPin                plugin.TValue[int64]
+	EnableBdeWithNoTpm            plugin.TValue[int64]
+	DisableExternalDmaUnderLock   plugin.TValue[int64]
+	OsAllowSecureBootForIntegrity plugin.TValue[int64]
+	OperatingSystemDrives         plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+	FixedDataDrives               plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+	RemovableDataDrives           plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
+}
+
+// createWindowsBitlockerPolicy creates a new instance of this resource
+func createWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerPolicy) MqlName() string {
+	return "windows.bitlocker.policy"
+}
+
+func (c *mqlWindowsBitlockerPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetUseAdvancedStartup() *plugin.TValue[int64] {
+	return &c.UseAdvancedStartup
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetUseEnhancedPin() *plugin.TValue[int64] {
+	return &c.UseEnhancedPin
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetEnableBdeWithNoTpm() *plugin.TValue[int64] {
+	return &c.EnableBdeWithNoTpm
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetDisableExternalDmaUnderLock() *plugin.TValue[int64] {
+	return &c.DisableExternalDmaUnderLock
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetOsAllowSecureBootForIntegrity() *plugin.TValue[int64] {
+	return &c.OsAllowSecureBootForIntegrity
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetOperatingSystemDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.OperatingSystemDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "operatingSystemDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.operatingSystemDrives()
+	})
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetFixedDataDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.FixedDataDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "fixedDataDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.fixedDataDrives()
+	})
+}
+
+func (c *mqlWindowsBitlockerPolicy) GetRemovableDataDrives() *plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings] {
+	return plugin.GetOrCompute[*mqlWindowsBitlockerPolicyDriveSettings](&c.RemovableDataDrives, func() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.policy", c.__id, "removableDataDrives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsBitlockerPolicyDriveSettings), nil
+			}
+		}
+
+		return c.removableDataDrives()
+	})
+}
+
+// mqlWindowsBitlockerPolicyDriveSettings for the windows.bitlocker.policy.driveSettings resource
+type mqlWindowsBitlockerPolicyDriveSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsBitlockerPolicyDriveSettingsInternal it will be used here
+	DriveType                    plugin.TValue[string]
+	Recovery                     plugin.TValue[int64]
+	ManageDRA                    plugin.TValue[int64]
+	RecoveryPassword             plugin.TValue[int64]
+	RecoveryKey                  plugin.TValue[int64]
+	HideRecoveryPage             plugin.TValue[int64]
+	ActiveDirectoryBackup        plugin.TValue[int64]
+	ActiveDirectoryInfoToStore   plugin.TValue[int64]
+	RequireActiveDirectoryBackup plugin.TValue[int64]
+	HardwareEncryption           plugin.TValue[int64]
+	Passphrase                   plugin.TValue[int64]
+	AllowUserCert                plugin.TValue[int64]
+	EnforceUserCert              plugin.TValue[int64]
+	DiscoveryVolumeType          plugin.TValue[string]
+	DenyWriteAccess              plugin.TValue[int64]
+	DenyCrossOrg                 plugin.TValue[int64]
+}
+
+// createWindowsBitlockerPolicyDriveSettings creates a new instance of this resource
+func createWindowsBitlockerPolicyDriveSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerPolicyDriveSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.policy.driveSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) MqlName() string {
+	return "windows.bitlocker.policy.driveSettings"
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDriveType() *plugin.TValue[string] {
+	return &c.DriveType
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecovery() *plugin.TValue[int64] {
+	return &c.Recovery
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetManageDRA() *plugin.TValue[int64] {
+	return &c.ManageDRA
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecoveryPassword() *plugin.TValue[int64] {
+	return &c.RecoveryPassword
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecoveryKey() *plugin.TValue[int64] {
+	return &c.RecoveryKey
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHideRecoveryPage() *plugin.TValue[int64] {
+	return &c.HideRecoveryPage
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryBackup() *plugin.TValue[int64] {
+	return &c.ActiveDirectoryBackup
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryInfoToStore() *plugin.TValue[int64] {
+	return &c.ActiveDirectoryInfoToStore
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRequireActiveDirectoryBackup() *plugin.TValue[int64] {
+	return &c.RequireActiveDirectoryBackup
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHardwareEncryption() *plugin.TValue[int64] {
+	return &c.HardwareEncryption
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetPassphrase() *plugin.TValue[int64] {
+	return &c.Passphrase
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetAllowUserCert() *plugin.TValue[int64] {
+	return &c.AllowUserCert
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetEnforceUserCert() *plugin.TValue[int64] {
+	return &c.EnforceUserCert
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDiscoveryVolumeType() *plugin.TValue[string] {
+	return &c.DiscoveryVolumeType
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyWriteAccess() *plugin.TValue[int64] {
+	return &c.DenyWriteAccess
+}
+
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValue[int64] {
+	return &c.DenyCrossOrg
 }
 
 // mqlWindowsBitlockerVolume for the windows.bitlocker.volume resource
