@@ -30,7 +30,11 @@ func firewallRuleAllowsPublicIngress(ruleType, action, source string, enable boo
 
 	t := strings.ToLower(strings.TrimSpace(ruleType))
 	// Only inbound rules expose a target. PVE treats an empty type as an
-	// inbound match, so accept "" as well; "out" and "group" do not.
+	// inbound match, so accept "" as well; "out" and "group" do not. This
+	// intentionally over-reports: a misconfigured rule with type="" and
+	// action=ACCEPT is flagged as internet-exposed. For an exposure check that
+	// is the safer direction — over-reporting beats silently missing a real
+	// exposure. (See the "empty type defaults inbound" case in the test.)
 	if t != "in" && t != "" {
 		return false
 	}
