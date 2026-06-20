@@ -85,6 +85,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceBastionHost                                           string = "azure.subscription.networkService.bastionHost"
 	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                         string = "azure.subscription.networkService.securityGroup"
 	ResourceAzureSubscriptionNetworkServiceSecurityrule                                          string = "azure.subscription.networkService.securityrule"
+	ResourceAzureNetworkExposure                                                                 string = "azure.network.exposure"
 	ResourceAzureSubscriptionNetworkServiceWatcher                                               string = "azure.subscription.networkService.watcher"
 	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                        string = "azure.subscription.networkService.watcher.flowlog"
 	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                  string = "azure.subscription.networkService.watcher.packetCapture"
@@ -700,6 +701,10 @@ func init() {
 		"azure.subscription.networkService.securityrule": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceSecurityrule,
+		},
+		"azure.network.exposure": {
+			// to override args, implement: initAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureNetworkExposure,
 		},
 		"azure.subscription.networkService.watcher": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceWatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2608,6 +2613,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmScaleSet()).ToDataRes(types.Resource("azure.subscription.computeService.vmScaleSet"))
+	},
+	"azure.subscription.computeService.vm.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetExposure()).ToDataRes(types.Resource("azure.network.exposure"))
 	},
 	"azure.subscription.computeService.vm.imageReference.publisher": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetPublisher()).ToDataRes(types.String)
@@ -4910,6 +4918,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityrule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetProvisioningState()).ToDataRes(types.String)
 	},
+	"azure.network.exposure.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureNetworkExposure).GetId()).ToDataRes(types.String)
+	},
+	"azure.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"azure.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"azure.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"azure.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
+	},
 	"azure.subscription.networkService.watcher.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetId()).ToDataRes(types.String)
 	},
@@ -6136,6 +6159,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.storageService.account.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.storageService.account.queue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetId()).ToDataRes(types.String)
@@ -7451,6 +7477,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.replicationLinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetReplicationLinks()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.replicationLink")))
 	},
+	"azure.subscription.sqlService.server.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.sqlService.server.vulnerabilityassessmentsettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings).GetId()).ToDataRes(types.String)
 	},
@@ -8162,6 +8191,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.postgreSqlService.flexibleServer.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.postgreSqlService.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetId()).ToDataRes(types.String)
 	},
@@ -8209,6 +8241,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.postgreSqlService.server.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
+	},
+	"azure.subscription.postgreSqlService.server.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.postgreSqlService.database.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceDatabase).GetId()).ToDataRes(types.String)
@@ -8468,6 +8503,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.server.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
 	},
+	"azure.subscription.mySqlService.server.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceServer).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.mySqlService.database.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceDatabase).GetId()).ToDataRes(types.String)
 	},
@@ -8539,6 +8577,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.mySqlService.flexibleServer.highAvailabilityState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetHighAvailabilityState()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.cosmosDbService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbService).GetSubscriptionId()).ToDataRes(types.String)
@@ -10654,6 +10695,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.aksService.cluster.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.aksService.cluster.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.aksService.cluster.aadProfile.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterAadProfile).GetId()).ToDataRes(types.String)
@@ -16132,6 +16176,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).VmScaleSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVmScaleSet](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).Exposure, ok = plugin.RawToTValue[*mqlAzureNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.imageReference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).__id, ok = v.Value.(string)
 		return
@@ -19440,6 +19488,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.network.exposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.watcher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceWatcher).__id, ok = v.Value.(string)
 		return
@@ -21186,6 +21258,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23116,6 +23192,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceServer).ReplicationLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.server.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.vulnerabilityassessmentsettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings).__id, ok = v.Value.(string)
 		return
@@ -24168,6 +24248,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.postgreSqlService.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).__id, ok = v.Value.(string)
 		return
@@ -24234,6 +24318,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.postgreSqlService.server.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.server.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.postgreSqlService.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24612,6 +24700,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.mySqlService.server.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.mySqlService.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMySqlServiceDatabase).__id, ok = v.Value.(string)
 		return
@@ -24714,6 +24806,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.mySqlService.flexibleServer.highAvailabilityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).HighAvailabilityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27782,6 +27878,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.aadProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36490,6 +36590,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	EnableAutomaticUpdates        plugin.TValue[bool]
 	PatchMode                     plugin.TValue[string]
 	VmScaleSet                    plugin.TValue[*mqlAzureSubscriptionComputeServiceVmScaleSet]
+	Exposure                      plugin.TValue[*mqlAzureNetworkExposure]
 }
 
 // createAzureSubscriptionComputeServiceVm creates a new instance of this resource
@@ -36810,6 +36911,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetVmScaleSet() *plugin.TValue[*m
 		}
 
 		return c.vmScaleSet()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetExposure() *plugin.TValue[*mqlAzureNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAzureNetworkExposure](&c.Exposure, func() (*mqlAzureNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.vm", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -44365,6 +44482,75 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetProvisioningState() 
 	return &c.ProvisioningState
 }
 
+// mqlAzureNetworkExposure for the azure.network.exposure resource
+type mqlAzureNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureNetworkExposureInternal it will be used here
+	Id                         plugin.TValue[string]
+	InternetReachable          plugin.TValue[bool]
+	HasPublicIp                plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+}
+
+// createAzureNetworkExposure creates a new instance of this resource
+func createAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureNetworkExposure) MqlName() string {
+	return "azure.network.exposure"
+}
+
+func (c *mqlAzureNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureNetworkExposure) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlAzureNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlAzureNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlAzureNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
+}
+
 // mqlAzureSubscriptionNetworkServiceWatcher for the azure.subscription.networkService.watcher resource
 type mqlAzureSubscriptionNetworkServiceWatcher struct {
 	MqlRuntime *plugin.Runtime
@@ -47585,6 +47771,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	BlobInventoryPolicy                              plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy]
 	DefenderForStorage                               plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting]
 	SystemMetadata                                   plugin.TValue[*mqlAzureSubscriptionSystemData]
+	IsPublic                                         plugin.TValue[bool]
 }
 
 // createAzureSubscriptionStorageServiceAccount creates a new instance of this resource
@@ -48115,6 +48302,12 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetSystemMetadata() *plugin.
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -52382,6 +52575,7 @@ type mqlAzureSubscriptionSqlServiceServer struct {
 	PrivateEndpointConnections       plugin.TValue[[]any]
 	FailoverGroups                   plugin.TValue[[]any]
 	ReplicationLinks                 plugin.TValue[[]any]
+	InternetReachable                plugin.TValue[bool]
 }
 
 // createAzureSubscriptionSqlServiceServer creates a new instance of this resource
@@ -52774,6 +52968,12 @@ func (c *mqlAzureSubscriptionSqlServiceServer) GetReplicationLinks() *plugin.TVa
 		}
 
 		return c.replicationLinks()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
 	})
 }
 
@@ -55168,6 +55368,7 @@ type mqlAzureSubscriptionPostgreSqlServiceFlexibleServer struct {
 	GeoRedundantBackup           plugin.TValue[string]
 	ThreatProtectionState        plugin.TValue[string]
 	PrivateEndpointConnections   plugin.TValue[[]any]
+	InternetReachable            plugin.TValue[bool]
 }
 
 // createAzureSubscriptionPostgreSqlServiceFlexibleServer creates a new instance of this resource
@@ -55369,6 +55570,12 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetPrivateEndpoint
 	})
 }
 
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlAzureSubscriptionPostgreSqlServiceServer for the azure.subscription.postgreSqlService.server resource
 type mqlAzureSubscriptionPostgreSqlServiceServer struct {
 	MqlRuntime *plugin.Runtime
@@ -55390,6 +55597,7 @@ type mqlAzureSubscriptionPostgreSqlServiceServer struct {
 	Configuration            plugin.TValue[[]any]
 	Databases                plugin.TValue[[]any]
 	FirewallRules            plugin.TValue[[]any]
+	InternetReachable        plugin.TValue[bool]
 }
 
 // createAzureSubscriptionPostgreSqlServiceServer creates a new instance of this resource
@@ -55526,6 +55734,12 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetFirewallRules() *plugin
 		}
 
 		return c.firewallRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceServer) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
 	})
 }
 
@@ -56275,6 +56489,7 @@ type mqlAzureSubscriptionMySqlServiceServer struct {
 	Configuration            plugin.TValue[[]any]
 	Databases                plugin.TValue[[]any]
 	FirewallRules            plugin.TValue[[]any]
+	InternetReachable        plugin.TValue[bool]
 }
 
 // createAzureSubscriptionMySqlServiceServer creates a new instance of this resource
@@ -56414,6 +56629,12 @@ func (c *mqlAzureSubscriptionMySqlServiceServer) GetFirewallRules() *plugin.TVal
 	})
 }
 
+func (c *mqlAzureSubscriptionMySqlServiceServer) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlAzureSubscriptionMySqlServiceDatabase for the azure.subscription.mySqlService.database resource
 type mqlAzureSubscriptionMySqlServiceDatabase struct {
 	MqlRuntime *plugin.Runtime
@@ -56507,6 +56728,7 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServer struct {
 	GeoBackupEncryptionKey plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 	HighAvailabilityMode   plugin.TValue[string]
 	HighAvailabilityState  plugin.TValue[string]
+	InternetReachable      plugin.TValue[bool]
 }
 
 // createAzureSubscriptionMySqlServiceFlexibleServer creates a new instance of this resource
@@ -56682,6 +56904,12 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetHighAvailabilityMode
 
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetHighAvailabilityState() *plugin.TValue[string] {
 	return &c.HighAvailabilityState
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 // mqlAzureSubscriptionCosmosDbService for the azure.subscription.cosmosDbService resource
@@ -63636,6 +63864,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	ControlPlaneMetricsEnabled        plugin.TValue[bool]
 	IdentityBindings                  plugin.TValue[[]any]
 	SystemMetadata                    plugin.TValue[*mqlAzureSubscriptionSystemData]
+	InternetReachable                 plugin.TValue[bool]
 }
 
 // createAzureSubscriptionAksServiceCluster creates a new instance of this resource
@@ -63952,6 +64181,12 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetSystemMetadata() *plugin.TVal
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
 	})
 }
 
