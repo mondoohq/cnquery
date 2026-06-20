@@ -6052,6 +6052,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.efs.filesystem.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.efs.filesystem.performanceMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetPerformanceMode()).ToDataRes(types.String)
 	},
@@ -10012,6 +10015,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetAccessPolicies()).ToDataRes(types.String)
 	},
+	"aws.es.domain.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.es.domain.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.es.domain.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetCreated()).ToDataRes(types.Bool)
 	},
@@ -12336,6 +12345,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.secretsmanager.secret.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetReplicaRegions()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret.replicaRegion")))
@@ -16471,6 +16483,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vault.policyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.backup.vault.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
 	},
@@ -18075,6 +18090,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"aws.redshift.cluster.endpointAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetEndpointAddress()).ToDataRes(types.String)
@@ -23520,6 +23538,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.neptune.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetCertificateAuthority()).ToDataRes(types.String)
@@ -34907,6 +34928,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.performanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).PerformanceMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -40711,6 +40736,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).AccessPolicies, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).Created, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -44081,6 +44114,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50239,6 +50276,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBackupVault).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.backup.vault.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVaultRecoveryPoint).__id, ok = v.Value.(string)
 		return
@@ -52529,6 +52570,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.endpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60425,6 +60470,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.neptune.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79737,6 +79786,7 @@ type mqlAwsEfsFilesystem struct {
 	AccessPoints             plugin.TValue[[]any]
 	FileSystemPolicy         plugin.TValue[string]
 	PolicyStatements         plugin.TValue[[]any]
+	IsPublic                 plugin.TValue[bool]
 	PerformanceMode          plugin.TValue[string]
 	ThroughputMode           plugin.TValue[string]
 	SizeInBytes              plugin.TValue[int64]
@@ -79888,6 +79938,12 @@ func (c *mqlAwsEfsFilesystem) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -95726,6 +95782,8 @@ type mqlAwsEsDomain struct {
 	EnforceHTTPS                       plugin.TValue[bool]
 	TlsSecurityPolicy                  plugin.TValue[string]
 	AccessPolicies                     plugin.TValue[string]
+	PolicyStatements                   plugin.TValue[[]any]
+	IsPublic                           plugin.TValue[bool]
 	Created                            plugin.TValue[bool]
 	Deleted                            plugin.TValue[bool]
 	Processing                         plugin.TValue[bool]
@@ -95890,6 +95948,28 @@ func (c *mqlAwsEsDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetAccessPolicies() *plugin.TValue[string] {
 	return &c.AccessPolicies
+}
+
+func (c *mqlAwsEsDomain) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 func (c *mqlAwsEsDomain) GetCreated() *plugin.TValue[bool] {
@@ -103871,6 +103951,7 @@ type mqlAwsSecretsmanagerSecret struct {
 	Tags             plugin.TValue[map[string]any]
 	ResourcePolicy   plugin.TValue[string]
 	PolicyStatements plugin.TValue[[]any]
+	IsPublic         plugin.TValue[bool]
 	ReplicaRegions   plugin.TValue[[]any]
 	Type             plugin.TValue[string]
 	Versions         plugin.TValue[[]any]
@@ -104005,6 +104086,12 @@ func (c *mqlAwsSecretsmanagerSecret) GetPolicyStatements() *plugin.TValue[[]any]
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -120837,6 +120924,7 @@ type mqlAwsBackupVault struct {
 	MinRetentionDays plugin.TValue[int64]
 	AccessPolicy     plugin.TValue[string]
 	PolicyStatements plugin.TValue[[]any]
+	IsPublic         plugin.TValue[bool]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -120963,6 +121051,12 @@ func (c *mqlAwsBackupVault) GetPolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsBackupVault) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -126210,6 +126304,7 @@ type mqlAwsRedshiftCluster struct {
 	Parameters                       plugin.TValue[[]any]
 	PreferredMaintenanceWindow       plugin.TValue[string]
 	PubliclyAccessible               plugin.TValue[bool]
+	InternetReachable                plugin.TValue[bool]
 	EndpointAddress                  plugin.TValue[string]
 	EndpointPort                     plugin.TValue[int64]
 	EndpointVpcEndpoints             plugin.TValue[[]any]
@@ -126372,6 +126467,12 @@ func (c *mqlAwsRedshiftCluster) GetPreferredMaintenanceWindow() *plugin.TValue[s
 
 func (c *mqlAwsRedshiftCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRedshiftCluster) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 func (c *mqlAwsRedshiftCluster) GetEndpointAddress() *plugin.TValue[string] {
@@ -145591,6 +145692,7 @@ type mqlAwsNeptuneInstance struct {
 	StorageType                      plugin.TValue[string]
 	TdeCredentialArn                 plugin.TValue[string]
 	PubliclyAccessible               plugin.TValue[bool]
+	Exposure                         plugin.TValue[*mqlAwsNetworkExposure]
 	CertificateAuthority             plugin.TValue[string]
 	NetworkType                      plugin.TValue[string]
 }
@@ -145781,6 +145883,22 @@ func (c *mqlAwsNeptuneInstance) GetTdeCredentialArn() *plugin.TValue[string] {
 
 func (c *mqlAwsNeptuneInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsNeptuneInstance) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune.instance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 func (c *mqlAwsNeptuneInstance) GetCertificateAuthority() *plugin.TValue[string] {

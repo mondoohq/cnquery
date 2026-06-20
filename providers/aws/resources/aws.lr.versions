@@ -821,6 +821,7 @@ aws.backup.vault.arn 11.15.2
 aws.backup.vault.createdAt 11.15.2
 aws.backup.vault.encryptionKey 13.12.1
 aws.backup.vault.encryptionKeyArn 11.15.2
+aws.backup.vault.isPublic 13.37.1
 aws.backup.vault.locked 11.15.2
 aws.backup.vault.lockedAt 11.15.2
 aws.backup.vault.maxRetentionDays 11.15.2
@@ -3827,6 +3828,7 @@ aws.efs.filesystem.encrypted 11.15.2
 aws.efs.filesystem.fileSystemPolicy 11.15.2
 aws.efs.filesystem.fileSystemProtection 13.12.1
 aws.efs.filesystem.id 11.15.2
+aws.efs.filesystem.isPublic 13.37.1
 aws.efs.filesystem.kmsKey 11.15.2
 aws.efs.filesystem.lifecycleConfiguration 13.12.1
 aws.efs.filesystem.lifecycleConfiguration.transitionToArchive 13.12.1
@@ -4448,9 +4450,11 @@ aws.es.domain.indexSlowLogGroup 13.21.4
 aws.es.domain.instanceCount 13.21.4
 aws.es.domain.instanceType 13.21.4
 aws.es.domain.internalUserDatabaseEnabled 13.21.4
+aws.es.domain.isPublic 13.37.1
 aws.es.domain.kmsKey 13.21.4
 aws.es.domain.name 11.15.2
 aws.es.domain.nodeToNodeEncryptionEnabled 11.15.2
+aws.es.domain.policyStatements 13.37.1
 aws.es.domain.processing 13.21.4
 aws.es.domain.region 11.15.2
 aws.es.domain.searchSlowLogEnabled 13.21.4
@@ -6684,6 +6688,7 @@ aws.neptune.instance.endpoint 11.15.2
 aws.neptune.instance.engine 11.15.2
 aws.neptune.instance.engineVersion 11.15.2
 aws.neptune.instance.enhancedMonitoringResourceArn 11.15.2
+aws.neptune.instance.exposure 13.37.1
 aws.neptune.instance.iamDatabaseAuthenticationEnabled 11.15.2
 aws.neptune.instance.instanceClass 11.15.2
 aws.neptune.instance.kmsKey 11.16.1
@@ -7341,6 +7346,7 @@ aws.redshift.cluster.endpointPort 13.15.2
 aws.redshift.cluster.endpointVpcEndpoints 13.15.2
 aws.redshift.cluster.enhancedVpcRouting 11.15.2
 aws.redshift.cluster.hsmStatus 11.16.1
+aws.redshift.cluster.internetReachable 13.37.1
 aws.redshift.cluster.ipAddressType 11.15.2
 aws.redshift.cluster.kmsKey 11.16.1
 aws.redshift.cluster.logging 11.15.2
@@ -8832,6 +8838,7 @@ aws.secretsmanager.secret.arn 11.15.2
 aws.secretsmanager.secret.createdAt 11.15.2
 aws.secretsmanager.secret.deletedAt 13.12.1
 aws.secretsmanager.secret.description 11.15.2
+aws.secretsmanager.secret.isPublic 13.37.1
 aws.secretsmanager.secret.kmsKey 11.15.2
 aws.secretsmanager.secret.lastAccessedDate 11.15.2
 aws.secretsmanager.secret.lastChangedDate 11.15.2

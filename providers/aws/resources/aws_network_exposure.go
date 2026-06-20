@@ -12,6 +12,9 @@ import (
 // openIngressRulesFromSecurityGroups returns the ingress rules across the given
 // security groups that permit inbound traffic from the internet.
 func openIngressRulesFromSecurityGroups(sgs *plugin.TValue[[]any]) ([]any, error) {
+	if sgs == nil {
+		return []any{}, nil
+	}
 	if sgs.Error != nil {
 		return nil, sgs.Error
 	}

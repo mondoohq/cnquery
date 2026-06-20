@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestNaclAllowsPublicIngress(t *testing.T) {
@@ -78,4 +80,56 @@ func TestRouteAuthIsPublic(t *testing.T) {
 	assert.False(t, routeAuthIsPublic("AWS_IAM"))
 	assert.False(t, routeAuthIsPublic("JWT"))
 	assert.False(t, routeAuthIsPublic("CUSTOM"))
+}
+
+func setBoolValue(v bool) plugin.TValue[bool] {
+	return plugin.TValue[bool]{Data: v, State: plugin.StateIsSet}
+}
+
+func TestEsDomainIsPublic(t *testing.T) {
+	tests := []struct {
+		name               string
+		inVPC              bool
+		policyAllowsPublic bool
+		want               bool
+	}{
+		{"public endpoint, public policy", false, true, true},
+		{"public endpoint, scoped policy", false, false, false},
+		{"vpc domain, public policy", true, true, false},
+		{"vpc domain, scoped policy", true, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, esDomainIsPublic(tt.inVPC, tt.policyAllowsPublic))
+		})
+	}
+}
+
+func TestRedshiftClusterInternetReachable(t *testing.T) {
+	tests := []struct {
+		name               string
+		publiclyAccessible bool
+		want               bool
+	}{
+		{"publicly accessible", true, true},
+		{"private", false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cluster := &mqlAwsRedshiftCluster{
+				PubliclyAccessible: setBoolValue(tt.publiclyAccessible),
+			}
+			got, err := cluster.internetReachable()
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestOpenIngressRulesFromSecurityGroupsNil(t *testing.T) {
+	// A nil security-group TValue (e.g. a Neptune instance whose parent cluster
+	// could not be located) must yield no open rules rather than panicking.
+	rules, err := openIngressRulesFromSecurityGroups(nil)
+	require.NoError(t, err)
+	assert.Empty(t, rules)
 }

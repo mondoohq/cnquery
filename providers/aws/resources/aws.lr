@@ -1385,6 +1385,11 @@ private aws.efs.filesystem @defaults("name id region") {
   fileSystemPolicy() string
   // Parsed statements from the file system policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the file system policy grants access to a public (wildcard) principal
+  //
+  // True when an Allow statement grants a wildcard principal access that is not
+  // scoped by a source-restricting condition.
+  isPublic() bool
   // Performance mode: generalPurpose or maxIO
   performanceMode string
   // Throughput mode: bursting, provisioned, or elastic
@@ -4764,6 +4769,14 @@ private aws.es.domain @defaults("arn name") {
   tlsSecurityPolicy string
   // IAM access policy as a JSON-formatted string
   accessPolicies string
+  // Parsed statements from the domain access policy
+  policyStatements() []aws.iam.policyStatement
+  // Whether the domain is reachable from the internet
+  //
+  // True when the domain is not deployed inside a VPC (its endpoint is publicly
+  // resolvable) and its access policy grants a wildcard principal access that is
+  // not scoped by a source-restricting condition.
+  isPublic() bool
   // Whether the domain creation is complete
   created bool
   // Whether the domain is being deleted
@@ -6846,6 +6859,11 @@ aws.secretsmanager.secret @defaults("arn name") {
   resourcePolicy() string
   // Parsed statements from the resource-based policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the resource policy grants access to a public (wildcard) principal
+  //
+  // True when an Allow statement grants a wildcard principal access that is not
+  // scoped by a source-restricting condition.
+  isPublic() bool
   // Regions where the secret is replicated
   replicaRegions() []aws.secretsmanager.secret.replicaRegion
   // Secret type: USER (user-created) or MANAGED_EXTERNAL (managed by another service)
@@ -10811,6 +10829,11 @@ private aws.backup.vault @defaults("name region") {
   accessPolicy() string
   // Parsed statements from the vault access policy
   policyStatements() []aws.iam.policyStatement
+  // Whether the vault access policy grants access to a public (wildcard) principal
+  //
+  // True when an Allow statement grants a wildcard principal access that is not
+  // scoped by a source-restricting condition.
+  isPublic() bool
 }
 
 // AWS Backup vault recovery point
@@ -12195,6 +12218,11 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   preferredMaintenanceWindow string
   // Whether the cluster is publicly accessible
   publiclyAccessible bool
+  // Whether the cluster is reachable from the internet
+  //
+  // True when the cluster is configured for public access, which assigns it a
+  // publicly resolvable endpoint reachable from outside its VPC.
+  internetReachable() bool
   // Connection endpoint address for the cluster (empty when the cluster has no endpoint)
   endpointAddress string
   // Connection endpoint port for the cluster (0 when the cluster has no endpoint)
@@ -16985,6 +17013,8 @@ private aws.neptune.instance @defaults("arn name status"){
   tdeCredentialArn string
   // Whether the DB instance is publicly accessible
   publiclyAccessible bool
+  // Internet-exposure breakdown (publicly-accessible flag combined with the parent cluster's security group ingress)
+  exposure() aws.network.exposure
   // ID of the Certificate Authority
   certificateAuthority string
   // Network protocol the instance is accessible over (IPV4 or DUAL for IPv4/IPv6 dual-stack)
