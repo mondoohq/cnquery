@@ -13907,7 +13907,7 @@ private aws.apigatewayv2.route @defaults("routeKey apiId authorizationType") {
   requestModels map[string]string
   // Whether the route is owned and managed by another AWS service
   apiGatewayManaged bool
-  // Whether the route is publicly invokable (no authorizer — authorization type NONE)
+  // Whether the route is publicly invocable (no authorizer — authorization type NONE)
   isPublic() bool
 }
 
