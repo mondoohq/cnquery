@@ -874,12 +874,58 @@ func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return args, mqlSG, nil
 }
 
+// newMqlOpenstackSecurityGroup maps a Neutron security group to its MQL
+// resource, including embedded rules and the cached project id used by the
+// project() accessor.
+func newMqlOpenstackSecurityGroup(runtime *plugin.Runtime, sg *groups.SecGroup) (*mqlOpenstackSecurityGroup, error) {
+	ruleResources, err := buildSecurityGroupRules(runtime, sg)
+	if err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "openstack.securityGroup", map[string]*llx.RawData{
+		"__id":        llx.StringData("openstack.securityGroup/" + sg.ID),
+		"id":          llx.StringData(sg.ID),
+		"name":        llx.StringData(sg.Name),
+		"description": llx.StringData(sg.Description),
+		"stateful":    llx.BoolData(sg.Stateful),
+		"tags":        stringSliceData(sg.Tags),
+		"createdAt":   llx.TimeDataPtr(timePtr(sg.CreatedAt)),
+		"updatedAt":   llx.TimeDataPtr(timePtr(sg.UpdatedAt)),
+		"rules":       llx.ArrayData(ruleResources, types.Resource("openstack.securityGroup.rule")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlSG := res.(*mqlOpenstackSecurityGroup)
+	mqlSG.cacheProjectID = sg.ProjectID
+	return mqlSG, nil
+}
+
 func (o *mqlOpenstack) securityGroups() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.NetworkClient()
 	if err != nil {
 		return nil, err
 	}
+
+	// On a discovered openstack-security-group asset the connection is scoped to
+	// a single group; return just that one (fetched directly) so per-asset checks
+	// operate on it without listing the whole project.
+	if sgID := c.SecurityGroupID(); sgID != "" {
+		sg, err := groups.Get(ctx(), client, sgID).Extract()
+		if err != nil {
+			if translateGetError(err) == nil {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		mqlSG, err := newMqlOpenstackSecurityGroup(o.MqlRuntime, sg)
+		if err != nil {
+			return nil, err
+		}
+		return []any{mqlSG}, nil
+	}
+
 	pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
 	if err != nil {
 		if translateOpenstackError(err) == nil {
@@ -909,27 +955,10 @@ func (o *mqlOpenstack) securityGroups() ([]any, error) {
 
 	out := make([]any, 0, len(items))
 	for i := range items {
-		sg := &items[i]
-		ruleResources, err := buildSecurityGroupRules(o.MqlRuntime, sg)
+		mqlSG, err := newMqlOpenstackSecurityGroup(o.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		res, err := CreateResource(o.MqlRuntime, "openstack.securityGroup", map[string]*llx.RawData{
-			"__id":        llx.StringData("openstack.securityGroup/" + sg.ID),
-			"id":          llx.StringData(sg.ID),
-			"name":        llx.StringData(sg.Name),
-			"description": llx.StringData(sg.Description),
-			"stateful":    llx.BoolData(sg.Stateful),
-			"tags":        stringSliceData(sg.Tags),
-			"createdAt":   llx.TimeDataPtr(timePtr(sg.CreatedAt)),
-			"updatedAt":   llx.TimeDataPtr(timePtr(sg.UpdatedAt)),
-			"rules":       llx.ArrayData(ruleResources, types.Resource("openstack.securityGroup.rule")),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mqlSG := res.(*mqlOpenstackSecurityGroup)
-		mqlSG.cacheProjectID = sg.ProjectID
 		out = append(out, mqlSG)
 	}
 	return out, nil

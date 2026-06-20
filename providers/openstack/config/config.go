@@ -32,9 +32,13 @@ Authentication options (in priority order):
 Application credentials are also supported via --application-credential-id
 and --application-credential-secret.
 `,
-			MinArgs:   0,
-			MaxArgs:   0,
-			Discovery: []string{},
+			MinArgs: 0,
+			MaxArgs: 0,
+			Discovery: []string{
+				connection.DiscoveryAuto,
+				connection.DiscoveryAll,
+				connection.DiscoverySecurityGroups,
+			},
 			Flags: []plugin.Flag{
 				{Long: connection.OPTION_CLOUD, Type: plugin.FlagType_String, Desc: "clouds.yaml entry to use"},
 				{Long: connection.OPTION_AUTH_URL, Type: plugin.FlagType_String, Desc: "Keystone auth URL (env: OS_AUTH_URL)"},

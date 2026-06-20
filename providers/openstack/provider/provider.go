@@ -70,6 +70,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.OPTION_INSECURE] = "true"
 	}
 
+	// Discovery expands the connected scope into specific child assets.
+	discoverTargets := []string{connection.DiscoveryAuto}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		discoverTargets = discoverTargets[:0]
+		for i := range x.Array {
+			discoverTargets = append(discoverTargets, string(x.Array[i].Value))
+		}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -94,12 +104,29 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
+}
+
+func (s *Service) discover(conn *connection.OpenstackConnection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf.Discover == nil {
+		return nil, nil
+	}
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+	return resources.Discover(runtime)
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.OpenstackConnection, error) {
@@ -142,6 +169,18 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OpenstackConnection) error {
+	// A discovered child asset (e.g. a single security group) carries its scope
+	// in the connection options; report its platform instead of the root scope.
+	if platform, platformID, name := conn.SubAssetPlatform(); platform != nil {
+		asset.Platform = platform
+		asset.Id = platformID
+		asset.PlatformIds = []string{platformID}
+		if asset.Name == "" {
+			asset.Name = name
+		}
+		return nil
+	}
+
 	asset.Platform = &inventory.Platform{
 		Family:  []string{"openstack"},
 		Kind:    "api",
