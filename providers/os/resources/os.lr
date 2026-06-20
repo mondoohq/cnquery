@@ -6900,6 +6900,84 @@ windows.rdp {
   maxDisconnectionTimeMs() int
 }
 
+// Windows Remote Management (WinRM)
+//
+// Examine the effective WinRM (Windows Remote Management) policy posture for
+// both the WinRM client and service, plus the WinRS remote shell setting and
+// the WinRM service start mode. The client and service settings are read from
+// the Group Policy key HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM; these
+// are GPO-only values with no per-listener effective fallback, so when a value
+// is absent the documented Windows default applies. `serviceStartMode` reflects
+// HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start. Read from the registry, so
+// it is available even on connections that cannot run commands.
+windows.winrm {
+  // WinRM client authentication and transport policy
+  client() windows.winrm.client
+  // WinRM service authentication, transport, and listener policy
+  service() windows.winrm.service
+  // WinRM service start mode (Services\WinRM\Start)
+  //
+  // The HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start DWORD: 2=automatic,
+  // 3=manual, 4=disabled. Defaults to 3 (manual) when the value is absent.
+  serviceStartMode() int
+}
+
+// WinRM client policy
+//
+// Examine the WinRM client policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\WinRM\Client. These are GPO-only values; when a value is absent the
+// documented Windows default applies.
+private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
+  // Whether the WinRM client allows Basic authentication (Client\AllowBasic)
+  //
+  // Defaults to true (Windows historically allows Basic auth on the client
+  // when the policy is not configured).
+  allowBasic bool
+  // Whether the WinRM client allows unencrypted traffic (Client\AllowUnencryptedTraffic)
+  //
+  // Defaults to true (Windows historically allows unencrypted traffic on the
+  // client when the policy is not configured).
+  allowUnencryptedTraffic bool
+  // Whether the WinRM client allows Digest authentication (Client\AllowDigest)
+  //
+  // Defaults to true (Digest authentication is enabled on the client when the
+  // policy is not configured).
+  allowDigest bool
+}
+
+// WinRM service policy
+//
+// Examine the WinRM service policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\WinRM\Service (and the WinRS subkey). These are GPO-only values;
+// when a value is absent the documented Windows default applies.
+private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
+  // Whether the WinRM service allows Basic authentication (Service\AllowBasic)
+  //
+  // Defaults to true (Windows historically allows Basic auth on the service
+  // when the policy is not configured).
+  allowBasic bool
+  // Whether the WinRM service allows unencrypted traffic (Service\AllowUnencryptedTraffic)
+  //
+  // Defaults to true (Windows historically allows unencrypted traffic on the
+  // service when the policy is not configured).
+  allowUnencryptedTraffic bool
+  // Whether the WinRM service disallows storing RunAs credentials (Service\DisableRunAs)
+  //
+  // Defaults to false (RunAs credential storage is not disabled when the
+  // policy is not configured).
+  disableRunAs bool
+  // Whether the WinRM service allows remote server management / auto config (Service\AllowAutoConfig)
+  //
+  // Defaults to false (the listener is not auto-configured when the policy is
+  // not configured).
+  allowAutoConfig bool
+  // Whether WinRS allows remote shell access (Service\WinRS\AllowRemoteShellAccess)
+  //
+  // Defaults to true (remote shell access is allowed when the policy is not
+  // configured).
+  allowRemoteShellAccess bool
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,

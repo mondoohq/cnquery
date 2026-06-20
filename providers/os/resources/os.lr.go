@@ -335,6 +335,9 @@ const (
 	ResourceWindowsOptionalFeature                        string = "windows.optionalFeature"
 	ResourceWindowsEventlog                               string = "windows.eventlog"
 	ResourceWindowsRdp                                    string = "windows.rdp"
+	ResourceWindowsWinrm                                  string = "windows.winrm"
+	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
+	ResourceWindowsWinrmService                           string = "windows.winrm.service"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1748,6 +1751,18 @@ func init() {
 		"windows.rdp": {
 			// to override args, implement: initWindowsRdp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsRdp,
+		},
+		"windows.winrm": {
+			// to override args, implement: initWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrm,
+		},
+		"windows.winrm.client": {
+			// to override args, implement: initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrmClient,
+		},
+		"windows.winrm.service": {
+			// to override args, implement: initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrmService,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8302,6 +8317,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetMaxDisconnectionTimeMs()).ToDataRes(types.Int)
+	},
+	"windows.winrm.client": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetClient()).ToDataRes(types.Resource("windows.winrm.client"))
+	},
+	"windows.winrm.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetService()).ToDataRes(types.Resource("windows.winrm.service"))
+	},
+	"windows.winrm.serviceStartMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetServiceStartMode()).ToDataRes(types.Int)
+	},
+	"windows.winrm.client.allowBasic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowBasic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client.allowUnencryptedTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowUnencryptedTraffic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client.allowDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetAllowDigest()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowBasic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowBasic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowUnencryptedTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowUnencryptedTraffic()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.disableRunAs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetDisableRunAs()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowAutoConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowAutoConfig()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetAllowRemoteShellAccess()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -20004,6 +20052,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.rdp.maxDisconnectionTimeMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).MaxDisconnectionTimeMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.client": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).Client, ok = plugin.RawToTValue[*mqlWindowsWinrmClient](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).Service, ok = plugin.RawToTValue[*mqlWindowsWinrmService](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.serviceStartMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).ServiceStartMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.client.allowBasic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowBasic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.allowUnencryptedTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowUnencryptedTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.allowDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).AllowDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.service.allowBasic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowBasic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowUnencryptedTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowUnencryptedTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.disableRunAs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).DisableRunAs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowAutoConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowAutoConfig, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).AllowRemoteShellAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52756,6 +52860,219 @@ func (c *mqlWindowsRdp) GetMaxDisconnectionTimeMs() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.MaxDisconnectionTimeMs, func() (int64, error) {
 		return c.maxDisconnectionTimeMs()
 	})
+}
+
+// mqlWindowsWinrm for the windows.winrm resource
+type mqlWindowsWinrm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmInternal it will be used here
+	Client           plugin.TValue[*mqlWindowsWinrmClient]
+	Service          plugin.TValue[*mqlWindowsWinrmService]
+	ServiceStartMode plugin.TValue[int64]
+}
+
+// createWindowsWinrm creates a new instance of this resource
+func createWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrm) MqlName() string {
+	return "windows.winrm"
+}
+
+func (c *mqlWindowsWinrm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrm) GetClient() *plugin.TValue[*mqlWindowsWinrmClient] {
+	return plugin.GetOrCompute[*mqlWindowsWinrmClient](&c.Client, func() (*mqlWindowsWinrmClient, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.winrm", c.__id, "client")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsWinrmClient), nil
+			}
+		}
+
+		return c.client()
+	})
+}
+
+func (c *mqlWindowsWinrm) GetService() *plugin.TValue[*mqlWindowsWinrmService] {
+	return plugin.GetOrCompute[*mqlWindowsWinrmService](&c.Service, func() (*mqlWindowsWinrmService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.winrm", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsWinrmService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlWindowsWinrm) GetServiceStartMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ServiceStartMode, func() (int64, error) {
+		return c.serviceStartMode()
+	})
+}
+
+// mqlWindowsWinrmClient for the windows.winrm.client resource
+type mqlWindowsWinrmClient struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmClientInternal it will be used here
+	AllowBasic              plugin.TValue[bool]
+	AllowUnencryptedTraffic plugin.TValue[bool]
+	AllowDigest             plugin.TValue[bool]
+}
+
+// createWindowsWinrmClient creates a new instance of this resource
+func createWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrmClient{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm.client", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrmClient) MqlName() string {
+	return "windows.winrm.client"
+}
+
+func (c *mqlWindowsWinrmClient) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowBasic() *plugin.TValue[bool] {
+	return &c.AllowBasic
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
+	return &c.AllowUnencryptedTraffic
+}
+
+func (c *mqlWindowsWinrmClient) GetAllowDigest() *plugin.TValue[bool] {
+	return &c.AllowDigest
+}
+
+// mqlWindowsWinrmService for the windows.winrm.service resource
+type mqlWindowsWinrmService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmServiceInternal it will be used here
+	AllowBasic              plugin.TValue[bool]
+	AllowUnencryptedTraffic plugin.TValue[bool]
+	DisableRunAs            plugin.TValue[bool]
+	AllowAutoConfig         plugin.TValue[bool]
+	AllowRemoteShellAccess  plugin.TValue[bool]
+}
+
+// createWindowsWinrmService creates a new instance of this resource
+func createWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrmService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrmService) MqlName() string {
+	return "windows.winrm.service"
+}
+
+func (c *mqlWindowsWinrmService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrmService) GetAllowBasic() *plugin.TValue[bool] {
+	return &c.AllowBasic
+}
+
+func (c *mqlWindowsWinrmService) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
+	return &c.AllowUnencryptedTraffic
+}
+
+func (c *mqlWindowsWinrmService) GetDisableRunAs() *plugin.TValue[bool] {
+	return &c.DisableRunAs
+}
+
+func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
+	return &c.AllowAutoConfig
+}
+
+func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
+	return &c.AllowRemoteShellAccess
 }
 
 // mqlWindowsTpm for the windows.tpm resource
