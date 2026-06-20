@@ -323,7 +323,7 @@ func (a *mqlAwsEc2NetworkaclEntry) id() (string, error) {
 // entire internet, matching every IPv4 address (0.0.0.0/0) or every IPv6
 // address (::/0).
 func cidrEntryIsPublic(cidrBlock, ipv6CidrBlock string) bool {
-	return cidrBlock == "0.0.0.0/0" || ipv6CidrBlock == "::/0"
+	return cidrIsPublic(cidrBlock) || cidrIsPublic(ipv6CidrBlock)
 }
 
 // isPublic reports whether the entry opens traffic to the entire internet.
@@ -2155,14 +2155,40 @@ func (a *mqlAwsEc2SecuritygroupIppermission) includesPublicSource() (bool, error
 	if ipv4.Error != nil {
 		return false, ipv4.Error
 	}
-	if anyStringEquals(ipv4.Data, "0.0.0.0/0") {
+	if anyCidrPublic(ipv4.Data) {
 		return true, nil
 	}
 	ipv6 := a.GetIpv6Ranges()
 	if ipv6.Error != nil {
 		return false, ipv6.Error
 	}
-	return anyStringEquals(ipv6.Data, "::/0"), nil
+	if anyCidrPublic(ipv6.Data) {
+		return true, nil
+	}
+
+	// A referenced managed prefix list can itself contain public ranges, so a
+	// rule that names only a prefix list can still be internet-facing.
+	prefixLists := a.GetPrefixLists()
+	if prefixLists.Error != nil {
+		return false, prefixLists.Error
+	}
+	for _, pl := range prefixLists.Data {
+		mpl, ok := pl.(*mqlAwsEc2ManagedPrefixList)
+		if !ok {
+			continue
+		}
+		entries := mpl.GetEntries()
+		if entries.Error != nil {
+			return false, entries.Error
+		}
+		for _, e := range entries.Data {
+			entry, ok := e.(*mqlAwsEc2ManagedPrefixListEntry)
+			if ok && cidrIsPublic(entry.Cidr.Data) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // anyStringEquals reports whether any element of the slice equals target.
