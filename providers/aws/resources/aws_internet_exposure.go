@@ -91,7 +91,11 @@ func (a *mqlAwsBackupVault) isPublic() (bool, error) {
 }
 
 func (a *mqlAwsEsDomain) policyStatements() ([]any, error) {
-	return policyStatementsFromString(a.MqlRuntime, a.Arn.Data, a.GetAccessPolicies())
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
+	return policyStatementsFromString(a.MqlRuntime, arn.Data, a.GetAccessPolicies())
 }
 
 // esDomainIsPublic reports whether an Elasticsearch/OpenSearch domain is
@@ -112,9 +116,8 @@ func (a *mqlAwsEsDomain) isPublic() (bool, error) {
 	if inVPC {
 		return false, nil
 	}
-	policyAllowsPublic, err := resourceIsPublic(a.GetPolicyStatements())
-	if err != nil {
-		return false, err
-	}
-	return esDomainIsPublic(inVPC, policyAllowsPublic), nil
+	// Not in a VPC (checked above), so public reachability reduces to whether the
+	// access policy grants a wildcard principal. esDomainIsPublic encodes the full
+	// rule and is covered directly by unit tests.
+	return resourceIsPublic(a.GetPolicyStatements())
 }
