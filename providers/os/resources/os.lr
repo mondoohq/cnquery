@@ -7229,6 +7229,515 @@ windows.security.health {
   securityCenterService dict
 }
 
+// Microsoft Defender Antivirus
+//
+// Examine the complete runtime status and configuration of Microsoft Defender
+// Antivirus so policies can assert on every Defender security control. The
+// `status` accessor exposes the live engine, signature, and protection state
+// reported by `Get-MpComputerStatus` (real-time protection, behavior
+// monitoring, network inspection, tamper protection, scan ages, and signature
+// freshness). The `preferences` accessor exposes the configurable policy
+// reported by `Get-MpPreference`, grouped into scan, real-time, cloud-delivered
+// protection, signature-update, threat-action, controlled-folder-access,
+// network-protection, and remediation settings, plus exclusions and Attack
+// Surface Reduction rules. The `threats` and `threatDetections` accessors
+// expose the recorded threat history. On systems without Defender (for example
+// servers running a third-party antivirus) the accessors resolve to null
+// rather than failing the query.
+windows.defender @defaults("enabled") {
+  // Whether the Defender antimalware service and real-time antivirus and antispyware protection are all active
+  enabled() bool
+  // Live engine, signature, and protection status (Get-MpComputerStatus)
+  status() windows.defender.status
+  // Configurable Defender preferences and policy (Get-MpPreference)
+  preferences() windows.defender.preferences
+  // Threats recorded in the Defender threat history
+  threats() []windows.defender.threat
+  // Malware detections recorded by Defender
+  threatDetections() []windows.defender.threatDetection
+}
+
+// Microsoft Defender Antivirus runtime status
+//
+// Examine the live state reported by `Get-MpComputerStatus`: whether the
+// antimalware service and each protection component (real-time, behavior
+// monitoring, IOAV, on-access, network inspection) are enabled, the engine
+// and signature versions and their ages, the most recent quick and full scan
+// times and whether they are overdue, tamper-protection state and source, and
+// whether a reboot or signature update is pending. Reached through
+// `windows.defender.status`.
+windows.defender.status @defaults("antivirusEnabled realTimeProtectionEnabled isTamperProtected") {
+  // Antimalware engine version
+  amEngineVersion string
+  // Antimalware client (product) version
+  amProductVersion string
+  // Whether the Windows Defender antimalware service is running
+  amServiceEnabled bool
+  // Antimalware service version
+  amServiceVersion string
+  // Whether antispyware protection is enabled
+  antispywareEnabled bool
+  // Number of days since antispyware definitions were last updated
+  antispywareSignatureAge int
+  // Date the antispyware definitions were last updated
+  antispywareSignatureLastUpdated time
+  // Antispyware definition version
+  antispywareSignatureVersion string
+  // Whether antivirus protection is enabled
+  antivirusEnabled bool
+  // Number of days since antivirus definitions were last updated
+  antivirusSignatureAge int
+  // Date the antivirus definitions were last updated
+  antivirusSignatureLastUpdated time
+  // Antivirus definition version
+  antivirusSignatureVersion string
+  // Whether behavior monitoring is enabled
+  behaviorMonitorEnabled bool
+  // Unique identifier of the computer as known to Defender
+  computerID string
+  // Current state of the computer as a bitmask of Defender component states
+  computerState int
+  // Whether the Defender signatures are out of date
+  defenderSignaturesOutOfDate bool
+  // Default enforcement mode for device control
+  deviceControlDefaultEnforcement int
+  // Date the device-control policies were last updated
+  deviceControlPoliciesLastUpdated time
+  // Operational state of device control
+  deviceControlState int
+  // Number of days since the last full scan completed
+  fullScanAge int
+  // Time the last full scan started
+  fullScanStartTime time
+  // Time the last full scan completed
+  fullScanEndTime time
+  // Whether a scheduled full scan is overdue
+  fullScanOverdue bool
+  // Whether a full scan is required to complete remediation
+  fullScanRequired bool
+  // Definition version used by the last full scan
+  fullScanSignatureVersion string
+  // Whether scanning of downloaded files and attachments (IOAV) is enabled
+  ioavProtectionEnabled bool
+  // Whether tamper protection is shielding Defender settings
+  isTamperProtected bool
+  // Whether the host is a virtual machine
+  isVirtualMachine bool
+  // Source that triggered the last full scan
+  lastFullScanSource int
+  // Source that triggered the last quick scan
+  lastQuickScanSource int
+  // Whether the Network Inspection System (NIS) is enabled
+  nisEnabled bool
+  // Network Inspection System engine version
+  nisEngineVersion string
+  // Number of days since the NIS definitions were last updated
+  nisSignatureAge int
+  // Date the NIS definitions were last updated
+  nisSignatureLastUpdated time
+  // Network Inspection System definition version
+  nisSignatureVersion string
+  // Whether on-access protection is enabled
+  onAccessProtectionEnabled bool
+  // Aggregate product status bitmask
+  productStatus int
+  // Number of days since the last quick scan completed
+  quickScanAge int
+  // Time the last quick scan started
+  quickScanStartTime time
+  // Time the last quick scan completed
+  quickScanEndTime time
+  // Whether a scheduled quick scan is overdue
+  quickScanOverdue bool
+  // Definition version used by the last quick scan
+  quickScanSignatureVersion string
+  // Whether real-time protection is enabled
+  realTimeProtectionEnabled bool
+  // Direction in which real-time scanning inspects files
+  //
+  // 0 = both incoming and outgoing, 1 = incoming only, 2 = outgoing only.
+  realTimeScanDirection int
+  // Whether a reboot is required to finish remediation
+  rebootRequired bool
+  // State of Smart App Control
+  //
+  // One of On, Off, Eval, or an empty string when unsupported.
+  smartAppControlState string
+  // Expiration time of the Smart App Control evaluation period
+  smartAppControlExpiration time
+  // Source that manages tamper protection (for example Intune, signatures, or the local UI)
+  tamperProtectionSource string
+}
+
+// Microsoft Defender Antivirus preferences
+//
+// Examine the configurable Defender policy reported by `Get-MpPreference`,
+// grouped into typed accessors so audits can assert on individual controls:
+// `scan` (schedule and scan behavior), `realTimeProtection`, `cloudProtection`
+// (MAPS / cloud-delivered protection), `signatureUpdates`, `threatActions`
+// (per-severity default actions), `controlledFolderAccess`, `networkProtection`,
+// `remediation`, `exclusions`, and `attackSurfaceReductionRules`. Reached
+// through `windows.defender.preferences`.
+windows.defender.preferences @defaults("puaProtection") {
+  // Scan schedule and scan-behavior settings
+  scan() windows.defender.scanSettings
+  // Real-time and behavior-monitoring protection settings
+  realTimeProtection() windows.defender.realTimeSettings
+  // Cloud-delivered protection (MAPS) settings
+  cloudProtection() windows.defender.cloudSettings
+  // Definition, engine, and platform update settings
+  signatureUpdates() windows.defender.signatureSettings
+  // Per-severity default threat actions
+  threatActions() windows.defender.threatActionSettings
+  // Controlled folder access (ransomware protection) settings
+  controlledFolderAccess() windows.defender.controlledFolderAccess
+  // Network protection settings
+  networkProtection() windows.defender.networkProtectionSettings
+  // Threat remediation settings
+  remediation() windows.defender.remediationSettings
+  // Scan exclusions (paths, extensions, processes, IP addresses)
+  exclusions() windows.defender.exclusions
+  // Configured Attack Surface Reduction (ASR) rules and their actions
+  attackSurfaceReductionRules() []windows.defender.asrRule
+  // Potentially unwanted application (PUA) protection mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode.
+  puaProtection() int
+  // Whether the Defender user interface is locked down (hidden from users)
+  uiLockdown() bool
+  // Whether scheduled task start times are randomized
+  randomizeScheduleTaskTimes() bool
+  // Whether automatic exclusions for server roles are disabled
+  disableAutoExclusions() bool
+}
+
+// Microsoft Defender scan settings
+//
+// Examine the scheduled-scan and scan-behavior preferences: the schedule day
+// and time, the quick-scan time, CPU load factor, and the toggles that disable
+// scanning of archives, email, removable drives, mapped network drives, and
+// network files. Reached through `windows.defender.preferences.scan`.
+windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
+  // Default scan type (1 = quick scan, 2 = full scan)
+  scanParameters int
+  // Day of the week a scheduled scan runs
+  //
+  // 0 = every day, 1 = Sunday through 7 = Saturday, 8 = never.
+  scanScheduleDay int
+  // Time of day a scheduled scan runs (raw schedule value)
+  scanScheduleTime string
+  // Time of day a scheduled quick scan runs (raw schedule value)
+  scanScheduleQuickScanTime string
+  // Number of minutes after midnight to offset the scheduled scan
+  scanScheduleOffset int
+  // Maximum percentage of CPU a scan may consume
+  scanAvgCPULoadFactor int
+  // Whether scheduled scans run only when the computer is idle
+  scanOnlyIfIdleEnabled bool
+  // Whether to check for new signatures before running a scheduled scan
+  //
+  // 0 = never, 1 = before every scan, 2 = disabled.
+  checkForSignaturesBeforeRunningScan int
+  // Whether scanning inside archive files is disabled
+  disableArchiveScanning bool
+  // Whether email scanning is disabled
+  disableEmailScanning bool
+  // Whether scanning of removable drives during full scans is disabled
+  disableRemovableDriveScanning bool
+  // Whether scanning of mapped network drives during full scans is disabled
+  disableScanningMappedNetworkDrivesForFullScan bool
+  // Whether scanning of files on the network is disabled
+  disableScanningNetworkFiles bool
+  // Whether catch-up full scans are disabled
+  disableCatchupFullScan bool
+  // Whether catch-up quick scans are disabled
+  disableCatchupQuickScan bool
+  // Whether CPU throttling during idle scans is disabled
+  disableCpuThrottleOnIdleScans bool
+  // Whether full scans are allowed to run while on battery power
+  enableFullScanOnBatteryPower bool
+  // Whether scans run at low CPU priority
+  enableLowCpuPriority bool
+}
+
+// Microsoft Defender real-time protection settings
+//
+// Examine the real-time protection preferences: the master real-time
+// monitoring toggle, behavior monitoring, downloaded-file (IOAV) scanning,
+// script scanning, on-access protection, the intrusion-prevention system, the
+// scan direction, and file-hash computation. Reached through
+// `windows.defender.preferences.realTimeProtection`.
+windows.defender.realTimeSettings @defaults("disableRealtimeMonitoring") {
+  // Whether real-time monitoring is disabled
+  disableRealtimeMonitoring bool
+  // Whether behavior monitoring is disabled
+  disableBehaviorMonitoring bool
+  // Whether scanning of downloaded files and attachments (IOAV) is disabled
+  disableIOAVProtection bool
+  // Whether script scanning is disabled
+  disableScriptScanning bool
+  // Whether the Network Inspection System (intrusion prevention) is disabled
+  disableIntrusionPreventionSystem bool
+  // Direction in which real-time scanning inspects files
+  //
+  // 0 = both incoming and outgoing, 1 = incoming only, 2 = outgoing only.
+  realTimeScanDirection int
+  // Whether file-hash computation is enabled
+  enableFileHashComputation bool
+}
+
+// Microsoft Defender cloud-delivered protection settings
+//
+// Examine the Microsoft Active Protection Service (MAPS) and cloud-delivered
+// protection preferences: the reporting membership level, the sample-submission
+// consent, the cloud block level and extended timeout, and the block-at-first-
+// seen toggle. Reached through `windows.defender.preferences.cloudProtection`.
+windows.defender.cloudSettings @defaults("mapsReporting cloudBlockLevel") {
+  // MAPS reporting membership level
+  //
+  // 0 = disabled, 1 = basic membership, 2 = advanced membership.
+  mapsReporting int
+  // Sample-submission consent
+  //
+  // 0 = always prompt, 1 = send safe samples automatically, 2 = never send,
+  // 3 = send all samples automatically.
+  submitSamplesConsent int
+  // Cloud-delivered protection block level
+  //
+  // 0 = default, 2 = high, 4 = high plus, 6 = zero tolerance.
+  cloudBlockLevel int
+  // Number of seconds Defender may extend a cloud check (0-50)
+  cloudExtendedTimeout int
+  // Whether block-at-first-seen cloud protection is disabled
+  disableBlockAtFirstSeen bool
+}
+
+// Microsoft Defender signature and platform update settings
+//
+// Examine the definition, engine, and platform update preferences: the update
+// schedule and interval, the catch-up interval, the fallback source order,
+// file-share sources, and the release channels for definitions, engine, and
+// platform. Reached through `windows.defender.preferences.signatureUpdates`.
+windows.defender.signatureSettings @defaults("signatureUpdateInterval") {
+  // Day of the week scheduled signature updates run
+  signatureScheduleDay int
+  // Time of day scheduled signature updates run (raw schedule value)
+  signatureScheduleTime string
+  // Hours between signature update checks
+  signatureUpdateInterval int
+  // Hours after which a missed signature update is retried
+  signatureUpdateCatchupInterval int
+  // Ordered list of signature update sources
+  signatureFallbackOrder string
+  // UNC file-share sources for signature updates
+  signatureDefinitionUpdateFileSharesSources string
+  // Whether signature updates on startup without an engine are disabled
+  signatureDisableUpdateOnStartupWithoutEngine bool
+  // Grace period (minutes) before the first scheduled update after install
+  signatureFirstAuGracePeriod int
+  // Grace period (minutes) for automatic signature updates
+  signatureAuGracePeriod int
+  // Release channel for definition updates
+  definitionUpdatesChannel int
+  // Release channel for engine updates
+  engineUpdatesChannel int
+  // Release channel for platform updates
+  platformUpdatesChannel int
+  // Whether updates are allowed over metered connections
+  meteredConnectionUpdates bool
+}
+
+// Microsoft Defender default threat actions
+//
+// Examine the default remediation action applied to threats of each severity
+// (severe, high, moderate, low, and unknown) plus any per-threat-ID action
+// overrides. Reached through `windows.defender.preferences.threatActions`.
+windows.defender.threatActionSettings @defaults("severeThreatDefaultAction highThreatDefaultAction") {
+  // Default action for severe-severity threats
+  //
+  // 1 = clean, 2 = quarantine, 3 = remove, 6 = allow, 8 = user defined,
+  // 9 = no action, 10 = block.
+  severeThreatDefaultAction int
+  // Default action for high-severity threats (see severeThreatDefaultAction for values)
+  highThreatDefaultAction int
+  // Default action for moderate-severity threats (see severeThreatDefaultAction for values)
+  moderateThreatDefaultAction int
+  // Default action for low-severity threats (see severeThreatDefaultAction for values)
+  lowThreatDefaultAction int
+  // Default action for unknown-severity threats (see severeThreatDefaultAction for values)
+  unknownThreatDefaultAction int
+  // Per-threat-ID default action overrides
+  idActions() []windows.defender.threatIdAction
+}
+
+// Microsoft Defender per-threat-ID action override
+//
+// Examine a single override that pins the remediation action for a specific
+// threat ID, pairing the `threatId` with the configured `action`. Iterated
+// from `windows.defender.preferences.threatActions.idActions`.
+windows.defender.threatIdAction @defaults("threatId action") {
+  // Threat ID the override applies to
+  threatId string
+  // Action applied to the threat
+  //
+  // 1 = clean, 2 = quarantine, 3 = remove, 6 = allow, 8 = user defined,
+  // 9 = no action, 10 = block.
+  action int
+}
+
+// Microsoft Defender controlled folder access settings
+//
+// Examine the controlled-folder-access (ransomware protection) configuration:
+// whether it is enabled or in audit mode, the applications allowed to write to
+// protected folders, and the list of additional protected folders. Reached
+// through `windows.defender.preferences.controlledFolderAccess`.
+windows.defender.controlledFolderAccess @defaults("enabled") {
+  // Controlled folder access mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode, 3 = block disk
+  // modification only, 4 = audit disk modification only.
+  enabled int
+  // Applications explicitly allowed to write to protected folders
+  allowedApplications []string
+  // Additional folders protected beyond the system defaults
+  protectedFolders []string
+}
+
+// Microsoft Defender network protection settings
+//
+// Examine the network-protection configuration: the enforcement mode and the
+// toggles that extend protection to Windows Server, down-level clients, and
+// datagram processing, plus DNS sinkhole enforcement. Reached through
+// `windows.defender.preferences.networkProtection`.
+windows.defender.networkProtectionSettings @defaults("enableNetworkProtection") {
+  // Network protection enforcement mode
+  //
+  // 0 = disabled, 1 = enabled (block), 2 = audit mode.
+  enableNetworkProtection int
+  // Whether network protection is allowed on Windows Server
+  allowNetworkProtectionOnWinServer bool
+  // Whether network protection is allowed on down-level (older) clients
+  allowNetworkProtectionDownLevel bool
+  // Whether datagram processing is allowed on Windows Server
+  allowDatagramProcessingOnWinServer bool
+  // Whether DNS sinkhole enforcement is enabled
+  enableDnsSinkhole bool
+}
+
+// Microsoft Defender remediation settings
+//
+// Examine the threat-remediation preferences: the scheduled remediation day
+// and time, how long quarantined items are retained, and whether system
+// restore points are created before remediation. Reached through
+// `windows.defender.preferences.remediation`.
+windows.defender.remediationSettings @defaults("quarantinePurgeItemsAfterDelay") {
+  // Day of the week scheduled remediation runs
+  remediationScheduleDay int
+  // Time of day scheduled remediation runs (raw schedule value)
+  remediationScheduleTime string
+  // Number of days quarantined items are kept before purging
+  quarantinePurgeItemsAfterDelay int
+  // Whether creation of a system restore point before remediation is disabled
+  disableRestorePoint bool
+}
+
+// Microsoft Defender scan exclusions
+//
+// Examine every configured scan exclusion: file and folder `paths`, file
+// `extensions`, `processes`, and `ipAddresses`. Empty lists mean no exclusions
+// of that kind are configured. Reached through
+// `windows.defender.preferences.exclusions`.
+windows.defender.exclusions @defaults("paths extensions processes") {
+  // Excluded file and folder paths
+  paths []string
+  // Excluded file extensions
+  extensions []string
+  // Excluded processes
+  processes []string
+  // Excluded IP addresses
+  ipAddresses []string
+}
+
+// Microsoft Defender Attack Surface Reduction rule
+//
+// Examine a single Attack Surface Reduction (ASR) rule: its `id` (the rule
+// GUID), the friendly `name` when the GUID is recognized, and the configured
+// `action`. The `id` selects the rule — for example
+// `windows.defender.preferences.attackSurfaceReductionRules.where(id == "...")`.
+// Iterated from `windows.defender.preferences.attackSurfaceReductionRules`.
+windows.defender.asrRule @defaults("id name action") {
+  // Attack Surface Reduction rule GUID
+  id string
+  // Friendly name of the rule, when the GUID is recognized
+  name string
+  // Configured action for the rule
+  //
+  // 0 = not configured (disabled), 1 = block, 2 = audit, 5 = not configured,
+  // 6 = warn.
+  action int
+}
+
+// Microsoft Defender recorded threat
+//
+// Examine a single threat recorded in the Defender threat history: its
+// `threatId`, `name`, `severityID`, `categoryID`, whether it `isActive` and
+// whether it executed, and the affected `resources`. Iterated from
+// `windows.defender.threats`.
+windows.defender.threat @defaults("name severityID isActive") {
+  // Numeric threat identifier
+  threatId int
+  // Threat name as reported by Defender
+  name string
+  // Severity identifier (higher is more severe)
+  severityID int
+  // Category identifier of the threat
+  categoryID int
+  // Whether the threat is currently active
+  isActive bool
+  // Whether the threat executed on the system
+  didThreatExecute bool
+  // Aggregate rollup status of the threat
+  rollupStatus int
+  // Resources (files, registry keys, processes) affected by the threat
+  resources []string
+}
+
+// Microsoft Defender threat detection
+//
+// Examine a single detection event recorded by Defender: the `detectionId`,
+// the associated `threatId`, the `processName` and `domainUser` involved, the
+// detection source and status, the action taken and whether it succeeded, and
+// the detection and remediation timestamps. Iterated from
+// `windows.defender.threatDetections`.
+windows.defender.threatDetection @defaults("threatId processName actionSuccess") {
+  // Unique detection identifier
+  detectionId string
+  // Numeric threat identifier associated with the detection
+  threatId int
+  // Name of the process involved in the detection
+  processName string
+  // Domain user in whose context the detection occurred
+  domainUser string
+  // Detection source type identifier
+  detectionSourceTypeId int
+  // Current execution status of the detected threat
+  currentThreatExecutionStatusID int
+  // Status identifier of the threat
+  threatStatusID int
+  // Identifier of the cleaning action applied
+  cleaningActionID int
+  // Whether the remediation action succeeded
+  actionSuccess bool
+  // Time the threat was first detected
+  initialDetectionTime time
+  // Time the threat status last changed
+  lastThreatStatusChangeTime time
+  // Time remediation completed
+  remediationTime time
+  // Resources (files, registry keys, processes) affected by the detection
+  resources []string
+}
+
 // Cloud-asset metadata
 //
 // Examine the cloud provider and exposed instance metadata
