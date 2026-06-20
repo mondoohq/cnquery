@@ -3886,8 +3886,6 @@ func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 	return res.(*mqlAwsVpcSubnet), nil
 }
 
-// inPublicSubnet reports whether the instance's subnet routes to an internet
-// gateway, which is the defining property of a public subnet.
 // instanceInPublicSubnet reports whether the instance's subnet routes to an
 // internet gateway (the defining property of a public subnet).
 func instanceInPublicSubnet(i *mqlAwsEc2Instance) (bool, error) {
@@ -3921,12 +3919,6 @@ func instanceInPublicSubnet(i *mqlAwsEc2Instance) (bool, error) {
 	}
 	return false, nil
 }
-
-// internetReachable reports whether the instance is directly reachable from the
-// internet: it has a public IP, sits in a public subnet, an attached security
-// group permits inbound traffic from 0.0.0.0/0 or ::/0, and the subnet's network
-// ACL does not block that traffic. Load-balancer-fronted exposure is a separate
-// path (see loadBalancers).
 
 // instanceSubnetNaclAllowsPublicIngress reports whether the instance's subnet
 // network ACL permits inbound internet traffic. Missing subnet/NACL data does

@@ -92,6 +92,10 @@ func TestIpPermissionIncludesPublicSource(t *testing.T) {
 		p := &mqlAwsEc2SecuritygroupIppermission{}
 		p.IpRanges = plugin.TValue[[]any]{Data: ipv4, State: plugin.StateIsSet}
 		p.Ipv6Ranges = plugin.TValue[[]any]{Data: ipv6, State: plugin.StateIsSet}
+		// Pre-resolve the prefix-list field so includesPublicSource does not lazily
+		// compute it, which would dereference a runtime this synthetic resource does
+		// not have. The CIDR cases below never reference a prefix list.
+		p.PrefixLists = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
 		return p
 	}
 
