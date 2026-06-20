@@ -2690,6 +2690,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   settings gcp.project.sqlService.instance.settings
   // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
   publicIpEnabled() bool
+  // Whether the instance is reachable from the internet (a public IP and an authorized network open to 0.0.0.0/0)
+  internetReachable() bool
   // Whether IAM database authentication is enabled — true when the cloudsql.iam_authentication database flag is on
   iamAuthenticationEnabled() bool
   // Whether automated backups are enabled — flat hoist of settings.backupConfiguration.enabled

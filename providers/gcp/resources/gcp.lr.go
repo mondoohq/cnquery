@@ -5122,6 +5122,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.publicIpEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetPublicIpEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.sqlService.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"gcp.project.sqlService.instance.iamAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetIamAuthenticationEnabled()).ToDataRes(types.Bool)
 	},
@@ -20875,6 +20878,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.publicIpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).PublicIpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.iamAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47663,6 +47670,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	ReplicaNames                               plugin.TValue[[]any]
 	Settings                                   plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettings]
 	PublicIpEnabled                            plugin.TValue[bool]
+	InternetReachable                          plugin.TValue[bool]
 	IamAuthenticationEnabled                   plugin.TValue[bool]
 	BackupConfigurationEnabled                 plugin.TValue[bool]
 	PointInTimeRecoveryEnabled                 plugin.TValue[bool]
@@ -47847,6 +47855,12 @@ func (c *mqlGcpProjectSqlServiceInstance) GetSettings() *plugin.TValue[*mqlGcpPr
 func (c *mqlGcpProjectSqlServiceInstance) GetPublicIpEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.PublicIpEnabled, func() (bool, error) {
 		return c.publicIpEnabled()
+	})
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
 	})
 }
 

@@ -4451,6 +4451,7 @@ gcp.project.sqlService.instance.gceZone 9.0.0
 gcp.project.sqlService.instance.hasBuiltInUsers 13.12.2
 gcp.project.sqlService.instance.iamAuthenticationEnabled 13.21.2
 gcp.project.sqlService.instance.instanceType 9.0.0
+gcp.project.sqlService.instance.internetReachable 13.24.1
 gcp.project.sqlService.instance.ipAddresses 9.0.0
 gcp.project.sqlService.instance.ipMapping 9.0.0
 gcp.project.sqlService.instance.ipMapping.id 9.0.0

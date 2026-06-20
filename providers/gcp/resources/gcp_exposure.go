@@ -249,3 +249,36 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 	}
 	return res.(*mqlGcpProjectComputeServiceNetworkExposure), nil
 }
+
+// internetReachable reports whether the Cloud SQL instance is reachable from the
+// internet: it has a public IP and an authorized network that admits any address
+// (0.0.0.0/0). Reuses the existing publicIpEnabled and hasOpenAuthorizedNetworks
+// signals.
+func (g *mqlGcpProjectSqlServiceInstance) internetReachable() (bool, error) {
+	public := g.GetPublicIpEnabled()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if !public.Data {
+		return false, nil
+	}
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return false, settings.Error
+	}
+	if settings.Data == nil {
+		return false, nil
+	}
+	ipConfig := settings.Data.GetIpConfiguration()
+	if ipConfig.Error != nil {
+		return false, ipConfig.Error
+	}
+	if ipConfig.Data == nil {
+		return false, nil
+	}
+	open := ipConfig.Data.GetHasOpenAuthorizedNetworks()
+	if open.Error != nil {
+		return false, open.Error
+	}
+	return open.Data, nil
+}
