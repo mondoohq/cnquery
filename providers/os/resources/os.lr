@@ -6711,6 +6711,9 @@ windows.update {
   // Windows Update Agent configuration and freshness
   config() windows.update.config
   // Windows Update for Business and Automatic Updates group policy configuration
+  //
+  // Each policy value is nullable: a null value signals that the setting is not
+  // configured, distinguishing an absent policy from one explicitly set to 0.
   policy() windows.update.policy
   // Updates that have been installed (Windows Update Agent history)
   installed() []windows.update.entry

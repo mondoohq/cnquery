@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -269,8 +270,16 @@ func computeWindowsUpdatePolicy(policy, au map[string]registry.RegistryKeyItem) 
 }
 
 func (w *mqlWindowsUpdate) policy() (*mqlWindowsUpdatePolicy, error) {
-	policy, _ := w.readRegistryKey(wuPolicyKey)
-	au, _ := w.readRegistryKey(wuPolicyAUKey)
+	policy, okPolicy := w.readRegistryKey(wuPolicyKey)
+	au, okAU := w.readRegistryKey(wuPolicyAUKey)
+
+	// readRegistryKey returns true when the registry was queryable at all, even
+	// when the key is simply absent (the default on an unmanaged host). When
+	// neither key could be read the registry connection itself is broken, so
+	// surface that rather than silently reporting an unconfigured policy.
+	if !okPolicy && !okAU {
+		return nil, errors.New("windows.update.policy: could not read the Windows Update policy registry keys")
+	}
 
 	v := computeWindowsUpdatePolicy(policy, au)
 
