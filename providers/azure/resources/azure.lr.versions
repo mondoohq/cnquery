@@ -2,12 +2,6 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 azure 9.0.0
-azure.network.exposure 13.20.1
-azure.network.exposure.hasPublicIp 13.20.1
-azure.network.exposure.id 13.20.1
-azure.network.exposure.internetReachable 13.20.1
-azure.network.exposure.openIngressRules 13.20.1
-azure.network.exposure.securityGroupAllowsIngress 13.20.1
 azure.subscription 11.4.28
 azure.subscription.advisor 11.4.28
 azure.subscription.advisorService 9.0.13
@@ -2842,6 +2836,12 @@ azure.subscription.networkService.ddosProtectionPlan.tags 13.3.3
 azure.subscription.networkService.ddosProtectionPlan.type 13.3.3
 azure.subscription.networkService.ddosProtectionPlan.virtualNetworks 13.3.3
 azure.subscription.networkService.ddosProtectionPlans 13.3.3
+azure.subscription.networkService.exposure 13.20.1
+azure.subscription.networkService.exposure.hasPublicIp 13.20.1
+azure.subscription.networkService.exposure.id 13.20.1
+azure.subscription.networkService.exposure.internetReachable 13.20.1
+azure.subscription.networkService.exposure.openIngressRules 13.20.1
+azure.subscription.networkService.exposure.securityGroupAllowsIngress 13.20.1
 azure.subscription.networkService.expressRouteCircuit 13.12.2
 azure.subscription.networkService.expressRouteCircuit.allowClassicOperations 13.12.2
 azure.subscription.networkService.expressRouteCircuit.authorization 13.12.2

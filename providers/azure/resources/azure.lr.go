@@ -85,7 +85,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceBastionHost                                           string = "azure.subscription.networkService.bastionHost"
 	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                         string = "azure.subscription.networkService.securityGroup"
 	ResourceAzureSubscriptionNetworkServiceSecurityrule                                          string = "azure.subscription.networkService.securityrule"
-	ResourceAzureNetworkExposure                                                                 string = "azure.network.exposure"
+	ResourceAzureSubscriptionNetworkServiceExposure                                              string = "azure.subscription.networkService.exposure"
 	ResourceAzureSubscriptionNetworkServiceWatcher                                               string = "azure.subscription.networkService.watcher"
 	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                        string = "azure.subscription.networkService.watcher.flowlog"
 	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                  string = "azure.subscription.networkService.watcher.packetCapture"
@@ -702,9 +702,9 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceSecurityrule,
 		},
-		"azure.network.exposure": {
-			// to override args, implement: initAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureNetworkExposure,
+		"azure.subscription.networkService.exposure": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceExposure,
 		},
 		"azure.subscription.networkService.watcher": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceWatcher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2615,7 +2615,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmScaleSet()).ToDataRes(types.Resource("azure.subscription.computeService.vmScaleSet"))
 	},
 	"azure.subscription.computeService.vm.exposure": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetExposure()).ToDataRes(types.Resource("azure.network.exposure"))
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetExposure()).ToDataRes(types.Resource("azure.subscription.networkService.exposure"))
 	},
 	"azure.subscription.computeService.vm.imageReference.publisher": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetPublisher()).ToDataRes(types.String)
@@ -4918,20 +4918,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityrule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.network.exposure.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureNetworkExposure).GetId()).ToDataRes(types.String)
+	"azure.subscription.networkService.exposure.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetId()).ToDataRes(types.String)
 	},
-	"azure.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	"azure.subscription.networkService.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetInternetReachable()).ToDataRes(types.Bool)
 	},
-	"azure.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	"azure.subscription.networkService.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetHasPublicIp()).ToDataRes(types.Bool)
 	},
-	"azure.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
 	},
-	"azure.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
+	"azure.subscription.networkService.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
 	},
 	"azure.subscription.networkService.watcher.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetId()).ToDataRes(types.String)
@@ -16177,7 +16177,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.computeService.vm.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceVm).Exposure, ok = plugin.RawToTValue[*mqlAzureNetworkExposure](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionComputeServiceVm).Exposure, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceExposure](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vm.imageReference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19488,28 +19488,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).__id, ok = v.Value.(string)
+	"azure.subscription.networkService.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.network.exposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.networkService.exposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.networkService.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.networkService.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.networkService.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.watcher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36590,7 +36590,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	EnableAutomaticUpdates        plugin.TValue[bool]
 	PatchMode                     plugin.TValue[string]
 	VmScaleSet                    plugin.TValue[*mqlAzureSubscriptionComputeServiceVmScaleSet]
-	Exposure                      plugin.TValue[*mqlAzureNetworkExposure]
+	Exposure                      plugin.TValue[*mqlAzureSubscriptionNetworkServiceExposure]
 }
 
 // createAzureSubscriptionComputeServiceVm creates a new instance of this resource
@@ -36914,15 +36914,15 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetVmScaleSet() *plugin.TValue[*m
 	})
 }
 
-func (c *mqlAzureSubscriptionComputeServiceVm) GetExposure() *plugin.TValue[*mqlAzureNetworkExposure] {
-	return plugin.GetOrCompute[*mqlAzureNetworkExposure](&c.Exposure, func() (*mqlAzureNetworkExposure, error) {
+func (c *mqlAzureSubscriptionComputeServiceVm) GetExposure() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceExposure] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceExposure](&c.Exposure, func() (*mqlAzureSubscriptionNetworkServiceExposure, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.vm", c.__id, "exposure")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAzureNetworkExposure), nil
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceExposure), nil
 			}
 		}
 
@@ -44482,11 +44482,11 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetProvisioningState() 
 	return &c.ProvisioningState
 }
 
-// mqlAzureNetworkExposure for the azure.network.exposure resource
-type mqlAzureNetworkExposure struct {
+// mqlAzureSubscriptionNetworkServiceExposure for the azure.subscription.networkService.exposure resource
+type mqlAzureSubscriptionNetworkServiceExposure struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureNetworkExposureInternal it will be used here
+	// optional: if you define mqlAzureSubscriptionNetworkServiceExposureInternal it will be used here
 	Id                         plugin.TValue[string]
 	InternetReachable          plugin.TValue[bool]
 	HasPublicIp                plugin.TValue[bool]
@@ -44494,9 +44494,9 @@ type mqlAzureNetworkExposure struct {
 	OpenIngressRules           plugin.TValue[[]any]
 }
 
-// createAzureNetworkExposure creates a new instance of this resource
-func createAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureNetworkExposure{
+// createAzureSubscriptionNetworkServiceExposure creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceExposure{
 		MqlRuntime: runtime,
 	}
 
@@ -44513,7 +44513,7 @@ func createAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.network.exposure", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.exposure", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -44523,31 +44523,31 @@ func createAzureNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return res, nil
 }
 
-func (c *mqlAzureNetworkExposure) MqlName() string {
-	return "azure.network.exposure"
+func (c *mqlAzureSubscriptionNetworkServiceExposure) MqlName() string {
+	return "azure.subscription.networkService.exposure"
 }
 
-func (c *mqlAzureNetworkExposure) MqlID() string {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureNetworkExposure) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetInternetReachable() *plugin.TValue[bool] {
 	return &c.InternetReachable
 }
 
-func (c *mqlAzureNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetHasPublicIp() *plugin.TValue[bool] {
 	return &c.HasPublicIp
 }
 
-func (c *mqlAzureNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
 	return &c.SecurityGroupAllowsIngress
 }
 
-func (c *mqlAzureNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
 	return &c.OpenIngressRules
 }
 

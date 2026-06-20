@@ -448,7 +448,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   // Reports whether the VM is reachable from the public internet by checking for
   // an assigned public IP and an attached network security group rule that
   // allows inbound traffic from any source.
-  exposure() azure.network.exposure
+  exposure() azure.subscription.networkService.exposure
 }
 
 // Azure VM image reference
@@ -2537,7 +2537,7 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
 // is considered internet-reachable only when it has a public IP AND a security
 // rule allows ingress from any source (0.0.0.0/0, ::/0, *, or the "Internet"
 // service tag). Computed from cached NIC, public-IP, and NSG data.
-private azure.network.exposure {
+private azure.subscription.networkService.exposure {
   // Stable identifier of the exposure summary (derived from the owning resource ID)
   id string
   // Whether the resource is reachable from the public internet

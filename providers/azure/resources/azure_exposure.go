@@ -107,7 +107,7 @@ func aksApiServerInternetReachable(enablePrivateCluster bool, publicNetworkAcces
 
 // --- Resolvers ---
 
-func (a *mqlAzureNetworkExposure) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceExposure) id() (string, error) {
 	return a.Id.Data, nil
 }
 
@@ -121,7 +121,7 @@ func (a *mqlAzureNetworkExposure) id() (string, error) {
 // shadow a lower-priority Allow-from-internet rule. This breakdown flags any
 // matching Allow rule as opening ingress, so securityGroupAllowsIngress may
 // report true even when a higher-priority Deny actually blocks the traffic.
-func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureNetworkExposure, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscriptionNetworkServiceExposure, error) {
 	publicIps := a.GetPublicIpAddresses()
 	if publicIps.Error != nil {
 		return nil, publicIps.Error
@@ -139,12 +139,19 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureNetworkExpos
 			continue
 		}
 		nsgVal := nic.GetNetworkSecurityGroup()
-		if nsgVal.Error != nil || nsgVal.Data == nil {
+		if nsgVal.Error != nil {
+			// Propagate rather than swallow: a failed NSG load (e.g. a
+			// permissions error) would otherwise make the VM look like it has no
+			// open ingress rules — a false negative for internet exposure.
+			return nil, nsgVal.Error
+		}
+		if nsgVal.Data == nil {
+			// A NIC legitimately may have no NSG attached.
 			continue
 		}
 		rules := nsgVal.Data.GetSecurityRules()
 		if rules.Error != nil {
-			continue
+			return nil, rules.Error
 		}
 		for _, r := range rules.Data {
 			rule, ok := r.(*mqlAzureSubscriptionNetworkServiceSecurityrule)
@@ -170,7 +177,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureNetworkExpos
 	securityGroupAllowsIngress := len(openRules) > 0
 	internetReachable := hasPublicIp && securityGroupAllowsIngress
 
-	res, err := CreateResource(a.MqlRuntime, "azure.network.exposure", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("azure.subscription.computeService.vm/" + a.Id.Data + "/exposure"),
 		"id":                         llx.StringData(a.Id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
@@ -181,7 +188,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureNetworkExpos
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureNetworkExposure), nil
+	return res.(*mqlAzureSubscriptionNetworkServiceExposure), nil
 }
 
 // sqlFirewallRanges collects (startIp, endIp) pairs from a list of MQL SQL
