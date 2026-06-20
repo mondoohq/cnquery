@@ -5,6 +5,7 @@ stackit 13.0.0
 stackit.alb.loadBalancer 13.0.1
 stackit.alb.loadBalancer.disableTargetSecurityGroupAssignment 13.0.1
 stackit.alb.loadBalancer.errors 13.0.1
+stackit.alb.loadBalancer.exposure 13.0.6
 stackit.alb.loadBalancer.externalAddress 13.0.1
 stackit.alb.loadBalancer.labels 13.0.1
 stackit.alb.loadBalancer.listeners 13.0.1
@@ -120,6 +121,7 @@ stackit.kms.keyRings 13.0.1
 stackit.kms.keys 13.0.1
 stackit.loadBalancer 13.0.0
 stackit.loadBalancer.errors 13.0.0
+stackit.loadBalancer.exposure 13.0.6
 stackit.loadBalancer.externalAddress 13.0.0
 stackit.loadBalancer.listener 13.0.1
 stackit.loadBalancer.listener.displayName 13.0.1
@@ -155,6 +157,7 @@ stackit.logMe.instance.cfSpaceGuid 13.0.1
 stackit.logMe.instance.dashboardUrl 13.0.1
 stackit.logMe.instance.id 13.0.1
 stackit.logMe.instance.imageUrl 13.0.1
+stackit.logMe.instance.internetReachable 13.0.6
 stackit.logMe.instance.name 13.0.1
 stackit.logMe.instance.offeringName 13.0.1
 stackit.logMe.instance.parameters 13.0.1
@@ -169,6 +172,7 @@ stackit.mariaDb.instance.cfSpaceGuid 13.0.0
 stackit.mariaDb.instance.dashboardUrl 13.0.0
 stackit.mariaDb.instance.id 13.0.0
 stackit.mariaDb.instance.imageUrl 13.0.0
+stackit.mariaDb.instance.internetReachable 13.0.6
 stackit.mariaDb.instance.name 13.0.0
 stackit.mariaDb.instance.offeringName 13.0.0
 stackit.mariaDb.instance.parameters 13.0.0
@@ -203,6 +207,7 @@ stackit.mongoDbFlex.instance.acl 13.0.0
 stackit.mongoDbFlex.instance.backupSchedule 13.0.0
 stackit.mongoDbFlex.instance.flavor 13.0.0
 stackit.mongoDbFlex.instance.id 13.0.0
+stackit.mongoDbFlex.instance.internetReachable 13.0.6
 stackit.mongoDbFlex.instance.name 13.0.0
 stackit.mongoDbFlex.instance.options 13.0.0
 stackit.mongoDbFlex.instance.region 13.0.0
@@ -260,6 +265,7 @@ stackit.openSearch.instance.cfSpaceGuid 13.0.0
 stackit.openSearch.instance.dashboardUrl 13.0.0
 stackit.openSearch.instance.id 13.0.0
 stackit.openSearch.instance.imageUrl 13.0.0
+stackit.openSearch.instance.internetReachable 13.0.6
 stackit.openSearch.instance.name 13.0.0
 stackit.openSearch.instance.offeringName 13.0.0
 stackit.openSearch.instance.parameters 13.0.0
@@ -273,6 +279,7 @@ stackit.postgresFlex.instance.acl 13.0.0
 stackit.postgresFlex.instance.backupSchedule 13.0.0
 stackit.postgresFlex.instance.flavor 13.0.0
 stackit.postgresFlex.instance.id 13.0.0
+stackit.postgresFlex.instance.internetReachable 13.0.6
 stackit.postgresFlex.instance.name 13.0.0
 stackit.postgresFlex.instance.options 13.0.0
 stackit.postgresFlex.instance.region 13.0.0
@@ -301,6 +308,7 @@ stackit.rabbitMq.instance.cfSpaceGuid 13.0.0
 stackit.rabbitMq.instance.dashboardUrl 13.0.0
 stackit.rabbitMq.instance.id 13.0.0
 stackit.rabbitMq.instance.imageUrl 13.0.0
+stackit.rabbitMq.instance.internetReachable 13.0.6
 stackit.rabbitMq.instance.name 13.0.0
 stackit.rabbitMq.instance.offeringName 13.0.0
 stackit.rabbitMq.instance.parameters 13.0.0
@@ -315,6 +323,7 @@ stackit.redis.instance.cfSpaceGuid 13.0.0
 stackit.redis.instance.dashboardUrl 13.0.0
 stackit.redis.instance.id 13.0.0
 stackit.redis.instance.imageUrl 13.0.0
+stackit.redis.instance.internetReachable 13.0.6
 stackit.redis.instance.name 13.0.0
 stackit.redis.instance.offeringName 13.0.0
 stackit.redis.instance.parameters 13.0.0
@@ -493,6 +502,7 @@ stackit.sqlServerFlex.instance.acl 13.0.1
 stackit.sqlServerFlex.instance.backupSchedule 13.0.1
 stackit.sqlServerFlex.instance.flavor 13.0.1
 stackit.sqlServerFlex.instance.id 13.0.1
+stackit.sqlServerFlex.instance.internetReachable 13.0.6
 stackit.sqlServerFlex.instance.name 13.0.1
 stackit.sqlServerFlex.instance.options 13.0.1
 stackit.sqlServerFlex.instance.region 13.0.1

@@ -912,6 +912,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.loadBalancer.errors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetErrors()).ToDataRes(types.Array(types.Dict))
 	},
+	"stackit.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
+	},
 	"stackit.loadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancerListener).GetName()).ToDataRes(types.String)
 	},
@@ -1347,6 +1350,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.postgresFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitPostgresFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.postgresFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitPostgresFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.mongoDbFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mongoDbFlex.instance")))
 	},
@@ -1382,6 +1388,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.mongoDbFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMongoDbFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.mongoDbFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMongoDbFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.sqlServerFlex.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlex).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.sqlServerFlex.instance")))
@@ -1419,6 +1428,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.sqlServerFlex.instance.options": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSqlServerFlexInstance).GetOptions()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSqlServerFlexInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.openSearch.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearch).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.openSearch.instance")))
 	},
@@ -1454,6 +1466,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.openSearch.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.mariaDb.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDb).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.mariaDb.instance")))
@@ -1491,6 +1506,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mariaDb.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.redis.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedis).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.redis.instance")))
 	},
@@ -1526,6 +1544,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.redis.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.rabbitMq.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMq).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.rabbitMq.instance")))
@@ -1563,6 +1584,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetParameters()).ToDataRes(types.Dict)
 	},
+	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"stackit.logMe.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMe).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.logMe.instance")))
 	},
@@ -1598,6 +1622,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetParameters()).ToDataRes(types.Dict)
+	},
+	"stackit.logMe.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"stackit.secretsManager.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManager).GetInstances()).ToDataRes(types.Array(types.Resource("stackit.secretsManager.instance")))
@@ -1877,6 +1904,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.alb.loadBalancer.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.alb.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
 	"stackit.kms.keyRings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKms).GetKeyRings()).ToDataRes(types.Array(types.Resource("stackit.kms.keyRing")))
@@ -2675,6 +2705,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLoadBalancer).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"stackit.loadBalancer.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancerListener).__id, ok = v.Value.(string)
 		return
@@ -3327,6 +3361,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitPostgresFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.postgresFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitPostgresFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.mongoDbFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlex).__id, ok = v.Value.(string)
 		return
@@ -3381,6 +3419,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.mongoDbFlex.instance.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMongoDbFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.mongoDbFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMongoDbFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.sqlServerFlex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3439,6 +3481,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSqlServerFlexInstance).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"stackit.sqlServerFlex.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSqlServerFlexInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearch).__id, ok = v.Value.(string)
 		return
@@ -3493,6 +3539,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.openSearch.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearchInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.openSearch.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.mariaDb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3551,6 +3601,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMariaDbInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.mariaDb.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.redis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedis).__id, ok = v.Value.(string)
 		return
@@ -3605,6 +3659,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.redis.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedisInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.rabbitMq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3663,6 +3721,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.logMe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMe).__id, ok = v.Value.(string)
 		return
@@ -3717,6 +3779,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4149,6 +4215,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.alb.loadBalancer.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitAlbLoadBalancer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"stackit.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6088,6 +6158,7 @@ type mqlStackitLoadBalancer struct {
 	TargetPools        plugin.TValue[[]any]
 	Options            plugin.TValue[any]
 	Errors             plugin.TValue[[]any]
+	Exposure           plugin.TValue[*mqlStackitNetworkExposure]
 }
 
 // createStackitLoadBalancer creates a new instance of this resource
@@ -6193,6 +6264,22 @@ func (c *mqlStackitLoadBalancer) GetOptions() *plugin.TValue[any] {
 
 func (c *mqlStackitLoadBalancer) GetErrors() *plugin.TValue[[]any] {
 	return &c.Errors
+}
+
+func (c *mqlStackitLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 // mqlStackitLoadBalancerListener for the stackit.loadBalancer.listener resource
@@ -7758,17 +7845,18 @@ type mqlStackitPostgresFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitPostgresFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Acl            plugin.TValue[[]any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Acl               plugin.TValue[[]any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitPostgresFlexInstance creates a new instance of this resource
@@ -7866,6 +7954,12 @@ func (c *mqlStackitPostgresFlexInstance) GetOptions() *plugin.TValue[map[string]
 	})
 }
 
+func (c *mqlStackitPostgresFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitMongoDbFlex for the stackit.mongoDbFlex resource
 type mqlStackitMongoDbFlex struct {
 	MqlRuntime *plugin.Runtime
@@ -7932,17 +8026,18 @@ type mqlStackitMongoDbFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitMongoDbFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Acl            plugin.TValue[[]any]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Acl               plugin.TValue[[]any]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitMongoDbFlexInstance creates a new instance of this resource
@@ -8040,6 +8135,12 @@ func (c *mqlStackitMongoDbFlexInstance) GetOptions() *plugin.TValue[map[string]a
 	})
 }
 
+func (c *mqlStackitMongoDbFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitSqlServerFlex for the stackit.sqlServerFlex resource
 type mqlStackitSqlServerFlex struct {
 	MqlRuntime *plugin.Runtime
@@ -8101,17 +8202,18 @@ type mqlStackitSqlServerFlexInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitSqlServerFlexInstanceInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Status         plugin.TValue[string]
-	Region         plugin.TValue[string]
-	Version        plugin.TValue[string]
-	Flavor         plugin.TValue[any]
-	Acl            plugin.TValue[[]any]
-	Replicas       plugin.TValue[int64]
-	Storage        plugin.TValue[any]
-	BackupSchedule plugin.TValue[string]
-	Options        plugin.TValue[map[string]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Version           plugin.TValue[string]
+	Flavor            plugin.TValue[any]
+	Acl               plugin.TValue[[]any]
+	Replicas          plugin.TValue[int64]
+	Storage           plugin.TValue[any]
+	BackupSchedule    plugin.TValue[string]
+	Options           plugin.TValue[map[string]any]
+	InternetReachable plugin.TValue[bool]
 }
 
 // createStackitSqlServerFlexInstance creates a new instance of this resource
@@ -8209,6 +8311,12 @@ func (c *mqlStackitSqlServerFlexInstance) GetOptions() *plugin.TValue[map[string
 	})
 }
 
+func (c *mqlStackitSqlServerFlexInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitOpenSearch for the stackit.openSearch resource
 type mqlStackitOpenSearch struct {
 	MqlRuntime *plugin.Runtime
@@ -8286,6 +8394,7 @@ type mqlStackitOpenSearchInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitOpenSearchInstance creates a new instance of this resource
@@ -8369,6 +8478,12 @@ func (c *mqlStackitOpenSearchInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitOpenSearchInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitMariaDb for the stackit.mariaDb resource
 type mqlStackitMariaDb struct {
 	MqlRuntime *plugin.Runtime
@@ -8446,6 +8561,7 @@ type mqlStackitMariaDbInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitMariaDbInstance creates a new instance of this resource
@@ -8529,6 +8645,12 @@ func (c *mqlStackitMariaDbInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitMariaDbInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitRedis for the stackit.redis resource
 type mqlStackitRedis struct {
 	MqlRuntime *plugin.Runtime
@@ -8606,6 +8728,7 @@ type mqlStackitRedisInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitRedisInstance creates a new instance of this resource
@@ -8689,6 +8812,12 @@ func (c *mqlStackitRedisInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitRedisInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitRabbitMq for the stackit.rabbitMq resource
 type mqlStackitRabbitMq struct {
 	MqlRuntime *plugin.Runtime
@@ -8766,6 +8895,7 @@ type mqlStackitRabbitMqInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitRabbitMqInstance creates a new instance of this resource
@@ -8849,6 +8979,12 @@ func (c *mqlStackitRabbitMqInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
 }
 
+func (c *mqlStackitRabbitMqInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
+}
+
 // mqlStackitLogMe for the stackit.logMe resource
 type mqlStackitLogMe struct {
 	MqlRuntime *plugin.Runtime
@@ -8921,6 +9057,7 @@ type mqlStackitLogMeInstance struct {
 	DashboardUrl       plugin.TValue[string]
 	ImageUrl           plugin.TValue[string]
 	Parameters         plugin.TValue[any]
+	InternetReachable  plugin.TValue[bool]
 }
 
 // createStackitLogMeInstance creates a new instance of this resource
@@ -9002,6 +9139,12 @@ func (c *mqlStackitLogMeInstance) GetImageUrl() *plugin.TValue[string] {
 
 func (c *mqlStackitLogMeInstance) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+func (c *mqlStackitLogMeInstance) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 // mqlStackitSecretsManager for the stackit.secretsManager resource
@@ -10142,6 +10285,7 @@ type mqlStackitAlbLoadBalancer struct {
 	TargetSecurityGroup                  plugin.TValue[any]
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
+	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
 }
 
 // createStackitAlbLoadBalancer creates a new instance of this resource
@@ -10239,6 +10383,22 @@ func (c *mqlStackitAlbLoadBalancer) GetDisableTargetSecurityGroupAssignment() *p
 
 func (c *mqlStackitAlbLoadBalancer) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
+	return plugin.GetOrCompute[*mqlStackitNetworkExposure](&c.Exposure, func() (*mqlStackitNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 // mqlStackitKms for the stackit.kms resource
