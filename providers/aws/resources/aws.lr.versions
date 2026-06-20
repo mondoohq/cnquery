@@ -210,6 +210,7 @@ aws.apigatewayv2.route.apiKeyRequired 13.21.4
 aws.apigatewayv2.route.authorizationScopes 13.21.4
 aws.apigatewayv2.route.authorizationType 13.21.4
 aws.apigatewayv2.route.authorizerId 13.21.4
+aws.apigatewayv2.route.isPublic 13.37.1
 aws.apigatewayv2.route.operationName 13.21.4
 aws.apigatewayv2.route.region 13.21.4
 aws.apigatewayv2.route.requestModels 13.21.4

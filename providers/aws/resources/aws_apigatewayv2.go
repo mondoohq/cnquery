@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	apigwv2types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
@@ -525,4 +526,23 @@ func newMqlAwsApigatewayv2DomainName(runtime *plugin.Runtime, region string, dn 
 
 func (a *mqlAwsApigatewayv2DomainName) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// isPublic reports whether the route can be invoked without authentication —
+// its authorization type is NONE (or unset), meaning no IAM signature, JWT, or
+// custom authorizer is required.
+func (a *mqlAwsApigatewayv2Route) isPublic() (bool, error) {
+	authType := a.GetAuthorizationType()
+	if authType.Error != nil {
+		return false, authType.Error
+	}
+	return routeAuthIsPublic(authType.Data), nil
+}
+
+// routeAuthIsPublic reports whether an API Gateway v2 route authorization type
+// leaves the route open. NONE (the default when no authorizer is attached) means
+// unauthenticated public access; AWS_IAM, JWT, and CUSTOM all require a caller
+// identity.
+func routeAuthIsPublic(authorizationType string) bool {
+	return authorizationType == "" || strings.EqualFold(authorizationType, "NONE")
 }

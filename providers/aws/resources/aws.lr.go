@@ -19923,6 +19923,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigatewayv2.route.apiGatewayManaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Route).GetApiGatewayManaged()).ToDataRes(types.Bool)
 	},
+	"aws.apigatewayv2.route.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Route).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.apigatewayv2.authorizer.authorizerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Authorizer).GetAuthorizerId()).ToDataRes(types.String)
 	},
@@ -55112,6 +55115,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigatewayv2.route.apiGatewayManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayv2Route).ApiGatewayManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.route.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Route).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.apigatewayv2.authorizer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -132467,6 +132474,7 @@ type mqlAwsApigatewayv2Route struct {
 	OperationName       plugin.TValue[string]
 	RequestModels       plugin.TValue[map[string]any]
 	ApiGatewayManaged   plugin.TValue[bool]
+	IsPublic            plugin.TValue[bool]
 }
 
 // createAwsApigatewayv2Route creates a new instance of this resource
@@ -132568,6 +132576,12 @@ func (c *mqlAwsApigatewayv2Route) GetRequestModels() *plugin.TValue[map[string]a
 
 func (c *mqlAwsApigatewayv2Route) GetApiGatewayManaged() *plugin.TValue[bool] {
 	return &c.ApiGatewayManaged
+}
+
+func (c *mqlAwsApigatewayv2Route) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 // mqlAwsApigatewayv2Authorizer for the aws.apigatewayv2.authorizer resource

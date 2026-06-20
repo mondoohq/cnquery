@@ -3917,9 +3917,10 @@ func (i *mqlAwsEc2Instance) inPublicSubnet() (bool, error) {
 }
 
 // internetReachable reports whether the instance is directly reachable from the
-// internet: it has a public IP, sits in a public subnet, and an attached
-// security group permits inbound traffic from 0.0.0.0/0 or ::/0. Load-balancer-
-// fronted exposure is a separate path (see loadBalancers).
+// internet: it has a public IP, sits in a public subnet, an attached security
+// group permits inbound traffic from 0.0.0.0/0 or ::/0, and the subnet's network
+// ACL does not block that traffic. Load-balancer-fronted exposure is a separate
+// path (see loadBalancers).
 func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
 	publicIp := i.GetPublicIp()
 	if publicIp.Error != nil {
@@ -3937,7 +3938,85 @@ func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
 		return false, nil
 	}
 
-	return securityGroupsAllowPublicIngress(i.GetSecurityGroups())
+	sgOpen, err := securityGroupsAllowPublicIngress(i.GetSecurityGroups())
+	if err != nil {
+		return false, err
+	}
+	if !sgOpen {
+		return false, nil
+	}
+
+	// The subnet's network ACL must also permit inbound traffic from the
+	// internet — a restrictive NACL blocks reachability even when the security
+	// group is open. Missing subnet/NACL data does not override the positive
+	// public-IP + public-subnet + open-SG signal.
+	subnet := i.GetSubnet()
+	if subnet.Error != nil {
+		return false, subnet.Error
+	}
+	if subnet.Data == nil {
+		return true, nil
+	}
+	nacl := subnet.Data.GetNetworkAcl()
+	if nacl.Error != nil {
+		return false, nacl.Error
+	}
+	if nacl.Data == nil {
+		return true, nil
+	}
+	return networkAclAllowsPublicIngress(nacl.Data)
+}
+
+// naclIngressRule is the minimal shape of a network ACL inbound rule needed to
+// decide public reachability.
+type naclIngressRule struct {
+	ruleNumber int
+	allow      bool
+	public     bool // source is 0.0.0.0/0 or ::/0
+}
+
+// naclAllowsPublicIngress reports whether a network ACL permits inbound traffic
+// from the internet. Network ACL rules are evaluated in ascending rule-number
+// order and the first match wins, so the lowest-numbered rule whose source is
+// public decides the outcome. When no rule matches a public source the implicit
+// final deny blocks the traffic.
+func naclAllowsPublicIngress(rules []naclIngressRule) bool {
+	found := false
+	bestNum := 0
+	allow := false
+	for _, r := range rules {
+		if !r.public {
+			continue
+		}
+		if !found || r.ruleNumber < bestNum {
+			found = true
+			bestNum = r.ruleNumber
+			allow = r.allow
+		}
+	}
+	return found && allow
+}
+
+// networkAclAllowsPublicIngress evaluates a network ACL's inbound rules for
+// reachability from the internet.
+func networkAclAllowsPublicIngress(nacl *mqlAwsEc2Networkacl) (bool, error) {
+	entries := nacl.GetEntries()
+	if entries.Error != nil {
+		return false, entries.Error
+	}
+	rules := make([]naclIngressRule, 0, len(entries.Data))
+	for _, e := range entries.Data {
+		entry, ok := e.(*mqlAwsEc2NetworkaclEntry)
+		if !ok || entry.Egress.Data {
+			continue
+		}
+		rules = append(rules, naclIngressRule{
+			ruleNumber: int(entry.RuleNumber.Data),
+			allow:      strings.EqualFold(entry.RuleAction.Data, "allow"),
+			public:     cidrEntryIsPublic(entry.CidrBlock.Data, entry.Ipv6CidrBlock.Data),
+		})
+	}
+	return naclAllowsPublicIngress(rules), nil
 }
 
 // loadBalancers returns the load balancers that route traffic to this instance.

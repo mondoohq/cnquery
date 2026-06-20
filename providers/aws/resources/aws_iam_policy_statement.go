@@ -341,6 +341,35 @@ func (a *mqlAwsEcrRepository) isPublic() (bool, error) {
 	return resourceIsPublic(a.GetPolicyStatements())
 }
 
+// isPublic reports whether the function is exposed publicly — either its
+// resource policy grants a wildcard principal, or it has a Function URL whose
+// auth type is NONE (unauthenticated invocation over the internet).
 func (a *mqlAwsLambdaFunction) isPublic() (bool, error) {
-	return resourceIsPublic(a.GetPolicyStatements())
+	policyPublic, err := resourceIsPublic(a.GetPolicyStatements())
+	if err != nil {
+		return false, err
+	}
+	if policyPublic {
+		return true, nil
+	}
+
+	url := a.GetUrlConfig()
+	if url.Error != nil {
+		return false, url.Error
+	}
+	if url.Data == nil {
+		return false, nil
+	}
+	authType := url.Data.GetAuthType()
+	if authType.Error != nil {
+		return false, authType.Error
+	}
+	return functionUrlIsPublic(authType.Data), nil
+}
+
+// functionUrlIsPublic reports whether a Lambda Function URL auth type permits
+// unauthenticated public invocation. AWS_IAM requires a signed request; NONE
+// allows anyone on the internet.
+func functionUrlIsPublic(authType string) bool {
+	return strings.EqualFold(authType, "NONE")
 }
