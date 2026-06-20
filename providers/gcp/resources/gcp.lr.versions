@@ -3096,6 +3096,7 @@ gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.confidentialNodesEnabled 13.18.1
 gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
+gcp.project.gkeService.cluster.controlPlaneInternetReachable 13.24.1
 gcp.project.gkeService.cluster.controlPlaneLoggingComponents 13.18.1
 gcp.project.gkeService.cluster.controlPlaneMonitoringComponents 13.18.1
 gcp.project.gkeService.cluster.controlPlanePublicEndpointEnabled 13.18.1

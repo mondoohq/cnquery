@@ -3866,6 +3866,14 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // or legacy). When false, the control plane is reachable from any source
   // permitted by the endpoint configuration.
   masterAuthorizedNetworksAllowed bool
+  // Whether the control plane (Kubernetes API server) is reachable from the public internet
+  //
+  // True when the control plane has a public IP endpoint enabled AND either
+  // master authorized networks is not enforced (any source may reach it) or
+  // the authorized-networks allowlist contains an open CIDR (0.0.0.0/0 or
+  // ::/0). False means the API server is private or restricted to specific
+  // source ranges. Derived from cached cluster fields; no extra API calls.
+  controlPlaneInternetReachable() bool
   // Logging components enabled on the control plane
   //
   // The members of `loggingConfig.componentConfig.enableComponents` —

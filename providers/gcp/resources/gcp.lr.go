@@ -6278,6 +6278,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.masterAuthorizedNetworksAllowed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterAuthorizedNetworksAllowed()).ToDataRes(types.Bool)
 	},
+	"gcp.project.gkeService.cluster.controlPlaneInternetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlaneInternetReachable()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeService.cluster.controlPlaneLoggingComponents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlaneLoggingComponents()).ToDataRes(types.Array(types.String))
 	},
@@ -22516,6 +22519,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.masterAuthorizedNetworksAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).MasterAuthorizedNetworksAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneInternetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ControlPlaneInternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.controlPlaneLoggingComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51074,6 +51081,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	ControlPlanePublicEndpointEnabled        plugin.TValue[bool]
 	MasterAuthorizedNetworksCidrs            plugin.TValue[[]any]
 	MasterAuthorizedNetworksAllowed          plugin.TValue[bool]
+	ControlPlaneInternetReachable            plugin.TValue[bool]
 	ControlPlaneLoggingComponents            plugin.TValue[[]any]
 	ControlPlaneMonitoringComponents         plugin.TValue[[]any]
 	LoggingConfig                            plugin.TValue[any]
@@ -51358,6 +51366,12 @@ func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuthorizedNetworksCidrs() *plu
 
 func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuthorizedNetworksAllowed() *plugin.TValue[bool] {
 	return &c.MasterAuthorizedNetworksAllowed
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetControlPlaneInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ControlPlaneInternetReachable, func() (bool, error) {
+		return c.controlPlaneInternetReachable()
+	})
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetControlPlaneLoggingComponents() *plugin.TValue[[]any] {
