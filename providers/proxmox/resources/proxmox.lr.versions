@@ -193,6 +193,7 @@ proxmox.firewall.options.radv 0.1.9
 proxmox.firewall.options.scope 0.1.9
 proxmox.firewall.rule 0.1.1
 proxmox.firewall.rule.action 0.1.1
+proxmox.firewall.rule.allowsPublicIngress 0.1.13
 proxmox.firewall.rule.comment 0.1.1
 proxmox.firewall.rule.dest 0.1.1
 proxmox.firewall.rule.dport 0.1.1

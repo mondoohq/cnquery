@@ -1030,6 +1030,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"proxmox.firewall.rule.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxFirewallRule).GetGroup()).ToDataRes(types.Resource("proxmox.firewall.group"))
 	},
+	"proxmox.firewall.rule.allowsPublicIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProxmoxFirewallRule).GetAllowsPublicIngress()).ToDataRes(types.Bool)
+	},
 	"proxmox.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProxmoxUser).GetId()).ToDataRes(types.String)
 	},
@@ -2860,6 +2863,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"proxmox.firewall.rule.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProxmoxFirewallRule).Group, ok = plugin.RawToTValue[*mqlProxmoxFirewallGroup](v.Value, v.Error)
+		return
+	},
+	"proxmox.firewall.rule.allowsPublicIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProxmoxFirewallRule).AllowsPublicIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"proxmox.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6663,20 +6670,21 @@ type mqlProxmoxFirewallRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlProxmoxFirewallRuleInternal
-	Pos     plugin.TValue[int64]
-	Type    plugin.TValue[string]
-	Action  plugin.TValue[string]
-	Comment plugin.TValue[string]
-	Dest    plugin.TValue[string]
-	Dport   plugin.TValue[string]
-	Enable  plugin.TValue[bool]
-	Iface   plugin.TValue[string]
-	Log     plugin.TValue[string]
-	Macro   plugin.TValue[string]
-	Proto   plugin.TValue[string]
-	Source  plugin.TValue[string]
-	Sport   plugin.TValue[string]
-	Group   plugin.TValue[*mqlProxmoxFirewallGroup]
+	Pos                 plugin.TValue[int64]
+	Type                plugin.TValue[string]
+	Action              plugin.TValue[string]
+	Comment             plugin.TValue[string]
+	Dest                plugin.TValue[string]
+	Dport               plugin.TValue[string]
+	Enable              plugin.TValue[bool]
+	Iface               plugin.TValue[string]
+	Log                 plugin.TValue[string]
+	Macro               plugin.TValue[string]
+	Proto               plugin.TValue[string]
+	Source              plugin.TValue[string]
+	Sport               plugin.TValue[string]
+	Group               plugin.TValue[*mqlProxmoxFirewallGroup]
+	AllowsPublicIngress plugin.TValue[bool]
 }
 
 // createProxmoxFirewallRule creates a new instance of this resource
@@ -6781,6 +6789,12 @@ func (c *mqlProxmoxFirewallRule) GetGroup() *plugin.TValue[*mqlProxmoxFirewallGr
 		}
 
 		return c.group()
+	})
+}
+
+func (c *mqlProxmoxFirewallRule) GetAllowsPublicIngress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPublicIngress, func() (bool, error) {
+		return c.allowsPublicIngress()
 	})
 }
 
