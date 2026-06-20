@@ -1383,8 +1383,11 @@ gcp.project.computeService.instance @defaults("name id") {
   networkStackTypes []string
   // Whether the instance has at least one external IP attached via a network interface accessConfig
   hasPublicIp() bool
-  // Internet-exposure breakdown (public IP combined with applicable firewall ingress)
-  exposure() gcp.project.computeService.network.exposure
+  // Internet-exposure breakdown
+  //
+  // Explains whether the instance is reachable from the internet by combining
+  // external-IP presence with the VPC firewall ingress rules that apply to it.
+  exposure() gcp.project.computeService.instance.exposure
   // Whether the instance runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com)
   usesDefaultServiceAccount() bool
   // Whether any attached service account has the broad cloud-platform OAuth scope
@@ -1487,7 +1490,7 @@ gcp.project.computeService.instance @defaults("name id") {
 // whether it has an external IP and whether a VPC firewall rule that applies to
 // it (same network, matching target tags or service accounts) admits ingress
 // from any address.
-private gcp.project.computeService.network.exposure @defaults("internetReachable hasPublicIp") {
+private gcp.project.computeService.instance.exposure @defaults("internetReachable hasPublicIp") {
   // Whether the instance is reachable from the internet (an external IP and an applicable firewall rule that admits any address)
   internetReachable bool
   // Whether the instance has an external IP

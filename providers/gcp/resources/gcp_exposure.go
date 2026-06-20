@@ -131,7 +131,7 @@ func anyStringSet(items []any) map[string]bool {
 	return set
 }
 
-func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeServiceNetworkExposure, error) {
+func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeServiceInstanceExposure, error) {
 	id := g.GetId()
 	if id.Error != nil {
 		return nil, id.Error
@@ -237,7 +237,7 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 	firewallAllowsIngress := len(openFirewalls) > 0
 	internetReachable := hasPublicIp.Data && firewallAllowsIngress
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network.exposure", map[string]*llx.RawData{
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instance.exposure", map[string]*llx.RawData{
 		"__id":                  llx.StringData("gcp.project.computeService.instance/" + id.Data + "/exposure"),
 		"internetReachable":     llx.BoolData(internetReachable),
 		"hasPublicIp":           llx.BoolData(hasPublicIp.Data),
@@ -247,7 +247,7 @@ func (g *mqlGcpProjectComputeServiceInstance) exposure() (*mqlGcpProjectComputeS
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeServiceNetworkExposure), nil
+	return res.(*mqlGcpProjectComputeServiceInstanceExposure), nil
 }
 
 // internetReachable reports whether the Cloud SQL instance is reachable from the
