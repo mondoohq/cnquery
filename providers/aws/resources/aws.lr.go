@@ -6425,6 +6425,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetIsPublic()).ToDataRes(types.Bool)
 	},
+	"aws.kms.key.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetKeySpec()).ToDataRes(types.String)
 	},
@@ -6964,6 +6967,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.role.inlinePolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetInlinePolicies()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.role.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
 	"aws.iam.group.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetArn()).ToDataRes(types.String)
@@ -9889,6 +9895,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sns.topic.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"aws.sns.topic.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetFifoTopic()).ToDataRes(types.Bool)
@@ -15739,6 +15748,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetManagedBy()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.externalAccessFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetExternalAccessFindings()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.finding")))
 	},
 	"aws.s3.bucket.eventNotification.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketEventNotification).GetId()).ToDataRes(types.String)
@@ -35424,6 +35436,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.externalAccessFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kms.key.keySpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).KeySpec, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -36198,6 +36214,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.inlinePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).InlinePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.externalAccessFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40506,6 +40526,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sns.topic.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSnsTopic).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.externalAccessFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.topic.fifoTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49126,6 +49150,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.externalAccessFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ExternalAccessFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.eventNotification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81054,6 +81082,7 @@ type mqlAwsKmsKey struct {
 	Policy                    plugin.TValue[string]
 	PolicyStatements          plugin.TValue[[]any]
 	IsPublic                  plugin.TValue[bool]
+	ExternalAccessFindings    plugin.TValue[[]any]
 	KeySpec                   plugin.TValue[string]
 	KeyUsage                  plugin.TValue[string]
 	MultiRegion               plugin.TValue[bool]
@@ -81224,6 +81253,22 @@ func (c *mqlAwsKmsKey) GetPolicyStatements() *plugin.TValue[[]any] {
 func (c *mqlAwsKmsKey) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetExternalAccessFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessFindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "externalAccessFindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessFindings()
 	})
 }
 
@@ -83041,6 +83086,7 @@ type mqlAwsIamRole struct {
 	IsServiceLinked             plugin.TValue[bool]
 	AttachedPolicies            plugin.TValue[[]any]
 	InlinePolicies              plugin.TValue[[]any]
+	ExternalAccessFindings      plugin.TValue[[]any]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -83211,6 +83257,22 @@ func (c *mqlAwsIamRole) GetAttachedPolicies() *plugin.TValue[[]any] {
 func (c *mqlAwsIamRole) GetInlinePolicies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.InlinePolicies, func() ([]any, error) {
 		return c.inlinePolicies()
+	})
+}
+
+func (c *mqlAwsIamRole) GetExternalAccessFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessFindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "externalAccessFindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessFindings()
 	})
 }
 
@@ -95206,6 +95268,7 @@ type mqlAwsSnsTopic struct {
 	Policy                    plugin.TValue[any]
 	PolicyStatements          plugin.TValue[[]any]
 	IsPublic                  plugin.TValue[bool]
+	ExternalAccessFindings    plugin.TValue[[]any]
 	FifoTopic                 plugin.TValue[bool]
 	ContentBasedDeduplication plugin.TValue[bool]
 	DataProtectionPolicy      plugin.TValue[any]
@@ -95334,6 +95397,22 @@ func (c *mqlAwsSnsTopic) GetPolicyStatements() *plugin.TValue[[]any] {
 func (c *mqlAwsSnsTopic) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetExternalAccessFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessFindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns.topic", c.__id, "externalAccessFindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessFindings()
 	})
 }
 
@@ -117688,6 +117767,7 @@ type mqlAwsS3Bucket struct {
 	AccessPoints                     plugin.TValue[[]any]
 	CloudformationStack              plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                        plugin.TValue[string]
+	ExternalAccessFindings           plugin.TValue[[]any]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -118098,6 +118178,22 @@ func (c *mqlAwsS3Bucket) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudfor
 func (c *mqlAwsS3Bucket) GetManagedBy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
 		return c.managedBy()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetExternalAccessFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAccessFindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "externalAccessFindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.externalAccessFindings()
 	})
 }
 

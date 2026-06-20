@@ -5307,6 +5307,7 @@ aws.iam.role.assumeRolePolicyStatements 13.32.2
 aws.iam.role.attachedPolicies 13.6.3
 aws.iam.role.createdAt 11.15.2
 aws.iam.role.description 11.15.2
+aws.iam.role.externalAccessFindings 13.37.1
 aws.iam.role.id 11.15.2
 aws.iam.role.inlinePolicies 13.6.3
 aws.iam.role.isServiceLinked 13.6.3
@@ -5758,6 +5759,7 @@ aws.kms.key.enabled 11.15.2
 aws.kms.key.encryptedVolumes 13.37.1
 aws.kms.key.encryptionAlgorithms 13.12.1
 aws.kms.key.expirationModel 13.12.1
+aws.kms.key.externalAccessFindings 13.37.1
 aws.kms.key.grants 11.15.2
 aws.kms.key.id 11.15.2
 aws.kms.key.isPublic 13.37.1
@@ -7764,6 +7766,7 @@ aws.s3.bucket.eventNotification.topic 13.29.1
 aws.s3.bucket.eventNotification.type 13.29.1
 aws.s3.bucket.eventNotifications 13.29.1
 aws.s3.bucket.exists 11.15.2
+aws.s3.bucket.externalAccessFindings 13.37.1
 aws.s3.bucket.grant 11.15.2
 aws.s3.bucket.grant.grantee 11.15.2
 aws.s3.bucket.grant.id 11.15.2
@@ -9119,6 +9122,7 @@ aws.sns.topic.contentBasedDeduplication 13.12.1
 aws.sns.topic.dataProtectionPolicy 13.12.1
 aws.sns.topic.deliveryPolicy 13.12.1
 aws.sns.topic.displayName 13.12.1
+aws.sns.topic.externalAccessFindings 13.37.1
 aws.sns.topic.fifoTopic 13.12.1
 aws.sns.topic.isPublic 13.37.1
 aws.sns.topic.kmsMasterKey 11.15.2

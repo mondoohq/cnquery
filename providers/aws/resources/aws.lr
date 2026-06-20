@@ -1718,6 +1718,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   policyStatements() []aws.iam.policyStatement
   // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
   isPublic() bool
+  // IAM Access Analyzer findings reporting external or public access to this resource
+  externalAccessFindings() []aws.iam.accessAnalyzer.finding
   // Describes the type of key material in the key
   //
   // One of: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, ECC_SECG_P256K1, HMAC_224, HMAC_256, HMAC_384, HMAC_512, SM2.
@@ -2233,6 +2235,8 @@ private aws.iam.role @defaults("arn name") {
   attachedPolicies() []aws.iam.policy
   // List of inline policy names embedded in the role
   inlinePolicies() []string
+  // IAM Access Analyzer findings reporting external or public access to this resource
+  externalAccessFindings() []aws.iam.accessAnalyzer.finding
 }
 
 // AWS IAM group
@@ -4667,6 +4671,8 @@ private aws.sns.topic @defaults("arn") {
   policyStatements() []aws.iam.policyStatement
   // Whether the resource policy grants public access (a wildcard principal with no scoping conditions)
   isPublic() bool
+  // IAM Access Analyzer findings reporting external or public access to this resource
+  externalAccessFindings() []aws.iam.accessAnalyzer.finding
   // Whether the topic is a FIFO topic
   fifoTopic() bool
   // Whether content-based deduplication is enabled (FIFO topics only)
@@ -10145,6 +10151,8 @@ private aws.s3.bucket @defaults("name location public") {
   //
   // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the bucket is unmanaged or managed by a tool that leaves no recognizable tag.
   managedBy() string
+  // IAM Access Analyzer findings reporting external or public access to this resource
+  externalAccessFindings() []aws.iam.accessAnalyzer.finding
 }
 
 // Amazon S3 bucket event notification
