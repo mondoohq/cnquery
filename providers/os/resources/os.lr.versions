@@ -3061,6 +3061,12 @@ windows.optionalFeature.enabled 11.2.6
 windows.optionalFeature.name 11.2.6
 windows.optionalFeature.state 11.2.6
 windows.optionalFeatures 11.2.6
+windows.powershell 13.29.1
+windows.powershell.executionPolicy 13.29.1
+windows.powershell.scriptBlockLogging 13.29.1
+windows.powershell.scriptBlockLogging.enabled 13.29.1
+windows.powershell.transcription 13.29.1
+windows.powershell.transcription.enabled 13.29.1
 windows.rdp 13.22.2
 windows.rdp.alwaysPromptForPassword 13.22.2
 windows.rdp.clipboardServerToClientLevel 13.29.1

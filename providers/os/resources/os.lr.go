@@ -355,6 +355,9 @@ const (
 	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
 	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
 	ResourceWindowsTelemetry                              string = "windows.telemetry"
+	ResourceWindowsPowershell                             string = "windows.powershell"
+	ResourceWindowsPowershellScriptBlockLogging           string = "windows.powershell.scriptBlockLogging"
+	ResourceWindowsPowershellTranscription                string = "windows.powershell.transcription"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1852,6 +1855,18 @@ func init() {
 		"windows.telemetry": {
 			// to override args, implement: initWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsTelemetry,
+		},
+		"windows.powershell": {
+			// to override args, implement: initWindowsPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershell,
+		},
+		"windows.powershell.scriptBlockLogging": {
+			// to override args, implement: initWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershellScriptBlockLogging,
+		},
+		"windows.powershell.transcription": {
+			// to override args, implement: initWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsPowershellTranscription,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8842,6 +8857,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Int)
+	},
+	"windows.powershell.scriptBlockLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetScriptBlockLogging()).ToDataRes(types.Resource("windows.powershell.scriptBlockLogging"))
+	},
+	"windows.powershell.transcription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetTranscription()).ToDataRes(types.Resource("windows.powershell.transcription"))
+	},
+	"windows.powershell.executionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershell).GetExecutionPolicy()).ToDataRes(types.String)
+	},
+	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershellScriptBlockLogging).GetEnabled()).ToDataRes(types.Int)
+	},
+	"windows.powershell.transcription.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsPowershellTranscription).GetEnabled()).ToDataRes(types.Int)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -21340,6 +21370,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.scriptBlockLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).ScriptBlockLogging, ok = plugin.RawToTValue[*mqlWindowsPowershellScriptBlockLogging](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.transcription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).Transcription, ok = plugin.RawToTValue[*mqlWindowsPowershellTranscription](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.executionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershell).ExecutionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.scriptBlockLogging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellScriptBlockLogging).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellScriptBlockLogging).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.powershell.transcription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellTranscription).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.powershell.transcription.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsPowershellTranscription).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56166,6 +56228,189 @@ func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue
 	return plugin.GetOrCompute[int64](&c.DisableWindowsConsumerFeatures, func() (int64, error) {
 		return c.disableWindowsConsumerFeatures()
 	})
+}
+
+// mqlWindowsPowershell for the windows.powershell resource
+type mqlWindowsPowershell struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellInternal it will be used here
+	ScriptBlockLogging plugin.TValue[*mqlWindowsPowershellScriptBlockLogging]
+	Transcription      plugin.TValue[*mqlWindowsPowershellTranscription]
+	ExecutionPolicy    plugin.TValue[string]
+}
+
+// createWindowsPowershell creates a new instance of this resource
+func createWindowsPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershell{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershell) MqlName() string {
+	return "windows.powershell"
+}
+
+func (c *mqlWindowsPowershell) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershell) GetScriptBlockLogging() *plugin.TValue[*mqlWindowsPowershellScriptBlockLogging] {
+	return plugin.GetOrCompute[*mqlWindowsPowershellScriptBlockLogging](&c.ScriptBlockLogging, func() (*mqlWindowsPowershellScriptBlockLogging, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.powershell", c.__id, "scriptBlockLogging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsPowershellScriptBlockLogging), nil
+			}
+		}
+
+		return c.scriptBlockLogging()
+	})
+}
+
+func (c *mqlWindowsPowershell) GetTranscription() *plugin.TValue[*mqlWindowsPowershellTranscription] {
+	return plugin.GetOrCompute[*mqlWindowsPowershellTranscription](&c.Transcription, func() (*mqlWindowsPowershellTranscription, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.powershell", c.__id, "transcription")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsPowershellTranscription), nil
+			}
+		}
+
+		return c.transcription()
+	})
+}
+
+func (c *mqlWindowsPowershell) GetExecutionPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionPolicy, func() (string, error) {
+		return c.executionPolicy()
+	})
+}
+
+// mqlWindowsPowershellScriptBlockLogging for the windows.powershell.scriptBlockLogging resource
+type mqlWindowsPowershellScriptBlockLogging struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellScriptBlockLoggingInternal it will be used here
+	Enabled plugin.TValue[int64]
+}
+
+// createWindowsPowershellScriptBlockLogging creates a new instance of this resource
+func createWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershellScriptBlockLogging{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell.scriptBlockLogging", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) MqlName() string {
+	return "windows.powershell.scriptBlockLogging"
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershellScriptBlockLogging) GetEnabled() *plugin.TValue[int64] {
+	return &c.Enabled
+}
+
+// mqlWindowsPowershellTranscription for the windows.powershell.transcription resource
+type mqlWindowsPowershellTranscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsPowershellTranscriptionInternal it will be used here
+	Enabled plugin.TValue[int64]
+}
+
+// createWindowsPowershellTranscription creates a new instance of this resource
+func createWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsPowershellTranscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.powershell.transcription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsPowershellTranscription) MqlName() string {
+	return "windows.powershell.transcription"
+}
+
+func (c *mqlWindowsPowershellTranscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsPowershellTranscription) GetEnabled() *plugin.TValue[int64] {
+	return &c.Enabled
 }
 
 // mqlWindowsTpm for the windows.tpm resource

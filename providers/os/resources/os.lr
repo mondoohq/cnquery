@@ -7511,6 +7511,50 @@ windows.telemetry {
   disableWindowsConsumerFeatures() int
 }
 
+// Windows PowerShell logging policy
+//
+// Examine the PowerShell logging settings configured via Group Policy under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell: Script Block Logging,
+// Transcription, and the machine execution policy. These are GPO-only values
+// with no effective fallback, so when a value is absent the corresponding field
+// is null, which is distinguishable from an explicit 0. Read from the registry,
+// so it is available even on connections that cannot run commands.
+windows.powershell {
+  // Script Block Logging policy (PowerShell\ScriptBlockLogging)
+  scriptBlockLogging() windows.powershell.scriptBlockLogging
+  // Transcription policy (PowerShell\Transcription)
+  transcription() windows.powershell.transcription
+  // PowerShell execution policy (PowerShell\ExecutionPolicy)
+  //
+  // The machine-wide execution policy string set by Group Policy, e.g.
+  // "AllSigned", "RemoteSigned", or "Restricted". Null when the value is absent.
+  executionPolicy() string
+}
+
+// PowerShell Script Block Logging policy
+//
+// Examine the Script Block Logging policy under HKLM\SOFTWARE\Policies
+// \Microsoft\Windows\PowerShell\ScriptBlockLogging. This is a GPO-only value;
+// when it is absent the field is null, distinguishable from an explicit 0.
+private windows.powershell.scriptBlockLogging @defaults("enabled") {
+  // Whether script block logging is enabled (EnableScriptBlockLogging DWORD)
+  //
+  // 1 when enabled, 0 when explicitly disabled, null when the value is absent.
+  enabled int
+}
+
+// PowerShell Transcription policy
+//
+// Examine the Transcription policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\PowerShell\Transcription. This is a GPO-only value; when it is
+// absent the field is null, distinguishable from an explicit 0.
+private windows.powershell.transcription @defaults("enabled") {
+  // Whether PowerShell transcription is enabled (EnableTranscripting DWORD)
+  //
+  // 1 when enabled, 0 when explicitly disabled, null when the value is absent.
+  enabled int
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,
