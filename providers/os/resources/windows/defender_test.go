@@ -149,3 +149,56 @@ func TestIsDefenderUnavailable(t *testing.T) {
 	assert.True(t, isDefenderUnavailable("CommandNotFoundException"))
 	assert.False(t, isDefenderUnavailable("Access is denied"))
 }
+
+// defenderUnavailable must work on non-English Windows. The localized "command
+// not recognized" stderr text is not reliable, so the sentinel exit code set by
+// the Get-Command guard is the primary, language-independent signal.
+func TestDefenderUnavailable(t *testing.T) {
+	t.Run("sentinel exit code, no stderr", func(t *testing.T) {
+		// The Get-Command guard exits before emitting any (localized) text.
+		assert.True(t, defenderUnavailable(defenderUnavailableExitCode, ""))
+	})
+
+	t.Run("sentinel exit code on a non-English host", func(t *testing.T) {
+		// Worst case: fully localized prose with no English phrase and no cmdlet
+		// token to fall back on. The heuristic alone cannot detect it, but the
+		// sentinel exit code still flags it correctly.
+		german := "Die Benennung wurde nicht als Name eines Cmdlets erkannt. Überprüfen Sie die Schreibweise des Namens."
+		assert.False(t, isDefenderUnavailable(german), "heuristic cannot match fully localized text")
+		assert.True(t, defenderUnavailable(defenderUnavailableExitCode, german))
+	})
+
+	t.Run("English stderr fallback without the sentinel", func(t *testing.T) {
+		// Older path: a command-not-found surfaced via stderr on an English host.
+		assert.True(t, defenderUnavailable(1, "The term 'Get-MpComputerStatus' is not recognized"))
+	})
+
+	t.Run("genuine error is not treated as unavailable", func(t *testing.T) {
+		// A real failure (e.g. access denied) on a non-sentinel exit code must be
+		// surfaced, not swallowed as "Defender not installed".
+		assert.False(t, defenderUnavailable(1, "Zugriff verweigert"))
+		assert.False(t, defenderUnavailable(1, "Access is denied"))
+	})
+}
+
+// Every Defender script must carry the locale-independent availability guard so
+// a missing cmdlet exits with the sentinel before any localized error text.
+func TestDefenderScriptsHaveAvailabilityGuard(t *testing.T) {
+	cases := map[string]struct {
+		script string
+		cmdlet string
+	}{
+		"computer status":  {defenderComputerStatusScript, "Get-MpComputerStatus"},
+		"preferences":      {defenderPreferenceScript, "Get-MpPreference"},
+		"threats":          {defenderThreatScript, "Get-MpThreat"},
+		"threat detection": {defenderThreatDetectionScript, "Get-MpThreatDetection"},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Contains(t, tc.script, "Get-Command "+tc.cmdlet, "guard must probe the cmdlet")
+			assert.Contains(t, tc.script, "exit 2", "guard must exit with the sentinel code")
+			// The pipeline itself is still present after the guard.
+			assert.Contains(t, tc.script, tc.cmdlet+" | ConvertTo-Json")
+		})
+	}
+}

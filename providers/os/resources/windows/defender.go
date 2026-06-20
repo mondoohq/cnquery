@@ -6,6 +6,7 @@ package windows
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -26,14 +27,36 @@ import (
 // ErrDefenderUnavailable so callers can resolve the resource to null rather
 // than failing the entire query.
 //
+// Availability detection must work on non-English Windows. The "command not
+// recognized" error text PowerShell writes to stderr is localized, so we do not
+// rely on it as the primary signal. Instead each script is guarded with
+// Get-Command and, when the cmdlet is missing, exits with a fixed sentinel code
+// (defenderUnavailableExitCode) before any localized text is emitted. The
+// stderr heuristic is kept only as a secondary fallback.
+//
 // References:
 // https://learn.microsoft.com/en-us/powershell/module/defender/
 
-const (
-	defenderComputerStatusScript  = `Get-MpComputerStatus | ConvertTo-Json -Compress`
-	defenderPreferenceScript      = `Get-MpPreference | ConvertTo-Json -Compress -Depth 3`
-	defenderThreatScript          = `Get-MpThreat | ConvertTo-Json -Compress -Depth 3`
-	defenderThreatDetectionScript = `Get-MpThreatDetection | ConvertTo-Json -Compress -Depth 3`
+// defenderUnavailableExitCode is the process exit code our scripts use to
+// signal, locale-independently, that the Defender cmdlet is not present.
+const defenderUnavailableExitCode = 2
+
+// defenderScript wraps a Defender cmdlet pipeline with a locale-independent
+// availability guard: if the cmdlet is not present, PowerShell exits with
+// defenderUnavailableExitCode before running (or emitting any localized error
+// for) the pipeline.
+func defenderScript(cmdlet, pipeline string) string {
+	return fmt.Sprintf(
+		"if (-not (Get-Command %s -ErrorAction SilentlyContinue)) { exit %d }; %s",
+		cmdlet, defenderUnavailableExitCode, pipeline,
+	)
+}
+
+var (
+	defenderComputerStatusScript  = defenderScript("Get-MpComputerStatus", `Get-MpComputerStatus | ConvertTo-Json -Compress`)
+	defenderPreferenceScript      = defenderScript("Get-MpPreference", `Get-MpPreference | ConvertTo-Json -Compress -Depth 3`)
+	defenderThreatScript          = defenderScript("Get-MpThreat", `Get-MpThreat | ConvertTo-Json -Compress -Depth 3`)
+	defenderThreatDetectionScript = defenderScript("Get-MpThreatDetection", `Get-MpThreatDetection | ConvertTo-Json -Compress -Depth 3`)
 )
 
 // ErrDefenderUnavailable indicates the Defender PowerShell module is not
@@ -41,8 +64,12 @@ const (
 // installation without the Defender feature).
 var ErrDefenderUnavailable = errors.New("microsoft defender is not available on this system")
 
-// isDefenderUnavailable reports whether a non-zero command result indicates
-// that the Defender cmdlets are missing rather than a genuine runtime failure.
+// isDefenderUnavailable reports whether command stderr indicates that the
+// Defender cmdlets are missing rather than a genuine runtime failure. It is a
+// best-effort fallback: the English "is not recognized" phrases only match on
+// English hosts, so the locale-independent exit-code check in defenderUnavailable
+// is the primary signal. The cmdlet names and the (non-localized) .NET exception
+// type still match here on non-English hosts.
 func isDefenderUnavailable(stderr string) bool {
 	s := strings.ToLower(stderr)
 	return strings.Contains(s, "is not recognized") ||
@@ -52,6 +79,17 @@ func isDefenderUnavailable(stderr string) bool {
 		strings.Contains(s, "get-mppreference") ||
 		strings.Contains(s, "get-mpthreat") ||
 		strings.Contains(s, "get-mpthreatdetection")
+}
+
+// defenderUnavailable reports whether a non-zero command result indicates the
+// Defender cmdlets are missing rather than a genuine runtime failure. The
+// sentinel exit code set by the Get-Command guard is the primary,
+// locale-independent signal; the stderr heuristic is a fallback.
+func defenderUnavailable(exitStatus int, stderr string) bool {
+	if exitStatus == defenderUnavailableExitCode {
+		return true
+	}
+	return isDefenderUnavailable(stderr)
 }
 
 // runDefenderCommand executes a Defender cmdlet and returns its stdout. It
@@ -67,7 +105,7 @@ func runDefenderCommand(p shared.Connection, script string) ([]byte, error) {
 		if rerr != nil {
 			return nil, rerr
 		}
-		if isDefenderUnavailable(string(stderr)) {
+		if defenderUnavailable(c.ExitStatus, string(stderr)) {
 			return nil, ErrDefenderUnavailable
 		}
 		return nil, errors.New("failed to query microsoft defender: " + string(stderr))
