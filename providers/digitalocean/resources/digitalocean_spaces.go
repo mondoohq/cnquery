@@ -97,11 +97,7 @@ func initDigitaloceanSpacesBucket(runtime *plugin.Runtime, args map[string]*llx.
 		}
 	}
 
-	parent, err := parentDigitalocean(runtime)
-	if err != nil {
-		return nil, nil, err
-	}
-	res, err := newSpacesBucket(parent, client, region, summary)
+	res, err := newSpacesBucket(runtime, client, region, summary)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -187,7 +183,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 	for i, ref := range refs {
 		idx, ref := i, ref
 		jobs = append(jobs, jobpool.NewJob(func() (jobpool.JobResult, error) {
-			res, err := newSpacesBucket(r, ref.client, ref.region, ref.b)
+			res, err := newSpacesBucket(r.MqlRuntime, ref.client, ref.region, ref.b)
 			if err != nil {
 				return nil, err
 			}
@@ -214,7 +210,7 @@ func fetchSpacesBucketDetails(r *mqlDigitalocean, refs []bucketRef) ([]interface
 // Each call tolerates the "not configured" S3 error codes so an
 // un-customized bucket still produces a resource with sensible nil
 // defaults.
-func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3types.Bucket) (interface{}, error) {
+func newSpacesBucket(runtime *plugin.Runtime, client *s3.Client, region string, b s3types.Bucket) (interface{}, error) {
 	ctx := context.Background()
 	name := aws.ToString(b.Name)
 
@@ -355,7 +351,7 @@ func newSpacesBucket(r *mqlDigitalocean, client *s3.Client, region string, b s3t
 		return nil, err
 	}
 
-	return CreateResource(r.MqlRuntime, "digitalocean.spacesBucket", map[string]*llx.RawData{
+	return CreateResource(runtime, "digitalocean.spacesBucket", map[string]*llx.RawData{
 		"name":                 llx.StringData(name),
 		"region":               llx.StringData(region),
 		"createdAt":            llx.TimeDataPtr(createdAt),

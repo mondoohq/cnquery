@@ -38,9 +38,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	conf := &inventory.Config{
-		Type:     req.Connector,
-		Options:  map[string]string{},
-		Discover: &inventory.Discovery{},
+		Type:    req.Connector,
+		Options: map[string]string{},
 	}
 
 	token := ""
