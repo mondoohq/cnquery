@@ -29,12 +29,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	ctx := context.Background()
 
 	// The owning account UUID anchors every child platform id so they
-	// stay stable and unique across scans. An empty UUID (token without
-	// account read access) still yields valid, account-relative ids.
-	accountUUID := ""
-	if acct, _, err := client.Account.Get(ctx); err == nil {
-		accountUUID = acct.UUID
-	}
+	// stay stable and unique across scans. It is cached on the
+	// connection and shared with detect(), so this does not add an
+	// Account.Get round-trip. An empty UUID (token without account read
+	// access) still yields valid, account-relative ids.
+	accountUUID := conn.AccountUUID()
 
 	assets := []*inventory.Asset{}
 

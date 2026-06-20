@@ -170,12 +170,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.DigitaloceanCo
 	asset.Id = conn.Conf.Type
 	asset.Name = "DigitalOcean Account"
 	asset.Platform = connection.AccountPlatform()
-
-	accountUUID := ""
-	if acct, _, err := conn.Client().Account.Get(context.Background()); err == nil {
-		accountUUID = acct.UUID
-	}
-	asset.PlatformIds = []string{connection.NewAccountIdentifier(accountUUID)}
+	asset.PlatformIds = []string{connection.NewAccountIdentifier(conn.AccountUUID())}
 	return nil
 }
 
