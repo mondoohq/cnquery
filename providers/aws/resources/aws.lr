@@ -5307,6 +5307,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   instances() []aws.ec2.instance
   // List of listeners for ALB/NLB load balancers (typed)
   listeners() []aws.elb.listener
+  // Whether all listeners use an encrypted protocol (no plaintext HTTP, TCP, or UDP listener)
+  enforcesTls() bool
   // Typed attributes for ALB/NLB load balancers
   attribute() aws.elb.loadbalancer.attribute
   // Health check configuration (classic load balancers only; null for ALB/NLB)
@@ -9287,6 +9289,10 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   webAclId string
   // AWS WAF web ACL associated with the distribution
   webAcl() aws.waf.acl
+  // Whether a WAF web ACL is associated with the distribution
+  protectedByWaf() bool
+  // Whether viewers are required to use HTTPS (viewer protocol policy is not allow-all)
+  enforcesHttps() bool
   // ID of the continuous deployment policy associated with the distribution (empty string when none)
   continuousDeploymentPolicyId() string
   // Type of geographic restriction applied to the distribution (none, whitelist, or blacklist)

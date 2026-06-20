@@ -845,3 +845,27 @@ func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]any, error) {
 	// TODO
 	return nil, nil
 }
+
+// enforcesTls reports whether every listener terminates an encrypted protocol —
+// i.e. no plaintext HTTP, TCP, or UDP listener accepts traffic. A load balancer
+// with no listeners vacuously enforces TLS (nothing accepts plaintext).
+func (a *mqlAwsElbLoadbalancer) enforcesTls() (bool, error) {
+	listeners := a.GetListeners()
+	if listeners.Error != nil {
+		return false, listeners.Error
+	}
+	for _, l := range listeners.Data {
+		listener, ok := l.(*mqlAwsElbListener)
+		if !ok {
+			continue
+		}
+		protocol := listener.GetProtocol()
+		if protocol.Error != nil {
+			return false, protocol.Error
+		}
+		if listenerProtocolIsPlaintext(protocol.Data) {
+			return false, nil
+		}
+	}
+	return true, nil
+}

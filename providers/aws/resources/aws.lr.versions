@@ -1453,6 +1453,7 @@ aws.cloudfront.distribution.continuousDeploymentPolicyId 13.29.1
 aws.cloudfront.distribution.defaultCacheBehavior 11.15.2
 aws.cloudfront.distribution.domainName 11.15.2
 aws.cloudfront.distribution.enabled 11.15.2
+aws.cloudfront.distribution.enforcesHttps 13.37.1
 aws.cloudfront.distribution.geoRestrictionType 11.15.2
 aws.cloudfront.distribution.httpVersion 11.15.2
 aws.cloudfront.distribution.isIPV6Enabled 11.15.2
@@ -1476,6 +1477,7 @@ aws.cloudfront.distribution.origin.originMtlsClientCertificate 13.20.1
 aws.cloudfront.distribution.origin.originPath 11.15.2
 aws.cloudfront.distribution.origins 11.15.2
 aws.cloudfront.distribution.priceClass 11.15.2
+aws.cloudfront.distribution.protectedByWaf 13.37.1
 aws.cloudfront.distribution.sslSupportMethod 13.3.1
 aws.cloudfront.distribution.status 11.15.2
 aws.cloudfront.distribution.viewerMtlsMode 13.25.1
@@ -4229,6 +4231,7 @@ aws.elb.loadbalancer.availabilityZones 11.15.2
 aws.elb.loadbalancer.createdAt 11.15.2
 aws.elb.loadbalancer.dnsName 11.15.2
 aws.elb.loadbalancer.elbType 11.15.2
+aws.elb.loadbalancer.enforcesTls 13.37.1
 aws.elb.loadbalancer.healthCheck 13.26.2
 aws.elb.loadbalancer.hostedZoneId 11.15.2
 aws.elb.loadbalancer.instances 11.15.2

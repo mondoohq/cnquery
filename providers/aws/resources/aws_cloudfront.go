@@ -597,3 +597,19 @@ func (a *mqlAwsCloudfront) trustStores() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (a *mqlAwsCloudfrontDistribution) protectedByWaf() (bool, error) {
+	webAclId := a.GetWebAclId()
+	if webAclId.Error != nil {
+		return false, webAclId.Error
+	}
+	return webAclId.Data != "", nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) enforcesHttps() (bool, error) {
+	policy := a.GetViewerProtocolPolicy()
+	if policy.Error != nil {
+		return false, policy.Error
+	}
+	return viewerPolicyEnforcesHttps(policy.Data), nil
+}

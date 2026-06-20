@@ -10701,6 +10701,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetListeners()).ToDataRes(types.Array(types.Resource("aws.elb.listener")))
 	},
+	"aws.elb.loadbalancer.enforcesTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetEnforcesTls()).ToDataRes(types.Bool)
+	},
 	"aws.elb.loadbalancer.attribute": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetAttribute()).ToDataRes(types.Resource("aws.elb.loadbalancer.attribute"))
 	},
@@ -14918,6 +14921,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.webAcl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetWebAcl()).ToDataRes(types.Resource("aws.waf.acl"))
+	},
+	"aws.cloudfront.distribution.protectedByWaf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetProtectedByWaf()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.enforcesHttps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetEnforcesHttps()).ToDataRes(types.Bool)
 	},
 	"aws.cloudfront.distribution.continuousDeploymentPolicyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetContinuousDeploymentPolicyId()).ToDataRes(types.String)
@@ -41593,6 +41602,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbLoadbalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.loadbalancer.enforcesTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).EnforcesTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.elb.loadbalancer.attribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Attribute, ok = plugin.RawToTValue[*mqlAwsElbLoadbalancerAttribute](v.Value, v.Error)
 		return
@@ -47859,6 +47872,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.webAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).WebAcl, ok = plugin.RawToTValue[*mqlAwsWafAcl](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.protectedByWaf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).ProtectedByWaf, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.enforcesHttps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).EnforcesHttps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.continuousDeploymentPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97454,6 +97475,7 @@ type mqlAwsElbLoadbalancer struct {
 	TargetGroups         plugin.TValue[[]any]
 	Instances            plugin.TValue[[]any]
 	Listeners            plugin.TValue[[]any]
+	EnforcesTls          plugin.TValue[bool]
 	Attribute            plugin.TValue[*mqlAwsElbLoadbalancerAttribute]
 	HealthCheck          plugin.TValue[any]
 }
@@ -97606,6 +97628,12 @@ func (c *mqlAwsElbLoadbalancer) GetListeners() *plugin.TValue[[]any] {
 		}
 
 		return c.listeners()
+	})
+}
+
+func (c *mqlAwsElbLoadbalancer) GetEnforcesTls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnforcesTls, func() (bool, error) {
+		return c.enforcesTls()
 	})
 }
 
@@ -114591,6 +114619,8 @@ type mqlAwsCloudfrontDistribution struct {
 	SslSupportMethod             plugin.TValue[string]
 	WebAclId                     plugin.TValue[string]
 	WebAcl                       plugin.TValue[*mqlAwsWafAcl]
+	ProtectedByWaf               plugin.TValue[bool]
+	EnforcesHttps                plugin.TValue[bool]
 	ContinuousDeploymentPolicyId plugin.TValue[string]
 	GeoRestrictionType           plugin.TValue[string]
 	LastModifiedAt               plugin.TValue[*time.Time]
@@ -114710,6 +114740,18 @@ func (c *mqlAwsCloudfrontDistribution) GetWebAcl() *plugin.TValue[*mqlAwsWafAcl]
 		}
 
 		return c.webAcl()
+	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetProtectedByWaf() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProtectedByWaf, func() (bool, error) {
+		return c.protectedByWaf()
+	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetEnforcesHttps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnforcesHttps, func() (bool, error) {
+		return c.enforcesHttps()
 	})
 }
 
