@@ -196,7 +196,7 @@ func TestDefenderScriptsHaveAvailabilityGuard(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			assert.Contains(t, tc.script, "Get-Command "+tc.cmdlet, "guard must probe the cmdlet")
-			assert.Contains(t, tc.script, "exit 2", "guard must exit with the sentinel code")
+			assert.Contains(t, tc.script, "exit 200", "guard must exit with the sentinel code")
 			// The pipeline itself is still present after the guard.
 			assert.Contains(t, tc.script, tc.cmdlet+" | ConvertTo-Json")
 		})

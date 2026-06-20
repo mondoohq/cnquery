@@ -38,8 +38,10 @@ import (
 // https://learn.microsoft.com/en-us/powershell/module/defender/
 
 // defenderUnavailableExitCode is the process exit code our scripts use to
-// signal, locale-independently, that the Defender cmdlet is not present.
-const defenderUnavailableExitCode = 2
+// signal, locale-independently, that the Defender cmdlet is not present. It is a
+// distinctive value (not the common 0/1/2) so it is unlikely to collide with an
+// exit code PowerShell or Windows would return for an unrelated failure.
+const defenderUnavailableExitCode = 200
 
 // defenderScript wraps a Defender cmdlet pipeline with a locale-independent
 // availability guard: if the cmdlet is not present, PowerShell exits with
