@@ -3,7 +3,10 @@
 
 package resources
 
-import "net"
+import (
+	"fmt"
+	"net"
+)
 
 // privateOrReservedCIDRs are address ranges that are not routable from the
 // public internet. A security-group or network-ACL rule whose source is wholly
@@ -31,12 +34,17 @@ const (
 	broadPublicPrefixV6 = 32
 )
 
+// mustParseCIDRs parses a fixed set of CIDR literals at init time, panicking on
+// a malformed entry so a typo in the private/reserved list fails loudly rather
+// than silently shrinking the set.
 func mustParseCIDRs(cidrs ...string) []*net.IPNet {
 	nets := make([]*net.IPNet, 0, len(cidrs))
 	for _, c := range cidrs {
-		if _, n, err := net.ParseCIDR(c); err == nil {
-			nets = append(nets, n)
+		_, n, err := net.ParseCIDR(c)
+		if err != nil {
+			panic(fmt.Sprintf("mustParseCIDRs: %s: %v", c, err))
 		}
+		nets = append(nets, n)
 	}
 	return nets
 }
