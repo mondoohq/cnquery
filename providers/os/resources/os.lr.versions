@@ -3144,6 +3144,14 @@ windows.serverFeature.installed 11.2.6
 windows.serverFeature.name 11.2.6
 windows.serverFeature.path 11.2.6
 windows.serverFeatures 11.2.6
+windows.smartScreen 13.29.1
+windows.smartScreen.edgeEnabled 13.29.1
+windows.smartScreen.edgePreventOverride 13.29.1
+windows.smartScreen.edgePreventOverrideForFiles 13.29.1
+windows.smartScreen.edgePuaEnabled 13.29.1
+windows.smartScreen.explorerEnabled 13.29.1
+windows.smartScreen.explorerLevel 13.29.1
+windows.smartScreen.storeAppsEnabled 13.29.1
 windows.smb 13.28.2
 windows.smb.clientConfiguration 13.29.1
 windows.smb.clientConfiguration.allowInsecureGuestAuth 13.29.1

@@ -323,6 +323,7 @@ const (
 	ResourceWindowsExploitProtectionCfg                   string = "windows.exploitProtection.cfg"
 	ResourceWindowsExploitProtectionSehop                 string = "windows.exploitProtection.sehop"
 	ResourceWindowsExploitProtectionHeap                  string = "windows.exploitProtection.heap"
+	ResourceWindowsSmartScreen                            string = "windows.smartScreen"
 	ResourceWindowsScheduledTask                          string = "windows.scheduledTask"
 	ResourceWindowsScheduledTaskPrincipal                 string = "windows.scheduledTask.principal"
 	ResourceWindowsScheduledTaskAction                    string = "windows.scheduledTask.action"
@@ -1716,6 +1717,10 @@ func init() {
 		"windows.exploitProtection.heap": {
 			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsExploitProtectionHeap,
+		},
+		"windows.smartScreen": {
+			// to override args, implement: initWindowsSmartScreen(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmartScreen,
 		},
 		"windows.scheduledTask": {
 			// to override args, implement: initWindowsScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7935,6 +7940,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsExploitProtectionHeap).GetTerminateOnError()).ToDataRes(types.String)
+	},
+	"windows.smartScreen.explorerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetExplorerEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.explorerLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetExplorerLevel()).ToDataRes(types.String)
+	},
+	"windows.smartScreen.edgeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgeEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePuaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePuaEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePreventOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePreventOverride()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.edgePreventOverrideForFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetEdgePreventOverrideForFiles()).ToDataRes(types.Bool)
+	},
+	"windows.smartScreen.storeAppsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmartScreen).GetStoreAppsEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsScheduledTask).GetName()).ToDataRes(types.String)
@@ -19776,6 +19802,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsExploitProtectionHeap).TerminateOnError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smartScreen.explorerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).ExplorerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.explorerLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).ExplorerLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePuaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePuaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePreventOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePreventOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.edgePreventOverrideForFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).EdgePreventOverrideForFiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen.storeAppsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmartScreen).StoreAppsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52345,6 +52403,94 @@ func (c *mqlWindowsExploitProtectionHeap) MqlID() string {
 
 func (c *mqlWindowsExploitProtectionHeap) GetTerminateOnError() *plugin.TValue[string] {
 	return &c.TerminateOnError
+}
+
+// mqlWindowsSmartScreen for the windows.smartScreen resource
+type mqlWindowsSmartScreen struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsSmartScreenInternal
+	ExplorerEnabled             plugin.TValue[bool]
+	ExplorerLevel               plugin.TValue[string]
+	EdgeEnabled                 plugin.TValue[bool]
+	EdgePuaEnabled              plugin.TValue[bool]
+	EdgePreventOverride         plugin.TValue[bool]
+	EdgePreventOverrideForFiles plugin.TValue[bool]
+	StoreAppsEnabled            plugin.TValue[bool]
+}
+
+// createWindowsSmartScreen creates a new instance of this resource
+func createWindowsSmartScreen(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmartScreen{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smartScreen", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmartScreen) MqlName() string {
+	return "windows.smartScreen"
+}
+
+func (c *mqlWindowsSmartScreen) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmartScreen) GetExplorerEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ExplorerEnabled, func() (bool, error) {
+		return c.explorerEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetExplorerLevel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExplorerLevel, func() (string, error) {
+		return c.explorerLevel()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgeEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgeEnabled, func() (bool, error) {
+		return c.edgeEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePuaEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePuaEnabled, func() (bool, error) {
+		return c.edgePuaEnabled()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePreventOverride() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePreventOverride, func() (bool, error) {
+		return c.edgePreventOverride()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetEdgePreventOverrideForFiles() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EdgePreventOverrideForFiles, func() (bool, error) {
+		return c.edgePreventOverrideForFiles()
+	})
+}
+
+func (c *mqlWindowsSmartScreen) GetStoreAppsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StoreAppsEnabled, func() (bool, error) {
+		return c.storeAppsEnabled()
+	})
 }
 
 // mqlWindowsScheduledTask for the windows.scheduledTask resource

@@ -6453,6 +6453,34 @@ private windows.exploitProtection.heap @defaults("terminateOnError") {
   terminateOnError string
 }
 
+// Microsoft Defender SmartScreen
+//
+// Examine the Microsoft Defender SmartScreen policy configuration across its
+// three surfaces: Windows / File Explorer (which checks apps and files), the
+// Microsoft Edge browser, and Microsoft Store apps. SmartScreen is configured
+// through Group Policy registry values rather than a dedicated cmdlet; a value
+// that has not been configured resolves to its disabled default (false, or an
+// empty string for `explorerLevel`).
+windows.smartScreen @defaults("explorerEnabled explorerLevel edgeEnabled") {
+  // Whether SmartScreen is enabled for Windows / File Explorer
+  explorerEnabled() bool
+  // Enforcement level for Windows / File Explorer SmartScreen
+  //
+  // "Block" prevents the user from bypassing warnings; "Warn" lets the user
+  // continue; an empty string means no level is configured.
+  explorerLevel() string
+  // Whether SmartScreen is enabled for Microsoft Edge
+  edgeEnabled() bool
+  // Whether Edge SmartScreen blocks potentially unwanted applications (PUA)
+  edgePuaEnabled() bool
+  // Whether users are prevented from bypassing Edge SmartScreen warnings about sites
+  edgePreventOverride() bool
+  // Whether users are prevented from bypassing Edge SmartScreen warnings about downloads
+  edgePreventOverrideForFiles() bool
+  // Whether SmartScreen web-content evaluation is enabled for Microsoft Store apps
+  storeAppsEnabled() bool
+}
+
 // Windows Task Scheduler task
 //
 // Examine a registered task from the Windows Task Scheduler: its identity
