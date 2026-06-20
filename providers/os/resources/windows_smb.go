@@ -7,12 +7,38 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/registry"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 	"go.mondoo.com/mql/v13/providers/os/resources/windows"
+	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
+
+// Registry locations backing the SMB server (LanmanServer) and client
+// (LanmanWorkstation) configuration. For each role a value enforced through
+// Group Policy (the policy path) overrides the value configured under the
+// service's Parameters key; when neither is present the value is reported as
+// null so an explicit 0 is distinguishable from "not configured".
+const (
+	smbServerParamsPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters`
+	smbServerPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\LanmanServer`
+	smbServerServiceKey = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer`
+
+	smbClientParamsPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters`
+	smbClientPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation`
+	smbClientServiceKey = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanWorkstation`
+
+	smbV1DriverKey = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mrxsmb10`
+)
+
+// smbServiceDisabled is the registry Start value that marks a Windows service
+// (here mrxsmb10 / LanmanServer / LanmanWorkstation) as disabled.
+const smbServiceDisabled = 4
 
 // smbStdout runs a PowerShell command and returns its stdout reader, failing
 // on a non-zero exit status.
@@ -87,6 +113,256 @@ func (w *mqlWindowsSmb) sessions() ([]any, error) {
 		res = append(res, r)
 	}
 	return res, nil
+}
+
+func (w *mqlWindowsSmb) id() (string, error) {
+	return "windows.smb", nil
+}
+
+func (c *mqlWindowsSmbServerConfiguration) id() (string, error) {
+	return "windows.smb.serverConfiguration", nil
+}
+
+func (c *mqlWindowsSmbClientConfiguration) id() (string, error) {
+	return "windows.smb.clientConfiguration", nil
+}
+
+// readSmbRegistryKey reads a single registry key and returns its values keyed
+// by the lower-cased value name. A missing key yields an empty map rather than
+// an error, so resolution can fall through to the next source (e.g. no Group
+// Policy configured).
+func (w *mqlWindowsSmb) readSmbRegistryKey(path string) (map[string]registry.RegistryKeyItem, error) {
+	o, err := CreateResource(w.MqlRuntime, "registrykey", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := o.(*mqlRegistrykey).getEntries()
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return map[string]registry.RegistryKeyItem{}, nil
+		}
+		return nil, err
+	}
+
+	res := make(map[string]registry.RegistryKeyItem, len(entries))
+	for i := range entries {
+		res[strings.ToLower(entries[i].Key)] = entries[i]
+	}
+	return res, nil
+}
+
+// smbResolveInt applies policy-wins-then-parameters precedence and returns a
+// pointer to the effective DWORD, or nil when the value is configured nowhere.
+// A nil result is rendered as MQL null so an explicit 0 stays distinguishable
+// from "not configured".
+func smbResolveInt(policy, params map[string]registry.RegistryKeyItem, name string) *int64 {
+	key := strings.ToLower(name)
+	if it, ok := policy[key]; ok {
+		v := it.Value.Number
+		return &v
+	}
+	if it, ok := params[key]; ok {
+		v := it.Value.Number
+		return &v
+	}
+	return nil
+}
+
+// smbResolveBool resolves a DWORD that toggles on the value 1 and returns a
+// pointer to the boolean, or nil when the value is configured nowhere.
+func smbResolveBool(policy, params map[string]registry.RegistryKeyItem, name string) *bool {
+	v := smbResolveInt(policy, params, name)
+	if v == nil {
+		return nil
+	}
+	b := *v == 1
+	return &b
+}
+
+// smbResolveMultiString resolves a REG_MULTI_SZ value with policy-wins-then-
+// parameters precedence, returning an empty slice when neither key sets it.
+func smbResolveMultiString(policy, params map[string]registry.RegistryKeyItem, name string) []string {
+	key := strings.ToLower(name)
+	if it, ok := policy[key]; ok {
+		return it.Value.MultiString
+	}
+	if it, ok := params[key]; ok {
+		return it.Value.MultiString
+	}
+	return []string{}
+}
+
+// smbServerConfig holds the resolved SMB server settings. Pointer fields are
+// nil when the underlying registry value is not configured anywhere; this maps
+// directly onto MQL null so an explicit 0 can be told apart from absent.
+type smbServerConfig struct {
+	requireSecuritySignature            *bool
+	enableSecuritySignature             *bool
+	smb1Enabled                         *bool
+	restrictNullSessionAccess           *bool
+	nullSessionPipes                    []string
+	nullSessionShares                   []string
+	autoDisconnectMinutes               *int64
+	enableForcedLogoff                  *bool
+	serverNameHardeningLevel            *int64
+	enableAuthRateLimiter               *bool
+	invalidAuthenticationDelayMs        *int64
+	auditClientDoesNotSupportSigning    *bool
+	auditClientDoesNotSupportEncryption *bool
+	serviceStart                        *int64
+}
+
+// computeSmbServerConfig derives the effective SMB server configuration from the
+// policy key, the service Parameters key, and the service root key. Policy
+// values win over Parameters values. It is a pure function so the precedence and
+// nullable behavior can be unit tested without a live registry.
+func computeSmbServerConfig(policy, params, service map[string]registry.RegistryKeyItem) smbServerConfig {
+	return smbServerConfig{
+		requireSecuritySignature:            smbResolveBool(policy, params, "RequireSecuritySignature"),
+		enableSecuritySignature:             smbResolveBool(policy, params, "EnableSecuritySignature"),
+		smb1Enabled:                         smbResolveBool(policy, params, "SMB1"),
+		restrictNullSessionAccess:           smbResolveBool(policy, params, "RestrictNullSessAccess"),
+		nullSessionPipes:                    smbResolveMultiString(policy, params, "NullSessionPipes"),
+		nullSessionShares:                   smbResolveMultiString(policy, params, "NullSessionShares"),
+		autoDisconnectMinutes:               smbResolveInt(policy, params, "AutoDisconnect"),
+		enableForcedLogoff:                  smbResolveBool(policy, params, "enableforcedlogoff"),
+		serverNameHardeningLevel:            smbResolveInt(policy, params, "SMBServerNameHardeningLevel"),
+		enableAuthRateLimiter:               smbResolveBool(policy, params, "EnableAuthRateLimiter"),
+		invalidAuthenticationDelayMs:        smbResolveInt(policy, params, "InvalidAuthenticationDelayTimeInMs"),
+		auditClientDoesNotSupportSigning:    smbResolveBool(policy, params, "AuditClientDoesNotSupportSigning"),
+		auditClientDoesNotSupportEncryption: smbResolveBool(policy, params, "AuditClientDoesNotSupportEncryption"),
+		// the service Start value lives only under the service root, never the
+		// policy or Parameters key, so resolve it from a single source.
+		serviceStart: smbResolveInt(service, service, "Start"),
+	}
+}
+
+// smbClientConfig holds the resolved SMB client settings. Pointer fields are nil
+// when the underlying registry value is not configured anywhere.
+type smbClientConfig struct {
+	requireSecuritySignature            *bool
+	enableSecuritySignature             *bool
+	enablePlainTextPassword             *bool
+	allowInsecureGuestAuth              *bool
+	requireEncryption                   *bool
+	minSmb2Dialect                      *int64
+	auditInsecureGuestLogon             *bool
+	auditServerDoesNotSupportSigning    *bool
+	auditServerDoesNotSupportEncryption *bool
+	serviceStart                        *int64
+}
+
+// computeSmbClientConfig derives the effective SMB client configuration. Policy
+// values win over Parameters values. Pure function for unit testing.
+func computeSmbClientConfig(policy, params, service map[string]registry.RegistryKeyItem) smbClientConfig {
+	return smbClientConfig{
+		requireSecuritySignature:            smbResolveBool(policy, params, "RequireSecuritySignature"),
+		enableSecuritySignature:             smbResolveBool(policy, params, "EnableSecuritySignature"),
+		enablePlainTextPassword:             smbResolveBool(policy, params, "EnablePlainTextPassword"),
+		allowInsecureGuestAuth:              smbResolveBool(policy, params, "AllowInsecureGuestAuth"),
+		requireEncryption:                   smbResolveBool(policy, params, "RequireEncryption"),
+		minSmb2Dialect:                      smbResolveInt(policy, params, "MinSmb2Dialect"),
+		auditInsecureGuestLogon:             smbResolveBool(policy, params, "AuditInsecureGuestLogon"),
+		auditServerDoesNotSupportSigning:    smbResolveBool(policy, params, "AuditServerDoesNotSupportSigning"),
+		auditServerDoesNotSupportEncryption: smbResolveBool(policy, params, "AuditServerDoesNotSupportEncryption"),
+		serviceStart:                        smbResolveInt(service, service, "Start"),
+	}
+}
+
+// computeSmbV1Enabled reports whether the SMBv1 client driver (mrxsmb10) is
+// enabled. The driver is enabled unless its Start value is explicitly 4
+// (disabled); an absent value means the default-installed driver is present, so
+// it is treated as enabled.
+func computeSmbV1Enabled(driver map[string]registry.RegistryKeyItem) bool {
+	if it, ok := driver["start"]; ok {
+		return it.Value.Number != smbServiceDisabled
+	}
+	return true
+}
+
+func (w *mqlWindowsSmb) serverConfiguration() (*mqlWindowsSmbServerConfiguration, error) {
+	policy, err := w.readSmbRegistryKey(smbServerPolicyPath)
+	if err != nil {
+		return nil, err
+	}
+	params, err := w.readSmbRegistryKey(smbServerParamsPath)
+	if err != nil {
+		return nil, err
+	}
+	service, err := w.readSmbRegistryKey(smbServerServiceKey)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := computeSmbServerConfig(policy, params, service)
+
+	o, err := CreateResource(w.MqlRuntime, "windows.smb.serverConfiguration", map[string]*llx.RawData{
+		"__id":                                llx.StringData("windows.smb.serverConfiguration"),
+		"requireSecuritySignature":            llx.BoolDataPtr(cfg.requireSecuritySignature),
+		"enableSecuritySignature":             llx.BoolDataPtr(cfg.enableSecuritySignature),
+		"smb1Enabled":                         llx.BoolDataPtr(cfg.smb1Enabled),
+		"restrictNullSessionAccess":           llx.BoolDataPtr(cfg.restrictNullSessionAccess),
+		"nullSessionPipes":                    llx.ArrayData(strSliceToAny(cfg.nullSessionPipes), types.String),
+		"nullSessionShares":                   llx.ArrayData(strSliceToAny(cfg.nullSessionShares), types.String),
+		"autoDisconnectMinutes":               llx.IntDataPtr(cfg.autoDisconnectMinutes),
+		"enableForcedLogoff":                  llx.BoolDataPtr(cfg.enableForcedLogoff),
+		"serverNameHardeningLevel":            llx.IntDataPtr(cfg.serverNameHardeningLevel),
+		"enableAuthRateLimiter":               llx.BoolDataPtr(cfg.enableAuthRateLimiter),
+		"invalidAuthenticationDelayMs":        llx.IntDataPtr(cfg.invalidAuthenticationDelayMs),
+		"auditClientDoesNotSupportSigning":    llx.BoolDataPtr(cfg.auditClientDoesNotSupportSigning),
+		"auditClientDoesNotSupportEncryption": llx.BoolDataPtr(cfg.auditClientDoesNotSupportEncryption),
+		"serviceStart":                        llx.IntDataPtr(cfg.serviceStart),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlWindowsSmbServerConfiguration), nil
+}
+
+func (w *mqlWindowsSmb) clientConfiguration() (*mqlWindowsSmbClientConfiguration, error) {
+	policy, err := w.readSmbRegistryKey(smbClientPolicyPath)
+	if err != nil {
+		return nil, err
+	}
+	params, err := w.readSmbRegistryKey(smbClientParamsPath)
+	if err != nil {
+		return nil, err
+	}
+	service, err := w.readSmbRegistryKey(smbClientServiceKey)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := computeSmbClientConfig(policy, params, service)
+
+	o, err := CreateResource(w.MqlRuntime, "windows.smb.clientConfiguration", map[string]*llx.RawData{
+		"__id":                                llx.StringData("windows.smb.clientConfiguration"),
+		"requireSecuritySignature":            llx.BoolDataPtr(cfg.requireSecuritySignature),
+		"enableSecuritySignature":             llx.BoolDataPtr(cfg.enableSecuritySignature),
+		"enablePlainTextPassword":             llx.BoolDataPtr(cfg.enablePlainTextPassword),
+		"allowInsecureGuestAuth":              llx.BoolDataPtr(cfg.allowInsecureGuestAuth),
+		"requireEncryption":                   llx.BoolDataPtr(cfg.requireEncryption),
+		"minSmb2Dialect":                      llx.IntDataPtr(cfg.minSmb2Dialect),
+		"auditInsecureGuestLogon":             llx.BoolDataPtr(cfg.auditInsecureGuestLogon),
+		"auditServerDoesNotSupportSigning":    llx.BoolDataPtr(cfg.auditServerDoesNotSupportSigning),
+		"auditServerDoesNotSupportEncryption": llx.BoolDataPtr(cfg.auditServerDoesNotSupportEncryption),
+		"serviceStart":                        llx.IntDataPtr(cfg.serviceStart),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlWindowsSmbClientConfiguration), nil
+}
+
+func (w *mqlWindowsSmb) smbv1Enabled() (bool, error) {
+	driver, err := w.readSmbRegistryKey(smbV1DriverKey)
+	if err != nil {
+		return false, err
+	}
+	return computeSmbV1Enabled(driver), nil
 }
 
 func (w *mqlWindowsSmb) connections() ([]any, error) {

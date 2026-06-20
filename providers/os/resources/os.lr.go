@@ -342,6 +342,8 @@ const (
 	ResourceWindowsFirewallProfile                        string = "windows.firewall.profile"
 	ResourceWindowsFirewallRule                           string = "windows.firewall.rule"
 	ResourceWindowsSmb                                    string = "windows.smb"
+	ResourceWindowsSmbServerConfiguration                 string = "windows.smb.serverConfiguration"
+	ResourceWindowsSmbClientConfiguration                 string = "windows.smb.clientConfiguration"
 	ResourceWindowsSmbShare                               string = "windows.smb.share"
 	ResourceWindowsSmbSession                             string = "windows.smb.session"
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
@@ -1776,6 +1778,14 @@ func init() {
 		"windows.smb": {
 			// to override args, implement: initWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsSmb,
+		},
+		"windows.smb.serverConfiguration": {
+			// to override args, implement: initWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbServerConfiguration,
+		},
+		"windows.smb.clientConfiguration": {
+			// to override args, implement: initWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSmbClientConfiguration,
 		},
 		"windows.smb.share": {
 			// to override args, implement: initWindowsSmbShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8467,6 +8477,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.smb.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSmb).GetConnections()).ToDataRes(types.Array(types.Resource("windows.smb.connection")))
+	},
+	"windows.smb.serverConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetServerConfiguration()).ToDataRes(types.Resource("windows.smb.serverConfiguration"))
+	},
+	"windows.smb.clientConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetClientConfiguration()).ToDataRes(types.Resource("windows.smb.clientConfiguration"))
+	},
+	"windows.smb.smbv1Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmb).GetSmbv1Enabled()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.requireSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetRequireSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.enableSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.smb1Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetSmb1Enabled()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.restrictNullSessionAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetRestrictNullSessionAccess()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.nullSessionPipes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetNullSessionPipes()).ToDataRes(types.Array(types.String))
+	},
+	"windows.smb.serverConfiguration.nullSessionShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetNullSessionShares()).ToDataRes(types.Array(types.String))
+	},
+	"windows.smb.serverConfiguration.autoDisconnectMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAutoDisconnectMinutes()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.enableForcedLogoff": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableForcedLogoff()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.serverNameHardeningLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetServerNameHardeningLevel()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.enableAuthRateLimiter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetEnableAuthRateLimiter()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.invalidAuthenticationDelayMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetInvalidAuthenticationDelayMs()).ToDataRes(types.Int)
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAuditClientDoesNotSupportSigning()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetAuditClientDoesNotSupportEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.serverConfiguration.serviceStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbServerConfiguration).GetServiceStart()).ToDataRes(types.Int)
+	},
+	"windows.smb.clientConfiguration.requireSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetRequireSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.enableSecuritySignature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetEnableSecuritySignature()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.enablePlainTextPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetEnablePlainTextPassword()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.allowInsecureGuestAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAllowInsecureGuestAuth()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.requireEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetRequireEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.minSmb2Dialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetMinSmb2Dialect()).ToDataRes(types.Int)
+	},
+	"windows.smb.clientConfiguration.auditInsecureGuestLogon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditInsecureGuestLogon()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditServerDoesNotSupportSigning()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetAuditServerDoesNotSupportEncryption()).ToDataRes(types.Bool)
+	},
+	"windows.smb.clientConfiguration.serviceStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSmbClientConfiguration).GetServiceStart()).ToDataRes(types.Int)
 	},
 	"windows.smb.share.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSmbShare).GetName()).ToDataRes(types.String)
@@ -20252,6 +20343,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.smb.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSmb).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).ServerConfiguration, ok = plugin.RawToTValue[*mqlWindowsSmbServerConfiguration](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).ClientConfiguration, ok = plugin.RawToTValue[*mqlWindowsSmbClientConfiguration](v.Value, v.Error)
+		return
+	},
+	"windows.smb.smbv1Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmb).Smbv1Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.serverConfiguration.requireSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).RequireSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.smb1Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).Smb1Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.restrictNullSessionAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).RestrictNullSessionAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.nullSessionPipes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).NullSessionPipes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.nullSessionShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).NullSessionShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.autoDisconnectMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AutoDisconnectMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableForcedLogoff": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableForcedLogoff, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.serverNameHardeningLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).ServerNameHardeningLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.enableAuthRateLimiter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).EnableAuthRateLimiter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.invalidAuthenticationDelayMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).InvalidAuthenticationDelayMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AuditClientDoesNotSupportSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.auditClientDoesNotSupportEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).AuditClientDoesNotSupportEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.serverConfiguration.serviceStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbServerConfiguration).ServiceStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.smb.clientConfiguration.requireSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).RequireSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.enableSecuritySignature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).EnableSecuritySignature, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.enablePlainTextPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).EnablePlainTextPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.allowInsecureGuestAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AllowInsecureGuestAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.requireEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).RequireEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.minSmb2Dialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).MinSmb2Dialect, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditInsecureGuestLogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditInsecureGuestLogon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditServerDoesNotSupportSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.auditServerDoesNotSupportEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).AuditServerDoesNotSupportEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.smb.clientConfiguration.serviceStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSmbClientConfiguration).ServiceStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.smb.share.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53327,9 +53534,12 @@ type mqlWindowsSmb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsSmbInternal it will be used here
-	Shares      plugin.TValue[[]any]
-	Sessions    plugin.TValue[[]any]
-	Connections plugin.TValue[[]any]
+	Shares              plugin.TValue[[]any]
+	Sessions            plugin.TValue[[]any]
+	Connections         plugin.TValue[[]any]
+	ServerConfiguration plugin.TValue[*mqlWindowsSmbServerConfiguration]
+	ClientConfiguration plugin.TValue[*mqlWindowsSmbClientConfiguration]
+	Smbv1Enabled        plugin.TValue[bool]
 }
 
 // createWindowsSmb creates a new instance of this resource
@@ -53343,7 +53553,12 @@ func createWindowsSmb(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("windows.smb", res.__id)
@@ -53410,6 +53625,252 @@ func (c *mqlWindowsSmb) GetConnections() *plugin.TValue[[]any] {
 
 		return c.connections()
 	})
+}
+
+func (c *mqlWindowsSmb) GetServerConfiguration() *plugin.TValue[*mqlWindowsSmbServerConfiguration] {
+	return plugin.GetOrCompute[*mqlWindowsSmbServerConfiguration](&c.ServerConfiguration, func() (*mqlWindowsSmbServerConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "serverConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmbServerConfiguration), nil
+			}
+		}
+
+		return c.serverConfiguration()
+	})
+}
+
+func (c *mqlWindowsSmb) GetClientConfiguration() *plugin.TValue[*mqlWindowsSmbClientConfiguration] {
+	return plugin.GetOrCompute[*mqlWindowsSmbClientConfiguration](&c.ClientConfiguration, func() (*mqlWindowsSmbClientConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.smb", c.__id, "clientConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmbClientConfiguration), nil
+			}
+		}
+
+		return c.clientConfiguration()
+	})
+}
+
+func (c *mqlWindowsSmb) GetSmbv1Enabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Smbv1Enabled, func() (bool, error) {
+		return c.smbv1Enabled()
+	})
+}
+
+// mqlWindowsSmbServerConfiguration for the windows.smb.serverConfiguration resource
+type mqlWindowsSmbServerConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbServerConfigurationInternal it will be used here
+	RequireSecuritySignature            plugin.TValue[bool]
+	EnableSecuritySignature             plugin.TValue[bool]
+	Smb1Enabled                         plugin.TValue[bool]
+	RestrictNullSessionAccess           plugin.TValue[bool]
+	NullSessionPipes                    plugin.TValue[[]any]
+	NullSessionShares                   plugin.TValue[[]any]
+	AutoDisconnectMinutes               plugin.TValue[int64]
+	EnableForcedLogoff                  plugin.TValue[bool]
+	ServerNameHardeningLevel            plugin.TValue[int64]
+	EnableAuthRateLimiter               plugin.TValue[bool]
+	InvalidAuthenticationDelayMs        plugin.TValue[int64]
+	AuditClientDoesNotSupportSigning    plugin.TValue[bool]
+	AuditClientDoesNotSupportEncryption plugin.TValue[bool]
+	ServiceStart                        plugin.TValue[int64]
+}
+
+// createWindowsSmbServerConfiguration creates a new instance of this resource
+func createWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbServerConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.serverConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbServerConfiguration) MqlName() string {
+	return "windows.smb.serverConfiguration"
+}
+
+func (c *mqlWindowsSmbServerConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetRequireSecuritySignature() *plugin.TValue[bool] {
+	return &c.RequireSecuritySignature
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableSecuritySignature() *plugin.TValue[bool] {
+	return &c.EnableSecuritySignature
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetSmb1Enabled() *plugin.TValue[bool] {
+	return &c.Smb1Enabled
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetRestrictNullSessionAccess() *plugin.TValue[bool] {
+	return &c.RestrictNullSessionAccess
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetNullSessionPipes() *plugin.TValue[[]any] {
+	return &c.NullSessionPipes
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetNullSessionShares() *plugin.TValue[[]any] {
+	return &c.NullSessionShares
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAutoDisconnectMinutes() *plugin.TValue[int64] {
+	return &c.AutoDisconnectMinutes
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableForcedLogoff() *plugin.TValue[bool] {
+	return &c.EnableForcedLogoff
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetServerNameHardeningLevel() *plugin.TValue[int64] {
+	return &c.ServerNameHardeningLevel
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetEnableAuthRateLimiter() *plugin.TValue[bool] {
+	return &c.EnableAuthRateLimiter
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetInvalidAuthenticationDelayMs() *plugin.TValue[int64] {
+	return &c.InvalidAuthenticationDelayMs
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAuditClientDoesNotSupportSigning() *plugin.TValue[bool] {
+	return &c.AuditClientDoesNotSupportSigning
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetAuditClientDoesNotSupportEncryption() *plugin.TValue[bool] {
+	return &c.AuditClientDoesNotSupportEncryption
+}
+
+func (c *mqlWindowsSmbServerConfiguration) GetServiceStart() *plugin.TValue[int64] {
+	return &c.ServiceStart
+}
+
+// mqlWindowsSmbClientConfiguration for the windows.smb.clientConfiguration resource
+type mqlWindowsSmbClientConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSmbClientConfigurationInternal it will be used here
+	RequireSecuritySignature            plugin.TValue[bool]
+	EnableSecuritySignature             plugin.TValue[bool]
+	EnablePlainTextPassword             plugin.TValue[bool]
+	AllowInsecureGuestAuth              plugin.TValue[bool]
+	RequireEncryption                   plugin.TValue[bool]
+	MinSmb2Dialect                      plugin.TValue[int64]
+	AuditInsecureGuestLogon             plugin.TValue[bool]
+	AuditServerDoesNotSupportSigning    plugin.TValue[bool]
+	AuditServerDoesNotSupportEncryption plugin.TValue[bool]
+	ServiceStart                        plugin.TValue[int64]
+}
+
+// createWindowsSmbClientConfiguration creates a new instance of this resource
+func createWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSmbClientConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.smb.clientConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSmbClientConfiguration) MqlName() string {
+	return "windows.smb.clientConfiguration"
+}
+
+func (c *mqlWindowsSmbClientConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetRequireSecuritySignature() *plugin.TValue[bool] {
+	return &c.RequireSecuritySignature
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetEnableSecuritySignature() *plugin.TValue[bool] {
+	return &c.EnableSecuritySignature
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetEnablePlainTextPassword() *plugin.TValue[bool] {
+	return &c.EnablePlainTextPassword
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAllowInsecureGuestAuth() *plugin.TValue[bool] {
+	return &c.AllowInsecureGuestAuth
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetRequireEncryption() *plugin.TValue[bool] {
+	return &c.RequireEncryption
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetMinSmb2Dialect() *plugin.TValue[int64] {
+	return &c.MinSmb2Dialect
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditInsecureGuestLogon() *plugin.TValue[bool] {
+	return &c.AuditInsecureGuestLogon
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditServerDoesNotSupportSigning() *plugin.TValue[bool] {
+	return &c.AuditServerDoesNotSupportSigning
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetAuditServerDoesNotSupportEncryption() *plugin.TValue[bool] {
+	return &c.AuditServerDoesNotSupportEncryption
+}
+
+func (c *mqlWindowsSmbClientConfiguration) GetServiceStart() *plugin.TValue[int64] {
+	return &c.ServiceStart
 }
 
 // mqlWindowsSmbShare for the windows.smb.share resource

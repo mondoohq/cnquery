@@ -7091,6 +7091,143 @@ windows.smb {
   sessions() []windows.smb.session
   // Outbound SMB connections (this host connected to other SMB servers)
   connections() []windows.smb.connection
+  // SMB server (LanmanServer) registry configuration
+  serverConfiguration() windows.smb.serverConfiguration
+  // SMB client (LanmanWorkstation) registry configuration
+  clientConfiguration() windows.smb.clientConfiguration
+  // Whether the SMBv1 client driver (mrxsmb10) is enabled (Start != 4)
+  //
+  // True when the mrxsmb10 service Start value is anything other than 4
+  // (disabled). SMBv1 is deprecated and should be disabled.
+  smbv1Enabled() bool
+}
+
+// Windows SMB server configuration
+//
+// SMB server (LanmanServer) hardening settings sourced from the registry.
+// Values configured through Group Policy
+// (HKLM\SOFTWARE\Policies\Microsoft\Windows\LanmanServer) take precedence over
+// the service parameters
+// (HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters). Integer and
+// boolean fields whose compliant value is 0 are null when the value is not
+// configured anywhere, so an explicit 0 can be told apart from an absent value.
+private windows.smb.serverConfiguration {
+  // Whether the server requires SMB packet signing (RequireSecuritySignature)
+  //
+  // Maps the RequireSecuritySignature DWORD; 1 = required. Null when unset.
+  requireSecuritySignature bool
+  // Whether the server enables (offers) SMB packet signing (EnableSecuritySignature)
+  //
+  // Maps the EnableSecuritySignature DWORD; 1 = enabled. Null when unset.
+  enableSecuritySignature bool
+  // Whether SMBv1 is enabled on the server (SMB1)
+  //
+  // Maps the SMB1 DWORD; 1 = enabled, 0 = disabled. Null when unset (in which
+  // case the OS default applies). SMBv1 should be disabled.
+  smb1Enabled bool
+  // Whether anonymous (null session) access is restricted (RestrictNullSessAccess)
+  //
+  // Maps the RestrictNullSessAccess DWORD; 1 = restricted. Null when unset.
+  restrictNullSessionAccess bool
+  // Named pipes accessible to anonymous (null session) users (NullSessionPipes)
+  //
+  // The REG_MULTI_SZ NullSessionPipes value. Empty when unset; a compliant
+  // configuration is an empty list.
+  nullSessionPipes []string
+  // Shares accessible to anonymous (null session) users (NullSessionShares)
+  //
+  // The REG_MULTI_SZ NullSessionShares value. Empty when unset; a compliant
+  // configuration is an empty list.
+  nullSessionShares []string
+  // Idle time in minutes before a session is disconnected (AutoDisconnect)
+  //
+  // Maps the AutoDisconnect DWORD. Null when unset. The CIS-recommended value
+  // is 15 minutes or less.
+  autoDisconnectMinutes int
+  // Whether clients are forced to log off when logon hours expire (enableforcedlogoff)
+  //
+  // Maps the enableforcedlogoff DWORD; 1 = forced logoff enabled. Null when unset.
+  enableForcedLogoff bool
+  // SMB server name hardening level (SMBServerNameHardeningLevel)
+  //
+  // Maps the SMBServerNameHardeningLevel DWORD (0, 1, or 2). Null when unset.
+  serverNameHardeningLevel int
+  // Whether the SMB authentication rate limiter is enabled (EnableAuthRateLimiter)
+  //
+  // Maps the EnableAuthRateLimiter DWORD; 1 = enabled. Null when unset.
+  enableAuthRateLimiter bool
+  // Delay in milliseconds applied to invalid SMB authentication attempts (InvalidAuthenticationDelayTimeInMs)
+  //
+  // Maps the InvalidAuthenticationDelayTimeInMs DWORD. Null when unset.
+  invalidAuthenticationDelayMs int
+  // Whether to audit clients that do not support SMB signing (AuditClientDoesNotSupportSigning)
+  //
+  // Maps the AuditClientDoesNotSupportSigning DWORD; 1 = auditing enabled. Null when unset.
+  auditClientDoesNotSupportSigning bool
+  // Whether to audit clients that do not support SMB encryption (AuditClientDoesNotSupportEncryption)
+  //
+  // Maps the AuditClientDoesNotSupportEncryption DWORD; 1 = auditing enabled. Null when unset.
+  auditClientDoesNotSupportEncryption bool
+  // The LanmanServer service Start value (registry Start)
+  //
+  // Maps the LanmanServer service Start DWORD (2 = automatic, 3 = manual,
+  // 4 = disabled). Null when unset.
+  serviceStart int
+}
+
+// Windows SMB client configuration
+//
+// SMB client (LanmanWorkstation) hardening settings sourced from the registry.
+// Values configured through Group Policy
+// (HKLM\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation) take precedence
+// over the service parameters
+// (HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters).
+// Integer and boolean fields whose compliant value is 0 are null when the value
+// is not configured anywhere, so an explicit 0 can be told apart from absent.
+private windows.smb.clientConfiguration {
+  // Whether the client requires SMB packet signing (RequireSecuritySignature)
+  //
+  // Maps the RequireSecuritySignature DWORD; 1 = required. Null when unset.
+  requireSecuritySignature bool
+  // Whether the client enables (offers) SMB packet signing (EnableSecuritySignature)
+  //
+  // Maps the EnableSecuritySignature DWORD; 1 = enabled. Null when unset.
+  enableSecuritySignature bool
+  // Whether the client sends plaintext passwords to SMB servers (EnablePlainTextPassword)
+  //
+  // Maps the EnablePlainTextPassword DWORD; 0 = disabled (compliant). Null when
+  // unset, so an explicit 0 is distinguishable from absent.
+  enablePlainTextPassword bool
+  // Whether insecure guest logons are allowed (AllowInsecureGuestAuth)
+  //
+  // Maps the AllowInsecureGuestAuth DWORD; 0 = disallowed (compliant). Null when
+  // unset, so an explicit 0 is distinguishable from absent.
+  allowInsecureGuestAuth bool
+  // Whether the client requires SMB encryption (RequireEncryption)
+  //
+  // Maps the RequireEncryption DWORD; 1 = required. Null when unset.
+  requireEncryption bool
+  // Minimum SMB2 dialect the client will negotiate (MinSmb2Dialect)
+  //
+  // Maps the MinSmb2Dialect DWORD. Null when unset.
+  minSmb2Dialect int
+  // Whether to audit insecure guest logons (AuditInsecureGuestLogon)
+  //
+  // Maps the AuditInsecureGuestLogon DWORD; 1 = auditing enabled. Null when unset.
+  auditInsecureGuestLogon bool
+  // Whether to audit servers that do not support SMB signing (AuditServerDoesNotSupportSigning)
+  //
+  // Maps the AuditServerDoesNotSupportSigning DWORD; 1 = auditing enabled. Null when unset.
+  auditServerDoesNotSupportSigning bool
+  // Whether to audit servers that do not support SMB encryption (AuditServerDoesNotSupportEncryption)
+  //
+  // Maps the AuditServerDoesNotSupportEncryption DWORD; 1 = auditing enabled. Null when unset.
+  auditServerDoesNotSupportEncryption bool
+  // The LanmanWorkstation service Start value (registry Start)
+  //
+  // Maps the LanmanWorkstation service Start DWORD (2 = automatic, 3 = manual,
+  // 4 = disabled). Null when unset.
+  serviceStart int
 }
 
 // Windows SMB share
