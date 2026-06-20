@@ -94,9 +94,20 @@ func TestParseMpPreference(t *testing.T) {
 	assert.Equal(t, "00:00:00", pref.ScanScheduleQuickScanTimeString())
 	assert.NotEmpty(t, pref.ScanScheduleTimeString())
 
+	// behavioral network blocks
+	assert.Equal(t, int64(1), pref.BruteForceProtectionConfiguredState)
+	assert.Equal(t, int64(2), pref.BruteForceProtectionAggressiveness)
+	assert.Equal(t, int64(1), pref.RemoteEncryptionProtectionConfiguredState)
+
+	// local setting overrides
+	assert.False(t, pref.LocalSettingOverrideSpynetReporting)
+	assert.False(t, pref.LocalSettingOverrideRealtimeMonitoring)
+
 	// misc
 	assert.Equal(t, int64(1), pref.PUAProtection)
 	assert.True(t, pref.RandomizeScheduleTaskTimes)
+	// the "RePorts" casing is matched via the explicit json tag
+	assert.True(t, pref.DisableGenericReports)
 }
 
 func TestParseMpThreats(t *testing.T) {

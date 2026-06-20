@@ -16,455 +16,457 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                                    string = "asset"
-	ResourceAssetEol                                 string = "asset.eol"
-	ResourceMondooEol                                string = "mondoo.eol"
-	ResourceVulnmgmt                                 string = "vulnmgmt"
-	ResourceVulnCve                                  string = "vuln.cve"
-	ResourceVulnAdvisory                             string = "vuln.advisory"
-	ResourceVulnPackage                              string = "vuln.package"
-	ResourcePlatformAdvisories                       string = "platform.advisories"
-	ResourcePlatformCves                             string = "platform.cves"
-	ResourceAuditCvss                                string = "audit.cvss"
-	ResourceAuditAdvisory                            string = "audit.advisory"
-	ResourceAuditCve                                 string = "audit.cve"
-	ResourceMachine                                  string = "machine"
-	ResourceMachineBios                              string = "machine.bios"
-	ResourceMachineSystem                            string = "machine.system"
-	ResourceMachineBaseboard                         string = "machine.baseboard"
-	ResourceMachineChassis                           string = "machine.chassis"
-	ResourceMachineCpu                               string = "machine.cpu"
-	ResourceMachineSecureboot                        string = "machine.secureboot"
-	ResourceOs                                       string = "os"
-	ResourceOsDate                                   string = "os.date"
-	ResourceOsUpdate                                 string = "os.update"
-	ResourceOsBase                                   string = "os.base"
-	ResourceOsUnix                                   string = "os.unix"
-	ResourceOsLinux                                  string = "os.linux"
-	ResourceOsRootCertificates                       string = "os.rootCertificates"
-	ResourceCommand                                  string = "command"
-	ResourcePowershell                               string = "powershell"
-	ResourceFile                                     string = "file"
-	ResourceFileContext                              string = "file.context"
-	ResourceFilePermissions                          string = "file.permissions"
-	ResourceFiles                                    string = "files"
-	ResourceFilesFind                                string = "files.find"
-	ResourceParseIni                                 string = "parse.ini"
-	ResourceParseJson                                string = "parse.json"
-	ResourceParseXml                                 string = "parse.xml"
-	ResourceParsePlist                               string = "parse.plist"
-	ResourceParseYaml                                string = "parse.yaml"
-	ResourceParseCertificates                        string = "parse.certificates"
-	ResourceParseOpenpgp                             string = "parse.openpgp"
-	ResourceUser                                     string = "user"
-	ResourcePrivatekey                               string = "privatekey"
-	ResourceUsers                                    string = "users"
-	ResourceAuthorizedkeys                           string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry                      string = "authorizedkeys.entry"
-	ResourceGroup                                    string = "group"
-	ResourceGroups                                   string = "groups"
-	ResourcePackage                                  string = "package"
-	ResourcePkgFileInfo                              string = "pkgFileInfo"
-	ResourcePackages                                 string = "packages"
-	ResourcePamConf                                  string = "pam.conf"
-	ResourcePamConfServiceEntry                      string = "pam.conf.serviceEntry"
-	ResourcePamConfService                           string = "pam.conf.service"
-	ResourcePamModule                                string = "pam.module"
-	ResourceSshd                                     string = "sshd"
-	ResourceSshdConfig                               string = "sshd.config"
-	ResourceSshdConfigMatchBlock                     string = "sshd.config.matchBlock"
-	ResourceInetd                                    string = "inetd"
-	ResourceInetdConfig                              string = "inetd.config"
-	ResourceInetdConfigEntry                         string = "inetd.config.entry"
-	ResourceSnmpd                                    string = "snmpd"
-	ResourceSnmpdConfig                              string = "snmpd.config"
-	ResourceAuditdConfig                             string = "auditd.config"
-	ResourceAuditdRules                              string = "auditd.rules"
-	ResourceAuditdRule                               string = "auditd.rule"
-	ResourceAuditdRuleControl                        string = "auditd.rule.control"
-	ResourceAuditdRuleFile                           string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall                        string = "auditd.rule.syscall"
-	ResourceApache2                                  string = "apache2"
-	ResourceApache2Conf                              string = "apache2.conf"
-	ResourceApache2ConfEnvvars                       string = "apache2.conf.envvars"
-	ResourceApache2ConfModule                        string = "apache2.conf.module"
-	ResourceApache2ConfVirtualHost                   string = "apache2.conf.virtualHost"
-	ResourceApache2ConfDirectory                     string = "apache2.conf.directory"
-	ResourceApache2ConfLocation                      string = "apache2.conf.location"
-	ResourceNginx                                    string = "nginx"
-	ResourceNginxConf                                string = "nginx.conf"
-	ResourceNginxConfServer                          string = "nginx.conf.server"
-	ResourceNginxConfUpstream                        string = "nginx.conf.upstream"
-	ResourceNginxConfLocation                        string = "nginx.conf.location"
-	ResourceSquid                                    string = "squid"
-	ResourceSquidConf                                string = "squid.conf"
-	ResourceSquidConfListen                          string = "squid.conf.listen"
-	ResourceSquidConfAcl                             string = "squid.conf.acl"
-	ResourceSquidConfAccessRule                      string = "squid.conf.accessRule"
-	ResourceSquidConfCachePeer                       string = "squid.conf.cachePeer"
-	ResourceSquidConfCacheDir                        string = "squid.conf.cacheDir"
-	ResourceSquidConfRefreshPattern                  string = "squid.conf.refreshPattern"
-	ResourceSquidConfAccessLog                       string = "squid.conf.accessLog"
-	ResourceHaproxy                                  string = "haproxy"
-	ResourceHaproxyConfig                            string = "haproxy.config"
-	ResourceHaproxyConfigSection                     string = "haproxy.config.section"
-	ResourceHaproxyConfigGlobal                      string = "haproxy.config.global"
-	ResourceHaproxyConfigDefaultsSection             string = "haproxy.config.defaultsSection"
-	ResourceHaproxyConfigFrontend                    string = "haproxy.config.frontend"
-	ResourceHaproxyConfigBackend                     string = "haproxy.config.backend"
-	ResourceHaproxyConfigListen                      string = "haproxy.config.listen"
-	ResourceHaproxyConfigBind                        string = "haproxy.config.bind"
-	ResourceHaproxyConfigServer                      string = "haproxy.config.server"
-	ResourceHaproxyConfigResolversSection            string = "haproxy.config.resolversSection"
-	ResourceHaproxyConfigUserlist                    string = "haproxy.config.userlist"
-	ResourceHaproxyConfigPeersSection                string = "haproxy.config.peersSection"
-	ResourceJournaldConfig                           string = "journald.config"
-	ResourceJournaldConfigSection                    string = "journald.config.section"
-	ResourceJournaldConfigSectionParam               string = "journald.config.section.param"
-	ResourceService                                  string = "service"
-	ResourceServices                                 string = "services"
-	ResourceSystemdTimer                             string = "systemd.timer"
-	ResourceSystemdTimers                            string = "systemd.timers"
-	ResourceSystemdSocket                            string = "systemd.socket"
-	ResourceSystemdSockets                           string = "systemd.sockets"
-	ResourceSystemdTarget                            string = "systemd.target"
-	ResourceSystemdTargets                           string = "systemd.targets"
-	ResourceSystemdResolved                          string = "systemd.resolved"
-	ResourceSystemdTimesyncd                         string = "systemd.timesyncd"
-	ResourceKernel                                   string = "kernel"
-	ResourceKernelModule                             string = "kernel.module"
-	ResourceKernelCmdline                            string = "kernel.cmdline"
-	ResourceKernelTaint                              string = "kernel.taint"
-	ResourceKernelLockdown                           string = "kernel.lockdown"
-	ResourceKernelAslr                               string = "kernel.aslr"
-	ResourceCgroups                                  string = "cgroups"
-	ResourceCgroup                                   string = "cgroup"
-	ResourceDocker                                   string = "docker"
-	ResourceDockerFile                               string = "docker.file"
-	ResourceDockerFileStage                          string = "docker.file.stage"
-	ResourceDockerFileOci                            string = "docker.file.oci"
-	ResourceDockerFileArg                            string = "docker.file.arg"
-	ResourceDockerFileEnv                            string = "docker.file.env"
-	ResourceDockerFileUser                           string = "docker.file.user"
-	ResourceDockerFileExpose                         string = "docker.file.expose"
-	ResourceDockerFileFrom                           string = "docker.file.from"
-	ResourceDockerFileRun                            string = "docker.file.run"
-	ResourceDockerFileRunCommand                     string = "docker.file.run.command"
-	ResourceDockerFileRunMount                       string = "docker.file.run.mount"
-	ResourceDockerFileAdd                            string = "docker.file.add"
-	ResourceDockerFileCopy                           string = "docker.file.copy"
-	ResourceDockerFileHealthcheck                    string = "docker.file.healthcheck"
-	ResourceDockerFileVolume                         string = "docker.file.volume"
-	ResourceDockerFileShell                          string = "docker.file.shell"
-	ResourceDockerFileWorkdir                        string = "docker.file.workdir"
-	ResourceDockerFileStopsignal                     string = "docker.file.stopsignal"
-	ResourceDockerFileOnbuild                        string = "docker.file.onbuild"
-	ResourceDockerImage                              string = "docker.image"
-	ResourceDockerContainer                          string = "docker.container"
-	ResourceContainerd                               string = "containerd"
-	ResourceContainerdContainer                      string = "containerd.container"
-	ResourceIptables                                 string = "iptables"
-	ResourceIp6tables                                string = "ip6tables"
-	ResourceIptablesTable                            string = "iptables.table"
-	ResourceIptablesChain                            string = "iptables.chain"
-	ResourceIptablesEntry                            string = "iptables.entry"
-	ResourceNftables                                 string = "nftables"
-	ResourceNftablesTable                            string = "nftables.table"
-	ResourceNftablesChain                            string = "nftables.chain"
-	ResourceNftablesRule                             string = "nftables.rule"
-	ResourceNftablesSet                              string = "nftables.set"
-	ResourceUfw                                      string = "ufw"
-	ResourceUfwRule                                  string = "ufw.rule"
-	ResourceUfwApplication                           string = "ufw.application"
-	ResourceFirewalld                                string = "firewalld"
-	ResourceFirewalldZone                            string = "firewalld.zone"
-	ResourceFirewalldRichrule                        string = "firewalld.richrule"
-	ResourceFstab                                    string = "fstab"
-	ResourceFstabEntry                               string = "fstab.entry"
-	ResourceGrubConfig                               string = "grub.config"
-	ResourceGrubConfigEntry                          string = "grub.config.entry"
-	ResourceSysrc                                    string = "sysrc"
-	ResourceSysrcEntry                               string = "sysrc.entry"
-	ResourceProcess                                  string = "process"
-	ResourceProcesses                                string = "processes"
-	ResourcePort                                     string = "port"
-	ResourcePorts                                    string = "ports"
-	ResourceAuditpol                                 string = "auditpol"
-	ResourceAuditpolEntry                            string = "auditpol.entry"
-	ResourceSecpol                                   string = "secpol"
-	ResourceNtpConf                                  string = "ntp.conf"
-	ResourceChronyConf                               string = "chrony.conf"
-	ResourcePostfix                                  string = "postfix"
-	ResourcePostfixService                           string = "postfix.service"
-	ResourceExim                                     string = "exim"
-	ResourceRsyslogConf                              string = "rsyslog.conf"
-	ResourceRsyslogModule                            string = "rsyslog.module"
-	ResourceRsyslogInput                             string = "rsyslog.input"
-	ResourceRsyslogAction                            string = "rsyslog.action"
-	ResourceRsyslogRule                              string = "rsyslog.rule"
-	ResourceLogindefs                                string = "logindefs"
-	ResourceLimits                                   string = "limits"
-	ResourceLimitsEntry                              string = "limits.entry"
-	ResourceSudo                                     string = "sudo"
-	ResourceSudoPlugin                               string = "sudo.plugin"
-	ResourceSudoValidation                           string = "sudo.validation"
-	ResourceSudoValidationError                      string = "sudo.validation.error"
-	ResourceSudoers                                  string = "sudoers"
-	ResourceSudoersUserSpec                          string = "sudoers.userSpec"
-	ResourceSudoersDefault                           string = "sudoers.default"
-	ResourceSudoersAlias                             string = "sudoers.alias"
-	ResourceLsblk                                    string = "lsblk"
-	ResourceLsblkEntry                               string = "lsblk.entry"
-	ResourceLuks                                     string = "luks"
-	ResourceLuksVolume                               string = "luks.volume"
-	ResourceLuksVolumeCipher                         string = "luks.volume.cipher"
-	ResourceLuksKeyslot                              string = "luks.keyslot"
-	ResourceApparmor                                 string = "apparmor"
-	ResourceApparmorProfile                          string = "apparmor.profile"
-	ResourceApparmorProcess                          string = "apparmor.process"
-	ResourceSelinux                                  string = "selinux"
-	ResourceSelinuxBoolean                           string = "selinux.boolean"
-	ResourceSelinuxModule                            string = "selinux.module"
-	ResourceModprobe                                 string = "modprobe"
-	ResourceModprobeInstall                          string = "modprobe.install"
-	ResourceModprobeRemove                           string = "modprobe.remove"
-	ResourceModprobeBlacklist                        string = "modprobe.blacklist"
-	ResourceModprobeOption                           string = "modprobe.option"
-	ResourceModprobeAlias                            string = "modprobe.alias"
-	ResourceModprobeSoftdep                          string = "modprobe.softdep"
-	ResourceMount                                    string = "mount"
-	ResourceNfs                                      string = "nfs"
-	ResourceNfsExport                                string = "nfs.export"
-	ResourceNfsMount                                 string = "nfs.mount"
-	ResourceMountPoint                               string = "mount.point"
-	ResourceShadow                                   string = "shadow"
-	ResourceShadowEntry                              string = "shadow.entry"
-	ResourceYum                                      string = "yum"
-	ResourceYumRepo                                  string = "yum.repo"
-	ResourceYumConfig                                string = "yum.config"
-	ResourceApt                                      string = "apt"
-	ResourceAptRepo                                  string = "apt.repo"
-	ResourceRegistrykey                              string = "registrykey"
-	ResourceRegistrykeyProperty                      string = "registrykey.property"
-	ResourceContainerImage                           string = "container.image"
-	ResourceContainerRepository                      string = "container.repository"
-	ResourceKubelet                                  string = "kubelet"
-	ResourcePython                                   string = "python"
-	ResourcePythonPackage                            string = "python.package"
-	ResourceNpmPackages                              string = "npm.packages"
-	ResourceNpmPackage                               string = "npm.package"
-	ResourceGoPackages                               string = "go.packages"
-	ResourceGoPackage                                string = "go.package"
-	ResourceJavaPackages                             string = "java.packages"
-	ResourceJavaPackage                              string = "java.package"
-	ResourceRustPackages                             string = "rust.packages"
-	ResourceRustPackage                              string = "rust.package"
-	ResourceDotnetPackages                           string = "dotnet.packages"
-	ResourceDotnetPackage                            string = "dotnet.package"
-	ResourcePhpPackages                              string = "php.packages"
-	ResourcePhpPackage                               string = "php.package"
-	ResourceGithubactionsPackages                    string = "githubactions.packages"
-	ResourceGithubactionsPackage                     string = "githubactions.package"
-	ResourceSwiftPackages                            string = "swift.packages"
-	ResourceSwiftPackage                             string = "swift.package"
-	ResourceTerraformPackages                        string = "terraform.packages"
-	ResourceTerraformPackage                         string = "terraform.package"
-	ResourceHomebrewPackages                         string = "homebrew.packages"
-	ResourceHomebrewPackage                          string = "homebrew.package"
-	ResourceChocolateyPackages                       string = "chocolatey.packages"
-	ResourceChocolateyPackage                        string = "chocolatey.package"
-	ResourceJenkinsPackages                          string = "jenkins.packages"
-	ResourceJenkinsPackage                           string = "jenkins.package"
-	ResourceWordpressPackages                        string = "wordpress.packages"
-	ResourceWordpressPackage                         string = "wordpress.package"
-	ResourceRubyPackages                             string = "ruby.packages"
-	ResourceRubyPackage                              string = "ruby.package"
-	ResourceDartPackages                             string = "dart.packages"
-	ResourceDartPackage                              string = "dart.package"
-	ResourceHaskellPackages                          string = "haskell.packages"
-	ResourceHaskellPackage                           string = "haskell.package"
-	ResourceElixirPackages                           string = "elixir.packages"
-	ResourceElixirPackage                            string = "elixir.package"
-	ResourceErlangPackages                           string = "erlang.packages"
-	ResourceErlangPackage                            string = "erlang.package"
-	ResourcePrologPackages                           string = "prolog.packages"
-	ResourcePrologPackage                            string = "prolog.package"
-	ResourceCondaPackages                            string = "conda.packages"
-	ResourceCondaPackage                             string = "conda.package"
-	ResourceJuliaPackages                            string = "julia.packages"
-	ResourceJuliaPackage                             string = "julia.package"
-	ResourceRPackages                                string = "r.packages"
-	ResourceRPackage                                 string = "r.package"
-	ResourceLuaPackages                              string = "lua.packages"
-	ResourceLuaPackage                               string = "lua.package"
-	ResourceMacos                                    string = "macos"
-	ResourceMacosHardware                            string = "macos.hardware"
-	ResourceMacosAlf                                 string = "macos.alf"
-	ResourceMacosFirewall                            string = "macos.firewall"
-	ResourceMacosFirewallApp                         string = "macos.firewall.app"
-	ResourceMacosFilevault                           string = "macos.filevault"
-	ResourceMacosGatekeeper                          string = "macos.gatekeeper"
-	ResourceMacosSip                                 string = "macos.sip"
-	ResourceMacosXprotect                            string = "macos.xprotect"
-	ResourceMacosSharing                             string = "macos.sharing"
-	ResourceMacosMdm                                 string = "macos.mdm"
-	ResourceMacosProfiles                            string = "macos.profiles"
-	ResourceMacosProfile                             string = "macos.profile"
-	ResourceMacosProfilePayload                      string = "macos.profile.payload"
-	ResourceMacosSoftwareupdate                      string = "macos.softwareupdate"
-	ResourceMacosSoftwareupdateEntry                 string = "macos.softwareupdate.entry"
-	ResourceMacosTimemachine                         string = "macos.timemachine"
-	ResourceMacosSystemsetup                         string = "macos.systemsetup"
-	ResourceOpenBSMAudit                             string = "openBSMAudit"
-	ResourceWindows                                  string = "windows"
-	ResourceWindowsScheduledTask                     string = "windows.scheduledTask"
-	ResourceWindowsScheduledTaskPrincipal            string = "windows.scheduledTask.principal"
-	ResourceWindowsScheduledTaskAction               string = "windows.scheduledTask.action"
-	ResourceWindowsScheduledTaskTrigger              string = "windows.scheduledTask.trigger"
-	ResourceWindowsScheduledTaskSettings             string = "windows.scheduledTask.settings"
-	ResourceMacosSystemExtension                     string = "macos.systemExtension"
-	ResourceSafari                                   string = "safari"
-	ResourceSafariExtension                          string = "safari.extension"
-	ResourceLaunchd                                  string = "launchd"
-	ResourceLaunchdJob                               string = "launchd.job"
-	ResourceWindowsHotfix                            string = "windows.hotfix"
-	ResourceWindowsUpdate                            string = "windows.update"
-	ResourceWindowsUpdateEntry                       string = "windows.update.entry"
-	ResourceWindowsUpdateConfig                      string = "windows.update.config"
-	ResourceWindowsServerFeature                     string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature                   string = "windows.optionalFeature"
-	ResourceWindowsEventlog                          string = "windows.eventlog"
-	ResourceWindowsRdp                               string = "windows.rdp"
-	ResourceWindowsTpm                               string = "windows.tpm"
-	ResourceWindowsAuditPolicy                       string = "windows.auditPolicy"
-	ResourceWindowsAuditPolicySubcategory            string = "windows.auditPolicy.subcategory"
-	ResourceWindowsFirewall                          string = "windows.firewall"
-	ResourceWindowsFirewallProfile                   string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule                      string = "windows.firewall.rule"
-	ResourceWindowsSmb                               string = "windows.smb"
-	ResourceWindowsSmbShare                          string = "windows.smb.share"
-	ResourceWindowsSmbSession                        string = "windows.smb.session"
-	ResourceWindowsSmbConnection                     string = "windows.smb.connection"
-	ResourceWindowsBitlocker                         string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume                   string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity                          string = "windows.security"
-	ResourceWindowsSecurityProduct                   string = "windows.security.product"
-	ResourceWindowsSecurityHealth                    string = "windows.security.health"
-	ResourceWindowsDefender                          string = "windows.defender"
-	ResourceWindowsDefenderStatus                    string = "windows.defender.status"
-	ResourceWindowsDefenderPreferences               string = "windows.defender.preferences"
-	ResourceWindowsDefenderScanSettings              string = "windows.defender.scanSettings"
-	ResourceWindowsDefenderRealTimeSettings          string = "windows.defender.realTimeSettings"
-	ResourceWindowsDefenderCloudSettings             string = "windows.defender.cloudSettings"
-	ResourceWindowsDefenderSignatureSettings         string = "windows.defender.signatureSettings"
-	ResourceWindowsDefenderThreatActionSettings      string = "windows.defender.threatActionSettings"
-	ResourceWindowsDefenderThreatIdAction            string = "windows.defender.threatIdAction"
-	ResourceWindowsDefenderControlledFolderAccess    string = "windows.defender.controlledFolderAccess"
-	ResourceWindowsDefenderNetworkProtectionSettings string = "windows.defender.networkProtectionSettings"
-	ResourceWindowsDefenderRemediationSettings       string = "windows.defender.remediationSettings"
-	ResourceWindowsDefenderExclusions                string = "windows.defender.exclusions"
-	ResourceWindowsDefenderAsrRule                   string = "windows.defender.asrRule"
-	ResourceWindowsDefenderThreat                    string = "windows.defender.threat"
-	ResourceWindowsDefenderThreatDetection           string = "windows.defender.threatDetection"
-	ResourceCloud                                    string = "cloud"
-	ResourceCloudInstance                            string = "cloudInstance"
-	ResourceIpAddress                                string = "ipAddress"
-	ResourceNetwork                                  string = "network"
-	ResourceNetworkNeighbor                          string = "networkNeighbor"
-	ResourceNetworkInterface                         string = "networkInterface"
-	ResourceNetworkRoutes                            string = "networkRoutes"
-	ResourceNetworkRoute                             string = "networkRoute"
-	ResourceChrome                                   string = "chrome"
-	ResourceChromeExtension                          string = "chrome.extension"
-	ResourceChromeExtensionContentScript             string = "chrome.extensionContentScript"
-	ResourceFirefox                                  string = "firefox"
-	ResourceFirefoxAddon                             string = "firefox.addon"
-	ResourceUsb                                      string = "usb"
-	ResourceUsbDevice                                string = "usb.device"
-	ResourceCrontab                                  string = "crontab"
-	ResourceCrontabEntry                             string = "crontab.entry"
-	ResourceVscode                                   string = "vscode"
-	ResourceVscodeExtension                          string = "vscode.extension"
-	ResourceLogrotate                                string = "logrotate"
-	ResourceLogrotateEntry                           string = "logrotate.entry"
-	ResourceLvm                                      string = "lvm"
-	ResourceLvmPhysicalVolume                        string = "lvm.physicalVolume"
-	ResourceLvmVolumeGroup                           string = "lvm.volumeGroup"
-	ResourceLvmLogicalVolume                         string = "lvm.logicalVolume"
-	ResourceMdadm                                    string = "mdadm"
-	ResourceMdadmArray                               string = "mdadm.array"
-	ResourceMdadmDevice                              string = "mdadm.device"
-	ResourceZfs                                      string = "zfs"
-	ResourceZfsPool                                  string = "zfs.pool"
-	ResourceZfsPoolVdev                              string = "zfs.pool.vdev"
-	ResourceZfsDataset                               string = "zfs.dataset"
-	ResourceAi                                       string = "ai"
-	ResourceAiModel                                  string = "ai.model"
-	ResourceClaudeCode                               string = "claude.code"
-	ResourceClaudeCodePlugin                         string = "claude.code.plugin"
-	ResourceClaudeCodeSkill                          string = "claude.code.skill"
-	ResourceClaudeCodeProject                        string = "claude.code.project"
-	ResourceClaudeCodeMcpServer                      string = "claude.code.mcpServer"
-	ResourceOpenaiCodex                              string = "openai.codex"
-	ResourceOpenaiCodexPlugin                        string = "openai.codex.plugin"
-	ResourceOpenaiCodexSkill                         string = "openai.codex.skill"
-	ResourceOpenaiCodexMcpServer                     string = "openai.codex.mcpServer"
-	ResourceOpenaiCodexConnector                     string = "openai.codex.connector"
-	ResourceCursor                                   string = "cursor"
-	ResourceCursorMcpServer                          string = "cursor.mcpServer"
-	ResourceCursorRule                               string = "cursor.rule"
-	ResourceCursorSkill                              string = "cursor.skill"
-	ResourceGithubCopilot                            string = "github.copilot"
-	ResourceGithubCopilotAccount                     string = "github.copilot.account"
-	ResourceGithubCopilotMcpServer                   string = "github.copilot.mcpServer"
-	ResourceGithubCopilotSkill                       string = "github.copilot.skill"
-	ResourceGoose                                    string = "goose"
-	ResourceGooseExtension                           string = "goose.extension"
-	ResourceGooseSkill                               string = "goose.skill"
-	ResourceGemini                                   string = "gemini"
-	ResourceGeminiMcpServer                          string = "gemini.mcpServer"
-	ResourceGeminiSkill                              string = "gemini.skill"
-	ResourceWindsurf                                 string = "windsurf"
-	ResourceWindsurfRule                             string = "windsurf.rule"
-	ResourceWindsurfMcpServer                        string = "windsurf.mcpServer"
-	ResourceWindsurfSkill                            string = "windsurf.skill"
-	ResourceZed                                      string = "zed"
-	ResourceRoo                                      string = "roo"
-	ResourceRooSkill                                 string = "roo.skill"
-	ResourceCline                                    string = "cline"
-	ResourceClineSkill                               string = "cline.skill"
-	ResourceKiro                                     string = "kiro"
-	ResourceKiroSkill                                string = "kiro.skill"
-	ResourceContinuedev                              string = "continuedev"
-	ResourceContinuedevSkill                         string = "continuedev.skill"
-	ResourceTrae                                     string = "trae"
-	ResourceTraeSkill                                string = "trae.skill"
-	ResourceOpencode                                 string = "opencode"
-	ResourceOpencodeSkill                            string = "opencode.skill"
-	ResourcePi                                       string = "pi"
-	ResourcePiSkill                                  string = "pi.skill"
-	ResourceMistralVibe                              string = "mistral.vibe"
-	ResourceMistralVibeSkill                         string = "mistral.vibe.skill"
-	ResourceAntigravity                              string = "antigravity"
-	ResourceAntigravitySkill                         string = "antigravity.skill"
-	ResourceIbmBob                                   string = "ibm.bob"
-	ResourceIbmBobSkill                              string = "ibm.bob.skill"
-	ResourceOpenclaw                                 string = "openclaw"
-	ResourceOpenclawSkill                            string = "openclaw.skill"
-	ResourceSnowflakeCortex                          string = "snowflake.cortex"
-	ResourceSnowflakeCortexSkill                     string = "snowflake.cortex.skill"
-	ResourceJunie                                    string = "junie"
-	ResourceJunieSkill                               string = "junie.skill"
-	ResourceAugment                                  string = "augment"
-	ResourceAugmentSkill                             string = "augment.skill"
-	ResourceWarp                                     string = "warp"
-	ResourceWarpSkill                                string = "warp.skill"
-	ResourceKilocode                                 string = "kilocode"
-	ResourceKilocodeSkill                            string = "kilocode.skill"
-	ResourceOpenhands                                string = "openhands"
-	ResourceOpenhandsSkill                           string = "openhands.skill"
-	ResourceQwenCode                                 string = "qwen.code"
-	ResourceQwenCodeSkill                            string = "qwen.code.skill"
+	ResourceAsset                                         string = "asset"
+	ResourceAssetEol                                      string = "asset.eol"
+	ResourceMondooEol                                     string = "mondoo.eol"
+	ResourceVulnmgmt                                      string = "vulnmgmt"
+	ResourceVulnCve                                       string = "vuln.cve"
+	ResourceVulnAdvisory                                  string = "vuln.advisory"
+	ResourceVulnPackage                                   string = "vuln.package"
+	ResourcePlatformAdvisories                            string = "platform.advisories"
+	ResourcePlatformCves                                  string = "platform.cves"
+	ResourceAuditCvss                                     string = "audit.cvss"
+	ResourceAuditAdvisory                                 string = "audit.advisory"
+	ResourceAuditCve                                      string = "audit.cve"
+	ResourceMachine                                       string = "machine"
+	ResourceMachineBios                                   string = "machine.bios"
+	ResourceMachineSystem                                 string = "machine.system"
+	ResourceMachineBaseboard                              string = "machine.baseboard"
+	ResourceMachineChassis                                string = "machine.chassis"
+	ResourceMachineCpu                                    string = "machine.cpu"
+	ResourceMachineSecureboot                             string = "machine.secureboot"
+	ResourceOs                                            string = "os"
+	ResourceOsDate                                        string = "os.date"
+	ResourceOsUpdate                                      string = "os.update"
+	ResourceOsBase                                        string = "os.base"
+	ResourceOsUnix                                        string = "os.unix"
+	ResourceOsLinux                                       string = "os.linux"
+	ResourceOsRootCertificates                            string = "os.rootCertificates"
+	ResourceCommand                                       string = "command"
+	ResourcePowershell                                    string = "powershell"
+	ResourceFile                                          string = "file"
+	ResourceFileContext                                   string = "file.context"
+	ResourceFilePermissions                               string = "file.permissions"
+	ResourceFiles                                         string = "files"
+	ResourceFilesFind                                     string = "files.find"
+	ResourceParseIni                                      string = "parse.ini"
+	ResourceParseJson                                     string = "parse.json"
+	ResourceParseXml                                      string = "parse.xml"
+	ResourceParsePlist                                    string = "parse.plist"
+	ResourceParseYaml                                     string = "parse.yaml"
+	ResourceParseCertificates                             string = "parse.certificates"
+	ResourceParseOpenpgp                                  string = "parse.openpgp"
+	ResourceUser                                          string = "user"
+	ResourcePrivatekey                                    string = "privatekey"
+	ResourceUsers                                         string = "users"
+	ResourceAuthorizedkeys                                string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry                           string = "authorizedkeys.entry"
+	ResourceGroup                                         string = "group"
+	ResourceGroups                                        string = "groups"
+	ResourcePackage                                       string = "package"
+	ResourcePkgFileInfo                                   string = "pkgFileInfo"
+	ResourcePackages                                      string = "packages"
+	ResourcePamConf                                       string = "pam.conf"
+	ResourcePamConfServiceEntry                           string = "pam.conf.serviceEntry"
+	ResourcePamConfService                                string = "pam.conf.service"
+	ResourcePamModule                                     string = "pam.module"
+	ResourceSshd                                          string = "sshd"
+	ResourceSshdConfig                                    string = "sshd.config"
+	ResourceSshdConfigMatchBlock                          string = "sshd.config.matchBlock"
+	ResourceInetd                                         string = "inetd"
+	ResourceInetdConfig                                   string = "inetd.config"
+	ResourceInetdConfigEntry                              string = "inetd.config.entry"
+	ResourceSnmpd                                         string = "snmpd"
+	ResourceSnmpdConfig                                   string = "snmpd.config"
+	ResourceAuditdConfig                                  string = "auditd.config"
+	ResourceAuditdRules                                   string = "auditd.rules"
+	ResourceAuditdRule                                    string = "auditd.rule"
+	ResourceAuditdRuleControl                             string = "auditd.rule.control"
+	ResourceAuditdRuleFile                                string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall                             string = "auditd.rule.syscall"
+	ResourceApache2                                       string = "apache2"
+	ResourceApache2Conf                                   string = "apache2.conf"
+	ResourceApache2ConfEnvvars                            string = "apache2.conf.envvars"
+	ResourceApache2ConfModule                             string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost                        string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory                          string = "apache2.conf.directory"
+	ResourceApache2ConfLocation                           string = "apache2.conf.location"
+	ResourceNginx                                         string = "nginx"
+	ResourceNginxConf                                     string = "nginx.conf"
+	ResourceNginxConfServer                               string = "nginx.conf.server"
+	ResourceNginxConfUpstream                             string = "nginx.conf.upstream"
+	ResourceNginxConfLocation                             string = "nginx.conf.location"
+	ResourceSquid                                         string = "squid"
+	ResourceSquidConf                                     string = "squid.conf"
+	ResourceSquidConfListen                               string = "squid.conf.listen"
+	ResourceSquidConfAcl                                  string = "squid.conf.acl"
+	ResourceSquidConfAccessRule                           string = "squid.conf.accessRule"
+	ResourceSquidConfCachePeer                            string = "squid.conf.cachePeer"
+	ResourceSquidConfCacheDir                             string = "squid.conf.cacheDir"
+	ResourceSquidConfRefreshPattern                       string = "squid.conf.refreshPattern"
+	ResourceSquidConfAccessLog                            string = "squid.conf.accessLog"
+	ResourceHaproxy                                       string = "haproxy"
+	ResourceHaproxyConfig                                 string = "haproxy.config"
+	ResourceHaproxyConfigSection                          string = "haproxy.config.section"
+	ResourceHaproxyConfigGlobal                           string = "haproxy.config.global"
+	ResourceHaproxyConfigDefaultsSection                  string = "haproxy.config.defaultsSection"
+	ResourceHaproxyConfigFrontend                         string = "haproxy.config.frontend"
+	ResourceHaproxyConfigBackend                          string = "haproxy.config.backend"
+	ResourceHaproxyConfigListen                           string = "haproxy.config.listen"
+	ResourceHaproxyConfigBind                             string = "haproxy.config.bind"
+	ResourceHaproxyConfigServer                           string = "haproxy.config.server"
+	ResourceHaproxyConfigResolversSection                 string = "haproxy.config.resolversSection"
+	ResourceHaproxyConfigUserlist                         string = "haproxy.config.userlist"
+	ResourceHaproxyConfigPeersSection                     string = "haproxy.config.peersSection"
+	ResourceJournaldConfig                                string = "journald.config"
+	ResourceJournaldConfigSection                         string = "journald.config.section"
+	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
+	ResourceService                                       string = "service"
+	ResourceServices                                      string = "services"
+	ResourceSystemdTimer                                  string = "systemd.timer"
+	ResourceSystemdTimers                                 string = "systemd.timers"
+	ResourceSystemdSocket                                 string = "systemd.socket"
+	ResourceSystemdSockets                                string = "systemd.sockets"
+	ResourceSystemdTarget                                 string = "systemd.target"
+	ResourceSystemdTargets                                string = "systemd.targets"
+	ResourceSystemdResolved                               string = "systemd.resolved"
+	ResourceSystemdTimesyncd                              string = "systemd.timesyncd"
+	ResourceKernel                                        string = "kernel"
+	ResourceKernelModule                                  string = "kernel.module"
+	ResourceKernelCmdline                                 string = "kernel.cmdline"
+	ResourceKernelTaint                                   string = "kernel.taint"
+	ResourceKernelLockdown                                string = "kernel.lockdown"
+	ResourceKernelAslr                                    string = "kernel.aslr"
+	ResourceCgroups                                       string = "cgroups"
+	ResourceCgroup                                        string = "cgroup"
+	ResourceDocker                                        string = "docker"
+	ResourceDockerFile                                    string = "docker.file"
+	ResourceDockerFileStage                               string = "docker.file.stage"
+	ResourceDockerFileOci                                 string = "docker.file.oci"
+	ResourceDockerFileArg                                 string = "docker.file.arg"
+	ResourceDockerFileEnv                                 string = "docker.file.env"
+	ResourceDockerFileUser                                string = "docker.file.user"
+	ResourceDockerFileExpose                              string = "docker.file.expose"
+	ResourceDockerFileFrom                                string = "docker.file.from"
+	ResourceDockerFileRun                                 string = "docker.file.run"
+	ResourceDockerFileRunCommand                          string = "docker.file.run.command"
+	ResourceDockerFileRunMount                            string = "docker.file.run.mount"
+	ResourceDockerFileAdd                                 string = "docker.file.add"
+	ResourceDockerFileCopy                                string = "docker.file.copy"
+	ResourceDockerFileHealthcheck                         string = "docker.file.healthcheck"
+	ResourceDockerFileVolume                              string = "docker.file.volume"
+	ResourceDockerFileShell                               string = "docker.file.shell"
+	ResourceDockerFileWorkdir                             string = "docker.file.workdir"
+	ResourceDockerFileStopsignal                          string = "docker.file.stopsignal"
+	ResourceDockerFileOnbuild                             string = "docker.file.onbuild"
+	ResourceDockerImage                                   string = "docker.image"
+	ResourceDockerContainer                               string = "docker.container"
+	ResourceContainerd                                    string = "containerd"
+	ResourceContainerdContainer                           string = "containerd.container"
+	ResourceIptables                                      string = "iptables"
+	ResourceIp6tables                                     string = "ip6tables"
+	ResourceIptablesTable                                 string = "iptables.table"
+	ResourceIptablesChain                                 string = "iptables.chain"
+	ResourceIptablesEntry                                 string = "iptables.entry"
+	ResourceNftables                                      string = "nftables"
+	ResourceNftablesTable                                 string = "nftables.table"
+	ResourceNftablesChain                                 string = "nftables.chain"
+	ResourceNftablesRule                                  string = "nftables.rule"
+	ResourceNftablesSet                                   string = "nftables.set"
+	ResourceUfw                                           string = "ufw"
+	ResourceUfwRule                                       string = "ufw.rule"
+	ResourceUfwApplication                                string = "ufw.application"
+	ResourceFirewalld                                     string = "firewalld"
+	ResourceFirewalldZone                                 string = "firewalld.zone"
+	ResourceFirewalldRichrule                             string = "firewalld.richrule"
+	ResourceFstab                                         string = "fstab"
+	ResourceFstabEntry                                    string = "fstab.entry"
+	ResourceGrubConfig                                    string = "grub.config"
+	ResourceGrubConfigEntry                               string = "grub.config.entry"
+	ResourceSysrc                                         string = "sysrc"
+	ResourceSysrcEntry                                    string = "sysrc.entry"
+	ResourceProcess                                       string = "process"
+	ResourceProcesses                                     string = "processes"
+	ResourcePort                                          string = "port"
+	ResourcePorts                                         string = "ports"
+	ResourceAuditpol                                      string = "auditpol"
+	ResourceAuditpolEntry                                 string = "auditpol.entry"
+	ResourceSecpol                                        string = "secpol"
+	ResourceNtpConf                                       string = "ntp.conf"
+	ResourceChronyConf                                    string = "chrony.conf"
+	ResourcePostfix                                       string = "postfix"
+	ResourcePostfixService                                string = "postfix.service"
+	ResourceExim                                          string = "exim"
+	ResourceRsyslogConf                                   string = "rsyslog.conf"
+	ResourceRsyslogModule                                 string = "rsyslog.module"
+	ResourceRsyslogInput                                  string = "rsyslog.input"
+	ResourceRsyslogAction                                 string = "rsyslog.action"
+	ResourceRsyslogRule                                   string = "rsyslog.rule"
+	ResourceLogindefs                                     string = "logindefs"
+	ResourceLimits                                        string = "limits"
+	ResourceLimitsEntry                                   string = "limits.entry"
+	ResourceSudo                                          string = "sudo"
+	ResourceSudoPlugin                                    string = "sudo.plugin"
+	ResourceSudoValidation                                string = "sudo.validation"
+	ResourceSudoValidationError                           string = "sudo.validation.error"
+	ResourceSudoers                                       string = "sudoers"
+	ResourceSudoersUserSpec                               string = "sudoers.userSpec"
+	ResourceSudoersDefault                                string = "sudoers.default"
+	ResourceSudoersAlias                                  string = "sudoers.alias"
+	ResourceLsblk                                         string = "lsblk"
+	ResourceLsblkEntry                                    string = "lsblk.entry"
+	ResourceLuks                                          string = "luks"
+	ResourceLuksVolume                                    string = "luks.volume"
+	ResourceLuksVolumeCipher                              string = "luks.volume.cipher"
+	ResourceLuksKeyslot                                   string = "luks.keyslot"
+	ResourceApparmor                                      string = "apparmor"
+	ResourceApparmorProfile                               string = "apparmor.profile"
+	ResourceApparmorProcess                               string = "apparmor.process"
+	ResourceSelinux                                       string = "selinux"
+	ResourceSelinuxBoolean                                string = "selinux.boolean"
+	ResourceSelinuxModule                                 string = "selinux.module"
+	ResourceModprobe                                      string = "modprobe"
+	ResourceModprobeInstall                               string = "modprobe.install"
+	ResourceModprobeRemove                                string = "modprobe.remove"
+	ResourceModprobeBlacklist                             string = "modprobe.blacklist"
+	ResourceModprobeOption                                string = "modprobe.option"
+	ResourceModprobeAlias                                 string = "modprobe.alias"
+	ResourceModprobeSoftdep                               string = "modprobe.softdep"
+	ResourceMount                                         string = "mount"
+	ResourceNfs                                           string = "nfs"
+	ResourceNfsExport                                     string = "nfs.export"
+	ResourceNfsMount                                      string = "nfs.mount"
+	ResourceMountPoint                                    string = "mount.point"
+	ResourceShadow                                        string = "shadow"
+	ResourceShadowEntry                                   string = "shadow.entry"
+	ResourceYum                                           string = "yum"
+	ResourceYumRepo                                       string = "yum.repo"
+	ResourceYumConfig                                     string = "yum.config"
+	ResourceApt                                           string = "apt"
+	ResourceAptRepo                                       string = "apt.repo"
+	ResourceRegistrykey                                   string = "registrykey"
+	ResourceRegistrykeyProperty                           string = "registrykey.property"
+	ResourceContainerImage                                string = "container.image"
+	ResourceContainerRepository                           string = "container.repository"
+	ResourceKubelet                                       string = "kubelet"
+	ResourcePython                                        string = "python"
+	ResourcePythonPackage                                 string = "python.package"
+	ResourceNpmPackages                                   string = "npm.packages"
+	ResourceNpmPackage                                    string = "npm.package"
+	ResourceGoPackages                                    string = "go.packages"
+	ResourceGoPackage                                     string = "go.package"
+	ResourceJavaPackages                                  string = "java.packages"
+	ResourceJavaPackage                                   string = "java.package"
+	ResourceRustPackages                                  string = "rust.packages"
+	ResourceRustPackage                                   string = "rust.package"
+	ResourceDotnetPackages                                string = "dotnet.packages"
+	ResourceDotnetPackage                                 string = "dotnet.package"
+	ResourcePhpPackages                                   string = "php.packages"
+	ResourcePhpPackage                                    string = "php.package"
+	ResourceGithubactionsPackages                         string = "githubactions.packages"
+	ResourceGithubactionsPackage                          string = "githubactions.package"
+	ResourceSwiftPackages                                 string = "swift.packages"
+	ResourceSwiftPackage                                  string = "swift.package"
+	ResourceTerraformPackages                             string = "terraform.packages"
+	ResourceTerraformPackage                              string = "terraform.package"
+	ResourceHomebrewPackages                              string = "homebrew.packages"
+	ResourceHomebrewPackage                               string = "homebrew.package"
+	ResourceChocolateyPackages                            string = "chocolatey.packages"
+	ResourceChocolateyPackage                             string = "chocolatey.package"
+	ResourceJenkinsPackages                               string = "jenkins.packages"
+	ResourceJenkinsPackage                                string = "jenkins.package"
+	ResourceWordpressPackages                             string = "wordpress.packages"
+	ResourceWordpressPackage                              string = "wordpress.package"
+	ResourceRubyPackages                                  string = "ruby.packages"
+	ResourceRubyPackage                                   string = "ruby.package"
+	ResourceDartPackages                                  string = "dart.packages"
+	ResourceDartPackage                                   string = "dart.package"
+	ResourceHaskellPackages                               string = "haskell.packages"
+	ResourceHaskellPackage                                string = "haskell.package"
+	ResourceElixirPackages                                string = "elixir.packages"
+	ResourceElixirPackage                                 string = "elixir.package"
+	ResourceErlangPackages                                string = "erlang.packages"
+	ResourceErlangPackage                                 string = "erlang.package"
+	ResourcePrologPackages                                string = "prolog.packages"
+	ResourcePrologPackage                                 string = "prolog.package"
+	ResourceCondaPackages                                 string = "conda.packages"
+	ResourceCondaPackage                                  string = "conda.package"
+	ResourceJuliaPackages                                 string = "julia.packages"
+	ResourceJuliaPackage                                  string = "julia.package"
+	ResourceRPackages                                     string = "r.packages"
+	ResourceRPackage                                      string = "r.package"
+	ResourceLuaPackages                                   string = "lua.packages"
+	ResourceLuaPackage                                    string = "lua.package"
+	ResourceMacos                                         string = "macos"
+	ResourceMacosHardware                                 string = "macos.hardware"
+	ResourceMacosAlf                                      string = "macos.alf"
+	ResourceMacosFirewall                                 string = "macos.firewall"
+	ResourceMacosFirewallApp                              string = "macos.firewall.app"
+	ResourceMacosFilevault                                string = "macos.filevault"
+	ResourceMacosGatekeeper                               string = "macos.gatekeeper"
+	ResourceMacosSip                                      string = "macos.sip"
+	ResourceMacosXprotect                                 string = "macos.xprotect"
+	ResourceMacosSharing                                  string = "macos.sharing"
+	ResourceMacosMdm                                      string = "macos.mdm"
+	ResourceMacosProfiles                                 string = "macos.profiles"
+	ResourceMacosProfile                                  string = "macos.profile"
+	ResourceMacosProfilePayload                           string = "macos.profile.payload"
+	ResourceMacosSoftwareupdate                           string = "macos.softwareupdate"
+	ResourceMacosSoftwareupdateEntry                      string = "macos.softwareupdate.entry"
+	ResourceMacosTimemachine                              string = "macos.timemachine"
+	ResourceMacosSystemsetup                              string = "macos.systemsetup"
+	ResourceOpenBSMAudit                                  string = "openBSMAudit"
+	ResourceWindows                                       string = "windows"
+	ResourceWindowsScheduledTask                          string = "windows.scheduledTask"
+	ResourceWindowsScheduledTaskPrincipal                 string = "windows.scheduledTask.principal"
+	ResourceWindowsScheduledTaskAction                    string = "windows.scheduledTask.action"
+	ResourceWindowsScheduledTaskTrigger                   string = "windows.scheduledTask.trigger"
+	ResourceWindowsScheduledTaskSettings                  string = "windows.scheduledTask.settings"
+	ResourceMacosSystemExtension                          string = "macos.systemExtension"
+	ResourceSafari                                        string = "safari"
+	ResourceSafariExtension                               string = "safari.extension"
+	ResourceLaunchd                                       string = "launchd"
+	ResourceLaunchdJob                                    string = "launchd.job"
+	ResourceWindowsHotfix                                 string = "windows.hotfix"
+	ResourceWindowsUpdate                                 string = "windows.update"
+	ResourceWindowsUpdateEntry                            string = "windows.update.entry"
+	ResourceWindowsUpdateConfig                           string = "windows.update.config"
+	ResourceWindowsServerFeature                          string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature                        string = "windows.optionalFeature"
+	ResourceWindowsEventlog                               string = "windows.eventlog"
+	ResourceWindowsRdp                                    string = "windows.rdp"
+	ResourceWindowsTpm                                    string = "windows.tpm"
+	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
+	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
+	ResourceWindowsFirewall                               string = "windows.firewall"
+	ResourceWindowsFirewallProfile                        string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule                           string = "windows.firewall.rule"
+	ResourceWindowsSmb                                    string = "windows.smb"
+	ResourceWindowsSmbShare                               string = "windows.smb.share"
+	ResourceWindowsSmbSession                             string = "windows.smb.session"
+	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
+	ResourceWindowsBitlocker                              string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume                        string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity                               string = "windows.security"
+	ResourceWindowsSecurityProduct                        string = "windows.security.product"
+	ResourceWindowsSecurityHealth                         string = "windows.security.health"
+	ResourceWindowsDefender                               string = "windows.defender"
+	ResourceWindowsDefenderStatus                         string = "windows.defender.status"
+	ResourceWindowsDefenderPreferences                    string = "windows.defender.preferences"
+	ResourceWindowsDefenderScanSettings                   string = "windows.defender.scanSettings"
+	ResourceWindowsDefenderRealTimeSettings               string = "windows.defender.realTimeSettings"
+	ResourceWindowsDefenderCloudSettings                  string = "windows.defender.cloudSettings"
+	ResourceWindowsDefenderSignatureSettings              string = "windows.defender.signatureSettings"
+	ResourceWindowsDefenderThreatActionSettings           string = "windows.defender.threatActionSettings"
+	ResourceWindowsDefenderThreatIdAction                 string = "windows.defender.threatIdAction"
+	ResourceWindowsDefenderControlledFolderAccess         string = "windows.defender.controlledFolderAccess"
+	ResourceWindowsDefenderNetworkProtectionSettings      string = "windows.defender.networkProtectionSettings"
+	ResourceWindowsDefenderBehavioralNetworkBlockSettings string = "windows.defender.behavioralNetworkBlockSettings"
+	ResourceWindowsDefenderLocalSettingOverrides          string = "windows.defender.localSettingOverrides"
+	ResourceWindowsDefenderRemediationSettings            string = "windows.defender.remediationSettings"
+	ResourceWindowsDefenderExclusions                     string = "windows.defender.exclusions"
+	ResourceWindowsDefenderAsrRule                        string = "windows.defender.asrRule"
+	ResourceWindowsDefenderThreat                         string = "windows.defender.threat"
+	ResourceWindowsDefenderThreatDetection                string = "windows.defender.threatDetection"
+	ResourceCloud                                         string = "cloud"
+	ResourceCloudInstance                                 string = "cloudInstance"
+	ResourceIpAddress                                     string = "ipAddress"
+	ResourceNetwork                                       string = "network"
+	ResourceNetworkNeighbor                               string = "networkNeighbor"
+	ResourceNetworkInterface                              string = "networkInterface"
+	ResourceNetworkRoutes                                 string = "networkRoutes"
+	ResourceNetworkRoute                                  string = "networkRoute"
+	ResourceChrome                                        string = "chrome"
+	ResourceChromeExtension                               string = "chrome.extension"
+	ResourceChromeExtensionContentScript                  string = "chrome.extensionContentScript"
+	ResourceFirefox                                       string = "firefox"
+	ResourceFirefoxAddon                                  string = "firefox.addon"
+	ResourceUsb                                           string = "usb"
+	ResourceUsbDevice                                     string = "usb.device"
+	ResourceCrontab                                       string = "crontab"
+	ResourceCrontabEntry                                  string = "crontab.entry"
+	ResourceVscode                                        string = "vscode"
+	ResourceVscodeExtension                               string = "vscode.extension"
+	ResourceLogrotate                                     string = "logrotate"
+	ResourceLogrotateEntry                                string = "logrotate.entry"
+	ResourceLvm                                           string = "lvm"
+	ResourceLvmPhysicalVolume                             string = "lvm.physicalVolume"
+	ResourceLvmVolumeGroup                                string = "lvm.volumeGroup"
+	ResourceLvmLogicalVolume                              string = "lvm.logicalVolume"
+	ResourceMdadm                                         string = "mdadm"
+	ResourceMdadmArray                                    string = "mdadm.array"
+	ResourceMdadmDevice                                   string = "mdadm.device"
+	ResourceZfs                                           string = "zfs"
+	ResourceZfsPool                                       string = "zfs.pool"
+	ResourceZfsPoolVdev                                   string = "zfs.pool.vdev"
+	ResourceZfsDataset                                    string = "zfs.dataset"
+	ResourceAi                                            string = "ai"
+	ResourceAiModel                                       string = "ai.model"
+	ResourceClaudeCode                                    string = "claude.code"
+	ResourceClaudeCodePlugin                              string = "claude.code.plugin"
+	ResourceClaudeCodeSkill                               string = "claude.code.skill"
+	ResourceClaudeCodeProject                             string = "claude.code.project"
+	ResourceClaudeCodeMcpServer                           string = "claude.code.mcpServer"
+	ResourceOpenaiCodex                                   string = "openai.codex"
+	ResourceOpenaiCodexPlugin                             string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill                              string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer                          string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector                          string = "openai.codex.connector"
+	ResourceCursor                                        string = "cursor"
+	ResourceCursorMcpServer                               string = "cursor.mcpServer"
+	ResourceCursorRule                                    string = "cursor.rule"
+	ResourceCursorSkill                                   string = "cursor.skill"
+	ResourceGithubCopilot                                 string = "github.copilot"
+	ResourceGithubCopilotAccount                          string = "github.copilot.account"
+	ResourceGithubCopilotMcpServer                        string = "github.copilot.mcpServer"
+	ResourceGithubCopilotSkill                            string = "github.copilot.skill"
+	ResourceGoose                                         string = "goose"
+	ResourceGooseExtension                                string = "goose.extension"
+	ResourceGooseSkill                                    string = "goose.skill"
+	ResourceGemini                                        string = "gemini"
+	ResourceGeminiMcpServer                               string = "gemini.mcpServer"
+	ResourceGeminiSkill                                   string = "gemini.skill"
+	ResourceWindsurf                                      string = "windsurf"
+	ResourceWindsurfRule                                  string = "windsurf.rule"
+	ResourceWindsurfMcpServer                             string = "windsurf.mcpServer"
+	ResourceWindsurfSkill                                 string = "windsurf.skill"
+	ResourceZed                                           string = "zed"
+	ResourceRoo                                           string = "roo"
+	ResourceRooSkill                                      string = "roo.skill"
+	ResourceCline                                         string = "cline"
+	ResourceClineSkill                                    string = "cline.skill"
+	ResourceKiro                                          string = "kiro"
+	ResourceKiroSkill                                     string = "kiro.skill"
+	ResourceContinuedev                                   string = "continuedev"
+	ResourceContinuedevSkill                              string = "continuedev.skill"
+	ResourceTrae                                          string = "trae"
+	ResourceTraeSkill                                     string = "trae.skill"
+	ResourceOpencode                                      string = "opencode"
+	ResourceOpencodeSkill                                 string = "opencode.skill"
+	ResourcePi                                            string = "pi"
+	ResourcePiSkill                                       string = "pi.skill"
+	ResourceMistralVibe                                   string = "mistral.vibe"
+	ResourceMistralVibeSkill                              string = "mistral.vibe.skill"
+	ResourceAntigravity                                   string = "antigravity"
+	ResourceAntigravitySkill                              string = "antigravity.skill"
+	ResourceIbmBob                                        string = "ibm.bob"
+	ResourceIbmBobSkill                                   string = "ibm.bob.skill"
+	ResourceOpenclaw                                      string = "openclaw"
+	ResourceOpenclawSkill                                 string = "openclaw.skill"
+	ResourceSnowflakeCortex                               string = "snowflake.cortex"
+	ResourceSnowflakeCortexSkill                          string = "snowflake.cortex.skill"
+	ResourceJunie                                         string = "junie"
+	ResourceJunieSkill                                    string = "junie.skill"
+	ResourceAugment                                       string = "augment"
+	ResourceAugmentSkill                                  string = "augment.skill"
+	ResourceWarp                                          string = "warp"
+	ResourceWarpSkill                                     string = "warp.skill"
+	ResourceKilocode                                      string = "kilocode"
+	ResourceKilocodeSkill                                 string = "kilocode.skill"
+	ResourceOpenhands                                     string = "openhands"
+	ResourceOpenhandsSkill                                string = "openhands.skill"
+	ResourceQwenCode                                      string = "qwen.code"
+	ResourceQwenCodeSkill                                 string = "qwen.code.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1850,6 +1852,14 @@ func init() {
 		"windows.defender.networkProtectionSettings": {
 			// to override args, implement: initWindowsDefenderNetworkProtectionSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsDefenderNetworkProtectionSettings,
+		},
+		"windows.defender.behavioralNetworkBlockSettings": {
+			// to override args, implement: initWindowsDefenderBehavioralNetworkBlockSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderBehavioralNetworkBlockSettings,
+		},
+		"windows.defender.localSettingOverrides": {
+			// to override args, implement: initWindowsDefenderLocalSettingOverrides(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDefenderLocalSettingOverrides,
 		},
 		"windows.defender.remediationSettings": {
 			// to override args, implement: initWindowsDefenderRemediationSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8749,8 +8759,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.defender.preferences.networkProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderPreferences).GetNetworkProtection()).ToDataRes(types.Resource("windows.defender.networkProtectionSettings"))
 	},
+	"windows.defender.preferences.behavioralNetworkBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetBehavioralNetworkBlocks()).ToDataRes(types.Resource("windows.defender.behavioralNetworkBlockSettings"))
+	},
 	"windows.defender.preferences.remediation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderPreferences).GetRemediation()).ToDataRes(types.Resource("windows.defender.remediationSettings"))
+	},
+	"windows.defender.preferences.localSettingOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetLocalSettingOverrides()).ToDataRes(types.Resource("windows.defender.localSettingOverrides"))
 	},
 	"windows.defender.preferences.exclusions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderPreferences).GetExclusions()).ToDataRes(types.Resource("windows.defender.exclusions"))
@@ -8769,6 +8785,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.preferences.disableAutoExclusions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderPreferences).GetDisableAutoExclusions()).ToDataRes(types.Bool)
+	},
+	"windows.defender.preferences.disableGenericReports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderPreferences).GetDisableGenericReports()).ToDataRes(types.Bool)
 	},
 	"windows.defender.scanSettings.scanParameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderScanSettings).GetScanParameters()).ToDataRes(types.Int)
@@ -8946,6 +8965,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderNetworkProtectionSettings).GetEnableDnsSinkhole()).ToDataRes(types.Bool)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionConfiguredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionConfiguredState()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionAggressiveness": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionAggressiveness()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionMaxBlockTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetBruteForceProtectionMaxBlockTime()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionConfiguredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionConfiguredState()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionAggressiveness": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionAggressiveness()).ToDataRes(types.Int)
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionMaxBlockTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).GetRemoteEncryptionProtectionMaxBlockTime()).ToDataRes(types.Int)
+	},
+	"windows.defender.localSettingOverrides.spynetReporting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetSpynetReporting()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.realtimeMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetRealtimeMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableBehaviorMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableBehaviorMonitoring()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableIOAVProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableIOAVProtection()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableIntrusionPreventionSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableIntrusionPreventionSystem()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.disableOnAccessProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetDisableOnAccessProtection()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.scanParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetScanParameters()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.scanScheduleDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetScanScheduleDay()).ToDataRes(types.Bool)
+	},
+	"windows.defender.localSettingOverrides.avgCPULoadFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderLocalSettingOverrides).GetAvgCPULoadFactor()).ToDataRes(types.Bool)
 	},
 	"windows.defender.remediationSettings.remediationScheduleDay": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderRemediationSettings).GetRemediationScheduleDay()).ToDataRes(types.Int)
@@ -20622,8 +20686,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDefenderPreferences).NetworkProtection, ok = plugin.RawToTValue[*mqlWindowsDefenderNetworkProtectionSettings](v.Value, v.Error)
 		return
 	},
+	"windows.defender.preferences.behavioralNetworkBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).BehavioralNetworkBlocks, ok = plugin.RawToTValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings](v.Value, v.Error)
+		return
+	},
 	"windows.defender.preferences.remediation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderPreferences).Remediation, ok = plugin.RawToTValue[*mqlWindowsDefenderRemediationSettings](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.localSettingOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).LocalSettingOverrides, ok = plugin.RawToTValue[*mqlWindowsDefenderLocalSettingOverrides](v.Value, v.Error)
 		return
 	},
 	"windows.defender.preferences.exclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20648,6 +20720,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.preferences.disableAutoExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderPreferences).DisableAutoExclusions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.preferences.disableGenericReports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderPreferences).DisableGenericReports, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.scanSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20916,6 +20992,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.networkProtectionSettings.enableDnsSinkhole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderNetworkProtectionSettings).EnableDnsSinkhole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionConfiguredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionConfiguredState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionAggressiveness": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionAggressiveness, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.bruteForceProtectionMaxBlockTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).BruteForceProtectionMaxBlockTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionConfiguredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionConfiguredState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionAggressiveness": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionAggressiveness, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.behavioralNetworkBlockSettings.remoteEncryptionProtectionMaxBlockTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderBehavioralNetworkBlockSettings).RemoteEncryptionProtectionMaxBlockTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.defender.localSettingOverrides.spynetReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).SpynetReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.realtimeMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).RealtimeMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableBehaviorMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableBehaviorMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableIOAVProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableIOAVProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableIntrusionPreventionSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableIntrusionPreventionSystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.disableOnAccessProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).DisableOnAccessProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.scanParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).ScanParameters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.scanScheduleDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).ScanScheduleDay, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.defender.localSettingOverrides.avgCPULoadFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderLocalSettingOverrides).AvgCPULoadFactor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.remediationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54204,13 +54348,16 @@ type mqlWindowsDefenderPreferences struct {
 	ThreatActions               plugin.TValue[*mqlWindowsDefenderThreatActionSettings]
 	ControlledFolderAccess      plugin.TValue[*mqlWindowsDefenderControlledFolderAccess]
 	NetworkProtection           plugin.TValue[*mqlWindowsDefenderNetworkProtectionSettings]
+	BehavioralNetworkBlocks     plugin.TValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings]
 	Remediation                 plugin.TValue[*mqlWindowsDefenderRemediationSettings]
+	LocalSettingOverrides       plugin.TValue[*mqlWindowsDefenderLocalSettingOverrides]
 	Exclusions                  plugin.TValue[*mqlWindowsDefenderExclusions]
 	AttackSurfaceReductionRules plugin.TValue[[]any]
 	PuaProtection               plugin.TValue[int64]
 	UiLockdown                  plugin.TValue[bool]
 	RandomizeScheduleTaskTimes  plugin.TValue[bool]
 	DisableAutoExclusions       plugin.TValue[bool]
+	DisableGenericReports       plugin.TValue[bool]
 }
 
 // createWindowsDefenderPreferences creates a new instance of this resource
@@ -54357,6 +54504,22 @@ func (c *mqlWindowsDefenderPreferences) GetNetworkProtection() *plugin.TValue[*m
 	})
 }
 
+func (c *mqlWindowsDefenderPreferences) GetBehavioralNetworkBlocks() *plugin.TValue[*mqlWindowsDefenderBehavioralNetworkBlockSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderBehavioralNetworkBlockSettings](&c.BehavioralNetworkBlocks, func() (*mqlWindowsDefenderBehavioralNetworkBlockSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "behavioralNetworkBlocks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderBehavioralNetworkBlockSettings), nil
+			}
+		}
+
+		return c.behavioralNetworkBlocks()
+	})
+}
+
 func (c *mqlWindowsDefenderPreferences) GetRemediation() *plugin.TValue[*mqlWindowsDefenderRemediationSettings] {
 	return plugin.GetOrCompute[*mqlWindowsDefenderRemediationSettings](&c.Remediation, func() (*mqlWindowsDefenderRemediationSettings, error) {
 		if c.MqlRuntime.HasRecording {
@@ -54370,6 +54533,22 @@ func (c *mqlWindowsDefenderPreferences) GetRemediation() *plugin.TValue[*mqlWind
 		}
 
 		return c.remediation()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetLocalSettingOverrides() *plugin.TValue[*mqlWindowsDefenderLocalSettingOverrides] {
+	return plugin.GetOrCompute[*mqlWindowsDefenderLocalSettingOverrides](&c.LocalSettingOverrides, func() (*mqlWindowsDefenderLocalSettingOverrides, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.defender.preferences", c.__id, "localSettingOverrides")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDefenderLocalSettingOverrides), nil
+			}
+		}
+
+		return c.localSettingOverrides()
 	})
 }
 
@@ -54426,6 +54605,12 @@ func (c *mqlWindowsDefenderPreferences) GetRandomizeScheduleTaskTimes() *plugin.
 func (c *mqlWindowsDefenderPreferences) GetDisableAutoExclusions() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DisableAutoExclusions, func() (bool, error) {
 		return c.disableAutoExclusions()
+	})
+}
+
+func (c *mqlWindowsDefenderPreferences) GetDisableGenericReports() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableGenericReports, func() (bool, error) {
+		return c.disableGenericReports()
 	})
 }
 
@@ -55046,6 +55231,159 @@ func (c *mqlWindowsDefenderNetworkProtectionSettings) GetAllowDatagramProcessing
 
 func (c *mqlWindowsDefenderNetworkProtectionSettings) GetEnableDnsSinkhole() *plugin.TValue[bool] {
 	return &c.EnableDnsSinkhole
+}
+
+// mqlWindowsDefenderBehavioralNetworkBlockSettings for the windows.defender.behavioralNetworkBlockSettings resource
+type mqlWindowsDefenderBehavioralNetworkBlockSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderBehavioralNetworkBlockSettingsInternal it will be used here
+	BruteForceProtectionConfiguredState       plugin.TValue[int64]
+	BruteForceProtectionAggressiveness        plugin.TValue[int64]
+	BruteForceProtectionMaxBlockTime          plugin.TValue[int64]
+	RemoteEncryptionProtectionConfiguredState plugin.TValue[int64]
+	RemoteEncryptionProtectionAggressiveness  plugin.TValue[int64]
+	RemoteEncryptionProtectionMaxBlockTime    plugin.TValue[int64]
+}
+
+// createWindowsDefenderBehavioralNetworkBlockSettings creates a new instance of this resource
+func createWindowsDefenderBehavioralNetworkBlockSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderBehavioralNetworkBlockSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.behavioralNetworkBlockSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) MqlName() string {
+	return "windows.defender.behavioralNetworkBlockSettings"
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionConfiguredState() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionConfiguredState
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionAggressiveness() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionAggressiveness
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetBruteForceProtectionMaxBlockTime() *plugin.TValue[int64] {
+	return &c.BruteForceProtectionMaxBlockTime
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionConfiguredState() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionConfiguredState
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionAggressiveness() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionAggressiveness
+}
+
+func (c *mqlWindowsDefenderBehavioralNetworkBlockSettings) GetRemoteEncryptionProtectionMaxBlockTime() *plugin.TValue[int64] {
+	return &c.RemoteEncryptionProtectionMaxBlockTime
+}
+
+// mqlWindowsDefenderLocalSettingOverrides for the windows.defender.localSettingOverrides resource
+type mqlWindowsDefenderLocalSettingOverrides struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDefenderLocalSettingOverridesInternal it will be used here
+	SpynetReporting                  plugin.TValue[bool]
+	RealtimeMonitoring               plugin.TValue[bool]
+	DisableBehaviorMonitoring        plugin.TValue[bool]
+	DisableIOAVProtection            plugin.TValue[bool]
+	DisableIntrusionPreventionSystem plugin.TValue[bool]
+	DisableOnAccessProtection        plugin.TValue[bool]
+	ScanParameters                   plugin.TValue[bool]
+	ScanScheduleDay                  plugin.TValue[bool]
+	AvgCPULoadFactor                 plugin.TValue[bool]
+}
+
+// createWindowsDefenderLocalSettingOverrides creates a new instance of this resource
+func createWindowsDefenderLocalSettingOverrides(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDefenderLocalSettingOverrides{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.defender.localSettingOverrides", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) MqlName() string {
+	return "windows.defender.localSettingOverrides"
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetSpynetReporting() *plugin.TValue[bool] {
+	return &c.SpynetReporting
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetRealtimeMonitoring() *plugin.TValue[bool] {
+	return &c.RealtimeMonitoring
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableBehaviorMonitoring() *plugin.TValue[bool] {
+	return &c.DisableBehaviorMonitoring
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableIOAVProtection() *plugin.TValue[bool] {
+	return &c.DisableIOAVProtection
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableIntrusionPreventionSystem() *plugin.TValue[bool] {
+	return &c.DisableIntrusionPreventionSystem
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetDisableOnAccessProtection() *plugin.TValue[bool] {
+	return &c.DisableOnAccessProtection
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetScanParameters() *plugin.TValue[bool] {
+	return &c.ScanParameters
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetScanScheduleDay() *plugin.TValue[bool] {
+	return &c.ScanScheduleDay
+}
+
+func (c *mqlWindowsDefenderLocalSettingOverrides) GetAvgCPULoadFactor() *plugin.TValue[bool] {
+	return &c.AvgCPULoadFactor
 }
 
 // mqlWindowsDefenderRemediationSettings for the windows.defender.remediationSettings resource

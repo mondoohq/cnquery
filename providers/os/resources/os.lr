@@ -7393,8 +7393,12 @@ windows.defender.preferences @defaults("puaProtection") {
   controlledFolderAccess() windows.defender.controlledFolderAccess
   // Network protection settings
   networkProtection() windows.defender.networkProtectionSettings
+  // Behavioral network block settings (brute-force and remote-encryption protection)
+  behavioralNetworkBlocks() windows.defender.behavioralNetworkBlockSettings
   // Threat remediation settings
   remediation() windows.defender.remediationSettings
+  // Whether a local preference may override the corresponding policy setting
+  localSettingOverrides() windows.defender.localSettingOverrides
   // Scan exclusions (paths, extensions, processes, IP addresses)
   exclusions() windows.defender.exclusions
   // Configured Attack Surface Reduction (ASR) rules and their actions
@@ -7409,6 +7413,8 @@ windows.defender.preferences @defaults("puaProtection") {
   randomizeScheduleTaskTimes() bool
   // Whether automatic exclusions for server roles are disabled
   disableAutoExclusions() bool
+  // Whether sending Watson (generic) reports to Microsoft is disabled
+  disableGenericReports() bool
 }
 
 // Microsoft Defender scan settings
@@ -7622,6 +7628,65 @@ windows.defender.networkProtectionSettings @defaults("enableNetworkProtection") 
   allowDatagramProcessingOnWinServer bool
   // Whether DNS sinkhole enforcement is enabled
   enableDnsSinkhole bool
+}
+
+// Microsoft Defender behavioral network block settings
+//
+// Examine the behavioral network protection preferences that block attacks
+// observed from the network: brute-force protection (against password-guessing
+// attacks) and remote-encryption protection (against remote ransomware
+// encryption). Each exposes its configured state, aggressiveness, and maximum
+// block time. Reached through
+// `windows.defender.preferences.behavioralNetworkBlocks`.
+windows.defender.behavioralNetworkBlockSettings @defaults("bruteForceProtectionConfiguredState remoteEncryptionProtectionConfiguredState") {
+  // Brute-force protection configured state
+  //
+  // 0 = not configured, 1 = block, 2 = audit.
+  bruteForceProtectionConfiguredState int
+  // Brute-force protection aggressiveness
+  //
+  // 0 = low, 1 = medium, 2 = high.
+  bruteForceProtectionAggressiveness int
+  // Maximum time (minutes) a brute-force source is blocked
+  bruteForceProtectionMaxBlockTime int
+  // Remote-encryption protection configured state
+  //
+  // 0 = not configured, 1 = block, 2 = audit.
+  remoteEncryptionProtectionConfiguredState int
+  // Remote-encryption protection aggressiveness
+  //
+  // 0 = low, 1 = medium, 2 = high.
+  remoteEncryptionProtectionAggressiveness int
+  // Maximum time (minutes) a remote-encryption source is blocked
+  remoteEncryptionProtectionMaxBlockTime int
+}
+
+// Microsoft Defender local setting overrides
+//
+// Examine whether a locally configured preference is allowed to override the
+// corresponding Group Policy setting. When an override is disabled (false) the
+// policy value is enforced and users cannot change it locally; CIS benchmarks
+// generally require these overrides to be disabled. Reached through
+// `windows.defender.preferences.localSettingOverrides`.
+windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonitoring") {
+  // Whether a local setting may override MAPS (SpyNet) reporting
+  spynetReporting bool
+  // Whether a local setting may override real-time monitoring
+  realtimeMonitoring bool
+  // Whether a local setting may override behavior monitoring
+  disableBehaviorMonitoring bool
+  // Whether a local setting may override downloaded-file (IOAV) scanning
+  disableIOAVProtection bool
+  // Whether a local setting may override the intrusion prevention system
+  disableIntrusionPreventionSystem bool
+  // Whether a local setting may override on-access protection
+  disableOnAccessProtection bool
+  // Whether a local setting may override the default scan type
+  scanParameters bool
+  // Whether a local setting may override the scheduled scan day
+  scanScheduleDay bool
+  // Whether a local setting may override the scan CPU load factor
+  avgCPULoadFactor bool
 }
 
 // Microsoft Defender remediation settings

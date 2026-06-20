@@ -316,6 +316,25 @@ type MpPreference struct {
 	AllowDatagramProcessingOnWinServer bool
 	EnableDnsSinkhole                  bool
 
+	// behavioral network blocks (brute-force and remote-encryption protection)
+	BruteForceProtectionConfiguredState       int64
+	BruteForceProtectionAggressiveness        int64
+	BruteForceProtectionMaxBlockTime          int64
+	RemoteEncryptionProtectionConfiguredState int64
+	RemoteEncryptionProtectionAggressiveness  int64
+	RemoteEncryptionProtectionMaxBlockTime    int64
+
+	// local setting overrides (whether a local preference may override policy)
+	LocalSettingOverrideSpynetReporting                  bool
+	LocalSettingOverrideRealtimeMonitoring               bool
+	LocalSettingOverrideDisableBehaviorMonitoring        bool
+	LocalSettingOverrideDisableIOAVProtection            bool
+	LocalSettingOverrideDisableIntrusionPreventionSystem bool
+	LocalSettingOverrideDisableOnAccessProtection        bool
+	LocalSettingOverrideScanParameters                   bool
+	LocalSettingOverrideScanScheduleDay                  bool
+	LocalSettingOverrideAvgCPULoadFactor                 bool
+
 	// remediation
 	RemediationScheduleDay         int64
 	RemediationScheduleTime        json.RawMessage
@@ -337,6 +356,10 @@ type MpPreference struct {
 	UILockdown                 bool
 	RandomizeScheduleTaskTimes bool
 	DisableAutoExclusions      bool
+	// Defender uses the historical "RePorts" casing for this preference; the
+	// json tag matches it explicitly so the field is populated regardless of how
+	// the cmdlet serializes it.
+	DisableGenericReports bool `json:"DisableGenericRePorts"`
 }
 
 // ScanScheduleTimeString returns the raw scheduled-scan time value.

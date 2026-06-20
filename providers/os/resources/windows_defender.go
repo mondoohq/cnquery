@@ -383,6 +383,49 @@ func (p *mqlWindowsDefenderPreferences) networkProtection() (*mqlWindowsDefender
 	return res.(*mqlWindowsDefenderNetworkProtectionSettings), nil
 }
 
+func (p *mqlWindowsDefenderPreferences) behavioralNetworkBlocks() (*mqlWindowsDefenderBehavioralNetworkBlockSettings, error) {
+	prefs, err := p.getPrefs()
+	if err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(p.MqlRuntime, "windows.defender.behavioralNetworkBlockSettings", map[string]*llx.RawData{
+		"__id":                                      llx.StringData("windows.defender.behavioralNetworkBlockSettings"),
+		"bruteForceProtectionConfiguredState":       llx.IntData(prefs.BruteForceProtectionConfiguredState),
+		"bruteForceProtectionAggressiveness":        llx.IntData(prefs.BruteForceProtectionAggressiveness),
+		"bruteForceProtectionMaxBlockTime":          llx.IntData(prefs.BruteForceProtectionMaxBlockTime),
+		"remoteEncryptionProtectionConfiguredState": llx.IntData(prefs.RemoteEncryptionProtectionConfiguredState),
+		"remoteEncryptionProtectionAggressiveness":  llx.IntData(prefs.RemoteEncryptionProtectionAggressiveness),
+		"remoteEncryptionProtectionMaxBlockTime":    llx.IntData(prefs.RemoteEncryptionProtectionMaxBlockTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlWindowsDefenderBehavioralNetworkBlockSettings), nil
+}
+
+func (p *mqlWindowsDefenderPreferences) localSettingOverrides() (*mqlWindowsDefenderLocalSettingOverrides, error) {
+	prefs, err := p.getPrefs()
+	if err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(p.MqlRuntime, "windows.defender.localSettingOverrides", map[string]*llx.RawData{
+		"__id":                             llx.StringData("windows.defender.localSettingOverrides"),
+		"spynetReporting":                  llx.BoolData(prefs.LocalSettingOverrideSpynetReporting),
+		"realtimeMonitoring":               llx.BoolData(prefs.LocalSettingOverrideRealtimeMonitoring),
+		"disableBehaviorMonitoring":        llx.BoolData(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
+		"disableIOAVProtection":            llx.BoolData(prefs.LocalSettingOverrideDisableIOAVProtection),
+		"disableIntrusionPreventionSystem": llx.BoolData(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
+		"disableOnAccessProtection":        llx.BoolData(prefs.LocalSettingOverrideDisableOnAccessProtection),
+		"scanParameters":                   llx.BoolData(prefs.LocalSettingOverrideScanParameters),
+		"scanScheduleDay":                  llx.BoolData(prefs.LocalSettingOverrideScanScheduleDay),
+		"avgCPULoadFactor":                 llx.BoolData(prefs.LocalSettingOverrideAvgCPULoadFactor),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlWindowsDefenderLocalSettingOverrides), nil
+}
+
 func (p *mqlWindowsDefenderPreferences) remediation() (*mqlWindowsDefenderRemediationSettings, error) {
 	prefs, err := p.getPrefs()
 	if err != nil {
@@ -478,6 +521,14 @@ func (p *mqlWindowsDefenderPreferences) disableAutoExclusions() (bool, error) {
 		return false, err
 	}
 	return prefs.DisableAutoExclusions, nil
+}
+
+func (p *mqlWindowsDefenderPreferences) disableGenericReports() (bool, error) {
+	prefs, err := p.getPrefs()
+	if err != nil {
+		return false, err
+	}
+	return prefs.DisableGenericReports, nil
 }
 
 // mqlWindowsDefenderThreatActionSettingsInternal caches the per-threat-ID
