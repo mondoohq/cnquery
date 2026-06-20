@@ -269,19 +269,20 @@ private digitalocean.firewall.ingressRule @defaults("protocol ports openToIntern
   sourceKubernetesClusters() []digitalocean.kubernetes.cluster
 }
 
-// Droplet internet-exposure breakdown
+// Network internet-exposure breakdown
 //
-// Explains whether a droplet is reachable from the internet: whether it has a
-// public IP and whether its firewalls admit inbound traffic from any address —
-// including the case where no firewall is attached, which leaves it fully open.
+// Explains whether a resource is reachable from the internet: whether it has a
+// public IP and whether its firewall admits inbound traffic from any address —
+// including the case where no firewall restricts ingress at all, which leaves
+// it fully open. Shared by droplets and internet-facing load balancers.
 private digitalocean.network.exposure @defaults("internetReachable hasPublicIp") {
-  // Whether the droplet is reachable from the internet (a public IP and firewall ingress that admits any address)
+  // Whether the resource is reachable from the internet (a public IP and firewall ingress that admits any address)
   internetReachable bool
-  // Whether the droplet has a public IPv4 or IPv6 address
+  // Whether the resource has a public IPv4 or IPv6 address
   hasPublicIp bool
-  // Whether inbound traffic from any address is admitted — a firewall ingress rule open to the internet, or no firewall attached at all
+  // Whether inbound traffic from any address is admitted — a firewall ingress rule open to the internet, or no firewall restricting ingress at all
   firewallAllowsIngress bool
-  // Firewall ingress rules that admit traffic from any address
+  // Droplet firewall ingress rules that admit traffic from any address; empty for resources that do not use cloud-firewall ingress rules
   openIngressRules []digitalocean.firewall.ingressRule
 }
 
@@ -365,6 +366,10 @@ digitalocean.database @defaults("id name engine") {
   tags []string
   // Firewall rules (trusted sources)
   firewallRules() []dict
+  // Whether the cluster is reachable from the internet
+  //
+  // True when the cluster has a public connection endpoint and its trusted-source firewall rules admit any address (an ip_addr rule of 0.0.0.0/0 or ::/0), or when no trusted-source rules are configured at all, which leaves the public endpoint open to every address.
+  internetReachable() bool
   // Public connection host
   connectionHost string
   // Public connection port
@@ -699,6 +704,8 @@ digitalocean.loadBalancer @defaults("id name status") {
   glbSettings dict
   // Regional load balancers this global load balancer distributes traffic to
   targetLoadBalancers() []digitalocean.loadBalancer
+  // Internet-exposure breakdown (public IP combined with the load balancer firewall)
+  exposure() digitalocean.network.exposure
 }
 
 // DigitalOcean VPC

@@ -80,6 +80,7 @@ digitalocean.database.engine 13.0.1
 digitalocean.database.evictionPolicy 13.1.7
 digitalocean.database.firewallRules 13.0.1
 digitalocean.database.id 13.0.1
+digitalocean.database.internetReachable 13.7.1
 digitalocean.database.latestBackupAt 13.2.1
 digitalocean.database.maintenanceWindow 13.0.1
 digitalocean.database.metricsEndpoints 13.6.2
@@ -577,6 +578,7 @@ digitalocean.loadBalancer.dropletIds 13.0.1
 digitalocean.loadBalancer.droplets 13.0.2
 digitalocean.loadBalancer.enableBackendKeepalive 13.0.1
 digitalocean.loadBalancer.enableProxyProtocol 13.0.1
+digitalocean.loadBalancer.exposure 13.7.1
 digitalocean.loadBalancer.firewallAllow 13.6.2
 digitalocean.loadBalancer.firewallDeny 13.6.2
 digitalocean.loadBalancer.forwardingRules 13.0.1

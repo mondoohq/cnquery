@@ -780,6 +780,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.database.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetFirewallRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.database.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabase).GetInternetReachable()).ToDataRes(types.Bool)
+	},
 	"digitalocean.database.connectionHost": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetConnectionHost()).ToDataRes(types.String)
 	},
@@ -1151,6 +1154,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.loadBalancer.targetLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetTargetLoadBalancers()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer")))
+	},
+	"digitalocean.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanLoadBalancer).GetExposure()).ToDataRes(types.Resource("digitalocean.network.exposure"))
 	},
 	"digitalocean.vpc.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpc).GetId()).ToDataRes(types.String)
@@ -3247,6 +3253,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDatabase).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.database.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabase).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"digitalocean.database.connectionHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDatabase).ConnectionHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3781,6 +3791,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.loadBalancer.targetLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanLoadBalancer).TargetLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlDigitaloceanNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"digitalocean.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7506,6 +7520,7 @@ type mqlDigitaloceanDatabase struct {
 	Vpc                              plugin.TValue[*mqlDigitaloceanVpc]
 	Tags                             plugin.TValue[[]any]
 	FirewallRules                    plugin.TValue[[]any]
+	InternetReachable                plugin.TValue[bool]
 	ConnectionHost                   plugin.TValue[string]
 	ConnectionPort                   plugin.TValue[int64]
 	PrivateConnectionHost            plugin.TValue[string]
@@ -7642,6 +7657,12 @@ func (c *mqlDigitaloceanDatabase) GetTags() *plugin.TValue[[]any] {
 func (c *mqlDigitaloceanDatabase) GetFirewallRules() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.FirewallRules, func() ([]any, error) {
 		return c.firewallRules()
+	})
+}
+
+func (c *mqlDigitaloceanDatabase) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
 	})
 }
 
@@ -8655,6 +8676,7 @@ type mqlDigitaloceanLoadBalancer struct {
 	Domains                      plugin.TValue[[]any]
 	GlbSettings                  plugin.TValue[any]
 	TargetLoadBalancers          plugin.TValue[[]any]
+	Exposure                     plugin.TValue[*mqlDigitaloceanNetworkExposure]
 }
 
 // createDigitaloceanLoadBalancer creates a new instance of this resource
@@ -8875,6 +8897,22 @@ func (c *mqlDigitaloceanLoadBalancer) GetTargetLoadBalancers() *plugin.TValue[[]
 		}
 
 		return c.targetLoadBalancers()
+	})
+}
+
+func (c *mqlDigitaloceanLoadBalancer) GetExposure() *plugin.TValue[*mqlDigitaloceanNetworkExposure] {
+	return plugin.GetOrCompute[*mqlDigitaloceanNetworkExposure](&c.Exposure, func() (*mqlDigitaloceanNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
