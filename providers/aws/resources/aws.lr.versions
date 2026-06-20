@@ -3182,6 +3182,7 @@ aws.ec2.launchtemplate.region 13.5.0
 aws.ec2.launchtemplate.securityGroupIds 13.6.3
 aws.ec2.launchtemplate.tags 13.5.0
 aws.ec2.launchtemplate.userData 13.5.0
+aws.ec2.launchtemplate.userDataPresent 13.37.1
 aws.ec2.managedPrefixList 13.6.3
 aws.ec2.managedPrefixList.addressFamily 13.6.3
 aws.ec2.managedPrefixList.arn 13.6.3
@@ -3265,6 +3266,7 @@ aws.ec2.placementGroup.tags 13.6.3
 aws.ec2.placementGroups 13.6.3
 aws.ec2.securityGroups 11.15.2
 aws.ec2.securitygroup 11.15.2
+aws.ec2.securitygroup.allowsUnrestrictedEgress 13.37.1
 aws.ec2.securitygroup.arn 11.15.2
 aws.ec2.securitygroup.cloudformationStack 13.37.1
 aws.ec2.securitygroup.description 11.15.2
@@ -5296,6 +5298,8 @@ aws.iam.policyversion.statements 13.32.2
 aws.iam.policyversion.versionId 11.15.2
 aws.iam.role 11.15.2
 aws.iam.role.arn 11.15.2
+aws.iam.role.assumableByExternalAccounts 13.37.1
+aws.iam.role.assumableByPublic 13.37.1
 aws.iam.role.assumeRolePolicyDocument 11.15.2
 aws.iam.role.assumeRolePolicyStatements 13.32.2
 aws.iam.role.attachedPolicies 13.6.3
@@ -5866,6 +5870,7 @@ aws.lambda.function.concurrency 11.15.2
 aws.lambda.function.description 11.15.2
 aws.lambda.function.dlqTargetArn 11.15.2
 aws.lambda.function.environment 11.15.2
+aws.lambda.function.environmentSecretLikeKeys 13.37.1
 aws.lambda.function.ephemeralStorageSize 11.15.2
 aws.lambda.function.eventInvokeConfig 13.6.3
 aws.lambda.function.eventSourceMappings 11.15.2

@@ -6924,6 +6924,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.role.assumeRolePolicyStatements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetAssumeRolePolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
 	},
+	"aws.iam.role.assumableByPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetAssumableByPublic()).ToDataRes(types.Bool)
+	},
+	"aws.iam.role.assumableByExternalAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetAssumableByExternalAccounts()).ToDataRes(types.Array(types.String))
+	},
 	"aws.iam.role.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetLastUsedAt()).ToDataRes(types.Time)
 	},
@@ -20199,6 +20205,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetEnvironment()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.lambda.function.environmentSecretLikeKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetEnvironmentSecretLikeKeys()).ToDataRes(types.Array(types.String))
+	},
 	"aws.lambda.function.layers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetLayers()).ToDataRes(types.Array(types.Resource("aws.lambda.function.layer")))
 	},
@@ -21498,6 +21507,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.launchtemplate.userData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetUserData()).ToDataRes(types.String)
 	},
+	"aws.ec2.launchtemplate.userDataPresent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetUserDataPresent()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.launchtemplate.metadataOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetMetadataOptions()).ToDataRes(types.Dict)
 	},
@@ -22511,6 +22523,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.securitygroup.ipPermissionsEgress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetIpPermissionsEgress()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup.ippermission")))
+	},
+	"aws.ec2.securitygroup.allowsUnrestrictedEgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Securitygroup).GetAllowsUnrestrictedEgress()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.securitygroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Securitygroup).GetRegion()).ToDataRes(types.String)
@@ -36112,6 +36127,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.assumeRolePolicyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).AssumeRolePolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.assumableByPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).AssumableByPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.assumableByExternalAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).AssumableByExternalAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55538,6 +55561,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.environmentSecretLikeKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).EnvironmentSecretLikeKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.layers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Layers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -57438,6 +57465,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Launchtemplate).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchtemplate.userDataPresent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).UserDataPresent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.launchtemplate.metadataOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Launchtemplate).MetadataOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -58908,6 +58939,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.securitygroup.ipPermissionsEgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Securitygroup).IpPermissionsEgress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.securitygroup.allowsUnrestrictedEgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Securitygroup).AllowsUnrestrictedEgress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.securitygroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -82935,24 +82970,26 @@ type mqlAwsIamRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamRoleInternal it will be used here
-	Arn                        plugin.TValue[string]
-	Id                         plugin.TValue[string]
-	Name                       plugin.TValue[string]
-	Description                plugin.TValue[string]
-	Tags                       plugin.TValue[map[string]any]
-	CreatedAt                  plugin.TValue[*time.Time]
-	AssumeRolePolicyDocument   plugin.TValue[any]
-	AssumeRolePolicyStatements plugin.TValue[[]any]
-	LastUsedAt                 plugin.TValue[*time.Time]
-	LastUsedRegion             plugin.TValue[string]
-	MaxSessionDuration         plugin.TValue[int64]
-	PermissionsBoundaryArn     plugin.TValue[string]
-	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
-	UsedByInstances            plugin.TValue[[]any]
-	Path                       plugin.TValue[string]
-	IsServiceLinked            plugin.TValue[bool]
-	AttachedPolicies           plugin.TValue[[]any]
-	InlinePolicies             plugin.TValue[[]any]
+	Arn                         plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	CreatedAt                   plugin.TValue[*time.Time]
+	AssumeRolePolicyDocument    plugin.TValue[any]
+	AssumeRolePolicyStatements  plugin.TValue[[]any]
+	AssumableByPublic           plugin.TValue[bool]
+	AssumableByExternalAccounts plugin.TValue[[]any]
+	LastUsedAt                  plugin.TValue[*time.Time]
+	LastUsedRegion              plugin.TValue[string]
+	MaxSessionDuration          plugin.TValue[int64]
+	PermissionsBoundaryArn      plugin.TValue[string]
+	PermissionsBoundary         plugin.TValue[*mqlAwsIamPolicy]
+	UsedByInstances             plugin.TValue[[]any]
+	Path                        plugin.TValue[string]
+	IsServiceLinked             plugin.TValue[bool]
+	AttachedPolicies            plugin.TValue[[]any]
+	InlinePolicies              plugin.TValue[[]any]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -83033,6 +83070,18 @@ func (c *mqlAwsIamRole) GetAssumeRolePolicyStatements() *plugin.TValue[[]any] {
 		}
 
 		return c.assumeRolePolicyStatements()
+	})
+}
+
+func (c *mqlAwsIamRole) GetAssumableByPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AssumableByPublic, func() (bool, error) {
+		return c.assumableByPublic()
+	})
+}
+
+func (c *mqlAwsIamRole) GetAssumableByExternalAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssumableByExternalAccounts, func() ([]any, error) {
+		return c.assumableByExternalAccounts()
 	})
 }
 
@@ -133344,6 +133393,7 @@ type mqlAwsLambdaFunction struct {
 	KmsKeyArn                     plugin.TValue[string]
 	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
 	Environment                   plugin.TValue[map[string]any]
+	EnvironmentSecretLikeKeys     plugin.TValue[[]any]
 	Layers                        plugin.TValue[[]any]
 	LoggingConfig                 plugin.TValue[*mqlAwsLambdaFunctionLoggingConfig]
 	SnapStartApplyOn              plugin.TValue[string]
@@ -133637,6 +133687,12 @@ func (c *mqlAwsLambdaFunction) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 
 func (c *mqlAwsLambdaFunction) GetEnvironment() *plugin.TValue[map[string]any] {
 	return &c.Environment
+}
+
+func (c *mqlAwsLambdaFunction) GetEnvironmentSecretLikeKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnvironmentSecretLikeKeys, func() ([]any, error) {
+		return c.environmentSecretLikeKeys()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetLayers() *plugin.TValue[[]any] {
@@ -138380,6 +138436,7 @@ type mqlAwsEc2Launchtemplate struct {
 	LatestVersion      plugin.TValue[int64]
 	Tags               plugin.TValue[map[string]any]
 	UserData           plugin.TValue[string]
+	UserDataPresent    plugin.TValue[bool]
 	MetadataOptions    plugin.TValue[any]
 	SecurityGroupIds   plugin.TValue[[]any]
 	IamInstanceProfile plugin.TValue[string]
@@ -138463,6 +138520,12 @@ func (c *mqlAwsEc2Launchtemplate) GetTags() *plugin.TValue[map[string]any] {
 func (c *mqlAwsEc2Launchtemplate) GetUserData() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
 		return c.userData()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetUserDataPresent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UserDataPresent, func() (bool, error) {
+		return c.userDataPresent()
 	})
 }
 
@@ -141801,6 +141864,7 @@ type mqlAwsEc2Securitygroup struct {
 	Vpc                          plugin.TValue[*mqlAwsVpc]
 	IpPermissions                plugin.TValue[[]any]
 	IpPermissionsEgress          plugin.TValue[[]any]
+	AllowsUnrestrictedEgress     plugin.TValue[bool]
 	Region                       plugin.TValue[string]
 	IsAttachedToNetworkInterface plugin.TValue[bool]
 	NetworkInterfaces            plugin.TValue[[]any]
@@ -141911,6 +141975,12 @@ func (c *mqlAwsEc2Securitygroup) GetIpPermissionsEgress() *plugin.TValue[[]any] 
 		}
 
 		return c.ipPermissionsEgress()
+	})
+}
+
+func (c *mqlAwsEc2Securitygroup) GetAllowsUnrestrictedEgress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsUnrestrictedEgress, func() (bool, error) {
+		return c.allowsUnrestrictedEgress()
 	})
 }
 

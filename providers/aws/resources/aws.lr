@@ -2207,6 +2207,10 @@ private aws.iam.role @defaults("arn name") {
   assumeRolePolicyDocument dict
   // Parsed statements from the role trust policy
   assumeRolePolicyStatements() []aws.iam.policyStatement
+  // Whether the trust policy allows any principal ("*") to assume the role without a scoping condition
+  assumableByPublic() bool
+  // AWS account IDs outside this account that the trust policy allows to assume the role
+  assumableByExternalAccounts() []string
   // Time when the role was last used to make an AWS request
   lastUsedAt time
   // Region in which the role was last used
@@ -14200,6 +14204,8 @@ private aws.lambda.function @defaults("arn") {
   kmsKey() aws.kms.key
   // Environment variables configured for the function
   environment map[string]string
+  // Environment variable names that look like inline secrets (password, token, secret, access key, and similar) and should likely use Secrets Manager
+  environmentSecretLikeKeys() []string
   // Layers attached to the function
   layers []aws.lambda.function.layer
   // Logging configuration for the function
@@ -15289,6 +15295,8 @@ private aws.ec2.launchtemplate @defaults("name region") {
   tags map[string]string
   // User data from the default version (base64-decoded)
   userData() string
+  // Whether the launch template has user data set (a launch script that may embed secrets)
+  userDataPresent() bool
   // Metadata options from the default version (httpTokens, httpEndpoint, httpPutResponseHopLimit)
   metadataOptions() dict
   // Security group IDs from the default version
@@ -16130,6 +16138,8 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   ipPermissions() []aws.ec2.securitygroup.ippermission
   // IP permissions (egress) for the security group
   ipPermissionsEgress() []aws.ec2.securitygroup.ippermission
+  // Whether any egress rule permits outbound traffic to the internet (0.0.0.0/0 or ::/0)
+  allowsUnrestrictedEgress() bool
   // Region associated with the security group
   region string
   // Whether the security group is attached to Amazon Elastic Compute Cloud
