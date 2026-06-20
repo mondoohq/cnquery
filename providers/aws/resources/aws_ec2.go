@@ -3858,36 +3858,14 @@ func (a *mqlAwsEc2Securitygroup) instances() ([]any, error) {
 }
 
 // securityGroupsAllowPublicIngress reports whether any of the given security
-// groups permits inbound traffic from 0.0.0.0/0 or ::/0. It is shared by the
-// resource-level internetReachable fields that gate on network reachability.
+// groups permits inbound traffic from 0.0.0.0/0 or ::/0. It shares the traversal
+// with openIngressRulesFromSecurityGroups so the two cannot diverge.
 func securityGroupsAllowPublicIngress(sgs *plugin.TValue[[]any]) (bool, error) {
-	if sgs.Error != nil {
-		return false, sgs.Error
+	rules, err := openIngressRulesFromSecurityGroups(sgs)
+	if err != nil {
+		return false, err
 	}
-	for _, s := range sgs.Data {
-		sg, ok := s.(*mqlAwsEc2Securitygroup)
-		if !ok {
-			continue
-		}
-		perms := sg.GetIpPermissions()
-		if perms.Error != nil {
-			return false, perms.Error
-		}
-		for _, p := range perms.Data {
-			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
-			if !ok {
-				continue
-			}
-			public := perm.GetIncludesPublicSource()
-			if public.Error != nil {
-				return false, public.Error
-			}
-			if public.Data {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
+	return len(rules) > 0, nil
 }
 
 // subnet returns the subnet of the instance's primary network interface, which

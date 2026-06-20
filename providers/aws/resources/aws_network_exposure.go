@@ -67,25 +67,37 @@ func buildNetworkExposure(runtime *plugin.Runtime, id string, publiclyAccessible
 }
 
 func (a *mqlAwsRdsDbinstance) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
 	publiclyAccessible := a.GetPubliclyAccessible()
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, a.Arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsDocumentdbInstance) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
 	publiclyAccessible := a.GetPubliclyAccessible()
 	if publiclyAccessible.Error != nil {
 		return nil, publiclyAccessible.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, a.Arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", publiclyAccessible.Data, a.GetSecurityGroups())
 }
 
 func (a *mqlAwsElbLoadbalancer) exposure() (*mqlAwsNetworkExposure, error) {
+	arn := a.GetArn()
+	if arn.Error != nil {
+		return nil, arn.Error
+	}
 	scheme := a.GetScheme()
 	if scheme.Error != nil {
 		return nil, scheme.Error
 	}
-	return buildNetworkExposure(a.MqlRuntime, a.Arn.Data+"/exposure", scheme.Data == "internet-facing", a.GetSecurityGroups())
+	return buildNetworkExposure(a.MqlRuntime, arn.Data+"/exposure", scheme.Data == "internet-facing", a.GetSecurityGroups())
 }
