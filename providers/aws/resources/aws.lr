@@ -15853,8 +15853,12 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   inPublicSubnet() bool
   // Whether the instance is directly reachable from the internet
   //
-  // True when the instance has a public IP, sits in a public subnet (its subnet's route table has an internet gateway route), and an attached security group permits inbound traffic from 0.0.0.0/0 or ::/0. Exposure through an internet-facing load balancer is a separate path — query `loadBalancers` and their `scheme` for that.
+  // True when the instance has a public IP, sits in a public subnet (its subnet's route table has an internet gateway route), and an attached security group permits inbound traffic from 0.0.0.0/0 or ::/0. A convenience shortcut for `exposure.internetReachable`.
   internetReachable() bool
+  // Internet-exposure analysis for the instance
+  //
+  // Breaks down whether and how the instance is reachable from the internet — the contributing signals, the security-group ingress rules that open it, and any internet-facing load balancers that front it.
+  exposure() aws.ec2.instance.exposure
   // CloudFormation stack that manages this instance, if any
   cloudformationStack() aws.cloudformation.stack
   // Infrastructure-management system that owns this instance
@@ -16112,6 +16116,29 @@ private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted"
   throughput int
   // Whether to delete on instance termination
   deleteOnTermination bool
+}
+
+// EC2 instance internet-exposure breakdown
+//
+// Explains the internetReachable verdict for an instance: the public-IP,
+// public-subnet, security-group, and network-ACL signals that combine into it,
+// plus the specific security-group ingress rules that open the instance and any
+// internet-facing load balancers that route to it.
+private aws.ec2.instance.exposure @defaults("internetReachable hasPublicIp inPublicSubnet") {
+  // Whether the instance is directly reachable from the internet (public IP and public subnet and an open security group and a permitting network ACL)
+  internetReachable bool
+  // Whether the instance has a public IP address
+  hasPublicIp bool
+  // Whether the instance's subnet routes to an internet gateway
+  inPublicSubnet bool
+  // Whether an attached security group permits inbound traffic from the internet
+  securityGroupAllowsIngress bool
+  // Whether the subnet's network ACL permits inbound traffic from the internet
+  networkAclAllowsIngress bool
+  // Security group ingress rules that open the instance to the internet, including their port ranges
+  openIngressRules []aws.ec2.securitygroup.ippermission
+  // Internet-facing load balancers that route traffic to this instance
+  internetFacingLoadBalancers []aws.elb.loadbalancer
 }
 
 // Amazon EC2 instance block device

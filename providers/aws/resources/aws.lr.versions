@@ -2976,6 +2976,14 @@ aws.ec2.instance.disableApiTermination 11.15.2
 aws.ec2.instance.ebsOptimized 11.15.2
 aws.ec2.instance.enaSupported 11.15.2
 aws.ec2.instance.enclaveEnabled 11.15.2
+aws.ec2.instance.exposure 13.37.1
+aws.ec2.instance.exposure.hasPublicIp 13.37.1
+aws.ec2.instance.exposure.inPublicSubnet 13.37.1
+aws.ec2.instance.exposure.internetFacingLoadBalancers 13.37.1
+aws.ec2.instance.exposure.internetReachable 13.37.1
+aws.ec2.instance.exposure.networkAclAllowsIngress 13.37.1
+aws.ec2.instance.exposure.openIngressRules 13.37.1
+aws.ec2.instance.exposure.securityGroupAllowsIngress 13.37.1
 aws.ec2.instance.hibernationConfigured 11.15.3
 aws.ec2.instance.httpEndpoint 11.15.2
 aws.ec2.instance.httpPutResponseHopLimit 11.15.2

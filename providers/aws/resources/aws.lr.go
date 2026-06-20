@@ -604,6 +604,7 @@ const (
 	ResourceAwsEc2ImageLaunchPermission                                         string = "aws.ec2.image.launchPermission"
 	ResourceAwsEc2ImageBlockDeviceMapping                                       string = "aws.ec2.image.blockDeviceMapping"
 	ResourceAwsEc2ImageEbsBlockDevice                                           string = "aws.ec2.image.ebsBlockDevice"
+	ResourceAwsEc2InstanceExposure                                              string = "aws.ec2.instance.exposure"
 	ResourceAwsEc2InstanceDevice                                                string = "aws.ec2.instance.device"
 	ResourceAwsEc2InstancePlacement                                             string = "aws.ec2.instance.placement"
 	ResourceAwsEc2Securitygroup                                                 string = "aws.ec2.securitygroup"
@@ -3274,6 +3275,10 @@ func init() {
 		"aws.ec2.image.ebsBlockDevice": {
 			// to override args, implement: initAwsEc2ImageEbsBlockDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2ImageEbsBlockDevice,
+		},
+		"aws.ec2.instance.exposure": {
+			// to override args, implement: initAwsEc2InstanceExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2InstanceExposure,
 		},
 		"aws.ec2.instance.device": {
 			// to override args, implement: initAwsEc2InstanceDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -22178,6 +22183,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetExposure()).ToDataRes(types.Resource("aws.ec2.instance.exposure"))
+	},
 	"aws.ec2.instance.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
 	},
@@ -22492,6 +22500,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.inPublicSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetInPublicSubnet()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.networkAclAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetNetworkAclAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.instance.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup.ippermission")))
+	},
+	"aws.ec2.instance.exposure.internetFacingLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceExposure).GetInternetFacingLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
 	"aws.ec2.instance.device.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
@@ -58472,6 +58501,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Instance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Exposure, ok = plugin.RawToTValue[*mqlAwsEc2InstanceExposure](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
 		return
@@ -58918,6 +58951,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ImageEbsBlockDevice).DeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.instance.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.inPublicSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).InPublicSubnet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.networkAclAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).NetworkAclAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.exposure.internetFacingLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceExposure).InternetFacingLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -140675,6 +140740,7 @@ type mqlAwsEc2Instance struct {
 	LoadBalancers           plugin.TValue[[]any]
 	InPublicSubnet          plugin.TValue[bool]
 	InternetReachable       plugin.TValue[bool]
+	Exposure                plugin.TValue[*mqlAwsEc2InstanceExposure]
 	CloudformationStack     plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy               plugin.TValue[string]
 	DisableApiTermination   plugin.TValue[bool]
@@ -141011,6 +141077,22 @@ func (c *mqlAwsEc2Instance) GetInPublicSubnet() *plugin.TValue[bool] {
 func (c *mqlAwsEc2Instance) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
+	})
+}
+
+func (c *mqlAwsEc2Instance) GetExposure() *plugin.TValue[*mqlAwsEc2InstanceExposure] {
+	return plugin.GetOrCompute[*mqlAwsEc2InstanceExposure](&c.Exposure, func() (*mqlAwsEc2InstanceExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2InstanceExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -141934,6 +142016,80 @@ func (c *mqlAwsEc2ImageEbsBlockDevice) GetThroughput() *plugin.TValue[int64] {
 
 func (c *mqlAwsEc2ImageEbsBlockDevice) GetDeleteOnTermination() *plugin.TValue[bool] {
 	return &c.DeleteOnTermination
+}
+
+// mqlAwsEc2InstanceExposure for the aws.ec2.instance.exposure resource
+type mqlAwsEc2InstanceExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2InstanceExposureInternal it will be used here
+	InternetReachable           plugin.TValue[bool]
+	HasPublicIp                 plugin.TValue[bool]
+	InPublicSubnet              plugin.TValue[bool]
+	SecurityGroupAllowsIngress  plugin.TValue[bool]
+	NetworkAclAllowsIngress     plugin.TValue[bool]
+	OpenIngressRules            plugin.TValue[[]any]
+	InternetFacingLoadBalancers plugin.TValue[[]any]
+}
+
+// createAwsEc2InstanceExposure creates a new instance of this resource
+func createAwsEc2InstanceExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2InstanceExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.instance.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2InstanceExposure) MqlName() string {
+	return "aws.ec2.instance.exposure"
+}
+
+func (c *mqlAwsEc2InstanceExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetInPublicSubnet() *plugin.TValue[bool] {
+	return &c.InPublicSubnet
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetNetworkAclAllowsIngress() *plugin.TValue[bool] {
+	return &c.NetworkAclAllowsIngress
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
+}
+
+func (c *mqlAwsEc2InstanceExposure) GetInternetFacingLoadBalancers() *plugin.TValue[[]any] {
+	return &c.InternetFacingLoadBalancers
 }
 
 // mqlAwsEc2InstanceDevice for the aws.ec2.instance.device resource

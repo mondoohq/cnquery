@@ -3925,35 +3925,27 @@ func (i *mqlAwsEc2Instance) inPublicSubnet() (bool, error) {
 // group permits inbound traffic from 0.0.0.0/0 or ::/0, and the subnet's network
 // ACL does not block that traffic. Load-balancer-fronted exposure is a separate
 // path (see loadBalancers).
+// internetReachable is a convenience shortcut for exposure.internetReachable.
 func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
-	publicIp := i.GetPublicIp()
-	if publicIp.Error != nil {
-		return false, publicIp.Error
+	exposure := i.GetExposure()
+	if exposure.Error != nil {
+		return false, exposure.Error
 	}
-	if publicIp.Data == "" {
+	if exposure.Data == nil {
 		return false, nil
 	}
+	reachable := exposure.Data.GetInternetReachable()
+	if reachable.Error != nil {
+		return false, reachable.Error
+	}
+	return reachable.Data, nil
+}
 
-	public := i.GetInPublicSubnet()
-	if public.Error != nil {
-		return false, public.Error
-	}
-	if !public.Data {
-		return false, nil
-	}
-
-	sgOpen, err := securityGroupsAllowPublicIngress(i.GetSecurityGroups())
-	if err != nil {
-		return false, err
-	}
-	if !sgOpen {
-		return false, nil
-	}
-
-	// The subnet's network ACL must also permit inbound traffic from the
-	// internet — a restrictive NACL blocks reachability even when the security
-	// group is open. Missing subnet/NACL data does not override the positive
-	// public-IP + public-subnet + open-SG signal.
+// instanceSubnetNaclAllowsPublicIngress reports whether the instance's subnet
+// network ACL permits inbound internet traffic. Missing subnet/NACL data does
+// not block (it defaults to allow), so it never overrides the other positive
+// signals on its own.
+func instanceSubnetNaclAllowsPublicIngress(i *mqlAwsEc2Instance) (bool, error) {
 	subnet := i.GetSubnet()
 	if subnet.Error != nil {
 		return false, subnet.Error
@@ -3969,6 +3961,111 @@ func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
 		return true, nil
 	}
 	return networkAclAllowsPublicIngress(nacl.Data)
+}
+
+// instanceOpenIngressRules returns the security group ingress rules across the
+// instance's attached security groups that permit inbound traffic from the
+// internet.
+func instanceOpenIngressRules(i *mqlAwsEc2Instance) ([]any, error) {
+	rules := []any{}
+	sgs := i.GetSecurityGroups()
+	if sgs.Error != nil {
+		return nil, sgs.Error
+	}
+	for _, s := range sgs.Data {
+		sg, ok := s.(*mqlAwsEc2Securitygroup)
+		if !ok {
+			continue
+		}
+		perms := sg.GetIpPermissions()
+		if perms.Error != nil {
+			return nil, perms.Error
+		}
+		for _, p := range perms.Data {
+			perm, ok := p.(*mqlAwsEc2SecuritygroupIppermission)
+			if !ok {
+				continue
+			}
+			public := perm.GetIncludesPublicSource()
+			if public.Error != nil {
+				return nil, public.Error
+			}
+			if public.Data {
+				rules = append(rules, perm)
+			}
+		}
+	}
+	return rules, nil
+}
+
+// instanceInternetFacingLoadBalancers returns the load balancers that route to
+// the instance and have an internet-facing scheme.
+func instanceInternetFacingLoadBalancers(i *mqlAwsEc2Instance) ([]any, error) {
+	res := []any{}
+	lbs := i.GetLoadBalancers()
+	if lbs.Error != nil {
+		return nil, lbs.Error
+	}
+	for _, l := range lbs.Data {
+		lb, ok := l.(*mqlAwsElbLoadbalancer)
+		if !ok {
+			continue
+		}
+		scheme := lb.GetScheme()
+		if scheme.Error != nil {
+			return nil, scheme.Error
+		}
+		if scheme.Data == "internet-facing" {
+			res = append(res, lb)
+		}
+	}
+	return res, nil
+}
+
+func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
+	publicIp := i.GetPublicIp()
+	if publicIp.Error != nil {
+		return nil, publicIp.Error
+	}
+	hasPublicIp := publicIp.Data != ""
+
+	inPublicSubnet := i.GetInPublicSubnet()
+	if inPublicSubnet.Error != nil {
+		return nil, inPublicSubnet.Error
+	}
+
+	openRules, err := instanceOpenIngressRules(i)
+	if err != nil {
+		return nil, err
+	}
+	sgAllows := len(openRules) > 0
+
+	naclAllows, err := instanceSubnetNaclAllowsPublicIngress(i)
+	if err != nil {
+		return nil, err
+	}
+
+	internetFacingLBs, err := instanceInternetFacingLoadBalancers(i)
+	if err != nil {
+		return nil, err
+	}
+
+	internetReachable := hasPublicIp && inPublicSubnet.Data && sgAllows && naclAllows
+
+	res, err := CreateResource(i.MqlRuntime, "aws.ec2.instance.exposure", map[string]*llx.RawData{
+		"__id":                        llx.StringData(i.Arn.Data + "/exposure"),
+		"internetReachable":           llx.BoolData(internetReachable),
+		"hasPublicIp":                 llx.BoolData(hasPublicIp),
+		"inPublicSubnet":              llx.BoolData(inPublicSubnet.Data),
+		"securityGroupAllowsIngress":  llx.BoolData(sgAllows),
+		"networkAclAllowsIngress":     llx.BoolData(naclAllows),
+		"openIngressRules":            llx.ArrayData(openRules, types.Resource("aws.ec2.securitygroup.ippermission")),
+		"internetFacingLoadBalancers": llx.ArrayData(internetFacingLBs, types.Resource("aws.elb.loadbalancer")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2InstanceExposure), nil
 }
 
 // naclIngressRule is the minimal shape of a network ACL inbound rule needed to
