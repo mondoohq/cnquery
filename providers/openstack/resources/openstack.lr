@@ -55,6 +55,10 @@ openstack {
   identityEndpoints() []openstack.identity.endpoint
   // Keystone regions
   regions() []openstack.identity.region
+  // Keystone role assignments showing which principals hold which roles at which scope (typically admin-only)
+  roleAssignments() []openstack.identity.roleAssignment
+  // Keystone role inference rules mapping a prior role to an implied role (typically admin-only)
+  roleInferences() []openstack.identity.roleInference
 
   // Nova compute servers (instances) in the scoped project
   servers() []openstack.compute.server
@@ -197,6 +201,12 @@ private openstack.user @defaults("id name enabled") {
   passwordExpiresAt time
   // Whether the user is exempt from account lockout after repeated failed authentication attempts (Keystone option `ignore_lockout_failure_attempts`)
   ignoreLockoutFailureAttempts bool
+  // Whether multi-factor authentication is required for this user (Keystone option `multi_factor_auth_enabled`)
+  multiFactorAuthEnabled bool
+  // Multi-factor authentication rule sets (Keystone option `multi_factor_auth_rules`)
+  //
+  // Each entry is a list of auth-method names that together satisfy MFA, for example `["password", "totp"]`. Empty when no rules are configured.
+  multiFactorAuthRules []dict
   // Domain this user belongs to
   domain() openstack.domain
   // Default project the user is scoped to when authenticating without an explicit scope; null when unset
@@ -256,6 +266,50 @@ private openstack.group @defaults("id name") {
   roles() []openstack.role
 }
 
+// OpenStack Keystone role assignment
+//
+// Flattened record of a single role granted to a single principal (a user or a
+// group) at a single scope (a project or a domain). Enumerating these is how a
+// policy audits who holds privileged roles such as `admin` across the whole
+// cloud, instead of walking each user or group. System-scoped grants and the
+// inherited flag are not reported, because the underlying client does not
+// return them.
+private openstack.identity.roleAssignment @defaults("roleName actorType scopeType") {
+  // Whether the role is granted to a user or a group ("user" or "group")
+  actorType string
+  // Whether the grant applies to a project or a domain ("project" or "domain")
+  scopeType string
+  // Name of the granted role; empty when the role catalog is not readable
+  roleName string
+  // Role granted by this assignment
+  role() openstack.role
+  // User the role is granted to; null when the grant is to a group
+  user() openstack.user
+  // Group the role is granted to; null when the grant is to a user
+  group() openstack.group
+  // Project the grant applies to; null when the grant is domain-scoped
+  scopeProject() openstack.project
+  // Domain the grant applies to; null when the grant is project-scoped
+  scopeDomain() openstack.domain
+}
+
+// OpenStack Keystone role inference rule
+//
+// Mapping from a prior role to an implied role: any principal holding the prior
+// role automatically gains the implied role. Chains of these rules are a
+// privilege-escalation path to audit, since a low-privilege role can imply a
+// more powerful one.
+private openstack.identity.roleInference @defaults("priorRoleName impliedRoleName") {
+  // Name of the prior role that is held directly; empty when the role catalog is not readable
+  priorRoleName string
+  // Name of the implied role conferred by holding the prior role; empty when the role catalog is not readable
+  impliedRoleName string
+  // Prior role held directly
+  priorRole() openstack.role
+  // Implied role conferred by the prior role
+  impliedRole() openstack.role
+}
+
 // OpenStack Nova compute server (instance)
 private openstack.compute.server @defaults("id name status") {
   init(id? string)
@@ -285,6 +339,16 @@ private openstack.compute.server @defaults("id name status") {
   availabilityZone string
   // Disk config (AUTO or MANUAL)
   diskConfig string
+  // Whether the server was booted with a config drive carrying instance metadata and cloud-init data (Nova `config_drive`)
+  configDrive bool
+  // Hypervisor host the server runs on (Nova `OS-EXT-SRV-ATTR:host`); admin-only, empty for non-admin tokens
+  host string
+  // Hypervisor hostname the server runs on (Nova `OS-EXT-SRV-ATTR:hypervisor_hostname`); admin-only, empty for non-admin tokens
+  hypervisorHostname string
+  // Cloud-init user data the server was booted with (Nova `OS-EXT-SRV-ATTR:user_data`)
+  //
+  // Admin-only and empty for non-admin tokens. The raw value may embed bootstrap secrets, so auditing it for hardcoded credentials is a common use.
+  userData string
   // Per-network address allocations (network name -> [{addr, version, type, macAddr}])
   addresses dict
   // Free-form server metadata
@@ -404,6 +468,8 @@ private openstack.network @defaults("id name status") {
   providerPhysicalNetwork string
   // Provider segmentation ID (VLAN tag, VXLAN VNI, ...)
   providerSegmentationId int
+  // Default port-security setting applied to ports created on this network; false disables anti-spoofing and security groups for those ports by default
+  portSecurityEnabled bool
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -412,6 +478,8 @@ private openstack.network @defaults("id name status") {
   subnets() []openstack.subnet
   // Project that owns this network
   project() openstack.project
+  // QoS policy attached to this network; null when none is attached
+  qosPolicy() openstack.qosPolicy
 }
 
 // OpenStack Neutron subnet
@@ -476,6 +544,8 @@ private openstack.router @defaults("id name status") {
   tags []string
   // External gateway info ({network_id, enable_snat, external_fixed_ips})
   externalGatewayInfo dict
+  // Whether source NAT is enabled on the external gateway; false when no external gateway is set
+  enableSnat bool
   // Static routes ([{destination, nexthop}])
   routes []dict
   // Creation timestamp
@@ -505,6 +575,10 @@ private openstack.port @defaults("id name status macAddress") {
   deviceOwner string
   // Fixed IPs ([{subnet_id, ip_address}])
   fixedIps []dict
+  // Allowed address pairs ([{ip_address, mac_address}])
+  //
+  // Additional IP/MAC pairs the port may send and receive traffic for beyond its fixed IPs. Anti-spoofing does not apply to these, so a wide entry (for example a large CIDR) can bypass it.
+  allowedAddressPairs []dict
   // Whether port security is enabled
   portSecurityEnabled bool
   // Whether port uplink status propagation is enabled
@@ -724,6 +798,10 @@ private openstack.image @defaults("id name status visibility") {
   minRamMegabytes int
   // Image data checksum (MD5; deprecated by Glance but still populated on most clouds)
   checksum string
+  // Secure-hash algorithm used for the image integrity digest (for example `sha512`); empty when the cloud does not report one
+  osHashAlgo string
+  // Image integrity digest in the algorithm named by osHashAlgo; empty when the cloud does not report one
+  osHashValue string
   // Image data size in bytes
   sizeBytes int
   // Virtual disk size in bytes
@@ -746,6 +824,10 @@ private openstack.image @defaults("id name status visibility") {
   owner() openstack.project
   // Sharing members for this image (projects the image has been shared with). Returns empty for community/public images and for non-shared private images.
   members() []openstack.image.member
+  // Kernel image this image boots with (AMI-style `kernel_id` property); null when not set
+  kernel() openstack.image
+  // Ramdisk image this image boots with (AMI-style `ramdisk_id` property); null when not set
+  ramdisk() openstack.image
 }
 
 // OpenStack Barbican secret. The `payload` (raw secret material) is intentionally not exposed.
@@ -1413,8 +1495,10 @@ private openstack.dns.zone @defaults("id name type ttl status") {
   type string
   // Master nameservers for SECONDARY zones (empty for PRIMARY zones)
   masters []string
-  // Project that owns this zone
-  projectId string
+  // Owning project ID
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -1435,7 +1519,9 @@ private openstack.dns.recordset @defaults("id name type ttl") {
   // Recordset name (FQDN, e.g. "www.example.com.")
   name string
   // Owning zone ID
-  zoneId string
+  //
+  // Deprecated in favor of zone.
+  zoneId @maturity("deprecated") string
   // Record type (A, AAAA, MX, CNAME, TXT, SRV, NS, PTR, SPF, SSHFP, CAA, ...)
   type string
   // TTL in seconds; null when the zone default applies
@@ -1576,8 +1662,10 @@ private openstack.blockstorage.backup @defaults("id name status size createdAt")
   availabilityZone string
   // Free-form backup metadata (requires Cinder microversion >= 3.43)
   metadata map[string]string
-  // Project that owns this backup (admin-only attribute; empty for non-admin tokens)
-  projectId string
+  // Owning project ID (admin-only attribute; empty for non-admin tokens)
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Timestamp when the data on the source volume was first saved (matches the source's data, not the backup's creation)
   dataTimestamp time
   // Backup creation timestamp
@@ -1807,8 +1895,12 @@ private openstack.compute.aggregate @defaults("id name availabilityZone hostCoun
 //
 // Reports both the configured maximum (`max*`) and the current usage (`*Used`) for each tracked resource. Limits without a usage counter are admin-set caps only.
 private openstack.compute.limits @defaults("maxTotalInstances totalInstancesUsed maxTotalCores totalCoresUsed maxTotalRAMSize totalRAMUsed") {
+  // Project ID the limits report applies to
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Project the limits report applies to
-  projectId string
+  project() openstack.project
   // Maximum number of vCPU cores
   maxTotalCores int
   // vCPU cores currently in use
@@ -1884,8 +1976,12 @@ private openstack.placement.resourceProvider @defaults("id name generation") {
 
 // OpenStack Cinder block-storage quota for the scoped project (configured maximums; usage values are not exposed by the default API path).
 private openstack.blockstorage.quotaSet @defaults("volumes snapshots gigabytes backups") {
+  // Project ID the quota applies to
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Project the quota applies to
-  projectId string
+  project() openstack.project
   // Maximum number of volumes
   volumes int
   // Maximum number of snapshots
@@ -1904,8 +2000,12 @@ private openstack.blockstorage.quotaSet @defaults("volumes snapshots gigabytes b
 
 // OpenStack Neutron network-service quota for the scoped project (configured maximums; usage values are not exposed by the default API path).
 private openstack.network.quotaSet @defaults("network subnet port floatingIp router") {
+  // Project ID the quota applies to
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Project the quota applies to
-  projectId string
+  project() openstack.project
   // Maximum number of networks
   network int
   // Maximum number of subnets
@@ -1974,8 +2074,10 @@ private openstack.sharedfilesystem.share @defaults("id name shareProto status si
   snapshotSupport bool
   // Snapshot ID the share was created from; empty when not created from a snapshot
   snapshotId string
-  // Project that owns the share
-  projectId string
+  // Owning project ID
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // User-defined metadata
   metadata map[string]string
   // Creation timestamp
@@ -2051,8 +2153,10 @@ private openstack.sharedfilesystem.securityService @defaults("id name type statu
   user string
   // Directory server hostname or IP address
   server string
-  // Project that owns the security service
-  projectId string
+  // Owning project ID
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2087,8 +2191,10 @@ private openstack.sharedfilesystem.shareNetwork @defaults("id name networkType c
   cidr string
   // IP version (4 or 6)
   ipVersion int
-  // Project that owns the share network
-  projectId string
+  // Owning project ID
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2142,8 +2248,10 @@ private openstack.containerinfra.cluster @defaults("id name status nodeCount mas
   discoveryUrl string
   // Labels (key/value tuning and feature flags) applied to the cluster
   labels map[string]string
-  // Project that owns the cluster
-  projectId string
+  // Owning project ID
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp

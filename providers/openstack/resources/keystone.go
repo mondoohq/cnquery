@@ -196,6 +196,8 @@ func newMqlOpenstackUser(runtime *plugin.Runtime, u *users.User) (*mqlOpenstackU
 		"description":                  llx.StringData(u.Description),
 		"passwordExpiresAt":            llx.TimeDataPtr(timePtr(u.PasswordExpiresAt)),
 		"ignoreLockoutFailureAttempts": llx.BoolData(userOptionBool(u.Options, "ignore_lockout_failure_attempts")),
+		"multiFactorAuthEnabled":       llx.BoolData(userOptionBool(u.Options, "multi_factor_auth_enabled")),
+		"multiFactorAuthRules":         dictSliceData(userMFARules(u.Options)),
 	})
 	if err != nil {
 		return nil, err
@@ -730,4 +732,253 @@ func (r *mqlOpenstackApplicationCredential) project() (*mqlOpenstackProject, err
 		return nil, err
 	}
 	return res.(*mqlOpenstackProject), nil
+}
+
+// ---- openstack.identity.roleAssignment ----
+
+type mqlOpenstackIdentityRoleAssignmentInternal struct {
+	cacheRoleID         string
+	cacheUserID         string
+	cacheGroupID        string
+	cacheScopeProjectID string
+	cacheScopeDomainID  string
+}
+
+// roleNamesByID builds a role-ID to role-name lookup from the role catalog. It
+// is the fallback used to populate a role assignment's `roleName` when the
+// cloud does not inline names in the assignment listing. Returns nil (an empty
+// lookup) when the catalog is not readable.
+func roleNamesByID(runtime *plugin.Runtime) map[string]string {
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil
+	}
+	list := root.(*mqlOpenstack).GetRoles()
+	if list.Error != nil {
+		return nil
+	}
+	byID := make(map[string]string, len(list.Data))
+	for _, raw := range list.Data {
+		role := raw.(*mqlOpenstackRole)
+		byID[role.Id.Data] = role.Name.Data
+	}
+	return byID
+}
+
+func (o *mqlOpenstack) roleAssignments() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	includeNames := true
+	pages, err := roles.ListAssignments(client, roles.ListAssignmentsOpts{
+		IncludeNames: &includeNames,
+	}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := roles.ExtractRoleAssignments(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	byID := roleNamesByID(o.MqlRuntime)
+
+	out := make([]any, 0, len(items))
+	for _, a := range items {
+		actorType := "user"
+		actorID := a.User.ID
+		if a.Group.ID != "" {
+			actorType = "group"
+			actorID = a.Group.ID
+		}
+		scopeType := ""
+		scopeID := ""
+		if a.Scope.Project.ID != "" {
+			scopeType = "project"
+			scopeID = a.Scope.Project.ID
+		} else if a.Scope.Domain.ID != "" {
+			scopeType = "domain"
+			scopeID = a.Scope.Domain.ID
+		}
+		roleName := a.Role.Name
+		if roleName == "" {
+			roleName = byID[a.Role.ID]
+		}
+		res, err := CreateResource(o.MqlRuntime, "openstack.identity.roleAssignment", map[string]*llx.RawData{
+			"__id":      llx.StringData("openstack.identity.roleAssignment/" + a.Role.ID + "/" + actorType + "/" + actorID + "/" + scopeType + "/" + scopeID),
+			"actorType": llx.StringData(actorType),
+			"scopeType": llx.StringData(scopeType),
+			"roleName":  llx.StringData(roleName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlRA := res.(*mqlOpenstackIdentityRoleAssignment)
+		mqlRA.cacheRoleID = a.Role.ID
+		mqlRA.cacheUserID = a.User.ID
+		mqlRA.cacheGroupID = a.Group.ID
+		mqlRA.cacheScopeProjectID = a.Scope.Project.ID
+		mqlRA.cacheScopeDomainID = a.Scope.Domain.ID
+		out = append(out, mqlRA)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackIdentityRoleAssignment) role() (*mqlOpenstackRole, error) {
+	if r.cacheRoleID == "" {
+		r.Role.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheRoleID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackRole), nil
+}
+
+func (r *mqlOpenstackIdentityRoleAssignment) user() (*mqlOpenstackUser, error) {
+	if r.cacheUserID == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackUser), nil
+}
+
+func (r *mqlOpenstackIdentityRoleAssignment) group() (*mqlOpenstackGroup, error) {
+	if r.cacheGroupID == "" {
+		r.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.group", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheGroupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackGroup), nil
+}
+
+func (r *mqlOpenstackIdentityRoleAssignment) scopeProject() (*mqlOpenstackProject, error) {
+	if r.cacheScopeProjectID == "" {
+		r.ScopeProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheScopeProjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
+}
+
+func (r *mqlOpenstackIdentityRoleAssignment) scopeDomain() (*mqlOpenstackDomain, error) {
+	if r.cacheScopeDomainID == "" {
+		r.ScopeDomain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.domain", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheScopeDomainID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackDomain), nil
+}
+
+// ---- openstack.identity.roleInference ----
+
+type mqlOpenstackIdentityRoleInferenceInternal struct {
+	cachePriorRoleID   string
+	cacheImpliedRoleID string
+}
+
+func (o *mqlOpenstack) roleInferences() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	result, err := roles.ListRoleInferenceRules(ctx(), client).Extract()
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	out := make([]any, 0, len(result.RoleInferenceRuleList))
+	for _, rule := range result.RoleInferenceRuleList {
+		prior := rule.PriorRole
+		for _, implied := range rule.ImpliedRoles {
+			res, err := CreateResource(o.MqlRuntime, "openstack.identity.roleInference", map[string]*llx.RawData{
+				"__id":            llx.StringData("openstack.identity.roleInference/" + prior.ID + "/" + implied.ID),
+				"priorRoleName":   llx.StringData(prior.Name),
+				"impliedRoleName": llx.StringData(implied.Name),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlRI := res.(*mqlOpenstackIdentityRoleInference)
+			mqlRI.cachePriorRoleID = prior.ID
+			mqlRI.cacheImpliedRoleID = implied.ID
+			out = append(out, mqlRI)
+		}
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackIdentityRoleInference) priorRole() (*mqlOpenstackRole, error) {
+	if r.cachePriorRoleID == "" {
+		r.PriorRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
+		"id": llx.StringData(r.cachePriorRoleID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackRole), nil
+}
+
+func (r *mqlOpenstackIdentityRoleInference) impliedRole() (*mqlOpenstackRole, error) {
+	if r.cacheImpliedRoleID == "" {
+		r.ImpliedRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheImpliedRoleID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackRole), nil
+}
+
+// userMFARules extracts the Keystone `multi_factor_auth_rules` option (a list
+// of auth-method sets) from a user's options. Returns an empty slice when no
+// rules are configured.
+func userMFARules(options map[string]any) []any {
+	if options == nil {
+		return []any{}
+	}
+	raw, ok := options["multi_factor_auth_rules"].([]any)
+	if !ok {
+		return []any{}
+	}
+	return raw
 }

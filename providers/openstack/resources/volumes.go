@@ -756,3 +756,7 @@ func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet
 	}
 	return res.(*mqlOpenstackBlockstorageQuotaSet), nil
 }
+
+func (r *mqlOpenstackBlockstorageQuotaSet) project() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+}

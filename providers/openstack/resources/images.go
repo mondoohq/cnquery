@@ -77,6 +77,8 @@ func (o *mqlOpenstack) images() ([]any, error) {
 			"minDiskGigabytes": llx.IntData(int64(img.MinDiskGigabytes)),
 			"minRamMegabytes":  llx.IntData(int64(img.MinRAMMegabytes)),
 			"checksum":         llx.StringData(img.Checksum),
+			"osHashAlgo":       llx.StringData(imagePropertyString(img.Properties, "os_hash_algo")),
+			"osHashValue":      llx.StringData(imagePropertyString(img.Properties, "os_hash_value")),
 			"sizeBytes":        llx.IntData(img.SizeBytes),
 			"virtualSize":      llx.IntData(img.VirtualSize),
 			"tags":             stringSliceData(img.Tags),
@@ -117,6 +119,50 @@ func (r *mqlOpenstackImage) imageSignature() (string, error) {
 		return "", props.Error
 	}
 	return imageSignatureFromProperties(props.Data), nil
+}
+
+// imagePropertyString returns the string value of a Glance image property,
+// or an empty string when the property is absent, null, or not a string.
+func imagePropertyString(properties any, key string) string {
+	props, ok := properties.(map[string]any)
+	if !ok {
+		return ""
+	}
+	v, ok := props[key].(string)
+	if !ok {
+		return ""
+	}
+	return v
+}
+
+// resolveImageRef resolves an image referenced by a `kernel_id` / `ramdisk_id`
+// property to an openstack.image resource, marking the field null when the
+// property is absent.
+func (r *mqlOpenstackImage) resolveImageRef(key string, field *plugin.TValue[*mqlOpenstackImage]) (*mqlOpenstackImage, error) {
+	props := r.GetProperties()
+	if props.Error != nil {
+		return nil, props.Error
+	}
+	id := imagePropertyString(props.Data, key)
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.image", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackImage), nil
+}
+
+func (r *mqlOpenstackImage) kernel() (*mqlOpenstackImage, error) {
+	return r.resolveImageRef("kernel_id", &r.Kernel)
+}
+
+func (r *mqlOpenstackImage) ramdisk() (*mqlOpenstackImage, error) {
+	return r.resolveImageRef("ramdisk_id", &r.Ramdisk)
 }
 
 func (r *mqlOpenstackImage) owner() (*mqlOpenstackProject, error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/provider"
+	qospolicies "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/qos/policies"
 	neutronquotas "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/quotas"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
@@ -25,17 +26,22 @@ import (
 // ---- openstack.network ----
 
 type mqlOpenstackNetworkInternal struct {
-	cacheSubnetIDs []string
-	cacheProjectID string
+	cacheSubnetIDs   []string
+	cacheProjectID   string
+	cacheQosPolicyID string
 }
 
 // networkExt is the union of the base network with provider:*, router:external,
-// and mtu extensions so a single list call returns all the fields we expose.
+// mtu, port-security, and qos extensions so a single list call returns all the
+// fields we expose. Clouds without a given extension simply leave its fields at
+// their zero value.
 type networkExt struct {
 	networks.Network
 	provider.NetworkProviderExt
 	external.NetworkExternalExt
 	mtu.NetworkMTUExt
+	portsecurity.PortSecurityExt
+	qospolicies.QoSPolicyExt
 }
 
 // portExt is the base port plus the port-security extension; it lets one list
@@ -109,6 +115,7 @@ func (o *mqlOpenstack) networks() ([]any, error) {
 			"providerNetworkType":     llx.StringData(n.NetworkType),
 			"providerPhysicalNetwork": llx.StringData(n.PhysicalNetwork),
 			"providerSegmentationId":  llx.IntData(parseSegmentationID(n.SegmentationID)),
+			"portSecurityEnabled":     llx.BoolData(n.PortSecurityEnabled),
 			"createdAt":               llx.TimeDataPtr(timePtr(n.CreatedAt)),
 			"updatedAt":               llx.TimeDataPtr(timePtr(n.UpdatedAt)),
 		})
@@ -118,6 +125,7 @@ func (o *mqlOpenstack) networks() ([]any, error) {
 		mqlNetwork := res.(*mqlOpenstackNetwork)
 		mqlNetwork.cacheSubnetIDs = n.Subnets
 		mqlNetwork.cacheProjectID = n.ProjectID
+		mqlNetwork.cacheQosPolicyID = n.QoSPolicyID
 		out = append(out, mqlNetwork)
 	}
 	return out, nil
@@ -145,6 +153,20 @@ func (r *mqlOpenstackNetwork) subnets() ([]any, error) {
 
 func (r *mqlOpenstackNetwork) project() (*mqlOpenstackProject, error) {
 	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
+}
+
+func (r *mqlOpenstackNetwork) qosPolicy() (*mqlOpenstackQosPolicy, error) {
+	if r.cacheQosPolicyID == "" {
+		r.QosPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.qosPolicy", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheQosPolicyID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackQosPolicy), nil
 }
 
 // parseSegmentationID coerces the provider:segmentation_id field into int64.
@@ -367,6 +389,7 @@ func (o *mqlOpenstack) routers() ([]any, error) {
 			"description":         llx.StringData(rt.Description),
 			"tags":                stringSliceData(rt.Tags),
 			"externalGatewayInfo": llx.DictData(gatewayInfoToDict(rt.GatewayInfo)),
+			"enableSnat":          llx.BoolData(rt.GatewayInfo.EnableSNAT != nil && *rt.GatewayInfo.EnableSNAT),
 			"routes":              dictSliceData(routesToDict(rt.Routes)),
 			"createdAt":           llx.TimeDataPtr(timePtr(rt.CreatedAt)),
 			"updatedAt":           llx.TimeDataPtr(timePtr(rt.UpdatedAt)),
@@ -502,6 +525,7 @@ func (o *mqlOpenstack) ports() ([]any, error) {
 			"macAddress":            llx.StringData(p.MACAddress),
 			"deviceOwner":           llx.StringData(p.DeviceOwner),
 			"fixedIps":              dictSliceData(fixedIPsToDict(p.FixedIPs)),
+			"allowedAddressPairs":   dictSliceData(allowedAddressPairsToDict(p.AllowedAddressPairs)),
 			"portSecurityEnabled":   llx.BoolData(p.PortSecurityEnabled),
 			"propagateUplinkStatus": llx.BoolData(p.PropagateUplinkStatus),
 			"description":           llx.StringData(p.Description),
@@ -563,6 +587,17 @@ func fixedIPsToDict(in []ports.IP) []any {
 		out = append(out, map[string]any{
 			"subnet_id":  ip.SubnetID,
 			"ip_address": ip.IPAddress,
+		})
+	}
+	return out
+}
+
+func allowedAddressPairsToDict(in []ports.AddressPair) []any {
+	out := make([]any, 0, len(in))
+	for _, pair := range in {
+		out = append(out, map[string]any{
+			"ip_address":  pair.IPAddress,
+			"mac_address": pair.MACAddress,
 		})
 	}
 	return out
@@ -1066,4 +1101,8 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 		return nil, err
 	}
 	return res.(*mqlOpenstackNetworkQuotaSet), nil
+}
+
+func (r *mqlOpenstackNetworkQuotaSet) project() (*mqlOpenstackProject, error) {
+	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
 }
