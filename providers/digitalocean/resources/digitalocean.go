@@ -76,6 +76,16 @@ func toIntSlice(s []int) []interface{} {
 	return r
 }
 
+// formatDoTime renders a time as RFC3339 for storage in a dict, returning ""
+// for the zero value so timestamps don't surface a misleading
+// "0001-01-01T00:00:00Z" when the API omitted them.
+func formatDoTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
 // helper to parse DigitalOcean time strings
 func parseDoTime(s string) *time.Time {
 	if s == "" {
@@ -92,6 +102,14 @@ type mqlDigitaloceanDropletInternal struct {
 	// image caches the godo image embedded in the droplet list response so the
 	// typed baseImage() accessor can build a digitalocean.image without a refetch.
 	image *godo.Image
+	// cacheVolumeIDs holds the block-storage volume IDs attached to the droplet so
+	// the typed volumes() accessor can resolve them without a refetch.
+	cacheVolumeIDs []string
+	// cacheSnapshotIDs and cacheBackupIDs hold the image IDs of the droplet's
+	// snapshots and automated backups so the typed snapshots()/backups()
+	// accessors can resolve them without a refetch.
+	cacheSnapshotIDs []int
+	cacheBackupIDs   []int
 }
 
 func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
@@ -163,32 +181,58 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				sizeSlug = d.Size.Slug
 			}
 
+			kernelDict := map[string]interface{}{}
+			if d.Kernel != nil {
+				kernelDict["id"] = float64(d.Kernel.ID)
+				kernelDict["name"] = d.Kernel.Name
+				kernelDict["version"] = d.Kernel.Version
+			}
+
+			var nextBackupStart, nextBackupEnd *time.Time
+			if d.NextBackupWindow != nil {
+				if d.NextBackupWindow.Start != nil {
+					nextBackupStart = &d.NextBackupWindow.Start.Time
+				}
+				if d.NextBackupWindow.End != nil {
+					nextBackupEnd = &d.NextBackupWindow.End.Time
+				}
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.droplet", map[string]*llx.RawData{
-				"id":                llx.IntData(int64(d.ID)),
-				"name":              llx.StringData(d.Name),
-				"memory":            llx.IntData(int64(d.Memory)),
-				"vcpus":             llx.IntData(int64(d.Vcpus)),
-				"disk":              llx.IntData(int64(d.Disk)),
-				"region":            llx.StringData(regionSlug),
-				"size":              llx.StringData(sizeSlug),
-				"status":            llx.StringData(d.Status),
-				"locked":            llx.BoolData(d.Locked),
-				"createdAt":         llx.TimeDataPtr(parseDoTime(d.Created)),
-				"publicIpv4":        llx.StringData(publicIPv4),
-				"privateIpv4":       llx.StringData(privateIPv4),
-				"publicIpv6":        llx.StringData(publicIPv6),
-				"tags":              llx.ArrayData(tags, "\x02"),
-				"vpcUuid":           llx.StringData(d.VPCUUID),
-				"features":          llx.ArrayData(features, "\x02"),
-				"backupsEnabled":    llx.BoolData(backupsEnabled),
-				"monitoringEnabled": llx.BoolData(monitoringEnabled),
-				"image":             llx.DictData(imageDict),
+				"id":                    llx.IntData(int64(d.ID)),
+				"name":                  llx.StringData(d.Name),
+				"memory":                llx.IntData(int64(d.Memory)),
+				"vcpus":                 llx.IntData(int64(d.Vcpus)),
+				"disk":                  llx.IntData(int64(d.Disk)),
+				"region":                llx.StringData(regionSlug),
+				"size":                  llx.StringData(sizeSlug),
+				"status":                llx.StringData(d.Status),
+				"locked":                llx.BoolData(d.Locked),
+				"createdAt":             llx.TimeDataPtr(parseDoTime(d.Created)),
+				"publicIpv4":            llx.StringData(publicIPv4),
+				"privateIpv4":           llx.StringData(privateIPv4),
+				"publicIpv6":            llx.StringData(publicIPv6),
+				"tags":                  llx.ArrayData(tags, "\x02"),
+				"vpcUuid":               llx.StringData(d.VPCUUID),
+				"features":              llx.ArrayData(features, "\x02"),
+				"backupsEnabled":        llx.BoolData(backupsEnabled),
+				"monitoringEnabled":     llx.BoolData(monitoringEnabled),
+				"image":                 llx.DictData(imageDict),
+				"kernel":                llx.DictData(kernelDict),
+				"nextBackupWindowStart": llx.TimeDataPtr(nextBackupStart),
+				"nextBackupWindowEnd":   llx.TimeDataPtr(nextBackupEnd),
 			})
 			if err != nil {
 				return nil, err
 			}
-			// Cache the droplet's image for the typed baseImage() accessor.
-			res.(*mqlDigitaloceanDroplet).image = d.Image
+			// Cache the godo image for the typed baseImage() accessor, plus the
+			// volume / snapshot / backup image IDs for the typed volumes(),
+			// snapshots(), and backups() accessors — all without a refetch.
+			mqlDroplet := res.(*mqlDigitaloceanDroplet)
+			mqlDroplet.image = d.Image
+			mqlDroplet.cacheVolumeIDs = d.VolumeIDs
+			mqlDroplet.cacheSnapshotIDs = d.SnapshotIDs
+			mqlDroplet.cacheBackupIDs = d.BackupIDs
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -452,6 +496,7 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			res.(*mqlDigitaloceanLoadBalancer).cacheTargetLoadBalancerIDs = lb.TargetLoadBalancerIDs
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -464,6 +509,13 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		opt.Page = page + 1
 	}
 	return all, nil
+}
+
+type mqlDigitaloceanLoadBalancerInternal struct {
+	// cacheTargetLoadBalancerIDs holds the regional load balancer IDs a global
+	// load balancer fans out to, so targetLoadBalancers() can resolve them
+	// without a refetch.
+	cacheTargetLoadBalancerIDs []string
 }
 
 func (r *mqlDigitaloceanLoadBalancer) id() (string, error) {

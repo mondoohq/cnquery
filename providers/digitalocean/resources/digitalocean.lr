@@ -177,6 +177,18 @@ digitalocean.droplet @defaults("id name status") {
   firewalls() []digitalocean.firewall
   // True when no firewall is attached to the droplet (by id or tag); does not check inbound rule restrictiveness — for that, query `firewalls`
   missingFirewall() bool
+  // Block storage volumes attached to the droplet
+  volumes() []digitalocean.volume
+  // Linux kernel the droplet boots (id, name, version); null on droplets using the current external boot loader
+  kernel dict
+  // Start of the next scheduled automated-backup window; null when backups are disabled
+  nextBackupWindowStart time
+  // End of the next scheduled automated-backup window; null when backups are disabled
+  nextBackupWindowEnd time
+  // Automated backup images retained for this droplet
+  backups() []digitalocean.image
+  // Snapshots taken of this droplet
+  snapshots() []digitalocean.snapshot
 }
 
 // DigitalOcean firewall
@@ -363,6 +375,24 @@ digitalocean.database @defaults("id name engine") {
   backupCount() int
   // PEM-encoded X.509 CA certificate that signs the cluster's TLS endpoint (clients use this to verify connections)
   caCertificate() string
+  // Whether storage autoscaling is enabled for the cluster
+  storageAutoscaleEnabled bool
+  // Disk-usage percentage that triggers an autoscale storage increase; null when autoscaling is disabled
+  storageAutoscaleThresholdPercent int
+  // Storage increment added on each autoscale event, in gibibytes; null when autoscaling is disabled
+  storageAutoscaleIncrementGib int
+  // DNS CNAMEs that resolve to the cluster's connection endpoints
+  serviceCnames []string
+  // Prometheus-compatible metrics endpoints exposed by the cluster (each dict: host, port)
+  metricsEndpoints []dict
+  // Standby (failover) public connection host; empty when the cluster has no standby node
+  standbyConnectionHost string
+  // Standby (failover) public connection port; zero when the cluster has no standby node
+  standbyConnectionPort int
+  // Standby (failover) private connection host reachable within the VPC; empty when the cluster has no standby node
+  standbyPrivateConnectionHost string
+  // Standby (failover) private connection port reachable within the VPC; zero when the cluster has no standby node
+  standbyPrivateConnectionPort int
 }
 
 // DigitalOcean database automated backup
@@ -621,6 +651,36 @@ digitalocean.loadBalancer @defaults("id name status") {
   stickySessions dict
   // Disable automatic Let's Encrypt DNS records
   disableLetsEncryptDnsRecords bool
+  // Public IPv6 address
+  ipv6 string
+  // Load balancer type (REGIONAL, REGIONAL_NETWORK, GLOBAL)
+  type string
+  // Size slug (lb-small, lb-medium, lb-large); empty when sized by node count
+  sizeSlug string
+  // Number of nodes the load balancer is sized to; zero when sized by slug
+  sizeUnit int
+  // ID of the project the load balancer belongs to
+  projectId string
+  // Project the load balancer belongs to
+  project() digitalocean.project
+  // Network visibility (EXTERNAL for internet-facing, INTERNAL for VPC-only)
+  network string
+  // IP stack served (IPV4 or DUALSTACK)
+  networkStack string
+  // Minimum TLS cipher policy applied to HTTPS and TLS listeners (DEFAULT or STRONG)
+  tlsCipherPolicy string
+  // Idle timeout for HTTP connections, in seconds; null when using the platform default
+  httpIdleTimeoutSeconds int
+  // Source addresses (CIDRs or IPs) explicitly allowed by the load balancer firewall
+  firewallAllow []string
+  // Source addresses (CIDRs or IPs) explicitly denied by the load balancer firewall
+  firewallDeny []string
+  // Managed domains served by a global load balancer (each dict: name, isManaged, certificateId, status)
+  domains []dict
+  // Global load balancer routing settings (each dict: targetProtocol, targetPort, cdnEnabled)
+  glbSettings dict
+  // Regional load balancers this global load balancer distributes traffic to
+  targetLoadBalancers() []digitalocean.loadBalancer
 }
 
 // DigitalOcean VPC
@@ -721,6 +781,30 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   tags []string
   // Maintenance policy
   maintenancePolicy dict
+  // Public IPv4 address of the cluster's API server
+  ipv4 string
+  // Public endpoint URL of the cluster's API server
+  endpoint string
+  // Status detail message (e.g., the reason for a degraded or errored state)
+  statusMessage string
+  // Whether the integrated DigitalOcean Container Registry is enabled for the cluster
+  registryEnabled bool
+  // Whether the control-plane firewall restricting API-server access is enabled; null when unset
+  controlPlaneFirewallEnabled bool
+  // Source addresses (CIDRs) allowed to reach the API server when the control-plane firewall is enabled
+  controlPlaneFirewallAllowedAddresses []string
+  // Whether the DigitalOcean routing agent add-on is enabled; null when unset
+  routingAgentEnabled bool
+  // Whether the AMD GPU device plugin add-on is enabled; null when unset
+  amdGpuDevicePluginEnabled bool
+  // Whether the AMD GPU device metrics exporter add-on is enabled; null when unset
+  amdGpuDeviceMetricsExporterPluginEnabled bool
+  // Whether the NVIDIA GPU device plugin add-on is enabled; null when unset
+  nvidiaGpuDevicePluginEnabled bool
+  // Whether the RDMA shared device plugin add-on is enabled; null when unset
+  rdmaSharedDevicePluginEnabled bool
+  // Whether the CoreDNS cluster-proportional autoscaler add-on is enabled; null when unset
+  corednsAutoscalerEnabled bool
   // Node pools
   nodePools() []digitalocean.kubernetes.nodePool
 }
@@ -751,6 +835,32 @@ private digitalocean.kubernetes.nodePool @defaults("id name size") {
   labels dict
   // Kubernetes taints applied to nodes in this pool (each dict: key, value, effect)
   taints []dict
+  // Worker nodes currently in this pool
+  nodes() []digitalocean.kubernetes.node
+}
+
+// DigitalOcean Kubernetes node
+//
+// Examine a single worker node in a DOKS node pool. Surfaces the node
+// name, lifecycle status and the status detail message, the backing
+// droplet the node runs on, and the creation and update timestamps. Use
+// the status to spot nodes stuck provisioning or draining, and follow
+// `droplet` to inspect the node's size, networking, and firewall posture.
+private digitalocean.kubernetes.node @defaults("id name status") {
+  // Node ID
+  id string
+  // Node name
+  name string
+  // Status (provisioning, running, draining, deleting)
+  status string
+  // Status detail message (e.g., the reason a node is stuck provisioning)
+  statusMessage string
+  // Droplet backing this node; null before the node's droplet is provisioned
+  droplet() digitalocean.droplet
+  // Time the resource was created
+  createdAt time
+  // Updated at
+  updatedAt time
 }
 
 // DigitalOcean project
@@ -992,6 +1102,22 @@ digitalocean.app @defaults("id name") {
   activeDeploymentStatus string
   // App spec
   spec dict
+  // Region slug the app runs in
+  region string
+  // App tier slug (e.g., basic, professional)
+  tierSlug string
+  // Default DigitalOcean-assigned ingress hostname (under ondigitalocean.app)
+  defaultIngress string
+  // Primary custom domain serving the app; empty when none is configured
+  liveDomain string
+  // ID of the project the app belongs to
+  projectId string
+  // Project the app belongs to
+  project() digitalocean.project
+  // ID of the currently active deployment; empty when the app has never deployed
+  activeDeploymentId string
+  // Custom domains attached to the app (each dict: id, name, phase, certificateExpiresAt)
+  domains []dict
 }
 
 // DigitalOcean alert policy

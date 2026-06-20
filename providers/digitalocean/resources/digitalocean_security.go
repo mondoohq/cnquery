@@ -50,6 +50,18 @@ type mqlDigitaloceanInternal struct {
 	loadBalancerIndex     map[string]*mqlDigitaloceanLoadBalancer
 	loadBalancerIndexErr  error
 
+	volumeIndexOnce sync.Once
+	volumeIndex     map[string]*mqlDigitaloceanVolume
+	volumeIndexErr  error
+
+	snapshotIndexOnce sync.Once
+	snapshotIndex     map[string]*mqlDigitaloceanSnapshot
+	snapshotIndexErr  error
+
+	imageIndexOnce sync.Once
+	imageIndex     map[int64]*mqlDigitaloceanImage
+	imageIndexErr  error
+
 	firewallIndexOnce sync.Once
 	firewallByDroplet map[int64][]*mqlDigitaloceanFirewall
 	firewallByTag     map[string][]*mqlDigitaloceanFirewall
@@ -249,6 +261,99 @@ func (r *mqlDigitalocean) loadBalancerByUIDs(uids []any) ([]any, error) {
 		}
 		if lb, ok := r.loadBalancerIndex[s]; ok {
 			out = append(out, lb)
+		}
+	}
+	return out, nil
+}
+
+func (r *mqlDigitalocean) volumesByIDs(ids []string) ([]any, error) {
+	if len(ids) == 0 {
+		return []any{}, nil
+	}
+	r.volumeIndexOnce.Do(func() {
+		volumes := r.GetVolumes()
+		if volumes.Error != nil {
+			r.volumeIndexErr = volumes.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanVolume, len(volumes.Data))
+		for _, v := range volumes.Data {
+			mv := v.(*mqlDigitaloceanVolume)
+			idx[mv.Id.Data] = mv
+		}
+		r.volumeIndex = idx
+	})
+	if r.volumeIndexErr != nil {
+		return nil, r.volumeIndexErr
+	}
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if v, ok := r.volumeIndex[id]; ok {
+			out = append(out, v)
+		}
+	}
+	return out, nil
+}
+
+// snapshotsByIDs resolves snapshot string IDs to digitalocean.snapshot
+// resources from the account-wide snapshot list, skipping any not found.
+// A droplet snapshot's string id equals the image id it was saved as.
+func (r *mqlDigitalocean) snapshotsByIDs(ids []string) ([]any, error) {
+	if len(ids) == 0 {
+		return []any{}, nil
+	}
+	r.snapshotIndexOnce.Do(func() {
+		snapshots := r.GetSnapshots()
+		if snapshots.Error != nil {
+			r.snapshotIndexErr = snapshots.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanSnapshot, len(snapshots.Data))
+		for _, s := range snapshots.Data {
+			ms := s.(*mqlDigitaloceanSnapshot)
+			idx[ms.Id.Data] = ms
+		}
+		r.snapshotIndex = idx
+	})
+	if r.snapshotIndexErr != nil {
+		return nil, r.snapshotIndexErr
+	}
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if s, ok := r.snapshotIndex[id]; ok {
+			out = append(out, s)
+		}
+	}
+	return out, nil
+}
+
+// imagesByIDs resolves image IDs to digitalocean.image resources from the
+// account's own image list (which includes backups and snapshots saved as
+// images), skipping any not found.
+func (r *mqlDigitalocean) imagesByIDs(ids []int) ([]any, error) {
+	if len(ids) == 0 {
+		return []any{}, nil
+	}
+	r.imageIndexOnce.Do(func() {
+		images := r.GetImages()
+		if images.Error != nil {
+			r.imageIndexErr = images.Error
+			return
+		}
+		idx := make(map[int64]*mqlDigitaloceanImage, len(images.Data))
+		for _, img := range images.Data {
+			mi := img.(*mqlDigitaloceanImage)
+			idx[mi.Id.Data] = mi
+		}
+		r.imageIndex = idx
+	})
+	if r.imageIndexErr != nil {
+		return nil, r.imageIndexErr
+	}
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if img, ok := r.imageIndex[int64(id)]; ok {
+			out = append(out, img)
 		}
 	}
 	return out, nil

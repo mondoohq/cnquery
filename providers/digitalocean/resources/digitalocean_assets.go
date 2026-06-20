@@ -57,26 +57,75 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		dbNames[i] = n
 	}
 
+	standbyHost := ""
+	standbyPort := int64(0)
+	if db.StandbyConnection != nil {
+		standbyHost = db.StandbyConnection.Host
+		standbyPort = int64(db.StandbyConnection.Port)
+	}
+	standbyPrivHost := ""
+	standbyPrivPort := int64(0)
+	if db.StandbyPrivateConnection != nil {
+		standbyPrivHost = db.StandbyPrivateConnection.Host
+		standbyPrivPort = int64(db.StandbyPrivateConnection.Port)
+	}
+
+	storageAutoscaleEnabled := false
+	var storageThreshold, storageIncrement *int64
+	if db.StorageAutoscale != nil {
+		storageAutoscaleEnabled = db.StorageAutoscale.Enabled
+		if db.StorageAutoscale.ThresholdPercent != nil {
+			v := int64(*db.StorageAutoscale.ThresholdPercent)
+			storageThreshold = &v
+		}
+		if db.StorageAutoscale.IncrementGib != nil {
+			v := int64(*db.StorageAutoscale.IncrementGib)
+			storageIncrement = &v
+		}
+	}
+
+	var serviceCnames []interface{}
+	if db.DOSettings != nil {
+		serviceCnames = toStringSlice(db.DOSettings.ServiceCnames)
+	}
+
+	metricsEndpoints := make([]interface{}, len(db.MetricsEndpoints))
+	for i, ep := range db.MetricsEndpoints {
+		metricsEndpoints[i] = map[string]interface{}{
+			"host": ep.Host,
+			"port": float64(ep.Port),
+		}
+	}
+
 	return map[string]*llx.RawData{
-		"id":                    llx.StringData(db.ID),
-		"name":                  llx.StringData(db.Name),
-		"engine":                llx.StringData(db.EngineSlug),
-		"version":               llx.StringData(db.VersionSlug),
-		"numNodes":              llx.IntData(int64(db.NumNodes)),
-		"size":                  llx.StringData(db.SizeSlug),
-		"region":                llx.StringData(db.RegionSlug),
-		"status":                llx.StringData(db.Status),
-		"storageSizeMib":        llx.IntData(int64(db.StorageSizeMib)),
-		"dbNames":               llx.ArrayData(dbNames, "\x02"),
-		"createdAt":             llx.TimeData(db.CreatedAt),
-		"projectId":             llx.StringData(db.ProjectID),
-		"privateNetworkUuid":    llx.StringData(db.PrivateNetworkUUID),
-		"tags":                  llx.ArrayData(tags, "\x02"),
-		"maintenanceWindow":     llx.DictData(mw),
-		"connectionHost":        llx.StringData(connHost),
-		"connectionPort":        llx.IntData(connPort),
-		"privateConnectionHost": llx.StringData(privConnHost),
-		"privateConnectionPort": llx.IntData(privConnPort),
+		"id":                               llx.StringData(db.ID),
+		"name":                             llx.StringData(db.Name),
+		"engine":                           llx.StringData(db.EngineSlug),
+		"version":                          llx.StringData(db.VersionSlug),
+		"numNodes":                         llx.IntData(int64(db.NumNodes)),
+		"size":                             llx.StringData(db.SizeSlug),
+		"region":                           llx.StringData(db.RegionSlug),
+		"status":                           llx.StringData(db.Status),
+		"storageSizeMib":                   llx.IntData(int64(db.StorageSizeMib)),
+		"dbNames":                          llx.ArrayData(dbNames, "\x02"),
+		"createdAt":                        llx.TimeData(db.CreatedAt),
+		"projectId":                        llx.StringData(db.ProjectID),
+		"privateNetworkUuid":               llx.StringData(db.PrivateNetworkUUID),
+		"tags":                             llx.ArrayData(tags, "\x02"),
+		"maintenanceWindow":                llx.DictData(mw),
+		"connectionHost":                   llx.StringData(connHost),
+		"connectionPort":                   llx.IntData(connPort),
+		"privateConnectionHost":            llx.StringData(privConnHost),
+		"privateConnectionPort":            llx.IntData(privConnPort),
+		"storageAutoscaleEnabled":          llx.BoolData(storageAutoscaleEnabled),
+		"storageAutoscaleThresholdPercent": llx.IntDataPtr(storageThreshold),
+		"storageAutoscaleIncrementGib":     llx.IntDataPtr(storageIncrement),
+		"serviceCnames":                    llx.ArrayData(serviceCnames, "\x02"),
+		"metricsEndpoints":                 llx.ArrayData(metricsEndpoints, "\x13"),
+		"standbyConnectionHost":            llx.StringData(standbyHost),
+		"standbyConnectionPort":            llx.IntData(standbyPort),
+		"standbyPrivateConnectionHost":     llx.StringData(standbyPrivHost),
+		"standbyPrivateConnectionPort":     llx.IntData(standbyPrivPort),
 	}
 }
 
@@ -218,6 +267,37 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		lbRegion = lb.Region.Slug
 	}
 
+	var firewallAllow, firewallDeny []interface{}
+	if lb.Firewall != nil {
+		firewallAllow = toStringSlice(lb.Firewall.Allow)
+		firewallDeny = toStringSlice(lb.Firewall.Deny)
+	}
+
+	domains := make([]interface{}, len(lb.Domains))
+	for i, d := range lb.Domains {
+		domains[i] = map[string]interface{}{
+			"name":          d.Name,
+			"isManaged":     d.IsManaged,
+			"certificateId": d.CertificateID,
+			"status":        d.Status,
+		}
+	}
+
+	glb := map[string]interface{}{}
+	if lb.GLBSettings != nil {
+		glb["targetProtocol"] = lb.GLBSettings.TargetProtocol
+		glb["targetPort"] = float64(lb.GLBSettings.TargetPort)
+		if lb.GLBSettings.CDN != nil {
+			glb["cdnEnabled"] = lb.GLBSettings.CDN.IsEnabled
+		}
+	}
+
+	var httpIdleTimeout *int64
+	if lb.HTTPIdleTimeoutSeconds != nil {
+		v := int64(*lb.HTTPIdleTimeoutSeconds)
+		httpIdleTimeout = &v
+	}
+
 	return map[string]*llx.RawData{
 		"id":                           llx.StringData(lb.ID),
 		"name":                         llx.StringData(lb.Name),
@@ -236,6 +316,19 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		"healthCheck":                  llx.DictData(hc),
 		"stickySessions":               llx.DictData(ss),
 		"disableLetsEncryptDnsRecords": llx.BoolDataPtr(lb.DisableLetsEncryptDNSRecords),
+		"ipv6":                         llx.StringData(lb.IPv6),
+		"type":                         llx.StringData(lb.Type),
+		"sizeSlug":                     llx.StringData(lb.SizeSlug),
+		"sizeUnit":                     llx.IntData(int64(lb.SizeUnit)),
+		"projectId":                    llx.StringData(lb.ProjectID),
+		"network":                      llx.StringData(lb.Network),
+		"networkStack":                 llx.StringData(lb.NetworkStack),
+		"tlsCipherPolicy":              llx.StringData(lb.TLSCipherPolicy),
+		"httpIdleTimeoutSeconds":       llx.IntDataPtr(httpIdleTimeout),
+		"firewallAllow":                llx.ArrayData(firewallAllow, "\x02"),
+		"firewallDeny":                 llx.ArrayData(firewallDeny, "\x02"),
+		"domains":                      llx.ArrayData(domains, "\x13"),
+		"glbSettings":                  llx.DictData(glb),
 	}
 }
 
@@ -269,11 +362,14 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 	if c.MaintenancePolicy != nil {
 		mp["startTime"] = c.MaintenancePolicy.StartTime
 		mp["day"] = float64(c.MaintenancePolicy.Day)
+		mp["duration"] = c.MaintenancePolicy.Duration
 	}
 
 	status := ""
+	statusMessage := ""
 	if c.Status != nil {
 		status = string(c.Status.State)
+		statusMessage = c.Status.Message
 	}
 
 	var ssoEnabled, ssoRequired bool
@@ -285,26 +381,66 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		ssoClientID = c.SSO.ClientID
 	}
 
+	var cpFirewallEnabled *bool
+	var cpFirewallAllowed []interface{}
+	if c.ControlPlaneFirewall != nil {
+		cpFirewallEnabled = c.ControlPlaneFirewall.Enabled
+		cpFirewallAllowed = toStringSlice(c.ControlPlaneFirewall.AllowedAddresses)
+	}
+
+	var routingAgentEnabled, amdGpuEnabled, amdGpuMetricsEnabled *bool
+	var nvidiaGpuEnabled, rdmaEnabled, corednsAutoscalerEnabled *bool
+	if c.RoutingAgent != nil {
+		routingAgentEnabled = c.RoutingAgent.Enabled
+	}
+	if c.AmdGpuDevicePlugin != nil {
+		amdGpuEnabled = c.AmdGpuDevicePlugin.Enabled
+	}
+	if c.AmdGpuDeviceMetricsExporterPlugin != nil {
+		amdGpuMetricsEnabled = c.AmdGpuDeviceMetricsExporterPlugin.Enabled
+	}
+	if c.NvidiaGpuDevicePlugin != nil {
+		nvidiaGpuEnabled = c.NvidiaGpuDevicePlugin.Enabled
+	}
+	if c.RdmaSharedDevicePlugin != nil {
+		rdmaEnabled = c.RdmaSharedDevicePlugin.Enabled
+	}
+	if c.CorednsAutoscaler != nil {
+		corednsAutoscalerEnabled = c.CorednsAutoscaler.Enabled
+	}
+
 	return map[string]*llx.RawData{
-		"id":                llx.StringData(c.ID),
-		"name":              llx.StringData(c.Name),
-		"version":           llx.StringData(c.VersionSlug),
-		"region":            llx.StringData(c.RegionSlug),
-		"status":            llx.StringData(status),
-		"createdAt":         llx.TimeData(c.CreatedAt),
-		"updatedAt":         llx.TimeData(c.UpdatedAt),
-		"clusterSubnet":     llx.StringData(c.ClusterSubnet),
-		"serviceSubnet":     llx.StringData(c.ServiceSubnet),
-		"vpcUuid":           llx.StringData(c.VPCUUID),
-		"autoUpgrade":       llx.BoolData(c.AutoUpgrade),
-		"surgeUpgrade":      llx.BoolData(c.SurgeUpgrade),
-		"ha":                llx.BoolData(c.HA),
-		"ssoEnabled":        llx.BoolData(ssoEnabled),
-		"ssoRequired":       llx.BoolData(ssoRequired),
-		"ssoIssuerUrl":      llx.StringData(ssoIssuerURL),
-		"ssoClientId":       llx.StringData(ssoClientID),
-		"tags":              llx.ArrayData(tags, "\x02"),
-		"maintenancePolicy": llx.DictData(mp),
+		"id":                                   llx.StringData(c.ID),
+		"name":                                 llx.StringData(c.Name),
+		"version":                              llx.StringData(c.VersionSlug),
+		"region":                               llx.StringData(c.RegionSlug),
+		"status":                               llx.StringData(status),
+		"createdAt":                            llx.TimeData(c.CreatedAt),
+		"updatedAt":                            llx.TimeData(c.UpdatedAt),
+		"clusterSubnet":                        llx.StringData(c.ClusterSubnet),
+		"serviceSubnet":                        llx.StringData(c.ServiceSubnet),
+		"vpcUuid":                              llx.StringData(c.VPCUUID),
+		"autoUpgrade":                          llx.BoolData(c.AutoUpgrade),
+		"surgeUpgrade":                         llx.BoolData(c.SurgeUpgrade),
+		"ha":                                   llx.BoolData(c.HA),
+		"ssoEnabled":                           llx.BoolData(ssoEnabled),
+		"ssoRequired":                          llx.BoolData(ssoRequired),
+		"ssoIssuerUrl":                         llx.StringData(ssoIssuerURL),
+		"ssoClientId":                          llx.StringData(ssoClientID),
+		"tags":                                 llx.ArrayData(tags, "\x02"),
+		"maintenancePolicy":                    llx.DictData(mp),
+		"ipv4":                                 llx.StringData(c.IPv4),
+		"endpoint":                             llx.StringData(c.Endpoint),
+		"statusMessage":                        llx.StringData(statusMessage),
+		"registryEnabled":                      llx.BoolData(c.RegistryEnabled),
+		"controlPlaneFirewallEnabled":          llx.BoolDataPtr(cpFirewallEnabled),
+		"controlPlaneFirewallAllowedAddresses": llx.ArrayData(cpFirewallAllowed, "\x02"),
+		"routingAgentEnabled":                  llx.BoolDataPtr(routingAgentEnabled),
+		"amdGpuDevicePluginEnabled":            llx.BoolDataPtr(amdGpuEnabled),
+		"amdGpuDeviceMetricsExporterPluginEnabled": llx.BoolDataPtr(amdGpuMetricsEnabled),
+		"nvidiaGpuDevicePluginEnabled":             llx.BoolDataPtr(nvidiaGpuEnabled),
+		"rdmaSharedDevicePluginEnabled":            llx.BoolDataPtr(rdmaEnabled),
+		"corednsAutoscalerEnabled":                 llx.BoolDataPtr(corednsAutoscalerEnabled),
 	}
 }
 

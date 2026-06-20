@@ -235,6 +235,9 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			// Cache the godo nodes so the typed nodes() accessor can build
+			// digitalocean.kubernetes.node resources without a refetch.
+			res.(*mqlDigitaloceanKubernetesNodePool).cacheNodes = np.Nodes
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -251,6 +254,50 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 
 func (r *mqlDigitaloceanKubernetesNodePool) id() (string, error) {
 	return "digitalocean.kubernetes.nodePool/" + r.ClusterId.Data + "/" + r.Id.Data, nil
+}
+
+type mqlDigitaloceanKubernetesNodePoolInternal struct {
+	// cacheNodes holds the godo nodes embedded in the node-pool list response
+	// so the typed nodes() accessor can build resources without a refetch.
+	cacheNodes []*godo.KubernetesNode
+}
+
+func (r *mqlDigitaloceanKubernetesNodePool) nodes() ([]interface{}, error) {
+	out := make([]interface{}, 0, len(r.cacheNodes))
+	for _, n := range r.cacheNodes {
+		if n == nil {
+			continue
+		}
+		status, statusMessage := "", ""
+		if n.Status != nil {
+			status = n.Status.State
+			statusMessage = n.Status.Message
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.node", map[string]*llx.RawData{
+			"id":            llx.StringData(n.ID),
+			"name":          llx.StringData(n.Name),
+			"status":        llx.StringData(status),
+			"statusMessage": llx.StringData(statusMessage),
+			"createdAt":     llx.TimeData(n.CreatedAt),
+			"updatedAt":     llx.TimeData(n.UpdatedAt),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res.(*mqlDigitaloceanKubernetesNode).cacheDropletID = n.DropletID
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+type mqlDigitaloceanKubernetesNodeInternal struct {
+	// cacheDropletID holds the backing droplet's ID (as the API returns it,
+	// a numeric string) so the typed droplet() accessor can resolve it.
+	cacheDropletID string
+}
+
+func (r *mqlDigitaloceanKubernetesNode) id() (string, error) {
+	return "digitalocean.kubernetes.node/" + r.Id.Data, nil
 }
 
 // --- Container Registry ---
@@ -643,6 +690,30 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				name = app.Spec.Name
 			}
 
+			region := ""
+			if app.Region != nil {
+				region = app.Region.Slug
+			}
+
+			activeDeploymentId := ""
+			if app.ActiveDeployment != nil {
+				activeDeploymentId = app.ActiveDeployment.ID
+			}
+
+			domains := make([]interface{}, len(app.Domains))
+			for i, d := range app.Domains {
+				domainName := ""
+				if d.Spec != nil {
+					domainName = d.Spec.Domain
+				}
+				domains[i] = map[string]interface{}{
+					"id":                   d.ID,
+					"name":                 domainName,
+					"phase":                string(d.Phase),
+					"certificateExpiresAt": formatDoTime(d.CertificateExpiresAt),
+				}
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.app", map[string]*llx.RawData{
 				"id":                     llx.StringData(app.ID),
 				"name":                   llx.StringData(name),
@@ -651,6 +722,13 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				"updatedAt":              llx.TimeData(app.UpdatedAt),
 				"activeDeploymentStatus": llx.StringData(status),
 				"spec":                   llx.DictData(spec),
+				"region":                 llx.StringData(region),
+				"tierSlug":               llx.StringData(app.TierSlug),
+				"defaultIngress":         llx.StringData(app.DefaultIngress),
+				"liveDomain":             llx.StringData(app.LiveDomain),
+				"projectId":              llx.StringData(app.ProjectID),
+				"activeDeploymentId":     llx.StringData(activeDeploymentId),
+				"domains":                llx.ArrayData(domains, "\x13"),
 			})
 			if err != nil {
 				return nil, err
