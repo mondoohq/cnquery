@@ -283,10 +283,12 @@ func loadBalancerArgs(lb *godo.LoadBalancer) map[string]*llx.RawData {
 		}
 	}
 
-	glb := map[string]interface{}{}
+	var glb map[string]interface{}
 	if lb.GLBSettings != nil {
-		glb["targetProtocol"] = lb.GLBSettings.TargetProtocol
-		glb["targetPort"] = float64(lb.GLBSettings.TargetPort)
+		glb = map[string]interface{}{
+			"targetProtocol": lb.GLBSettings.TargetProtocol,
+			"targetPort":     float64(lb.GLBSettings.TargetPort),
+		}
 		if lb.GLBSettings.CDN != nil {
 			glb["cdnEnabled"] = lb.GLBSettings.CDN.IsEnabled
 		}

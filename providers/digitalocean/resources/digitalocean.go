@@ -181,11 +181,13 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				sizeSlug = d.Size.Slug
 			}
 
-			kernelDict := map[string]interface{}{}
+			var kernelDict map[string]interface{}
 			if d.Kernel != nil {
-				kernelDict["id"] = float64(d.Kernel.ID)
-				kernelDict["name"] = d.Kernel.Name
-				kernelDict["version"] = d.Kernel.Version
+				kernelDict = map[string]interface{}{
+					"id":      float64(d.Kernel.ID),
+					"name":    d.Kernel.Name,
+					"version": d.Kernel.Version,
+				}
 			}
 
 			var nextBackupStart, nextBackupEnd *time.Time
