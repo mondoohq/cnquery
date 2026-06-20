@@ -49,7 +49,7 @@ type SmartScreenSettings struct {
 	StoreAppsEnableWebContentEvaluation *int64
 }
 
-// Enabled reports whether a pointer-backed DWORD toggle is present and set to 1.
+// enabledFlag reports whether a pointer-backed DWORD toggle is present and set to 1.
 func enabledFlag(v *int64) bool { return v != nil && *v == 1 }
 
 // ExplorerEnabled reports whether SmartScreen is enabled for Windows/File Explorer.

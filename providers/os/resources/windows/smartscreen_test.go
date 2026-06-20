@@ -54,3 +54,32 @@ func TestParseSmartScreenSettings_ExplicitZero(t *testing.T) {
 	assert.Equal(t, int64(0), *s.EnableSmartScreen)
 	assert.Equal(t, "Warn", s.ShellSmartScreenLevel)
 }
+
+// A surface may be configured while others are not (e.g. Explorer on, Edge off).
+func TestParseSmartScreenSettings_Mixed(t *testing.T) {
+	s, err := ParseSmartScreenSettings([]byte(`{"EnableSmartScreen":1,"ShellSmartScreenLevel":"Block","EdgeSmartScreenEnabled":0}`))
+	require.NoError(t, err)
+	assert.True(t, s.ExplorerEnabled())
+	assert.Equal(t, "Block", s.ShellSmartScreenLevel)
+	assert.False(t, s.EdgeEnabled())
+	// untouched surfaces are unconfigured, not enabled
+	assert.Nil(t, s.StoreAppsEnableWebContentEvaluation)
+	assert.False(t, s.StoreAppsEnabled())
+}
+
+func TestParseSmartScreenSettings_Malformed(t *testing.T) {
+	_, err := ParseSmartScreenSettings([]byte("not json"))
+	require.Error(t, err)
+}
+
+// enabledFlag only treats an explicit 1 as enabled; any other value (including
+// an unexpected non-1 DWORD) is "not enabled".
+func TestSmartScreenEnabledFlag(t *testing.T) {
+	one := int64(1)
+	two := int64(2)
+	zero := int64(0)
+	assert.True(t, enabledFlag(&one))
+	assert.False(t, enabledFlag(&two))
+	assert.False(t, enabledFlag(&zero))
+	assert.False(t, enabledFlag(nil))
+}
