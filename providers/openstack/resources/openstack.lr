@@ -377,6 +377,33 @@ private openstack.compute.server @defaults("id name status") {
   project() openstack.project
   // User that created this server
   user() openstack.user
+  // Neutron ports attached to this server
+  ports() []openstack.port
+  // Floating (public) IPs mapped to this server through its ports; empty when the server has none
+  floatingIps() []openstack.floatingIp
+  // Internet-exposure summary for this server (public reachability plus the security-group rules that open it up)
+  exposure() openstack.compute.server.exposure
+}
+
+// OpenStack Nova compute server internet exposure
+//
+// Summarizes whether a server is reachable from the public internet and, when
+// it is, the security-group rules that open it up. A server is publicly
+// accessible when it has a floating IP or a port on an external network;
+// internetReachable additionally requires a security-group rule permitting
+// ingress from a public source. Inspect openIngressRules for the rules and
+// their port ranges.
+private openstack.compute.server.exposure @defaults("internetReachable publiclyAccessible securityGroupAllowsIngress") {
+  // Whether the server is reachable from the internet (publicly accessible and a security group permits ingress from a public source)
+  internetReachable bool
+  // Whether the server has a public edge: a floating IP, or a port on an external network
+  publiclyAccessible bool
+  // Whether a security group attached to the server permits ingress from a public source
+  securityGroupAllowsIngress bool
+  // Security-group ingress rules that open the server to the internet, including their port ranges
+  openIngressRules []openstack.securityGroup.rule
+  // Floating (public) IPs mapped to the server
+  floatingIps []openstack.floatingIp
 }
 
 // OpenStack Nova flavor (VM size)
@@ -603,6 +630,8 @@ private openstack.port @defaults("id name status macAddress") {
   server() openstack.compute.server
   // Router this port is attached to; null when the port is not a router interface or gateway
   router() openstack.router
+  // Floating (public) IPs bound to this port; empty when none are bound
+  floatingIps() []openstack.floatingIp
 }
 
 // OpenStack Neutron floating IP
@@ -655,6 +684,8 @@ private openstack.securityGroup @defaults("id name") {
   project() openstack.project
   // Embedded rules
   rules []openstack.securityGroup.rule
+  // Whether any ingress rule permits traffic from a public source (a public CIDR or an unscoped any-source rule)
+  allowsPublicIngress() bool
 }
 
 // OpenStack Neutron security group rule
@@ -683,6 +714,10 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   securityGroup() openstack.securityGroup
   // Remote security group the rule matches; null when matched by IP prefix instead
   remoteGroup() openstack.securityGroup
+  // Whether the rule's source reaches the public internet
+  //
+  // True when remoteIpPrefix is a public CIDR (a broad block such as 0.0.0.0/0 or ::/0, excluding private and reserved ranges) or when the rule is unscoped (no remote IP prefix and no remote group), which Neutron treats as any source. Direction-agnostic, so it also classifies egress destinations.
+  includesPublicSource() bool
   // Project that owns this security group rule
   project() openstack.project
 }
@@ -976,6 +1011,28 @@ private openstack.octavia.loadBalancer @defaults("id name provisioningStatus ope
   listeners() []openstack.octavia.listener
   // Pools attached to this load balancer
   pools() []openstack.octavia.pool
+  // Whether every listener uses an encrypted protocol (no plaintext HTTP, TCP, UDP, or SCTP listener)
+  enforcesTls() bool
+  // Internet-exposure summary for this load balancer (public reachability plus the listeners open to the world)
+  exposure() openstack.octavia.loadBalancer.exposure
+}
+
+// OpenStack Octavia load balancer internet exposure
+//
+// Summarizes whether a load balancer is reachable from the public internet and,
+// when it is, the listeners that accept traffic from any source. A load balancer
+// is publicly accessible when its VIP sits on an external network or has a
+// floating IP; internetReachable additionally requires at least one listener
+// open to the world (an empty or public allowedCidrs list).
+private openstack.octavia.loadBalancer.exposure @defaults("internetReachable publiclyAccessible") {
+  // Whether the load balancer is reachable from the internet (publicly accessible and at least one listener is open to the world)
+  internetReachable bool
+  // Whether the VIP has a public edge: it sits on an external network, or a floating IP is mapped to it
+  publiclyAccessible bool
+  // Listeners that accept connections from any source (allowedCidrs is empty or contains a public CIDR)
+  listenersOpenToWorld []openstack.octavia.listener
+  // Floating (public) IPs mapped to the VIP port
+  floatingIps []openstack.floatingIp
 }
 
 // OpenStack Octavia listener
@@ -1037,6 +1094,8 @@ private openstack.octavia.listener @defaults("id name protocol protocolPort prov
   clientCRLContainer() openstack.keymanager.container
   // L7 policies attached to this listener
   l7Policies() []openstack.octavia.l7Policy
+  // Whether the listener accepts connections from any source (allowedCidrs is empty or contains a public CIDR)
+  openToWorld() bool
 }
 
 // OpenStack Octavia backend pool

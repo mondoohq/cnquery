@@ -25,6 +25,7 @@ const (
 	ResourceOpenstackIdentityRoleAssignment          string = "openstack.identity.roleAssignment"
 	ResourceOpenstackIdentityRoleInference           string = "openstack.identity.roleInference"
 	ResourceOpenstackComputeServer                   string = "openstack.compute.server"
+	ResourceOpenstackComputeServerExposure           string = "openstack.compute.server.exposure"
 	ResourceOpenstackComputeFlavor                   string = "openstack.compute.flavor"
 	ResourceOpenstackComputeKeypair                  string = "openstack.compute.keypair"
 	ResourceOpenstackComputeServerGroup              string = "openstack.compute.serverGroup"
@@ -42,6 +43,7 @@ const (
 	ResourceOpenstackKeymanagerContainer             string = "openstack.keymanager.container"
 	ResourceOpenstackKeymanagerOrder                 string = "openstack.keymanager.order"
 	ResourceOpenstackOctaviaLoadBalancer             string = "openstack.octavia.loadBalancer"
+	ResourceOpenstackOctaviaLoadBalancerExposure     string = "openstack.octavia.loadBalancer.exposure"
 	ResourceOpenstackOctaviaListener                 string = "openstack.octavia.listener"
 	ResourceOpenstackOctaviaPool                     string = "openstack.octavia.pool"
 	ResourceOpenstackOctaviaMember                   string = "openstack.octavia.member"
@@ -129,6 +131,10 @@ func init() {
 			Init:   initOpenstackComputeServer,
 			Create: createOpenstackComputeServer,
 		},
+		"openstack.compute.server.exposure": {
+			// to override args, implement: initOpenstackComputeServerExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackComputeServerExposure,
+		},
 		"openstack.compute.flavor": {
 			Init:   initOpenstackComputeFlavor,
 			Create: createOpenstackComputeFlavor,
@@ -196,6 +202,10 @@ func init() {
 		"openstack.octavia.loadBalancer": {
 			Init:   initOpenstackOctaviaLoadBalancer,
 			Create: createOpenstackOctaviaLoadBalancer,
+		},
+		"openstack.octavia.loadBalancer.exposure": {
+			// to override args, implement: initOpenstackOctaviaLoadBalancerExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackOctaviaLoadBalancerExposure,
 		},
 		"openstack.octavia.listener": {
 			Init:   initOpenstackOctaviaListener,
@@ -874,6 +884,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.compute.server.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeServer).GetUser()).ToDataRes(types.Resource("openstack.user"))
 	},
+	"openstack.compute.server.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServer).GetPorts()).ToDataRes(types.Array(types.Resource("openstack.port")))
+	},
+	"openstack.compute.server.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServer).GetFloatingIps()).ToDataRes(types.Array(types.Resource("openstack.floatingIp")))
+	},
+	"openstack.compute.server.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServer).GetExposure()).ToDataRes(types.Resource("openstack.compute.server.exposure"))
+	},
+	"openstack.compute.server.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServerExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"openstack.compute.server.exposure.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServerExposure).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"openstack.compute.server.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServerExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"openstack.compute.server.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServerExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("openstack.securityGroup.rule")))
+	},
+	"openstack.compute.server.exposure.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServerExposure).GetFloatingIps()).ToDataRes(types.Array(types.Resource("openstack.floatingIp")))
+	},
 	"openstack.compute.flavor.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeFlavor).GetId()).ToDataRes(types.String)
 	},
@@ -1159,6 +1193,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.port.router": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackPort).GetRouter()).ToDataRes(types.Resource("openstack.router"))
 	},
+	"openstack.port.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackPort).GetFloatingIps()).ToDataRes(types.Array(types.Resource("openstack.floatingIp")))
+	},
 	"openstack.floatingIp.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackFloatingIp).GetId()).ToDataRes(types.String)
 	},
@@ -1222,6 +1259,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.securityGroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroup).GetRules()).ToDataRes(types.Array(types.Resource("openstack.securityGroup.rule")))
 	},
+	"openstack.securityGroup.allowsPublicIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSecurityGroup).GetAllowsPublicIngress()).ToDataRes(types.Bool)
+	},
 	"openstack.securityGroup.rule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetId()).ToDataRes(types.String)
 	},
@@ -1257,6 +1297,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.securityGroup.rule.remoteGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteGroup()).ToDataRes(types.Resource("openstack.securityGroup"))
+	},
+	"openstack.securityGroup.rule.includesPublicSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSecurityGroupRule).GetIncludesPublicSource()).ToDataRes(types.Bool)
 	},
 	"openstack.securityGroup.rule.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetProject()).ToDataRes(types.Resource("openstack.project"))
@@ -1639,6 +1682,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.octavia.loadBalancer.pools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaLoadBalancer).GetPools()).ToDataRes(types.Array(types.Resource("openstack.octavia.pool")))
 	},
+	"openstack.octavia.loadBalancer.enforcesTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancer).GetEnforcesTls()).ToDataRes(types.Bool)
+	},
+	"openstack.octavia.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancer).GetExposure()).ToDataRes(types.Resource("openstack.octavia.loadBalancer.exposure"))
+	},
+	"openstack.octavia.loadBalancer.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancerExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"openstack.octavia.loadBalancer.exposure.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancerExposure).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"openstack.octavia.loadBalancer.exposure.listenersOpenToWorld": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancerExposure).GetListenersOpenToWorld()).ToDataRes(types.Array(types.Resource("openstack.octavia.listener")))
+	},
+	"openstack.octavia.loadBalancer.exposure.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaLoadBalancerExposure).GetFloatingIps()).ToDataRes(types.Array(types.Resource("openstack.floatingIp")))
+	},
 	"openstack.octavia.listener.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetId()).ToDataRes(types.String)
 	},
@@ -1722,6 +1783,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.octavia.listener.l7Policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaListener).GetL7Policies()).ToDataRes(types.Array(types.Resource("openstack.octavia.l7Policy")))
+	},
+	"openstack.octavia.listener.openToWorld": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackOctaviaListener).GetOpenToWorld()).ToDataRes(types.Bool)
 	},
 	"openstack.octavia.pool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOctaviaPool).GetId()).ToDataRes(types.String)
@@ -4019,6 +4083,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackComputeServer).User, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
 		return
 	},
+	"openstack.compute.server.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServer).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServer).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServer).Exposure, ok = plugin.RawToTValue[*mqlOpenstackComputeServerExposure](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.compute.server.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.exposure.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServerExposure).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"openstack.compute.flavor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackComputeFlavor).__id, ok = v.Value.(string)
 		return
@@ -4427,6 +4527,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackPort).Router, ok = plugin.RawToTValue[*mqlOpenstackRouter](v.Value, v.Error)
 		return
 	},
+	"openstack.port.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackPort).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"openstack.floatingIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackFloatingIp).__id, ok = v.Value.(string)
 		return
@@ -4519,6 +4623,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackSecurityGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"openstack.securityGroup.allowsPublicIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSecurityGroup).AllowsPublicIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"openstack.securityGroup.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackSecurityGroupRule).__id, ok = v.Value.(string)
 		return
@@ -4569,6 +4677,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.securityGroup.rule.remoteGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackSecurityGroupRule).RemoteGroup, ok = plugin.RawToTValue[*mqlOpenstackSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"openstack.securityGroup.rule.includesPublicSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSecurityGroupRule).IncludesPublicSource, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"openstack.securityGroup.rule.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5107,6 +5219,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackOctaviaLoadBalancer).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"openstack.octavia.loadBalancer.enforcesTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancer).EnforcesTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlOpenstackOctaviaLoadBalancerExposure](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancerExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancerExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancerExposure).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure.listenersOpenToWorld": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancerExposure).ListenersOpenToWorld, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.loadBalancer.exposure.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaLoadBalancerExposure).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"openstack.octavia.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaListener).__id, ok = v.Value.(string)
 		return
@@ -5221,6 +5361,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.octavia.listener.l7Policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackOctaviaListener).L7Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.octavia.listener.openToWorld": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackOctaviaListener).OpenToWorld, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"openstack.octavia.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9556,6 +9700,9 @@ type mqlOpenstackComputeServer struct {
 	Volumes            plugin.TValue[[]any]
 	Project            plugin.TValue[*mqlOpenstackProject]
 	User               plugin.TValue[*mqlOpenstackUser]
+	Ports              plugin.TValue[[]any]
+	FloatingIps        plugin.TValue[[]any]
+	Exposure           plugin.TValue[*mqlOpenstackComputeServerExposure]
 }
 
 // createOpenstackComputeServer creates a new instance of this resource
@@ -9801,6 +9948,118 @@ func (c *mqlOpenstackComputeServer) GetUser() *plugin.TValue[*mqlOpenstackUser] 
 
 		return c.user()
 	})
+}
+
+func (c *mqlOpenstackComputeServer) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.compute.server", c.__id, "ports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ports()
+	})
+}
+
+func (c *mqlOpenstackComputeServer) GetFloatingIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FloatingIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.compute.server", c.__id, "floatingIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.floatingIps()
+	})
+}
+
+func (c *mqlOpenstackComputeServer) GetExposure() *plugin.TValue[*mqlOpenstackComputeServerExposure] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeServerExposure](&c.Exposure, func() (*mqlOpenstackComputeServerExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.compute.server", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeServerExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
+}
+
+// mqlOpenstackComputeServerExposure for the openstack.compute.server.exposure resource
+type mqlOpenstackComputeServerExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackComputeServerExposureInternal it will be used here
+	InternetReachable          plugin.TValue[bool]
+	PubliclyAccessible         plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+	FloatingIps                plugin.TValue[[]any]
+}
+
+// createOpenstackComputeServerExposure creates a new instance of this resource
+func createOpenstackComputeServerExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackComputeServerExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.compute.server.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackComputeServerExposure) MqlName() string {
+	return "openstack.compute.server.exposure"
+}
+
+func (c *mqlOpenstackComputeServerExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackComputeServerExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlOpenstackComputeServerExposure) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlOpenstackComputeServerExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlOpenstackComputeServerExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
+}
+
+func (c *mqlOpenstackComputeServerExposure) GetFloatingIps() *plugin.TValue[[]any] {
+	return &c.FloatingIps
 }
 
 // mqlOpenstackComputeFlavor for the openstack.compute.flavor resource
@@ -10613,6 +10872,7 @@ type mqlOpenstackPort struct {
 	Project               plugin.TValue[*mqlOpenstackProject]
 	Server                plugin.TValue[*mqlOpenstackComputeServer]
 	Router                plugin.TValue[*mqlOpenstackRouter]
+	FloatingIps           plugin.TValue[[]any]
 }
 
 // createOpenstackPort creates a new instance of this resource
@@ -10804,6 +11064,22 @@ func (c *mqlOpenstackPort) GetRouter() *plugin.TValue[*mqlOpenstackRouter] {
 	})
 }
 
+func (c *mqlOpenstackPort) GetFloatingIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FloatingIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.port", c.__id, "floatingIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.floatingIps()
+	})
+}
+
 // mqlOpenstackFloatingIp for the openstack.floatingIp resource
 type mqlOpenstackFloatingIp struct {
 	MqlRuntime *plugin.Runtime
@@ -10961,15 +11237,16 @@ type mqlOpenstackSecurityGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOpenstackSecurityGroupInternal
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Stateful    plugin.TValue[bool]
-	Tags        plugin.TValue[[]any]
-	CreatedAt   plugin.TValue[*time.Time]
-	UpdatedAt   plugin.TValue[*time.Time]
-	Project     plugin.TValue[*mqlOpenstackProject]
-	Rules       plugin.TValue[[]any]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Stateful            plugin.TValue[bool]
+	Tags                plugin.TValue[[]any]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Project             plugin.TValue[*mqlOpenstackProject]
+	Rules               plugin.TValue[[]any]
+	AllowsPublicIngress plugin.TValue[bool]
 }
 
 // createOpenstackSecurityGroup creates a new instance of this resource
@@ -11057,24 +11334,31 @@ func (c *mqlOpenstackSecurityGroup) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
+func (c *mqlOpenstackSecurityGroup) GetAllowsPublicIngress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPublicIngress, func() (bool, error) {
+		return c.allowsPublicIngress()
+	})
+}
+
 // mqlOpenstackSecurityGroupRule for the openstack.securityGroup.rule resource
 type mqlOpenstackSecurityGroupRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOpenstackSecurityGroupRuleInternal
-	Id             plugin.TValue[string]
-	Direction      plugin.TValue[string]
-	Ethertype      plugin.TValue[string]
-	Protocol       plugin.TValue[string]
-	PortRangeMin   plugin.TValue[int64]
-	PortRangeMax   plugin.TValue[int64]
-	RemoteIpPrefix plugin.TValue[string]
-	Description    plugin.TValue[string]
-	CreatedAt      plugin.TValue[*time.Time]
-	UpdatedAt      plugin.TValue[*time.Time]
-	SecurityGroup  plugin.TValue[*mqlOpenstackSecurityGroup]
-	RemoteGroup    plugin.TValue[*mqlOpenstackSecurityGroup]
-	Project        plugin.TValue[*mqlOpenstackProject]
+	Id                   plugin.TValue[string]
+	Direction            plugin.TValue[string]
+	Ethertype            plugin.TValue[string]
+	Protocol             plugin.TValue[string]
+	PortRangeMin         plugin.TValue[int64]
+	PortRangeMax         plugin.TValue[int64]
+	RemoteIpPrefix       plugin.TValue[string]
+	Description          plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	SecurityGroup        plugin.TValue[*mqlOpenstackSecurityGroup]
+	RemoteGroup          plugin.TValue[*mqlOpenstackSecurityGroup]
+	IncludesPublicSource plugin.TValue[bool]
+	Project              plugin.TValue[*mqlOpenstackProject]
 }
 
 // createOpenstackSecurityGroupRule creates a new instance of this resource
@@ -11183,6 +11467,12 @@ func (c *mqlOpenstackSecurityGroupRule) GetRemoteGroup() *plugin.TValue[*mqlOpen
 		}
 
 		return c.remoteGroup()
+	})
+}
+
+func (c *mqlOpenstackSecurityGroupRule) GetIncludesPublicSource() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IncludesPublicSource, func() (bool, error) {
+		return c.includesPublicSource()
 	})
 }
 
@@ -12335,6 +12625,8 @@ type mqlOpenstackOctaviaLoadBalancer struct {
 	VipSubnet          plugin.TValue[*mqlOpenstackSubnet]
 	Listeners          plugin.TValue[[]any]
 	Pools              plugin.TValue[[]any]
+	EnforcesTls        plugin.TValue[bool]
+	Exposure           plugin.TValue[*mqlOpenstackOctaviaLoadBalancerExposure]
 }
 
 // createOpenstackOctaviaLoadBalancer creates a new instance of this resource
@@ -12526,6 +12818,87 @@ func (c *mqlOpenstackOctaviaLoadBalancer) GetPools() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlOpenstackOctaviaLoadBalancer) GetEnforcesTls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnforcesTls, func() (bool, error) {
+		return c.enforcesTls()
+	})
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancer) GetExposure() *plugin.TValue[*mqlOpenstackOctaviaLoadBalancerExposure] {
+	return plugin.GetOrCompute[*mqlOpenstackOctaviaLoadBalancerExposure](&c.Exposure, func() (*mqlOpenstackOctaviaLoadBalancerExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.octavia.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackOctaviaLoadBalancerExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
+}
+
+// mqlOpenstackOctaviaLoadBalancerExposure for the openstack.octavia.loadBalancer.exposure resource
+type mqlOpenstackOctaviaLoadBalancerExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackOctaviaLoadBalancerExposureInternal it will be used here
+	InternetReachable    plugin.TValue[bool]
+	PubliclyAccessible   plugin.TValue[bool]
+	ListenersOpenToWorld plugin.TValue[[]any]
+	FloatingIps          plugin.TValue[[]any]
+}
+
+// createOpenstackOctaviaLoadBalancerExposure creates a new instance of this resource
+func createOpenstackOctaviaLoadBalancerExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackOctaviaLoadBalancerExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.octavia.loadBalancer.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) MqlName() string {
+	return "openstack.octavia.loadBalancer.exposure"
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) GetListenersOpenToWorld() *plugin.TValue[[]any] {
+	return &c.ListenersOpenToWorld
+}
+
+func (c *mqlOpenstackOctaviaLoadBalancerExposure) GetFloatingIps() *plugin.TValue[[]any] {
+	return &c.FloatingIps
+}
+
 // mqlOpenstackOctaviaListener for the openstack.octavia.listener resource
 type mqlOpenstackOctaviaListener struct {
 	MqlRuntime *plugin.Runtime
@@ -12559,6 +12932,7 @@ type mqlOpenstackOctaviaListener struct {
 	ClientCATlsContainer  plugin.TValue[*mqlOpenstackKeymanagerContainer]
 	ClientCRLContainer    plugin.TValue[*mqlOpenstackKeymanagerContainer]
 	L7Policies            plugin.TValue[[]any]
+	OpenToWorld           plugin.TValue[bool]
 }
 
 // createOpenstackOctaviaListener creates a new instance of this resource
@@ -12803,6 +13177,12 @@ func (c *mqlOpenstackOctaviaListener) GetL7Policies() *plugin.TValue[[]any] {
 		}
 
 		return c.l7Policies()
+	})
+}
+
+func (c *mqlOpenstackOctaviaListener) GetOpenToWorld() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OpenToWorld, func() (bool, error) {
+		return c.openToWorld()
 	})
 }
 

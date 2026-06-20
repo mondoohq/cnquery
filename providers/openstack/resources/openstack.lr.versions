@@ -221,7 +221,14 @@ openstack.compute.server.availabilityZone 13.0.1
 openstack.compute.server.configDrive 13.4.2
 openstack.compute.server.created 13.0.1
 openstack.compute.server.diskConfig 13.0.1
+openstack.compute.server.exposure 13.4.2
+openstack.compute.server.exposure.floatingIps 13.4.2
+openstack.compute.server.exposure.internetReachable 13.4.2
+openstack.compute.server.exposure.openIngressRules 13.4.2
+openstack.compute.server.exposure.publiclyAccessible 13.4.2
+openstack.compute.server.exposure.securityGroupAllowsIngress 13.4.2
 openstack.compute.server.flavor 13.0.1
+openstack.compute.server.floatingIps 13.4.2
 openstack.compute.server.host 13.4.2
 openstack.compute.server.hostId 13.0.1
 openstack.compute.server.hypervisorHostname 13.4.2
@@ -233,6 +240,7 @@ openstack.compute.server.launchedAt 13.0.1
 openstack.compute.server.locked 13.0.1
 openstack.compute.server.metadata 13.0.1
 openstack.compute.server.name 13.0.1
+openstack.compute.server.ports 13.4.2
 openstack.compute.server.powerState 13.0.1
 openstack.compute.server.project 13.2.1
 openstack.compute.server.securityGroups 13.0.1
@@ -705,6 +713,7 @@ openstack.octavia.listener.insertHeaders 13.0.1
 openstack.octavia.listener.l7Policies 13.0.1
 openstack.octavia.listener.loadBalancer 13.0.1
 openstack.octavia.listener.name 13.0.1
+openstack.octavia.listener.openToWorld 13.4.2
 openstack.octavia.listener.project 13.0.1
 openstack.octavia.listener.protocol 13.0.1
 openstack.octavia.listener.protocolPort 13.0.1
@@ -723,6 +732,12 @@ openstack.octavia.loadBalancer.adminStateUp 13.0.1
 openstack.octavia.loadBalancer.availabilityZone 13.0.1
 openstack.octavia.loadBalancer.createdAt 13.0.1
 openstack.octavia.loadBalancer.description 13.0.1
+openstack.octavia.loadBalancer.enforcesTls 13.4.2
+openstack.octavia.loadBalancer.exposure 13.4.2
+openstack.octavia.loadBalancer.exposure.floatingIps 13.4.2
+openstack.octavia.loadBalancer.exposure.internetReachable 13.4.2
+openstack.octavia.loadBalancer.exposure.listenersOpenToWorld 13.4.2
+openstack.octavia.loadBalancer.exposure.publiclyAccessible 13.4.2
 openstack.octavia.loadBalancer.flavorId 13.0.1
 openstack.octavia.loadBalancer.id 13.0.1
 openstack.octavia.loadBalancer.listeners 13.0.1
@@ -810,6 +825,7 @@ openstack.port.createdAt 13.0.1
 openstack.port.description 13.0.1
 openstack.port.deviceOwner 13.0.1
 openstack.port.fixedIps 13.0.1
+openstack.port.floatingIps 13.4.2
 openstack.port.id 13.0.1
 openstack.port.macAddress 13.0.1
 openstack.port.name 13.0.1
@@ -879,6 +895,7 @@ openstack.secretContainers 13.0.1
 openstack.secretOrders 13.0.1
 openstack.secrets 13.0.1
 openstack.securityGroup 13.0.1
+openstack.securityGroup.allowsPublicIngress 13.4.2
 openstack.securityGroup.createdAt 13.0.1
 openstack.securityGroup.description 13.0.1
 openstack.securityGroup.id 13.0.1
@@ -890,6 +907,7 @@ openstack.securityGroup.rule.description 13.0.1
 openstack.securityGroup.rule.direction 13.0.1
 openstack.securityGroup.rule.ethertype 13.0.1
 openstack.securityGroup.rule.id 13.0.1
+openstack.securityGroup.rule.includesPublicSource 13.4.2
 openstack.securityGroup.rule.portRangeMax 13.0.1
 openstack.securityGroup.rule.portRangeMin 13.0.1
 openstack.securityGroup.rule.project 13.2.1
