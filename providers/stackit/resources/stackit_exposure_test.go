@@ -231,11 +231,12 @@ func TestFlexInstanceReachable(t *testing.T) {
 		acl  []any
 		want bool
 	}{
-		{"empty acl is open", []any{}, true},
+		{"empty acl is not flagged (no public-endpoint signal)", []any{}, false},
 		{"contains default route", []any{"10.0.0.0/8", "0.0.0.0/0"}, true},
 		{"restricted ranges only", []any{"10.0.0.0/8", "203.0.113.0/24"}, false},
 		{"ipv6 default route", []any{"::/0"}, true},
 		{"non-string entries ignored", []any{1, "192.168.0.0/16"}, false},
+		{"non-string entries with default route still open", []any{1, "0.0.0.0/0"}, true},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

@@ -224,16 +224,24 @@ func dbaasInstanceReachable(parameters any) bool {
 
 // flexInstanceReachable reports whether a Flex managed database (Postgres,
 // MongoDB, SQLServer) is reachable from the internet. These services expose
-// their connection allow-list directly as an ACL CIDR list; an empty ACL (no
-// restriction) or one that admits a default route leaves the instance open.
+// their connection allow-list directly as an ACL CIDR list, and the instance is
+// internet-reachable only when that list explicitly admits a default route
+// (0.0.0.0/0 or ::/0).
+//
+// Unlike the DBaaS and load-balancer paths — which gate on an explicit
+// enable_public_access / public-IP signal before consulting the allow-list —
+// the Flex SDK exposes no public-endpoint flag (see postgresflex.Instance,
+// which carries only an ACL). An *empty* ACL is therefore deliberately NOT
+// treated as internet-open here: doing so would report a false positive for a
+// VPC-only instance, or one whose ACL simply has not been populated, that is not
+// actually reachable from the public internet.
 func flexInstanceReachable(acl []any) bool {
-	ranges := make([]string, 0, len(acl))
 	for _, a := range acl {
-		if s, ok := a.(string); ok {
-			ranges = append(ranges, s)
+		if s, ok := a.(string); ok && cidrIsAnyAddress(s) {
+			return true
 		}
 	}
-	return aclAllowsAnyAddress(ranges)
+	return false
 }
 
 // loadBalancerExposure builds the network-exposure breakdown for a legacy
@@ -265,6 +273,11 @@ func (c *mqlStackitLoadBalancer) exposure() (*mqlStackitNetworkExposure, error) 
 
 // exposure builds the network-exposure breakdown for an Application Load
 // Balancer, mirroring the legacy load balancer's access-control model.
+//
+// Note: unlike the legacy load balancer (which surfaces privateNetworkOnly as a
+// top-level field), the ALB carries the flag inside its `options` blob, so it is
+// read via lbPrivateNetworkOnly(opts.Data). If the ALB API ever promotes the
+// flag to a top-level field, switch to that accessor here.
 func (c *mqlStackitAlbLoadBalancer) exposure() (*mqlStackitNetworkExposure, error) {
 	name := c.GetName()
 	if name.Error != nil {

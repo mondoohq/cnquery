@@ -934,9 +934,10 @@ private stackit.postgresFlex.instance @defaults("id name version status") {
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
-  // True when the connection ACL is empty or admits any address (0.0.0.0/0
-  // or ::/0); a managed Flex instance with a public endpoint and such an ACL
-  // is reachable from the internet.
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
   internetReachable() bool
 }
 
@@ -981,9 +982,10 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
-  // True when the connection ACL is empty or admits any address (0.0.0.0/0
-  // or ::/0); a managed Flex instance with a public endpoint and such an ACL
-  // is reachable from the internet.
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
   internetReachable() bool
 }
 
@@ -1028,9 +1030,10 @@ private stackit.sqlServerFlex.instance @defaults("id name version status") {
   options() map[string]string
   // Whether the instance accepts connections from any address
   //
-  // True when the connection ACL is empty or admits any address (0.0.0.0/0
-  // or ::/0); a managed Flex instance with a public endpoint and such an ACL
-  // is reachable from the internet.
+  // True only when the connection ACL explicitly admits a default route
+  // (0.0.0.0/0 or ::/0). An empty ACL is not flagged: the Flex API exposes no
+  // public-endpoint indicator, so an unpopulated ACL cannot be assumed to be
+  // internet-reachable.
   internetReachable() bool
 }
 
