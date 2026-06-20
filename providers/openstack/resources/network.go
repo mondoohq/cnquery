@@ -814,7 +814,17 @@ func (r *mqlOpenstackSecurityGroup) id() (string, error) {
 func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := stringArg(args, "id")
 	if !ok || id == "" {
-		return args, nil, nil
+		// On a discovered openstack-security-group asset the connection is
+		// scoped to a single group; resolve it when the caller passes no id, so
+		// a bare `openstack.securityGroup` query works on that platform. A root
+		// (project/domain/system) scope has no scoped group, so fall back to the
+		// bare empty resource as before.
+		sgID := conn(runtime).SecurityGroupID()
+		if sgID == "" {
+			return args, nil, nil
+		}
+		id = sgID
+		args["id"] = llx.StringData(id)
 	}
 	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
 	if err != nil {
