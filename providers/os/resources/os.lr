@@ -6354,6 +6354,9 @@ windows {
 
   // Registered Windows Task Scheduler tasks
   scheduledTasks() []windows.scheduledTask
+
+  // Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
+  deviceGuard() windows.deviceGuard
 }
 
 // Windows Task Scheduler task
@@ -6976,6 +6979,50 @@ private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
   // Defaults to true (remote shell access is allowed when the policy is not
   // configured).
   allowRemoteShellAccess bool
+}
+
+// Windows Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
+//
+// Examine the Device Guard Group Policy values under HKLM\SOFTWARE\Policies
+// \Microsoft\Windows\DeviceGuard. These configure Virtualization-Based
+// Security (VBS), Hypervisor-Enforced Code Integrity (HVCI / Memory
+// Integrity), Credential Guard, System Guard Secure Launch, and kernel-mode
+// hardware-enforced stack protection. Every field is an int that reads null
+// when the underlying value is absent, so "not configured" is distinguishable
+// from an explicit 0. Read from the Windows registry, so it is available even
+// on connections that cannot run commands.
+private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hypervisorEnforcedCodeIntegrity credentialGuardConfig") {
+  // Whether Virtualization-Based Security is enabled (EnableVirtualizationBasedSecurity)
+  //
+  // 1=enabled, 0=disabled. Null when the value is not configured.
+  virtualizationBasedSecurityEnabled int
+  // Required platform security features for VBS (RequirePlatformSecurityFeatures)
+  //
+  // 1=Secure Boot, 3=Secure Boot and DMA Protection. Null when not configured.
+  requirePlatformSecurityFeatures int
+  // Hypervisor-Enforced Code Integrity / Memory Integrity (HypervisorEnforcedCodeIntegrity)
+  //
+  // 0=disabled, 1=enabled with UEFI lock, 2=enabled without lock. Null when
+  // not configured.
+  hypervisorEnforcedCodeIntegrity int
+  // Whether HVCI requires a Memory Access Table (HVCIMATRequired)
+  //
+  // 1=require MAT, 0=do not require. Null when not configured.
+  hvciMatRequired int
+  // Credential Guard configuration (LsaCfgFlags)
+  //
+  // 0=off, 1=enabled with UEFI lock, 2=enabled without lock. Null when not
+  // configured.
+  credentialGuardConfig int
+  // System Guard Secure Launch configuration (ConfigureSystemGuardLaunch)
+  //
+  // 1=enabled, 0=disabled. Null when not configured.
+  systemGuardLaunch int
+  // Kernel-mode hardware-enforced stack protection (ConfigureKernelShadowStacksLaunch)
+  //
+  // 1=enabled in enforcement mode, 2=enabled in audit mode, 0=disabled. Null
+  // when not configured.
+  kernelShadowStacksLaunch int
 }
 
 // Windows Trusted Platform Module (TPM)

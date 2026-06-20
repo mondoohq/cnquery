@@ -2914,6 +2914,14 @@ windows.defender.threatIdAction 13.29.1
 windows.defender.threatIdAction.action 13.29.1
 windows.defender.threatIdAction.threatId 13.29.1
 windows.defender.threats 13.29.1
+windows.deviceGuard 13.29.1
+windows.deviceGuard.credentialGuardConfig 13.29.1
+windows.deviceGuard.hvciMatRequired 13.29.1
+windows.deviceGuard.hypervisorEnforcedCodeIntegrity 13.29.1
+windows.deviceGuard.kernelShadowStacksLaunch 13.29.1
+windows.deviceGuard.requirePlatformSecurityFeatures 13.29.1
+windows.deviceGuard.systemGuardLaunch 13.29.1
+windows.deviceGuard.virtualizationBasedSecurityEnabled 13.29.1
 windows.eventlog 13.22.2
 windows.eventlog.maxSizeKB 13.22.2
 windows.eventlog.name 13.22.2

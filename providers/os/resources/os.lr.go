@@ -338,6 +338,7 @@ const (
 	ResourceWindowsWinrm                                  string = "windows.winrm"
 	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
 	ResourceWindowsWinrmService                           string = "windows.winrm.service"
+	ResourceWindowsDeviceGuard                            string = "windows.deviceGuard"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1763,6 +1764,10 @@ func init() {
 		"windows.winrm.service": {
 			// to override args, implement: initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsWinrmService,
+		},
+		"windows.deviceGuard": {
+			// to override args, implement: initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDeviceGuard,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7808,6 +7813,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.scheduledTasks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetScheduledTasks()).ToDataRes(types.Array(types.Resource("windows.scheduledTask")))
 	},
+	"windows.deviceGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetDeviceGuard()).ToDataRes(types.Resource("windows.deviceGuard"))
+	},
 	"windows.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsScheduledTask).GetName()).ToDataRes(types.String)
 	},
@@ -8350,6 +8358,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrmService).GetAllowRemoteShellAccess()).ToDataRes(types.Bool)
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityEnabled()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetRequirePlatformSecurityFeatures()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.hypervisorEnforcedCodeIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetHypervisorEnforcedCodeIntegrity()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetHvciMatRequired()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetCredentialGuardConfig()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetSystemGuardLaunch()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetKernelShadowStacksLaunch()).ToDataRes(types.Int)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -19302,6 +19331,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindows).ScheduledTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"windows.deviceGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).DeviceGuard, ok = plugin.RawToTValue[*mqlWindowsDeviceGuard](v.Value, v.Error)
+		return
+	},
 	"windows.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsScheduledTask).__id, ok = v.Value.(string)
 		return
@@ -20108,6 +20141,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsWinrmService).AllowRemoteShellAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).VirtualizationBasedSecurityEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).RequirePlatformSecurityFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.hypervisorEnforcedCodeIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).HypervisorEnforcedCodeIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).HvciMatRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).CredentialGuardConfig, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).SystemGuardLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).KernelShadowStacksLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50992,6 +51057,7 @@ type mqlWindows struct {
 	ServerFeatures   plugin.TValue[[]any]
 	OptionalFeatures plugin.TValue[[]any]
 	ScheduledTasks   plugin.TValue[[]any]
+	DeviceGuard      plugin.TValue[*mqlWindowsDeviceGuard]
 }
 
 // createWindows creates a new instance of this resource
@@ -51093,6 +51159,22 @@ func (c *mqlWindows) GetScheduledTasks() *plugin.TValue[[]any] {
 		}
 
 		return c.scheduledTasks()
+	})
+}
+
+func (c *mqlWindows) GetDeviceGuard() *plugin.TValue[*mqlWindowsDeviceGuard] {
+	return plugin.GetOrCompute[*mqlWindowsDeviceGuard](&c.DeviceGuard, func() (*mqlWindowsDeviceGuard, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "deviceGuard")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDeviceGuard), nil
+			}
+		}
+
+		return c.deviceGuard()
 	})
 }
 
@@ -53073,6 +53155,85 @@ func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
 
 func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
 	return &c.AllowRemoteShellAccess
+}
+
+// mqlWindowsDeviceGuard for the windows.deviceGuard resource
+type mqlWindowsDeviceGuard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDeviceGuardInternal it will be used here
+	VirtualizationBasedSecurityEnabled plugin.TValue[int64]
+	RequirePlatformSecurityFeatures    plugin.TValue[int64]
+	HypervisorEnforcedCodeIntegrity    plugin.TValue[int64]
+	HvciMatRequired                    plugin.TValue[int64]
+	CredentialGuardConfig              plugin.TValue[int64]
+	SystemGuardLaunch                  plugin.TValue[int64]
+	KernelShadowStacksLaunch           plugin.TValue[int64]
+}
+
+// createWindowsDeviceGuard creates a new instance of this resource
+func createWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDeviceGuard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.deviceGuard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDeviceGuard) MqlName() string {
+	return "windows.deviceGuard"
+}
+
+func (c *mqlWindowsDeviceGuard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDeviceGuard) GetVirtualizationBasedSecurityEnabled() *plugin.TValue[int64] {
+	return &c.VirtualizationBasedSecurityEnabled
+}
+
+func (c *mqlWindowsDeviceGuard) GetRequirePlatformSecurityFeatures() *plugin.TValue[int64] {
+	return &c.RequirePlatformSecurityFeatures
+}
+
+func (c *mqlWindowsDeviceGuard) GetHypervisorEnforcedCodeIntegrity() *plugin.TValue[int64] {
+	return &c.HypervisorEnforcedCodeIntegrity
+}
+
+func (c *mqlWindowsDeviceGuard) GetHvciMatRequired() *plugin.TValue[int64] {
+	return &c.HvciMatRequired
+}
+
+func (c *mqlWindowsDeviceGuard) GetCredentialGuardConfig() *plugin.TValue[int64] {
+	return &c.CredentialGuardConfig
+}
+
+func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[int64] {
+	return &c.SystemGuardLaunch
+}
+
+func (c *mqlWindowsDeviceGuard) GetKernelShadowStacksLaunch() *plugin.TValue[int64] {
+	return &c.KernelShadowStacksLaunch
 }
 
 // mqlWindowsTpm for the windows.tpm resource
