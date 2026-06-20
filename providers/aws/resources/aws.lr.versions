@@ -2533,6 +2533,7 @@ aws.documentdb.instance.endpointHostedZoneId 13.19.1
 aws.documentdb.instance.endpointPort 13.19.1
 aws.documentdb.instance.engine 11.16.1
 aws.documentdb.instance.engineVersion 11.16.1
+aws.documentdb.instance.exposure 13.37.1
 aws.documentdb.instance.instanceClass 11.16.1
 aws.documentdb.instance.isClusterWriter 13.19.1
 aws.documentdb.instance.kmsKey 11.16.1
@@ -4238,6 +4239,7 @@ aws.elb.loadbalancer.createdAt 11.15.2
 aws.elb.loadbalancer.dnsName 11.15.2
 aws.elb.loadbalancer.elbType 11.15.2
 aws.elb.loadbalancer.enforcesTls 13.37.1
+aws.elb.loadbalancer.exposure 13.37.1
 aws.elb.loadbalancer.healthCheck 13.26.2
 aws.elb.loadbalancer.hostedZoneId 11.15.2
 aws.elb.loadbalancer.instances 11.15.2
@@ -6735,6 +6737,11 @@ aws.neptuneAnalytics.graph.statusReason 13.18.1
 aws.neptuneAnalytics.graph.tags 13.18.1
 aws.neptuneAnalytics.graph.vectorSearchDimension 13.18.1
 aws.neptuneAnalytics.graphs 13.18.1
+aws.network.exposure 13.37.1
+aws.network.exposure.internetReachable 13.37.1
+aws.network.exposure.openIngressRules 13.37.1
+aws.network.exposure.publiclyAccessible 13.37.1
+aws.network.exposure.securityGroupAllowsIngress 13.37.1
 aws.networkfirewall 11.16.1
 aws.networkfirewall.firewall 11.16.1
 aws.networkfirewall.firewall.arn 11.16.1
@@ -7149,9 +7156,9 @@ aws.rds.dbinstance.engine 11.15.2
 aws.rds.dbinstance.engineLifecycleSupport 11.15.2
 aws.rds.dbinstance.engineVersion 11.15.2
 aws.rds.dbinstance.enhancedMonitoringResourceArn 11.15.2
+aws.rds.dbinstance.exposure 13.37.1
 aws.rds.dbinstance.iamDatabaseAuthentication 11.15.2
 aws.rds.dbinstance.id 11.15.2
-aws.rds.dbinstance.internetReachable 13.37.1
 aws.rds.dbinstance.kmsKey 11.15.2
 aws.rds.dbinstance.latestRestorableTime 11.15.2
 aws.rds.dbinstance.licenseModel 11.15.2

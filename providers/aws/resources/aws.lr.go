@@ -219,6 +219,7 @@ const (
 	ResourceAwsElbTargetgroup                                                   string = "aws.elb.targetgroup"
 	ResourceAwsElbTargetgroupAttributes                                         string = "aws.elb.targetgroup.attributes"
 	ResourceAwsElbLoadbalancer                                                  string = "aws.elb.loadbalancer"
+	ResourceAwsNetworkExposure                                                  string = "aws.network.exposure"
 	ResourceAwsElbListener                                                      string = "aws.elb.listener"
 	ResourceAwsElbLoadbalancerAttribute                                         string = "aws.elb.loadbalancer.attribute"
 	ResourceAwsCodebuild                                                        string = "aws.codebuild"
@@ -1733,6 +1734,10 @@ func init() {
 		"aws.elb.loadbalancer": {
 			Init:   initAwsElbLoadbalancer,
 			Create: createAwsElbLoadbalancer,
+		},
+		"aws.network.exposure": {
+			// to override args, implement: initAwsNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkExposure,
 		},
 		"aws.elb.listener": {
 			// to override args, implement: initAwsElbListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10680,6 +10685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.elb.loadbalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetHostedZoneId()).ToDataRes(types.String)
 	},
@@ -10715,6 +10723,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.loadbalancer.healthCheck": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetHealthCheck()).ToDataRes(types.Dict)
+	},
+	"aws.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"aws.network.exposure.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkExposure).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"aws.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup.ippermission")))
 	},
 	"aws.elb.listener.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetArn()).ToDataRes(types.String)
@@ -17370,8 +17390,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
 	},
-	"aws.rds.dbinstance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsDbinstance).GetInternetReachable()).ToDataRes(types.Bool)
+	"aws.rds.dbinstance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
@@ -24017,6 +24037,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.documentdb.instance.copyTagsToSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetCopyTagsToSnapshot()).ToDataRes(types.Bool)
@@ -41601,6 +41624,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbLoadbalancer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.loadbalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -41647,6 +41674,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.loadbalancer.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).HealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.network.exposure.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkExposure).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51481,8 +51528,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbinstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.rds.dbinstance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"aws.rds.dbinstance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61075,6 +61122,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.copyTagsToSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97543,6 +97594,7 @@ type mqlAwsElbLoadbalancer struct {
 	CreatedAt            plugin.TValue[*time.Time]
 	AvailabilityZones    plugin.TValue[[]any]
 	SecurityGroups       plugin.TValue[[]any]
+	Exposure             plugin.TValue[*mqlAwsNetworkExposure]
 	HostedZoneId         plugin.TValue[string]
 	Region               plugin.TValue[string]
 	ElbType              plugin.TValue[string]
@@ -97632,6 +97684,22 @@ func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]any] {
 
 func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]any] {
 	return &c.SecurityGroups
+}
+
+func (c *mqlAwsElbLoadbalancer) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.loadbalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 func (c *mqlAwsElbLoadbalancer) GetHostedZoneId() *plugin.TValue[string] {
@@ -97732,6 +97800,65 @@ func (c *mqlAwsElbLoadbalancer) GetAttribute() *plugin.TValue[*mqlAwsElbLoadbala
 
 func (c *mqlAwsElbLoadbalancer) GetHealthCheck() *plugin.TValue[any] {
 	return &c.HealthCheck
+}
+
+// mqlAwsNetworkExposure for the aws.network.exposure resource
+type mqlAwsNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNetworkExposureInternal it will be used here
+	InternetReachable          plugin.TValue[bool]
+	PubliclyAccessible         plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+}
+
+// createAwsNetworkExposure creates a new instance of this resource
+func createAwsNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkExposure) MqlName() string {
+	return "aws.network.exposure"
+}
+
+func (c *mqlAwsNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlAwsNetworkExposure) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlAwsNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
 }
 
 // mqlAwsElbListener for the aws.elb.listener resource
@@ -123802,7 +123929,7 @@ type mqlAwsRdsDbinstance struct {
 	Region                             plugin.TValue[string]
 	AvailabilityZone                   plugin.TValue[string]
 	PubliclyAccessible                 plugin.TValue[bool]
-	InternetReachable                  plugin.TValue[bool]
+	Exposure                           plugin.TValue[*mqlAwsNetworkExposure]
 	EnabledCloudwatchLogsExports       plugin.TValue[[]any]
 	DeletionProtection                 plugin.TValue[bool]
 	MultiAZ                            plugin.TValue[bool]
@@ -123961,9 +124088,19 @@ func (c *mqlAwsRdsDbinstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
 }
 
-func (c *mqlAwsRdsDbinstance) GetInternetReachable() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
-		return c.internetReachable()
+func (c *mqlAwsRdsDbinstance) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -147022,6 +147159,7 @@ type mqlAwsDocumentdbInstance struct {
 	CaCertificateDetailsCAIdentifier plugin.TValue[string]
 	CaCertificateValidTill           plugin.TValue[*time.Time]
 	PubliclyAccessible               plugin.TValue[bool]
+	Exposure                         plugin.TValue[*mqlAwsNetworkExposure]
 	CopyTagsToSnapshot               plugin.TValue[bool]
 	LatestRestorableTime             plugin.TValue[*time.Time]
 	PerformanceInsightsEnabled       plugin.TValue[bool]
@@ -147204,6 +147342,22 @@ func (c *mqlAwsDocumentdbInstance) GetCaCertificateValidTill() *plugin.TValue[*t
 
 func (c *mqlAwsDocumentdbInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsDocumentdbInstance) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
 }
 
 func (c *mqlAwsDocumentdbInstance) GetCopyTagsToSnapshot() *plugin.TValue[bool] {

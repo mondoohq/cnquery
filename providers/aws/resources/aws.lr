@@ -5293,6 +5293,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   availabilityZones []string
   // VPC security groups for the load balancer
   securityGroups []aws.ec2.securitygroup
+  // Internet-exposure breakdown (internet-facing scheme combined with security group ingress)
+  exposure() aws.network.exposure
   // ID of the Amazon Route 53 hosted zone associated with the load balancer
   hostedZoneId string
   // Region where the load balancer exists
@@ -5317,6 +5319,24 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   attribute() aws.elb.loadbalancer.attribute
   // Health check configuration (classic load balancers only; null for ALB/NLB)
   healthCheck dict
+}
+
+// Network internet-exposure breakdown
+//
+// Explains whether a network-attached resource (database, load balancer, and
+// similar) is reachable from the internet: whether it is configured for public
+// access and whether an attached security group opens it to the internet, with
+// the specific ingress rules. Shared by resources whose exposure follows the
+// public-toggle-plus-security-group model.
+private aws.network.exposure @defaults("internetReachable publiclyAccessible") {
+  // Whether the resource is reachable from the internet (configured for public access and an attached security group permits public ingress)
+  internetReachable bool
+  // Whether the resource is configured for public access (a publicly-accessible flag or an internet-facing scheme)
+  publiclyAccessible bool
+  // Whether an attached security group permits inbound traffic from the internet
+  securityGroupAllowsIngress bool
+  // Security group ingress rules that open the resource to the internet, including their port ranges
+  openIngressRules []aws.ec2.securitygroup.ippermission
 }
 
 // AWS ELB listener
@@ -11610,8 +11630,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   availabilityZone string
   // Whether the instance is publicly accessible
   publiclyAccessible bool
-  // Whether the database is reachable from the internet (publicly accessible with a security group open to 0.0.0.0/0 or ::/0)
-  internetReachable() bool
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // List of log types the instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
   // Whether deletion protection is enabled
@@ -17429,6 +17449,8 @@ private aws.documentdb.instance @defaults("arn name status") {
   caCertificateValidTill time
   // Whether the instance is publicly accessible
   publiclyAccessible bool
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // Whether tags are copied from the instance to snapshots
   copyTagsToSnapshot bool
   // Latest time to which a database can be restored using point-in-time restore
