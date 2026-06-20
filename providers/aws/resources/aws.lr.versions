@@ -2934,6 +2934,8 @@ aws.ec2.image.public 11.15.2
 aws.ec2.image.region 11.15.2
 aws.ec2.image.rootDeviceName 11.15.3
 aws.ec2.image.rootDeviceType 11.15.2
+aws.ec2.image.sharedExternally 13.37.1
+aws.ec2.image.sharedWithAccounts 13.37.1
 aws.ec2.image.sourceImage 13.35.2
 aws.ec2.image.sourceImageId 11.15.3
 aws.ec2.image.sourceImageRegion 11.15.3
@@ -3302,6 +3304,8 @@ aws.ec2.snapshot.kmsKey 11.15.2
 aws.ec2.snapshot.outpostArn 13.35.2
 aws.ec2.snapshot.ownerAlias 13.35.2
 aws.ec2.snapshot.region 11.15.2
+aws.ec2.snapshot.sharedExternally 13.37.1
+aws.ec2.snapshot.sharedWithAccounts 13.37.1
 aws.ec2.snapshot.sourceVolume 13.35.2
 aws.ec2.snapshot.startTime 11.15.2
 aws.ec2.snapshot.state 11.15.2

@@ -15411,6 +15411,10 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   outpostArn string
   // Whether the snapshot is public (shared with all AWS accounts)
   isPublic() bool
+  // AWS account IDs this snapshot is explicitly shared with (excludes public sharing)
+  sharedWithAccounts() []string
+  // Whether the snapshot is shared outside this account, either publicly or with specific accounts
+  sharedExternally() bool
 }
 
 // Amazon EC2 (EBS) volume
@@ -15961,6 +15965,10 @@ private aws.ec2.image @defaults("ownerAlias id name") {
   region string
   // Launch permissions for the image (user IDs and groups that can launch instances from this AMI)
   launchPermissions() []aws.ec2.image.launchPermission
+  // AWS account IDs this image is explicitly shared with (excludes public sharing)
+  sharedWithAccounts() []string
+  // Whether the image is shared outside this account, either publicly or with specific accounts
+  sharedExternally() bool
   // Description of the AMI
   description string
   // Type of image: machine, kernel, or ramdisk

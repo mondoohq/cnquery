@@ -4145,3 +4145,80 @@ func (i *mqlAwsEc2Instance) managedBy() (string, error) {
 func (a *mqlAwsEc2Securitygroup) managedBy() (string, error) {
 	return managedByFromTags(a.Tags.Data), nil
 }
+
+func (i *mqlAwsEc2Image) sharedWithAccounts() ([]any, error) {
+	perms := i.GetLaunchPermissions()
+	if perms.Error != nil {
+		return nil, perms.Error
+	}
+	res := []any{}
+	for _, p := range perms.Data {
+		perm, ok := p.(*mqlAwsEc2ImageLaunchPermission)
+		if !ok {
+			continue
+		}
+		userId := perm.GetUserId()
+		if userId.Error != nil {
+			return nil, userId.Error
+		}
+		if userId.Data != "" {
+			res = append(res, userId.Data)
+		}
+	}
+	return res, nil
+}
+
+func (i *mqlAwsEc2Image) sharedExternally() (bool, error) {
+	public := i.GetPublic()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if public.Data {
+		return true, nil
+	}
+	accounts := i.GetSharedWithAccounts()
+	if accounts.Error != nil {
+		return false, accounts.Error
+	}
+	return len(accounts.Data) > 0, nil
+}
+
+// accountIdsFromVolumePermissions extracts the account IDs from a snapshot's
+// createVolumePermission entries, ignoring the public ("all" group) entry which
+// carries no UserId.
+func accountIdsFromVolumePermissions(perms []any) []any {
+	res := []any{}
+	for _, p := range perms {
+		m, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		if uid, ok := m["UserId"].(string); ok && uid != "" {
+			res = append(res, uid)
+		}
+	}
+	return res
+}
+
+func (a *mqlAwsEc2Snapshot) sharedWithAccounts() ([]any, error) {
+	perms := a.GetCreateVolumePermission()
+	if perms.Error != nil {
+		return nil, perms.Error
+	}
+	return accountIdsFromVolumePermissions(perms.Data), nil
+}
+
+func (a *mqlAwsEc2Snapshot) sharedExternally() (bool, error) {
+	public := a.GetIsPublic()
+	if public.Error != nil {
+		return false, public.Error
+	}
+	if public.Data {
+		return true, nil
+	}
+	accounts := a.GetSharedWithAccounts()
+	if accounts.Error != nil {
+		return false, accounts.Error
+	}
+	return len(accounts.Data) > 0, nil
+}

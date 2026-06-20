@@ -21651,6 +21651,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.snapshot.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetIsPublic()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.snapshot.sharedWithAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetSharedWithAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.snapshot.sharedExternally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetSharedExternally()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.volume.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetArn()).ToDataRes(types.String)
 	},
@@ -22313,6 +22319,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.launchPermissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetLaunchPermissions()).ToDataRes(types.Array(types.Resource("aws.ec2.image.launchPermission")))
+	},
+	"aws.ec2.image.sharedWithAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetSharedWithAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.image.sharedExternally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Image).GetSharedExternally()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.image.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetDescription()).ToDataRes(types.String)
@@ -57641,6 +57653,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Snapshot).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.snapshot.sharedWithAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).SharedWithAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.sharedExternally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).SharedExternally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Volume).__id, ok = v.Value.(string)
 		return
@@ -58595,6 +58615,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.launchPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Image).LaunchPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.sharedWithAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).SharedWithAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.sharedExternally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Image).SharedExternally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -138788,6 +138816,8 @@ type mqlAwsEc2Snapshot struct {
 	OwnerAlias             plugin.TValue[string]
 	OutpostArn             plugin.TValue[string]
 	IsPublic               plugin.TValue[bool]
+	SharedWithAccounts     plugin.TValue[[]any]
+	SharedExternally       plugin.TValue[bool]
 }
 
 // createAwsEc2Snapshot creates a new instance of this resource
@@ -138928,6 +138958,18 @@ func (c *mqlAwsEc2Snapshot) GetOutpostArn() *plugin.TValue[string] {
 func (c *mqlAwsEc2Snapshot) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
+	})
+}
+
+func (c *mqlAwsEc2Snapshot) GetSharedWithAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedWithAccounts, func() ([]any, error) {
+		return c.sharedWithAccounts()
+	})
+}
+
+func (c *mqlAwsEc2Snapshot) GetSharedExternally() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SharedExternally, func() (bool, error) {
+		return c.sharedExternally()
 	})
 }
 
@@ -141033,6 +141075,8 @@ type mqlAwsEc2Image struct {
 	Tags                     plugin.TValue[map[string]any]
 	Region                   plugin.TValue[string]
 	LaunchPermissions        plugin.TValue[[]any]
+	SharedWithAccounts       plugin.TValue[[]any]
+	SharedExternally         plugin.TValue[bool]
 	Description              plugin.TValue[string]
 	ImageType                plugin.TValue[string]
 	FreeTierEligible         plugin.TValue[bool]
@@ -141173,6 +141217,18 @@ func (c *mqlAwsEc2Image) GetLaunchPermissions() *plugin.TValue[[]any] {
 		}
 
 		return c.launchPermissions()
+	})
+}
+
+func (c *mqlAwsEc2Image) GetSharedWithAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedWithAccounts, func() ([]any, error) {
+		return c.sharedWithAccounts()
+	})
+}
+
+func (c *mqlAwsEc2Image) GetSharedExternally() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SharedExternally, func() (bool, error) {
+		return c.sharedExternally()
 	})
 }
 
