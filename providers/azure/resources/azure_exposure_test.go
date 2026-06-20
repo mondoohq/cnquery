@@ -67,7 +67,7 @@ func TestFirewallRuleAllowsAnyInternet(t *testing.T) {
 		start, end string
 		want       bool
 	}{
-		{"0.0.0.0", "0.0.0.0", true},             // allow-all-Azure-services rule
+		{"0.0.0.0", "0.0.0.0", false},            // allow-all-Azure-services rule, not the public internet
 		{"0.0.0.0", "255.255.255.255", true},     // full IPv4 span
 		{"203.0.113.1", "203.0.113.10", false},   // scoped range
 		{"10.0.0.0", "10.255.255.255", false},    // private span
@@ -84,7 +84,10 @@ func TestDatabaseInternetReachable(t *testing.T) {
 		assert.False(t, databaseInternetReachable("Disabled", [][2]string{{"0.0.0.0", "255.255.255.255"}}))
 	})
 	t.Run("public access enabled with open rule is reachable", func(t *testing.T) {
-		assert.True(t, databaseInternetReachable("Enabled", [][2]string{{"0.0.0.0", "0.0.0.0"}}))
+		assert.True(t, databaseInternetReachable("Enabled", [][2]string{{"0.0.0.0", "255.255.255.255"}}))
+	})
+	t.Run("allow-all-Azure-services rule alone is not reachable", func(t *testing.T) {
+		assert.False(t, databaseInternetReachable("Enabled", [][2]string{{"0.0.0.0", "0.0.0.0"}}))
 	})
 	t.Run("public access enabled but only scoped rules is not reachable", func(t *testing.T) {
 		assert.False(t, databaseInternetReachable("Enabled", [][2]string{{"203.0.113.1", "203.0.113.10"}}))

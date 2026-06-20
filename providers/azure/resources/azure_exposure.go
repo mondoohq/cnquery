@@ -60,16 +60,16 @@ func publicNetworkAccessEnabled(value string) bool {
 }
 
 // firewallRuleAllowsAnyInternet reports whether a database firewall rule (start
-// IP / end IP range) opens the server to any internet address. Two forms count:
-//   - the special "allow all Azure services" rule 0.0.0.0 -> 0.0.0.0
-//   - a rule whose range spans the entire IPv4 space (0.0.0.0 -> 255.255.255.255)
+// IP / end IP range) opens the server to the entire public internet — a rule
+// whose range spans the whole IPv4 space (0.0.0.0 -> 255.255.255.255).
+//
+// The special "allow all Azure services" rule (0.0.0.0 -> 0.0.0.0) is
+// deliberately NOT treated as internet-open. That rule permits traffic only
+// from Azure-internal service IPs, not from arbitrary public addresses, so
+// counting it as internet-reachable would be a false positive for servers that
+// have nothing but that rule enabled.
 func firewallRuleAllowsAnyInternet(startIp, endIp string) bool {
-	start := strings.TrimSpace(startIp)
-	end := strings.TrimSpace(endIp)
-	if start == "0.0.0.0" && (end == "0.0.0.0" || end == "255.255.255.255") {
-		return true
-	}
-	return false
+	return strings.TrimSpace(startIp) == "0.0.0.0" && strings.TrimSpace(endIp) == "255.255.255.255"
 }
 
 // databaseInternetReachable combines the publicNetworkAccess gate with the
@@ -115,6 +115,12 @@ func (a *mqlAzureNetworkExposure) id() (string, error) {
 // public IPs and the security rules of NSGs attached to its NICs. No new API
 // calls are made beyond the existing publicIpAddresses()/networkInterfaces()
 // accessors, both of which are cached on the VM resource.
+//
+// Limitation: NSG rule priorities are not evaluated. Azure applies rules in
+// priority order (lowest number wins), so a higher-priority Deny rule can
+// shadow a lower-priority Allow-from-internet rule. This breakdown flags any
+// matching Allow rule as opening ingress, so securityGroupAllowsIngress may
+// report true even when a higher-priority Deny actually blocks the traffic.
 func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureNetworkExposure, error) {
 	publicIps := a.GetPublicIpAddresses()
 	if publicIps.Error != nil {

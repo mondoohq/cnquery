@@ -4845,8 +4845,9 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // Whether the SQL server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to any internet address — either the "allow all Azure
-  // services" rule (0.0.0.0) or a rule whose range spans 0.0.0.0-255.255.255.255.
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
 }
 
@@ -5437,8 +5438,9 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   // Whether the PostgreSQL flexible server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to any internet address (the all-Azure-services 0.0.0.0
-  // rule or a rule spanning 0.0.0.0-255.255.255.255).
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
 }
 
@@ -5479,8 +5481,9 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
   // Whether the PostgreSQL server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to any internet address (the all-Azure-services 0.0.0.0
-  // rule or a rule spanning 0.0.0.0-255.255.255.255).
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
 }
 
@@ -5699,8 +5702,9 @@ private azure.subscription.mySqlService.server @defaults("id name location") {
   // Whether the MySQL server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to any internet address (the all-Azure-services 0.0.0.0
-  // rule or a rule spanning 0.0.0.0-255.255.255.255).
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
 }
 
@@ -5761,8 +5765,9 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   // Whether the MySQL flexible server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to any internet address (the all-Azure-services 0.0.0.0
-  // rule or a rule spanning 0.0.0.0-255.255.255.255).
+  // opens the server to the entire public internet — a rule whose range spans
+  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
+  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
 }
 
