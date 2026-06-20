@@ -22177,12 +22177,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
-	"aws.ec2.instance.inPublicSubnet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetInPublicSubnet()).ToDataRes(types.Bool)
-	},
-	"aws.ec2.instance.internetReachable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEc2Instance).GetInternetReachable()).ToDataRes(types.Bool)
-	},
 	"aws.ec2.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetExposure()).ToDataRes(types.Resource("aws.ec2.instance.exposure"))
 	},
@@ -58491,14 +58485,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.instance.inPublicSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).InPublicSubnet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.ec2.instance.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEc2Instance).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -140738,8 +140724,6 @@ type mqlAwsEc2Instance struct {
 	NetworkInterfaces       plugin.TValue[[]any]
 	Subnet                  plugin.TValue[*mqlAwsVpcSubnet]
 	LoadBalancers           plugin.TValue[[]any]
-	InPublicSubnet          plugin.TValue[bool]
-	InternetReachable       plugin.TValue[bool]
 	Exposure                plugin.TValue[*mqlAwsEc2InstanceExposure]
 	CloudformationStack     plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy               plugin.TValue[string]
@@ -141065,18 +141049,6 @@ func (c *mqlAwsEc2Instance) GetLoadBalancers() *plugin.TValue[[]any] {
 		}
 
 		return c.loadBalancers()
-	})
-}
-
-func (c *mqlAwsEc2Instance) GetInPublicSubnet() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.InPublicSubnet, func() (bool, error) {
-		return c.inPublicSubnet()
-	})
-}
-
-func (c *mqlAwsEc2Instance) GetInternetReachable() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
-		return c.internetReachable()
 	})
 }
 

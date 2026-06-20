@@ -3888,7 +3888,9 @@ func (i *mqlAwsEc2Instance) subnet() (*mqlAwsVpcSubnet, error) {
 
 // inPublicSubnet reports whether the instance's subnet routes to an internet
 // gateway, which is the defining property of a public subnet.
-func (i *mqlAwsEc2Instance) inPublicSubnet() (bool, error) {
+// instanceInPublicSubnet reports whether the instance's subnet routes to an
+// internet gateway (the defining property of a public subnet).
+func instanceInPublicSubnet(i *mqlAwsEc2Instance) (bool, error) {
 	subnet := i.GetSubnet()
 	if subnet.Error != nil {
 		return false, subnet.Error
@@ -3925,21 +3927,6 @@ func (i *mqlAwsEc2Instance) inPublicSubnet() (bool, error) {
 // group permits inbound traffic from 0.0.0.0/0 or ::/0, and the subnet's network
 // ACL does not block that traffic. Load-balancer-fronted exposure is a separate
 // path (see loadBalancers).
-// internetReachable is a convenience shortcut for exposure.internetReachable.
-func (i *mqlAwsEc2Instance) internetReachable() (bool, error) {
-	exposure := i.GetExposure()
-	if exposure.Error != nil {
-		return false, exposure.Error
-	}
-	if exposure.Data == nil {
-		return false, nil
-	}
-	reachable := exposure.Data.GetInternetReachable()
-	if reachable.Error != nil {
-		return false, reachable.Error
-	}
-	return reachable.Data, nil
-}
 
 // instanceSubnetNaclAllowsPublicIngress reports whether the instance's subnet
 // network ACL permits inbound internet traffic. Missing subnet/NACL data does
@@ -4029,9 +4016,9 @@ func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
 	}
 	hasPublicIp := publicIp.Data != ""
 
-	inPublicSubnet := i.GetInPublicSubnet()
-	if inPublicSubnet.Error != nil {
-		return nil, inPublicSubnet.Error
+	inPublicSubnet, err := instanceInPublicSubnet(i)
+	if err != nil {
+		return nil, err
 	}
 
 	openRules, err := instanceOpenIngressRules(i)
@@ -4050,13 +4037,13 @@ func (i *mqlAwsEc2Instance) exposure() (*mqlAwsEc2InstanceExposure, error) {
 		return nil, err
 	}
 
-	internetReachable := hasPublicIp && inPublicSubnet.Data && sgAllows && naclAllows
+	internetReachable := hasPublicIp && inPublicSubnet && sgAllows && naclAllows
 
 	res, err := CreateResource(i.MqlRuntime, "aws.ec2.instance.exposure", map[string]*llx.RawData{
 		"__id":                        llx.StringData(i.Arn.Data + "/exposure"),
 		"internetReachable":           llx.BoolData(internetReachable),
 		"hasPublicIp":                 llx.BoolData(hasPublicIp),
-		"inPublicSubnet":              llx.BoolData(inPublicSubnet.Data),
+		"inPublicSubnet":              llx.BoolData(inPublicSubnet),
 		"securityGroupAllowsIngress":  llx.BoolData(sgAllows),
 		"networkAclAllowsIngress":     llx.BoolData(naclAllows),
 		"openIngressRules":            llx.ArrayData(openRules, types.Resource("aws.ec2.securitygroup.ippermission")),

@@ -15849,12 +15849,6 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   subnet() aws.vpc.subnet
   // Load balancers that route traffic to this instance
   loadBalancers() []aws.elb.loadbalancer
-  // Whether the instance's subnet routes to an internet gateway (a public subnet)
-  inPublicSubnet() bool
-  // Whether the instance is directly reachable from the internet
-  //
-  // True when the instance has a public IP, sits in a public subnet (its subnet's route table has an internet gateway route), and an attached security group permits inbound traffic from 0.0.0.0/0 or ::/0. A convenience shortcut for `exposure.internetReachable`.
-  internetReachable() bool
   // Internet-exposure analysis for the instance
   //
   // Breaks down whether and how the instance is reachable from the internet — the contributing signals, the security-group ingress rules that open it, and any internet-facing load balancers that front it.
