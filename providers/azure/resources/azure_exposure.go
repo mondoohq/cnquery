@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // --- Pure helpers (table-tested in azure_exposure_test.go) ---
@@ -60,8 +61,10 @@ func publicNetworkAccessEnabled(value string) bool {
 }
 
 // firewallRuleAllowsAnyInternet reports whether a database firewall rule (start
-// IP / end IP range) opens the server to the entire public internet — a rule
-// whose range spans the whole IPv4 space (0.0.0.0 -> 255.255.255.255).
+// IP / end IP range) opens the server to the public internet. A rule qualifies
+// when it starts at 0.0.0.0 and extends to any address beyond it — this catches
+// the full IPv4 span (0.0.0.0 -> 255.255.255.255) as well as wide partial
+// ranges such as 0.0.0.0 -> 128.255.255.255.
 //
 // The special "allow all Azure services" rule (0.0.0.0 -> 0.0.0.0) is
 // deliberately NOT treated as internet-open. That rule permits traffic only
@@ -69,7 +72,9 @@ func publicNetworkAccessEnabled(value string) bool {
 // counting it as internet-reachable would be a false positive for servers that
 // have nothing but that rule enabled.
 func firewallRuleAllowsAnyInternet(startIp, endIp string) bool {
-	return strings.TrimSpace(startIp) == "0.0.0.0" && strings.TrimSpace(endIp) == "255.255.255.255"
+	start := strings.TrimSpace(startIp)
+	end := strings.TrimSpace(endIp)
+	return start == "0.0.0.0" && end != "" && end != "0.0.0.0"
 }
 
 // databaseInternetReachable combines the publicNetworkAccess gate with the
@@ -111,10 +116,36 @@ func (a *mqlAzureSubscriptionNetworkServiceExposure) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// effectiveRuleAllowsInternetIngress reports whether a single Azure
+// effective-security-rule object (the raw dict returned by a NIC's
+// effectiveSecurityRules) is an inbound Allow rule open to any internet source.
+// It reads the camelCase keys of the Azure effective-NSG payload and reuses
+// securityRuleAllowsInternetIngress for the direction/access/source matching.
+func effectiveRuleAllowsInternetIngress(rule map[string]any) bool {
+	direction, _ := rule["direction"].(string)
+	access, _ := rule["access"].(string)
+	sourcePrefix, _ := rule["sourceAddressPrefix"].(string)
+	sourcePrefixes := []string{}
+	// The effective rule lists sources both as the configured prefixes and the
+	// expanded set (service tags resolved to CIDRs); check both.
+	for _, key := range []string{"sourceAddressPrefixes", "expandedSourceAddressPrefix"} {
+		if arr, ok := rule[key].([]any); ok {
+			for _, p := range arr {
+				if s, ok := p.(string); ok {
+					sourcePrefixes = append(sourcePrefixes, s)
+				}
+			}
+		}
+	}
+	return securityRuleAllowsInternetIngress(direction, access, sourcePrefix, sourcePrefixes)
+}
+
 // exposure builds the network-exposure summary for a VM from its already-cached
-// public IPs and the security rules of NSGs attached to its NICs. No new API
-// calls are made beyond the existing publicIpAddresses()/networkInterfaces()
-// accessors, both of which are cached on the VM resource.
+// public IPs and the effective security rules of its NICs. The effective rules
+// (via the NIC's effectiveSecurityRules accessor) merge the NSG attached to the
+// NIC, the NSG attached to its subnet, and application security group rules, so
+// a subnet-level NSG that opens the VM is accounted for. Resolving effective
+// rules is a live Azure call per NIC; it is only paid when exposure is queried.
 //
 // Limitation: NSG rule priorities are not evaluated. Azure applies rules in
 // priority order (lowest number wins), so a higher-priority Deny rule can
@@ -138,37 +169,20 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 		if !ok {
 			continue
 		}
-		nsgVal := nic.GetNetworkSecurityGroup()
-		if nsgVal.Error != nil {
-			// Propagate rather than swallow: a failed NSG load (e.g. a
-			// permissions error) would otherwise make the VM look like it has no
-			// open ingress rules — a false negative for internet exposure.
-			return nil, nsgVal.Error
+		// effectiveSecurityRules merges NIC-level NSG, subnet-level NSG, and ASG
+		// rules. It propagates real errors but returns an empty set for
+		// stopped/detached NICs (the Azure API can't compute effective rules
+		// there), so those simply contribute no open rules.
+		eff := nic.GetEffectiveSecurityRules()
+		if eff.Error != nil {
+			return nil, eff.Error
 		}
-		if nsgVal.Data == nil {
-			// A NIC legitimately may have no NSG attached.
-			continue
-		}
-		rules := nsgVal.Data.GetSecurityRules()
-		if rules.Error != nil {
-			return nil, rules.Error
-		}
-		for _, r := range rules.Data {
-			rule, ok := r.(*mqlAzureSubscriptionNetworkServiceSecurityrule)
+		for _, r := range eff.Data {
+			rule, ok := r.(map[string]any)
 			if !ok {
 				continue
 			}
-			direction := rule.GetDirection()
-			access := rule.GetAccess()
-			sourcePrefix := rule.GetSourceAddressPrefix()
-			sourcePrefixesVal := rule.GetSourceAddressPrefixes()
-			sourcePrefixes := []string{}
-			for _, p := range sourcePrefixesVal.Data {
-				if s, ok := p.(string); ok {
-					sourcePrefixes = append(sourcePrefixes, s)
-				}
-			}
-			if securityRuleAllowsInternetIngress(direction.Data, access.Data, sourcePrefix.Data, sourcePrefixes) {
+			if effectiveRuleAllowsInternetIngress(rule) {
 				openRules = append(openRules, rule)
 			}
 		}
@@ -183,7 +197,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
 		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
-		"openIngressRules":           llx.ArrayData(openRules, "azure.subscription.networkService.securityrule"),
+		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
 	})
 	if err != nil {
 		return nil, err

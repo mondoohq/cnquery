@@ -4931,7 +4931,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.watcher.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetId()).ToDataRes(types.String)
