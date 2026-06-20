@@ -1732,6 +1732,7 @@ gcp.project.computeService.instance.enableDisplay 9.0.0
 gcp.project.computeService.instance.enableIntegrityMonitoring 9.0.0
 gcp.project.computeService.instance.enableSecureBoot 9.0.0
 gcp.project.computeService.instance.enableVtpm 9.0.0
+gcp.project.computeService.instance.exposure 13.24.1
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
 gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2
@@ -1937,6 +1938,11 @@ gcp.project.computeService.network.autoCreateSubnetworks 9.0.0
 gcp.project.computeService.network.created 9.0.0
 gcp.project.computeService.network.description 9.0.0
 gcp.project.computeService.network.enableUlaInternalIpv6 9.0.0
+gcp.project.computeService.network.exposure 13.24.1
+gcp.project.computeService.network.exposure.firewallAllowsIngress 13.24.1
+gcp.project.computeService.network.exposure.hasPublicIp 13.24.1
+gcp.project.computeService.network.exposure.internetReachable 13.24.1
+gcp.project.computeService.network.exposure.openIngressFirewalls 13.24.1
 gcp.project.computeService.network.firewallPolicy 11.6.6
 gcp.project.computeService.network.gatewayIPv4 9.0.0
 gcp.project.computeService.network.id 9.0.0

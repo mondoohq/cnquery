@@ -50,6 +50,7 @@ const (
 	ResourceGcpProjectComputeServiceZone                                               string = "gcp.project.computeService.zone"
 	ResourceGcpProjectComputeServiceMachineType                                        string = "gcp.project.computeService.machineType"
 	ResourceGcpProjectComputeServiceInstance                                           string = "gcp.project.computeService.instance"
+	ResourceGcpProjectComputeServiceNetworkExposure                                    string = "gcp.project.computeService.network.exposure"
 	ResourceGcpProjectComputeServiceInstanceOsInventory                                string = "gcp.project.computeService.instance.osInventory"
 	ResourceGcpProjectComputeServiceInstanceOsInventoryItem                            string = "gcp.project.computeService.instance.osInventory.item"
 	ResourceGcpProjectComputeServiceInstanceVulnerabilityReport                        string = "gcp.project.computeService.instance.vulnerabilityReport"
@@ -605,6 +606,10 @@ func init() {
 		"gcp.project.computeService.instance": {
 			Init:   initGcpProjectComputeServiceInstance,
 			Create: createGcpProjectComputeServiceInstance,
+		},
+		"gcp.project.computeService.network.exposure": {
+			// to override args, implement: initGcpProjectComputeServiceNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceNetworkExposure,
 		},
 		"gcp.project.computeService.instance.osInventory": {
 			// to override args, implement: initGcpProjectComputeServiceInstanceOsInventory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3812,6 +3817,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasPublicIp()).ToDataRes(types.Bool)
 	},
+	"gcp.project.computeService.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetExposure()).ToDataRes(types.Resource("gcp.project.computeService.network.exposure"))
+	},
 	"gcp.project.computeService.instance.usesDefaultServiceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetUsesDefaultServiceAccount()).ToDataRes(types.Bool)
 	},
@@ -3913,6 +3921,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetVulnerabilityReport()).ToDataRes(types.Resource("gcp.project.computeService.instance.vulnerabilityReport"))
+	},
+	"gcp.project.computeService.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.exposure.firewallAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkExposure).GetFirewallAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.exposure.openIngressFirewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkExposure).GetOpenIngressFirewalls()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewall")))
 	},
 	"gcp.project.computeService.instance.osInventory.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetName()).ToDataRes(types.String)
@@ -19009,6 +19029,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstance).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Exposure, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.usesDefaultServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).UsesDefaultServiceAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -19143,6 +19167,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).VulnerabilityReport, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.exposure.firewallAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkExposure).FirewallAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.exposure.openIngressFirewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkExposure).OpenIngressFirewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.osInventory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43871,6 +43915,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	NetworkInterfaces               plugin.TValue[[]any]
 	NetworkStackTypes               plugin.TValue[[]any]
 	HasPublicIp                     plugin.TValue[bool]
+	Exposure                        plugin.TValue[*mqlGcpProjectComputeServiceNetworkExposure]
 	UsesDefaultServiceAccount       plugin.TValue[bool]
 	HasFullCloudPlatformScope       plugin.TValue[bool]
 	BlockProjectSshKeysEnabled      plugin.TValue[bool]
@@ -44039,6 +44084,22 @@ func (c *mqlGcpProjectComputeServiceInstance) GetNetworkStackTypes() *plugin.TVa
 func (c *mqlGcpProjectComputeServiceInstance) GetHasPublicIp() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasPublicIp, func() (bool, error) {
 		return c.hasPublicIp()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetExposure() *plugin.TValue[*mqlGcpProjectComputeServiceNetworkExposure] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetworkExposure](&c.Exposure, func() (*mqlGcpProjectComputeServiceNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -44224,6 +44285,65 @@ func (c *mqlGcpProjectComputeServiceInstance) GetVulnerabilityReport() *plugin.T
 
 		return c.vulnerabilityReport()
 	})
+}
+
+// mqlGcpProjectComputeServiceNetworkExposure for the gcp.project.computeService.network.exposure resource
+type mqlGcpProjectComputeServiceNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceNetworkExposureInternal it will be used here
+	InternetReachable     plugin.TValue[bool]
+	HasPublicIp           plugin.TValue[bool]
+	FirewallAllowsIngress plugin.TValue[bool]
+	OpenIngressFirewalls  plugin.TValue[[]any]
+}
+
+// createGcpProjectComputeServiceNetworkExposure creates a new instance of this resource
+func createGcpProjectComputeServiceNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) MqlName() string {
+	return "gcp.project.computeService.network.exposure"
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) GetFirewallAllowsIngress() *plugin.TValue[bool] {
+	return &c.FirewallAllowsIngress
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkExposure) GetOpenIngressFirewalls() *plugin.TValue[[]any] {
+	return &c.OpenIngressFirewalls
 }
 
 // mqlGcpProjectComputeServiceInstanceOsInventory for the gcp.project.computeService.instance.osInventory resource
