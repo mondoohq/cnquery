@@ -317,6 +317,12 @@ const (
 	ResourceMacosSystemsetup                              string = "macos.systemsetup"
 	ResourceOpenBSMAudit                                  string = "openBSMAudit"
 	ResourceWindows                                       string = "windows"
+	ResourceWindowsExploitProtection                      string = "windows.exploitProtection"
+	ResourceWindowsExploitProtectionDep                   string = "windows.exploitProtection.dep"
+	ResourceWindowsExploitProtectionAslr                  string = "windows.exploitProtection.aslr"
+	ResourceWindowsExploitProtectionCfg                   string = "windows.exploitProtection.cfg"
+	ResourceWindowsExploitProtectionSehop                 string = "windows.exploitProtection.sehop"
+	ResourceWindowsExploitProtectionHeap                  string = "windows.exploitProtection.heap"
 	ResourceWindowsScheduledTask                          string = "windows.scheduledTask"
 	ResourceWindowsScheduledTaskPrincipal                 string = "windows.scheduledTask.principal"
 	ResourceWindowsScheduledTaskAction                    string = "windows.scheduledTask.action"
@@ -1680,6 +1686,30 @@ func init() {
 		"windows": {
 			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindows,
+		},
+		"windows.exploitProtection": {
+			// to override args, implement: initWindowsExploitProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtection,
+		},
+		"windows.exploitProtection.dep": {
+			// to override args, implement: initWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionDep,
+		},
+		"windows.exploitProtection.aslr": {
+			// to override args, implement: initWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionAslr,
+		},
+		"windows.exploitProtection.cfg": {
+			// to override args, implement: initWindowsExploitProtectionCfg(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionCfg,
+		},
+		"windows.exploitProtection.sehop": {
+			// to override args, implement: initWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionSehop,
+		},
+		"windows.exploitProtection.heap": {
+			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsExploitProtectionHeap,
 		},
 		"windows.scheduledTask": {
 			// to override args, implement: initWindowsScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7815,6 +7845,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.deviceGuard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetDeviceGuard()).ToDataRes(types.Resource("windows.deviceGuard"))
+	},
+	"windows.exploitProtection.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetAvailable()).ToDataRes(types.Bool)
+	},
+	"windows.exploitProtection.disallowOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetDisallowOverride()).ToDataRes(types.Bool)
+	},
+	"windows.exploitProtection.dep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetDep()).ToDataRes(types.Resource("windows.exploitProtection.dep"))
+	},
+	"windows.exploitProtection.aslr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetAslr()).ToDataRes(types.Resource("windows.exploitProtection.aslr"))
+	},
+	"windows.exploitProtection.controlFlowGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetControlFlowGuard()).ToDataRes(types.Resource("windows.exploitProtection.cfg"))
+	},
+	"windows.exploitProtection.sehop": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetSehop()).ToDataRes(types.Resource("windows.exploitProtection.sehop"))
+	},
+	"windows.exploitProtection.heap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtection).GetHeap()).ToDataRes(types.Resource("windows.exploitProtection.heap"))
+	},
+	"windows.exploitProtection.dep.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionDep).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.dep.emulateAtlThunks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionDep).GetEmulateAtlThunks()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.bottomUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetBottomUp()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.forceRelocateImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetForceRelocateImages()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.highEntropy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetHighEntropy()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.aslr.requireInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionAslr).GetRequireInfo()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.suppressExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetSuppressExports()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.cfg.strictControlFlowGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionCfg).GetStrictControlFlowGuard()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.sehop.enable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionSehop).GetEnable()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.sehop.telemetryOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionSehop).GetTelemetryOnly()).ToDataRes(types.String)
+	},
+	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsExploitProtectionHeap).GetTerminateOnError()).ToDataRes(types.String)
 	},
 	"windows.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsScheduledTask).GetName()).ToDataRes(types.String)
@@ -19333,6 +19420,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.deviceGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).DeviceGuard, ok = plugin.RawToTValue[*mqlWindowsDeviceGuard](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.disallowOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).DisallowOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Dep, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionDep](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Aslr, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionAslr](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.controlFlowGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).ControlFlowGuard, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionCfg](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Sehop, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionSehop](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.heap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtection).Heap, ok = plugin.RawToTValue[*mqlWindowsExploitProtectionHeap](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.dep.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.dep.emulateAtlThunks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionDep).EmulateAtlThunks, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.aslr.bottomUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).BottomUp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.forceRelocateImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).ForceRelocateImages, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.highEntropy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).HighEntropy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.aslr.requireInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionAslr).RequireInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.cfg.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.suppressExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).SuppressExports, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.cfg.strictControlFlowGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionCfg).StrictControlFlowGuard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.sehop.enable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).Enable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.sehop.telemetryOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionSehop).TelemetryOnly, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection.heap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionHeap).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.exploitProtection.heap.terminateOnError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsExploitProtectionHeap).TerminateOnError, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51176,6 +51363,399 @@ func (c *mqlWindows) GetDeviceGuard() *plugin.TValue[*mqlWindowsDeviceGuard] {
 
 		return c.deviceGuard()
 	})
+}
+
+// mqlWindowsExploitProtection for the windows.exploitProtection resource
+type mqlWindowsExploitProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsExploitProtectionInternal
+	Available        plugin.TValue[bool]
+	DisallowOverride plugin.TValue[bool]
+	Dep              plugin.TValue[*mqlWindowsExploitProtectionDep]
+	Aslr             plugin.TValue[*mqlWindowsExploitProtectionAslr]
+	ControlFlowGuard plugin.TValue[*mqlWindowsExploitProtectionCfg]
+	Sehop            plugin.TValue[*mqlWindowsExploitProtectionSehop]
+	Heap             plugin.TValue[*mqlWindowsExploitProtectionHeap]
+}
+
+// createWindowsExploitProtection creates a new instance of this resource
+func createWindowsExploitProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtection) MqlName() string {
+	return "windows.exploitProtection"
+}
+
+func (c *mqlWindowsExploitProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtection) GetAvailable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Available, func() (bool, error) {
+		return c.available()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetDisallowOverride() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisallowOverride, func() (bool, error) {
+		return c.disallowOverride()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetDep() *plugin.TValue[*mqlWindowsExploitProtectionDep] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionDep](&c.Dep, func() (*mqlWindowsExploitProtectionDep, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "dep")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionDep), nil
+			}
+		}
+
+		return c.dep()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetAslr() *plugin.TValue[*mqlWindowsExploitProtectionAslr] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionAslr](&c.Aslr, func() (*mqlWindowsExploitProtectionAslr, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "aslr")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionAslr), nil
+			}
+		}
+
+		return c.aslr()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetControlFlowGuard() *plugin.TValue[*mqlWindowsExploitProtectionCfg] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionCfg](&c.ControlFlowGuard, func() (*mqlWindowsExploitProtectionCfg, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "controlFlowGuard")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionCfg), nil
+			}
+		}
+
+		return c.controlFlowGuard()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetSehop() *plugin.TValue[*mqlWindowsExploitProtectionSehop] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionSehop](&c.Sehop, func() (*mqlWindowsExploitProtectionSehop, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "sehop")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionSehop), nil
+			}
+		}
+
+		return c.sehop()
+	})
+}
+
+func (c *mqlWindowsExploitProtection) GetHeap() *plugin.TValue[*mqlWindowsExploitProtectionHeap] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtectionHeap](&c.Heap, func() (*mqlWindowsExploitProtectionHeap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.exploitProtection", c.__id, "heap")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtectionHeap), nil
+			}
+		}
+
+		return c.heap()
+	})
+}
+
+// mqlWindowsExploitProtectionDep for the windows.exploitProtection.dep resource
+type mqlWindowsExploitProtectionDep struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionDepInternal it will be used here
+	Enable           plugin.TValue[string]
+	EmulateAtlThunks plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionDep creates a new instance of this resource
+func createWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionDep{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.dep", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionDep) MqlName() string {
+	return "windows.exploitProtection.dep"
+}
+
+func (c *mqlWindowsExploitProtectionDep) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionDep) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionDep) GetEmulateAtlThunks() *plugin.TValue[string] {
+	return &c.EmulateAtlThunks
+}
+
+// mqlWindowsExploitProtectionAslr for the windows.exploitProtection.aslr resource
+type mqlWindowsExploitProtectionAslr struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionAslrInternal it will be used here
+	BottomUp            plugin.TValue[string]
+	ForceRelocateImages plugin.TValue[string]
+	HighEntropy         plugin.TValue[string]
+	RequireInfo         plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionAslr creates a new instance of this resource
+func createWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionAslr{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.aslr", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionAslr) MqlName() string {
+	return "windows.exploitProtection.aslr"
+}
+
+func (c *mqlWindowsExploitProtectionAslr) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetBottomUp() *plugin.TValue[string] {
+	return &c.BottomUp
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetForceRelocateImages() *plugin.TValue[string] {
+	return &c.ForceRelocateImages
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetHighEntropy() *plugin.TValue[string] {
+	return &c.HighEntropy
+}
+
+func (c *mqlWindowsExploitProtectionAslr) GetRequireInfo() *plugin.TValue[string] {
+	return &c.RequireInfo
+}
+
+// mqlWindowsExploitProtectionCfg for the windows.exploitProtection.cfg resource
+type mqlWindowsExploitProtectionCfg struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionCfgInternal it will be used here
+	Enable                 plugin.TValue[string]
+	SuppressExports        plugin.TValue[string]
+	StrictControlFlowGuard plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionCfg creates a new instance of this resource
+func createWindowsExploitProtectionCfg(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionCfg{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.cfg", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionCfg) MqlName() string {
+	return "windows.exploitProtection.cfg"
+}
+
+func (c *mqlWindowsExploitProtectionCfg) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetSuppressExports() *plugin.TValue[string] {
+	return &c.SuppressExports
+}
+
+func (c *mqlWindowsExploitProtectionCfg) GetStrictControlFlowGuard() *plugin.TValue[string] {
+	return &c.StrictControlFlowGuard
+}
+
+// mqlWindowsExploitProtectionSehop for the windows.exploitProtection.sehop resource
+type mqlWindowsExploitProtectionSehop struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionSehopInternal it will be used here
+	Enable        plugin.TValue[string]
+	TelemetryOnly plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionSehop creates a new instance of this resource
+func createWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionSehop{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.sehop", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionSehop) MqlName() string {
+	return "windows.exploitProtection.sehop"
+}
+
+func (c *mqlWindowsExploitProtectionSehop) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionSehop) GetEnable() *plugin.TValue[string] {
+	return &c.Enable
+}
+
+func (c *mqlWindowsExploitProtectionSehop) GetTelemetryOnly() *plugin.TValue[string] {
+	return &c.TelemetryOnly
+}
+
+// mqlWindowsExploitProtectionHeap for the windows.exploitProtection.heap resource
+type mqlWindowsExploitProtectionHeap struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsExploitProtectionHeapInternal it will be used here
+	TerminateOnError plugin.TValue[string]
+}
+
+// createWindowsExploitProtectionHeap creates a new instance of this resource
+func createWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsExploitProtectionHeap{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.exploitProtection.heap", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsExploitProtectionHeap) MqlName() string {
+	return "windows.exploitProtection.heap"
+}
+
+func (c *mqlWindowsExploitProtectionHeap) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsExploitProtectionHeap) GetTerminateOnError() *plugin.TValue[string] {
+	return &c.TerminateOnError
 }
 
 // mqlWindowsScheduledTask for the windows.scheduledTask resource

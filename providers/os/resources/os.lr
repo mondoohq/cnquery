@@ -6359,6 +6359,98 @@ windows {
   deviceGuard() windows.deviceGuard
 }
 
+// Windows Exploit Protection
+//
+// Examine the system-wide Windows Exploit Protection (the successor to EMET)
+// configuration reported by `Get-ProcessMitigation -System`. Five mitigations
+// are supported system-wide: data execution prevention (`dep`), address space
+// layout randomization (`aslr`), Control Flow Guard (`controlFlowGuard`),
+// structured exception handling overwrite protection (`sehop`), and heap
+// integrity (`heap`). `disallowOverride` reflects whether users may override
+// these settings. On systems without the ProcessMitigations module the
+// mitigation accessors resolve to null while `disallowOverride` still resolves
+// from the registry.
+windows.exploitProtection @defaults("disallowOverride") {
+  // Whether the Get-ProcessMitigation cmdlet is available on the target
+  available() bool
+  // Whether users are prevented from overriding the exploit protection settings
+  disallowOverride() bool
+  // Data execution prevention (DEP) settings
+  dep() windows.exploitProtection.dep
+  // Address space layout randomization (ASLR) settings
+  aslr() windows.exploitProtection.aslr
+  // Control Flow Guard (CFG) settings
+  controlFlowGuard() windows.exploitProtection.cfg
+  // Structured Exception Handling Overwrite Protection (SEHOP) settings
+  sehop() windows.exploitProtection.sehop
+  // Heap integrity settings
+  heap() windows.exploitProtection.heap
+}
+
+// Windows Exploit Protection: data execution prevention (DEP)
+//
+// DEP prevents memory not explicitly marked executable from running as code.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.dep`.
+windows.exploitProtection.dep @defaults("enable") {
+  // Whether DEP is enabled
+  enable string
+  // Whether ATL thunk emulation is enabled
+  emulateAtlThunks string
+}
+
+// Windows Exploit Protection: address space layout randomization (ASLR)
+//
+// ASLR randomizes the memory layout of a process to frustrate exploits that
+// rely on predictable addresses. Each value is "ON", "OFF", or "NOTSET".
+// Reached through `windows.exploitProtection.aslr`.
+windows.exploitProtection.aslr @defaults("bottomUp forceRelocateImages") {
+  // Whether bottom-up randomization is enabled
+  bottomUp string
+  // Whether images without /DYNAMICBASE are forcibly relocated
+  forceRelocateImages string
+  // Whether high-entropy bottom-up randomization is enabled
+  highEntropy string
+  // Whether images are required to declare ASLR support
+  requireInfo string
+}
+
+// Windows Exploit Protection: Control Flow Guard (CFG)
+//
+// CFG protects against memory-corruption exploits that hijack indirect calls.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.controlFlowGuard`.
+windows.exploitProtection.cfg @defaults("enable") {
+  // Whether Control Flow Guard is enabled
+  enable string
+  // Whether export suppression is enabled
+  suppressExports string
+  // Whether strict Control Flow Guard is enabled
+  strictControlFlowGuard string
+}
+
+// Windows Exploit Protection: structured exception handling overwrite protection (SEHOP)
+//
+// SEHOP blocks exploits that overwrite the structured exception handler chain.
+// Each value is "ON", "OFF", or "NOTSET". Reached through
+// `windows.exploitProtection.sehop`.
+windows.exploitProtection.sehop @defaults("enable") {
+  // Whether SEHOP is enabled
+  enable string
+  // Whether SEHOP runs in telemetry-only mode
+  telemetryOnly string
+}
+
+// Windows Exploit Protection: heap integrity
+//
+// Terminating on heap corruption prevents an attacker from continuing
+// execution after corrupting the heap. The value is "ON", "OFF", or "NOTSET".
+// Reached through `windows.exploitProtection.heap`.
+windows.exploitProtection.heap @defaults("terminateOnError") {
+  // Whether the process is terminated on heap corruption
+  terminateOnError string
+}
+
 // Windows Task Scheduler task
 //
 // Examine a registered task from the Windows Task Scheduler: its identity
