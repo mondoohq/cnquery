@@ -99,7 +99,7 @@ func init() {
 			Create: createDigitaloceanDroplet,
 		},
 		"digitalocean.firewall": {
-			// to override args, implement: initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanFirewall,
 			Create: createDigitaloceanFirewall,
 		},
 		"digitalocean.firewall.ingressRule": {
@@ -111,7 +111,7 @@ func init() {
 			Create: createDigitaloceanFirewallEgressRule,
 		},
 		"digitalocean.database": {
-			// to override args, implement: initDigitaloceanDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanDatabase,
 			Create: createDigitaloceanDatabase,
 		},
 		"digitalocean.database.backup": {
@@ -151,7 +151,7 @@ func init() {
 			Create: createDigitaloceanVolume,
 		},
 		"digitalocean.loadBalancer": {
-			// to override args, implement: initDigitaloceanLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanLoadBalancer,
 			Create: createDigitaloceanLoadBalancer,
 		},
 		"digitalocean.vpc": {
@@ -163,7 +163,7 @@ func init() {
 			Create: createDigitaloceanVpcPeering,
 		},
 		"digitalocean.kubernetes.cluster": {
-			// to override args, implement: initDigitaloceanKubernetesCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanKubernetesCluster,
 			Create: createDigitaloceanKubernetesCluster,
 		},
 		"digitalocean.kubernetes.nodePool": {
@@ -231,7 +231,7 @@ func init() {
 			Create: createDigitaloceanSpacesKey,
 		},
 		"digitalocean.spacesBucket": {
-			// to override args, implement: initDigitaloceanSpacesBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanSpacesBucket,
 			Create: createDigitaloceanSpacesBucket,
 		},
 		"digitalocean.image": {
