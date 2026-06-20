@@ -7025,6 +7025,113 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
   kernelShadowStacksLaunch int
 }
 
+// Windows Local Security Authority (LSA) security policy
+//
+// Examine the Local Security Authority configuration that backs the
+// "Network access", "Network security", and related security options under
+// HKLM\SYSTEM\CurrentControlSet\Control\Lsa. These DWORD and SDDL values
+// control anonymous access restrictions, blank-password use, LAN Manager
+// authentication level, NTLM hashing, LSA protection (RunAsPPL), and audit
+// behaviour. NTLM (MSV1_0 and WDigest) settings are grouped under `ntlm` and
+// the Netlogon secure-channel settings under `secureChannel`. Values are
+// nullable: an absent value resolves to null so it is distinguishable from an
+// explicit 0, letting checks assert on configured-vs-default precisely.
+windows.lsa {
+  // Whether storing network authentication credentials is disabled (Lsa\DisableDomainCreds; 1 disables)
+  disableDomainCreds() int
+  // Whether the Everyone permissions apply to anonymous users (Lsa\EveryoneIncludesAnonymous; 0 excludes anonymous)
+  everyoneIncludesAnonymous() int
+  // Sharing and security model for local accounts (Lsa\ForceGuest; 0 classic, 1 guest only)
+  forceGuest() int
+  // Whether local accounts with blank passwords are limited to console logon (Lsa\LimitBlankPasswordUse; 1 limits)
+  limitBlankPasswordUse() int
+  // LAN Manager authentication level (Lsa\LmCompatibilityLevel; 0-5, higher is stronger)
+  lmCompatibilityLevel() int
+  // Whether the LAN Manager (LM) hash of new passwords is not stored (Lsa\NoLMHash; 1 disables LM hash storage)
+  noLmHash() int
+  // Restrictions on anonymous (null session) connections (Lsa\RestrictAnonymous; higher is more restrictive)
+  restrictAnonymous() int
+  // Whether anonymous enumeration of SAM accounts is disallowed (Lsa\RestrictAnonymousSAM; 1 disallows)
+  restrictAnonymousSam() int
+  // SDDL string controlling which clients may make remote SAM calls (Lsa\restrictremotesam, REG_SZ)
+  restrictRemoteSam() string
+  // LSA protection / Run as Protected Process Light level (Lsa\RunAsPPL; 1 or 2 enables LSA protection)
+  runAsPpl() int
+  // Whether advanced audit policy is forced over legacy audit categories (Lsa\SCENoApplyLegacyAuditPolicy)
+  //
+  // 1 forces the advanced audit policy subcategories and ignores the legacy
+  // audit categories.
+  sceNoApplyLegacyAuditPolicy() int
+  // Recovery console / authority delegation submit-control flag (Lsa\SubmitControl; 1 allows)
+  submitControl() int
+  // Whether the computer account identity is used for outbound authentication (Lsa\UseMachineId; 1 uses machine identity)
+  useMachineId() int
+  // NTLM authentication settings (Lsa\MSV1_0 and the WDigest provider)
+  ntlm() windows.lsa.ntlm
+  // Netlogon secure-channel settings (Services\Netlogon\Parameters)
+  secureChannel() windows.lsa.secureChannel
+}
+
+// Windows LSA NTLM authentication settings
+//
+// Examine the NTLM security settings under
+// HKLM\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0 together with the WDigest
+// provider's UseLogonCredential value under
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest. These
+// control NULL session fallback, inbound/outbound NTLM auditing and
+// restriction, the minimum negotiated NTLM session security for clients and
+// servers, and whether WDigest caches plaintext credentials in memory. Values
+// are nullable so an absent value is distinguishable from an explicit 0.
+private windows.lsa.ntlm {
+  // Whether NTLM NULL session fallback is allowed (MSV1_0\AllowNullSessionFallback; 0 disallows)
+  allowNullSessionFallback int
+  // Audit level for incoming NTLM traffic (MSV1_0\AuditReceivingNTLMTraffic; 0 off, 1 allow, 2 deny-all)
+  auditReceivingNtlmTraffic int
+  // Minimum session security negotiated for NTLM SSP clients (MSV1_0\NTLMMinClientSec, bitmask)
+  ntlmMinClientSec int
+  // Minimum session security negotiated for NTLM SSP servers (MSV1_0\NTLMMinServerSec, bitmask)
+  ntlmMinServerSec int
+  // Restriction level for outgoing NTLM traffic to remote servers (MSV1_0\RestrictSendingNTLMTraffic; 0 allow, 1 audit, 2 deny-all)
+  restrictSendingNtlmTraffic int
+  // Whether WDigest caches plaintext credentials in memory (WDigest\UseLogonCredential; 0 disables plaintext caching)
+  useLogonCredential int
+  // Whether online identities (PKU2U) may authenticate to this computer (Lsa\pku2u\AllowOnlineID; 0 disallows)
+  allowOnlineId int
+}
+
+// Windows LSA Netlogon secure-channel settings
+//
+// Examine the Netlogon secure-channel (domain member) settings under
+// HKLM\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters. These control
+// digital signing and sealing of secure-channel data, the machine account
+// password change behaviour and maximum age, strong session keys, NETBIOS
+// discovery, the vulnerable-channel allow list, and inbound NTLM auditing in
+// the domain. BlockNetbiosDiscovery is read from the GPO location
+// HKLM\SOFTWARE\Policies\Microsoft\Netlogon\Parameters. Values are nullable so
+// an absent value is distinguishable from an explicit 0.
+private windows.lsa.secureChannel {
+  // Audit level for inbound NTLM traffic on domain controllers (Netlogon\Parameters\AuditNTLMInDomain, bitmask)
+  auditNtlmInDomain int
+  // Whether NetBIOS-based domain controller discovery is blocked (Policies\Microsoft\Netlogon\Parameters\BlockNetbiosDiscovery; 1 blocks)
+  blockNetbiosDiscovery int
+  // Whether automatic machine account password changes are disabled (Netlogon\Parameters\DisablePasswordChange; 1 disables)
+  disablePasswordChange int
+  // Maximum machine account password age in days (Netlogon\Parameters\MaximumPasswordAge)
+  maximumPasswordAge int
+  // Whether the domain controller refuses machine account password changes (Netlogon\Parameters\RefusePasswordChange; 1 refuses)
+  refusePasswordChange int
+  // Whether secure-channel data is digitally signed or sealed when possible (Netlogon\Parameters\RequireSignOrSeal; 1 requires)
+  requireSignOrSeal int
+  // Whether a strong (128-bit) secure-channel session key is required (Netlogon\Parameters\RequireStrongKey; 1 requires)
+  requireStrongKey int
+  // Whether secure-channel data is digitally encrypted when possible (Netlogon\Parameters\SealSecureChannel; 1 seals)
+  sealSecureChannel int
+  // Whether secure-channel data is digitally signed when possible (Netlogon\Parameters\SignSecureChannel; 1 signs)
+  signSecureChannel int
+  // Allow list of vulnerable Netlogon secure channels (Netlogon\Parameters\vulnerablechannelallowlist, REG_SZ)
+  vulnerableChannelAllowList string
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,

@@ -339,6 +339,9 @@ const (
 	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
 	ResourceWindowsWinrmService                           string = "windows.winrm.service"
 	ResourceWindowsDeviceGuard                            string = "windows.deviceGuard"
+	ResourceWindowsLsa                                    string = "windows.lsa"
+	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
+	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1768,6 +1771,18 @@ func init() {
 		"windows.deviceGuard": {
 			// to override args, implement: initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsDeviceGuard,
+		},
+		"windows.lsa": {
+			// to override args, implement: initWindowsLsa(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsa,
+		},
+		"windows.lsa.ntlm": {
+			// to override args, implement: initWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsaNtlm,
+		},
+		"windows.lsa.secureChannel": {
+			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsLsaSecureChannel,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8379,6 +8394,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetKernelShadowStacksLaunch()).ToDataRes(types.Int)
+	},
+	"windows.lsa.disableDomainCreds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetDisableDomainCreds()).ToDataRes(types.Int)
+	},
+	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetEveryoneIncludesAnonymous()).ToDataRes(types.Int)
+	},
+	"windows.lsa.forceGuest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetForceGuest()).ToDataRes(types.Int)
+	},
+	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLimitBlankPasswordUse()).ToDataRes(types.Int)
+	},
+	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLmCompatibilityLevel()).ToDataRes(types.Int)
+	},
+	"windows.lsa.noLmHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetNoLmHash()).ToDataRes(types.Int)
+	},
+	"windows.lsa.restrictAnonymous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictAnonymous()).ToDataRes(types.Int)
+	},
+	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictAnonymousSam()).ToDataRes(types.Int)
+	},
+	"windows.lsa.restrictRemoteSam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRestrictRemoteSam()).ToDataRes(types.String)
+	},
+	"windows.lsa.runAsPpl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetRunAsPpl()).ToDataRes(types.Int)
+	},
+	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSceNoApplyLegacyAuditPolicy()).ToDataRes(types.Int)
+	},
+	"windows.lsa.submitControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSubmitControl()).ToDataRes(types.Int)
+	},
+	"windows.lsa.useMachineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetUseMachineId()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetNtlm()).ToDataRes(types.Resource("windows.lsa.ntlm"))
+	},
+	"windows.lsa.secureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetSecureChannel()).ToDataRes(types.Resource("windows.lsa.secureChannel"))
+	},
+	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAllowNullSessionFallback()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAuditReceivingNtlmTraffic()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.ntlmMinClientSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetNtlmMinClientSec()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.ntlmMinServerSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetNtlmMinServerSec()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.restrictSendingNtlmTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetRestrictSendingNtlmTraffic()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetUseLogonCredential()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaNtlm).GetAllowOnlineId()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.auditNtlmInDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetAuditNtlmInDomain()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetBlockNetbiosDiscovery()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetDisablePasswordChange()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetMaximumPasswordAge()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRefusePasswordChange()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireSignOrSeal()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireStrongKey()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetSealSecureChannel()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetSignSecureChannel()).ToDataRes(types.Int)
+	},
+	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsaSecureChannel).GetVulnerableChannelAllowList()).ToDataRes(types.String)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -20173,6 +20284,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDeviceGuard).KernelShadowStacksLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.disableDomainCreds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).DisableDomainCreds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).EveryoneIncludesAnonymous, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.forceGuest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).ForceGuest, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LimitBlankPasswordUse, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LmCompatibilityLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.noLmHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).NoLmHash, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictAnonymous, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictAnonymousSam, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.restrictRemoteSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RestrictRemoteSam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.runAsPpl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).RunAsPpl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SceNoApplyLegacyAuditPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.submitControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SubmitControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.useMachineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).UseMachineId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).Ntlm, ok = plugin.RawToTValue[*mqlWindowsLsaNtlm](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).SecureChannel, ok = plugin.RawToTValue[*mqlWindowsLsaSecureChannel](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AllowNullSessionFallback, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AuditReceivingNtlmTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.ntlmMinClientSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).NtlmMinClientSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.ntlmMinServerSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).NtlmMinServerSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.restrictSendingNtlmTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).RestrictSendingNtlmTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).UseLogonCredential, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaNtlm).AllowOnlineId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.lsa.secureChannel.auditNtlmInDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).AuditNtlmInDomain, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).BlockNetbiosDiscovery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).DisablePasswordChange, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).MaximumPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RefusePasswordChange, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RequireSignOrSeal, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).RequireStrongKey, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).SealSecureChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).SignSecureChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsaSecureChannel).VulnerableChannelAllowList, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53234,6 +53485,348 @@ func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[int64] {
 
 func (c *mqlWindowsDeviceGuard) GetKernelShadowStacksLaunch() *plugin.TValue[int64] {
 	return &c.KernelShadowStacksLaunch
+}
+
+// mqlWindowsLsa for the windows.lsa resource
+type mqlWindowsLsa struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaInternal it will be used here
+	DisableDomainCreds          plugin.TValue[int64]
+	EveryoneIncludesAnonymous   plugin.TValue[int64]
+	ForceGuest                  plugin.TValue[int64]
+	LimitBlankPasswordUse       plugin.TValue[int64]
+	LmCompatibilityLevel        plugin.TValue[int64]
+	NoLmHash                    plugin.TValue[int64]
+	RestrictAnonymous           plugin.TValue[int64]
+	RestrictAnonymousSam        plugin.TValue[int64]
+	RestrictRemoteSam           plugin.TValue[string]
+	RunAsPpl                    plugin.TValue[int64]
+	SceNoApplyLegacyAuditPolicy plugin.TValue[int64]
+	SubmitControl               plugin.TValue[int64]
+	UseMachineId                plugin.TValue[int64]
+	Ntlm                        plugin.TValue[*mqlWindowsLsaNtlm]
+	SecureChannel               plugin.TValue[*mqlWindowsLsaSecureChannel]
+}
+
+// createWindowsLsa creates a new instance of this resource
+func createWindowsLsa(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsa{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsa) MqlName() string {
+	return "windows.lsa"
+}
+
+func (c *mqlWindowsLsa) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsa) GetDisableDomainCreds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DisableDomainCreds, func() (int64, error) {
+		return c.disableDomainCreds()
+	})
+}
+
+func (c *mqlWindowsLsa) GetEveryoneIncludesAnonymous() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EveryoneIncludesAnonymous, func() (int64, error) {
+		return c.everyoneIncludesAnonymous()
+	})
+}
+
+func (c *mqlWindowsLsa) GetForceGuest() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ForceGuest, func() (int64, error) {
+		return c.forceGuest()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLimitBlankPasswordUse() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LimitBlankPasswordUse, func() (int64, error) {
+		return c.limitBlankPasswordUse()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLmCompatibilityLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LmCompatibilityLevel, func() (int64, error) {
+		return c.lmCompatibilityLevel()
+	})
+}
+
+func (c *mqlWindowsLsa) GetNoLmHash() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NoLmHash, func() (int64, error) {
+		return c.noLmHash()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictAnonymous() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RestrictAnonymous, func() (int64, error) {
+		return c.restrictAnonymous()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictAnonymousSam() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RestrictAnonymousSam, func() (int64, error) {
+		return c.restrictAnonymousSam()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRestrictRemoteSam() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestrictRemoteSam, func() (string, error) {
+		return c.restrictRemoteSam()
+	})
+}
+
+func (c *mqlWindowsLsa) GetRunAsPpl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RunAsPpl, func() (int64, error) {
+		return c.runAsPpl()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSceNoApplyLegacyAuditPolicy() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SceNoApplyLegacyAuditPolicy, func() (int64, error) {
+		return c.sceNoApplyLegacyAuditPolicy()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSubmitControl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SubmitControl, func() (int64, error) {
+		return c.submitControl()
+	})
+}
+
+func (c *mqlWindowsLsa) GetUseMachineId() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UseMachineId, func() (int64, error) {
+		return c.useMachineId()
+	})
+}
+
+func (c *mqlWindowsLsa) GetNtlm() *plugin.TValue[*mqlWindowsLsaNtlm] {
+	return plugin.GetOrCompute[*mqlWindowsLsaNtlm](&c.Ntlm, func() (*mqlWindowsLsaNtlm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.lsa", c.__id, "ntlm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsLsaNtlm), nil
+			}
+		}
+
+		return c.ntlm()
+	})
+}
+
+func (c *mqlWindowsLsa) GetSecureChannel() *plugin.TValue[*mqlWindowsLsaSecureChannel] {
+	return plugin.GetOrCompute[*mqlWindowsLsaSecureChannel](&c.SecureChannel, func() (*mqlWindowsLsaSecureChannel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.lsa", c.__id, "secureChannel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsLsaSecureChannel), nil
+			}
+		}
+
+		return c.secureChannel()
+	})
+}
+
+// mqlWindowsLsaNtlm for the windows.lsa.ntlm resource
+type mqlWindowsLsaNtlm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaNtlmInternal it will be used here
+	AllowNullSessionFallback   plugin.TValue[int64]
+	AuditReceivingNtlmTraffic  plugin.TValue[int64]
+	NtlmMinClientSec           plugin.TValue[int64]
+	NtlmMinServerSec           plugin.TValue[int64]
+	RestrictSendingNtlmTraffic plugin.TValue[int64]
+	UseLogonCredential         plugin.TValue[int64]
+	AllowOnlineId              plugin.TValue[int64]
+}
+
+// createWindowsLsaNtlm creates a new instance of this resource
+func createWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsaNtlm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa.ntlm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsaNtlm) MqlName() string {
+	return "windows.lsa.ntlm"
+}
+
+func (c *mqlWindowsLsaNtlm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsaNtlm) GetAllowNullSessionFallback() *plugin.TValue[int64] {
+	return &c.AllowNullSessionFallback
+}
+
+func (c *mqlWindowsLsaNtlm) GetAuditReceivingNtlmTraffic() *plugin.TValue[int64] {
+	return &c.AuditReceivingNtlmTraffic
+}
+
+func (c *mqlWindowsLsaNtlm) GetNtlmMinClientSec() *plugin.TValue[int64] {
+	return &c.NtlmMinClientSec
+}
+
+func (c *mqlWindowsLsaNtlm) GetNtlmMinServerSec() *plugin.TValue[int64] {
+	return &c.NtlmMinServerSec
+}
+
+func (c *mqlWindowsLsaNtlm) GetRestrictSendingNtlmTraffic() *plugin.TValue[int64] {
+	return &c.RestrictSendingNtlmTraffic
+}
+
+func (c *mqlWindowsLsaNtlm) GetUseLogonCredential() *plugin.TValue[int64] {
+	return &c.UseLogonCredential
+}
+
+func (c *mqlWindowsLsaNtlm) GetAllowOnlineId() *plugin.TValue[int64] {
+	return &c.AllowOnlineId
+}
+
+// mqlWindowsLsaSecureChannel for the windows.lsa.secureChannel resource
+type mqlWindowsLsaSecureChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsLsaSecureChannelInternal it will be used here
+	AuditNtlmInDomain          plugin.TValue[int64]
+	BlockNetbiosDiscovery      plugin.TValue[int64]
+	DisablePasswordChange      plugin.TValue[int64]
+	MaximumPasswordAge         plugin.TValue[int64]
+	RefusePasswordChange       plugin.TValue[int64]
+	RequireSignOrSeal          plugin.TValue[int64]
+	RequireStrongKey           plugin.TValue[int64]
+	SealSecureChannel          plugin.TValue[int64]
+	SignSecureChannel          plugin.TValue[int64]
+	VulnerableChannelAllowList plugin.TValue[string]
+}
+
+// createWindowsLsaSecureChannel creates a new instance of this resource
+func createWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsLsaSecureChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.lsa.secureChannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsLsaSecureChannel) MqlName() string {
+	return "windows.lsa.secureChannel"
+}
+
+func (c *mqlWindowsLsaSecureChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetAuditNtlmInDomain() *plugin.TValue[int64] {
+	return &c.AuditNtlmInDomain
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetBlockNetbiosDiscovery() *plugin.TValue[int64] {
+	return &c.BlockNetbiosDiscovery
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetDisablePasswordChange() *plugin.TValue[int64] {
+	return &c.DisablePasswordChange
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetMaximumPasswordAge() *plugin.TValue[int64] {
+	return &c.MaximumPasswordAge
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRefusePasswordChange() *plugin.TValue[int64] {
+	return &c.RefusePasswordChange
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRequireSignOrSeal() *plugin.TValue[int64] {
+	return &c.RequireSignOrSeal
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetRequireStrongKey() *plugin.TValue[int64] {
+	return &c.RequireStrongKey
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetSealSecureChannel() *plugin.TValue[int64] {
+	return &c.SealSecureChannel
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[int64] {
+	return &c.SignSecureChannel
+}
+
+func (c *mqlWindowsLsaSecureChannel) GetVulnerableChannelAllowList() *plugin.TValue[string] {
+	return &c.VulnerableChannelAllowList
 }
 
 // mqlWindowsTpm for the windows.tpm resource
