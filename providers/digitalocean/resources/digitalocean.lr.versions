@@ -152,6 +152,7 @@ digitalocean.droplet.backupsEnabled 13.0.1
 digitalocean.droplet.baseImage 13.1.7
 digitalocean.droplet.createdAt 13.0.1
 digitalocean.droplet.disk 13.0.1
+digitalocean.droplet.exposure 13.7.1
 digitalocean.droplet.features 13.0.1
 digitalocean.droplet.firewalls 13.0.2
 digitalocean.droplet.id 13.0.1
@@ -603,6 +604,11 @@ digitalocean.loadBalancer.type 13.6.2
 digitalocean.loadBalancer.vpc 13.0.2
 digitalocean.loadBalancer.vpcUuid 13.0.1
 digitalocean.loadBalancers 13.0.1
+digitalocean.network.exposure 13.7.1
+digitalocean.network.exposure.firewallAllowsIngress 13.7.1
+digitalocean.network.exposure.hasPublicIp 13.7.1
+digitalocean.network.exposure.internetReachable 13.7.1
+digitalocean.network.exposure.openIngressRules 13.7.1
 digitalocean.nfs 13.4.2
 digitalocean.nfs.createdAt 13.4.2
 digitalocean.nfs.host 13.4.2

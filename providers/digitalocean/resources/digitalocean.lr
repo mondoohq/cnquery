@@ -177,6 +177,8 @@ digitalocean.droplet @defaults("id name status") {
   firewalls() []digitalocean.firewall
   // True when no firewall is attached to the droplet (by id or tag); does not check inbound rule restrictiveness — for that, query `firewalls`
   missingFirewall() bool
+  // Internet-exposure breakdown (public IP combined with firewall ingress)
+  exposure() digitalocean.network.exposure
   // Block storage volumes attached to the droplet
   volumes() []digitalocean.volume
   // Linux kernel the droplet boots (id, name, version); null on droplets using the current external boot loader
@@ -265,6 +267,22 @@ private digitalocean.firewall.ingressRule @defaults("protocol ports openToIntern
   sourceLoadBalancers() []digitalocean.loadBalancer
   // Kubernetes clusters trusted as a traffic source by this rule
   sourceKubernetesClusters() []digitalocean.kubernetes.cluster
+}
+
+// Droplet internet-exposure breakdown
+//
+// Explains whether a droplet is reachable from the internet: whether it has a
+// public IP and whether its firewalls admit inbound traffic from any address —
+// including the case where no firewall is attached, which leaves it fully open.
+private digitalocean.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the droplet is reachable from the internet (a public IP and firewall ingress that admits any address)
+  internetReachable bool
+  // Whether the droplet has a public IPv4 or IPv6 address
+  hasPublicIp bool
+  // Whether inbound traffic from any address is admitted — a firewall ingress rule open to the internet, or no firewall attached at all
+  firewallAllowsIngress bool
+  // Firewall ingress rules that admit traffic from any address
+  openIngressRules []digitalocean.firewall.ingressRule
 }
 
 // Egress rule of a DigitalOcean cloud firewall

@@ -21,6 +21,7 @@ const (
 	ResourceDigitaloceanDroplet                                         string = "digitalocean.droplet"
 	ResourceDigitaloceanFirewall                                        string = "digitalocean.firewall"
 	ResourceDigitaloceanFirewallIngressRule                             string = "digitalocean.firewall.ingressRule"
+	ResourceDigitaloceanNetworkExposure                                 string = "digitalocean.network.exposure"
 	ResourceDigitaloceanFirewallEgressRule                              string = "digitalocean.firewall.egressRule"
 	ResourceDigitaloceanDatabase                                        string = "digitalocean.database"
 	ResourceDigitaloceanDatabaseBackup                                  string = "digitalocean.database.backup"
@@ -106,6 +107,10 @@ func init() {
 		"digitalocean.firewall.ingressRule": {
 			// to override args, implement: initDigitaloceanFirewallIngressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanFirewallIngressRule,
+		},
+		"digitalocean.network.exposure": {
+			// to override args, implement: initDigitaloceanNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanNetworkExposure,
 		},
 		"digitalocean.firewall.egressRule": {
 			// to override args, implement: initDigitaloceanFirewallEgressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -613,6 +618,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.droplet.missingFirewall": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetMissingFirewall()).ToDataRes(types.Bool)
 	},
+	"digitalocean.droplet.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetExposure()).ToDataRes(types.Resource("digitalocean.network.exposure"))
+	},
 	"digitalocean.droplet.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetVolumes()).ToDataRes(types.Array(types.Resource("digitalocean.volume")))
 	},
@@ -687,6 +695,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.firewall.ingressRule.sourceKubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewallIngressRule).GetSourceKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
+	},
+	"digitalocean.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"digitalocean.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"digitalocean.network.exposure.firewallAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNetworkExposure).GetFirewallAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"digitalocean.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Resource("digitalocean.firewall.ingressRule")))
 	},
 	"digitalocean.firewall.egressRule.protocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewallEgressRule).GetProtocol()).ToDataRes(types.String)
@@ -2991,6 +3011,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDroplet).MissingFirewall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"digitalocean.droplet.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).Exposure, ok = plugin.RawToTValue[*mqlDigitaloceanNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"digitalocean.droplet.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDroplet).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3097,6 +3121,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.firewall.ingressRule.sourceKubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanFirewallIngressRule).SourceKubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.network.exposure.firewallAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNetworkExposure).FirewallAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.firewall.egressRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6765,6 +6809,7 @@ type mqlDigitaloceanDroplet struct {
 	BaseImage             plugin.TValue[*mqlDigitaloceanImage]
 	Firewalls             plugin.TValue[[]any]
 	MissingFirewall       plugin.TValue[bool]
+	Exposure              plugin.TValue[*mqlDigitaloceanNetworkExposure]
 	Volumes               plugin.TValue[[]any]
 	Kernel                plugin.TValue[any]
 	NextBackupWindowStart plugin.TValue[*time.Time]
@@ -6937,6 +6982,22 @@ func (c *mqlDigitaloceanDroplet) GetFirewalls() *plugin.TValue[[]any] {
 func (c *mqlDigitaloceanDroplet) GetMissingFirewall() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.MissingFirewall, func() (bool, error) {
 		return c.missingFirewall()
+	})
+}
+
+func (c *mqlDigitaloceanDroplet) GetExposure() *plugin.TValue[*mqlDigitaloceanNetworkExposure] {
+	return plugin.GetOrCompute[*mqlDigitaloceanNetworkExposure](&c.Exposure, func() (*mqlDigitaloceanNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.droplet", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -7248,6 +7309,65 @@ func (c *mqlDigitaloceanFirewallIngressRule) GetSourceKubernetesClusters() *plug
 
 		return c.sourceKubernetesClusters()
 	})
+}
+
+// mqlDigitaloceanNetworkExposure for the digitalocean.network.exposure resource
+type mqlDigitaloceanNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanNetworkExposureInternal it will be used here
+	InternetReachable     plugin.TValue[bool]
+	HasPublicIp           plugin.TValue[bool]
+	FirewallAllowsIngress plugin.TValue[bool]
+	OpenIngressRules      plugin.TValue[[]any]
+}
+
+// createDigitaloceanNetworkExposure creates a new instance of this resource
+func createDigitaloceanNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanNetworkExposure) MqlName() string {
+	return "digitalocean.network.exposure"
+}
+
+func (c *mqlDigitaloceanNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlDigitaloceanNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlDigitaloceanNetworkExposure) GetFirewallAllowsIngress() *plugin.TValue[bool] {
+	return &c.FirewallAllowsIngress
+}
+
+func (c *mqlDigitaloceanNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
 }
 
 // mqlDigitaloceanFirewallEgressRule for the digitalocean.firewall.egressRule resource
