@@ -7275,6 +7275,142 @@ private windows.lsa.secureChannel {
   vulnerableChannelAllowList string
 }
 
+// Windows Print Spooler security configuration
+//
+// Examine the hardening-relevant state of the Windows Print Spooler and
+// printing subsystem. The fields are sourced from the Group Policy printer
+// keys under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers (and its
+// PointAndPrint, RPC, IPP, and WPP subkeys), the machine-wide
+// HKLM\SYSTEM\CurrentControlSet\Control\Print key, and the spooler service
+// start configuration under HKLM\SYSTEM\CurrentControlSet\Services\Spooler.
+//
+// Integer settings that are not present in the registry resolve to null so
+// "not configured" is distinguishable from an explicit value of 0 — important
+// because several controls (for example registerRemoteRpcEndpoint == 0) are
+// compliant precisely when set to 0. Boolean settings resolve to their
+// documented Windows default when the value is absent.
+windows.spooler {
+  // Print Spooler service start type (HKLM\SYSTEM\CurrentControlSet\Services\Spooler\Start)
+  //
+  // One of 2 (Automatic), 3 (Manual), or 4 (Disabled). Null when the value
+  // is not present.
+  startMode() int
+  // Whether the Print Spooler service is disabled (Start == 4)
+  disabled() bool
+  // Whether incoming remote RPC connections to the spooler are allowed (Printers\RegisterSpoolerRemoteRpcEndPoint)
+  //
+  // 0 disables the remote RPC endpoint (the hardened state), 1 enables it.
+  // Null when not configured.
+  registerRemoteRpcEndpoint() int
+  // Redirection Guard policy state (Printers\RedirectionguardPolicy)
+  //
+  // 1 enables Redirection Guard. Null when not configured.
+  redirectionGuardPolicy() int
+  // Whether downloading of print drivers over HTTP / Web Point-and-Print is disabled (Printers\DisableWebPnPDownload)
+  //
+  // Defaults to false (downloads allowed) when not configured.
+  webPnpDownloadDisabled() bool
+  // Whether printing over HTTP is disabled (Printers\DisableHTTPPrinting)
+  //
+  // Defaults to false (HTTP printing allowed) when not configured.
+  httpPrintingDisabled() bool
+  // Copy Files policy controlling which color profile / helper files the spooler may copy (Printers\CopyFilesPolicy)
+  //
+  // 1 restricts copied files to the Windows color system. Null when not configured.
+  copyFilesPolicy() int
+  // Whether incoming RPC connections to the spooler require packet privacy (Control\Print\RpcAuthnLevelPrivacyEnabled)
+  //
+  // Defaults to true (packet privacy enabled), the modern Windows default,
+  // when not configured.
+  rpcAuthnLevelPrivacyEnabled() bool
+  // Who may add printer drivers via the LanMan print provider (Control\Print\Providers\LanMan Print Services\Servers\AddPrinterDrivers)
+  //
+  // 1 restricts adding printer drivers to administrators. Null when not configured.
+  addPrinterDriversRestricted() int
+  // Point and Print restriction settings (Printers\PointAndPrint)
+  pointAndPrint() windows.spooler.pointAndPrint
+  // Spooler RPC settings (Printers\RPC)
+  rpc() windows.spooler.rpc
+  // Internet Printing Protocol (IPP) certificate validation settings (Printers\IPP)
+  ipp() windows.spooler.ipp
+  // Windows Protected Print mode policy state (Printers\WPP\WindowsProtectedPrintGroupPolicyState)
+  //
+  // 1 enables Windows Protected Print. Null when not configured.
+  windowsProtectedPrintGroupPolicyState() int
+}
+
+// Windows Print Spooler Point and Print restrictions
+//
+// Settings under HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint
+// that govern how non-administrators may install printer drivers from a print
+// server. Integer values are null when not configured.
+private windows.spooler.pointAndPrint @defaults("restrictDriverInstallationToAdministrators") {
+  // Whether printer driver installation is restricted to administrators (RestrictDriverInstallationToAdministrators)
+  //
+  // Defaults to true (the hardened Windows default introduced by the
+  // PrintNightmare mitigations) when not configured.
+  restrictDriverInstallationToAdministrators bool
+  // Whether to suppress elevation/warning prompts when installing a Point-and-Print driver (NoWarningNoElevationOnInstall)
+  //
+  // 0 keeps the warning/elevation prompt (the hardened state). Null when not configured.
+  noWarningNoElevationOnInstall int
+  // Whether to suppress elevation/warning prompts when updating a Point-and-Print driver (UpdatePromptSettings)
+  //
+  // 0 keeps the warning/elevation prompt (the hardened state). Null when not configured.
+  updatePromptSettings int
+}
+
+// Windows Print Spooler RPC settings
+//
+// Settings under HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\RPC
+// that control the transport and authentication used for spooler RPC.
+// Integer values are null when not configured.
+private windows.spooler.rpc @defaults("authentication protocols") {
+  // RPC over named pipes selection (RpcUseNamedPipeProtocol)
+  //
+  // 0 uses RPC over TCP only (the hardened state), 1 also allows named pipes.
+  // Null when not configured.
+  useNamedPipeProtocol int
+  // RPC authentication requirement for incoming connections (RpcAuthentication)
+  //
+  // 1 = default, 2 = negotiate, 3 = none. Null when not configured.
+  authentication int
+  // Allowed RPC transport protocols bitmask (RpcProtocols)
+  //
+  // 5 allows RPC over TCP and named pipes; 7 adds local. Null when not configured.
+  protocols int
+  // Fixed TCP port used for RPC over TCP, 0 for dynamic (RpcTcpPort)
+  //
+  // Null when not configured.
+  tcpPort int
+  // Whether Kerberos is required for incoming spooler RPC connections (ForceKerberosForRpc)
+  //
+  // Defaults to false when not configured.
+  forceKerberos bool
+}
+
+// Windows Print Spooler Internet Printing Protocol (IPP) settings
+//
+// Certificate validation flags under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\IPP. The boolean
+// fields report whether each certificate check is enforced; they default to
+// false (the check is not enforced) when the corresponding value is absent.
+private windows.spooler.ipp @defaults("requireIpps") {
+  // Whether IPP connections must use IPP over HTTPS (RequireIpps)
+  //
+  // Defaults to false when not configured.
+  requireIpps bool
+  // Whether IPP rejects server certificates from an unknown CA (SecurityFlagsBlockUnknownCA)
+  blockUnknownCA bool
+  // Whether IPP rejects server certificates used for the wrong purpose (SecurityFlagsBlockCertWrongUsage)
+  blockCertWrongUsage bool
+  // Whether IPP rejects expired or not-yet-valid server certificates (SecurityFlagsBlockCertDateInvalid)
+  blockCertDateInvalid bool
+  // Whether IPP rejects server certificates whose CN does not match (SecurityFlagsBlockCertCNInvalid)
+  blockCertCNInvalid bool
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,

@@ -349,6 +349,10 @@ const (
 	ResourceWindowsLsa                                    string = "windows.lsa"
 	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
 	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
+	ResourceWindowsSpooler                                string = "windows.spooler"
+	ResourceWindowsSpoolerPointAndPrint                   string = "windows.spooler.pointAndPrint"
+	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
+	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1820,6 +1824,22 @@ func init() {
 		"windows.lsa.secureChannel": {
 			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsLsaSecureChannel,
+		},
+		"windows.spooler": {
+			// to override args, implement: initWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpooler,
+		},
+		"windows.spooler.pointAndPrint": {
+			// to override args, implement: initWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerPointAndPrint,
+		},
+		"windows.spooler.rpc": {
+			// to override args, implement: initWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerRpc,
+		},
+		"windows.spooler.ipp": {
+			// to override args, implement: initWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSpoolerIpp,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8637,6 +8657,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaSecureChannel).GetVulnerableChannelAllowList()).ToDataRes(types.String)
+	},
+	"windows.spooler.startMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetStartMode()).ToDataRes(types.Int)
+	},
+	"windows.spooler.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRegisterRemoteRpcEndpoint()).ToDataRes(types.Int)
+	},
+	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRedirectionGuardPolicy()).ToDataRes(types.Int)
+	},
+	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetWebPnpDownloadDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.httpPrintingDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetHttpPrintingDisabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.copyFilesPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetCopyFilesPolicy()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRpcAuthnLevelPrivacyEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetAddPrinterDriversRestricted()).ToDataRes(types.Int)
+	},
+	"windows.spooler.pointAndPrint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetPointAndPrint()).ToDataRes(types.Resource("windows.spooler.pointAndPrint"))
+	},
+	"windows.spooler.rpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetRpc()).ToDataRes(types.Resource("windows.spooler.rpc"))
+	},
+	"windows.spooler.ipp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetIpp()).ToDataRes(types.Resource("windows.spooler.ipp"))
+	},
+	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpooler).GetWindowsProtectedPrintGroupPolicyState()).ToDataRes(types.Int)
+	},
+	"windows.spooler.pointAndPrint.restrictDriverInstallationToAdministrators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetRestrictDriverInstallationToAdministrators()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetNoWarningNoElevationOnInstall()).ToDataRes(types.Int)
+	},
+	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetUpdatePromptSettings()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetUseNamedPipeProtocol()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetAuthentication()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetProtocols()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.tcpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetTcpPort()).ToDataRes(types.Int)
+	},
+	"windows.spooler.rpc.forceKerberos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerRpc).GetForceKerberos()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.requireIpps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetRequireIpps()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockUnknownCA": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockUnknownCA()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertWrongUsage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertWrongUsage()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertDateInvalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertDateInvalid()).ToDataRes(types.Bool)
+	},
+	"windows.spooler.ipp.blockCertCNInvalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSpoolerIpp).GetBlockCertCNInvalid()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -20816,6 +20914,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsLsaSecureChannel).VulnerableChannelAllowList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.startMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).StartMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RegisterRemoteRpcEndpoint, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RedirectionGuardPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).WebPnpDownloadDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.httpPrintingDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).HttpPrintingDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.copyFilesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).CopyFilesPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).RpcAuthnLevelPrivacyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).AddPrinterDriversRestricted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).PointAndPrint, ok = plugin.RawToTValue[*mqlWindowsSpoolerPointAndPrint](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Rpc, ok = plugin.RawToTValue[*mqlWindowsSpoolerRpc](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).Ipp, ok = plugin.RawToTValue[*mqlWindowsSpoolerIpp](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpooler).WindowsProtectedPrintGroupPolicyState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.pointAndPrint.restrictDriverInstallationToAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).RestrictDriverInstallationToAdministrators, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).NoWarningNoElevationOnInstall, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerPointAndPrint).UpdatePromptSettings, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).UseNamedPipeProtocol, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).Authentication, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).Protocols, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.tcpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).TcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.rpc.forceKerberos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerRpc).ForceKerberos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.spooler.ipp.requireIpps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).RequireIpps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockUnknownCA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockUnknownCA, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertWrongUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertWrongUsage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertDateInvalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertDateInvalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.spooler.ipp.blockCertCNInvalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSpoolerIpp).BlockCertCNInvalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54871,6 +55089,368 @@ func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[int64
 
 func (c *mqlWindowsLsaSecureChannel) GetVulnerableChannelAllowList() *plugin.TValue[string] {
 	return &c.VulnerableChannelAllowList
+}
+
+// mqlWindowsSpooler for the windows.spooler resource
+type mqlWindowsSpooler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsSpoolerInternal
+	StartMode                             plugin.TValue[int64]
+	Disabled                              plugin.TValue[bool]
+	RegisterRemoteRpcEndpoint             plugin.TValue[int64]
+	RedirectionGuardPolicy                plugin.TValue[int64]
+	WebPnpDownloadDisabled                plugin.TValue[bool]
+	HttpPrintingDisabled                  plugin.TValue[bool]
+	CopyFilesPolicy                       plugin.TValue[int64]
+	RpcAuthnLevelPrivacyEnabled           plugin.TValue[bool]
+	AddPrinterDriversRestricted           plugin.TValue[int64]
+	PointAndPrint                         plugin.TValue[*mqlWindowsSpoolerPointAndPrint]
+	Rpc                                   plugin.TValue[*mqlWindowsSpoolerRpc]
+	Ipp                                   plugin.TValue[*mqlWindowsSpoolerIpp]
+	WindowsProtectedPrintGroupPolicyState plugin.TValue[int64]
+}
+
+// createWindowsSpooler creates a new instance of this resource
+func createWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpooler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpooler) MqlName() string {
+	return "windows.spooler"
+}
+
+func (c *mqlWindowsSpooler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpooler) GetStartMode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.StartMode, func() (int64, error) {
+		return c.startMode()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Disabled, func() (bool, error) {
+		return c.disabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRegisterRemoteRpcEndpoint() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RegisterRemoteRpcEndpoint, func() (int64, error) {
+		return c.registerRemoteRpcEndpoint()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRedirectionGuardPolicy() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RedirectionGuardPolicy, func() (int64, error) {
+		return c.redirectionGuardPolicy()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetWebPnpDownloadDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WebPnpDownloadDisabled, func() (bool, error) {
+		return c.webPnpDownloadDisabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetHttpPrintingDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HttpPrintingDisabled, func() (bool, error) {
+		return c.httpPrintingDisabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetCopyFilesPolicy() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CopyFilesPolicy, func() (int64, error) {
+		return c.copyFilesPolicy()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRpcAuthnLevelPrivacyEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RpcAuthnLevelPrivacyEnabled, func() (bool, error) {
+		return c.rpcAuthnLevelPrivacyEnabled()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetAddPrinterDriversRestricted() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AddPrinterDriversRestricted, func() (int64, error) {
+		return c.addPrinterDriversRestricted()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetPointAndPrint() *plugin.TValue[*mqlWindowsSpoolerPointAndPrint] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerPointAndPrint](&c.PointAndPrint, func() (*mqlWindowsSpoolerPointAndPrint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "pointAndPrint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerPointAndPrint), nil
+			}
+		}
+
+		return c.pointAndPrint()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetRpc() *plugin.TValue[*mqlWindowsSpoolerRpc] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerRpc](&c.Rpc, func() (*mqlWindowsSpoolerRpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "rpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerRpc), nil
+			}
+		}
+
+		return c.rpc()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetIpp() *plugin.TValue[*mqlWindowsSpoolerIpp] {
+	return plugin.GetOrCompute[*mqlWindowsSpoolerIpp](&c.Ipp, func() (*mqlWindowsSpoolerIpp, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.spooler", c.__id, "ipp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSpoolerIpp), nil
+			}
+		}
+
+		return c.ipp()
+	})
+}
+
+func (c *mqlWindowsSpooler) GetWindowsProtectedPrintGroupPolicyState() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.WindowsProtectedPrintGroupPolicyState, func() (int64, error) {
+		return c.windowsProtectedPrintGroupPolicyState()
+	})
+}
+
+// mqlWindowsSpoolerPointAndPrint for the windows.spooler.pointAndPrint resource
+type mqlWindowsSpoolerPointAndPrint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerPointAndPrintInternal it will be used here
+	RestrictDriverInstallationToAdministrators plugin.TValue[bool]
+	NoWarningNoElevationOnInstall              plugin.TValue[int64]
+	UpdatePromptSettings                       plugin.TValue[int64]
+}
+
+// createWindowsSpoolerPointAndPrint creates a new instance of this resource
+func createWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerPointAndPrint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.pointAndPrint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) MqlName() string {
+	return "windows.spooler.pointAndPrint"
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetRestrictDriverInstallationToAdministrators() *plugin.TValue[bool] {
+	return &c.RestrictDriverInstallationToAdministrators
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetNoWarningNoElevationOnInstall() *plugin.TValue[int64] {
+	return &c.NoWarningNoElevationOnInstall
+}
+
+func (c *mqlWindowsSpoolerPointAndPrint) GetUpdatePromptSettings() *plugin.TValue[int64] {
+	return &c.UpdatePromptSettings
+}
+
+// mqlWindowsSpoolerRpc for the windows.spooler.rpc resource
+type mqlWindowsSpoolerRpc struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerRpcInternal it will be used here
+	UseNamedPipeProtocol plugin.TValue[int64]
+	Authentication       plugin.TValue[int64]
+	Protocols            plugin.TValue[int64]
+	TcpPort              plugin.TValue[int64]
+	ForceKerberos        plugin.TValue[bool]
+}
+
+// createWindowsSpoolerRpc creates a new instance of this resource
+func createWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerRpc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.rpc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerRpc) MqlName() string {
+	return "windows.spooler.rpc"
+}
+
+func (c *mqlWindowsSpoolerRpc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerRpc) GetUseNamedPipeProtocol() *plugin.TValue[int64] {
+	return &c.UseNamedPipeProtocol
+}
+
+func (c *mqlWindowsSpoolerRpc) GetAuthentication() *plugin.TValue[int64] {
+	return &c.Authentication
+}
+
+func (c *mqlWindowsSpoolerRpc) GetProtocols() *plugin.TValue[int64] {
+	return &c.Protocols
+}
+
+func (c *mqlWindowsSpoolerRpc) GetTcpPort() *plugin.TValue[int64] {
+	return &c.TcpPort
+}
+
+func (c *mqlWindowsSpoolerRpc) GetForceKerberos() *plugin.TValue[bool] {
+	return &c.ForceKerberos
+}
+
+// mqlWindowsSpoolerIpp for the windows.spooler.ipp resource
+type mqlWindowsSpoolerIpp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSpoolerIppInternal it will be used here
+	RequireIpps          plugin.TValue[bool]
+	BlockUnknownCA       plugin.TValue[bool]
+	BlockCertWrongUsage  plugin.TValue[bool]
+	BlockCertDateInvalid plugin.TValue[bool]
+	BlockCertCNInvalid   plugin.TValue[bool]
+}
+
+// createWindowsSpoolerIpp creates a new instance of this resource
+func createWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSpoolerIpp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.spooler.ipp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSpoolerIpp) MqlName() string {
+	return "windows.spooler.ipp"
+}
+
+func (c *mqlWindowsSpoolerIpp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSpoolerIpp) GetRequireIpps() *plugin.TValue[bool] {
+	return &c.RequireIpps
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockUnknownCA() *plugin.TValue[bool] {
+	return &c.BlockUnknownCA
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertWrongUsage() *plugin.TValue[bool] {
+	return &c.BlockCertWrongUsage
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertDateInvalid() *plugin.TValue[bool] {
+	return &c.BlockCertDateInvalid
+}
+
+func (c *mqlWindowsSpoolerIpp) GetBlockCertCNInvalid() *plugin.TValue[bool] {
+	return &c.BlockCertCNInvalid
 }
 
 // mqlWindowsTpm for the windows.tpm resource
