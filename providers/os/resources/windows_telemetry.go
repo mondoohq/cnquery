@@ -1,0 +1,163 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"strings"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
+)
+
+// Registry locations that back windows.telemetry. Both are GPO-only policy keys
+// holding DWORD values. When a value is absent the policy is "not configured",
+// which is reported as null rather than an explicit 0 — the two states are
+// security-relevant and must remain distinguishable.
+const (
+	telemetryDataCollectionPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection`
+	telemetryCloudContentPath   = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent`
+)
+
+func (r *mqlWindowsTelemetry) id() (string, error) {
+	return "windows.telemetry", nil
+}
+
+func (r *mqlWindowsTelemetryConsumerContent) id() (string, error) {
+	return "windows.telemetry.consumerContent", nil
+}
+
+// readTelemetryKey reads a single registry key and returns its values keyed by
+// the lower-cased value name. A missing key yields an empty map rather than an
+// error, so every value resolves to null (not configured) instead of failing.
+// The registrykey resource is de-duplicated by the runtime, so the per-field
+// accessors that share a key path do not trigger repeated registry reads.
+func (r *mqlWindowsTelemetry) readTelemetryKey(path string) (map[string]registry.RegistryKeyItem, error) {
+	items := map[string]registry.RegistryKeyItem{}
+	o, err := CreateResource(r.MqlRuntime, "registrykey", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := o.(*mqlRegistrykey).getEntries()
+	if err != nil {
+		// a missing key is expected (e.g. no Group Policy configured); treat it
+		// as empty so each value resolves to null
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return items, nil
+		}
+		return nil, err
+	}
+
+	for i := range entries {
+		items[strings.ToLower(entries[i].Key)] = entries[i]
+	}
+	return items, nil
+}
+
+// telemetryValues holds the nullable DataCollection diagnostic-data settings.
+type telemetryValues struct {
+	allowTelemetry                 *int64
+	disableEnterpriseAuthProxy     *int64
+	disableOneSettingsDownloads    *int64
+	doNotShowFeedbackNotifications *int64
+	enableOneSettingsAuditing      *int64
+	limitDiagnosticLogCollection   *int64
+	limitDumpCollection            *int64
+}
+
+// consumerContentValues holds the nullable CloudContent consumer settings.
+type consumerContentValues struct {
+	disableCloudOptimizedContent       *int64
+	disableConsumerAccountStateContent *int64
+	disableWindowsConsumerFeatures     *int64
+}
+
+// computeTelemetry extracts the DataCollection diagnostic-data DWORDs from the
+// raw registry values. Each field is nil when its value is absent. Pure function
+// for unit testing.
+func computeTelemetry(items map[string]registry.RegistryKeyItem) telemetryValues {
+	return telemetryValues{
+		allowTelemetry:                 regIntPtr(items, "AllowTelemetry"),
+		disableEnterpriseAuthProxy:     regIntPtr(items, "DisableEnterpriseAuthProxy"),
+		disableOneSettingsDownloads:    regIntPtr(items, "DisableOneSettingsDownloads"),
+		doNotShowFeedbackNotifications: regIntPtr(items, "DoNotShowFeedbackNotifications"),
+		enableOneSettingsAuditing:      regIntPtr(items, "EnableOneSettingsAuditing"),
+		limitDiagnosticLogCollection:   regIntPtr(items, "LimitDiagnosticLogCollection"),
+		limitDumpCollection:            regIntPtr(items, "LimitDumpCollection"),
+	}
+}
+
+// computeConsumerContent extracts the CloudContent consumer DWORDs from the raw
+// registry values. Each field is nil when its value is absent. Pure function for
+// unit testing.
+func computeConsumerContent(items map[string]registry.RegistryKeyItem) consumerContentValues {
+	return consumerContentValues{
+		disableCloudOptimizedContent:       regIntPtr(items, "DisableCloudOptimizedContent"),
+		disableConsumerAccountStateContent: regIntPtr(items, "DisableConsumerAccountStateContent"),
+		disableWindowsConsumerFeatures:     regIntPtr(items, "DisableWindowsConsumerFeatures"),
+	}
+}
+
+// telemetryIntField converts a nullable DWORD pointer into a TValue, marking the
+// field null (rather than an explicit 0) when the policy value was absent.
+func telemetryIntField(v *int64) plugin.TValue[int64] {
+	if v == nil {
+		return plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return plugin.TValue[int64]{Data: *v, State: plugin.StateIsSet}
+}
+
+// populate reads the DataCollection key once and sets every diagnostic-data
+// field directly. The runtime's GetOrCompute wrapper only invokes this until the
+// fields are set, so the registry items are parsed a single time and the seven
+// accessors share one error-handling path.
+func (r *mqlWindowsTelemetry) populate() error {
+	items, err := r.readTelemetryKey(telemetryDataCollectionPath)
+	if err != nil {
+		return err
+	}
+	v := computeTelemetry(items)
+
+	r.AllowTelemetry = telemetryIntField(v.allowTelemetry)
+	r.DisableEnterpriseAuthProxy = telemetryIntField(v.disableEnterpriseAuthProxy)
+	r.DisableOneSettingsDownloads = telemetryIntField(v.disableOneSettingsDownloads)
+	r.DoNotShowFeedbackNotifications = telemetryIntField(v.doNotShowFeedbackNotifications)
+	r.EnableOneSettingsAuditing = telemetryIntField(v.enableOneSettingsAuditing)
+	r.LimitDiagnosticLogCollection = telemetryIntField(v.limitDiagnosticLogCollection)
+	r.LimitDumpCollection = telemetryIntField(v.limitDumpCollection)
+	return nil
+}
+
+func (r *mqlWindowsTelemetry) allowTelemetry() (int64, error)                 { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) disableEnterpriseAuthProxy() (int64, error)     { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) disableOneSettingsDownloads() (int64, error)    { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) doNotShowFeedbackNotifications() (int64, error) { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) enableOneSettingsAuditing() (int64, error)      { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) limitDiagnosticLogCollection() (int64, error)   { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) limitDumpCollection() (int64, error)            { return 0, r.populate() }
+
+func (r *mqlWindowsTelemetry) consumerContent() (*mqlWindowsTelemetryConsumerContent, error) {
+	items, err := r.readTelemetryKey(telemetryCloudContentPath)
+	if err != nil {
+		return nil, err
+	}
+
+	v := computeConsumerContent(items)
+
+	o, err := CreateResource(r.MqlRuntime, "windows.telemetry.consumerContent", map[string]*llx.RawData{
+		"__id":                               llx.StringData("windows.telemetry.consumerContent"),
+		"disableCloudOptimizedContent":       llx.IntDataPtr(v.disableCloudOptimizedContent),
+		"disableConsumerAccountStateContent": llx.IntDataPtr(v.disableConsumerAccountStateContent),
+		"disableWindowsConsumerFeatures":     llx.IntDataPtr(v.disableWindowsConsumerFeatures),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlWindowsTelemetryConsumerContent), nil
+}

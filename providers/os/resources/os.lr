@@ -7433,6 +7433,60 @@ private windows.spooler.ipp @defaults("requireIpps") {
   blockCertCNInvalid bool
 }
 
+// Windows diagnostic data (telemetry) and consumer cloud-content policy
+//
+// Examine the effective Windows privacy and telemetry posture read from the
+// Group Policy keys HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection and
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent. These are GPO-only
+// DWORD values; every field is nullable so that an absent value (the policy is
+// not configured) is distinguishable from an explicit 0. Read from the
+// registry, so it is available even on connections that cannot run commands.
+windows.telemetry {
+  // Diagnostic data level (DataCollection\AllowTelemetry): 0=Security, 1=Basic/Required, 2=Enhanced, 3=Full. Null when not configured.
+  allowTelemetry() int
+  // Whether the telemetry service may not use an authenticated proxy (DataCollection\DisableEnterpriseAuthProxy)
+  //
+  // Applies to the Connected User Experiences and Telemetry service. Null when
+  // the policy is not configured.
+  disableEnterpriseAuthProxy() int
+  // Whether downloading configuration from the OneSettings service is disabled (DataCollection\DisableOneSettingsDownloads). Null when not configured.
+  disableOneSettingsDownloads() int
+  // Whether feedback notifications are suppressed (DataCollection\DoNotShowFeedbackNotifications)
+  //
+  // When set, the user does not receive telemetry feedback notifications. Null
+  // when the policy is not configured.
+  doNotShowFeedbackNotifications() int
+  // Whether auditing of OneSettings usage is enabled (DataCollection\EnableOneSettingsAuditing). Null when not configured.
+  enableOneSettingsAuditing() int
+  // Whether collection of diagnostic logs is limited (DataCollection\LimitDiagnosticLogCollection). Null when not configured.
+  limitDiagnosticLogCollection() int
+  // Whether collection of crash dumps is limited (DataCollection\LimitDumpCollection). Null when not configured.
+  limitDumpCollection() int
+  // Consumer cloud-content (CloudContent) policy settings
+  consumerContent() windows.telemetry.consumerContent
+}
+
+// Windows consumer cloud-content policy
+//
+// Examine the consumer cloud-content policy under HKLM\SOFTWARE\Policies
+// \Microsoft\Windows\CloudContent. These are GPO-only DWORD values; every field
+// is nullable so that an absent value (the policy is not configured) is
+// distinguishable from an explicit 0.
+private windows.telemetry.consumerContent @defaults("disableWindowsConsumerFeatures") {
+  // Whether cloud-optimized content is disabled (CloudContent\DisableCloudOptimizedContent)
+  //
+  // Cloud-optimized content tailors suggestions using cloud data. Null when the
+  // policy is not configured.
+  disableCloudOptimizedContent int
+  // Whether consumer account state content is disabled (CloudContent\DisableConsumerAccountStateContent). Null when not configured.
+  disableConsumerAccountStateContent int
+  // Whether Windows consumer features are disabled (CloudContent\DisableWindowsConsumerFeatures)
+  //
+  // Consumer features include app suggestions and consumer experiences. Null
+  // when the policy is not configured.
+  disableWindowsConsumerFeatures int
+}
+
 // Windows Trusted Platform Module (TPM)
 //
 // Examine the Trusted Platform Module state: whether a TPM is present,
