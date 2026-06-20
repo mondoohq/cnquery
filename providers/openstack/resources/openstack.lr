@@ -1011,7 +1011,9 @@ private openstack.octavia.loadBalancer @defaults("id name provisioningStatus ope
   listeners() []openstack.octavia.listener
   // Pools attached to this load balancer
   pools() []openstack.octavia.pool
-  // Whether every listener uses an encrypted protocol (no plaintext HTTP, TCP, UDP, or SCTP listener)
+  // Whether every listener uses an encrypted protocol
+  //
+  // True when no listener uses a plaintext protocol (HTTP, TCP, UDP, SCTP, or PROMETHEUS). A load balancer with no listeners has no plaintext exposure and is reported as enforcing; pair with `exposure.internetReachable` to scope an audit to internet-facing load balancers.
   enforcesTls() bool
   // Internet-exposure summary for this load balancer (public reachability plus the listeners open to the world)
   exposure() openstack.octavia.loadBalancer.exposure
