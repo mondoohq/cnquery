@@ -4918,9 +4918,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityrule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.subscription.networkService.exposure.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetId()).ToDataRes(types.String)
-	},
 	"azure.subscription.networkService.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetInternetReachable()).ToDataRes(types.Bool)
 	},
@@ -19490,10 +19487,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceExposure).__id, ok = v.Value.(string)
-		return
-	},
-	"azure.subscription.networkService.exposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionNetworkServiceExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44487,7 +44480,6 @@ type mqlAzureSubscriptionNetworkServiceExposure struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionNetworkServiceExposureInternal it will be used here
-	Id                         plugin.TValue[string]
 	InternetReachable          plugin.TValue[bool]
 	HasPublicIp                plugin.TValue[bool]
 	SecurityGroupAllowsIngress plugin.TValue[bool]
@@ -44505,12 +44497,7 @@ func createAzureSubscriptionNetworkServiceExposure(runtime *plugin.Runtime, args
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.exposure", res.__id)
@@ -44529,10 +44516,6 @@ func (c *mqlAzureSubscriptionNetworkServiceExposure) MqlName() string {
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAzureSubscriptionNetworkServiceExposure) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) GetInternetReachable() *plugin.TValue[bool] {

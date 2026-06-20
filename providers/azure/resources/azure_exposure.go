@@ -112,10 +112,6 @@ func aksApiServerInternetReachable(enablePrivateCluster bool, publicNetworkAcces
 
 // --- Resolvers ---
 
-func (a *mqlAzureSubscriptionNetworkServiceExposure) id() (string, error) {
-	return a.Id.Data, nil
-}
-
 // effectiveRuleAllowsInternetIngress reports whether a single Azure
 // effective-security-rule object (the raw dict returned by a NIC's
 // effectiveSecurityRules) is an inbound Allow rule open to any internet source.
@@ -193,7 +189,6 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("azure.subscription.computeService.vm/" + a.Id.Data + "/exposure"),
-		"id":                         llx.StringData(a.Id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
 		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),

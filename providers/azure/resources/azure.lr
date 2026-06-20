@@ -2539,8 +2539,6 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
 // "Internet" service tag). The effective rules merge the NSG on the NIC, the
 // NSG on its subnet, and application security groups.
 private azure.subscription.networkService.exposure {
-  // Stable identifier of the exposure summary (derived from the owning resource ID)
-  id string
   // Whether the resource is reachable from the public internet
   //
   // True when the resource has a public IP AND an attached security group
