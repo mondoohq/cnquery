@@ -147,7 +147,10 @@ define testProvider
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
 	$(eval $@_PKGS = $(shell go list ./${$@_HOME}/...))
 	echo "--> test ${$@_NAME} in ${$@_HOME}"
-	gotestsum --junitfile ./report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
+	# -vet=off: `go vet` re-typechecks the large generated *.lr.go on every
+	# compile (and is far worse combined with -cover). govet still runs in
+	# `make test/lint`, so static-analysis coverage is unchanged.
+	gotestsum --junitfile ./report_${$@_NAME}.xml --format pkgname -- -vet=off -cover ${$@_PKGS}
 endef
 
 define testGoModProvider
@@ -155,7 +158,8 @@ define testGoModProvider
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
 	$(eval $@_PKGS = $(shell bash -c "cd ${$@_HOME} && go list ./..."))
 	echo "--> test ${$@_NAME} in ${$@_HOME}"
-	cd ${$@_HOME} && gotestsum --junitfile ../../report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
+	# -vet=off: see testProvider above. govet still runs in `make test/lint`.
+	cd ${$@_HOME} && gotestsum --junitfile ../../report_${$@_NAME}.xml --format pkgname -- -vet=off -cover ${$@_PKGS}
 endef
 
 .PHONY: providers
