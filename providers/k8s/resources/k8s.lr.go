@@ -839,6 +839,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.pod.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.pod.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
 	},
@@ -1079,6 +1088,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.deployment.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.deployment.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
+	},
 	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1217,6 +1235,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.daemonset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.daemonset.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
+	},
 	"k8s.daemonset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetId()).ToDataRes(types.String)
 	},
@@ -1351,6 +1378,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.statefulset.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
 	},
 	"k8s.statefulset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetId()).ToDataRes(types.String)
@@ -1502,6 +1538,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.replicaset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
+	},
 	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
 	},
@@ -1621,6 +1666,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.job.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.job.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.job.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
 	},
 	"k8s.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetId()).ToDataRes(types.String)
@@ -1777,6 +1831,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetPodSecurityStandard()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.meetsPodSecurityBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetMeetsPodSecurityBaseline()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.meetsPodSecurityRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetMeetsPodSecurityRestricted()).ToDataRes(types.Bool)
 	},
 	"k8s.cronjob.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetId()).ToDataRes(types.String)
@@ -4736,6 +4799,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5060,6 +5135,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5248,6 +5335,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5430,6 +5529,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5636,6 +5747,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5798,6 +5921,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.job.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6010,6 +6145,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.meetsPodSecurityBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).MeetsPodSecurityBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.meetsPodSecurityRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).MeetsPodSecurityRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11247,6 +11394,9 @@ type mqlK8sPod struct {
 	UsesHostPath                  plugin.TValue[bool]
 	UsesUnconfinedSeccomp         plugin.TValue[bool]
 	HasSeccompProfile             plugin.TValue[bool]
+	PodSecurityStandard           plugin.TValue[string]
+	MeetsPodSecurityBaseline      plugin.TValue[bool]
+	MeetsPodSecurityRestricted    plugin.TValue[bool]
 	Id                            plugin.TValue[string]
 	Uid                           plugin.TValue[string]
 	ResourceVersion               plugin.TValue[string]
@@ -11408,6 +11558,24 @@ func (c *mqlK8sPod) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sPod) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sPod) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sPod) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -11945,6 +12113,9 @@ type mqlK8sDeployment struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	PodSecurityStandard          plugin.TValue[string]
+	MeetsPodSecurityBaseline     plugin.TValue[bool]
+	MeetsPodSecurityRestricted   plugin.TValue[bool]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -12102,6 +12273,24 @@ func (c *mqlK8sDeployment) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDeployment) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDeployment) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sDeployment) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sDeployment) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -12347,6 +12536,9 @@ type mqlK8sDaemonset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	PodSecurityStandard          plugin.TValue[string]
+	MeetsPodSecurityBaseline     plugin.TValue[bool]
+	MeetsPodSecurityRestricted   plugin.TValue[bool]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -12503,6 +12695,24 @@ func (c *mqlK8sDaemonset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDaemonset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -12742,6 +12952,9 @@ type mqlK8sStatefulset struct {
 	UsesHostPath                         plugin.TValue[bool]
 	UsesUnconfinedSeccomp                plugin.TValue[bool]
 	HasSeccompProfile                    plugin.TValue[bool]
+	PodSecurityStandard                  plugin.TValue[string]
+	MeetsPodSecurityBaseline             plugin.TValue[bool]
+	MeetsPodSecurityRestricted           plugin.TValue[bool]
 	Id                                   plugin.TValue[string]
 	Uid                                  plugin.TValue[string]
 	ResourceVersion                      plugin.TValue[string]
@@ -12903,6 +13116,24 @@ func (c *mqlK8sStatefulset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sStatefulset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -13172,6 +13403,9 @@ type mqlK8sReplicaset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	PodSecurityStandard          plugin.TValue[string]
+	MeetsPodSecurityBaseline     plugin.TValue[bool]
+	MeetsPodSecurityRestricted   plugin.TValue[bool]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -13323,6 +13557,24 @@ func (c *mqlK8sReplicaset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sReplicaset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -13532,6 +13784,9 @@ type mqlK8sJob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	PodSecurityStandard          plugin.TValue[string]
+	MeetsPodSecurityBaseline     plugin.TValue[bool]
+	MeetsPodSecurityRestricted   plugin.TValue[bool]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -13695,6 +13950,24 @@ func (c *mqlK8sJob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sJob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sJob) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sJob) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sJob) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 
@@ -13976,6 +14249,9 @@ type mqlK8sCronjob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	PodSecurityStandard          plugin.TValue[string]
+	MeetsPodSecurityBaseline     plugin.TValue[bool]
+	MeetsPodSecurityRestricted   plugin.TValue[bool]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -14129,6 +14405,24 @@ func (c *mqlK8sCronjob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sCronjob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sCronjob) GetPodSecurityStandard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityStandard, func() (string, error) {
+		return c.podSecurityStandard()
+	})
+}
+
+func (c *mqlK8sCronjob) GetMeetsPodSecurityBaseline() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityBaseline, func() (bool, error) {
+		return c.meetsPodSecurityBaseline()
+	})
+}
+
+func (c *mqlK8sCronjob) GetMeetsPodSecurityRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetsPodSecurityRestricted, func() (bool, error) {
+		return c.meetsPodSecurityRestricted()
 	})
 }
 

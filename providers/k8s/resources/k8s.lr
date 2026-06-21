@@ -416,6 +416,16 @@ private k8s.pod @defaults("namespace name created"){
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -608,6 +618,16 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -732,6 +752,16 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -855,6 +885,16 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -986,6 +1026,16 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1097,6 +1147,16 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1233,6 +1293,16 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Highest Pod Security Standards level the workload satisfies
+  //
+  // One of "restricted", "baseline", or "privileged" (the level a PodSecurity
+  // admission controller would assign), computed from the pod template's
+  // securityContext, capabilities, volumes, and host settings.
+  podSecurityStandard() string
+  // Whether the workload satisfies the Pod Security Standards baseline profile
+  meetsPodSecurityBaseline() bool
+  // Whether the workload satisfies the Pod Security Standards restricted profile
+  meetsPodSecurityRestricted() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
