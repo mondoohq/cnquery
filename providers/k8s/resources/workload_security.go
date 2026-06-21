@@ -3,6 +3,18 @@
 
 package resources
 
+// This file wires the workload-level securityContext rollup predicates
+// (runsPrivileged, runsAsRoot, usesHostNamespaces, etc.) onto every K8s
+// workload kind that owns a pod template: deployment, daemonset, statefulset,
+// replicaset, job, and cronjob.
+//
+// k8s.pod is intentionally asymmetric. The pod resource already exposes
+// automountServiceAccountToken (its own implementation in pod.go, present
+// since schema 13.0.16) and securityContext, hostNetwork, hostPID, and hostIPC
+// as plain schema fields, so this file only adds the container-rollup
+// predicates to it and deliberately does NOT re-add those five fields. Future
+// maintainers should not duplicate them on the pod.
+
 import (
 	corev1 "k8s.io/api/core/v1"
 
@@ -182,6 +194,9 @@ func stringsFromSpec(spec *corev1.PodSpec, err error, fn func(*corev1.PodSpec) [
 func dictFromSpec(spec *corev1.PodSpec, err error) (map[string]any, error) {
 	if err != nil {
 		return nil, err
+	}
+	if spec == nil {
+		return nil, nil
 	}
 	return convert.JsonToDict(spec.SecurityContext)
 }

@@ -46,6 +46,29 @@ func deploymentByName(t *testing.T, k8s *mqlK8s, name string) *mqlK8sDeployment 
 	return nil
 }
 
+// TestWorkloadSecurityRollups_NilSpec guards against panics when the pod spec
+// is nil (e.g. a malformed manifest yields (nil, nil)). Every helper must treat
+// a nil spec as "nothing configured" rather than dereferencing it.
+func TestWorkloadSecurityRollups_NilSpec(t *testing.T) {
+	assert.NotPanics(t, func() {
+		// With no containers, the "any container" predicates report false.
+		assert.False(t, specRunsPrivileged(nil), "runsPrivileged")
+		assert.False(t, specAllowsPrivilegeEscalation(nil), "allowsPrivilegeEscalation")
+		assert.False(t, specRunsAsRoot(nil), "runsAsRoot")
+		assert.False(t, specHasWritableRootFilesystem(nil), "hasWritableRootFilesystem")
+		assert.False(t, specDropsAllCapabilities(nil), "dropsAllCapabilities")
+		assert.Empty(t, specAddedCapabilities(nil), "addedCapabilities")
+		assert.False(t, specUsesHostNamespaces(nil), "usesHostNamespaces")
+		assert.False(t, specUsesHostPath(nil), "usesHostPath")
+		assert.False(t, specAutomountServiceAccountToken(nil), "automountServiceAccountToken")
+	})
+
+	// dictFromSpec must not dereference a nil spec.
+	dict, err := dictFromSpec(nil, nil)
+	require.NoError(t, err)
+	assert.Nil(t, dict)
+}
+
 func TestWorkloadSecurityRollups(t *testing.T) {
 	k8s := workloadSecurityK8s(t)
 
@@ -126,15 +149,28 @@ func TestWorkloadSecurityRollups_Pod(t *testing.T) {
 }
 
 // rollupReader is the common accessor surface every workload-bearing resource
-// implements; it lets one table verify per-kind wiring.
+// implements; it lets one table verify per-kind wiring of every predicate.
 type rollupReader interface {
 	GetName() *plugin.TValue[string]
 	GetRunsPrivileged() *plugin.TValue[bool]
+	GetAllowsPrivilegeEscalation() *plugin.TValue[bool]
+	GetRunsAsRoot() *plugin.TValue[bool]
+	GetHasWritableRootFilesystem() *plugin.TValue[bool]
+	GetDropsAllCapabilities() *plugin.TValue[bool]
+	GetAddedCapabilities() *plugin.TValue[[]any]
+	GetUsesHostNamespaces() *plugin.TValue[bool]
+	GetUsesHostPath() *plugin.TValue[bool]
+	GetAutomountServiceAccountToken() *plugin.TValue[bool]
+	GetHostNetwork() *plugin.TValue[bool]
+	GetHostPID() *plugin.TValue[bool]
+	GetHostIPC() *plugin.TValue[bool]
 	GetSecurityContext() *plugin.TValue[any]
 }
 
 // TestWorkloadSecurityRollups_AllKinds confirms every controller workload wires
-// the predicates and the securityContext dict to its own object getter.
+// each predicate (and the securityContext dict) to its own object getter. The
+// *-privileged fixtures each have a single privileged container and nothing
+// else set, so every kind shares the same expected predicate vector.
 func TestWorkloadSecurityRollups_AllKinds(t *testing.T) {
 	k8s := workloadSecurityK8s(t)
 
@@ -164,8 +200,22 @@ func TestWorkloadSecurityRollups_AllKinds(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := find(t, tc.list, tc.name)
+			// A lone privileged container, nothing else set.
 			assert.True(t, r.GetRunsPrivileged().Data, "runsPrivileged")
-			// securityContext resolves without error even when unset
+			// allowPrivilegeEscalation is unset, which defaults to permitted.
+			assert.True(t, r.GetAllowsPrivilegeEscalation().Data, "allowsPrivilegeEscalation")
+			assert.True(t, r.GetRunsAsRoot().Data, "runsAsRoot")
+			assert.True(t, r.GetHasWritableRootFilesystem().Data, "hasWritableRootFilesystem")
+			assert.False(t, r.GetDropsAllCapabilities().Data, "dropsAllCapabilities")
+			assert.Empty(t, r.GetAddedCapabilities().Data, "addedCapabilities")
+			assert.False(t, r.GetUsesHostNamespaces().Data, "usesHostNamespaces")
+			assert.False(t, r.GetUsesHostPath().Data, "usesHostPath")
+			// automountServiceAccountToken is unset, which defaults to true.
+			assert.True(t, r.GetAutomountServiceAccountToken().Data, "automountServiceAccountToken")
+			assert.False(t, r.GetHostNetwork().Data, "hostNetwork")
+			assert.False(t, r.GetHostPID().Data, "hostPID")
+			assert.False(t, r.GetHostIPC().Data, "hostIPC")
+			// securityContext resolves without error even when unset.
 			assert.NoError(t, r.GetSecurityContext().Error, "securityContext")
 		})
 	}
