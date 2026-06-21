@@ -12,6 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
@@ -134,10 +135,18 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 			Limit:    250,
 			Continue: next,
 		})
-		// this error will happen when users have no permission
 		if err != nil {
-			log.Debug().Err(err).Msgf("could not fetch resources for: %v", apiRes.GroupVersionResource())
-			break
+			// A missing permission for a resource type is expected (the user's
+			// RBAC may not cover every discovered kind), so swallow it and skip
+			// this kind. Any other error (throttling, a transient API-server
+			// failure, an expired continue token mid-pagination) must propagate
+			// rather than silently truncate the result set to an empty/partial
+			// list that looks like "this kind has no objects".
+			if k8sErrors.IsForbidden(err) || k8sErrors.IsUnauthorized(err) {
+				log.Debug().Err(err).Msgf("no permission to fetch resources for: %v", apiRes.GroupVersionResource())
+				break
+			}
+			return out, errors.Wrapf(err, "could not fetch resources for %v", apiRes.GroupVersionResource())
 		}
 
 		out = append(out, UnstructuredListToObjectList(resp.Items)...)

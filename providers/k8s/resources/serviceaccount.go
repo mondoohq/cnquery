@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 )
 
 type mqlK8sServiceaccountInternal struct {
@@ -44,8 +43,13 @@ func (k *mqlK8s) serviceaccounts() ([]any, error) {
 		// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
 		// As discussed here, this behavior will not change for core/v1:
 		// https://github.com/kubernetes/kubernetes/issues/57601
-		if serviceAccount.AutomountServiceAccountToken == nil && objT.GetAPIVersion() == "v1" {
-			serviceAccount.AutomountServiceAccountToken = ptr.To(true)
+		// ServiceAccount only exists in core/v1, so an unset field always
+		// defaults to true. Compute the value with a nil-safe local rather than
+		// dereferencing the pointer (which is nil whenever TypeMeta isn't
+		// populated, e.g. on the manifest path).
+		automountServiceAccountToken := true
+		if serviceAccount.AutomountServiceAccountToken != nil {
+			automountServiceAccountToken = *serviceAccount.AutomountServiceAccountToken
 		}
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.serviceaccount", map[string]*llx.RawData{
@@ -58,7 +62,7 @@ func (k *mqlK8s) serviceaccounts() ([]any, error) {
 			"created":                      llx.TimeData(ts.Time),
 			"secrets":                      llx.DictData(secrets),
 			"imagePullSecrets":             llx.DictData(imagePullSecrets),
-			"automountServiceAccountToken": llx.BoolData(*serviceAccount.AutomountServiceAccountToken),
+			"automountServiceAccountToken": llx.BoolData(automountServiceAccountToken),
 		})
 		if err != nil {
 			return nil, err

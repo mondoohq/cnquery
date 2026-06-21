@@ -45,21 +45,32 @@ func (k *mqlK8sAdmissionreview) request() (*mqlK8sAdmissionrequest, error) {
 	}
 
 	aRequest := result[0].Request
-	obj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.Object.Raw))
-	if err != nil {
-		return nil, err
-	}
-
-	objDict, err := convert.JsonToDict(obj[0])
-	if err != nil {
-		return nil, err
+	if aRequest == nil {
+		k.Request.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	args := map[string]*llx.RawData{
 		"name":      llx.StringData(aRequest.Name),
 		"namespace": llx.StringData(aRequest.Namespace),
 		"operation": llx.StringData(string(aRequest.Operation)),
-		"object":    llx.DictData(objDict),
+	}
+
+	// The incoming object is empty on DELETE requests (the object lives in
+	// oldObject instead), so guard against an empty parse result rather than
+	// indexing obj[0] unconditionally.
+	obj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.Object.Raw))
+	if err != nil {
+		return nil, err
+	}
+	if len(obj) == 1 {
+		objDict, err := convert.JsonToDict(obj[0])
+		if err != nil {
+			return nil, err
+		}
+		args["object"] = llx.DictData(objDict)
+	} else {
+		args["object"] = llx.NilData
 	}
 
 	oldObj, err := resources.ResourcesFromManifest(bytes.NewReader(aRequest.OldObject.Raw))

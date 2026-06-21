@@ -48,6 +48,9 @@ func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Conne
 	}
 
 	for _, r := range res {
+		if r.Request == nil {
+			continue
+		}
 		// For each admission we want to also parse the object as an individual asset so we
 		// can show the admission review and the resource together in the CI/CD view.
 		objs, err := resources.ResourcesFromManifest(bytes.NewReader(r.Request.Object.Raw))

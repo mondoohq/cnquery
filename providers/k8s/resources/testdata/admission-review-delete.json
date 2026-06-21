@@ -1,0 +1,31 @@
+{
+  "apiVersion": "admission.k8s.io/v1",
+  "kind": "AdmissionReview",
+  "request": {
+    "uid": "11111111-2222-3333-4444-555555555555",
+    "kind": { "group": "", "version": "v1", "kind": "Pod" },
+    "resource": { "group": "", "version": "v1", "resource": "pods" },
+    "name": "deleted-pod",
+    "namespace": "default",
+    "operation": "DELETE",
+    "userInfo": {
+      "username": "system:serviceaccount:kube-system:replicaset-controller",
+      "uid": "4cdf5173-88c7-42cf-bb3f-0e873e6e2655"
+    },
+    "object": null,
+    "oldObject": {
+      "kind": "Pod",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "deleted-pod",
+        "namespace": "default",
+        "uid": "99999999-8888-7777-6666-555555555555"
+      },
+      "spec": {
+        "containers": [
+          { "name": "main", "image": "nginx:1.25" }
+        ]
+      }
+    }
+  }
+}
