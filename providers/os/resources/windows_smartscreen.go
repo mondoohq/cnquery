@@ -11,11 +11,17 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
 
+func (r *mqlWindowsSmartScreen) id() (string, error) {
+	return "windows.smartScreen", nil
+}
+
 // smartScreen exposes the Microsoft Defender SmartScreen policy from the parent
 // windows resource. Every field is a computed method backed by a single lazy
 // policy read, so the resource is created without up-front arguments.
 func (w *mqlWindows) smartScreen() (*mqlWindowsSmartScreen, error) {
-	o, err := CreateResource(w.MqlRuntime, "windows.smartScreen", map[string]*llx.RawData{})
+	o, err := CreateResource(w.MqlRuntime, "windows.smartScreen", map[string]*llx.RawData{
+		"__id": llx.StringData("windows.smartScreen"),
+	})
 	if err != nil {
 		return nil, err
 	}
