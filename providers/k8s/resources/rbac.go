@@ -75,9 +75,9 @@ func rbacAllowsPrivilegeEscalation(rules []rbacv1.PolicyRule) bool {
 			rbacRuleGrants(rule, rbacGroup, "clusterroles", "escalate") {
 			return true
 		}
-		// bind on rolebindings/clusterrolebindings
-		if rbacRuleGrants(rule, rbacGroup, "rolebindings", "bind") ||
-			rbacRuleGrants(rule, rbacGroup, "clusterrolebindings", "bind") {
+		// bind on roles/clusterroles
+		if rbacRuleGrants(rule, rbacGroup, "roles", "bind") ||
+			rbacRuleGrants(rule, rbacGroup, "clusterroles", "bind") {
 			return true
 		}
 		// impersonate users/groups/serviceaccounts (core group)

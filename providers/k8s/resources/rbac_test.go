@@ -119,7 +119,7 @@ func TestRbacRolePredicates(t *testing.T) {
 	assert.False(t, reader.GetAllowsPrivilegeEscalation().Data)
 	assert.False(t, reader.GetCanReadSecrets().Data)
 
-	// role that can bind rolebindings escalates privileges
+	// role that can bind roles escalates privileges
 	binder := roleByName(t, k8s, "binder")
 	assert.False(t, binder.GetHasWildcardRule().Data)
 	assert.True(t, binder.GetAllowsPrivilegeEscalation().Data)

@@ -48,7 +48,7 @@ rules:
     verbs: ["get", "list"]
     resourceNames: ["app-config"]
 ---
-# Namespaced role that can bind roleBindings (privilege escalation).
+# Namespaced role that can bind roles (privilege escalation).
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -56,5 +56,5 @@ metadata:
   namespace: default
 rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
-    resources: ["rolebindings"]
+    resources: ["roles"]
     verbs: ["bind", "create"]

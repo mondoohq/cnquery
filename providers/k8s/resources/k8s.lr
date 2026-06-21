@@ -1487,6 +1487,10 @@ private k8s.rbac.clusterrole @defaults("name created") {
 }
 
 // Kubernetes RBAC policy rule
+//
+// Single grant from the rules list of a Role or ClusterRole, combining the
+// verbs, apiGroups, resources, resourceNames, and nonResourceURLs that
+// together determine which actions a subject bound to the role may perform.
 private k8s.rbac.policyRule @defaults("verbs apiGroups resources") {
   // Verbs that apply to the listed resources or non-resource URLs (e.g., get, list, watch, create; "*" matches all)
   verbs []string
