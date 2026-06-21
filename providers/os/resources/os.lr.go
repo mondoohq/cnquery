@@ -8579,6 +8579,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetClipboardServerToClientLevel()).ToDataRes(types.Int)
 	},
+	"windows.rdp.endSessionWhenTimeLimitReached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetEndSessionWhenTimeLimitReached()).ToDataRes(types.Bool)
+	},
+	"windows.rdp.cloudClipboardIntegrationDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsRdp).GetCloudClipboardIntegrationDisabled()).ToDataRes(types.Bool)
+	},
 	"windows.winrm.client": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrm).GetClient()).ToDataRes(types.Resource("windows.winrm.client"))
 	},
@@ -20934,6 +20940,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.rdp.clipboardServerToClientLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).ClipboardServerToClientLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.endSessionWhenTimeLimitReached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).EndSessionWhenTimeLimitReached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.rdp.cloudClipboardIntegrationDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsRdp).CloudClipboardIntegrationDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.winrm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54837,28 +54851,30 @@ type mqlWindowsRdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlWindowsRdpInternal
-	NetworkLevelAuthentication       plugin.TValue[bool]
-	AlwaysPromptForPassword          plugin.TValue[bool]
-	DriveRedirectionDisabled         plugin.TValue[bool]
-	ComPortRedirectionDisabled       plugin.TValue[bool]
-	LptPortRedirectionDisabled       plugin.TValue[bool]
-	PnpDeviceRedirectionDisabled     plugin.TValue[bool]
-	PasswordSavingDisabled           plugin.TValue[bool]
-	DeleteTempDirsOnExit             plugin.TValue[bool]
-	SecureRpcRequired                plugin.TValue[bool]
-	SecurityLayer                    plugin.TValue[int64]
-	MinEncryptionLevel               plugin.TValue[int64]
-	MaxIdleTimeMs                    plugin.TValue[int64]
-	MaxDisconnectionTimeMs           plugin.TValue[int64]
-	ConnectionsDenied                plugin.TValue[bool]
-	SingleSessionPerUser             plugin.TValue[bool]
-	PerSessionTempDirsUsed           plugin.TValue[bool]
-	SolicitedRemoteAssistanceAllowed plugin.TValue[bool]
-	OfferRemoteAssistanceAllowed     plugin.TValue[bool]
-	WebAuthnRedirectionDisabled      plugin.TValue[bool]
-	LocationRedirectionDisabled      plugin.TValue[bool]
-	UiAutomationRedirectionEnabled   plugin.TValue[bool]
-	ClipboardServerToClientLevel     plugin.TValue[int64]
+	NetworkLevelAuthentication        plugin.TValue[bool]
+	AlwaysPromptForPassword           plugin.TValue[bool]
+	DriveRedirectionDisabled          plugin.TValue[bool]
+	ComPortRedirectionDisabled        plugin.TValue[bool]
+	LptPortRedirectionDisabled        plugin.TValue[bool]
+	PnpDeviceRedirectionDisabled      plugin.TValue[bool]
+	PasswordSavingDisabled            plugin.TValue[bool]
+	DeleteTempDirsOnExit              plugin.TValue[bool]
+	SecureRpcRequired                 plugin.TValue[bool]
+	SecurityLayer                     plugin.TValue[int64]
+	MinEncryptionLevel                plugin.TValue[int64]
+	MaxIdleTimeMs                     plugin.TValue[int64]
+	MaxDisconnectionTimeMs            plugin.TValue[int64]
+	ConnectionsDenied                 plugin.TValue[bool]
+	SingleSessionPerUser              plugin.TValue[bool]
+	PerSessionTempDirsUsed            plugin.TValue[bool]
+	SolicitedRemoteAssistanceAllowed  plugin.TValue[bool]
+	OfferRemoteAssistanceAllowed      plugin.TValue[bool]
+	WebAuthnRedirectionDisabled       plugin.TValue[bool]
+	LocationRedirectionDisabled       plugin.TValue[bool]
+	UiAutomationRedirectionEnabled    plugin.TValue[bool]
+	ClipboardServerToClientLevel      plugin.TValue[int64]
+	EndSessionWhenTimeLimitReached    plugin.TValue[bool]
+	CloudClipboardIntegrationDisabled plugin.TValue[bool]
 }
 
 // createWindowsRdp creates a new instance of this resource
@@ -55027,6 +55043,18 @@ func (c *mqlWindowsRdp) GetUiAutomationRedirectionEnabled() *plugin.TValue[bool]
 func (c *mqlWindowsRdp) GetClipboardServerToClientLevel() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.ClipboardServerToClientLevel, func() (int64, error) {
 		return c.clipboardServerToClientLevel()
+	})
+}
+
+func (c *mqlWindowsRdp) GetEndSessionWhenTimeLimitReached() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EndSessionWhenTimeLimitReached, func() (bool, error) {
+		return c.endSessionWhenTimeLimitReached()
+	})
+}
+
+func (c *mqlWindowsRdp) GetCloudClipboardIntegrationDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudClipboardIntegrationDisabled, func() (bool, error) {
+		return c.cloudClipboardIntegrationDisabled()
 	})
 }
 

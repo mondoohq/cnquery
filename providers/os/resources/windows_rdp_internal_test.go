@@ -53,6 +53,8 @@ func TestRdpSettingDefaults(t *testing.T) {
 		{"fDisableLocationRedir", 0},
 		{"EnableUiaRedirection", 0},
 		{"SCClipLevel", 3},
+		{"fResetBroken", 0},
+		{"DisableCloudClipboardIntegration", 0},
 	}
 	for _, c := range cases {
 		t.Run(c.name+" default", func(t *testing.T) {

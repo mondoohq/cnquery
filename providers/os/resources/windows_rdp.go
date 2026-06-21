@@ -22,6 +22,7 @@ func (r *mqlWindowsRdp) id() (string, error) {
 // documented Windows default applies.
 const (
 	rdpPolicyPath         = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services`
+	rdpPolicyClientPath   = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services\Client`
 	rdpWinStationsPath    = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp`
 	rdpTerminalServerPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server`
 )
@@ -41,10 +42,11 @@ type mqlWindowsRdpInternal struct {
 	lock   sync.Mutex
 	loaded bool
 	// each map is name (lower-cased) -> DWORD value for one registry key
-	policy  map[string]int64
-	winSta  map[string]int64
-	tsRoot  map[string]int64
-	loadErr error
+	policy       map[string]int64
+	policyClient map[string]int64
+	winSta       map[string]int64
+	tsRoot       map[string]int64
+	loadErr      error
 }
 
 // readRdpKey reads a single registry key and returns its numeric values keyed
@@ -92,6 +94,11 @@ func (r *mqlWindowsRdp) load() error {
 		r.loadErr = err
 		return err
 	}
+	policyClient, err := r.readRdpKey(rdpPolicyClientPath)
+	if err != nil {
+		r.loadErr = err
+		return err
+	}
 	winSta, err := r.readRdpKey(rdpWinStationsPath)
 	if err != nil {
 		r.loadErr = err
@@ -104,6 +111,7 @@ func (r *mqlWindowsRdp) load() error {
 	}
 
 	r.policy = policy
+	r.policyClient = policyClient
 	r.winSta = winSta
 	r.tsRoot = tsRoot
 	r.loaded = true
@@ -251,4 +259,19 @@ func (r *mqlWindowsRdp) clipboardServerToClientLevel() (int64, error) {
 	// 3 == unrestricted server-to-client clipboard, the behavior when the
 	// "Restrict clipboard transfer from server to client" policy is not set
 	return r.resolve("SCClipLevel", rdpWinStations, 3)
+}
+
+func (r *mqlWindowsRdp) endSessionWhenTimeLimitReached() (bool, error) {
+	// when not configured, a session that hits a time limit is disconnected
+	// rather than ended, so the setting defaults to off
+	return r.resolveBool("fResetBroken", rdpWinStations, 0)
+}
+
+func (r *mqlWindowsRdp) cloudClipboardIntegrationDisabled() (bool, error) {
+	if err := r.load(); err != nil {
+		return false, err
+	}
+	// Group Policy-only setting under the Terminal Services\Client subkey; cloud
+	// clipboard integration is enabled (not disabled) when it is not configured
+	return resolveRdpValue(r.policyClient, nil, "DisableCloudClipboardIntegration", 0) == 1, nil
 }

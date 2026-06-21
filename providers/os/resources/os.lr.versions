@@ -3064,10 +3064,12 @@ windows.optionalFeatures 11.2.6
 windows.rdp 13.22.2
 windows.rdp.alwaysPromptForPassword 13.22.2
 windows.rdp.clipboardServerToClientLevel 13.29.1
+windows.rdp.cloudClipboardIntegrationDisabled 13.29.1
 windows.rdp.comPortRedirectionDisabled 13.22.2
 windows.rdp.connectionsDenied 13.29.1
 windows.rdp.deleteTempDirsOnExit 13.22.2
 windows.rdp.driveRedirectionDisabled 13.22.2
+windows.rdp.endSessionWhenTimeLimitReached 13.29.1
 windows.rdp.locationRedirectionDisabled 13.29.1
 windows.rdp.lptPortRedirectionDisabled 13.22.2
 windows.rdp.maxDisconnectionTimeMs 13.22.2

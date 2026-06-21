@@ -7097,6 +7097,10 @@ windows.rdp {
   // to the client; higher values permit progressively more content. Resolves
   // to 3 (unrestricted) when the policy is not configured.
   clipboardServerToClientLevel() int
+  // Whether a session is ended rather than disconnected when a time limit is reached (fResetBroken)
+  endSessionWhenTimeLimitReached() bool
+  // Whether RDP Cloud Clipboard integration for server-to-client data transfer is disabled (DisableCloudClipboardIntegration)
+  cloudClipboardIntegrationDisabled() bool
 }
 
 // Windows Remote Management (WinRM)
