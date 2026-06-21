@@ -6357,6 +6357,8 @@ windows {
 
   // Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
   deviceGuard() windows.deviceGuard
+  // System-wide Windows Exploit Protection configuration
+  exploitProtection() windows.exploitProtection
 }
 
 // Windows Exploit Protection
@@ -6392,7 +6394,7 @@ windows.exploitProtection @defaults("disallowOverride") {
 // DEP prevents memory not explicitly marked executable from running as code.
 // Each value is "ON", "OFF", or "NOTSET". Reached through
 // `windows.exploitProtection.dep`.
-windows.exploitProtection.dep @defaults("enable") {
+private windows.exploitProtection.dep @defaults("enable") {
   // Whether DEP is enabled
   enable string
   // Whether ATL thunk emulation is enabled
@@ -6404,7 +6406,7 @@ windows.exploitProtection.dep @defaults("enable") {
 // ASLR randomizes the memory layout of a process to frustrate exploits that
 // rely on predictable addresses. Each value is "ON", "OFF", or "NOTSET".
 // Reached through `windows.exploitProtection.aslr`.
-windows.exploitProtection.aslr @defaults("bottomUp forceRelocateImages") {
+private windows.exploitProtection.aslr @defaults("bottomUp forceRelocateImages") {
   // Whether bottom-up randomization is enabled
   bottomUp string
   // Whether images without /DYNAMICBASE are forcibly relocated
@@ -6420,7 +6422,7 @@ windows.exploitProtection.aslr @defaults("bottomUp forceRelocateImages") {
 // CFG protects against memory-corruption exploits that hijack indirect calls.
 // Each value is "ON", "OFF", or "NOTSET". Reached through
 // `windows.exploitProtection.controlFlowGuard`.
-windows.exploitProtection.cfg @defaults("enable") {
+private windows.exploitProtection.cfg @defaults("enable") {
   // Whether Control Flow Guard is enabled
   enable string
   // Whether export suppression is enabled
@@ -6434,7 +6436,7 @@ windows.exploitProtection.cfg @defaults("enable") {
 // SEHOP blocks exploits that overwrite the structured exception handler chain.
 // Each value is "ON", "OFF", or "NOTSET". Reached through
 // `windows.exploitProtection.sehop`.
-windows.exploitProtection.sehop @defaults("enable") {
+private windows.exploitProtection.sehop @defaults("enable") {
   // Whether SEHOP is enabled
   enable string
   // Whether SEHOP runs in telemetry-only mode
@@ -6446,7 +6448,7 @@ windows.exploitProtection.sehop @defaults("enable") {
 // Terminating on heap corruption prevents an attacker from continuing
 // execution after corrupting the heap. The value is "ON", "OFF", or "NOTSET".
 // Reached through `windows.exploitProtection.heap`.
-windows.exploitProtection.heap @defaults("terminateOnError") {
+private windows.exploitProtection.heap @defaults("terminateOnError") {
   // Whether the process is terminated on heap corruption
   terminateOnError string
 }

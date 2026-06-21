@@ -7846,6 +7846,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.deviceGuard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetDeviceGuard()).ToDataRes(types.Resource("windows.deviceGuard"))
 	},
+	"windows.exploitProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetExploitProtection()).ToDataRes(types.Resource("windows.exploitProtection"))
+	},
 	"windows.exploitProtection.available": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsExploitProtection).GetAvailable()).ToDataRes(types.Bool)
 	},
@@ -19420,6 +19423,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.deviceGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).DeviceGuard, ok = plugin.RawToTValue[*mqlWindowsDeviceGuard](v.Value, v.Error)
+		return
+	},
+	"windows.exploitProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).ExploitProtection, ok = plugin.RawToTValue[*mqlWindowsExploitProtection](v.Value, v.Error)
 		return
 	},
 	"windows.exploitProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51239,12 +51246,13 @@ type mqlWindows struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsInternal it will be used here
-	ComputerInfo     plugin.TValue[any]
-	Hotfixes         plugin.TValue[[]any]
-	ServerFeatures   plugin.TValue[[]any]
-	OptionalFeatures plugin.TValue[[]any]
-	ScheduledTasks   plugin.TValue[[]any]
-	DeviceGuard      plugin.TValue[*mqlWindowsDeviceGuard]
+	ComputerInfo      plugin.TValue[any]
+	Hotfixes          plugin.TValue[[]any]
+	ServerFeatures    plugin.TValue[[]any]
+	OptionalFeatures  plugin.TValue[[]any]
+	ScheduledTasks    plugin.TValue[[]any]
+	DeviceGuard       plugin.TValue[*mqlWindowsDeviceGuard]
+	ExploitProtection plugin.TValue[*mqlWindowsExploitProtection]
 }
 
 // createWindows creates a new instance of this resource
@@ -51362,6 +51370,22 @@ func (c *mqlWindows) GetDeviceGuard() *plugin.TValue[*mqlWindowsDeviceGuard] {
 		}
 
 		return c.deviceGuard()
+	})
+}
+
+func (c *mqlWindows) GetExploitProtection() *plugin.TValue[*mqlWindowsExploitProtection] {
+	return plugin.GetOrCompute[*mqlWindowsExploitProtection](&c.ExploitProtection, func() (*mqlWindowsExploitProtection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "exploitProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsExploitProtection), nil
+			}
+		}
+
+		return c.exploitProtection()
 	})
 }
 
