@@ -215,6 +215,10 @@ k8s.cronjob.containers 9.0.0
 k8s.cronjob.created 9.0.0
 k8s.cronjob.dropsAllCapabilities 13.2.2
 k8s.cronjob.failedJobsHistoryLimit 13.0.16
+k8s.cronjob.hasCpuLimit 13.3.1
+k8s.cronjob.hasMemoryLimit 13.3.1
+k8s.cronjob.hasResourceLimits 13.3.1
+k8s.cronjob.hasResourceRequests 13.3.1
 k8s.cronjob.hasSeccompProfile 13.3.1
 k8s.cronjob.hasWritableRootFilesystem 13.2.2
 k8s.cronjob.hostIPC 13.2.2
@@ -276,6 +280,10 @@ k8s.daemonset.created 9.0.0
 k8s.daemonset.currentNumberScheduled 13.0.16
 k8s.daemonset.desiredNumberScheduled 13.0.16
 k8s.daemonset.dropsAllCapabilities 13.2.2
+k8s.daemonset.hasCpuLimit 13.3.1
+k8s.daemonset.hasMemoryLimit 13.3.1
+k8s.daemonset.hasResourceLimits 13.3.1
+k8s.daemonset.hasResourceRequests 13.3.1
 k8s.daemonset.hasSeccompProfile 13.3.1
 k8s.daemonset.hasWritableRootFilesystem 13.2.2
 k8s.daemonset.hostIPC 13.2.2
@@ -326,6 +334,10 @@ k8s.deployment.containers 9.0.0
 k8s.deployment.created 9.0.0
 k8s.deployment.desiredReplicas 13.0.16
 k8s.deployment.dropsAllCapabilities 13.2.2
+k8s.deployment.hasCpuLimit 13.3.1
+k8s.deployment.hasMemoryLimit 13.3.1
+k8s.deployment.hasResourceLimits 13.3.1
+k8s.deployment.hasResourceRequests 13.3.1
 k8s.deployment.hasSeccompProfile 13.3.1
 k8s.deployment.hasWritableRootFilesystem 13.2.2
 k8s.deployment.hostIPC 13.2.2
@@ -635,6 +647,10 @@ k8s.job.created 9.0.0
 k8s.job.dropsAllCapabilities 13.2.2
 k8s.job.failed 13.0.16
 k8s.job.failedIndexes 13.0.16
+k8s.job.hasCpuLimit 13.3.1
+k8s.job.hasMemoryLimit 13.3.1
+k8s.job.hasResourceLimits 13.3.1
+k8s.job.hasResourceRequests 13.3.1
 k8s.job.hasSeccompProfile 13.3.1
 k8s.job.hasWritableRootFilesystem 13.2.2
 k8s.job.hostIPC 13.2.2
@@ -909,6 +925,10 @@ k8s.pod.dnsPolicy 13.0.16
 k8s.pod.dropsAllCapabilities 13.2.2
 k8s.pod.enableServiceLinks 13.0.16
 k8s.pod.ephemeralContainers 9.0.0
+k8s.pod.hasCpuLimit 13.3.1
+k8s.pod.hasMemoryLimit 13.3.1
+k8s.pod.hasResourceLimits 13.3.1
+k8s.pod.hasResourceRequests 13.3.1
 k8s.pod.hasSeccompProfile 13.3.1
 k8s.pod.hasWritableRootFilesystem 13.2.2
 k8s.pod.hostAliases 13.0.16
@@ -1127,6 +1147,10 @@ k8s.replicaset.created 9.0.0
 k8s.replicaset.desiredReplicas 13.0.16
 k8s.replicaset.dropsAllCapabilities 13.2.2
 k8s.replicaset.fullyLabeledReplicas 13.0.16
+k8s.replicaset.hasCpuLimit 13.3.1
+k8s.replicaset.hasMemoryLimit 13.3.1
+k8s.replicaset.hasResourceLimits 13.3.1
+k8s.replicaset.hasResourceRequests 13.3.1
 k8s.replicaset.hasSeccompProfile 13.3.1
 k8s.replicaset.hasWritableRootFilesystem 13.2.2
 k8s.replicaset.hostIPC 13.2.2
@@ -1273,6 +1297,10 @@ k8s.statefulset.currentReplicas 13.0.16
 k8s.statefulset.currentRevision 13.0.16
 k8s.statefulset.desiredReplicas 13.0.16
 k8s.statefulset.dropsAllCapabilities 13.2.2
+k8s.statefulset.hasCpuLimit 13.3.1
+k8s.statefulset.hasMemoryLimit 13.3.1
+k8s.statefulset.hasResourceLimits 13.3.1
+k8s.statefulset.hasResourceRequests 13.3.1
 k8s.statefulset.hasSeccompProfile 13.3.1
 k8s.statefulset.hasWritableRootFilesystem 13.2.2
 k8s.statefulset.hostIPC 13.2.2

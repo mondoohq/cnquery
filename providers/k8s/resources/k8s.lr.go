@@ -839,6 +839,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.pod.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasResourceRequests()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetPodSecurityStandard()).ToDataRes(types.String)
 	},
@@ -1088,6 +1100,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.deployment.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasResourceRequests()).ToDataRes(types.Bool)
+	},
 	"k8s.deployment.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetPodSecurityStandard()).ToDataRes(types.String)
 	},
@@ -1235,6 +1259,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.daemonset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasResourceRequests()).ToDataRes(types.Bool)
+	},
 	"k8s.daemonset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetPodSecurityStandard()).ToDataRes(types.String)
 	},
@@ -1378,6 +1414,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasResourceRequests()).ToDataRes(types.Bool)
 	},
 	"k8s.statefulset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetPodSecurityStandard()).ToDataRes(types.String)
@@ -1538,6 +1586,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.replicaset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasResourceRequests()).ToDataRes(types.Bool)
+	},
 	"k8s.replicaset.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetPodSecurityStandard()).ToDataRes(types.String)
 	},
@@ -1666,6 +1726,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasResourceRequests()).ToDataRes(types.Bool)
 	},
 	"k8s.job.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetPodSecurityStandard()).ToDataRes(types.String)
@@ -1831,6 +1903,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasCpuLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasMemoryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasMemoryLimit()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasResourceLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasResourceLimits()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasResourceRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasResourceRequests()).ToDataRes(types.Bool)
 	},
 	"k8s.cronjob.podSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetPodSecurityStandard()).ToDataRes(types.String)
@@ -4847,6 +4931,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5183,6 +5283,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5383,6 +5499,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5577,6 +5709,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5795,6 +5943,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).PodSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5969,6 +6133,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.job.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6193,6 +6373,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasMemoryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasMemoryLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasResourceLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasResourceLimits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasResourceRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasResourceRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.podSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11506,6 +11702,10 @@ type mqlK8sPod struct {
 	UsesHostPath                  plugin.TValue[bool]
 	UsesUnconfinedSeccomp         plugin.TValue[bool]
 	HasSeccompProfile             plugin.TValue[bool]
+	HasCpuLimit                   plugin.TValue[bool]
+	HasMemoryLimit                plugin.TValue[bool]
+	HasResourceLimits             plugin.TValue[bool]
+	HasResourceRequests           plugin.TValue[bool]
 	PodSecurityStandard           plugin.TValue[string]
 	MeetsPodSecurityBaseline      plugin.TValue[bool]
 	MeetsPodSecurityRestricted    plugin.TValue[bool]
@@ -11670,6 +11870,30 @@ func (c *mqlK8sPod) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sPod) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sPod) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sPod) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sPod) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -12225,6 +12449,10 @@ type mqlK8sDeployment struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	HasCpuLimit                  plugin.TValue[bool]
+	HasMemoryLimit               plugin.TValue[bool]
+	HasResourceLimits            plugin.TValue[bool]
+	HasResourceRequests          plugin.TValue[bool]
 	PodSecurityStandard          plugin.TValue[string]
 	MeetsPodSecurityBaseline     plugin.TValue[bool]
 	MeetsPodSecurityRestricted   plugin.TValue[bool]
@@ -12385,6 +12613,30 @@ func (c *mqlK8sDeployment) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDeployment) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -12648,6 +12900,10 @@ type mqlK8sDaemonset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	HasCpuLimit                  plugin.TValue[bool]
+	HasMemoryLimit               plugin.TValue[bool]
+	HasResourceLimits            plugin.TValue[bool]
+	HasResourceRequests          plugin.TValue[bool]
 	PodSecurityStandard          plugin.TValue[string]
 	MeetsPodSecurityBaseline     plugin.TValue[bool]
 	MeetsPodSecurityRestricted   plugin.TValue[bool]
@@ -12807,6 +13063,30 @@ func (c *mqlK8sDaemonset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDaemonset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -13064,6 +13344,10 @@ type mqlK8sStatefulset struct {
 	UsesHostPath                         plugin.TValue[bool]
 	UsesUnconfinedSeccomp                plugin.TValue[bool]
 	HasSeccompProfile                    plugin.TValue[bool]
+	HasCpuLimit                          plugin.TValue[bool]
+	HasMemoryLimit                       plugin.TValue[bool]
+	HasResourceLimits                    plugin.TValue[bool]
+	HasResourceRequests                  plugin.TValue[bool]
 	PodSecurityStandard                  plugin.TValue[string]
 	MeetsPodSecurityBaseline             plugin.TValue[bool]
 	MeetsPodSecurityRestricted           plugin.TValue[bool]
@@ -13228,6 +13512,30 @@ func (c *mqlK8sStatefulset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sStatefulset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -13515,6 +13823,10 @@ type mqlK8sReplicaset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	HasCpuLimit                  plugin.TValue[bool]
+	HasMemoryLimit               plugin.TValue[bool]
+	HasResourceLimits            plugin.TValue[bool]
+	HasResourceRequests          plugin.TValue[bool]
 	PodSecurityStandard          plugin.TValue[string]
 	MeetsPodSecurityBaseline     plugin.TValue[bool]
 	MeetsPodSecurityRestricted   plugin.TValue[bool]
@@ -13669,6 +13981,30 @@ func (c *mqlK8sReplicaset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sReplicaset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -13896,6 +14232,10 @@ type mqlK8sJob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	HasCpuLimit                  plugin.TValue[bool]
+	HasMemoryLimit               plugin.TValue[bool]
+	HasResourceLimits            plugin.TValue[bool]
+	HasResourceRequests          plugin.TValue[bool]
 	PodSecurityStandard          plugin.TValue[string]
 	MeetsPodSecurityBaseline     plugin.TValue[bool]
 	MeetsPodSecurityRestricted   plugin.TValue[bool]
@@ -14062,6 +14402,30 @@ func (c *mqlK8sJob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sJob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sJob) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sJob) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sJob) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sJob) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 
@@ -14361,6 +14725,10 @@ type mqlK8sCronjob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	HasCpuLimit                  plugin.TValue[bool]
+	HasMemoryLimit               plugin.TValue[bool]
+	HasResourceLimits            plugin.TValue[bool]
+	HasResourceRequests          plugin.TValue[bool]
 	PodSecurityStandard          plugin.TValue[string]
 	MeetsPodSecurityBaseline     plugin.TValue[bool]
 	MeetsPodSecurityRestricted   plugin.TValue[bool]
@@ -14517,6 +14885,30 @@ func (c *mqlK8sCronjob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sCronjob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasCpuLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasCpuLimit, func() (bool, error) {
+		return c.hasCpuLimit()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasMemoryLimit() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasMemoryLimit, func() (bool, error) {
+		return c.hasMemoryLimit()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasResourceLimits() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceLimits, func() (bool, error) {
+		return c.hasResourceLimits()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasResourceRequests() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasResourceRequests, func() (bool, error) {
+		return c.hasResourceRequests()
 	})
 }
 

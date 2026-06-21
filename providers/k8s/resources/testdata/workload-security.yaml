@@ -25,6 +25,13 @@ spec:
       containers:
       - name: app
         image: nginx:1.25
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
         securityContext:
           privileged: false
           allowPrivilegeEscalation: false
