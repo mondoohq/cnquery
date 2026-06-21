@@ -97,3 +97,126 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
+---
+# A privileged pod, to exercise the pod accessor path (podSpecTyped).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: risky-pod
+  namespace: default
+spec:
+  hostIPC: true
+  containers:
+  - name: main
+    image: docker:24
+    securityContext:
+      privileged: true
+      runAsUser: 0
+      capabilities:
+        add: ["SYS_ADMIN"]
+  volumes:
+  - name: host
+    hostPath:
+      path: /
+---
+# One of each remaining workload kind with a privileged container, to verify
+# the per-kind accessor wiring (all share the rollup logic).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-privileged
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: ds-privileged
+  template:
+    metadata:
+      labels:
+        app: ds-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ss-privileged
+  namespace: default
+spec:
+  serviceName: ss-privileged
+  selector:
+    matchLabels:
+      app: ss-privileged
+  template:
+    metadata:
+      labels:
+        app: ss-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs-privileged
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: rs-privileged
+  template:
+    metadata:
+      labels:
+        app: rs-privileged
+    spec:
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-privileged
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: job-privileged
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: main
+        image: docker:24
+        securityContext:
+          privileged: true
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-privileged
+  namespace: default
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: cronjob-privileged
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: main
+            image: docker:24
+            securityContext:
+              privileged: true

@@ -87,4 +87,86 @@ func TestWorkloadSecurityRollups(t *testing.T) {
 		assert.False(t, d.GetRunsPrivileged().Data, "runsPrivileged")
 		assert.True(t, d.GetDropsAllCapabilities().Data, "dropsAllCapabilities")
 	})
+
+	t.Run("securityContext dict surfaces the pod-level context", func(t *testing.T) {
+		d := deploymentByName(t, k8s, "podlevelnonroot")
+		sc := d.GetSecurityContext()
+		require.NoError(t, sc.Error)
+		scMap, ok := sc.Data.(map[string]any)
+		require.True(t, ok, "securityContext is a dict")
+		assert.Equal(t, true, scMap["runAsNonRoot"], "securityContext.runAsNonRoot")
+	})
+}
+
+// TestWorkloadSecurityRollups_Pod exercises the pod accessor path, which uses
+// podSpecTyped() rather than the controller securitySpec() helper.
+func TestWorkloadSecurityRollups_Pod(t *testing.T) {
+	k8s := workloadSecurityK8s(t)
+
+	pods := k8s.GetPods()
+	require.NoError(t, pods.Error)
+	var pod *mqlK8sPod
+	for i := range pods.Data {
+		p := pods.Data[i].(*mqlK8sPod)
+		if p.GetName().Data == "risky-pod" {
+			pod = p
+			break
+		}
+	}
+	require.NotNil(t, pod, "risky-pod not found")
+
+	assert.True(t, pod.GetRunsPrivileged().Data, "runsPrivileged")
+	assert.True(t, pod.GetAllowsPrivilegeEscalation().Data, "allowsPrivilegeEscalation")
+	assert.True(t, pod.GetRunsAsRoot().Data, "runsAsRoot")
+	assert.True(t, pod.GetHasWritableRootFilesystem().Data, "hasWritableRootFilesystem")
+	assert.False(t, pod.GetDropsAllCapabilities().Data, "dropsAllCapabilities")
+	assert.Equal(t, []any{"SYS_ADMIN"}, pod.GetAddedCapabilities().Data, "addedCapabilities")
+	assert.True(t, pod.GetUsesHostNamespaces().Data, "usesHostNamespaces (hostIPC)")
+	assert.True(t, pod.GetUsesHostPath().Data, "usesHostPath")
+}
+
+// rollupReader is the common accessor surface every workload-bearing resource
+// implements; it lets one table verify per-kind wiring.
+type rollupReader interface {
+	GetName() *plugin.TValue[string]
+	GetRunsPrivileged() *plugin.TValue[bool]
+	GetSecurityContext() *plugin.TValue[any]
+}
+
+// TestWorkloadSecurityRollups_AllKinds confirms every controller workload wires
+// the predicates and the securityContext dict to its own object getter.
+func TestWorkloadSecurityRollups_AllKinds(t *testing.T) {
+	k8s := workloadSecurityK8s(t)
+
+	find := func(t *testing.T, list *plugin.TValue[[]any], name string) rollupReader {
+		t.Helper()
+		require.NoError(t, list.Error)
+		for i := range list.Data {
+			r := list.Data[i].(rollupReader)
+			if r.GetName().Data == name {
+				return r
+			}
+		}
+		require.FailNowf(t, "workload not found", "%q not found", name)
+		return nil
+	}
+
+	cases := []struct {
+		name string
+		list *plugin.TValue[[]any]
+	}{
+		{"ds-privileged", k8s.GetDaemonsets()},
+		{"ss-privileged", k8s.GetStatefulsets()},
+		{"rs-privileged", k8s.GetReplicasets()},
+		{"job-privileged", k8s.GetJobs()},
+		{"cronjob-privileged", k8s.GetCronjobs()},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := find(t, tc.list, tc.name)
+			assert.True(t, r.GetRunsPrivileged().Data, "runsPrivileged")
+			// securityContext resolves without error even when unset
+			assert.NoError(t, r.GetSecurityContext().Error, "securityContext")
+		})
+	}
 }
