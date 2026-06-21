@@ -25,16 +25,6 @@ func regItems(values map[string]int64) map[string]registry.RegistryKeyItem {
 	return items
 }
 
-func lower(s string) string {
-	b := []byte(s)
-	for i := range b {
-		if b[i] >= 'A' && b[i] <= 'Z' {
-			b[i] += 'a' - 'A'
-		}
-	}
-	return string(b)
-}
-
 func TestComputeWindowsUpdatePolicy(t *testing.T) {
 	t.Run("not configured", func(t *testing.T) {
 		v := computeWindowsUpdatePolicy(nil, nil)

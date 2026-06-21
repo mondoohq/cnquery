@@ -11,15 +11,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/registry"
 )
 
-// dword builds a registry item map entry holding a DWORD value, mirroring how
-// the registry reader stores items keyed by the lower-cased value name.
-func dword(name string, v int64) (string, registry.RegistryKeyItem) {
-	return name, registry.RegistryKeyItem{
-		Key:   name,
-		Value: registry.RegistryKeyValue{Kind: registry.DWORD, Number: v},
-	}
-}
-
 // multiSz builds a registry item map entry holding a REG_MULTI_SZ value.
 func multiSz(name string, v ...string) (string, registry.RegistryKeyItem) {
 	return name, registry.RegistryKeyItem{
@@ -35,10 +26,6 @@ func regMap(entries ...func() (string, registry.RegistryKeyItem)) map[string]reg
 		m[k] = v
 	}
 	return m
-}
-
-func d(name string, v int64) func() (string, registry.RegistryKeyItem) {
-	return func() (string, registry.RegistryKeyItem) { return dword(name, v) }
 }
 
 func ms(name string, v ...string) func() (string, registry.RegistryKeyItem) {

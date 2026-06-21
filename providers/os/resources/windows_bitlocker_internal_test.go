@@ -38,16 +38,6 @@ func itemsFrom(items ...registry.RegistryKeyItem) map[string]registry.RegistryKe
 	return m
 }
 
-func lower(s string) string {
-	out := []rune(s)
-	for i, r := range out {
-		if r >= 'A' && r <= 'Z' {
-			out[i] = r + ('a' - 'A')
-		}
-	}
-	return string(out)
-}
-
 func TestDriveTypeForPrefix(t *testing.T) {
 	assert.Equal(t, "operatingSystem", driveTypeForPrefix(fveOSPrefix))
 	assert.Equal(t, "fixedData", driveTypeForPrefix(fveFDVPrefix))
