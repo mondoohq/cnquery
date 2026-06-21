@@ -3225,7 +3225,6 @@ windows.smb.share.path 13.28.2
 windows.smb.share.scopeName 13.28.2
 windows.smb.share.shareType 13.28.2
 windows.smb.shares 13.28.2
-<<<<<<< HEAD
 windows.smb.smbv1Enabled 13.29.1
 windows.spooler 13.29.1
 windows.spooler.addPrinterDriversRestricted 13.29.1
@@ -3254,20 +3253,17 @@ windows.spooler.rpcAuthnLevelPrivacyEnabled 13.29.1
 windows.spooler.startMode 13.29.1
 windows.spooler.webPnpDownloadDisabled 13.29.1
 windows.spooler.windowsProtectedPrintGroupPolicyState 13.29.1
-=======
 windows.telemetry 13.29.1
 windows.telemetry.allowTelemetry 13.29.1
-windows.telemetry.consumerContent 13.29.1
-windows.telemetry.consumerContent.disableCloudOptimizedContent 13.29.1
-windows.telemetry.consumerContent.disableConsumerAccountStateContent 13.29.1
-windows.telemetry.consumerContent.disableWindowsConsumerFeatures 13.29.1
+windows.telemetry.disableCloudOptimizedContent 13.29.1
+windows.telemetry.disableConsumerAccountStateContent 13.29.1
 windows.telemetry.disableEnterpriseAuthProxy 13.29.1
 windows.telemetry.disableOneSettingsDownloads 13.29.1
+windows.telemetry.disableWindowsConsumerFeatures 13.29.1
 windows.telemetry.doNotShowFeedbackNotifications 13.29.1
 windows.telemetry.enableOneSettingsAuditing 13.29.1
 windows.telemetry.limitDiagnosticLogCollection 13.29.1
 windows.telemetry.limitDumpCollection 13.29.1
->>>>>>> e39eee4dc (🌟 Add windows.telemetry resource for diagnostic-data and consumer cloud-content policy)
 windows.tpm 13.22.2
 windows.tpm.activated 13.22.2
 windows.tpm.enabled 13.22.2

@@ -7462,29 +7462,18 @@ windows.telemetry {
   limitDiagnosticLogCollection() int
   // Whether collection of crash dumps is limited (DataCollection\LimitDumpCollection). Null when not configured.
   limitDumpCollection() int
-  // Consumer cloud-content (CloudContent) policy settings
-  consumerContent() windows.telemetry.consumerContent
-}
-
-// Windows consumer cloud-content policy
-//
-// Examine the consumer cloud-content policy under HKLM\SOFTWARE\Policies
-// \Microsoft\Windows\CloudContent. These are GPO-only DWORD values; every field
-// is nullable so that an absent value (the policy is not configured) is
-// distinguishable from an explicit 0.
-private windows.telemetry.consumerContent @defaults("disableWindowsConsumerFeatures") {
   // Whether cloud-optimized content is disabled (CloudContent\DisableCloudOptimizedContent)
   //
   // Cloud-optimized content tailors suggestions using cloud data. Null when the
   // policy is not configured.
-  disableCloudOptimizedContent int
+  disableCloudOptimizedContent() int
   // Whether consumer account state content is disabled (CloudContent\DisableConsumerAccountStateContent). Null when not configured.
-  disableConsumerAccountStateContent int
+  disableConsumerAccountStateContent() int
   // Whether Windows consumer features are disabled (CloudContent\DisableWindowsConsumerFeatures)
   //
   // Consumer features include app suggestions and consumer experiences. Null
   // when the policy is not configured.
-  disableWindowsConsumerFeatures int
+  disableWindowsConsumerFeatures() int
 }
 
 // Windows Trusted Platform Module (TPM)

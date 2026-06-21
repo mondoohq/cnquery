@@ -26,10 +26,6 @@ func (r *mqlWindowsTelemetry) id() (string, error) {
 	return "windows.telemetry", nil
 }
 
-func (r *mqlWindowsTelemetryConsumerContent) id() (string, error) {
-	return "windows.telemetry.consumerContent", nil
-}
-
 // readTelemetryKey reads a single registry key and returns its values keyed by
 // the lower-cased value name. A missing key yields an empty map rather than an
 // error, so every value resolves to null (not configured) instead of failing.
@@ -113,16 +109,21 @@ func telemetryIntField(v *int64) plugin.TValue[int64] {
 	return plugin.TValue[int64]{Data: *v, State: plugin.StateIsSet}
 }
 
-// populate reads the DataCollection key once and sets every diagnostic-data
+// populate reads the DataCollection and CloudContent keys once and sets every
 // field directly. The runtime's GetOrCompute wrapper only invokes this until the
-// fields are set, so the registry items are parsed a single time and the seven
+// fields are set, so the registry items are parsed a single time and all ten
 // accessors share one error-handling path.
 func (r *mqlWindowsTelemetry) populate() error {
-	items, err := r.readTelemetryKey(telemetryDataCollectionPath)
+	dataCollection, err := r.readTelemetryKey(telemetryDataCollectionPath)
 	if err != nil {
 		return err
 	}
-	v := computeTelemetry(items)
+	cloudContent, err := r.readTelemetryKey(telemetryCloudContentPath)
+	if err != nil {
+		return err
+	}
+	v := computeTelemetry(dataCollection)
+	c := computeConsumerContent(cloudContent)
 
 	r.AllowTelemetry = telemetryIntField(v.allowTelemetry)
 	r.DisableEnterpriseAuthProxy = telemetryIntField(v.disableEnterpriseAuthProxy)
@@ -131,6 +132,9 @@ func (r *mqlWindowsTelemetry) populate() error {
 	r.EnableOneSettingsAuditing = telemetryIntField(v.enableOneSettingsAuditing)
 	r.LimitDiagnosticLogCollection = telemetryIntField(v.limitDiagnosticLogCollection)
 	r.LimitDumpCollection = telemetryIntField(v.limitDumpCollection)
+	r.DisableCloudOptimizedContent = telemetryIntField(c.disableCloudOptimizedContent)
+	r.DisableConsumerAccountStateContent = telemetryIntField(c.disableConsumerAccountStateContent)
+	r.DisableWindowsConsumerFeatures = telemetryIntField(c.disableWindowsConsumerFeatures)
 	return nil
 }
 
@@ -142,22 +146,8 @@ func (r *mqlWindowsTelemetry) enableOneSettingsAuditing() (int64, error)      { 
 func (r *mqlWindowsTelemetry) limitDiagnosticLogCollection() (int64, error)   { return 0, r.populate() }
 func (r *mqlWindowsTelemetry) limitDumpCollection() (int64, error)            { return 0, r.populate() }
 
-func (r *mqlWindowsTelemetry) consumerContent() (*mqlWindowsTelemetryConsumerContent, error) {
-	items, err := r.readTelemetryKey(telemetryCloudContentPath)
-	if err != nil {
-		return nil, err
-	}
-
-	v := computeConsumerContent(items)
-
-	o, err := CreateResource(r.MqlRuntime, "windows.telemetry.consumerContent", map[string]*llx.RawData{
-		"__id":                               llx.StringData("windows.telemetry.consumerContent"),
-		"disableCloudOptimizedContent":       llx.IntDataPtr(v.disableCloudOptimizedContent),
-		"disableConsumerAccountStateContent": llx.IntDataPtr(v.disableConsumerAccountStateContent),
-		"disableWindowsConsumerFeatures":     llx.IntDataPtr(v.disableWindowsConsumerFeatures),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return o.(*mqlWindowsTelemetryConsumerContent), nil
+func (r *mqlWindowsTelemetry) disableCloudOptimizedContent() (int64, error) { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) disableConsumerAccountStateContent() (int64, error) {
+	return 0, r.populate()
 }
+func (r *mqlWindowsTelemetry) disableWindowsConsumerFeatures() (int64, error) { return 0, r.populate() }

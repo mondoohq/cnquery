@@ -354,7 +354,6 @@ const (
 	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
 	ResourceWindowsSpoolerIpp                             string = "windows.spooler.ipp"
 	ResourceWindowsTelemetry                              string = "windows.telemetry"
-	ResourceWindowsTelemetryConsumerContent               string = "windows.telemetry.consumerContent"
 	ResourceWindowsTpm                                    string = "windows.tpm"
 	ResourceWindowsAuditPolicy                            string = "windows.auditPolicy"
 	ResourceWindowsAuditPolicySubcategory                 string = "windows.auditPolicy.subcategory"
@@ -1848,10 +1847,6 @@ func init() {
 		"windows.telemetry": {
 			// to override args, implement: initWindowsTelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsTelemetry,
-		},
-		"windows.telemetry.consumerContent": {
-			// to override args, implement: initWindowsTelemetryConsumerContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createWindowsTelemetryConsumerContent,
 		},
 		"windows.tpm": {
 			// to override args, implement: initWindowsTpm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8804,17 +8799,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.telemetry.limitDumpCollection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTelemetry).GetLimitDumpCollection()).ToDataRes(types.Int)
 	},
-	"windows.telemetry.consumerContent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetConsumerContent()).ToDataRes(types.Resource("windows.telemetry.consumerContent"))
+	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableCloudOptimizedContent()).ToDataRes(types.Int)
 	},
-	"windows.telemetry.consumerContent.disableCloudOptimizedContent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetryConsumerContent).GetDisableCloudOptimizedContent()).ToDataRes(types.Int)
+	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableConsumerAccountStateContent()).ToDataRes(types.Int)
 	},
-	"windows.telemetry.consumerContent.disableConsumerAccountStateContent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetryConsumerContent).GetDisableConsumerAccountStateContent()).ToDataRes(types.Int)
-	},
-	"windows.telemetry.consumerContent.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetryConsumerContent).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Int)
+	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Int)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -21259,24 +21251,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsTelemetry).LimitDumpCollection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"windows.telemetry.consumerContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).ConsumerContent, ok = plugin.RawToTValue[*mqlWindowsTelemetryConsumerContent](v.Value, v.Error)
+	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableCloudOptimizedContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"windows.telemetry.consumerContent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetryConsumerContent).__id, ok = v.Value.(string)
+	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableConsumerAccountStateContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"windows.telemetry.consumerContent.disableCloudOptimizedContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetryConsumerContent).DisableCloudOptimizedContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"windows.telemetry.consumerContent.disableConsumerAccountStateContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetryConsumerContent).DisableConsumerAccountStateContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"windows.telemetry.consumerContent.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetryConsumerContent).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55872,14 +55856,16 @@ type mqlWindowsTelemetry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsTelemetryInternal it will be used here
-	AllowTelemetry                 plugin.TValue[int64]
-	DisableEnterpriseAuthProxy     plugin.TValue[int64]
-	DisableOneSettingsDownloads    plugin.TValue[int64]
-	DoNotShowFeedbackNotifications plugin.TValue[int64]
-	EnableOneSettingsAuditing      plugin.TValue[int64]
-	LimitDiagnosticLogCollection   plugin.TValue[int64]
-	LimitDumpCollection            plugin.TValue[int64]
-	ConsumerContent                plugin.TValue[*mqlWindowsTelemetryConsumerContent]
+	AllowTelemetry                     plugin.TValue[int64]
+	DisableEnterpriseAuthProxy         plugin.TValue[int64]
+	DisableOneSettingsDownloads        plugin.TValue[int64]
+	DoNotShowFeedbackNotifications     plugin.TValue[int64]
+	EnableOneSettingsAuditing          plugin.TValue[int64]
+	LimitDiagnosticLogCollection       plugin.TValue[int64]
+	LimitDumpCollection                plugin.TValue[int64]
+	DisableCloudOptimizedContent       plugin.TValue[int64]
+	DisableConsumerAccountStateContent plugin.TValue[int64]
+	DisableWindowsConsumerFeatures     plugin.TValue[int64]
 }
 
 // createWindowsTelemetry creates a new instance of this resource
@@ -55961,79 +55947,22 @@ func (c *mqlWindowsTelemetry) GetLimitDumpCollection() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetConsumerContent() *plugin.TValue[*mqlWindowsTelemetryConsumerContent] {
-	return plugin.GetOrCompute[*mqlWindowsTelemetryConsumerContent](&c.ConsumerContent, func() (*mqlWindowsTelemetryConsumerContent, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.telemetry", c.__id, "consumerContent")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlWindowsTelemetryConsumerContent), nil
-			}
-		}
-
-		return c.consumerContent()
+func (c *mqlWindowsTelemetry) GetDisableCloudOptimizedContent() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DisableCloudOptimizedContent, func() (int64, error) {
+		return c.disableCloudOptimizedContent()
 	})
 }
 
-// mqlWindowsTelemetryConsumerContent for the windows.telemetry.consumerContent resource
-type mqlWindowsTelemetryConsumerContent struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlWindowsTelemetryConsumerContentInternal it will be used here
-	DisableCloudOptimizedContent       plugin.TValue[int64]
-	DisableConsumerAccountStateContent plugin.TValue[int64]
-	DisableWindowsConsumerFeatures     plugin.TValue[int64]
+func (c *mqlWindowsTelemetry) GetDisableConsumerAccountStateContent() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DisableConsumerAccountStateContent, func() (int64, error) {
+		return c.disableConsumerAccountStateContent()
+	})
 }
 
-// createWindowsTelemetryConsumerContent creates a new instance of this resource
-func createWindowsTelemetryConsumerContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlWindowsTelemetryConsumerContent{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("windows.telemetry.consumerContent", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlWindowsTelemetryConsumerContent) MqlName() string {
-	return "windows.telemetry.consumerContent"
-}
-
-func (c *mqlWindowsTelemetryConsumerContent) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlWindowsTelemetryConsumerContent) GetDisableCloudOptimizedContent() *plugin.TValue[int64] {
-	return &c.DisableCloudOptimizedContent
-}
-
-func (c *mqlWindowsTelemetryConsumerContent) GetDisableConsumerAccountStateContent() *plugin.TValue[int64] {
-	return &c.DisableConsumerAccountStateContent
-}
-
-func (c *mqlWindowsTelemetryConsumerContent) GetDisableWindowsConsumerFeatures() *plugin.TValue[int64] {
-	return &c.DisableWindowsConsumerFeatures
+func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DisableWindowsConsumerFeatures, func() (int64, error) {
+		return c.disableWindowsConsumerFeatures()
+	})
 }
 
 // mqlWindowsTpm for the windows.tpm resource
