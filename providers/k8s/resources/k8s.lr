@@ -12,10 +12,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/k8s/resources"
 // Use the Kubernetes namespace as the cluster-wide handle for every
 // modeled API object. Read `serverVersion` for the control-plane
 // version and `apiResources()` for the list of resource types the
-// API server advertises. Iterate the workload accessors —
+// API server advertises. Iterate the workload accessors
 // `namespaces()`, `nodes()`, `pods()`, `deployments()`, `daemonsets()`,
 // `statefulsets()`, `replicasets()`, `jobs()`, `cronjobs()`, and
-// `apps()` — for the running workload, and `services()`, `ingresses()`,
+// `apps()` for the running workload, and `services()`, `ingresses()`,
 // `endpointSlices()`, and `networkPolicies()` for the network plane.
 // `secrets()`, `configmaps()`, and `serviceaccounts()` cover identity
 // and configuration data; `clusterroles()`, `clusterrolebindings()`,
@@ -118,7 +118,13 @@ k8s {
   ingressClasses() []k8s.ingressclass
 }
 
-// Kubernetes API resources
+// Kubernetes API resource type
+//
+// Resource type the API server advertises through discovery, selected by its
+// plural name and kind. The group and version report the preferred API path,
+// namespaced indicates whether instances are scoped to a namespace, and
+// shortNames and categories list the kubectl aliases and groupings (such as
+// "all") the type belongs to.
 private k8s.apiresource @defaults("name kind") {
   // Plural name of the resource
   name string
@@ -139,6 +145,16 @@ private k8s.apiresource @defaults("name kind") {
 }
 
 // Kubernetes namespace
+//
+// Namespace that partitions a cluster into isolated scopes, selected by name.
+// The workload accessors (pods, deployments, statefulsets, daemonsets,
+// replicasets, jobs, cronjobs) and the services, ingresses, endpointSlices,
+// and networkPolicies accessors return only the objects in this namespace,
+// while secrets, configmaps, serviceaccounts, persistentVolumeClaims, roles,
+// and rolebindings cover its configuration, identity, storage, and RBAC. The
+// podSecurityEnforce, podSecurityAudit, and podSecurityWarn fields (with their
+// version companions) report the Pod Security Standards level applied by Pod
+// Security admission.
 private k8s.namespace @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -239,6 +255,15 @@ private k8s.namespace @defaults("name created") {
 }
 
 // Kubernetes node
+//
+// Worker or control-plane machine that runs pods, selected by name. The
+// capacity and allocatable fields report total and schedulable resources,
+// conditions surfaces health signals such as Ready and MemoryPressure, taints
+// lists the scheduling restrictions pods must tolerate, and addresses holds
+// the node's hostnames and IPs. The osImage, kernelVersion, kubeletVersion,
+// containerRuntimeVersion, operatingSystem, and architecture fields report the
+// node's software stack, and unschedulable reports whether the node is
+// cordoned.
 private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -339,6 +364,17 @@ private k8s.nodeAddress @defaults("type address") {
 }
 
 // Kubernetes Pod
+//
+// Smallest deployable unit, one or more co-scheduled containers sharing a
+// network and storage context, selected by namespace and name. The containers,
+// initContainers, and ephemeralContainers accessors expose the workload and
+// its images, command, resources, and securityContext, while containerStatuses
+// reports their runtime state. Scheduling is described by node, nodeSelector,
+// tolerations, affinity, priorityClass, and serviceAccount; the host-namespace
+// and security posture by hostNetwork, hostPID, hostIPC, and securityContext;
+// and runtime status by phase, qosClass, podIP, and conditions. The owning
+// controller is reached through replicaSet, statefulSet, daemonSet, job, and
+// deployment.
 private k8s.pod @defaults("namespace name created"){
   // Mondoo ID for the Kubernetes object
   id string
@@ -473,6 +509,14 @@ private k8s.pod @defaults("namespace name created"){
 }
 
 // Kubernetes Deployment
+//
+// Controller that manages a replicated, declaratively updated set of pods
+// through ReplicaSets, selected by namespace and name. The pod template is
+// available through podSpec, containers, and initContainers; the rollout is
+// governed by desiredReplicas, strategy, paused, and revisionHistoryLimit; and
+// the current rollout state is reported by replicas, readyReplicas,
+// availableReplicas, updatedReplicas, unavailableReplicas, and conditions. The
+// pods field returns the pods currently backing the deployment.
 private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -539,6 +583,14 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
 }
 
 // Kubernetes DaemonSet
+//
+// Controller that runs one copy of a pod on every matching node, selected by
+// namespace and name. The pod template is available through podSpec,
+// containers, and initContainers, the rollout is governed by updateStrategy
+// and revisionHistoryLimit, and scheduling coverage is reported by
+// desiredNumberScheduled, currentNumberScheduled, numberReady, numberAvailable,
+// numberMisscheduled, and updatedNumberScheduled. The pods field returns the
+// daemon pods currently running.
 private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -603,6 +655,15 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
 }
 
 // Kubernetes StatefulSet
+//
+// Controller that manages pods with stable identities and persistent storage,
+// selected by namespace and name. The pod template is available through
+// podSpec, containers, and initContainers; identity and ordering are governed
+// by serviceName, podManagementPolicy, ordinalsStart, and updateStrategy; and
+// persistentVolumeClaimRetentionPolicy controls whether per-pod volumes survive
+// scale-down. Rollout state is reported by replicas, readyReplicas,
+// currentReplicas, updatedReplicas, currentRevision, updateRevision, and
+// conditions, and the pods field returns the backing pods.
 private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -677,6 +738,13 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
 }
 
 // Kubernetes ReplicaSet
+//
+// Controller that maintains a stable set of replica pods, usually owned by a
+// Deployment, selected by namespace and name. The pod template is available
+// through podSpec, containers, and initContainers, the target count comes from
+// desiredReplicas and selector, and the observed state is reported by replicas,
+// readyReplicas, availableReplicas, fullyLabeledReplicas, and conditions. The
+// pods field returns the pods the ReplicaSet owns.
 private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -731,6 +799,13 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 }
 
 // Kubernetes Job
+//
+// Controller that runs pods to completion, selected by namespace and name. The
+// pod template is available through podSpec, containers, and initContainers;
+// execution is governed by parallelism, completions, completionMode,
+// backoffLimit, activeDeadlineSeconds, and suspend; and progress is reported by
+// active, succeeded, failed, ready, startTime, completionTime, and conditions.
+// The pods field returns the pods the job has created.
 private k8s.job @defaults("namespace name succeeded failed created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -809,6 +884,14 @@ private k8s.job @defaults("namespace name succeeded failed created") {
 }
 
 // Kubernetes CronJob
+//
+// Controller that creates Jobs on a repeating schedule, selected by namespace
+// and name. The schedule and timeZone fields define when jobs run,
+// concurrencyPolicy, startingDeadlineSeconds, and suspend govern execution, and
+// successfulJobsHistoryLimit and failedJobsHistoryLimit control how many
+// finished jobs are retained. The activeJobs field returns the jobs currently
+// running, jobs returns every job the CronJob still owns, and the shared pod
+// template is available through podSpec, containers, and initContainers.
 private k8s.cronjob @defaults("namespace name schedule suspend created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1165,6 +1248,13 @@ private k8s.ephemeralContainer @defaults("name") {
 }
 
 // Kubernetes Secret
+//
+// Object that holds sensitive data such as passwords, tokens, and keys,
+// selected by namespace and name. The type field reports the secret's purpose
+// (for example kubernetes.io/tls or kubernetes.io/dockerconfigjson),
+// certificates parses any X.509 certificates the secret carries, and usedBy
+// returns the pods that consume the secret through volumes, environment
+// variables, or image-pull references.
 private k8s.secret @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1199,6 +1289,11 @@ private k8s.secret @defaults("namespace name created") {
 }
 
 // Kubernetes ConfigMap
+//
+// Object that holds non-confidential configuration as key-value pairs,
+// selected by namespace and name. The data field exposes the stored
+// configuration entries, and usedBy returns the pods that consume the ConfigMap
+// through volumes, environment variables, or envFrom.
 private k8s.configmap @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1231,6 +1326,15 @@ private k8s.configmap @defaults("namespace name created") {
 }
 
 // Kubernetes Service
+//
+// Stable network endpoint that load-balances traffic to a set of pods,
+// selected by namespace and name. The type field distinguishes ClusterIP,
+// NodePort, LoadBalancer, and ExternalName services; clusterIP, externalIPs,
+// loadBalancerIngress, and ports report the addresses and ports it exposes; and
+// selector identifies the backing pods. Traffic and affinity behavior is
+// governed by externalTrafficPolicy, internalTrafficPolicy, and
+// sessionAffinity, and endpointSlices returns the slices listing the current
+// backing endpoints.
 private k8s.service @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1369,6 +1473,13 @@ private k8s.ingresstls {
 }
 
 // Kubernetes Ingress
+//
+// HTTP and HTTPS routing rules that expose Services to traffic from outside the
+// cluster, selected by namespace and name. The rules field maps hostnames and
+// paths to backend services, tls lists the hostnames and certificates
+// terminated by the ingress, and ingressClass identifies the controller that
+// implements the rules. The loadBalancerIngress field reports the addresses the
+// controller has assigned.
 private k8s.ingress @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1407,6 +1518,12 @@ private k8s.ingress @defaults("namespace name created") {
 }
 
 // Kubernetes service account
+//
+// Identity that pods use to authenticate to the API server, selected by
+// namespace and name. The secrets and imagePullSecrets fields list the tokens
+// and registry credentials associated with the account, and
+// automountServiceAccountToken reports whether its API token is mounted into
+// pods by default.
 private k8s.serviceaccount @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1441,6 +1558,11 @@ private k8s.serviceaccount @defaults("namespace name created") {
 }
 
 // Kubernetes ClusterRole
+//
+// Cluster-wide set of RBAC permissions, selected by name. The rules field lists
+// the API groups, resources, and verbs the role grants, aggregationRule
+// describes how the role aggregates other ClusterRoles by label, and boundBy
+// returns the ClusterRoleBindings that grant this role to subjects.
 private k8s.rbac.clusterrole @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1473,6 +1595,11 @@ private k8s.rbac.clusterrole @defaults("name created") {
 }
 
 // Kubernetes ClusterRoleBinding
+//
+// Grant that binds a ClusterRole to a set of subjects cluster-wide, selected by
+// name. The subjects field lists the users, groups, and service accounts the
+// role is granted to, serviceAccounts resolves the service-account subjects to
+// their objects, and clusterRole returns the ClusterRole named by roleRef.
 private k8s.rbac.clusterrolebinding @defaults("name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1507,6 +1634,11 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
 }
 
 // Kubernetes Role
+//
+// Namespaced set of RBAC permissions, selected by namespace and name. The rules
+// field lists the API groups, resources, and verbs the role grants within its
+// namespace, and boundBy returns the RoleBindings that grant this role to
+// subjects.
 private k8s.rbac.role @defaults("name namespace") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1539,6 +1671,12 @@ private k8s.rbac.role @defaults("name namespace") {
 }
 
 // Kubernetes RoleBinding
+//
+// Grant that binds a Role or ClusterRole to subjects within a namespace,
+// selected by namespace and name. The subjects field lists the users, groups,
+// and service accounts the permissions are granted to, serviceAccounts resolves
+// the service-account subjects to their objects, and role or clusterRole
+// returns the object named by roleRef depending on its kind.
 private k8s.rbac.rolebinding @defaults("name namespace created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1577,6 +1715,12 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
 }
 
 // Kubernetes Network Policy
+//
+// Rule set that controls allowed network traffic to and from pods, selected by
+// namespace and name. The podSelector field chooses the pods the policy
+// governs, policyTypes reports whether ingress, egress, or both are restricted,
+// and the ingress and egress fields list the permitted peers and ports. Pods
+// selected by a policy deny all traffic not explicitly allowed by these rules.
 private k8s.networkpolicy @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1615,6 +1759,11 @@ private k8s.networkpolicy @defaults("namespace name created") {
 }
 
 // Kubernetes CustomResource
+//
+// Instance of a custom resource defined by a CustomResourceDefinition, selected
+// by namespace and name. The kind field reports the custom type and manifest
+// exposes the object's full content, so custom API extensions can be queried
+// alongside built-in Kubernetes objects.
 private k8s.customresource @defaults("name namespace created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1643,6 +1792,13 @@ private k8s.customresource @defaults("name namespace created") {
 }
 
 // Kubernetes PersistentVolume
+//
+// Cluster-wide piece of storage provisioned for use by pods, selected by name.
+// The capacity, accessModes, volumeMode, and storageClass fields describe the
+// volume's size and capabilities, persistentVolumeReclaimPolicy governs what
+// happens when its claim is released, and phase reports its lifecycle state
+// (Available, Bound, Released, or Failed). The claim field returns the
+// PersistentVolumeClaim currently bound to the volume.
 private k8s.persistentvolume @defaults("name capacity['storage'] phase storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1701,6 +1857,12 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
 }
 
 // Kubernetes StorageClass
+//
+// Template that describes how volumes are dynamically provisioned, selected by
+// name. The provisioner field names the plugin that creates volumes, parameters
+// carries the provisioner-specific settings, and reclaimPolicy,
+// volumeBindingMode, and allowVolumeExpansion govern reclamation, binding
+// timing, and whether bound volumes may grow.
 private k8s.storageclass @defaults("name provisioner") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1739,6 +1901,12 @@ private k8s.storageclass @defaults("name provisioner") {
 }
 
 // Kubernetes PriorityClass
+//
+// Named scheduling priority that pods can request, selected by name. The value
+// field sets the integer priority used during scheduling and preemption,
+// globalDefault marks the class applied to pods that request none, and
+// preemptionPolicy controls whether higher-priority pods may evict
+// lower-priority ones.
 private k8s.priorityclass @defaults("name value") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1773,6 +1941,14 @@ private k8s.priorityclass @defaults("name value") {
 }
 
 // Kubernetes HorizontalPodAutoscaler
+//
+// Controller that scales a workload's replica count to meet observed metrics,
+// selected by namespace and name. The scaleTargetKind and scaleTargetName
+// fields identify the scaled workload (reached through scaleTargetDeployment,
+// scaleTargetStatefulSet, or scaleTargetReplicaSet), minReplicas and maxReplicas
+// bound the replica count, and metrics and behavior define the targets and
+// scaling policies. Current state is reported by currentReplicas,
+// desiredReplicas, currentMetrics, lastScaleTime, and conditions.
 private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxReplicas currentReplicas created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1837,6 +2013,11 @@ private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxRep
 }
 
 // Kubernetes ResourceQuota
+//
+// Constraint on the aggregate resource consumption of a namespace, selected by
+// namespace and name. The hard field lists the enforced limits (such as CPU,
+// memory, and object counts) and used reports current consumption against them.
+// The scopes and scopeSelector fields narrow which objects the quota applies to.
 private k8s.resourcequota @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1877,6 +2058,12 @@ private k8s.resourcequota @defaults("namespace name created") {
 }
 
 // Kubernetes LimitRange
+//
+// Policy that constrains resource requests and limits for objects in a
+// namespace, selected by namespace and name. The limits field lists the
+// default, minimum, and maximum values applied per object type (Container, Pod,
+// or PersistentVolumeClaim), supplying defaults to objects that omit them and
+// rejecting objects that fall outside the bounds.
 private k8s.limitrange @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1909,6 +2096,12 @@ private k8s.limitrange @defaults("namespace name created") {
 }
 
 // Kubernetes PersistentVolumeClaim
+//
+// Request for storage by a pod, selected by namespace and name. The accessModes,
+// resources, storageClass, and volumeMode fields describe the storage requested,
+// volume and volumeName identify the bound PersistentVolume, and phase reports
+// whether the claim is Pending, Bound, or Lost. The capacity and
+// boundAccessModes fields report what the bound volume actually provides.
 private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['storage'] storageClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -1969,6 +2162,12 @@ private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['stor
 }
 
 // Kubernetes EndpointSlice
+//
+// Scalable list of network endpoints that back a Service, selected by namespace
+// and name. The addressType field reports whether the slice holds IPv4, IPv6, or
+// FQDN endpoints, endpoints lists the backing addresses and their readiness,
+// ports lists the ports they expose, and service returns the Service the slice
+// belongs to.
 private k8s.endpointslice @defaults("namespace name addressType") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2008,7 +2207,7 @@ private k8s.endpointslice @defaults("namespace name addressType") {
 //
 // Examine an AdmissionReview that an admission controller is being
 // asked to evaluate. Use `request()` to read the embedded
-// `k8s.admissionrequest` — the operation, requesting user, target
+// `k8s.admissionrequest`: the operation, requesting user, target
 // namespace, the incoming object, and (for UPDATE/DELETE) the prior
 // object. This resource is populated when MQL is invoked from inside a
 // dynamic admission webhook so policies can decide whether to admit
@@ -2043,6 +2242,12 @@ private k8s.userinfo @defaults("username") {
 }
 
 // Kubernetes Validating Webhook Configuration
+//
+// Configuration that registers external webhooks to validate API requests,
+// selected by name. The webhooks field lists each registered webhook with its
+// endpoint, the resource rules and namespace and object selectors that decide
+// when it is called, its failure policy, and its admission side effects.
+// Validating webhooks may reject a request but cannot modify the object.
 private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2071,6 +2276,13 @@ private k8s.admission.validatingwebhookconfiguration @defaults("name") {
 }
 
 // Kubernetes Application
+//
+// Logical application reconstructed from the recommended app.kubernetes.io
+// labels shared across a group of objects. The name, version, and instance
+// fields identify the application, managedBy names the tool that operates it
+// (such as helm), partOf names a larger application it belongs to, and
+// components lists the architectural pieces (such as database, cache, or
+// frontend) discovered for it.
 private k8s.app {
   // Application name
   name string
@@ -2087,6 +2299,12 @@ private k8s.app {
 }
 
 // Kubernetes Gateway API GatewayClass
+//
+// Gateway API template that ties Gateways to a controller implementation,
+// selected by name. The controllerName field names the controller that manages
+// Gateways of this class, parametersRef points to a controller-specific
+// configuration resource, and conditions reports whether the class has been
+// accepted.
 private k8s.gatewayclass @defaults("name controllerName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2121,6 +2339,13 @@ private k8s.gatewayclass @defaults("name controllerName created") {
 }
 
 // Kubernetes Gateway API Gateway
+//
+// Gateway API object that configures how external traffic enters the cluster,
+// selected by namespace and name. The gatewayClass field selects the
+// implementing controller, listeners defines the ports, protocols, and
+// hostnames the Gateway accepts, and addresses requests specific entry
+// addresses. The statusAddresses and listenerStatus fields report the addresses
+// the controller assigned and the routes attached to each listener.
 private k8s.gateway @defaults("namespace name gatewayClassName created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2165,6 +2390,13 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
 }
 
 // Kubernetes Gateway API HTTPRoute
+//
+// Gateway API rules that route HTTP traffic from Gateways to backend services,
+// selected by namespace and name. The parentRefs field binds the route to the
+// Gateways or Services that delegate to it, hostnames narrows the route to
+// specific hosts, and rules describes the matches, filters, and backend
+// forwarding applied to requests. The parentStatus field reports whether each
+// parent accepted the route.
 private k8s.httproute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2201,6 +2433,13 @@ private k8s.httproute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API GRPCRoute
+//
+// Gateway API rules that route gRPC traffic from Gateways to backend services,
+// selected by namespace and name. The parentRefs field binds the route to the
+// Gateways or Services that delegate to it, hostnames narrows the route to
+// specific hosts, and rules describes the method matches, filters, and backend
+// forwarding applied to requests. The parentStatus field reports whether each
+// parent accepted the route.
 private k8s.grpcroute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2237,6 +2476,12 @@ private k8s.grpcroute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API ReferenceGrant
+//
+// Gateway API grant that permits cross-namespace references into its namespace,
+// selected by namespace and name. The from field lists the resource kinds and
+// namespaces allowed to make references, and the to field lists the resource
+// kinds in this namespace they may reference, letting routes and other objects
+// point at targets they would otherwise be denied.
 private k8s.referencegrant @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2269,6 +2514,13 @@ private k8s.referencegrant @defaults("namespace name created") {
 }
 
 // Kubernetes MutatingWebhookConfiguration
+//
+// Configuration that registers external webhooks to modify API requests,
+// selected by name. The webhooks field lists each registered webhook with its
+// endpoint, the resource rules and namespace and object selectors that decide
+// when it is called, its reinvocation and failure policies, and its admission
+// side effects. Mutating webhooks run before validation and may patch the
+// incoming object.
 private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2353,7 +2605,7 @@ private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") 
 // Examine a binding that activates a `k8s.admission.validatingadmissionpolicy`
 // and decides how its validation failures are enforced. `policyName` (and the
 // typed `policy()` accessor) identify the bound policy; `validationActions`
-// lists the enforcement actions applied on failure — `Deny` blocks the
+// lists the enforcement actions applied on failure. `Deny` blocks the
 // request, `Warn` returns a client warning, and `Audit` records the failure in
 // the audit log. Use `matchResources()` to see how the binding narrows the
 // policy's scope and `paramRef()` for the parameter resource it supplies.
@@ -2393,6 +2645,13 @@ private k8s.admission.validatingadmissionpolicybinding @defaults("name policyNam
 }
 
 // Kubernetes PodDisruptionBudget
+//
+// Policy that limits how many pods of a workload may be down at once during
+// voluntary disruptions, selected by namespace and name. The minAvailable and
+// maxUnavailable fields set the budget, selector chooses the protected pods, and
+// unhealthyPodEvictionPolicy governs eviction of unhealthy pods. Current state
+// is reported by currentHealthy, desiredHealthy, expectedPods, and
+// disruptionsAllowed.
 private k8s.poddisruptionbudget @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2441,6 +2700,12 @@ private k8s.poddisruptionbudget @defaults("namespace name created") {
 }
 
 // Kubernetes Lease (coordination.k8s.io)
+//
+// Coordination object that backs leader election and node heartbeats, selected
+// by namespace and name. The holderIdentity field names the current holder,
+// leaseDurationSeconds and renewTime report how long the lease is held and when
+// it was last renewed, and acquireTime and leaseTransitions track when it was
+// acquired and how often it has changed hands.
 private k8s.lease @defaults("namespace name holderIdentity created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2483,6 +2748,13 @@ private k8s.lease @defaults("namespace name holderIdentity created") {
 }
 
 // Kubernetes CertificateSigningRequest
+//
+// Request for a certificate to be issued by a cluster signer, selected by name.
+// The request field carries the PEM-encoded certificate signing request,
+// signerName names the signer that should handle it, and usages and
+// expirationSeconds state the requested key usages and lifetime. The username,
+// groups, and requesterUid fields identify the requester, conditions reports
+// approval state, and certificate holds the issued certificate once signed.
 private k8s.certificatesigningrequest @defaults("name signerName username created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2527,6 +2799,14 @@ private k8s.certificatesigningrequest @defaults("name signerName username create
 }
 
 // Kubernetes APIService (aggregation layer)
+//
+// Registration that adds an API group and version to the cluster through the
+// aggregation layer, selected by name. The group and version fields name the API
+// the registration serves, serviceName and serviceNamespace identify the backend
+// that handles it (reached through service, or empty when served by
+// kube-apiserver itself), and caBundle and insecureSkipTLSVerify govern how the
+// API server trusts that backend. The conditions field reports whether the API
+// is available.
 private k8s.apiservice @defaults("name group version created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -2575,6 +2855,11 @@ private k8s.apiservice @defaults("name group version created") {
 }
 
 // Kubernetes IngressClass
+//
+// Template that ties Ingress objects to a controller implementation, selected by
+// name. The controller field names the controller that handles ingresses of this
+// class, and parameters points to a controller-specific configuration resource
+// that tunes its behavior.
 private k8s.ingressclass @defaults("name controller created") {
   // Mondoo ID for the Kubernetes object
   id string
