@@ -6,7 +6,9 @@ package shared
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	v1 "k8s.io/api/core/v1"
 )
 
 type ManifestParserSuite struct {
@@ -45,4 +47,60 @@ func (s *ManifestParserSuite) TestNamespaces() {
 
 func TestManifestParserSuite(t *testing.T) {
 	suite.Run(t, new(ManifestParserSuite))
+}
+
+func TestNamespaces_StandaloneObjectsCarryMetadata(t *testing.T) {
+	manifest, err := LoadManifestFile("./resources/testdata/namespaces.yaml")
+	require.NoError(t, err)
+	parser, err := NewManifestParser(manifest, "", "")
+	require.NoError(t, err)
+
+	nss, err := parser.Namespaces()
+	require.NoError(t, err)
+
+	byName := map[string]v1.Namespace{}
+	for _, ns := range nss {
+		byName[ns.Name] = ns
+		// every returned namespace must carry the Namespace kind
+		require.Equal(t, "Namespace", ns.Kind, "namespace %q missing kind", ns.Name)
+	}
+
+	// standalone Namespace objects and a reference-only namespace are all present
+	require.ElementsMatch(t, []string{"secured", "privileged-ns", "referenced-only"}, keysOf(byName))
+
+	// standalone Namespace objects keep their full metadata
+	secured := byName["secured"]
+	require.Equal(t, "restricted", secured.Labels["pod-security.kubernetes.io/enforce"])
+	require.Equal(t, "v1.30", secured.Labels["pod-security.kubernetes.io/enforce-version"])
+	require.Equal(t, "baseline", secured.Labels["pod-security.kubernetes.io/warn"])
+	require.Equal(t, "platform-team", secured.Annotations["owner"])
+	require.Equal(t, "11111111-1111-1111-1111-111111111111", string(secured.UID))
+
+	require.Equal(t, "privileged", byName["privileged-ns"].Labels["pod-security.kubernetes.io/enforce"])
+
+	// reference-only namespaces are synthesized minimally (no labels)
+	require.Empty(t, byName["referenced-only"].Labels)
+}
+
+func TestNamespace_StandaloneObjectLookup(t *testing.T) {
+	manifest, err := LoadManifestFile("./resources/testdata/namespaces.yaml")
+	require.NoError(t, err)
+	parser, err := NewManifestParser(manifest, "", "")
+	require.NoError(t, err)
+
+	ns, err := parser.Namespace("secured")
+	require.NoError(t, err)
+	require.Equal(t, "secured", ns.Name)
+	require.Equal(t, "restricted", ns.Labels["pod-security.kubernetes.io/enforce"])
+
+	_, err = parser.Namespace("does-not-exist")
+	require.Error(t, err)
+}
+
+func keysOf(m map[string]v1.Namespace) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
 }

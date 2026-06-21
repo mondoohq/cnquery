@@ -32,3 +32,13 @@ metadata:
 spec:
   policyName: demo-policy
   validationActions: ["Deny", "Audit"]
+---
+# A ConfigMap in a namespace with no Namespace object of its own. The parser
+# synthesizes a minimal "guarded-workloads" namespace (no PSA labels) for it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: guarded-workloads
+data:
+  key: value
