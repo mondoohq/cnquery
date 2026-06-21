@@ -81,6 +81,22 @@ func (k *mqlK8sRbacClusterrole) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
+func (k *mqlK8sRbacClusterrole) policyRules() ([]any, error) {
+	return rbacPolicyRules(k.MqlRuntime, k.Id.Data, k.obj.Rules)
+}
+
+func (k *mqlK8sRbacClusterrole) hasWildcardRule() (bool, error) {
+	return rbacHasWildcardRule(k.obj.Rules), nil
+}
+
+func (k *mqlK8sRbacClusterrole) allowsPrivilegeEscalation() (bool, error) {
+	return rbacAllowsPrivilegeEscalation(k.obj.Rules), nil
+}
+
+func (k *mqlK8sRbacClusterrole) canReadSecrets() (bool, error) {
+	return rbacCanReadSecrets(k.obj.Rules), nil
+}
+
 func (k *mqlK8sRbacClusterrole) boundBy() ([]any, error) {
 	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
 	if err != nil {

@@ -46,6 +46,7 @@ const (
 	ResourceK8sIngress                                   string = "k8s.ingress"
 	ResourceK8sServiceaccount                            string = "k8s.serviceaccount"
 	ResourceK8sRbacClusterrole                           string = "k8s.rbac.clusterrole"
+	ResourceK8sRbacPolicyRule                            string = "k8s.rbac.policyRule"
 	ResourceK8sRbacClusterrolebinding                    string = "k8s.rbac.clusterrolebinding"
 	ResourceK8sRbacRole                                  string = "k8s.rbac.role"
 	ResourceK8sRbacRolebinding                           string = "k8s.rbac.rolebinding"
@@ -204,6 +205,10 @@ func init() {
 		"k8s.rbac.clusterrole": {
 			Init:   initK8sRbacClusterrole,
 			Create: createK8sRbacClusterrole,
+		},
+		"k8s.rbac.policyRule": {
+			// to override args, implement: initK8sRbacPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sRbacPolicyRule,
 		},
 		"k8s.rbac.clusterrolebinding": {
 			Init:   initK8sRbacClusterrolebinding,
@@ -2262,11 +2267,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrole.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.rbac.clusterrole.policyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetPolicyRules()).ToDataRes(types.Array(types.Resource("k8s.rbac.policyRule")))
+	},
+	"k8s.rbac.clusterrole.hasWildcardRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetHasWildcardRule()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.clusterrole.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.clusterrole.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetCanReadSecrets()).ToDataRes(types.Bool)
+	},
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetAggregationRule()).ToDataRes(types.Dict)
 	},
 	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrolebinding")))
+	},
+	"k8s.rbac.policyRule.verbs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacPolicyRule).GetVerbs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.rbac.policyRule.apiGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacPolicyRule).GetApiGroups()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.rbac.policyRule.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacPolicyRule).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.rbac.policyRule.resourceNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacPolicyRule).GetResourceNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.rbac.policyRule.nonResourceURLs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacPolicyRule).GetNonResourceURLs()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.rbac.clusterrolebinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetId()).ToDataRes(types.String)
@@ -2351,6 +2383,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.role.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.rbac.role.policyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetPolicyRules()).ToDataRes(types.Array(types.Resource("k8s.rbac.policyRule")))
+	},
+	"k8s.rbac.role.hasWildcardRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetHasWildcardRule()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.role.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.role.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetCanReadSecrets()).ToDataRes(types.Bool)
 	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
@@ -6384,12 +6428,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrole.policyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).PolicyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.hasWildcardRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).HasWildcardRule, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.canReadSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.policyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.rbac.policyRule.verbs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).Verbs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.policyRule.apiGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).ApiGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.policyRule.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.policyRule.resourceNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).ResourceNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.policyRule.nonResourceURLs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacPolicyRule).NonResourceURLs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6510,6 +6594,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.role.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.policyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).PolicyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.hasWildcardRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).HasWildcardRule, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.canReadSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14924,20 +15024,24 @@ type mqlK8sRbacClusterrole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sRbacClusterroleInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	OwnerReferences plugin.TValue[[]any]
-	ManagedFields   plugin.TValue[[]any]
-	Name            plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	Rules           plugin.TValue[[]any]
-	AggregationRule plugin.TValue[any]
-	BoundBy         plugin.TValue[[]any]
+	Id                        plugin.TValue[string]
+	Uid                       plugin.TValue[string]
+	ResourceVersion           plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Annotations               plugin.TValue[map[string]any]
+	OwnerReferences           plugin.TValue[[]any]
+	ManagedFields             plugin.TValue[[]any]
+	Name                      plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Manifest                  plugin.TValue[any]
+	Rules                     plugin.TValue[[]any]
+	PolicyRules               plugin.TValue[[]any]
+	HasWildcardRule           plugin.TValue[bool]
+	AllowsPrivilegeEscalation plugin.TValue[bool]
+	CanReadSecrets            plugin.TValue[bool]
+	AggregationRule           plugin.TValue[any]
+	BoundBy                   plugin.TValue[[]any]
 }
 
 // createK8sRbacClusterrole creates a new instance of this resource
@@ -15055,6 +15159,40 @@ func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
 }
 
+func (c *mqlK8sRbacClusterrole) GetPolicyRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrole", c.__id, "policyRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyRules()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetHasWildcardRule() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardRule, func() (bool, error) {
+		return c.hasWildcardRule()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetCanReadSecrets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanReadSecrets, func() (bool, error) {
+		return c.canReadSecrets()
+	})
+}
+
 func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[any] {
 	return &c.AggregationRule
 }
@@ -15073,6 +15211,70 @@ func (c *mqlK8sRbacClusterrole) GetBoundBy() *plugin.TValue[[]any] {
 
 		return c.boundBy()
 	})
+}
+
+// mqlK8sRbacPolicyRule for the k8s.rbac.policyRule resource
+type mqlK8sRbacPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sRbacPolicyRuleInternal it will be used here
+	Verbs           plugin.TValue[[]any]
+	ApiGroups       plugin.TValue[[]any]
+	Resources       plugin.TValue[[]any]
+	ResourceNames   plugin.TValue[[]any]
+	NonResourceURLs plugin.TValue[[]any]
+}
+
+// createK8sRbacPolicyRule creates a new instance of this resource
+func createK8sRbacPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sRbacPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.rbac.policyRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sRbacPolicyRule) MqlName() string {
+	return "k8s.rbac.policyRule"
+}
+
+func (c *mqlK8sRbacPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sRbacPolicyRule) GetVerbs() *plugin.TValue[[]any] {
+	return &c.Verbs
+}
+
+func (c *mqlK8sRbacPolicyRule) GetApiGroups() *plugin.TValue[[]any] {
+	return &c.ApiGroups
+}
+
+func (c *mqlK8sRbacPolicyRule) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+func (c *mqlK8sRbacPolicyRule) GetResourceNames() *plugin.TValue[[]any] {
+	return &c.ResourceNames
+}
+
+func (c *mqlK8sRbacPolicyRule) GetNonResourceURLs() *plugin.TValue[[]any] {
+	return &c.NonResourceURLs
 }
 
 // mqlK8sRbacClusterrolebinding for the k8s.rbac.clusterrolebinding resource
@@ -15253,20 +15455,24 @@ type mqlK8sRbacRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sRbacRoleInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	OwnerReferences plugin.TValue[[]any]
-	ManagedFields   plugin.TValue[[]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	Rules           plugin.TValue[[]any]
-	BoundBy         plugin.TValue[[]any]
+	Id                        plugin.TValue[string]
+	Uid                       plugin.TValue[string]
+	ResourceVersion           plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Annotations               plugin.TValue[map[string]any]
+	OwnerReferences           plugin.TValue[[]any]
+	ManagedFields             plugin.TValue[[]any]
+	Name                      plugin.TValue[string]
+	Namespace                 plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Manifest                  plugin.TValue[any]
+	Rules                     plugin.TValue[[]any]
+	PolicyRules               plugin.TValue[[]any]
+	HasWildcardRule           plugin.TValue[bool]
+	AllowsPrivilegeEscalation plugin.TValue[bool]
+	CanReadSecrets            plugin.TValue[bool]
+	BoundBy                   plugin.TValue[[]any]
 }
 
 // createK8sRbacRole creates a new instance of this resource
@@ -15386,6 +15592,40 @@ func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[any] {
 
 func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
+}
+
+func (c *mqlK8sRbacRole) GetPolicyRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.role", c.__id, "policyRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyRules()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetHasWildcardRule() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardRule, func() (bool, error) {
+		return c.hasWildcardRule()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetCanReadSecrets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanReadSecrets, func() (bool, error) {
+		return c.canReadSecrets()
+	})
 }
 
 func (c *mqlK8sRbacRole) GetBoundBy() *plugin.TValue[[]any] {

@@ -1466,10 +1466,38 @@ private k8s.rbac.clusterrole @defaults("name created") {
   manifest() dict
   // ClusterRole rules
   rules []dict
+  // Access rules as typed policy-rule resources (a structured view of `rules`)
+  policyRules() []k8s.rbac.policyRule
+  // Whether any rule uses a wildcard ("*") for verbs, API groups, or resources
+  hasWildcardRule() bool
+  // Whether any rule grants RBAC privilege escalation
+  //
+  // True when a rule allows the `escalate` or `bind` verb on RBAC roles or
+  // bindings, or the `impersonate` verb on users, groups, or service accounts —
+  // the canonical ways a subject can grant itself more privileges than it
+  // currently holds. Wildcard verbs/resources/apiGroups that cover those
+  // permissions also count.
+  allowsPrivilegeEscalation() bool
+  // Whether any rule grants read access (get, list, or watch) to Secrets
+  canReadSecrets() bool
   // ClusterRole aggregation rule
   aggregationRule dict
   // ClusterRoleBindings that reference this ClusterRole via roleRef
   boundBy() []k8s.rbac.clusterrolebinding
+}
+
+// Kubernetes RBAC policy rule
+private k8s.rbac.policyRule @defaults("verbs apiGroups resources") {
+  // Verbs that apply to the listed resources or non-resource URLs (e.g., get, list, watch, create; "*" matches all)
+  verbs []string
+  // API groups the rule applies to ("" is the core group; "*" matches all)
+  apiGroups []string
+  // Resources the rule applies to (e.g., pods, secrets; "*" matches all; may include subresources like pods/exec)
+  resources []string
+  // Object names the rule is restricted to (empty means all objects of the listed resources)
+  resourceNames []string
+  // Non-resource URLs the rule grants access to (e.g., /healthz; mutually exclusive with resources)
+  nonResourceURLs []string
 }
 
 // Kubernetes ClusterRoleBinding
@@ -1534,6 +1562,20 @@ private k8s.rbac.role @defaults("name namespace") {
   manifest() dict
   // Role rules defining the permissions granted within this namespace
   rules []dict
+  // Access rules as typed policy-rule resources (a structured view of `rules`)
+  policyRules() []k8s.rbac.policyRule
+  // Whether any rule uses a wildcard ("*") for verbs, API groups, or resources
+  hasWildcardRule() bool
+  // Whether any rule grants RBAC privilege escalation
+  //
+  // True when a rule allows the `escalate` or `bind` verb on RBAC roles or
+  // bindings, or the `impersonate` verb on users, groups, or service accounts —
+  // the canonical ways a subject can grant itself more privileges than it
+  // currently holds. Wildcard verbs/resources/apiGroups that cover those
+  // permissions also count.
+  allowsPrivilegeEscalation() bool
+  // Whether any rule grants read access (get, list, or watch) to Secrets
+  canReadSecrets() bool
   // RoleBindings in this namespace that reference this Role via roleRef
   boundBy() []k8s.rbac.rolebinding
 }
