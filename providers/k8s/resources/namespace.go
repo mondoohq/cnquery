@@ -165,6 +165,41 @@ func (k *mqlK8sNamespace) rolebindings() ([]any, error) {
 	return filterByNamespace[*mqlK8sRbacRolebinding](k.MqlRuntime, k.Name.Data, func(c *mqlK8s) *plugin.TValue[[]any] { return c.GetRolebindings() })
 }
 
+// Pod Security admission label keys. See
+// https://kubernetes.io/docs/concepts/security/pod-security-admission/
+const (
+	psaEnforceLabel        = "pod-security.kubernetes.io/enforce"
+	psaEnforceVersionLabel = "pod-security.kubernetes.io/enforce-version"
+	psaAuditLabel          = "pod-security.kubernetes.io/audit"
+	psaAuditVersionLabel   = "pod-security.kubernetes.io/audit-version"
+	psaWarnLabel           = "pod-security.kubernetes.io/warn"
+	psaWarnVersionLabel    = "pod-security.kubernetes.io/warn-version"
+)
+
+func (k *mqlK8sNamespace) podSecurityEnforce() (string, error) {
+	return k.obj.GetLabels()[psaEnforceLabel], nil
+}
+
+func (k *mqlK8sNamespace) podSecurityEnforceVersion() (string, error) {
+	return k.obj.GetLabels()[psaEnforceVersionLabel], nil
+}
+
+func (k *mqlK8sNamespace) podSecurityAudit() (string, error) {
+	return k.obj.GetLabels()[psaAuditLabel], nil
+}
+
+func (k *mqlK8sNamespace) podSecurityAuditVersion() (string, error) {
+	return k.obj.GetLabels()[psaAuditVersionLabel], nil
+}
+
+func (k *mqlK8sNamespace) podSecurityWarn() (string, error) {
+	return k.obj.GetLabels()[psaWarnLabel], nil
+}
+
+func (k *mqlK8sNamespace) podSecurityWarnVersion() (string, error) {
+	return k.obj.GetLabels()[psaWarnVersionLabel], nil
+}
+
 func (k *mqlK8sNamespace) ownerReferences() ([]any, error) {
 	return k8sOwnerReferences(k.MqlRuntime, k.obj)
 }

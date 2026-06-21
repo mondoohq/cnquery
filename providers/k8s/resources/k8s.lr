@@ -102,6 +102,10 @@ k8s {
   referenceGrants() []k8s.referencegrant
   // Kubernetes admission mutating webhook configurations
   mutatingWebhookConfigurations() []k8s.admission.mutatingwebhookconfiguration
+  // Kubernetes built-in (CEL) ValidatingAdmissionPolicies
+  validatingAdmissionPolicies() []k8s.admission.validatingadmissionpolicy
+  // Kubernetes built-in (CEL) ValidatingAdmissionPolicyBindings
+  validatingAdmissionPolicyBindings() []k8s.admission.validatingadmissionpolicybinding
   // Kubernetes PodDisruptionBudgets
   podDisruptionBudgets() []k8s.poddisruptionbudget
   // Kubernetes coordination Leases
@@ -198,6 +202,40 @@ private k8s.namespace @defaults("name created") {
   roles() []k8s.rbac.role
   // RBAC RoleBindings in this namespace
   rolebindings() []k8s.rbac.rolebinding
+  // Pod Security Standards level enforced on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/enforce` label (privileged,
+  // baseline, or restricted). Empty when the namespace opts out of Pod
+  // Security admission enforcement, in which case violating pods are still
+  // admitted.
+  podSecurityEnforce() string
+  // Pod Security Standards version pinned for enforcement
+  //
+  // Value of the `pod-security.kubernetes.io/enforce-version` label (a
+  // Kubernetes minor version like "v1.30" or "latest"). Empty when unset.
+  podSecurityEnforceVersion() string
+  // Pod Security Standards level audited on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/audit` label (privileged,
+  // baseline, or restricted). Violations are recorded in the audit log but
+  // not blocked. Empty when unset.
+  podSecurityAudit() string
+  // Pod Security Standards version pinned for auditing
+  //
+  // Value of the `pod-security.kubernetes.io/audit-version` label. Empty when
+  // unset.
+  podSecurityAuditVersion() string
+  // Pod Security Standards level warned on this namespace
+  //
+  // Value of the `pod-security.kubernetes.io/warn` label (privileged,
+  // baseline, or restricted). Violations return a client warning but are not
+  // blocked. Empty when unset.
+  podSecurityWarn() string
+  // Pod Security Standards version pinned for warnings
+  //
+  // Value of the `pod-security.kubernetes.io/warn-version` label. Empty when
+  // unset.
+  podSecurityWarnVersion() string
 }
 
 // Kubernetes node
@@ -2256,6 +2294,102 @@ private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+}
+
+// Kubernetes ValidatingAdmissionPolicy
+//
+// Examine a built-in, CEL-based admission policy that the API server
+// evaluates in-process (no external webhook). Read `failurePolicy` for how
+// CEL errors are handled, `validations()` for the expressions enforced
+// against matching requests, `matchConstraints()` for the resources the
+// policy targets, and `matchConditions()`/`variables()` for the guards and
+// reusable expressions. A policy is inert until a
+// `k8s.admission.validatingadmissionpolicybinding` activates it; use
+// `bindings()` to reach the bindings that reference this policy by name and
+// the enforcement actions (Deny, Warn, Audit) they apply.
+private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // How CEL evaluation failures are handled (Ignore or Fail; defaults to Fail)
+  failurePolicy string
+  // CEL validation expressions enforced against matching requests (expression, message, reason)
+  validations() []dict
+  // CEL match conditions that gate whether the policy is evaluated for a request
+  matchConditions() []dict
+  // Resource matching constraints (resourceRules, namespaceSelector, objectSelector, matchPolicy)
+  matchConstraints() dict
+  // Named CEL variables available to the policy's expressions
+  variables() []dict
+  // CEL expressions that produce audit annotations on the audit event
+  auditAnnotations() []dict
+  // Kind of resource used to parameterize the policy (apiVersion, kind); null when the policy takes no parameters
+  paramKind() dict
+  // Bindings that activate this policy (filtered by spec.policyName)
+  bindings() []k8s.admission.validatingadmissionpolicybinding
+}
+
+// Kubernetes ValidatingAdmissionPolicyBinding
+//
+// Examine a binding that activates a `k8s.admission.validatingadmissionpolicy`
+// and decides how its validation failures are enforced. `policyName` (and the
+// typed `policy()` accessor) identify the bound policy; `validationActions`
+// lists the enforcement actions applied on failure — `Deny` blocks the
+// request, `Warn` returns a client warning, and `Audit` records the failure in
+// the audit log. Use `matchResources()` to see how the binding narrows the
+// policy's scope and `paramRef()` for the parameter resource it supplies.
+private k8s.admission.validatingadmissionpolicybinding @defaults("name policyName") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // Name of the ValidatingAdmissionPolicy this binding activates
+  policyName string
+  // The ValidatingAdmissionPolicy this binding activates (null if the referenced policy does not exist)
+  policy() k8s.admission.validatingadmissionpolicy
+  // Enforcement actions applied to validation failures (Deny, Warn, Audit)
+  validationActions []string
+  // Parameter resource reference used to configure the policy (name, namespace, selector, parameterNotFoundAction); null when unset
+  paramRef() dict
+  // Additional resource matching constraints, intersected with the policy's matchConstraints; null when unset
+  matchResources() dict
 }
 
 // Kubernetes PodDisruptionBudget

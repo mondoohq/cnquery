@@ -16,67 +16,69 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceK8s                                        string = "k8s"
-	ResourceK8sApiresource                             string = "k8s.apiresource"
-	ResourceK8sNamespace                               string = "k8s.namespace"
-	ResourceK8sNode                                    string = "k8s.node"
-	ResourceK8sNodeTaint                               string = "k8s.nodeTaint"
-	ResourceK8sNodeCondition                           string = "k8s.nodeCondition"
-	ResourceK8sNodeAddress                             string = "k8s.nodeAddress"
-	ResourceK8sPod                                     string = "k8s.pod"
-	ResourceK8sDeployment                              string = "k8s.deployment"
-	ResourceK8sDaemonset                               string = "k8s.daemonset"
-	ResourceK8sStatefulset                             string = "k8s.statefulset"
-	ResourceK8sReplicaset                              string = "k8s.replicaset"
-	ResourceK8sJob                                     string = "k8s.job"
-	ResourceK8sCronjob                                 string = "k8s.cronjob"
-	ResourceK8sContainer                               string = "k8s.container"
-	ResourceK8sContainerStatus                         string = "k8s.containerStatus"
-	ResourceK8sInitContainer                           string = "k8s.initContainer"
-	ResourceK8sEphemeralContainer                      string = "k8s.ephemeralContainer"
-	ResourceK8sSecret                                  string = "k8s.secret"
-	ResourceK8sConfigmap                               string = "k8s.configmap"
-	ResourceK8sService                                 string = "k8s.service"
-	ResourceK8sIngressresourceref                      string = "k8s.ingressresourceref"
-	ResourceK8sIngressservicebackend                   string = "k8s.ingressservicebackend"
-	ResourceK8sIngressbackend                          string = "k8s.ingressbackend"
-	ResourceK8sIngresshttprulepath                     string = "k8s.ingresshttprulepath"
-	ResourceK8sIngressrule                             string = "k8s.ingressrule"
-	ResourceK8sIngresstls                              string = "k8s.ingresstls"
-	ResourceK8sIngress                                 string = "k8s.ingress"
-	ResourceK8sServiceaccount                          string = "k8s.serviceaccount"
-	ResourceK8sRbacClusterrole                         string = "k8s.rbac.clusterrole"
-	ResourceK8sRbacClusterrolebinding                  string = "k8s.rbac.clusterrolebinding"
-	ResourceK8sRbacRole                                string = "k8s.rbac.role"
-	ResourceK8sRbacRolebinding                         string = "k8s.rbac.rolebinding"
-	ResourceK8sNetworkpolicy                           string = "k8s.networkpolicy"
-	ResourceK8sCustomresource                          string = "k8s.customresource"
-	ResourceK8sPersistentvolume                        string = "k8s.persistentvolume"
-	ResourceK8sStorageclass                            string = "k8s.storageclass"
-	ResourceK8sPriorityclass                           string = "k8s.priorityclass"
-	ResourceK8sHorizontalpodautoscaler                 string = "k8s.horizontalpodautoscaler"
-	ResourceK8sResourcequota                           string = "k8s.resourcequota"
-	ResourceK8sLimitrange                              string = "k8s.limitrange"
-	ResourceK8sPersistentvolumeclaim                   string = "k8s.persistentvolumeclaim"
-	ResourceK8sEndpointslice                           string = "k8s.endpointslice"
-	ResourceK8sAdmissionreview                         string = "k8s.admissionreview"
-	ResourceK8sAdmissionrequest                        string = "k8s.admissionrequest"
-	ResourceK8sUserinfo                                string = "k8s.userinfo"
-	ResourceK8sAdmissionValidatingwebhookconfiguration string = "k8s.admission.validatingwebhookconfiguration"
-	ResourceK8sApp                                     string = "k8s.app"
-	ResourceK8sGatewayclass                            string = "k8s.gatewayclass"
-	ResourceK8sGateway                                 string = "k8s.gateway"
-	ResourceK8sHttproute                               string = "k8s.httproute"
-	ResourceK8sGrpcroute                               string = "k8s.grpcroute"
-	ResourceK8sReferencegrant                          string = "k8s.referencegrant"
-	ResourceK8sAdmissionMutatingwebhookconfiguration   string = "k8s.admission.mutatingwebhookconfiguration"
-	ResourceK8sPoddisruptionbudget                     string = "k8s.poddisruptionbudget"
-	ResourceK8sLease                                   string = "k8s.lease"
-	ResourceK8sCertificatesigningrequest               string = "k8s.certificatesigningrequest"
-	ResourceK8sApiservice                              string = "k8s.apiservice"
-	ResourceK8sIngressclass                            string = "k8s.ingressclass"
-	ResourceK8sOwnerReference                          string = "k8s.ownerReference"
-	ResourceK8sManagedField                            string = "k8s.managedField"
+	ResourceK8s                                          string = "k8s"
+	ResourceK8sApiresource                               string = "k8s.apiresource"
+	ResourceK8sNamespace                                 string = "k8s.namespace"
+	ResourceK8sNode                                      string = "k8s.node"
+	ResourceK8sNodeTaint                                 string = "k8s.nodeTaint"
+	ResourceK8sNodeCondition                             string = "k8s.nodeCondition"
+	ResourceK8sNodeAddress                               string = "k8s.nodeAddress"
+	ResourceK8sPod                                       string = "k8s.pod"
+	ResourceK8sDeployment                                string = "k8s.deployment"
+	ResourceK8sDaemonset                                 string = "k8s.daemonset"
+	ResourceK8sStatefulset                               string = "k8s.statefulset"
+	ResourceK8sReplicaset                                string = "k8s.replicaset"
+	ResourceK8sJob                                       string = "k8s.job"
+	ResourceK8sCronjob                                   string = "k8s.cronjob"
+	ResourceK8sContainer                                 string = "k8s.container"
+	ResourceK8sContainerStatus                           string = "k8s.containerStatus"
+	ResourceK8sInitContainer                             string = "k8s.initContainer"
+	ResourceK8sEphemeralContainer                        string = "k8s.ephemeralContainer"
+	ResourceK8sSecret                                    string = "k8s.secret"
+	ResourceK8sConfigmap                                 string = "k8s.configmap"
+	ResourceK8sService                                   string = "k8s.service"
+	ResourceK8sIngressresourceref                        string = "k8s.ingressresourceref"
+	ResourceK8sIngressservicebackend                     string = "k8s.ingressservicebackend"
+	ResourceK8sIngressbackend                            string = "k8s.ingressbackend"
+	ResourceK8sIngresshttprulepath                       string = "k8s.ingresshttprulepath"
+	ResourceK8sIngressrule                               string = "k8s.ingressrule"
+	ResourceK8sIngresstls                                string = "k8s.ingresstls"
+	ResourceK8sIngress                                   string = "k8s.ingress"
+	ResourceK8sServiceaccount                            string = "k8s.serviceaccount"
+	ResourceK8sRbacClusterrole                           string = "k8s.rbac.clusterrole"
+	ResourceK8sRbacClusterrolebinding                    string = "k8s.rbac.clusterrolebinding"
+	ResourceK8sRbacRole                                  string = "k8s.rbac.role"
+	ResourceK8sRbacRolebinding                           string = "k8s.rbac.rolebinding"
+	ResourceK8sNetworkpolicy                             string = "k8s.networkpolicy"
+	ResourceK8sCustomresource                            string = "k8s.customresource"
+	ResourceK8sPersistentvolume                          string = "k8s.persistentvolume"
+	ResourceK8sStorageclass                              string = "k8s.storageclass"
+	ResourceK8sPriorityclass                             string = "k8s.priorityclass"
+	ResourceK8sHorizontalpodautoscaler                   string = "k8s.horizontalpodautoscaler"
+	ResourceK8sResourcequota                             string = "k8s.resourcequota"
+	ResourceK8sLimitrange                                string = "k8s.limitrange"
+	ResourceK8sPersistentvolumeclaim                     string = "k8s.persistentvolumeclaim"
+	ResourceK8sEndpointslice                             string = "k8s.endpointslice"
+	ResourceK8sAdmissionreview                           string = "k8s.admissionreview"
+	ResourceK8sAdmissionrequest                          string = "k8s.admissionrequest"
+	ResourceK8sUserinfo                                  string = "k8s.userinfo"
+	ResourceK8sAdmissionValidatingwebhookconfiguration   string = "k8s.admission.validatingwebhookconfiguration"
+	ResourceK8sApp                                       string = "k8s.app"
+	ResourceK8sGatewayclass                              string = "k8s.gatewayclass"
+	ResourceK8sGateway                                   string = "k8s.gateway"
+	ResourceK8sHttproute                                 string = "k8s.httproute"
+	ResourceK8sGrpcroute                                 string = "k8s.grpcroute"
+	ResourceK8sReferencegrant                            string = "k8s.referencegrant"
+	ResourceK8sAdmissionMutatingwebhookconfiguration     string = "k8s.admission.mutatingwebhookconfiguration"
+	ResourceK8sAdmissionValidatingadmissionpolicy        string = "k8s.admission.validatingadmissionpolicy"
+	ResourceK8sAdmissionValidatingadmissionpolicybinding string = "k8s.admission.validatingadmissionpolicybinding"
+	ResourceK8sPoddisruptionbudget                       string = "k8s.poddisruptionbudget"
+	ResourceK8sLease                                     string = "k8s.lease"
+	ResourceK8sCertificatesigningrequest                 string = "k8s.certificatesigningrequest"
+	ResourceK8sApiservice                                string = "k8s.apiservice"
+	ResourceK8sIngressclass                              string = "k8s.ingressclass"
+	ResourceK8sOwnerReference                            string = "k8s.ownerReference"
+	ResourceK8sManagedField                              string = "k8s.managedField"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -299,6 +301,14 @@ func init() {
 			Init:   initK8sAdmissionMutatingwebhookconfiguration,
 			Create: createK8sAdmissionMutatingwebhookconfiguration,
 		},
+		"k8s.admission.validatingadmissionpolicy": {
+			Init:   initK8sAdmissionValidatingadmissionpolicy,
+			Create: createK8sAdmissionValidatingadmissionpolicy,
+		},
+		"k8s.admission.validatingadmissionpolicybinding": {
+			Init:   initK8sAdmissionValidatingadmissionpolicybinding,
+			Create: createK8sAdmissionValidatingadmissionpolicybinding,
+		},
 		"k8s.poddisruptionbudget": {
 			Init:   initK8sPoddisruptionbudget,
 			Create: createK8sPoddisruptionbudget,
@@ -512,6 +522,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.mutatingWebhookConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetMutatingWebhookConfigurations()).ToDataRes(types.Array(types.Resource("k8s.admission.mutatingwebhookconfiguration")))
 	},
+	"k8s.validatingAdmissionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetValidatingAdmissionPolicies()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingadmissionpolicy")))
+	},
+	"k8s.validatingAdmissionPolicyBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetValidatingAdmissionPolicyBindings()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingadmissionpolicybinding")))
+	},
 	"k8s.podDisruptionBudgets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetPodDisruptionBudgets()).ToDataRes(types.Array(types.Resource("k8s.poddisruptionbudget")))
 	},
@@ -643,6 +659,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.namespace.rolebindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetRolebindings()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
+	},
+	"k8s.namespace.podSecurityEnforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityEnforce()).ToDataRes(types.String)
+	},
+	"k8s.namespace.podSecurityEnforceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityEnforceVersion()).ToDataRes(types.String)
+	},
+	"k8s.namespace.podSecurityAudit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityAudit()).ToDataRes(types.String)
+	},
+	"k8s.namespace.podSecurityAuditVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityAuditVersion()).ToDataRes(types.String)
+	},
+	"k8s.namespace.podSecurityWarn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityWarn()).ToDataRes(types.String)
+	},
+	"k8s.namespace.podSecurityWarnVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetPodSecurityWarnVersion()).ToDataRes(types.String)
 	},
 	"k8s.node.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetId()).ToDataRes(types.String)
@@ -3314,6 +3348,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.mutatingwebhookconfiguration.webhooks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetWebhooks()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.admission.validatingadmissionpolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetId()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingadmissionpolicy.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingadmissionpolicy.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.admission.validatingadmissionpolicy.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.admission.validatingadmissionpolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetName()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.admission.validatingadmissionpolicy.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicy.failurePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetFailurePolicy()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicy.validations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetValidations()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.admission.validatingadmissionpolicy.matchConditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetMatchConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.admission.validatingadmissionpolicy.matchConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetMatchConstraints()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicy.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.admission.validatingadmissionpolicy.auditAnnotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetAuditAnnotations()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.admission.validatingadmissionpolicy.paramKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetParamKind()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicy.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetBindings()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingadmissionpolicybinding")))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetId()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.ownerReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetOwnerReferences()).ToDataRes(types.Array(types.Resource("k8s.ownerReference")))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.managedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetManagedFields()).ToDataRes(types.Array(types.Resource("k8s.managedField")))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetName()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.policyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetPolicyName()).ToDataRes(types.String)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetPolicy()).ToDataRes(types.Resource("k8s.admission.validatingadmissionpolicy"))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.validationActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetValidationActions()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.admission.validatingadmissionpolicybinding.paramRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetParamRef()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.matchResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetMatchResources()).ToDataRes(types.Dict)
+	},
 	"k8s.poddisruptionbudget.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPoddisruptionbudget).GetId()).ToDataRes(types.String)
 	},
@@ -3809,6 +3948,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8s).MutatingWebhookConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.validatingAdmissionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ValidatingAdmissionPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.validatingAdmissionPolicyBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ValidatingAdmissionPolicyBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.podDisruptionBudgets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).PodDisruptionBudgets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3991,6 +4138,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.namespace.rolebindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNamespace).Rolebindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityEnforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityEnforce, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityEnforceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityEnforceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityAudit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityAudit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityAuditVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityAuditVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityWarn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityWarn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.podSecurityWarnVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).PodSecurityWarnVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7757,6 +7928,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.validatingadmissionpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.failurePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).FailurePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.validations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Validations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.matchConditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).MatchConditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.matchConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).MatchConstraints, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.auditAnnotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).AuditAnnotations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.paramKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).ParamKind, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicy.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.ownerReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).OwnerReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.managedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).ManagedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.policyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).PolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Policy, ok = plugin.RawToTValue[*mqlK8sAdmissionValidatingadmissionpolicy](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.validationActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).ValidationActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.paramRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).ParamRef, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.matchResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).MatchResources, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"k8s.poddisruptionbudget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPoddisruptionbudget).__id, ok = v.Value.(string)
 		return
@@ -8250,49 +8569,51 @@ type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sInternal
-	ServerVersion                   plugin.TValue[any]
-	ApiResources                    plugin.TValue[[]any]
-	Namespaces                      plugin.TValue[[]any]
-	Nodes                           plugin.TValue[[]any]
-	Pods                            plugin.TValue[[]any]
-	Deployments                     plugin.TValue[[]any]
-	Daemonsets                      plugin.TValue[[]any]
-	Statefulsets                    plugin.TValue[[]any]
-	Replicasets                     plugin.TValue[[]any]
-	Jobs                            plugin.TValue[[]any]
-	Cronjobs                        plugin.TValue[[]any]
-	Secrets                         plugin.TValue[[]any]
-	Configmaps                      plugin.TValue[[]any]
-	Services                        plugin.TValue[[]any]
-	Ingresses                       plugin.TValue[[]any]
-	Serviceaccounts                 plugin.TValue[[]any]
-	Clusterroles                    plugin.TValue[[]any]
-	Clusterrolebindings             plugin.TValue[[]any]
-	Roles                           plugin.TValue[[]any]
-	Rolebindings                    plugin.TValue[[]any]
-	NetworkPolicies                 plugin.TValue[[]any]
-	Customresources                 plugin.TValue[[]any]
-	ValidatingWebhookConfigurations plugin.TValue[[]any]
-	Apps                            plugin.TValue[[]any]
-	PersistentVolumes               plugin.TValue[[]any]
-	StorageClasses                  plugin.TValue[[]any]
-	PriorityClasses                 plugin.TValue[[]any]
-	HorizontalPodAutoscalers        plugin.TValue[[]any]
-	ResourceQuotas                  plugin.TValue[[]any]
-	LimitRanges                     plugin.TValue[[]any]
-	PersistentVolumeClaims          plugin.TValue[[]any]
-	EndpointSlices                  plugin.TValue[[]any]
-	GatewayClasses                  plugin.TValue[[]any]
-	Gateways                        plugin.TValue[[]any]
-	HttpRoutes                      plugin.TValue[[]any]
-	GrpcRoutes                      plugin.TValue[[]any]
-	ReferenceGrants                 plugin.TValue[[]any]
-	MutatingWebhookConfigurations   plugin.TValue[[]any]
-	PodDisruptionBudgets            plugin.TValue[[]any]
-	Leases                          plugin.TValue[[]any]
-	CertificateSigningRequests      plugin.TValue[[]any]
-	ApiServices                     plugin.TValue[[]any]
-	IngressClasses                  plugin.TValue[[]any]
+	ServerVersion                     plugin.TValue[any]
+	ApiResources                      plugin.TValue[[]any]
+	Namespaces                        plugin.TValue[[]any]
+	Nodes                             plugin.TValue[[]any]
+	Pods                              plugin.TValue[[]any]
+	Deployments                       plugin.TValue[[]any]
+	Daemonsets                        plugin.TValue[[]any]
+	Statefulsets                      plugin.TValue[[]any]
+	Replicasets                       plugin.TValue[[]any]
+	Jobs                              plugin.TValue[[]any]
+	Cronjobs                          plugin.TValue[[]any]
+	Secrets                           plugin.TValue[[]any]
+	Configmaps                        plugin.TValue[[]any]
+	Services                          plugin.TValue[[]any]
+	Ingresses                         plugin.TValue[[]any]
+	Serviceaccounts                   plugin.TValue[[]any]
+	Clusterroles                      plugin.TValue[[]any]
+	Clusterrolebindings               plugin.TValue[[]any]
+	Roles                             plugin.TValue[[]any]
+	Rolebindings                      plugin.TValue[[]any]
+	NetworkPolicies                   plugin.TValue[[]any]
+	Customresources                   plugin.TValue[[]any]
+	ValidatingWebhookConfigurations   plugin.TValue[[]any]
+	Apps                              plugin.TValue[[]any]
+	PersistentVolumes                 plugin.TValue[[]any]
+	StorageClasses                    plugin.TValue[[]any]
+	PriorityClasses                   plugin.TValue[[]any]
+	HorizontalPodAutoscalers          plugin.TValue[[]any]
+	ResourceQuotas                    plugin.TValue[[]any]
+	LimitRanges                       plugin.TValue[[]any]
+	PersistentVolumeClaims            plugin.TValue[[]any]
+	EndpointSlices                    plugin.TValue[[]any]
+	GatewayClasses                    plugin.TValue[[]any]
+	Gateways                          plugin.TValue[[]any]
+	HttpRoutes                        plugin.TValue[[]any]
+	GrpcRoutes                        plugin.TValue[[]any]
+	ReferenceGrants                   plugin.TValue[[]any]
+	MutatingWebhookConfigurations     plugin.TValue[[]any]
+	ValidatingAdmissionPolicies       plugin.TValue[[]any]
+	ValidatingAdmissionPolicyBindings plugin.TValue[[]any]
+	PodDisruptionBudgets              plugin.TValue[[]any]
+	Leases                            plugin.TValue[[]any]
+	CertificateSigningRequests        plugin.TValue[[]any]
+	ApiServices                       plugin.TValue[[]any]
+	IngressClasses                    plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -8925,6 +9246,38 @@ func (c *mqlK8s) GetMutatingWebhookConfigurations() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8s) GetValidatingAdmissionPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ValidatingAdmissionPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "validatingAdmissionPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.validatingAdmissionPolicies()
+	})
+}
+
+func (c *mqlK8s) GetValidatingAdmissionPolicyBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ValidatingAdmissionPolicyBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "validatingAdmissionPolicyBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.validatingAdmissionPolicyBindings()
+	})
+}
+
 func (c *mqlK8s) GetPodDisruptionBudgets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.PodDisruptionBudgets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -9094,37 +9447,43 @@ type mqlK8sNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sNamespaceInternal
-	Id                       plugin.TValue[string]
-	Uid                      plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Created                  plugin.TValue[*time.Time]
-	Manifest                 plugin.TValue[any]
-	Kind                     plugin.TValue[string]
-	Labels                   plugin.TValue[map[string]any]
-	Annotations              plugin.TValue[map[string]any]
-	OwnerReferences          plugin.TValue[[]any]
-	ManagedFields            plugin.TValue[[]any]
-	Pods                     plugin.TValue[[]any]
-	Deployments              plugin.TValue[[]any]
-	Statefulsets             plugin.TValue[[]any]
-	Daemonsets               plugin.TValue[[]any]
-	Replicasets              plugin.TValue[[]any]
-	Jobs                     plugin.TValue[[]any]
-	Cronjobs                 plugin.TValue[[]any]
-	Services                 plugin.TValue[[]any]
-	Ingresses                plugin.TValue[[]any]
-	EndpointSlices           plugin.TValue[[]any]
-	NetworkPolicies          plugin.TValue[[]any]
-	Secrets                  plugin.TValue[[]any]
-	Configmaps               plugin.TValue[[]any]
-	Serviceaccounts          plugin.TValue[[]any]
-	PersistentVolumeClaims   plugin.TValue[[]any]
-	HorizontalPodAutoscalers plugin.TValue[[]any]
-	ResourceQuotas           plugin.TValue[[]any]
-	LimitRanges              plugin.TValue[[]any]
-	PodDisruptionBudgets     plugin.TValue[[]any]
-	Roles                    plugin.TValue[[]any]
-	Rolebindings             plugin.TValue[[]any]
+	Id                        plugin.TValue[string]
+	Uid                       plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Manifest                  plugin.TValue[any]
+	Kind                      plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Annotations               plugin.TValue[map[string]any]
+	OwnerReferences           plugin.TValue[[]any]
+	ManagedFields             plugin.TValue[[]any]
+	Pods                      plugin.TValue[[]any]
+	Deployments               plugin.TValue[[]any]
+	Statefulsets              plugin.TValue[[]any]
+	Daemonsets                plugin.TValue[[]any]
+	Replicasets               plugin.TValue[[]any]
+	Jobs                      plugin.TValue[[]any]
+	Cronjobs                  plugin.TValue[[]any]
+	Services                  plugin.TValue[[]any]
+	Ingresses                 plugin.TValue[[]any]
+	EndpointSlices            plugin.TValue[[]any]
+	NetworkPolicies           plugin.TValue[[]any]
+	Secrets                   plugin.TValue[[]any]
+	Configmaps                plugin.TValue[[]any]
+	Serviceaccounts           plugin.TValue[[]any]
+	PersistentVolumeClaims    plugin.TValue[[]any]
+	HorizontalPodAutoscalers  plugin.TValue[[]any]
+	ResourceQuotas            plugin.TValue[[]any]
+	LimitRanges               plugin.TValue[[]any]
+	PodDisruptionBudgets      plugin.TValue[[]any]
+	Roles                     plugin.TValue[[]any]
+	Rolebindings              plugin.TValue[[]any]
+	PodSecurityEnforce        plugin.TValue[string]
+	PodSecurityEnforceVersion plugin.TValue[string]
+	PodSecurityAudit          plugin.TValue[string]
+	PodSecurityAuditVersion   plugin.TValue[string]
+	PodSecurityWarn           plugin.TValue[string]
+	PodSecurityWarnVersion    plugin.TValue[string]
 }
 
 // createK8sNamespace creates a new instance of this resource
@@ -9567,6 +9926,42 @@ func (c *mqlK8sNamespace) GetRolebindings() *plugin.TValue[[]any] {
 		}
 
 		return c.rolebindings()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityEnforce() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityEnforce, func() (string, error) {
+		return c.podSecurityEnforce()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityEnforceVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityEnforceVersion, func() (string, error) {
+		return c.podSecurityEnforceVersion()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityAudit() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityAudit, func() (string, error) {
+		return c.podSecurityAudit()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityAuditVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityAuditVersion, func() (string, error) {
+		return c.podSecurityAuditVersion()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityWarn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityWarn, func() (string, error) {
+		return c.podSecurityWarn()
+	})
+}
+
+func (c *mqlK8sNamespace) GetPodSecurityWarnVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PodSecurityWarnVersion, func() (string, error) {
+		return c.podSecurityWarnVersion()
 	})
 }
 
@@ -18451,6 +18846,369 @@ func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetManifest() *plugin.TVal
 func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetWebhooks() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Webhooks, func() ([]any, error) {
 		return c.webhooks()
+	})
+}
+
+// mqlK8sAdmissionValidatingadmissionpolicy for the k8s.admission.validatingadmissionpolicy resource
+type mqlK8sAdmissionValidatingadmissionpolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sAdmissionValidatingadmissionpolicyInternal
+	Id               plugin.TValue[string]
+	Uid              plugin.TValue[string]
+	ResourceVersion  plugin.TValue[string]
+	Labels           plugin.TValue[map[string]any]
+	Annotations      plugin.TValue[map[string]any]
+	OwnerReferences  plugin.TValue[[]any]
+	ManagedFields    plugin.TValue[[]any]
+	Name             plugin.TValue[string]
+	Kind             plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Manifest         plugin.TValue[any]
+	FailurePolicy    plugin.TValue[string]
+	Validations      plugin.TValue[[]any]
+	MatchConditions  plugin.TValue[[]any]
+	MatchConstraints plugin.TValue[any]
+	Variables        plugin.TValue[[]any]
+	AuditAnnotations plugin.TValue[[]any]
+	ParamKind        plugin.TValue[any]
+	Bindings         plugin.TValue[[]any]
+}
+
+// createK8sAdmissionValidatingadmissionpolicy creates a new instance of this resource
+func createK8sAdmissionValidatingadmissionpolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionValidatingadmissionpolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admission.validatingadmissionpolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) MqlName() string {
+	return "k8s.admission.validatingadmissionpolicy"
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicy", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicy", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetFailurePolicy() *plugin.TValue[string] {
+	return &c.FailurePolicy
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetValidations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Validations, func() ([]any, error) {
+		return c.validations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetMatchConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MatchConditions, func() ([]any, error) {
+		return c.matchConditions()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetMatchConstraints() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.MatchConstraints, func() (any, error) {
+		return c.matchConstraints()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		return c.variables()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetAuditAnnotations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditAnnotations, func() ([]any, error) {
+		return c.auditAnnotations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetParamKind() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ParamKind, func() (any, error) {
+		return c.paramKind()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicy", c.__id, "bindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bindings()
+	})
+}
+
+// mqlK8sAdmissionValidatingadmissionpolicybinding for the k8s.admission.validatingadmissionpolicybinding resource
+type mqlK8sAdmissionValidatingadmissionpolicybinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sAdmissionValidatingadmissionpolicybindingInternal
+	Id                plugin.TValue[string]
+	Uid               plugin.TValue[string]
+	ResourceVersion   plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	Annotations       plugin.TValue[map[string]any]
+	OwnerReferences   plugin.TValue[[]any]
+	ManagedFields     plugin.TValue[[]any]
+	Name              plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	Manifest          plugin.TValue[any]
+	PolicyName        plugin.TValue[string]
+	Policy            plugin.TValue[*mqlK8sAdmissionValidatingadmissionpolicy]
+	ValidationActions plugin.TValue[[]any]
+	ParamRef          plugin.TValue[any]
+	MatchResources    plugin.TValue[any]
+}
+
+// createK8sAdmissionValidatingadmissionpolicybinding creates a new instance of this resource
+func createK8sAdmissionValidatingadmissionpolicybinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionValidatingadmissionpolicybinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admission.validatingadmissionpolicybinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) MqlName() string {
+	return "k8s.admission.validatingadmissionpolicybinding"
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetOwnerReferences() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OwnerReferences, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicybinding", c.__id, "ownerReferences")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ownerReferences()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetManagedFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicybinding", c.__id, "managedFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedFields()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetPolicyName() *plugin.TValue[string] {
+	return &c.PolicyName
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetPolicy() *plugin.TValue[*mqlK8sAdmissionValidatingadmissionpolicy] {
+	return plugin.GetOrCompute[*mqlK8sAdmissionValidatingadmissionpolicy](&c.Policy, func() (*mqlK8sAdmissionValidatingadmissionpolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicybinding", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sAdmissionValidatingadmissionpolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetValidationActions() *plugin.TValue[[]any] {
+	return &c.ValidationActions
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetParamRef() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ParamRef, func() (any, error) {
+		return c.paramRef()
+	})
+}
+
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetMatchResources() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.MatchResources, func() (any, error) {
+		return c.matchResources()
 	})
 }
 
