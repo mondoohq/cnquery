@@ -6,9 +6,21 @@ package resources
 import (
 	"sync"
 
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/windows"
 )
+
+// smartScreen exposes the Microsoft Defender SmartScreen policy from the parent
+// windows resource. Every field is a computed method backed by a single lazy
+// policy read, so the resource is created without up-front arguments.
+func (w *mqlWindows) smartScreen() (*mqlWindowsSmartScreen, error) {
+	o, err := CreateResource(w.MqlRuntime, "windows.smartScreen", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlWindowsSmartScreen), nil
+}
 
 // mqlWindowsSmartScreenInternal caches the policy read so every accessor shares
 // a single PowerShell invocation.

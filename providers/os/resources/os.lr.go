@@ -7884,6 +7884,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.exploitProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindows).GetExploitProtection()).ToDataRes(types.Resource("windows.exploitProtection"))
 	},
+	"windows.smartScreen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetSmartScreen()).ToDataRes(types.Resource("windows.smartScreen"))
+	},
 	"windows.exploitProtection.available": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsExploitProtection).GetAvailable()).ToDataRes(types.Bool)
 	},
@@ -19702,6 +19705,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.exploitProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindows).ExploitProtection, ok = plugin.RawToTValue[*mqlWindowsExploitProtection](v.Value, v.Error)
+		return
+	},
+	"windows.smartScreen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).SmartScreen, ok = plugin.RawToTValue[*mqlWindowsSmartScreen](v.Value, v.Error)
 		return
 	},
 	"windows.exploitProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51876,6 +51883,7 @@ type mqlWindows struct {
 	ScheduledTasks    plugin.TValue[[]any]
 	DeviceGuard       plugin.TValue[*mqlWindowsDeviceGuard]
 	ExploitProtection plugin.TValue[*mqlWindowsExploitProtection]
+	SmartScreen       plugin.TValue[*mqlWindowsSmartScreen]
 }
 
 // createWindows creates a new instance of this resource
@@ -52009,6 +52017,22 @@ func (c *mqlWindows) GetExploitProtection() *plugin.TValue[*mqlWindowsExploitPro
 		}
 
 		return c.exploitProtection()
+	})
+}
+
+func (c *mqlWindows) GetSmartScreen() *plugin.TValue[*mqlWindowsSmartScreen] {
+	return plugin.GetOrCompute[*mqlWindowsSmartScreen](&c.SmartScreen, func() (*mqlWindowsSmartScreen, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "smartScreen")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsSmartScreen), nil
+			}
+		}
+
+		return c.smartScreen()
 	})
 }
 

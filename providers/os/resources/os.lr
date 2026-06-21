@@ -6359,6 +6359,9 @@ windows {
   deviceGuard() windows.deviceGuard
   // System-wide Windows Exploit Protection configuration
   exploitProtection() windows.exploitProtection
+
+  // Microsoft Defender SmartScreen policy
+  smartScreen() windows.smartScreen
 }
 
 // Windows Exploit Protection
