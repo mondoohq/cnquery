@@ -143,7 +143,16 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 			// rather than silently truncate the result set to an empty/partial
 			// list that looks like "this kind has no objects".
 			if k8sErrors.IsForbidden(err) || k8sErrors.IsUnauthorized(err) {
-				log.Debug().Err(err).Msgf("no permission to fetch resources for: %v", apiRes.GroupVersionResource())
+				// On the first page this simply means "no access to this kind",
+				// and we return an empty list. If it happens mid-pagination
+				// (e.g. a token rotates during a long list), the results already
+				// in `out` are partial, so warn that this kind may be incomplete
+				// rather than silently returning a truncated set.
+				if len(out) > 0 {
+					log.Warn().Err(err).Msgf("lost permission mid-pagination for %v; returning %d partial results", apiRes.GroupVersionResource(), len(out))
+				} else {
+					log.Debug().Err(err).Msgf("no permission to fetch resources for: %v", apiRes.GroupVersionResource())
+				}
 				break
 			}
 			return out, errors.Wrapf(err, "could not fetch resources for %v", apiRes.GroupVersionResource())
