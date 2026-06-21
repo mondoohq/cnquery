@@ -78,6 +78,10 @@ yoman = "yoman"
 # German word ("as") in a localized PowerShell error string used to test
 # non-English Defender availability detection.
 als = "als"
+# Windows registry value name for the PowerShell transcription policy
+# (HKLM\...\PowerShell\Transcription\EnableTranscripting). Microsoft's own
+# spelling, so it must stay verbatim to match the real registry key.
+transcripting = "transcripting"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"
