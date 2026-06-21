@@ -7698,7 +7698,7 @@ windows.bitlocker.policy {
 // type does not define, or that are not configured, are null. For example,
 // operating system drives have no `allowUserCert`, and only removable data
 // drives define `denyCrossOrg` and `denyWriteAccess`.
-windows.bitlocker.policy.driveSettings {
+private windows.bitlocker.policy.driveSettings {
   // Drive type these settings apply to: operatingSystem, fixedData, or removableData
   driveType string
   // Choose how BitLocker-protected drives can be recovered (*Recovery)

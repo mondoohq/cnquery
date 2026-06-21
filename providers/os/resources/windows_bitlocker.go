@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -75,11 +76,29 @@ func (d *mqlWindowsBitlockerPolicyDriveSettings) id() (string, error) {
 	return "windows.bitlocker.policy.driveSettings/" + d.DriveType.Data, nil
 }
 
+// mqlWindowsBitlockerPolicyInternal caches the FVE policy registry key so the
+// global policy fields and all three per-drive-type sub-resources share a single
+// registry read rather than re-reading the key once per accessor.
+type mqlWindowsBitlockerPolicyInternal struct {
+	itemsOnce sync.Once
+	items     map[string]registry.RegistryKeyItem
+	itemsErr  error
+}
+
 // readFVERegistryKey returns the values of the FVE policy registry key as a
 // name->item map with lower-cased keys. A missing key yields an empty map (the
 // host simply has no BitLocker policy configured); a read failure yields a nil
-// map so callers can surface it as null/unknown.
+// map so callers can surface it as null/unknown. The result is read once and
+// cached for the lifetime of the resource.
 func (p *mqlWindowsBitlockerPolicy) readFVERegistryKey() (map[string]registry.RegistryKeyItem, error) {
+	p.itemsOnce.Do(func() {
+		p.items, p.itemsErr = p.loadFVERegistryKey()
+	})
+	return p.items, p.itemsErr
+}
+
+// loadFVERegistryKey performs the actual registry read backing readFVERegistryKey.
+func (p *mqlWindowsBitlockerPolicy) loadFVERegistryKey() (map[string]registry.RegistryKeyItem, error) {
 	items := map[string]registry.RegistryKeyItem{}
 	o, err := CreateResource(p.MqlRuntime, "registrykey", map[string]*llx.RawData{
 		"path": llx.StringData(fvePolicyKey),
@@ -189,8 +208,8 @@ func computeBitlockerGlobal(items map[string]registry.RegistryKeyItem) map[strin
 }
 
 func (s *mqlWindowsBitlocker) policy() (*mqlWindowsBitlockerPolicy, error) {
-	// the global fields are populated eagerly here; the per-drive sub-resources
-	// are lazy callbacks that re-read the FVE key when accessed.
+	// Read the FVE key once to populate the global fields eagerly. The per-drive
+	// sub-resources are lazy callbacks that reuse the same cached read.
 	p := &mqlWindowsBitlockerPolicy{MqlRuntime: s.MqlRuntime}
 	items, err := p.readFVERegistryKey()
 	if err != nil {
@@ -200,7 +219,13 @@ func (s *mqlWindowsBitlocker) policy() (*mqlWindowsBitlockerPolicy, error) {
 	if err != nil {
 		return nil, err
 	}
-	return o.(*mqlWindowsBitlockerPolicy), nil
+	policy := o.(*mqlWindowsBitlockerPolicy)
+	// Seed the created resource's cache with the items we already read so the
+	// drive-settings accessors don't read the registry key again.
+	policy.itemsOnce.Do(func() {
+		policy.items, policy.itemsErr = items, nil
+	})
+	return policy, nil
 }
 
 func (p *mqlWindowsBitlockerPolicy) driveSettings(prefix string) (*mqlWindowsBitlockerPolicyDriveSettings, error) {

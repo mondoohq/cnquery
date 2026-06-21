@@ -56233,7 +56233,7 @@ func (c *mqlWindowsBitlocker) GetPolicy() *plugin.TValue[*mqlWindowsBitlockerPol
 type mqlWindowsBitlockerPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerPolicyInternal it will be used here
+	mqlWindowsBitlockerPolicyInternal
 	UseAdvancedStartup            plugin.TValue[int64]
 	UseEnhancedPin                plugin.TValue[int64]
 	EnableBdeWithNoTpm            plugin.TValue[int64]
