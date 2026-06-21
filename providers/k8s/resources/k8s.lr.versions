@@ -215,6 +215,7 @@ k8s.cronjob.containers 9.0.0
 k8s.cronjob.created 9.0.0
 k8s.cronjob.dropsAllCapabilities 13.2.2
 k8s.cronjob.failedJobsHistoryLimit 13.0.16
+k8s.cronjob.hasSeccompProfile 13.3.1
 k8s.cronjob.hasWritableRootFilesystem 13.2.2
 k8s.cronjob.hostIPC 13.2.2
 k8s.cronjob.hostNetwork 13.2.2
@@ -244,6 +245,7 @@ k8s.cronjob.timeZone 13.0.16
 k8s.cronjob.uid 9.0.0
 k8s.cronjob.usesHostNamespaces 13.2.2
 k8s.cronjob.usesHostPath 13.2.2
+k8s.cronjob.usesUnconfinedSeccomp 13.3.1
 k8s.cronjobs 9.0.0
 k8s.customresource 9.0.0
 k8s.customresource.annotations 9.0.0
@@ -271,6 +273,7 @@ k8s.daemonset.created 9.0.0
 k8s.daemonset.currentNumberScheduled 13.0.16
 k8s.daemonset.desiredNumberScheduled 13.0.16
 k8s.daemonset.dropsAllCapabilities 13.2.2
+k8s.daemonset.hasSeccompProfile 13.3.1
 k8s.daemonset.hasWritableRootFilesystem 13.2.2
 k8s.daemonset.hostIPC 13.2.2
 k8s.daemonset.hostNetwork 13.2.2
@@ -303,6 +306,7 @@ k8s.daemonset.updateStrategy 13.0.16
 k8s.daemonset.updatedNumberScheduled 13.0.16
 k8s.daemonset.usesHostNamespaces 13.2.2
 k8s.daemonset.usesHostPath 13.2.2
+k8s.daemonset.usesUnconfinedSeccomp 13.3.1
 k8s.daemonsets 9.0.0
 k8s.deployment 9.0.0
 k8s.deployment.addedCapabilities 13.2.2
@@ -316,6 +320,7 @@ k8s.deployment.containers 9.0.0
 k8s.deployment.created 9.0.0
 k8s.deployment.desiredReplicas 13.0.16
 k8s.deployment.dropsAllCapabilities 13.2.2
+k8s.deployment.hasSeccompProfile 13.3.1
 k8s.deployment.hasWritableRootFilesystem 13.2.2
 k8s.deployment.hostIPC 13.2.2
 k8s.deployment.hostNetwork 13.2.2
@@ -349,6 +354,7 @@ k8s.deployment.unavailableReplicas 13.0.16
 k8s.deployment.updatedReplicas 13.0.16
 k8s.deployment.usesHostNamespaces 13.2.2
 k8s.deployment.usesHostPath 13.2.2
+k8s.deployment.usesUnconfinedSeccomp 13.3.1
 k8s.deployments 9.0.0
 k8s.endpointSlices 11.1.139
 k8s.endpointslice 11.1.139
@@ -620,6 +626,7 @@ k8s.job.created 9.0.0
 k8s.job.dropsAllCapabilities 13.2.2
 k8s.job.failed 13.0.16
 k8s.job.failedIndexes 13.0.16
+k8s.job.hasSeccompProfile 13.3.1
 k8s.job.hasWritableRootFilesystem 13.2.2
 k8s.job.hostIPC 13.2.2
 k8s.job.hostNetwork 13.2.2
@@ -652,6 +659,7 @@ k8s.job.ttlSecondsAfterFinished 13.0.16
 k8s.job.uid 9.0.0
 k8s.job.usesHostNamespaces 13.2.2
 k8s.job.usesHostPath 13.2.2
+k8s.job.usesUnconfinedSeccomp 13.3.1
 k8s.jobs 9.0.0
 k8s.lease 13.0.16
 k8s.lease.acquireTime 13.0.16
@@ -889,6 +897,7 @@ k8s.pod.dnsPolicy 13.0.16
 k8s.pod.dropsAllCapabilities 13.2.2
 k8s.pod.enableServiceLinks 13.0.16
 k8s.pod.ephemeralContainers 9.0.0
+k8s.pod.hasSeccompProfile 13.3.1
 k8s.pod.hasWritableRootFilesystem 13.2.2
 k8s.pod.hostAliases 13.0.16
 k8s.pod.hostIP 13.0.16
@@ -944,6 +953,7 @@ k8s.pod.topologySpreadConstraints 13.0.16
 k8s.pod.uid 9.0.0
 k8s.pod.usesHostNamespaces 13.2.2
 k8s.pod.usesHostPath 13.2.2
+k8s.pod.usesUnconfinedSeccomp 13.3.1
 k8s.podDisruptionBudgets 13.0.16
 k8s.poddisruptionbudget 13.0.16
 k8s.poddisruptionbudget.annotations 13.0.16
@@ -1092,6 +1102,7 @@ k8s.replicaset.created 9.0.0
 k8s.replicaset.desiredReplicas 13.0.16
 k8s.replicaset.dropsAllCapabilities 13.2.2
 k8s.replicaset.fullyLabeledReplicas 13.0.16
+k8s.replicaset.hasSeccompProfile 13.3.1
 k8s.replicaset.hasWritableRootFilesystem 13.2.2
 k8s.replicaset.hostIPC 13.2.2
 k8s.replicaset.hostNetwork 13.2.2
@@ -1119,6 +1130,7 @@ k8s.replicaset.selector 13.0.16
 k8s.replicaset.uid 9.0.0
 k8s.replicaset.usesHostNamespaces 13.2.2
 k8s.replicaset.usesHostPath 13.2.2
+k8s.replicaset.usesUnconfinedSeccomp 13.3.1
 k8s.replicasets 9.0.0
 k8s.resourceQuotas 11.1.139
 k8s.resourcequota 11.1.139
@@ -1227,6 +1239,7 @@ k8s.statefulset.currentReplicas 13.0.16
 k8s.statefulset.currentRevision 13.0.16
 k8s.statefulset.desiredReplicas 13.0.16
 k8s.statefulset.dropsAllCapabilities 13.2.2
+k8s.statefulset.hasSeccompProfile 13.3.1
 k8s.statefulset.hasWritableRootFilesystem 13.2.2
 k8s.statefulset.hostIPC 13.2.2
 k8s.statefulset.hostNetwork 13.2.2
@@ -1262,6 +1275,7 @@ k8s.statefulset.updateStrategy 13.0.16
 k8s.statefulset.updatedReplicas 13.0.16
 k8s.statefulset.usesHostNamespaces 13.2.2
 k8s.statefulset.usesHostPath 13.2.2
+k8s.statefulset.usesUnconfinedSeccomp 13.3.1
 k8s.statefulsets 9.0.0
 k8s.storageClasses 11.1.139
 k8s.storageclass 11.1.139

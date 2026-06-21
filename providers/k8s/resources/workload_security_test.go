@@ -61,6 +61,8 @@ func TestWorkloadSecurityRollups_NilSpec(t *testing.T) {
 		assert.False(t, specUsesHostNamespaces(nil), "usesHostNamespaces")
 		assert.False(t, specUsesHostPath(nil), "usesHostPath")
 		assert.False(t, specAutomountServiceAccountToken(nil), "automountServiceAccountToken")
+		assert.False(t, specUsesUnconfinedSeccomp(nil), "usesUnconfinedSeccomp")
+		assert.False(t, specHasSeccompProfile(nil), "hasSeccompProfile")
 	})
 
 	// dictFromSpec must not dereference a nil spec.
@@ -84,6 +86,9 @@ func TestWorkloadSecurityRollups(t *testing.T) {
 		assert.False(t, d.GetUsesHostPath().Data, "usesHostPath")
 		assert.False(t, d.GetAutomountServiceAccountToken().Data, "automountServiceAccountToken")
 		assert.False(t, d.GetHostNetwork().Data, "hostNetwork")
+		// Pod-level RuntimeDefault profile applies to the container.
+		assert.False(t, d.GetUsesUnconfinedSeccomp().Data, "usesUnconfinedSeccomp")
+		assert.True(t, d.GetHasSeccompProfile().Data, "hasSeccompProfile")
 	})
 
 	t.Run("risky workload", func(t *testing.T) {
@@ -102,6 +107,9 @@ func TestWorkloadSecurityRollups(t *testing.T) {
 		assert.False(t, d.GetHostIPC().Data, "hostIPC")
 		// automountServiceAccountToken defaults to true when unset
 		assert.True(t, d.GetAutomountServiceAccountToken().Data, "automountServiceAccountToken")
+		// The main container explicitly sets the Unconfined seccomp profile.
+		assert.True(t, d.GetUsesUnconfinedSeccomp().Data, "usesUnconfinedSeccomp")
+		assert.False(t, d.GetHasSeccompProfile().Data, "hasSeccompProfile")
 	})
 
 	t.Run("pod-level runAsNonRoot is folded into runsAsRoot", func(t *testing.T) {
@@ -164,6 +172,8 @@ type rollupReader interface {
 	GetHostNetwork() *plugin.TValue[bool]
 	GetHostPID() *plugin.TValue[bool]
 	GetHostIPC() *plugin.TValue[bool]
+	GetUsesUnconfinedSeccomp() *plugin.TValue[bool]
+	GetHasSeccompProfile() *plugin.TValue[bool]
 	GetSecurityContext() *plugin.TValue[any]
 }
 
@@ -215,6 +225,9 @@ func TestWorkloadSecurityRollups_AllKinds(t *testing.T) {
 			assert.False(t, r.GetHostNetwork().Data, "hostNetwork")
 			assert.False(t, r.GetHostPID().Data, "hostPID")
 			assert.False(t, r.GetHostIPC().Data, "hostIPC")
+			// No seccomp profile is set, so it is neither Unconfined nor confined.
+			assert.False(t, r.GetUsesUnconfinedSeccomp().Data, "usesUnconfinedSeccomp")
+			assert.False(t, r.GetHasSeccompProfile().Data, "hasSeccompProfile")
 			// securityContext resolves without error even when unset.
 			assert.NoError(t, r.GetSecurityContext().Error, "securityContext")
 		})

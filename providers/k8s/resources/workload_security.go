@@ -175,6 +175,51 @@ func specAutomountServiceAccountToken(spec *corev1.PodSpec) bool {
 	return spec.AutomountServiceAccountToken == nil || *spec.AutomountServiceAccountToken
 }
 
+// effectiveSeccompType resolves the seccomp profile type that applies to a
+// container: a container-level profile wins over the pod-level default, and an
+// empty string means no profile is set at either level.
+func effectiveSeccompType(spec *corev1.PodSpec, c corev1.Container) corev1.SeccompProfileType {
+	if c.SecurityContext != nil && c.SecurityContext.SeccompProfile != nil {
+		return c.SecurityContext.SeccompProfile.Type
+	}
+	if spec != nil && spec.SecurityContext != nil && spec.SecurityContext.SeccompProfile != nil {
+		return spec.SecurityContext.SeccompProfile.Type
+	}
+	return ""
+}
+
+// specUsesUnconfinedSeccomp reports whether any container effectively runs with
+// the Unconfined seccomp profile (no syscall filtering). This is the Pod
+// Security Standards "baseline" seccomp check.
+func specUsesUnconfinedSeccomp(spec *corev1.PodSpec) bool {
+	for _, c := range allWorkloadContainers(spec) {
+		if effectiveSeccompType(spec, c) == corev1.SeccompProfileTypeUnconfined {
+			return true
+		}
+	}
+	return false
+}
+
+// specHasSeccompProfile reports whether every container has an effective seccomp
+// profile explicitly set to a confining value (RuntimeDefault or Localhost).
+// An unset or Unconfined profile on any container makes this false. This is the
+// stricter Pod Security Standards "restricted" seccomp check.
+func specHasSeccompProfile(spec *corev1.PodSpec) bool {
+	containers := allWorkloadContainers(spec)
+	if len(containers) == 0 {
+		return false
+	}
+	for _, c := range containers {
+		switch effectiveSeccompType(spec, c) {
+		case corev1.SeccompProfileTypeRuntimeDefault, corev1.SeccompProfileTypeLocalhost:
+			// confined
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 // boolFromSpec and friends adapt the spec-level helpers to the (value, error)
 // shape the generated resource accessors expect.
 func boolFromSpec(spec *corev1.PodSpec, err error, fn func(*corev1.PodSpec) bool) (bool, error) {
@@ -241,6 +286,16 @@ func (k *mqlK8sPod) usesHostNamespaces() (bool, error) {
 func (k *mqlK8sPod) usesHostPath() (bool, error) {
 	spec, err := k.podSpecTyped()
 	return boolFromSpec(spec, err, specUsesHostPath)
+}
+
+func (k *mqlK8sPod) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.podSpecTyped()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sPod) hasSeccompProfile() (bool, error) {
+	spec, err := k.podSpecTyped()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
 }
 
 // ---- k8s.deployment ----
@@ -317,6 +372,16 @@ func (k *mqlK8sDeployment) usesHostPath() (bool, error) {
 	return boolFromSpec(spec, err, specUsesHostPath)
 }
 
+func (k *mqlK8sDeployment) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sDeployment) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
+}
+
 // ---- k8s.daemonset ----
 
 func (k *mqlK8sDaemonset) securitySpec() (*corev1.PodSpec, error) {
@@ -389,6 +454,16 @@ func (k *mqlK8sDaemonset) usesHostNamespaces() (bool, error) {
 func (k *mqlK8sDaemonset) usesHostPath() (bool, error) {
 	spec, err := k.securitySpec()
 	return boolFromSpec(spec, err, specUsesHostPath)
+}
+
+func (k *mqlK8sDaemonset) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sDaemonset) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
 }
 
 // ---- k8s.statefulset ----
@@ -465,6 +540,16 @@ func (k *mqlK8sStatefulset) usesHostPath() (bool, error) {
 	return boolFromSpec(spec, err, specUsesHostPath)
 }
 
+func (k *mqlK8sStatefulset) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sStatefulset) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
+}
+
 // ---- k8s.replicaset ----
 
 func (k *mqlK8sReplicaset) securitySpec() (*corev1.PodSpec, error) {
@@ -537,6 +622,16 @@ func (k *mqlK8sReplicaset) usesHostNamespaces() (bool, error) {
 func (k *mqlK8sReplicaset) usesHostPath() (bool, error) {
 	spec, err := k.securitySpec()
 	return boolFromSpec(spec, err, specUsesHostPath)
+}
+
+func (k *mqlK8sReplicaset) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sReplicaset) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
 }
 
 // ---- k8s.job ----
@@ -613,6 +708,16 @@ func (k *mqlK8sJob) usesHostPath() (bool, error) {
 	return boolFromSpec(spec, err, specUsesHostPath)
 }
 
+func (k *mqlK8sJob) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sJob) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
+}
+
 // ---- k8s.cronjob ----
 
 func (k *mqlK8sCronjob) securitySpec() (*corev1.PodSpec, error) {
@@ -685,4 +790,14 @@ func (k *mqlK8sCronjob) usesHostNamespaces() (bool, error) {
 func (k *mqlK8sCronjob) usesHostPath() (bool, error) {
 	spec, err := k.securitySpec()
 	return boolFromSpec(spec, err, specUsesHostPath)
+}
+
+func (k *mqlK8sCronjob) usesUnconfinedSeccomp() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specUsesUnconfinedSeccomp)
+}
+
+func (k *mqlK8sCronjob) hasSeccompProfile() (bool, error) {
+	spec, err := k.securitySpec()
+	return boolFromSpec(spec, err, specHasSeccompProfile)
 }

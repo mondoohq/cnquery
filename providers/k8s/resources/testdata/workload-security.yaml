@@ -19,6 +19,9 @@ spec:
         app: hardened
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: app
         image: nginx:1.25
@@ -64,6 +67,8 @@ spec:
         securityContext:
           privileged: true
           runAsUser: 0
+          seccompProfile:
+            type: Unconfined
           capabilities:
             add: ["NET_RAW"]
       volumes:

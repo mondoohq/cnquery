@@ -405,6 +405,17 @@ private k8s.pod @defaults("namespace name created"){
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -586,6 +597,17 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -699,6 +721,17 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -811,6 +844,17 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -931,6 +975,17 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1031,6 +1086,17 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1156,6 +1222,17 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Whether any container effectively runs with the Unconfined seccomp profile
+  //
+  // Resolves the container-level seccomp profile, falling back to the pod-level
+  // default. True when any container ends up Unconfined (no syscall filtering).
+  usesUnconfinedSeccomp() bool
+  // Whether every container has a confining seccomp profile set
+  //
+  // True only when each container effectively uses RuntimeDefault or Localhost
+  // (container-level setting wins over the pod default). An unset or Unconfined
+  // profile on any container makes this false.
+  hasSeccompProfile() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
