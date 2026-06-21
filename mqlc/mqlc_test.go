@@ -2261,7 +2261,7 @@ func TestSuggestions(t *testing.T) {
 		{
 			// resource suggestions
 			"ssh",
-			[]string{"macos.sharing", "os.unix.sshd", "sshd", "sshd.config", "windows.security.health"},
+			[]string{"macos.sharing", "os.unix.sshd", "sshd", "sshd.config", "windows.powershell", "windows.security.health"},
 			errors.New("cannot find resource for identifier 'ssh'"),
 			nil,
 		},
