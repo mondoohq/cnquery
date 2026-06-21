@@ -2594,6 +2594,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
+	"k8s.serviceaccount.roleBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetRoleBindings()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
+	},
+	"k8s.serviceaccount.clusterRoleBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetClusterRoleBindings()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrolebinding")))
+	},
+	"k8s.serviceaccount.isClusterAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetIsClusterAdmin()).ToDataRes(types.Bool)
+	},
+	"k8s.serviceaccount.canEscalatePrivileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetCanEscalatePrivileges()).ToDataRes(types.Bool)
+	},
+	"k8s.serviceaccount.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetCanReadSecrets()).ToDataRes(types.Bool)
+	},
+	"k8s.serviceaccount.hasWildcardPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetHasWildcardPermissions()).ToDataRes(types.Bool)
+	},
 	"k8s.rbac.clusterrole.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetId()).ToDataRes(types.String)
 	},
@@ -7251,6 +7269,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sServiceaccount).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.roleBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).RoleBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.clusterRoleBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).ClusterRoleBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.isClusterAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).IsClusterAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.canEscalatePrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).CanEscalatePrivileges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.canReadSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.hasWildcardPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).HasWildcardPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.clusterrole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16654,6 +16696,12 @@ type mqlK8sServiceaccount struct {
 	Secrets                      plugin.TValue[[]any]
 	ImagePullSecrets             plugin.TValue[[]any]
 	AutomountServiceAccountToken plugin.TValue[bool]
+	RoleBindings                 plugin.TValue[[]any]
+	ClusterRoleBindings          plugin.TValue[[]any]
+	IsClusterAdmin               plugin.TValue[bool]
+	CanEscalatePrivileges        plugin.TValue[bool]
+	CanReadSecrets               plugin.TValue[bool]
+	HasWildcardPermissions       plugin.TValue[bool]
 }
 
 // createK8sServiceaccount creates a new instance of this resource
@@ -16781,6 +16829,62 @@ func (c *mqlK8sServiceaccount) GetImagePullSecrets() *plugin.TValue[[]any] {
 
 func (c *mqlK8sServiceaccount) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
 	return &c.AutomountServiceAccountToken
+}
+
+func (c *mqlK8sServiceaccount) GetRoleBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.serviceaccount", c.__id, "roleBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleBindings()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetClusterRoleBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterRoleBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.serviceaccount", c.__id, "clusterRoleBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusterRoleBindings()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetIsClusterAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsClusterAdmin, func() (bool, error) {
+		return c.isClusterAdmin()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetCanEscalatePrivileges() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanEscalatePrivileges, func() (bool, error) {
+		return c.canEscalatePrivileges()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetCanReadSecrets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanReadSecrets, func() (bool, error) {
+		return c.canReadSecrets()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetHasWildcardPermissions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardPermissions, func() (bool, error) {
+		return c.hasWildcardPermissions()
+	})
 }
 
 // mqlK8sRbacClusterrole for the k8s.rbac.clusterrole resource

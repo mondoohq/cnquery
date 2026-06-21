@@ -1238,9 +1238,14 @@ k8s.service.uid 9.0.0
 k8s.serviceaccount 9.0.0
 k8s.serviceaccount.annotations 9.0.0
 k8s.serviceaccount.automountServiceAccountToken 9.0.0
+k8s.serviceaccount.canEscalatePrivileges 13.3.1
+k8s.serviceaccount.canReadSecrets 13.3.1
+k8s.serviceaccount.clusterRoleBindings 13.3.1
 k8s.serviceaccount.created 9.0.0
+k8s.serviceaccount.hasWildcardPermissions 13.3.1
 k8s.serviceaccount.id 9.0.0
 k8s.serviceaccount.imagePullSecrets 9.0.0
+k8s.serviceaccount.isClusterAdmin 13.3.1
 k8s.serviceaccount.kind 9.0.0
 k8s.serviceaccount.labels 9.0.0
 k8s.serviceaccount.managedFields 13.2.2
@@ -1249,6 +1254,7 @@ k8s.serviceaccount.name 9.0.0
 k8s.serviceaccount.namespace 9.0.0
 k8s.serviceaccount.ownerReferences 13.2.2
 k8s.serviceaccount.resourceVersion 9.0.0
+k8s.serviceaccount.roleBindings 13.3.1
 k8s.serviceaccount.secrets 9.0.0
 k8s.serviceaccount.uid 9.0.0
 k8s.serviceaccounts 9.0.0

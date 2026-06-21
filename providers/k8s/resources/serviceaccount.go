@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -18,6 +19,13 @@ import (
 type mqlK8sServiceaccountInternal struct {
 	lock sync.Mutex
 	obj  *corev1.ServiceAccount
+
+	// effectiveRules is aggregated once and shared by the access rollups
+	// (isClusterAdmin, canEscalatePrivileges, canReadSecrets,
+	// hasWildcardPermissions) so they make a single pass over the bindings.
+	effectiveRulesOnce sync.Once
+	effectiveRulesData []rbacv1.PolicyRule
+	effectiveRulesErr  error
 }
 
 func (k *mqlK8s) serviceaccounts() ([]any, error) {
@@ -94,6 +102,154 @@ func (k *mqlK8sServiceaccount) annotations() (map[string]any, error) {
 
 func (k *mqlK8sServiceaccount) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+}
+
+// subjectsIncludeServiceAccount reports whether subjects lists the given
+// ServiceAccount. A subject's namespace falls back to fallbackNamespace when
+// omitted (kube-apiserver behavior for RoleBindings; pass "" for the
+// cluster-scoped ClusterRoleBinding, which requires an explicit namespace).
+func subjectsIncludeServiceAccount(subjects []rbacv1.Subject, saName, saNamespace, fallbackNamespace string) bool {
+	for _, s := range subjects {
+		if s.Kind != "ServiceAccount" || s.Name != saName {
+			continue
+		}
+		ns := s.Namespace
+		if ns == "" {
+			ns = fallbackNamespace
+		}
+		if ns == saNamespace {
+			return true
+		}
+	}
+	return false
+}
+
+func (k *mqlK8sServiceaccount) k8sResource() (*mqlK8s, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlK8s), nil
+}
+
+// roleBindings returns the RoleBindings (in this ServiceAccount's namespace)
+// that list it as a subject.
+func (k *mqlK8sServiceaccount) roleBindings() ([]any, error) {
+	o, err := k.k8sResource()
+	if err != nil {
+		return nil, err
+	}
+	rbs := o.GetRolebindings()
+	if rbs.Error != nil {
+		return nil, rbs.Error
+	}
+	out := []any{}
+	for i := range rbs.Data {
+		rb, ok := rbs.Data[i].(*mqlK8sRbacRolebinding)
+		if !ok {
+			continue
+		}
+		if subjectsIncludeServiceAccount(rb.obj.Subjects, k.Name.Data, k.Namespace.Data, rb.obj.Namespace) {
+			out = append(out, rb)
+		}
+	}
+	return out, nil
+}
+
+// clusterRoleBindings returns the ClusterRoleBindings that list this
+// ServiceAccount as a subject.
+func (k *mqlK8sServiceaccount) clusterRoleBindings() ([]any, error) {
+	o, err := k.k8sResource()
+	if err != nil {
+		return nil, err
+	}
+	crbs := o.GetClusterrolebindings()
+	if crbs.Error != nil {
+		return nil, crbs.Error
+	}
+	out := []any{}
+	for i := range crbs.Data {
+		crb, ok := crbs.Data[i].(*mqlK8sRbacClusterrolebinding)
+		if !ok {
+			continue
+		}
+		if subjectsIncludeServiceAccount(crb.obj.Subjects, k.Name.Data, k.Namespace.Data, "") {
+			out = append(out, crb)
+		}
+	}
+	return out, nil
+}
+
+// effectiveRules aggregates the policy rules of every Role and ClusterRole bound
+// to this ServiceAccount, the union of what the account is permitted to do. The
+// result is computed once and reused by the four access rollups.
+func (k *mqlK8sServiceaccount) effectiveRules() ([]rbacv1.PolicyRule, error) {
+	k.effectiveRulesOnce.Do(func() {
+		k.effectiveRulesData, k.effectiveRulesErr = k.computeEffectiveRules()
+	})
+	return k.effectiveRulesData, k.effectiveRulesErr
+}
+
+func (k *mqlK8sServiceaccount) computeEffectiveRules() ([]rbacv1.PolicyRule, error) {
+	var rules []rbacv1.PolicyRule
+
+	rbs := k.GetRoleBindings()
+	if rbs.Error != nil {
+		return nil, rbs.Error
+	}
+	for i := range rbs.Data {
+		rr, err := rbs.Data[i].(*mqlK8sRbacRolebinding).referencedRules()
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rr...)
+	}
+
+	crbs := k.GetClusterRoleBindings()
+	if crbs.Error != nil {
+		return nil, crbs.Error
+	}
+	for i := range crbs.Data {
+		rr, err := crbs.Data[i].(*mqlK8sRbacClusterrolebinding).referencedRules()
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rr...)
+	}
+
+	return rules, nil
+}
+
+func (k *mqlK8sServiceaccount) isClusterAdmin() (bool, error) {
+	rules, err := k.effectiveRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacGrantsClusterAdmin(rules), nil
+}
+
+func (k *mqlK8sServiceaccount) canEscalatePrivileges() (bool, error) {
+	rules, err := k.effectiveRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacAllowsPrivilegeEscalation(rules), nil
+}
+
+func (k *mqlK8sServiceaccount) canReadSecrets() (bool, error) {
+	rules, err := k.effectiveRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacCanReadSecrets(rules), nil
+}
+
+func (k *mqlK8sServiceaccount) hasWildcardPermissions() (bool, error) {
+	rules, err := k.effectiveRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacHasWildcardRule(rules), nil
 }
 
 func (k *mqlK8sServiceaccount) ownerReferences() ([]any, error) {

@@ -1965,6 +1965,18 @@ private k8s.serviceaccount @defaults("namespace name created") {
   imagePullSecrets []dict
   // Whether pods running as this service account should have an API token automatically mounted
   automountServiceAccountToken bool
+  // RoleBindings in this namespace that grant this service account a role
+  roleBindings() []k8s.rbac.rolebinding
+  // ClusterRoleBindings that grant this service account a cluster role
+  clusterRoleBindings() []k8s.rbac.clusterrolebinding
+  // Whether any bound role confers cluster-admin (wildcard verbs, API groups, and resources)
+  isClusterAdmin() bool
+  // Whether any bound role allows RBAC privilege escalation (escalate/bind/impersonate)
+  canEscalatePrivileges() bool
+  // Whether any bound role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
+  // Whether any bound role has a wildcard rule (wildcard verbs, API groups, or resources)
+  hasWildcardPermissions() bool
 }
 
 // Kubernetes ClusterRole
