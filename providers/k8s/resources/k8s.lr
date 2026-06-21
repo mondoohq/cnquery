@@ -376,6 +376,35 @@ private k8s.nodeAddress @defaults("type address") {
 // controller is reached through replicaSet, statefulSet, daemonSet, job, and
 // deployment.
 private k8s.pod @defaults("namespace name created"){
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -518,6 +547,45 @@ private k8s.pod @defaults("namespace name created"){
 // availableReplicas, updatedReplicas, unavailableReplicas, and conditions. The
 // pods field returns the pods currently backing the deployment.
 private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -592,6 +660,45 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
 // numberMisscheduled, and updatedNumberScheduled. The pods field returns the
 // daemon pods currently running.
 private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -665,6 +772,45 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
 // currentReplicas, updatedReplicas, currentRevision, updateRevision, and
 // conditions, and the pods field returns the backing pods.
 private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -746,6 +892,45 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
 // readyReplicas, availableReplicas, fullyLabeledReplicas, and conditions. The
 // pods field returns the pods the ReplicaSet owns.
 private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -807,6 +992,45 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 // active, succeeded, failed, ready, startTime, completionTime, and conditions.
 // The pods field returns the pods the job has created.
 private k8s.job @defaults("namespace name succeeded failed created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -893,6 +1117,45 @@ private k8s.job @defaults("namespace name succeeded failed created") {
 // running, jobs returns every job the CronJob still owns, and the shared pod
 // template is available through podSpec, containers, and initContainers.
 private k8s.cronjob @defaults("namespace name schedule suspend created") {
+  // Whether an API token is automatically mounted for the ServiceAccount
+  automountServiceAccountToken() bool
+  // Whether the pod shares the host network namespace
+  hostNetwork() bool
+  // Whether the pod shares the host PID namespace
+  hostPID() bool
+  // Whether the pod shares the host IPC namespace
+  hostIPC() bool
+  // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
+  securityContext() dict
+  // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
+  runsPrivileged() bool
+  // Whether privilege escalation is possible for any container
+  //
+  // True when a container does not explicitly set allowPrivilegeEscalation to
+  // false, across regular, init, and ephemeral containers.
+  allowsPrivilegeEscalation() bool
+  // Whether any container may run as the root user
+  //
+  // True when a container is not guaranteed to run as a non-root user, after
+  // folding runAsNonRoot and runAsUser from both the pod and the container.
+  // Covers regular, init, and ephemeral containers.
+  runsAsRoot() bool
+  // Whether any container can write to its own root filesystem
+  //
+  // True when a container does not set readOnlyRootFilesystem to true, across
+  // regular, init, and ephemeral containers.
+  hasWritableRootFilesystem() bool
+  // Whether every container drops all Linux capabilities
+  //
+  // True only when each container drops the ALL capability, across regular,
+  // init, and ephemeral containers.
+  dropsAllCapabilities() bool
+  // Linux capabilities added to any container, deduplicated across all containers
+  addedCapabilities() []string
+  // Whether the pod shares the host network, PID, or IPC namespace
+  usesHostNamespaces() bool
+  // Whether the pod mounts a hostPath volume
+  usesHostPath() bool
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID

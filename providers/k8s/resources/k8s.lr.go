@@ -809,6 +809,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.nodeAddress.address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNodeAddress).GetAddress()).ToDataRes(types.String)
 	},
+	"k8s.pod.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.pod.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesHostPath()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
 	},
@@ -1004,6 +1028,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.deployment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetDeployment()).ToDataRes(types.Resource("k8s.deployment"))
 	},
+	"k8s.deployment.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.deployment.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.deployment.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesHostPath()).ToDataRes(types.Bool)
+	},
 	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1097,6 +1160,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.daemonset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.daemonset.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.daemonset.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesHostPath()).ToDataRes(types.Bool)
+	},
 	"k8s.daemonset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetId()).ToDataRes(types.String)
 	},
@@ -1186,6 +1288,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.daemonset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.statefulset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.statefulset.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.statefulset.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesHostPath()).ToDataRes(types.Bool)
 	},
 	"k8s.statefulset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetId()).ToDataRes(types.String)
@@ -1292,6 +1433,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.statefulset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.replicaset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.replicaset.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.replicaset.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesHostPath()).ToDataRes(types.Bool)
+	},
 	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
 	},
@@ -1366,6 +1546,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.replicaset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.job.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.job.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.job.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.job.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.job.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.job.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.job.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.job.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.job.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesHostPath()).ToDataRes(types.Bool)
 	},
 	"k8s.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetId()).ToDataRes(types.String)
@@ -1477,6 +1696,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.cronjob.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hostPID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHostPID()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hostIPC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHostIPC()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.cronjob.runsPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetRunsPrivileged()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.runsAsRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetRunsAsRoot()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasWritableRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasWritableRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.dropsAllCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetDropsAllCapabilities()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.addedCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetAddedCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.cronjob.usesHostNamespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesHostNamespaces()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.usesHostPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesHostPath()).ToDataRes(types.Bool)
 	},
 	"k8s.cronjob.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetId()).ToDataRes(types.String)
@@ -4396,6 +4654,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).__id, ok = v.Value.(string)
 		return
 	},
+	"k8s.pod.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4660,6 +4950,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
 		return
 	},
+	"k8s.deployment.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4788,6 +5130,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).__id, ok = v.Value.(string)
 		return
 	},
+	"k8s.daemonset.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4910,6 +5304,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.statefulset.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5056,6 +5502,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
 		return
 	},
+	"k8s.replicaset.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5158,6 +5656,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.job.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5310,6 +5860,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.cronjob.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HostPID, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hostIPC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HostIPC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).SecurityContext, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.runsPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).RunsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.runsAsRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).RunsAsRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasWritableRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasWritableRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.dropsAllCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).DropsAllCapabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.addedCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).AddedCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesHostNamespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesHostNamespaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesHostPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesHostPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10537,6 +11139,14 @@ type mqlK8sPod struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sPodInternal
+	RunsPrivileged                plugin.TValue[bool]
+	AllowsPrivilegeEscalation     plugin.TValue[bool]
+	RunsAsRoot                    plugin.TValue[bool]
+	HasWritableRootFilesystem     plugin.TValue[bool]
+	DropsAllCapabilities          plugin.TValue[bool]
+	AddedCapabilities             plugin.TValue[[]any]
+	UsesHostNamespaces            plugin.TValue[bool]
+	UsesHostPath                  plugin.TValue[bool]
 	Id                            plugin.TValue[string]
 	Uid                           plugin.TValue[string]
 	ResourceVersion               plugin.TValue[string]
@@ -10639,6 +11249,54 @@ func (c *mqlK8sPod) MqlName() string {
 
 func (c *mqlK8sPod) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sPod) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sPod) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sPod) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sPod) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sPod) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sPod) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sPod) GetId() *plugin.TValue[string] {
@@ -11160,37 +11818,50 @@ type mqlK8sDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sDeploymentInternal
-	Id                      plugin.TValue[string]
-	Uid                     plugin.TValue[string]
-	ResourceVersion         plugin.TValue[string]
-	Labels                  plugin.TValue[map[string]any]
-	Annotations             plugin.TValue[map[string]any]
-	OwnerReferences         plugin.TValue[[]any]
-	ManagedFields           plugin.TValue[[]any]
-	Name                    plugin.TValue[string]
-	Namespace               plugin.TValue[string]
-	Kind                    plugin.TValue[string]
-	Created                 plugin.TValue[*time.Time]
-	Manifest                plugin.TValue[any]
-	PodSpec                 plugin.TValue[any]
-	InitContainers          plugin.TValue[[]any]
-	Containers              plugin.TValue[[]any]
-	Pods                    plugin.TValue[[]any]
-	DesiredReplicas         plugin.TValue[int64]
-	Selector                plugin.TValue[any]
-	Strategy                plugin.TValue[any]
-	RevisionHistoryLimit    plugin.TValue[int64]
-	ProgressDeadlineSeconds plugin.TValue[int64]
-	Paused                  plugin.TValue[bool]
-	MinReadySeconds         plugin.TValue[int64]
-	Replicas                plugin.TValue[int64]
-	ReadyReplicas           plugin.TValue[int64]
-	AvailableReplicas       plugin.TValue[int64]
-	UpdatedReplicas         plugin.TValue[int64]
-	UnavailableReplicas     plugin.TValue[int64]
-	ObservedGeneration      plugin.TValue[int64]
-	CollisionCount          plugin.TValue[int64]
-	Conditions              plugin.TValue[[]any]
+	AutomountServiceAccountToken plugin.TValue[bool]
+	HostNetwork                  plugin.TValue[bool]
+	HostPID                      plugin.TValue[bool]
+	HostIPC                      plugin.TValue[bool]
+	SecurityContext              plugin.TValue[any]
+	RunsPrivileged               plugin.TValue[bool]
+	AllowsPrivilegeEscalation    plugin.TValue[bool]
+	RunsAsRoot                   plugin.TValue[bool]
+	HasWritableRootFilesystem    plugin.TValue[bool]
+	DropsAllCapabilities         plugin.TValue[bool]
+	AddedCapabilities            plugin.TValue[[]any]
+	UsesHostNamespaces           plugin.TValue[bool]
+	UsesHostPath                 plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	PodSpec                      plugin.TValue[any]
+	InitContainers               plugin.TValue[[]any]
+	Containers                   plugin.TValue[[]any]
+	Pods                         plugin.TValue[[]any]
+	DesiredReplicas              plugin.TValue[int64]
+	Selector                     plugin.TValue[any]
+	Strategy                     plugin.TValue[any]
+	RevisionHistoryLimit         plugin.TValue[int64]
+	ProgressDeadlineSeconds      plugin.TValue[int64]
+	Paused                       plugin.TValue[bool]
+	MinReadySeconds              plugin.TValue[int64]
+	Replicas                     plugin.TValue[int64]
+	ReadyReplicas                plugin.TValue[int64]
+	AvailableReplicas            plugin.TValue[int64]
+	UpdatedReplicas              plugin.TValue[int64]
+	UnavailableReplicas          plugin.TValue[int64]
+	ObservedGeneration           plugin.TValue[int64]
+	CollisionCount               plugin.TValue[int64]
+	Conditions                   plugin.TValue[[]any]
 }
 
 // createK8sDeployment creates a new instance of this resource
@@ -11228,6 +11899,84 @@ func (c *mqlK8sDeployment) MqlName() string {
 
 func (c *mqlK8sDeployment) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sDeployment) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sDeployment) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sDeployment) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sDeployment) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sDeployment) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sDeployment) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sDeployment) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sDeployment) GetId() *plugin.TValue[string] {
@@ -11457,36 +12206,49 @@ type mqlK8sDaemonset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sDaemonsetInternal
-	Id                     plugin.TValue[string]
-	Uid                    plugin.TValue[string]
-	ResourceVersion        plugin.TValue[string]
-	Labels                 plugin.TValue[map[string]any]
-	Annotations            plugin.TValue[map[string]any]
-	OwnerReferences        plugin.TValue[[]any]
-	ManagedFields          plugin.TValue[[]any]
-	Name                   plugin.TValue[string]
-	Namespace              plugin.TValue[string]
-	Kind                   plugin.TValue[string]
-	Created                plugin.TValue[*time.Time]
-	Manifest               plugin.TValue[any]
-	PodSpec                plugin.TValue[any]
-	InitContainers         plugin.TValue[[]any]
-	Containers             plugin.TValue[[]any]
-	Pods                   plugin.TValue[[]any]
-	Selector               plugin.TValue[any]
-	UpdateStrategy         plugin.TValue[any]
-	RevisionHistoryLimit   plugin.TValue[int64]
-	MinReadySeconds        plugin.TValue[int64]
-	CurrentNumberScheduled plugin.TValue[int64]
-	NumberMisscheduled     plugin.TValue[int64]
-	DesiredNumberScheduled plugin.TValue[int64]
-	NumberReady            plugin.TValue[int64]
-	UpdatedNumberScheduled plugin.TValue[int64]
-	NumberAvailable        plugin.TValue[int64]
-	NumberUnavailable      plugin.TValue[int64]
-	ObservedGeneration     plugin.TValue[int64]
-	CollisionCount         plugin.TValue[int64]
-	Conditions             plugin.TValue[[]any]
+	AutomountServiceAccountToken plugin.TValue[bool]
+	HostNetwork                  plugin.TValue[bool]
+	HostPID                      plugin.TValue[bool]
+	HostIPC                      plugin.TValue[bool]
+	SecurityContext              plugin.TValue[any]
+	RunsPrivileged               plugin.TValue[bool]
+	AllowsPrivilegeEscalation    plugin.TValue[bool]
+	RunsAsRoot                   plugin.TValue[bool]
+	HasWritableRootFilesystem    plugin.TValue[bool]
+	DropsAllCapabilities         plugin.TValue[bool]
+	AddedCapabilities            plugin.TValue[[]any]
+	UsesHostNamespaces           plugin.TValue[bool]
+	UsesHostPath                 plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	PodSpec                      plugin.TValue[any]
+	InitContainers               plugin.TValue[[]any]
+	Containers                   plugin.TValue[[]any]
+	Pods                         plugin.TValue[[]any]
+	Selector                     plugin.TValue[any]
+	UpdateStrategy               plugin.TValue[any]
+	RevisionHistoryLimit         plugin.TValue[int64]
+	MinReadySeconds              plugin.TValue[int64]
+	CurrentNumberScheduled       plugin.TValue[int64]
+	NumberMisscheduled           plugin.TValue[int64]
+	DesiredNumberScheduled       plugin.TValue[int64]
+	NumberReady                  plugin.TValue[int64]
+	UpdatedNumberScheduled       plugin.TValue[int64]
+	NumberAvailable              plugin.TValue[int64]
+	NumberUnavailable            plugin.TValue[int64]
+	ObservedGeneration           plugin.TValue[int64]
+	CollisionCount               plugin.TValue[int64]
+	Conditions                   plugin.TValue[[]any]
 }
 
 // createK8sDaemonset creates a new instance of this resource
@@ -11524,6 +12286,84 @@ func (c *mqlK8sDaemonset) MqlName() string {
 
 func (c *mqlK8sDaemonset) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sDaemonset) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sDaemonset) GetId() *plugin.TValue[string] {
@@ -11747,6 +12587,19 @@ type mqlK8sStatefulset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sStatefulsetInternal
+	AutomountServiceAccountToken         plugin.TValue[bool]
+	HostNetwork                          plugin.TValue[bool]
+	HostPID                              plugin.TValue[bool]
+	HostIPC                              plugin.TValue[bool]
+	SecurityContext                      plugin.TValue[any]
+	RunsPrivileged                       plugin.TValue[bool]
+	AllowsPrivilegeEscalation            plugin.TValue[bool]
+	RunsAsRoot                           plugin.TValue[bool]
+	HasWritableRootFilesystem            plugin.TValue[bool]
+	DropsAllCapabilities                 plugin.TValue[bool]
+	AddedCapabilities                    plugin.TValue[[]any]
+	UsesHostNamespaces                   plugin.TValue[bool]
+	UsesHostPath                         plugin.TValue[bool]
 	Id                                   plugin.TValue[string]
 	Uid                                  plugin.TValue[string]
 	ResourceVersion                      plugin.TValue[string]
@@ -11819,6 +12672,84 @@ func (c *mqlK8sStatefulset) MqlName() string {
 
 func (c *mqlK8sStatefulset) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sStatefulset) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sStatefulset) GetId() *plugin.TValue[string] {
@@ -12072,31 +13003,44 @@ type mqlK8sReplicaset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sReplicasetInternal
-	Id                   plugin.TValue[string]
-	Uid                  plugin.TValue[string]
-	ResourceVersion      plugin.TValue[string]
-	Labels               plugin.TValue[map[string]any]
-	Annotations          plugin.TValue[map[string]any]
-	OwnerReferences      plugin.TValue[[]any]
-	ManagedFields        plugin.TValue[[]any]
-	Name                 plugin.TValue[string]
-	Namespace            plugin.TValue[string]
-	Kind                 plugin.TValue[string]
-	Created              plugin.TValue[*time.Time]
-	Manifest             plugin.TValue[any]
-	PodSpec              plugin.TValue[any]
-	InitContainers       plugin.TValue[[]any]
-	Containers           plugin.TValue[[]any]
-	Pods                 plugin.TValue[[]any]
-	DesiredReplicas      plugin.TValue[int64]
-	Selector             plugin.TValue[any]
-	MinReadySeconds      plugin.TValue[int64]
-	Replicas             plugin.TValue[int64]
-	FullyLabeledReplicas plugin.TValue[int64]
-	ReadyReplicas        plugin.TValue[int64]
-	AvailableReplicas    plugin.TValue[int64]
-	ObservedGeneration   plugin.TValue[int64]
-	Conditions           plugin.TValue[[]any]
+	AutomountServiceAccountToken plugin.TValue[bool]
+	HostNetwork                  plugin.TValue[bool]
+	HostPID                      plugin.TValue[bool]
+	HostIPC                      plugin.TValue[bool]
+	SecurityContext              plugin.TValue[any]
+	RunsPrivileged               plugin.TValue[bool]
+	AllowsPrivilegeEscalation    plugin.TValue[bool]
+	RunsAsRoot                   plugin.TValue[bool]
+	HasWritableRootFilesystem    plugin.TValue[bool]
+	DropsAllCapabilities         plugin.TValue[bool]
+	AddedCapabilities            plugin.TValue[[]any]
+	UsesHostNamespaces           plugin.TValue[bool]
+	UsesHostPath                 plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	PodSpec                      plugin.TValue[any]
+	InitContainers               plugin.TValue[[]any]
+	Containers                   plugin.TValue[[]any]
+	Pods                         plugin.TValue[[]any]
+	DesiredReplicas              plugin.TValue[int64]
+	Selector                     plugin.TValue[any]
+	MinReadySeconds              plugin.TValue[int64]
+	Replicas                     plugin.TValue[int64]
+	FullyLabeledReplicas         plugin.TValue[int64]
+	ReadyReplicas                plugin.TValue[int64]
+	AvailableReplicas            plugin.TValue[int64]
+	ObservedGeneration           plugin.TValue[int64]
+	Conditions                   plugin.TValue[[]any]
 }
 
 // createK8sReplicaset creates a new instance of this resource
@@ -12134,6 +13078,84 @@ func (c *mqlK8sReplicaset) MqlName() string {
 
 func (c *mqlK8sReplicaset) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sReplicaset) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sReplicaset) GetId() *plugin.TValue[string] {
@@ -12327,43 +13349,56 @@ type mqlK8sJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sJobInternal
-	Id                      plugin.TValue[string]
-	Uid                     plugin.TValue[string]
-	ResourceVersion         plugin.TValue[string]
-	Labels                  plugin.TValue[map[string]any]
-	Annotations             plugin.TValue[map[string]any]
-	OwnerReferences         plugin.TValue[[]any]
-	ManagedFields           plugin.TValue[[]any]
-	Name                    plugin.TValue[string]
-	Namespace               plugin.TValue[string]
-	Kind                    plugin.TValue[string]
-	Created                 plugin.TValue[*time.Time]
-	Manifest                plugin.TValue[any]
-	PodSpec                 plugin.TValue[any]
-	InitContainers          plugin.TValue[[]any]
-	Containers              plugin.TValue[[]any]
-	Pods                    plugin.TValue[[]any]
-	Parallelism             plugin.TValue[int64]
-	Completions             plugin.TValue[int64]
-	BackoffLimit            plugin.TValue[int64]
-	BackoffLimitPerIndex    plugin.TValue[int64]
-	MaxFailedIndexes        plugin.TValue[int64]
-	CompletionMode          plugin.TValue[string]
-	ActiveDeadlineSeconds   plugin.TValue[int64]
-	TtlSecondsAfterFinished plugin.TValue[int64]
-	Suspend                 plugin.TValue[bool]
-	PodReplacementPolicy    plugin.TValue[string]
-	Selector                plugin.TValue[any]
-	Active                  plugin.TValue[int64]
-	Succeeded               plugin.TValue[int64]
-	Failed                  plugin.TValue[int64]
-	Ready                   plugin.TValue[int64]
-	Terminating             plugin.TValue[int64]
-	CompletedIndexes        plugin.TValue[string]
-	FailedIndexes           plugin.TValue[string]
-	StartTime               plugin.TValue[*time.Time]
-	CompletionTime          plugin.TValue[*time.Time]
-	Conditions              plugin.TValue[[]any]
+	AutomountServiceAccountToken plugin.TValue[bool]
+	HostNetwork                  plugin.TValue[bool]
+	HostPID                      plugin.TValue[bool]
+	HostIPC                      plugin.TValue[bool]
+	SecurityContext              plugin.TValue[any]
+	RunsPrivileged               plugin.TValue[bool]
+	AllowsPrivilegeEscalation    plugin.TValue[bool]
+	RunsAsRoot                   plugin.TValue[bool]
+	HasWritableRootFilesystem    plugin.TValue[bool]
+	DropsAllCapabilities         plugin.TValue[bool]
+	AddedCapabilities            plugin.TValue[[]any]
+	UsesHostNamespaces           plugin.TValue[bool]
+	UsesHostPath                 plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	PodSpec                      plugin.TValue[any]
+	InitContainers               plugin.TValue[[]any]
+	Containers                   plugin.TValue[[]any]
+	Pods                         plugin.TValue[[]any]
+	Parallelism                  plugin.TValue[int64]
+	Completions                  plugin.TValue[int64]
+	BackoffLimit                 plugin.TValue[int64]
+	BackoffLimitPerIndex         plugin.TValue[int64]
+	MaxFailedIndexes             plugin.TValue[int64]
+	CompletionMode               plugin.TValue[string]
+	ActiveDeadlineSeconds        plugin.TValue[int64]
+	TtlSecondsAfterFinished      plugin.TValue[int64]
+	Suspend                      plugin.TValue[bool]
+	PodReplacementPolicy         plugin.TValue[string]
+	Selector                     plugin.TValue[any]
+	Active                       plugin.TValue[int64]
+	Succeeded                    plugin.TValue[int64]
+	Failed                       plugin.TValue[int64]
+	Ready                        plugin.TValue[int64]
+	Terminating                  plugin.TValue[int64]
+	CompletedIndexes             plugin.TValue[string]
+	FailedIndexes                plugin.TValue[string]
+	StartTime                    plugin.TValue[*time.Time]
+	CompletionTime               plugin.TValue[*time.Time]
+	Conditions                   plugin.TValue[[]any]
 }
 
 // createK8sJob creates a new instance of this resource
@@ -12401,6 +13436,84 @@ func (c *mqlK8sJob) MqlName() string {
 
 func (c *mqlK8sJob) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sJob) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sJob) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sJob) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sJob) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sJob) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sJob) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sJob) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sJob) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sJob) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sJob) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sJob) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sJob) GetId() *plugin.TValue[string] {
@@ -12666,33 +13779,46 @@ type mqlK8sCronjob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sCronjobInternal
-	Id                         plugin.TValue[string]
-	Uid                        plugin.TValue[string]
-	ResourceVersion            plugin.TValue[string]
-	Labels                     plugin.TValue[map[string]any]
-	Annotations                plugin.TValue[map[string]any]
-	OwnerReferences            plugin.TValue[[]any]
-	ManagedFields              plugin.TValue[[]any]
-	Name                       plugin.TValue[string]
-	Namespace                  plugin.TValue[string]
-	Kind                       plugin.TValue[string]
-	Created                    plugin.TValue[*time.Time]
-	Manifest                   plugin.TValue[any]
-	PodSpec                    plugin.TValue[any]
-	InitContainers             plugin.TValue[[]any]
-	Containers                 plugin.TValue[[]any]
-	Schedule                   plugin.TValue[string]
-	TimeZone                   plugin.TValue[string]
-	ConcurrencyPolicy          plugin.TValue[string]
-	StartingDeadlineSeconds    plugin.TValue[int64]
-	SuccessfulJobsHistoryLimit plugin.TValue[int64]
-	FailedJobsHistoryLimit     plugin.TValue[int64]
-	Suspend                    plugin.TValue[bool]
-	Active                     plugin.TValue[[]any]
-	LastScheduleTime           plugin.TValue[*time.Time]
-	LastSuccessfulTime         plugin.TValue[*time.Time]
-	ActiveJobs                 plugin.TValue[[]any]
-	Jobs                       plugin.TValue[[]any]
+	AutomountServiceAccountToken plugin.TValue[bool]
+	HostNetwork                  plugin.TValue[bool]
+	HostPID                      plugin.TValue[bool]
+	HostIPC                      plugin.TValue[bool]
+	SecurityContext              plugin.TValue[any]
+	RunsPrivileged               plugin.TValue[bool]
+	AllowsPrivilegeEscalation    plugin.TValue[bool]
+	RunsAsRoot                   plugin.TValue[bool]
+	HasWritableRootFilesystem    plugin.TValue[bool]
+	DropsAllCapabilities         plugin.TValue[bool]
+	AddedCapabilities            plugin.TValue[[]any]
+	UsesHostNamespaces           plugin.TValue[bool]
+	UsesHostPath                 plugin.TValue[bool]
+	Id                           plugin.TValue[string]
+	Uid                          plugin.TValue[string]
+	ResourceVersion              plugin.TValue[string]
+	Labels                       plugin.TValue[map[string]any]
+	Annotations                  plugin.TValue[map[string]any]
+	OwnerReferences              plugin.TValue[[]any]
+	ManagedFields                plugin.TValue[[]any]
+	Name                         plugin.TValue[string]
+	Namespace                    plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Created                      plugin.TValue[*time.Time]
+	Manifest                     plugin.TValue[any]
+	PodSpec                      plugin.TValue[any]
+	InitContainers               plugin.TValue[[]any]
+	Containers                   plugin.TValue[[]any]
+	Schedule                     plugin.TValue[string]
+	TimeZone                     plugin.TValue[string]
+	ConcurrencyPolicy            plugin.TValue[string]
+	StartingDeadlineSeconds      plugin.TValue[int64]
+	SuccessfulJobsHistoryLimit   plugin.TValue[int64]
+	FailedJobsHistoryLimit       plugin.TValue[int64]
+	Suspend                      plugin.TValue[bool]
+	Active                       plugin.TValue[[]any]
+	LastScheduleTime             plugin.TValue[*time.Time]
+	LastSuccessfulTime           plugin.TValue[*time.Time]
+	ActiveJobs                   plugin.TValue[[]any]
+	Jobs                         plugin.TValue[[]any]
 }
 
 // createK8sCronjob creates a new instance of this resource
@@ -12730,6 +13856,84 @@ func (c *mqlK8sCronjob) MqlName() string {
 
 func (c *mqlK8sCronjob) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8sCronjob) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutomountServiceAccountToken, func() (bool, error) {
+		return c.automountServiceAccountToken()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHostNetwork() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
+		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHostPID() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostPID, func() (bool, error) {
+		return c.hostPID()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHostIPC() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HostIPC, func() (bool, error) {
+		return c.hostIPC()
+	})
+}
+
+func (c *mqlK8sCronjob) GetSecurityContext() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityContext, func() (any, error) {
+		return c.securityContext()
+	})
+}
+
+func (c *mqlK8sCronjob) GetRunsPrivileged() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsPrivileged, func() (bool, error) {
+		return c.runsPrivileged()
+	})
+}
+
+func (c *mqlK8sCronjob) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sCronjob) GetRunsAsRoot() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RunsAsRoot, func() (bool, error) {
+		return c.runsAsRoot()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasWritableRootFilesystem() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWritableRootFilesystem, func() (bool, error) {
+		return c.hasWritableRootFilesystem()
+	})
+}
+
+func (c *mqlK8sCronjob) GetDropsAllCapabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DropsAllCapabilities, func() (bool, error) {
+		return c.dropsAllCapabilities()
+	})
+}
+
+func (c *mqlK8sCronjob) GetAddedCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddedCapabilities, func() ([]any, error) {
+		return c.addedCapabilities()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesHostNamespaces() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostNamespaces, func() (bool, error) {
+		return c.usesHostNamespaces()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesHostPath() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesHostPath, func() (bool, error) {
+		return c.usesHostPath()
+	})
 }
 
 func (c *mqlK8sCronjob) GetId() *plugin.TValue[string] {
