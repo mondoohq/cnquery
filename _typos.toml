@@ -75,6 +75,9 @@ reciever = "reciever"
 # that must stay verbatim.
 yor = "yor"
 yoman = "yoman"
+# German word ("as") in a localized PowerShell error string used to test
+# non-English Defender availability detection.
+als = "als"
 # Pre-existing misspellings in MQL schema fields / exported Go identifiers.
 # Renaming these would break the schema or API, so they are baselined.
 appliable = "appliable"
