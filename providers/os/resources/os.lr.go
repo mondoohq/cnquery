@@ -8856,7 +8856,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsTcpip).GetDisableIpSourceRouting()).ToDataRes(types.Int)
 	},
 	"windows.tcpip.enableIcmpRedirect": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTcpip).GetEnableIcmpRedirect()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTcpip).GetEnableIcmpRedirect()).ToDataRes(types.Bool)
 	},
 	"windows.tcpip.keepAliveTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTcpip).GetKeepAliveTime()).ToDataRes(types.Int)
@@ -8880,7 +8880,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsTcpipNetbios).GetNodeType()).ToDataRes(types.Int)
 	},
 	"windows.tcpip.netbios.noNameReleaseOnDemand": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTcpipNetbios).GetNoNameReleaseOnDemand()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTcpipNetbios).GetNoNameReleaseOnDemand()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -21382,7 +21382,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.tcpip.enableIcmpRedirect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTcpip).EnableIcmpRedirect, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTcpip).EnableIcmpRedirect, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tcpip.keepAliveTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21422,7 +21422,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.tcpip.netbios.noNameReleaseOnDemand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTcpipNetbios).NoNameReleaseOnDemand, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTcpipNetbios).NoNameReleaseOnDemand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56243,7 +56243,7 @@ type mqlWindowsTcpip struct {
 	__id       string
 	// optional: if you define mqlWindowsTcpipInternal it will be used here
 	DisableIpSourceRouting    plugin.TValue[int64]
-	EnableIcmpRedirect        plugin.TValue[int64]
+	EnableIcmpRedirect        plugin.TValue[bool]
 	KeepAliveTime             plugin.TValue[int64]
 	PerformRouterDiscovery    plugin.TValue[int64]
 	TcpMaxDataRetransmissions plugin.TValue[int64]
@@ -56292,7 +56292,7 @@ func (c *mqlWindowsTcpip) GetDisableIpSourceRouting() *plugin.TValue[int64] {
 	return &c.DisableIpSourceRouting
 }
 
-func (c *mqlWindowsTcpip) GetEnableIcmpRedirect() *plugin.TValue[int64] {
+func (c *mqlWindowsTcpip) GetEnableIcmpRedirect() *plugin.TValue[bool] {
 	return &c.EnableIcmpRedirect
 }
 
@@ -56395,7 +56395,7 @@ type mqlWindowsTcpipNetbios struct {
 	__id       string
 	// optional: if you define mqlWindowsTcpipNetbiosInternal it will be used here
 	NodeType              plugin.TValue[int64]
-	NoNameReleaseOnDemand plugin.TValue[int64]
+	NoNameReleaseOnDemand plugin.TValue[bool]
 }
 
 // createWindowsTcpipNetbios creates a new instance of this resource
@@ -56439,7 +56439,7 @@ func (c *mqlWindowsTcpipNetbios) GetNodeType() *plugin.TValue[int64] {
 	return &c.NodeType
 }
 
-func (c *mqlWindowsTcpipNetbios) GetNoNameReleaseOnDemand() *plugin.TValue[int64] {
+func (c *mqlWindowsTcpipNetbios) GetNoNameReleaseOnDemand() *plugin.TValue[bool] {
 	return &c.NoNameReleaseOnDemand
 }
 

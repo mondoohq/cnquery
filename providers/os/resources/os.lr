@@ -7524,11 +7524,8 @@ windows.tcpip {
   // 2=highest protection, source routing is completely disabled. Null when the
   // value is absent.
   disableIpSourceRouting int
-  // Whether ICMP redirects override OSPF-generated routes (Tcpip\Parameters\EnableICMPRedirect)
-  //
-  // DWORD: 0=disabled (do not allow ICMP redirects), 1=enabled. Null when the
-  // value is absent.
-  enableIcmpRedirect int
+  // Whether ICMP redirects override OSPF-generated routes (Tcpip\Parameters\EnableICMPRedirect); null when the value is absent
+  enableIcmpRedirect bool
   // How often TCP sends keep-alive packets, in milliseconds (Tcpip\Parameters\KeepAliveTime)
   //
   // DWORD measured in milliseconds. Null when the value is absent.
@@ -7575,11 +7572,10 @@ private windows.tcpip.netbios @defaults("nodeType noNameReleaseOnDemand") {
   // DWORD: 1=B-node (broadcast), 2=P-node (point-to-point), 4=M-node (mixed),
   // 8=H-node (hybrid). Null when the value is absent.
   nodeType int
-  // Whether the computer ignores NetBIOS name-release requests except from WINS servers (NetBT\Parameters\NoNameReleaseOnDemand)
+  // Whether the computer ignores NetBIOS name-release requests except from WINS servers
   //
-  // DWORD: 0=respond to all release requests, 1=ignore release requests except
-  // from WINS servers. Null when the value is absent.
-  noNameReleaseOnDemand int
+  // Maps NetBT\Parameters\NoNameReleaseOnDemand. Null when the value is absent.
+  noNameReleaseOnDemand bool
 }
 
 // Windows Trusted Platform Module (TPM)

@@ -51,7 +51,7 @@ func TestTcpipItemsToMap(t *testing.T) {
 func TestTcpipIntPtr(t *testing.T) {
 	items := map[string]int64{
 		"disableipsourcerouting":    2,
-		"enableicmpredirect":        0,
+		"performrouterdiscovery":    0,
 		"tcpmaxdataretransmissions": 3,
 	}
 
@@ -62,9 +62,9 @@ func TestTcpipIntPtr(t *testing.T) {
 	})
 
 	t.Run("distinguishes an explicit 0 from absent", func(t *testing.T) {
-		// EnableICMPRedirect==0 is a real, compliant value and must not be
+		// PerformRouterDiscovery==0 is a real, compliant value and must not be
 		// reported as null.
-		got := tcpipIntPtr(items, "EnableICMPRedirect")
+		got := tcpipIntPtr(items, "PerformRouterDiscovery")
 		require.NotNil(t, got)
 		assert.Equal(t, int64(0), *got)
 	})
@@ -97,6 +97,31 @@ func TestTcpipIntPtr(t *testing.T) {
 	})
 }
 
+func TestTcpipBoolPtr(t *testing.T) {
+	items := map[string]int64{
+		"enableicmpredirect":    1,
+		"nonamereleaseondemand": 0,
+	}
+
+	t.Run("non-zero DWORD returns true", func(t *testing.T) {
+		got := tcpipBoolPtr(items, "EnableICMPRedirect")
+		require.NotNil(t, got)
+		assert.True(t, *got)
+	})
+
+	t.Run("distinguishes an explicit false from absent", func(t *testing.T) {
+		// NoNameReleaseOnDemand==false is a real value and must not be null.
+		got := tcpipBoolPtr(items, "NoNameReleaseOnDemand")
+		require.NotNil(t, got)
+		assert.False(t, *got)
+	})
+
+	t.Run("returns nil for an absent value", func(t *testing.T) {
+		assert.Nil(t, tcpipBoolPtr(items, "KeepAliveTime"))
+		assert.Nil(t, tcpipBoolPtr(map[string]int64{}, "EnableICMPRedirect"))
+	})
+}
+
 // TestTcpipCoverage documents the full set of CIS-required values backed by the
 // resource and asserts the case-insensitive extraction works end-to-end for
 // each one, including the lower-cased tcpmaxdataretransmissions casing.
@@ -111,7 +136,6 @@ func TestTcpipCoverage(t *testing.T) {
 	})
 	for name, want := range map[string]int64{
 		"DisableIPSourceRouting":    2,
-		"EnableICMPRedirect":        0,
 		"KeepAliveTime":             300000,
 		"PerformRouterDiscovery":    0,
 		"TcpMaxDataRetransmissions": 3,
@@ -120,6 +144,10 @@ func TestTcpipCoverage(t *testing.T) {
 		require.NotNilf(t, got, "expected %s to be present", name)
 		assert.Equalf(t, want, *got, "value for %s", name)
 	}
+	// EnableICMPRedirect is a bool toggle; an explicit 0 must stay false (not null)
+	icmp := tcpipBoolPtr(ipv4, "EnableICMPRedirect")
+	require.NotNil(t, icmp)
+	assert.False(t, *icmp)
 
 	// Tcpip6\Parameters (IPv6)
 	ipv6 := tcpipItemsToMap([]registry.RegistryKeyItem{
@@ -134,12 +162,10 @@ func TestTcpipCoverage(t *testing.T) {
 		regItem("NodeType", 2),
 		regItem("NoNameReleaseOnDemand", 1),
 	})
-	for name, want := range map[string]int64{
-		"NodeType":              2,
-		"NoNameReleaseOnDemand": 1,
-	} {
-		got := tcpipIntPtr(netbios, name)
-		require.NotNilf(t, got, "expected %s to be present", name)
-		assert.Equalf(t, want, *got, "value for %s", name)
-	}
+	nodeType := tcpipIntPtr(netbios, "NodeType")
+	require.NotNil(t, nodeType)
+	assert.Equal(t, int64(2), *nodeType)
+	noRelease := tcpipBoolPtr(netbios, "NoNameReleaseOnDemand")
+	require.NotNil(t, noRelease)
+	assert.True(t, *noRelease)
 }

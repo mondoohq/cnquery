@@ -81,6 +81,19 @@ func tcpipIntPtr(items map[string]int64, name string) *int64 {
 	return nil
 }
 
+// tcpipBoolPtr returns a pointer to the boolean interpretation of the DWORD
+// stored under name (true for any non-zero value, lookup is case-insensitive),
+// or nil when the value is absent. Returning nil lets the caller emit a null
+// field so an explicit false is distinguishable from an unconfigured value.
+// Pure function for unit testing.
+func tcpipBoolPtr(items map[string]int64, name string) *bool {
+	if v, ok := items[strings.ToLower(name)]; ok {
+		b := v != 0
+		return &b
+	}
+	return nil
+}
+
 // initWindowsTcpip reads the Tcpip\Parameters key once and populates the
 // top-level DWORD fields. Each field is null when its value is absent so an
 // explicit 0 is distinguishable from an unconfigured value.
@@ -91,7 +104,7 @@ func initWindowsTcpip(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	args["disableIpSourceRouting"] = llx.IntDataPtr(tcpipIntPtr(items, "DisableIPSourceRouting"))
-	args["enableIcmpRedirect"] = llx.IntDataPtr(tcpipIntPtr(items, "EnableICMPRedirect"))
+	args["enableIcmpRedirect"] = llx.BoolDataPtr(tcpipBoolPtr(items, "EnableICMPRedirect"))
 	args["keepAliveTime"] = llx.IntDataPtr(tcpipIntPtr(items, "KeepAliveTime"))
 	args["performRouterDiscovery"] = llx.IntDataPtr(tcpipIntPtr(items, "PerformRouterDiscovery"))
 	// the TcpMaxDataRetransmissions value name is stored lower-cased on some
@@ -126,7 +139,7 @@ func (r *mqlWindowsTcpip) netbios() (*mqlWindowsTcpipNetbios, error) {
 	o, err := CreateResource(r.MqlRuntime, "windows.tcpip.netbios", map[string]*llx.RawData{
 		"__id":                  llx.StringData("windows.tcpip.netbios"),
 		"nodeType":              llx.IntDataPtr(tcpipIntPtr(items, "NodeType")),
-		"noNameReleaseOnDemand": llx.IntDataPtr(tcpipIntPtr(items, "NoNameReleaseOnDemand")),
+		"noNameReleaseOnDemand": llx.BoolDataPtr(tcpipBoolPtr(items, "NoNameReleaseOnDemand")),
 	})
 	if err != nil {
 		return nil, err
