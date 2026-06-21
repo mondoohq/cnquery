@@ -426,6 +426,12 @@ private k8s.pod @defaults("namespace name created"){
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -628,6 +634,12 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -762,6 +774,12 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -895,6 +913,12 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1036,6 +1060,12 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1157,6 +1187,12 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1303,6 +1339,12 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   meetsPodSecurityBaseline() bool
   // Whether the workload satisfies the Pod Security Standards restricted profile
   meetsPodSecurityRestricted() bool
+  // Whether any container injects a Secret as an environment variable (secretKeyRef or envFrom)
+  usesSecretsAsEnv() bool
+  // Whether the workload mounts a Secret as a volume (including projected secret sources)
+  mountsSecretVolumes() bool
+  // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
+  consumedSecrets() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID

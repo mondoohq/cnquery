@@ -225,3 +225,38 @@ spec:
             image: docker:24
             securityContext:
               privileged: true
+---
+# Consumes Secrets every which way: env (secretKeyRef + envFrom), a mounted
+# secret volume, and an image-pull secret. Used by the secret-consumption tests.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-consumer
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: secret-consumer
+  template:
+    metadata:
+      labels:
+        app: secret-consumer
+    spec:
+      imagePullSecrets:
+      - name: registry-creds
+      containers:
+      - name: app
+        image: nginx:1.25
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-secret
+              key: key
+        envFrom:
+        - secretRef:
+            name: env-secret
+      volumes:
+      - name: tls
+        secret:
+          secretName: tls-secret
