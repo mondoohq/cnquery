@@ -165,6 +165,61 @@ func resolveServiceAccountSubjects(runtime *plugin.Runtime, subjects []rbacv1.Su
 	return out, nil
 }
 
+// referencedRules returns the policy rules this binding grants, resolving the
+// roleRef to either a namespaced Role or a ClusterRole. It resolves to nil (no
+// rules) when the reference is missing or cannot be found (including a
+// ClusterRole that isn't loaded for a namespace-scoped asset), so the rollups
+// report false rather than erroring on an unresolvable reference.
+func (k *mqlK8sRbacRolebinding) referencedRules() ([]rbacv1.PolicyRule, error) {
+	role := k.GetRole()
+	if role.Error != nil {
+		return nil, role.Error
+	}
+	if role.Data != nil {
+		return role.Data.obj.Rules, nil
+	}
+	cr := k.GetClusterRole()
+	if cr.Error != nil {
+		return nil, cr.Error
+	}
+	if cr.Data == nil {
+		return nil, nil
+	}
+	return cr.Data.obj.Rules, nil
+}
+
+func (k *mqlK8sRbacRolebinding) grantsClusterAdmin() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacGrantsClusterAdmin(rules), nil
+}
+
+func (k *mqlK8sRbacRolebinding) hasWildcardRule() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacHasWildcardRule(rules), nil
+}
+
+func (k *mqlK8sRbacRolebinding) allowsPrivilegeEscalation() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacAllowsPrivilegeEscalation(rules), nil
+}
+
+func (k *mqlK8sRbacRolebinding) canReadSecrets() (bool, error) {
+	rules, err := k.referencedRules()
+	if err != nil {
+		return false, err
+	}
+	return rbacCanReadSecrets(rules), nil
+}
+
 func (k *mqlK8sRbacRolebinding) ownerReferences() ([]any, error) {
 	return k8sOwnerReferences(k.MqlRuntime, k.obj)
 }

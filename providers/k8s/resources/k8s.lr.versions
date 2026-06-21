@@ -1018,6 +1018,7 @@ k8s.rbac.clusterrole.annotations 9.0.0
 k8s.rbac.clusterrole.boundBy 13.0.16
 k8s.rbac.clusterrole.canReadSecrets 13.2.2
 k8s.rbac.clusterrole.created 9.0.0
+k8s.rbac.clusterrole.grantsClusterAdmin 13.3.1
 k8s.rbac.clusterrole.hasWildcardRule 13.2.2
 k8s.rbac.clusterrole.id 9.0.0
 k8s.rbac.clusterrole.kind 9.0.0
@@ -1031,9 +1032,13 @@ k8s.rbac.clusterrole.resourceVersion 9.0.0
 k8s.rbac.clusterrole.rules 9.0.0
 k8s.rbac.clusterrole.uid 9.0.0
 k8s.rbac.clusterrolebinding 9.0.0
+k8s.rbac.clusterrolebinding.allowsPrivilegeEscalation 13.3.1
 k8s.rbac.clusterrolebinding.annotations 9.0.0
+k8s.rbac.clusterrolebinding.canReadSecrets 13.3.1
 k8s.rbac.clusterrolebinding.clusterRole 13.0.16
 k8s.rbac.clusterrolebinding.created 9.0.0
+k8s.rbac.clusterrolebinding.grantsClusterAdmin 13.3.1
+k8s.rbac.clusterrolebinding.hasWildcardRule 13.3.1
 k8s.rbac.clusterrolebinding.id 9.0.0
 k8s.rbac.clusterrolebinding.kind 9.0.0
 k8s.rbac.clusterrolebinding.labels 9.0.0
@@ -1058,6 +1063,7 @@ k8s.rbac.role.annotations 9.0.0
 k8s.rbac.role.boundBy 13.0.16
 k8s.rbac.role.canReadSecrets 13.2.2
 k8s.rbac.role.created 9.0.0
+k8s.rbac.role.grantsClusterAdmin 13.3.1
 k8s.rbac.role.hasWildcardRule 13.2.2
 k8s.rbac.role.id 9.0.0
 k8s.rbac.role.kind 9.0.0
@@ -1072,9 +1078,13 @@ k8s.rbac.role.resourceVersion 9.0.0
 k8s.rbac.role.rules 9.0.0
 k8s.rbac.role.uid 9.0.0
 k8s.rbac.rolebinding 9.0.0
+k8s.rbac.rolebinding.allowsPrivilegeEscalation 13.3.1
 k8s.rbac.rolebinding.annotations 9.0.0
+k8s.rbac.rolebinding.canReadSecrets 13.3.1
 k8s.rbac.rolebinding.clusterRole 13.0.16
 k8s.rbac.rolebinding.created 9.0.0
+k8s.rbac.rolebinding.grantsClusterAdmin 13.3.1
+k8s.rbac.rolebinding.hasWildcardRule 13.3.1
 k8s.rbac.rolebinding.id 9.0.0
 k8s.rbac.rolebinding.kind 9.0.0
 k8s.rbac.rolebinding.labels 9.0.0

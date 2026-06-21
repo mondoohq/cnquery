@@ -93,6 +93,10 @@ func (k *mqlK8sRbacRole) canReadSecrets() (bool, error) {
 	return rbacCanReadSecrets(k.obj.Rules), nil
 }
 
+func (k *mqlK8sRbacRole) grantsClusterAdmin() (bool, error) {
+	return rbacGrantsClusterAdmin(k.obj.Rules), nil
+}
+
 func (k *mqlK8sRbacRole) boundBy() ([]any, error) {
 	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
 	if err != nil {

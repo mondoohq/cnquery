@@ -2642,6 +2642,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrole.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetCanReadSecrets()).ToDataRes(types.Bool)
 	},
+	"k8s.rbac.clusterrole.grantsClusterAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetGrantsClusterAdmin()).ToDataRes(types.Bool)
+	},
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetAggregationRule()).ToDataRes(types.Dict)
 	},
@@ -2705,6 +2708,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrolebinding.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
 	},
+	"k8s.rbac.clusterrolebinding.grantsClusterAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetGrantsClusterAdmin()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.clusterrolebinding.hasWildcardRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetHasWildcardRule()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.clusterrolebinding.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.clusterrolebinding.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetCanReadSecrets()).ToDataRes(types.Bool)
+	},
 	"k8s.rbac.clusterrolebinding.clusterRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetClusterRole()).ToDataRes(types.Resource("k8s.rbac.clusterrole"))
 	},
@@ -2759,6 +2774,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.role.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetCanReadSecrets()).ToDataRes(types.Bool)
 	},
+	"k8s.rbac.role.grantsClusterAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetGrantsClusterAdmin()).ToDataRes(types.Bool)
+	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
 	},
@@ -2806,6 +2824,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.rolebinding.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
+	},
+	"k8s.rbac.rolebinding.grantsClusterAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetGrantsClusterAdmin()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.rolebinding.hasWildcardRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetHasWildcardRule()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.rolebinding.allowsPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetAllowsPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"k8s.rbac.rolebinding.canReadSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetCanReadSecrets()).ToDataRes(types.Bool)
 	},
 	"k8s.rbac.rolebinding.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetRole()).ToDataRes(types.Resource("k8s.rbac.role"))
@@ -7291,6 +7321,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrole).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrole.grantsClusterAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).GrantsClusterAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -7383,6 +7417,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrolebinding).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrolebinding.grantsClusterAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).GrantsClusterAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.hasWildcardRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).HasWildcardRule, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrolebinding.canReadSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrolebinding.clusterRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrolebinding).ClusterRole, ok = plugin.RawToTValue[*mqlK8sRbacClusterrole](v.Value, v.Error)
 		return
@@ -7459,6 +7509,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacRole).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.role.grantsClusterAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).GrantsClusterAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -7525,6 +7579,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.rolebinding.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRolebinding).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.grantsClusterAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).GrantsClusterAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.hasWildcardRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).HasWildcardRule, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.allowsPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).AllowsPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.canReadSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).CanReadSecrets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16734,6 +16804,7 @@ type mqlK8sRbacClusterrole struct {
 	HasWildcardRule           plugin.TValue[bool]
 	AllowsPrivilegeEscalation plugin.TValue[bool]
 	CanReadSecrets            plugin.TValue[bool]
+	GrantsClusterAdmin        plugin.TValue[bool]
 	AggregationRule           plugin.TValue[any]
 	BoundBy                   plugin.TValue[[]any]
 }
@@ -16887,6 +16958,12 @@ func (c *mqlK8sRbacClusterrole) GetCanReadSecrets() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlK8sRbacClusterrole) GetGrantsClusterAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GrantsClusterAdmin, func() (bool, error) {
+		return c.grantsClusterAdmin()
+	})
+}
+
 func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[any] {
 	return &c.AggregationRule
 }
@@ -16976,21 +17053,25 @@ type mqlK8sRbacClusterrolebinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sRbacClusterrolebindingInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	OwnerReferences plugin.TValue[[]any]
-	ManagedFields   plugin.TValue[[]any]
-	Name            plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	Subjects        plugin.TValue[[]any]
-	RoleRef         plugin.TValue[any]
-	ServiceAccounts plugin.TValue[[]any]
-	ClusterRole     plugin.TValue[*mqlK8sRbacClusterrole]
+	Id                        plugin.TValue[string]
+	Uid                       plugin.TValue[string]
+	ResourceVersion           plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Annotations               plugin.TValue[map[string]any]
+	OwnerReferences           plugin.TValue[[]any]
+	ManagedFields             plugin.TValue[[]any]
+	Name                      plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Manifest                  plugin.TValue[any]
+	Subjects                  plugin.TValue[[]any]
+	RoleRef                   plugin.TValue[any]
+	ServiceAccounts           plugin.TValue[[]any]
+	GrantsClusterAdmin        plugin.TValue[bool]
+	HasWildcardRule           plugin.TValue[bool]
+	AllowsPrivilegeEscalation plugin.TValue[bool]
+	CanReadSecrets            plugin.TValue[bool]
+	ClusterRole               plugin.TValue[*mqlK8sRbacClusterrole]
 }
 
 // createK8sRbacClusterrolebinding creates a new instance of this resource
@@ -17128,6 +17209,30 @@ func (c *mqlK8sRbacClusterrolebinding) GetServiceAccounts() *plugin.TValue[[]any
 	})
 }
 
+func (c *mqlK8sRbacClusterrolebinding) GetGrantsClusterAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GrantsClusterAdmin, func() (bool, error) {
+		return c.grantsClusterAdmin()
+	})
+}
+
+func (c *mqlK8sRbacClusterrolebinding) GetHasWildcardRule() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardRule, func() (bool, error) {
+		return c.hasWildcardRule()
+	})
+}
+
+func (c *mqlK8sRbacClusterrolebinding) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sRbacClusterrolebinding) GetCanReadSecrets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanReadSecrets, func() (bool, error) {
+		return c.canReadSecrets()
+	})
+}
+
 func (c *mqlK8sRbacClusterrolebinding) GetClusterRole() *plugin.TValue[*mqlK8sRbacClusterrole] {
 	return plugin.GetOrCompute[*mqlK8sRbacClusterrole](&c.ClusterRole, func() (*mqlK8sRbacClusterrole, error) {
 		if c.MqlRuntime.HasRecording {
@@ -17166,6 +17271,7 @@ type mqlK8sRbacRole struct {
 	HasWildcardRule           plugin.TValue[bool]
 	AllowsPrivilegeEscalation plugin.TValue[bool]
 	CanReadSecrets            plugin.TValue[bool]
+	GrantsClusterAdmin        plugin.TValue[bool]
 	BoundBy                   plugin.TValue[[]any]
 }
 
@@ -17322,6 +17428,12 @@ func (c *mqlK8sRbacRole) GetCanReadSecrets() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlK8sRbacRole) GetGrantsClusterAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GrantsClusterAdmin, func() (bool, error) {
+		return c.grantsClusterAdmin()
+	})
+}
+
 func (c *mqlK8sRbacRole) GetBoundBy() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.BoundBy, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -17343,23 +17455,27 @@ type mqlK8sRbacRolebinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sRbacRolebindingInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	OwnerReferences plugin.TValue[[]any]
-	ManagedFields   plugin.TValue[[]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	Subjects        plugin.TValue[[]any]
-	RoleRef         plugin.TValue[any]
-	ServiceAccounts plugin.TValue[[]any]
-	Role            plugin.TValue[*mqlK8sRbacRole]
-	ClusterRole     plugin.TValue[*mqlK8sRbacClusterrole]
+	Id                        plugin.TValue[string]
+	Uid                       plugin.TValue[string]
+	ResourceVersion           plugin.TValue[string]
+	Labels                    plugin.TValue[map[string]any]
+	Annotations               plugin.TValue[map[string]any]
+	OwnerReferences           plugin.TValue[[]any]
+	ManagedFields             plugin.TValue[[]any]
+	Name                      plugin.TValue[string]
+	Namespace                 plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	Manifest                  plugin.TValue[any]
+	Subjects                  plugin.TValue[[]any]
+	RoleRef                   plugin.TValue[any]
+	ServiceAccounts           plugin.TValue[[]any]
+	GrantsClusterAdmin        plugin.TValue[bool]
+	HasWildcardRule           plugin.TValue[bool]
+	AllowsPrivilegeEscalation plugin.TValue[bool]
+	CanReadSecrets            plugin.TValue[bool]
+	Role                      plugin.TValue[*mqlK8sRbacRole]
+	ClusterRole               plugin.TValue[*mqlK8sRbacClusterrole]
 }
 
 // createK8sRbacRolebinding creates a new instance of this resource
@@ -17498,6 +17614,30 @@ func (c *mqlK8sRbacRolebinding) GetServiceAccounts() *plugin.TValue[[]any] {
 		}
 
 		return c.serviceAccounts()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetGrantsClusterAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.GrantsClusterAdmin, func() (bool, error) {
+		return c.grantsClusterAdmin()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetHasWildcardRule() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardRule, func() (bool, error) {
+		return c.hasWildcardRule()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetAllowsPrivilegeEscalation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsPrivilegeEscalation, func() (bool, error) {
+		return c.allowsPrivilegeEscalation()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetCanReadSecrets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanReadSecrets, func() (bool, error) {
+		return c.canReadSecrets()
 	})
 }
 

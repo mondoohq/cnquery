@@ -64,6 +64,22 @@ func rbacHasWildcardRule(rules []rbacv1.PolicyRule) bool {
 	return false
 }
 
+// rbacGrantsClusterAdmin reports whether any rule grants unrestricted access:
+// the verb, API group, and resource dimensions all include the wildcard "*".
+// This is the rule shape of the built-in cluster-admin ClusterRole and of any
+// equivalent custom role.
+func rbacGrantsClusterAdmin(rules []rbacv1.PolicyRule) bool {
+	for i := range rules {
+		rule := rules[i]
+		if stringx.Contains(rule.Verbs, "*") &&
+			stringx.Contains(rule.APIGroups, "*") &&
+			stringx.Contains(rule.Resources, "*") {
+			return true
+		}
+	}
+	return false
+}
+
 // rbacAllowsPrivilegeEscalation reports whether any rule grants one of the
 // canonical RBAC privilege-escalation permissions.
 func rbacAllowsPrivilegeEscalation(rules []rbacv1.PolicyRule) bool {

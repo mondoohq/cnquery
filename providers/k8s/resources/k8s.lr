@@ -2012,6 +2012,8 @@ private k8s.rbac.clusterrole @defaults("name created") {
   allowsPrivilegeEscalation() bool
   // Whether any rule grants read access (get, list, or watch) to Secrets
   canReadSecrets() bool
+  // Whether any rule grants unrestricted access (wildcard verbs, API groups, and resources), i.e. cluster-admin
+  grantsClusterAdmin() bool
   // ClusterRole aggregation rule
   aggregationRule dict
   // ClusterRoleBindings that reference this ClusterRole via roleRef
@@ -2071,6 +2073,14 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
   roleRef dict
   // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
   serviceAccounts() []k8s.serviceaccount
+  // Whether the granted ClusterRole confers cluster-admin (wildcard verbs, API groups, and resources)
+  grantsClusterAdmin() bool
+  // Whether the granted ClusterRole has any wildcard rule
+  hasWildcardRule() bool
+  // Whether the granted ClusterRole allows RBAC privilege escalation (escalate/bind/impersonate)
+  allowsPrivilegeEscalation() bool
+  // Whether the granted ClusterRole can read Secrets (get, list, or watch)
+  canReadSecrets() bool
   // The ClusterRole granted by this binding (roleRef.name)
   clusterRole() k8s.rbac.clusterrole
 }
@@ -2122,6 +2132,8 @@ private k8s.rbac.role @defaults("name namespace") {
   allowsPrivilegeEscalation() bool
   // Whether any rule grants read access (get, list, or watch) to Secrets
   canReadSecrets() bool
+  // Whether any rule grants unrestricted access (wildcard verbs, API groups, and resources), i.e. cluster-admin
+  grantsClusterAdmin() bool
   // RoleBindings in this namespace that reference this Role via roleRef
   boundBy() []k8s.rbac.rolebinding
 }
@@ -2164,6 +2176,14 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   roleRef dict
   // ServiceAccounts referenced as subjects (entries where kind == "ServiceAccount" resolved to typed resources)
   serviceAccounts() []k8s.serviceaccount
+  // Whether the granted role confers cluster-admin (wildcard verbs, API groups, and resources)
+  grantsClusterAdmin() bool
+  // Whether the granted role has any wildcard rule
+  hasWildcardRule() bool
+  // Whether the granted role allows RBAC privilege escalation (escalate/bind/impersonate)
+  allowsPrivilegeEscalation() bool
+  // Whether the granted role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
   // The Role granted by this binding (null when roleRef points to a ClusterRole)
   role() k8s.rbac.role
   // The ClusterRole granted by this binding (null when roleRef points to a Role)
