@@ -24,37 +24,37 @@ func stringItems(kv map[string]string) map[string]registry.RegistryKeyItem {
 	return items
 }
 
-func TestPowershellIntPtr(t *testing.T) {
-	t.Run("present and 1 returns pointer to 1", func(t *testing.T) {
+func TestPowershellBoolPtr(t *testing.T) {
+	t.Run("present and 1 returns pointer to true", func(t *testing.T) {
 		items := dwordItems(map[string]int64{"enablescriptblocklogging": 1})
-		got := powershellIntPtr(items, "EnableScriptBlockLogging")
+		got := powershellBoolPtr(items, "EnableScriptBlockLogging")
 		require.NotNil(t, got)
-		assert.Equal(t, int64(1), *got)
+		assert.True(t, *got)
 	})
 
-	t.Run("present and explicit 0 returns pointer to 0 (not nil)", func(t *testing.T) {
-		// nullable correctness: an explicit 0 must be distinguishable from absent
+	t.Run("present and explicit 0 returns pointer to false (not nil)", func(t *testing.T) {
+		// nullable correctness: an explicit false must be distinguishable from absent
 		items := dwordItems(map[string]int64{"enablescriptblocklogging": 0})
-		got := powershellIntPtr(items, "EnableScriptBlockLogging")
+		got := powershellBoolPtr(items, "EnableScriptBlockLogging")
 		require.NotNil(t, got)
-		assert.Equal(t, int64(0), *got)
+		assert.False(t, *got)
 	})
 
 	t.Run("absent returns nil", func(t *testing.T) {
-		assert.Nil(t, powershellIntPtr(dwordItems(nil), "EnableScriptBlockLogging"))
-		assert.Nil(t, powershellIntPtr(nil, "EnableTranscripting"))
+		assert.Nil(t, powershellBoolPtr(dwordItems(nil), "EnableScriptBlockLogging"))
+		assert.Nil(t, powershellBoolPtr(nil, "EnableTranscripting"))
 	})
 
 	t.Run("value name matching is case insensitive", func(t *testing.T) {
 		items := dwordItems(map[string]int64{"enabletranscripting": 1})
-		got := powershellIntPtr(items, "EnableTranscripting")
+		got := powershellBoolPtr(items, "EnableTranscripting")
 		require.NotNil(t, got)
-		assert.Equal(t, int64(1), *got)
+		assert.True(t, *got)
 	})
 
 	t.Run("unrelated value names do not match", func(t *testing.T) {
 		items := dwordItems(map[string]int64{"someothervalue": 1})
-		assert.Nil(t, powershellIntPtr(items, "EnableScriptBlockLogging"))
+		assert.Nil(t, powershellBoolPtr(items, "EnableScriptBlockLogging"))
 	})
 }
 

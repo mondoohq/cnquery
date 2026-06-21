@@ -7537,10 +7537,8 @@ windows.powershell {
 // \Microsoft\Windows\PowerShell\ScriptBlockLogging. This is a GPO-only value;
 // when it is absent the field is null, distinguishable from an explicit 0.
 private windows.powershell.scriptBlockLogging @defaults("enabled") {
-  // Whether script block logging is enabled (EnableScriptBlockLogging DWORD)
-  //
-  // 1 when enabled, 0 when explicitly disabled, null when the value is absent.
-  enabled int
+  // Whether script block logging is enabled (EnableScriptBlockLogging); null when the value is absent
+  enabled bool
 }
 
 // PowerShell Transcription policy
@@ -7549,10 +7547,8 @@ private windows.powershell.scriptBlockLogging @defaults("enabled") {
 // \Windows\PowerShell\Transcription. This is a GPO-only value; when it is
 // absent the field is null, distinguishable from an explicit 0.
 private windows.powershell.transcription @defaults("enabled") {
-  // Whether PowerShell transcription is enabled (EnableTranscripting DWORD)
-  //
-  // 1 when enabled, 0 when explicitly disabled, null when the value is absent.
-  enabled int
+  // Whether PowerShell transcription is enabled (EnableTranscripting); null when the value is absent
+  enabled bool
 }
 
 // Windows Trusted Platform Module (TPM)

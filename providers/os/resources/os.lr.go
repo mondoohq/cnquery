@@ -8868,10 +8868,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsPowershell).GetExecutionPolicy()).ToDataRes(types.String)
 	},
 	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsPowershellScriptBlockLogging).GetEnabled()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsPowershellScriptBlockLogging).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.powershell.transcription.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsPowershellTranscription).GetEnabled()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsPowershellTranscription).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -21393,7 +21393,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.powershell.scriptBlockLogging.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsPowershellScriptBlockLogging).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsPowershellScriptBlockLogging).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.powershell.transcription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21401,7 +21401,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.powershell.transcription.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsPowershellTranscription).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsPowershellTranscription).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56320,7 +56320,7 @@ type mqlWindowsPowershellScriptBlockLogging struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsPowershellScriptBlockLoggingInternal it will be used here
-	Enabled plugin.TValue[int64]
+	Enabled plugin.TValue[bool]
 }
 
 // createWindowsPowershellScriptBlockLogging creates a new instance of this resource
@@ -56360,7 +56360,7 @@ func (c *mqlWindowsPowershellScriptBlockLogging) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsPowershellScriptBlockLogging) GetEnabled() *plugin.TValue[int64] {
+func (c *mqlWindowsPowershellScriptBlockLogging) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 
@@ -56369,7 +56369,7 @@ type mqlWindowsPowershellTranscription struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsPowershellTranscriptionInternal it will be used here
-	Enabled plugin.TValue[int64]
+	Enabled plugin.TValue[bool]
 }
 
 // createWindowsPowershellTranscription creates a new instance of this resource
@@ -56409,7 +56409,7 @@ func (c *mqlWindowsPowershellTranscription) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsPowershellTranscription) GetEnabled() *plugin.TValue[int64] {
+func (c *mqlWindowsPowershellTranscription) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
 }
 

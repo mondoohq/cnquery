@@ -63,13 +63,13 @@ func (r *mqlWindowsPowershell) readPowershellKey(path string) (map[string]regist
 	return res, nil
 }
 
-// powershellIntPtr returns a pointer to the numeric value of a registry DWORD,
-// or nil when the value name is absent. Returning a pointer keeps "not
-// configured" (nil) distinguishable from an explicit 0. Pure function for unit
-// testing.
-func powershellIntPtr(items map[string]registry.RegistryKeyItem, name string) *int64 {
+// powershellBoolPtr returns a pointer to the boolean interpretation of a
+// registry DWORD (true for any non-zero value), or nil when the value name is
+// absent. Returning a pointer keeps "not configured" (nil) distinguishable from
+// an explicit false. Pure function for unit testing.
+func powershellBoolPtr(items map[string]registry.RegistryKeyItem, name string) *bool {
 	if it, ok := items[strings.ToLower(name)]; ok {
-		v := it.Value.Number
+		v := it.Value.Number != 0
 		return &v
 	}
 	return nil
@@ -95,7 +95,7 @@ func (r *mqlWindowsPowershell) scriptBlockLogging() (*mqlWindowsPowershellScript
 
 	o, err := CreateResource(r.MqlRuntime, "windows.powershell.scriptBlockLogging", map[string]*llx.RawData{
 		"__id":    llx.StringData("windows.powershell.scriptBlockLogging"),
-		"enabled": llx.IntDataPtr(powershellIntPtr(items, "EnableScriptBlockLogging")),
+		"enabled": llx.BoolDataPtr(powershellBoolPtr(items, "EnableScriptBlockLogging")),
 	})
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (r *mqlWindowsPowershell) transcription() (*mqlWindowsPowershellTranscripti
 
 	o, err := CreateResource(r.MqlRuntime, "windows.powershell.transcription", map[string]*llx.RawData{
 		"__id":    llx.StringData("windows.powershell.transcription"),
-		"enabled": llx.IntDataPtr(powershellIntPtr(items, "EnableTranscripting")),
+		"enabled": llx.BoolDataPtr(powershellBoolPtr(items, "EnableTranscripting")),
 	})
 	if err != nil {
 		return nil, err
