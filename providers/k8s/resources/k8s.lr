@@ -252,6 +252,8 @@ private k8s.namespace @defaults("name created") {
   // Value of the `pod-security.kubernetes.io/warn-version` label. Empty when
   // unset.
   podSecurityWarnVersion() string
+  // Whether the namespace enforces a non-privileged Pod Security Standards level (baseline or restricted)
+  enforcesPodSecurity() bool
 }
 
 // Kubernetes node
@@ -2761,6 +2763,8 @@ private k8s.admission.validatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+  // Whether any webhook is fail-open (failurePolicy: Ignore), so admission proceeds when the webhook errors or is unreachable
+  failsOpen() bool
 }
 
 // Kubernetes Application
@@ -3034,6 +3038,8 @@ private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
   manifest() dict
   // Webhooks configuration
   webhooks() []dict
+  // Whether any webhook is fail-open (failurePolicy: Ignore), so admission proceeds when the webhook errors or is unreachable
+  failsOpen() bool
 }
 
 // Kubernetes ValidatingAdmissionPolicy

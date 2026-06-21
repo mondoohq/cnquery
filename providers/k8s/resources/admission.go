@@ -173,6 +173,19 @@ func (k *mqlK8sAdmissionValidatingwebhookconfiguration) webhooks() ([]any, error
 	return dict, nil
 }
 
+// failsOpen reports whether any webhook has failurePolicy: Ignore, meaning
+// admission proceeds when the webhook is unreachable or errors — the guardrail
+// can be bypassed by making it fail. An unset failurePolicy defaults to Fail.
+func (k *mqlK8sAdmissionValidatingwebhookconfiguration) failsOpen() (bool, error) {
+	for i := range k.obj.Webhooks {
+		fp := k.obj.Webhooks[i].FailurePolicy
+		if fp != nil && *fp == admissionregistrationv1.Ignore {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (k *mqlK8sAdmissionValidatingwebhookconfiguration) id() (string, error) {
 	return k.Id.Data, nil
 }

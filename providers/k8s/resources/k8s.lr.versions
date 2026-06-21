@@ -5,6 +5,7 @@ k8s 9.0.0
 k8s.admission.mutatingwebhookconfiguration 13.0.16
 k8s.admission.mutatingwebhookconfiguration.annotations 13.0.16
 k8s.admission.mutatingwebhookconfiguration.created 13.0.16
+k8s.admission.mutatingwebhookconfiguration.failsOpen 13.3.1
 k8s.admission.mutatingwebhookconfiguration.id 13.0.16
 k8s.admission.mutatingwebhookconfiguration.kind 13.0.16
 k8s.admission.mutatingwebhookconfiguration.labels 13.0.16
@@ -55,6 +56,7 @@ k8s.admission.validatingadmissionpolicybinding.validationActions 13.2.2
 k8s.admission.validatingwebhookconfiguration 11.1.63
 k8s.admission.validatingwebhookconfiguration.annotations 11.1.63
 k8s.admission.validatingwebhookconfiguration.created 11.1.63
+k8s.admission.validatingwebhookconfiguration.failsOpen 13.3.1
 k8s.admission.validatingwebhookconfiguration.id 11.1.63
 k8s.admission.validatingwebhookconfiguration.kind 11.1.63
 k8s.admission.validatingwebhookconfiguration.labels 11.1.63
@@ -727,6 +729,7 @@ k8s.namespace.cronjobs 13.0.16
 k8s.namespace.daemonsets 13.0.16
 k8s.namespace.deployments 13.0.16
 k8s.namespace.endpointSlices 13.0.16
+k8s.namespace.enforcesPodSecurity 13.3.1
 k8s.namespace.horizontalPodAutoscalers 13.0.16
 k8s.namespace.id 9.0.0
 k8s.namespace.ingresses 13.0.16

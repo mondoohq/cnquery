@@ -200,6 +200,15 @@ func (k *mqlK8sNamespace) podSecurityWarnVersion() (string, error) {
 	return k.obj.GetLabels()[psaWarnVersionLabel], nil
 }
 
+// enforcesPodSecurity reports whether the namespace actively enforces a
+// non-privileged Pod Security Standards level. An unset or "privileged" enforce
+// label means workloads are not constrained at admission, so PSS findings on
+// those workloads are advisory rather than enforced.
+func (k *mqlK8sNamespace) enforcesPodSecurity() (bool, error) {
+	level := k.obj.GetLabels()[psaEnforceLabel]
+	return level == "baseline" || level == "restricted", nil
+}
+
 func (k *mqlK8sNamespace) ownerReferences() ([]any, error) {
 	return k8sOwnerReferences(k.MqlRuntime, k.obj)
 }
