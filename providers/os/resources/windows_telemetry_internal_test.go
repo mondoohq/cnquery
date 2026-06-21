@@ -66,17 +66,17 @@ func TestComputeTelemetry(t *testing.T) {
 		require.NotNil(t, v.allowTelemetry)
 		assert.Equal(t, int64(0), *v.allowTelemetry)
 		require.NotNil(t, v.disableEnterpriseAuthProxy)
-		assert.Equal(t, int64(0), *v.disableEnterpriseAuthProxy)
+		assert.Equal(t, false, *v.disableEnterpriseAuthProxy)
 		require.NotNil(t, v.disableOneSettingsDownloads)
-		assert.Equal(t, int64(0), *v.disableOneSettingsDownloads)
+		assert.Equal(t, false, *v.disableOneSettingsDownloads)
 		require.NotNil(t, v.doNotShowFeedbackNotifications)
-		assert.Equal(t, int64(0), *v.doNotShowFeedbackNotifications)
+		assert.Equal(t, false, *v.doNotShowFeedbackNotifications)
 		require.NotNil(t, v.enableOneSettingsAuditing)
-		assert.Equal(t, int64(0), *v.enableOneSettingsAuditing)
+		assert.Equal(t, false, *v.enableOneSettingsAuditing)
 		require.NotNil(t, v.limitDiagnosticLogCollection)
-		assert.Equal(t, int64(0), *v.limitDiagnosticLogCollection)
+		assert.Equal(t, false, *v.limitDiagnosticLogCollection)
 		require.NotNil(t, v.limitDumpCollection)
-		assert.Equal(t, int64(0), *v.limitDumpCollection)
+		assert.Equal(t, false, *v.limitDumpCollection)
 	})
 
 	t.Run("typical hardened values map through", func(t *testing.T) {
@@ -92,7 +92,7 @@ func TestComputeTelemetry(t *testing.T) {
 		require.NotNil(t, v.allowTelemetry)
 		assert.Equal(t, int64(1), *v.allowTelemetry)
 		require.NotNil(t, v.enableOneSettingsAuditing)
-		assert.Equal(t, int64(1), *v.enableOneSettingsAuditing)
+		assert.Equal(t, true, *v.enableOneSettingsAuditing)
 	})
 
 	t.Run("partial configuration leaves unset fields nil", func(t *testing.T) {
@@ -132,11 +132,11 @@ func TestComputeConsumerContent(t *testing.T) {
 			"DisableWindowsConsumerFeatures":     0,
 		}))
 		require.NotNil(t, v.disableCloudOptimizedContent)
-		assert.Equal(t, int64(0), *v.disableCloudOptimizedContent)
+		assert.Equal(t, false, *v.disableCloudOptimizedContent)
 		require.NotNil(t, v.disableConsumerAccountStateContent)
-		assert.Equal(t, int64(0), *v.disableConsumerAccountStateContent)
+		assert.Equal(t, false, *v.disableConsumerAccountStateContent)
 		require.NotNil(t, v.disableWindowsConsumerFeatures)
-		assert.Equal(t, int64(0), *v.disableWindowsConsumerFeatures)
+		assert.Equal(t, false, *v.disableWindowsConsumerFeatures)
 	})
 
 	t.Run("hardened values (all 1) map through", func(t *testing.T) {
@@ -146,11 +146,11 @@ func TestComputeConsumerContent(t *testing.T) {
 			"DisableWindowsConsumerFeatures":     1,
 		}))
 		require.NotNil(t, v.disableCloudOptimizedContent)
-		assert.Equal(t, int64(1), *v.disableCloudOptimizedContent)
+		assert.Equal(t, true, *v.disableCloudOptimizedContent)
 		require.NotNil(t, v.disableConsumerAccountStateContent)
-		assert.Equal(t, int64(1), *v.disableConsumerAccountStateContent)
+		assert.Equal(t, true, *v.disableConsumerAccountStateContent)
 		require.NotNil(t, v.disableWindowsConsumerFeatures)
-		assert.Equal(t, int64(1), *v.disableWindowsConsumerFeatures)
+		assert.Equal(t, true, *v.disableWindowsConsumerFeatures)
 	})
 
 	t.Run("partial configuration leaves unset fields nil", func(t *testing.T) {
@@ -158,7 +158,7 @@ func TestComputeConsumerContent(t *testing.T) {
 			"DisableWindowsConsumerFeatures": 1,
 		}))
 		require.NotNil(t, v.disableWindowsConsumerFeatures)
-		assert.Equal(t, int64(1), *v.disableWindowsConsumerFeatures)
+		assert.Equal(t, true, *v.disableWindowsConsumerFeatures)
 		assert.Nil(t, v.disableCloudOptimizedContent)
 		assert.Nil(t, v.disableConsumerAccountStateContent)
 	})

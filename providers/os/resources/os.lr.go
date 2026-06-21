@@ -8433,7 +8433,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsUpdatePolicy).GetAutomaticUpdatesEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.noAutoUpdate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoUpdate()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoUpdate()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallDay()).ToDataRes(types.Int)
@@ -8442,31 +8442,31 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsUpdatePolicy).GetScheduledInstallTime()).ToDataRes(types.Int)
 	},
 	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoRebootWithLoggedOnUsers()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetNoAutoRebootWithLoggedOnUsers()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdatePolicy).GetManagePreviewBuilds()).ToDataRes(types.Int)
 	},
 	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdates()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdates()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdatePolicy).GetDeferFeatureUpdatesPeriodInDays()).ToDataRes(types.Int)
 	},
 	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdates()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdates()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdatePolicy).GetDeferQualityUpdatesPeriodInDays()).ToDataRes(types.Int)
 	},
 	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetAllowTemporaryEnterpriseFeatureControl()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetAllowTemporaryEnterpriseFeatureControl()).ToDataRes(types.Bool)
 	},
 	"windows.update.policy.allowOptionalContent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsUpdatePolicy).GetAllowOptionalContent()).ToDataRes(types.Int)
 	},
 	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsUpdatePolicy).GetDisablePauseUXAccess()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsUpdatePolicy).GetDisablePauseUXAccess()).ToDataRes(types.Bool)
 	},
 	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
@@ -8619,7 +8619,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsWinrmService).GetAllowRemoteShellAccess()).ToDataRes(types.Bool)
 	},
 	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityEnabled()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetRequirePlatformSecurityFeatures()).ToDataRes(types.Int)
@@ -8628,40 +8628,40 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsDeviceGuard).GetHypervisorEnforcedCodeIntegrity()).ToDataRes(types.Int)
 	},
 	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDeviceGuard).GetHvciMatRequired()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDeviceGuard).GetHvciMatRequired()).ToDataRes(types.Bool)
 	},
 	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetCredentialGuardConfig()).ToDataRes(types.Int)
 	},
 	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDeviceGuard).GetSystemGuardLaunch()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDeviceGuard).GetSystemGuardLaunch()).ToDataRes(types.Bool)
 	},
 	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetKernelShadowStacksLaunch()).ToDataRes(types.Int)
 	},
 	"windows.lsa.disableDomainCreds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetDisableDomainCreds()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetDisableDomainCreds()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetEveryoneIncludesAnonymous()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetEveryoneIncludesAnonymous()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.forceGuest": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetForceGuest()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetForceGuest()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetLimitBlankPasswordUse()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetLimitBlankPasswordUse()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetLmCompatibilityLevel()).ToDataRes(types.Int)
 	},
 	"windows.lsa.noLmHash": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetNoLmHash()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetNoLmHash()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.restrictAnonymous": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetRestrictAnonymous()).ToDataRes(types.Int)
 	},
 	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetRestrictAnonymousSam()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetRestrictAnonymousSam()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.restrictRemoteSam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetRestrictRemoteSam()).ToDataRes(types.String)
@@ -8670,13 +8670,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsLsa).GetRunAsPpl()).ToDataRes(types.Int)
 	},
 	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetSceNoApplyLegacyAuditPolicy()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetSceNoApplyLegacyAuditPolicy()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.submitControl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetSubmitControl()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetSubmitControl()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.useMachineId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsa).GetUseMachineId()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsa).GetUseMachineId()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.ntlm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetNtlm()).ToDataRes(types.Resource("windows.lsa.ntlm"))
@@ -8685,7 +8685,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsLsa).GetSecureChannel()).ToDataRes(types.Resource("windows.lsa.secureChannel"))
 	},
 	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaNtlm).GetAllowNullSessionFallback()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaNtlm).GetAllowNullSessionFallback()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaNtlm).GetAuditReceivingNtlmTraffic()).ToDataRes(types.Int)
@@ -8700,37 +8700,37 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsLsaNtlm).GetRestrictSendingNtlmTraffic()).ToDataRes(types.Int)
 	},
 	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaNtlm).GetUseLogonCredential()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaNtlm).GetUseLogonCredential()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaNtlm).GetAllowOnlineId()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaNtlm).GetAllowOnlineId()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.auditNtlmInDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaSecureChannel).GetAuditNtlmInDomain()).ToDataRes(types.Int)
 	},
 	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetBlockNetbiosDiscovery()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetBlockNetbiosDiscovery()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetDisablePasswordChange()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetDisablePasswordChange()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaSecureChannel).GetMaximumPasswordAge()).ToDataRes(types.Int)
 	},
 	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetRefusePasswordChange()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetRefusePasswordChange()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetRequireSignOrSeal()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireSignOrSeal()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetRequireStrongKey()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetRequireStrongKey()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetSealSecureChannel()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetSealSecureChannel()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsLsaSecureChannel).GetSignSecureChannel()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsLsaSecureChannel).GetSignSecureChannel()).ToDataRes(types.Bool)
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaSecureChannel).GetVulnerableChannelAllowList()).ToDataRes(types.String)
@@ -8742,10 +8742,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsSpooler).GetDisabled()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpooler).GetRegisterRemoteRpcEndpoint()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpooler).GetRegisterRemoteRpcEndpoint()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpooler).GetRedirectionGuardPolicy()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpooler).GetRedirectionGuardPolicy()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetWebPnpDownloadDisabled()).ToDataRes(types.Bool)
@@ -8754,13 +8754,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsSpooler).GetHttpPrintingDisabled()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.copyFilesPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpooler).GetCopyFilesPolicy()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpooler).GetCopyFilesPolicy()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetRpcAuthnLevelPrivacyEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpooler).GetAddPrinterDriversRestricted()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpooler).GetAddPrinterDriversRestricted()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.pointAndPrint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetPointAndPrint()).ToDataRes(types.Resource("windows.spooler.pointAndPrint"))
@@ -8772,19 +8772,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsSpooler).GetIpp()).ToDataRes(types.Resource("windows.spooler.ipp"))
 	},
 	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpooler).GetWindowsProtectedPrintGroupPolicyState()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpooler).GetWindowsProtectedPrintGroupPolicyState()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.pointAndPrint.restrictDriverInstallationToAdministrators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpoolerPointAndPrint).GetRestrictDriverInstallationToAdministrators()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpoolerPointAndPrint).GetNoWarningNoElevationOnInstall()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpoolerPointAndPrint).GetNoWarningNoElevationOnInstall()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpoolerPointAndPrint).GetUpdatePromptSettings()).ToDataRes(types.Int)
 	},
 	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsSpoolerRpc).GetUseNamedPipeProtocol()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsSpoolerRpc).GetUseNamedPipeProtocol()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.rpc.authentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpoolerRpc).GetAuthentication()).ToDataRes(types.Int)
@@ -8817,31 +8817,31 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsTelemetry).GetAllowTelemetry()).ToDataRes(types.Int)
 	},
 	"windows.telemetry.disableEnterpriseAuthProxy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDisableEnterpriseAuthProxy()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDisableEnterpriseAuthProxy()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.disableOneSettingsDownloads": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDisableOneSettingsDownloads()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDisableOneSettingsDownloads()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.doNotShowFeedbackNotifications": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDoNotShowFeedbackNotifications()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDoNotShowFeedbackNotifications()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.enableOneSettingsAuditing": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetEnableOneSettingsAuditing()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetEnableOneSettingsAuditing()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.limitDiagnosticLogCollection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetLimitDiagnosticLogCollection()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetLimitDiagnosticLogCollection()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.limitDumpCollection": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetLimitDumpCollection()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetLimitDumpCollection()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDisableCloudOptimizedContent()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDisableCloudOptimizedContent()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDisableConsumerAccountStateContent()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDisableConsumerAccountStateContent()).ToDataRes(types.Bool)
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsTelemetry).GetDisableWindowsConsumerFeatures()).ToDataRes(types.Bool)
 	},
 	"windows.tpm.present": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetPresent()).ToDataRes(types.Bool)
@@ -9135,19 +9135,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsBitlocker).GetPolicy()).ToDataRes(types.Resource("windows.bitlocker.policy"))
 	},
 	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicy).GetUseAdvancedStartup()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseAdvancedStartup()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicy).GetUseEnhancedPin()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicy).GetUseEnhancedPin()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicy).GetEnableBdeWithNoTpm()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicy).GetEnableBdeWithNoTpm()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicy).GetDisableExternalDmaUnderLock()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicy).GetDisableExternalDmaUnderLock()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicy).GetOsAllowSecureBootForIntegrity()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicy).GetOsAllowSecureBootForIntegrity()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerPolicy).GetOperatingSystemDrives()).ToDataRes(types.Resource("windows.bitlocker.policy.driveSettings"))
@@ -9165,7 +9165,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecovery()).ToDataRes(types.Int)
 	},
 	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetManageDRA()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetManageDRA()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryPassword()).ToDataRes(types.Int)
@@ -9174,16 +9174,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRecoveryKey()).ToDataRes(types.Int)
 	},
 	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHideRecoveryPage()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHideRecoveryPage()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryBackup()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryBackup()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetActiveDirectoryInfoToStore()).ToDataRes(types.Int)
 	},
 	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRequireActiveDirectoryBackup()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetRequireActiveDirectoryBackup()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetHardwareEncryption()).ToDataRes(types.Int)
@@ -9192,19 +9192,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetPassphrase()).ToDataRes(types.Int)
 	},
 	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetAllowUserCert()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetAllowUserCert()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetEnforceUserCert()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetEnforceUserCert()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDiscoveryVolumeType()).ToDataRes(types.String)
 	},
 	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyWriteAccess()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyWriteAccess()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyCrossOrg()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsBitlockerPolicyDriveSettings).GetDenyCrossOrg()).ToDataRes(types.Bool)
 	},
 	"windows.bitlocker.volume.deviceID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerVolume).GetDeviceID()).ToDataRes(types.String)
@@ -20731,7 +20731,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.noAutoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).NoAutoUpdate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).NoAutoUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.update.policy.scheduledInstallDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20743,7 +20743,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.noAutoRebootWithLoggedOnUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).NoAutoRebootWithLoggedOnUsers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).NoAutoRebootWithLoggedOnUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.update.policy.managePreviewBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20751,7 +20751,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.deferFeatureUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).DeferFeatureUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.update.policy.deferFeatureUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20759,7 +20759,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.deferQualityUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdates, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).DeferQualityUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.update.policy.deferQualityUpdatesPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20767,7 +20767,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.allowTemporaryEnterpriseFeatureControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).AllowTemporaryEnterpriseFeatureControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).AllowTemporaryEnterpriseFeatureControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.update.policy.allowOptionalContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20775,7 +20775,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.update.policy.disablePauseUXAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsUpdatePolicy).DisablePauseUXAccess, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsUpdatePolicy).DisablePauseUXAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21011,7 +21011,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDeviceGuard).VirtualizationBasedSecurityEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDeviceGuard).VirtualizationBasedSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.deviceGuard.requirePlatformSecurityFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21023,7 +21023,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.deviceGuard.hvciMatRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDeviceGuard).HvciMatRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDeviceGuard).HvciMatRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.deviceGuard.credentialGuardConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21031,7 +21031,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.deviceGuard.systemGuardLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDeviceGuard).SystemGuardLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDeviceGuard).SystemGuardLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21043,19 +21043,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.disableDomainCreds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).DisableDomainCreds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).DisableDomainCreds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).EveryoneIncludesAnonymous, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).EveryoneIncludesAnonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.forceGuest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).ForceGuest, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).ForceGuest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).LimitBlankPasswordUse, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).LimitBlankPasswordUse, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.lmCompatibilityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21063,7 +21063,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.noLmHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).NoLmHash, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).NoLmHash, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.restrictAnonymous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21071,7 +21071,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.restrictAnonymousSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).RestrictAnonymousSam, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).RestrictAnonymousSam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.restrictRemoteSam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21083,15 +21083,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.sceNoApplyLegacyAuditPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).SceNoApplyLegacyAuditPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).SceNoApplyLegacyAuditPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.submitControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).SubmitControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).SubmitControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.useMachineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsa).UseMachineId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsa).UseMachineId, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.ntlm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21107,7 +21107,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.ntlm.allowNullSessionFallback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaNtlm).AllowNullSessionFallback, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaNtlm).AllowNullSessionFallback, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.ntlm.auditReceivingNtlmTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21127,11 +21127,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.ntlm.useLogonCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaNtlm).UseLogonCredential, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaNtlm).UseLogonCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.ntlm.allowOnlineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaNtlm).AllowOnlineId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaNtlm).AllowOnlineId, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21143,11 +21143,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.secureChannel.blockNetbiosDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).BlockNetbiosDiscovery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).BlockNetbiosDiscovery, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.disablePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).DisablePasswordChange, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).DisablePasswordChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.maximumPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21155,23 +21155,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.lsa.secureChannel.refusePasswordChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).RefusePasswordChange, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).RefusePasswordChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.requireSignOrSeal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).RequireSignOrSeal, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).RequireSignOrSeal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.requireStrongKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).RequireStrongKey, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).RequireStrongKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.sealSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).SealSecureChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).SealSecureChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.signSecureChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsLsaSecureChannel).SignSecureChannel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsLsaSecureChannel).SignSecureChannel, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21191,11 +21191,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.registerRemoteRpcEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpooler).RegisterRemoteRpcEndpoint, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpooler).RegisterRemoteRpcEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.redirectionGuardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpooler).RedirectionGuardPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpooler).RedirectionGuardPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.webPnpDownloadDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21207,7 +21207,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.copyFilesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpooler).CopyFilesPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpooler).CopyFilesPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.rpcAuthnLevelPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21215,7 +21215,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.addPrinterDriversRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpooler).AddPrinterDriversRestricted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpooler).AddPrinterDriversRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.pointAndPrint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21231,7 +21231,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.windowsProtectedPrintGroupPolicyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpooler).WindowsProtectedPrintGroupPolicyState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpooler).WindowsProtectedPrintGroupPolicyState, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.pointAndPrint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21243,7 +21243,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.pointAndPrint.noWarningNoElevationOnInstall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpoolerPointAndPrint).NoWarningNoElevationOnInstall, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpoolerPointAndPrint).NoWarningNoElevationOnInstall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.pointAndPrint.updatePromptSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21255,7 +21255,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.spooler.rpc.useNamedPipeProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsSpoolerRpc).UseNamedPipeProtocol, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsSpoolerRpc).UseNamedPipeProtocol, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.rpc.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21307,39 +21307,39 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.telemetry.disableEnterpriseAuthProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DisableEnterpriseAuthProxy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DisableEnterpriseAuthProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.disableOneSettingsDownloads": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DisableOneSettingsDownloads, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DisableOneSettingsDownloads, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.doNotShowFeedbackNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DoNotShowFeedbackNotifications, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DoNotShowFeedbackNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.enableOneSettingsAuditing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).EnableOneSettingsAuditing, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).EnableOneSettingsAuditing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.limitDiagnosticLogCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).LimitDiagnosticLogCollection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).LimitDiagnosticLogCollection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.limitDumpCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).LimitDumpCollection, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).LimitDumpCollection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.disableCloudOptimizedContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DisableCloudOptimizedContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DisableCloudOptimizedContent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.disableConsumerAccountStateContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DisableConsumerAccountStateContent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DisableConsumerAccountStateContent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.telemetry.disableWindowsConsumerFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsTelemetry).DisableWindowsConsumerFeatures, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.tpm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21787,23 +21787,23 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.useAdvancedStartup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicy).UseAdvancedStartup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicy).UseAdvancedStartup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.useEnhancedPin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicy).UseEnhancedPin, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicy).UseEnhancedPin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.enableBdeWithNoTpm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicy).EnableBdeWithNoTpm, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicy).EnableBdeWithNoTpm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.disableExternalDmaUnderLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicy).DisableExternalDmaUnderLock, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicy).DisableExternalDmaUnderLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.osAllowSecureBootForIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicy).OsAllowSecureBootForIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicy).OsAllowSecureBootForIntegrity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.operatingSystemDrives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21831,7 +21831,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.manageDRA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).ManageDRA, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ManageDRA, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.recoveryPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21843,11 +21843,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.hideRecoveryPage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).HideRecoveryPage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).HideRecoveryPage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.activeDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryBackup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).ActiveDirectoryBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.activeDirectoryInfoToStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21855,7 +21855,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.requireActiveDirectoryBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).RequireActiveDirectoryBackup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).RequireActiveDirectoryBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.hardwareEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21867,11 +21867,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.allowUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).AllowUserCert, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).AllowUserCert, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.enforceUserCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).EnforceUserCert, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).EnforceUserCert, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.discoveryVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21879,11 +21879,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.denyWriteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyWriteAccess, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyWriteAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.policy.driveSettings.denyCrossOrg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyCrossOrg, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsBitlockerPolicyDriveSettings).DenyCrossOrg, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54530,18 +54530,18 @@ type mqlWindowsUpdatePolicy struct {
 	__id       string
 	// optional: if you define mqlWindowsUpdatePolicyInternal it will be used here
 	AutomaticUpdatesEnabled                plugin.TValue[bool]
-	NoAutoUpdate                           plugin.TValue[int64]
+	NoAutoUpdate                           plugin.TValue[bool]
 	ScheduledInstallDay                    plugin.TValue[int64]
 	ScheduledInstallTime                   plugin.TValue[int64]
-	NoAutoRebootWithLoggedOnUsers          plugin.TValue[int64]
+	NoAutoRebootWithLoggedOnUsers          plugin.TValue[bool]
 	ManagePreviewBuilds                    plugin.TValue[int64]
-	DeferFeatureUpdates                    plugin.TValue[int64]
+	DeferFeatureUpdates                    plugin.TValue[bool]
 	DeferFeatureUpdatesPeriodInDays        plugin.TValue[int64]
-	DeferQualityUpdates                    plugin.TValue[int64]
+	DeferQualityUpdates                    plugin.TValue[bool]
 	DeferQualityUpdatesPeriodInDays        plugin.TValue[int64]
-	AllowTemporaryEnterpriseFeatureControl plugin.TValue[int64]
+	AllowTemporaryEnterpriseFeatureControl plugin.TValue[bool]
 	AllowOptionalContent                   plugin.TValue[int64]
-	DisablePauseUXAccess                   plugin.TValue[int64]
+	DisablePauseUXAccess                   plugin.TValue[bool]
 }
 
 // createWindowsUpdatePolicy creates a new instance of this resource
@@ -54585,7 +54585,7 @@ func (c *mqlWindowsUpdatePolicy) GetAutomaticUpdatesEnabled() *plugin.TValue[boo
 	return &c.AutomaticUpdatesEnabled
 }
 
-func (c *mqlWindowsUpdatePolicy) GetNoAutoUpdate() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetNoAutoUpdate() *plugin.TValue[bool] {
 	return &c.NoAutoUpdate
 }
 
@@ -54597,7 +54597,7 @@ func (c *mqlWindowsUpdatePolicy) GetScheduledInstallTime() *plugin.TValue[int64]
 	return &c.ScheduledInstallTime
 }
 
-func (c *mqlWindowsUpdatePolicy) GetNoAutoRebootWithLoggedOnUsers() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetNoAutoRebootWithLoggedOnUsers() *plugin.TValue[bool] {
 	return &c.NoAutoRebootWithLoggedOnUsers
 }
 
@@ -54605,7 +54605,7 @@ func (c *mqlWindowsUpdatePolicy) GetManagePreviewBuilds() *plugin.TValue[int64] 
 	return &c.ManagePreviewBuilds
 }
 
-func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdates() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdates() *plugin.TValue[bool] {
 	return &c.DeferFeatureUpdates
 }
 
@@ -54613,7 +54613,7 @@ func (c *mqlWindowsUpdatePolicy) GetDeferFeatureUpdatesPeriodInDays() *plugin.TV
 	return &c.DeferFeatureUpdatesPeriodInDays
 }
 
-func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdates() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdates() *plugin.TValue[bool] {
 	return &c.DeferQualityUpdates
 }
 
@@ -54621,7 +54621,7 @@ func (c *mqlWindowsUpdatePolicy) GetDeferQualityUpdatesPeriodInDays() *plugin.TV
 	return &c.DeferQualityUpdatesPeriodInDays
 }
 
-func (c *mqlWindowsUpdatePolicy) GetAllowTemporaryEnterpriseFeatureControl() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetAllowTemporaryEnterpriseFeatureControl() *plugin.TValue[bool] {
 	return &c.AllowTemporaryEnterpriseFeatureControl
 }
 
@@ -54629,7 +54629,7 @@ func (c *mqlWindowsUpdatePolicy) GetAllowOptionalContent() *plugin.TValue[int64]
 	return &c.AllowOptionalContent
 }
 
-func (c *mqlWindowsUpdatePolicy) GetDisablePauseUXAccess() *plugin.TValue[int64] {
+func (c *mqlWindowsUpdatePolicy) GetDisablePauseUXAccess() *plugin.TValue[bool] {
 	return &c.DisablePauseUXAccess
 }
 
@@ -55276,12 +55276,12 @@ type mqlWindowsDeviceGuard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsDeviceGuardInternal it will be used here
-	VirtualizationBasedSecurityEnabled plugin.TValue[int64]
+	VirtualizationBasedSecurityEnabled plugin.TValue[bool]
 	RequirePlatformSecurityFeatures    plugin.TValue[int64]
 	HypervisorEnforcedCodeIntegrity    plugin.TValue[int64]
-	HvciMatRequired                    plugin.TValue[int64]
+	HvciMatRequired                    plugin.TValue[bool]
 	CredentialGuardConfig              plugin.TValue[int64]
-	SystemGuardLaunch                  plugin.TValue[int64]
+	SystemGuardLaunch                  plugin.TValue[bool]
 	KernelShadowStacksLaunch           plugin.TValue[int64]
 }
 
@@ -55322,7 +55322,7 @@ func (c *mqlWindowsDeviceGuard) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsDeviceGuard) GetVirtualizationBasedSecurityEnabled() *plugin.TValue[int64] {
+func (c *mqlWindowsDeviceGuard) GetVirtualizationBasedSecurityEnabled() *plugin.TValue[bool] {
 	return &c.VirtualizationBasedSecurityEnabled
 }
 
@@ -55334,7 +55334,7 @@ func (c *mqlWindowsDeviceGuard) GetHypervisorEnforcedCodeIntegrity() *plugin.TVa
 	return &c.HypervisorEnforcedCodeIntegrity
 }
 
-func (c *mqlWindowsDeviceGuard) GetHvciMatRequired() *plugin.TValue[int64] {
+func (c *mqlWindowsDeviceGuard) GetHvciMatRequired() *plugin.TValue[bool] {
 	return &c.HvciMatRequired
 }
 
@@ -55342,7 +55342,7 @@ func (c *mqlWindowsDeviceGuard) GetCredentialGuardConfig() *plugin.TValue[int64]
 	return &c.CredentialGuardConfig
 }
 
-func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[int64] {
+func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[bool] {
 	return &c.SystemGuardLaunch
 }
 
@@ -55355,19 +55355,19 @@ type mqlWindowsLsa struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsLsaInternal it will be used here
-	DisableDomainCreds          plugin.TValue[int64]
-	EveryoneIncludesAnonymous   plugin.TValue[int64]
-	ForceGuest                  plugin.TValue[int64]
-	LimitBlankPasswordUse       plugin.TValue[int64]
+	DisableDomainCreds          plugin.TValue[bool]
+	EveryoneIncludesAnonymous   plugin.TValue[bool]
+	ForceGuest                  plugin.TValue[bool]
+	LimitBlankPasswordUse       plugin.TValue[bool]
 	LmCompatibilityLevel        plugin.TValue[int64]
-	NoLmHash                    plugin.TValue[int64]
+	NoLmHash                    plugin.TValue[bool]
 	RestrictAnonymous           plugin.TValue[int64]
-	RestrictAnonymousSam        plugin.TValue[int64]
+	RestrictAnonymousSam        plugin.TValue[bool]
 	RestrictRemoteSam           plugin.TValue[string]
 	RunAsPpl                    plugin.TValue[int64]
-	SceNoApplyLegacyAuditPolicy plugin.TValue[int64]
-	SubmitControl               plugin.TValue[int64]
-	UseMachineId                plugin.TValue[int64]
+	SceNoApplyLegacyAuditPolicy plugin.TValue[bool]
+	SubmitControl               plugin.TValue[bool]
+	UseMachineId                plugin.TValue[bool]
 	Ntlm                        plugin.TValue[*mqlWindowsLsaNtlm]
 	SecureChannel               plugin.TValue[*mqlWindowsLsaSecureChannel]
 }
@@ -55409,26 +55409,26 @@ func (c *mqlWindowsLsa) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsLsa) GetDisableDomainCreds() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableDomainCreds, func() (int64, error) {
+func (c *mqlWindowsLsa) GetDisableDomainCreds() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableDomainCreds, func() (bool, error) {
 		return c.disableDomainCreds()
 	})
 }
 
-func (c *mqlWindowsLsa) GetEveryoneIncludesAnonymous() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.EveryoneIncludesAnonymous, func() (int64, error) {
+func (c *mqlWindowsLsa) GetEveryoneIncludesAnonymous() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EveryoneIncludesAnonymous, func() (bool, error) {
 		return c.everyoneIncludesAnonymous()
 	})
 }
 
-func (c *mqlWindowsLsa) GetForceGuest() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.ForceGuest, func() (int64, error) {
+func (c *mqlWindowsLsa) GetForceGuest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ForceGuest, func() (bool, error) {
 		return c.forceGuest()
 	})
 }
 
-func (c *mqlWindowsLsa) GetLimitBlankPasswordUse() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.LimitBlankPasswordUse, func() (int64, error) {
+func (c *mqlWindowsLsa) GetLimitBlankPasswordUse() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitBlankPasswordUse, func() (bool, error) {
 		return c.limitBlankPasswordUse()
 	})
 }
@@ -55439,8 +55439,8 @@ func (c *mqlWindowsLsa) GetLmCompatibilityLevel() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlWindowsLsa) GetNoLmHash() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.NoLmHash, func() (int64, error) {
+func (c *mqlWindowsLsa) GetNoLmHash() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NoLmHash, func() (bool, error) {
 		return c.noLmHash()
 	})
 }
@@ -55451,8 +55451,8 @@ func (c *mqlWindowsLsa) GetRestrictAnonymous() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlWindowsLsa) GetRestrictAnonymousSam() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.RestrictAnonymousSam, func() (int64, error) {
+func (c *mqlWindowsLsa) GetRestrictAnonymousSam() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestrictAnonymousSam, func() (bool, error) {
 		return c.restrictAnonymousSam()
 	})
 }
@@ -55469,20 +55469,20 @@ func (c *mqlWindowsLsa) GetRunAsPpl() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlWindowsLsa) GetSceNoApplyLegacyAuditPolicy() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.SceNoApplyLegacyAuditPolicy, func() (int64, error) {
+func (c *mqlWindowsLsa) GetSceNoApplyLegacyAuditPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SceNoApplyLegacyAuditPolicy, func() (bool, error) {
 		return c.sceNoApplyLegacyAuditPolicy()
 	})
 }
 
-func (c *mqlWindowsLsa) GetSubmitControl() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.SubmitControl, func() (int64, error) {
+func (c *mqlWindowsLsa) GetSubmitControl() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SubmitControl, func() (bool, error) {
 		return c.submitControl()
 	})
 }
 
-func (c *mqlWindowsLsa) GetUseMachineId() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.UseMachineId, func() (int64, error) {
+func (c *mqlWindowsLsa) GetUseMachineId() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UseMachineId, func() (bool, error) {
 		return c.useMachineId()
 	})
 }
@@ -55524,13 +55524,13 @@ type mqlWindowsLsaNtlm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsLsaNtlmInternal it will be used here
-	AllowNullSessionFallback   plugin.TValue[int64]
+	AllowNullSessionFallback   plugin.TValue[bool]
 	AuditReceivingNtlmTraffic  plugin.TValue[int64]
 	NtlmMinClientSec           plugin.TValue[int64]
 	NtlmMinServerSec           plugin.TValue[int64]
 	RestrictSendingNtlmTraffic plugin.TValue[int64]
-	UseLogonCredential         plugin.TValue[int64]
-	AllowOnlineId              plugin.TValue[int64]
+	UseLogonCredential         plugin.TValue[bool]
+	AllowOnlineId              plugin.TValue[bool]
 }
 
 // createWindowsLsaNtlm creates a new instance of this resource
@@ -55570,7 +55570,7 @@ func (c *mqlWindowsLsaNtlm) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsLsaNtlm) GetAllowNullSessionFallback() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaNtlm) GetAllowNullSessionFallback() *plugin.TValue[bool] {
 	return &c.AllowNullSessionFallback
 }
 
@@ -55590,11 +55590,11 @@ func (c *mqlWindowsLsaNtlm) GetRestrictSendingNtlmTraffic() *plugin.TValue[int64
 	return &c.RestrictSendingNtlmTraffic
 }
 
-func (c *mqlWindowsLsaNtlm) GetUseLogonCredential() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaNtlm) GetUseLogonCredential() *plugin.TValue[bool] {
 	return &c.UseLogonCredential
 }
 
-func (c *mqlWindowsLsaNtlm) GetAllowOnlineId() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaNtlm) GetAllowOnlineId() *plugin.TValue[bool] {
 	return &c.AllowOnlineId
 }
 
@@ -55604,14 +55604,14 @@ type mqlWindowsLsaSecureChannel struct {
 	__id       string
 	// optional: if you define mqlWindowsLsaSecureChannelInternal it will be used here
 	AuditNtlmInDomain          plugin.TValue[int64]
-	BlockNetbiosDiscovery      plugin.TValue[int64]
-	DisablePasswordChange      plugin.TValue[int64]
+	BlockNetbiosDiscovery      plugin.TValue[bool]
+	DisablePasswordChange      plugin.TValue[bool]
 	MaximumPasswordAge         plugin.TValue[int64]
-	RefusePasswordChange       plugin.TValue[int64]
-	RequireSignOrSeal          plugin.TValue[int64]
-	RequireStrongKey           plugin.TValue[int64]
-	SealSecureChannel          plugin.TValue[int64]
-	SignSecureChannel          plugin.TValue[int64]
+	RefusePasswordChange       plugin.TValue[bool]
+	RequireSignOrSeal          plugin.TValue[bool]
+	RequireStrongKey           plugin.TValue[bool]
+	SealSecureChannel          plugin.TValue[bool]
+	SignSecureChannel          plugin.TValue[bool]
 	VulnerableChannelAllowList plugin.TValue[string]
 }
 
@@ -55656,11 +55656,11 @@ func (c *mqlWindowsLsaSecureChannel) GetAuditNtlmInDomain() *plugin.TValue[int64
 	return &c.AuditNtlmInDomain
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetBlockNetbiosDiscovery() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetBlockNetbiosDiscovery() *plugin.TValue[bool] {
 	return &c.BlockNetbiosDiscovery
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetDisablePasswordChange() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetDisablePasswordChange() *plugin.TValue[bool] {
 	return &c.DisablePasswordChange
 }
 
@@ -55668,23 +55668,23 @@ func (c *mqlWindowsLsaSecureChannel) GetMaximumPasswordAge() *plugin.TValue[int6
 	return &c.MaximumPasswordAge
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetRefusePasswordChange() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetRefusePasswordChange() *plugin.TValue[bool] {
 	return &c.RefusePasswordChange
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetRequireSignOrSeal() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetRequireSignOrSeal() *plugin.TValue[bool] {
 	return &c.RequireSignOrSeal
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetRequireStrongKey() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetRequireStrongKey() *plugin.TValue[bool] {
 	return &c.RequireStrongKey
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetSealSecureChannel() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetSealSecureChannel() *plugin.TValue[bool] {
 	return &c.SealSecureChannel
 }
 
-func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[int64] {
+func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[bool] {
 	return &c.SignSecureChannel
 }
 
@@ -55699,17 +55699,17 @@ type mqlWindowsSpooler struct {
 	mqlWindowsSpoolerInternal
 	StartMode                             plugin.TValue[int64]
 	Disabled                              plugin.TValue[bool]
-	RegisterRemoteRpcEndpoint             plugin.TValue[int64]
-	RedirectionGuardPolicy                plugin.TValue[int64]
+	RegisterRemoteRpcEndpoint             plugin.TValue[bool]
+	RedirectionGuardPolicy                plugin.TValue[bool]
 	WebPnpDownloadDisabled                plugin.TValue[bool]
 	HttpPrintingDisabled                  plugin.TValue[bool]
-	CopyFilesPolicy                       plugin.TValue[int64]
+	CopyFilesPolicy                       plugin.TValue[bool]
 	RpcAuthnLevelPrivacyEnabled           plugin.TValue[bool]
-	AddPrinterDriversRestricted           plugin.TValue[int64]
+	AddPrinterDriversRestricted           plugin.TValue[bool]
 	PointAndPrint                         plugin.TValue[*mqlWindowsSpoolerPointAndPrint]
 	Rpc                                   plugin.TValue[*mqlWindowsSpoolerRpc]
 	Ipp                                   plugin.TValue[*mqlWindowsSpoolerIpp]
-	WindowsProtectedPrintGroupPolicyState plugin.TValue[int64]
+	WindowsProtectedPrintGroupPolicyState plugin.TValue[bool]
 }
 
 // createWindowsSpooler creates a new instance of this resource
@@ -55761,14 +55761,14 @@ func (c *mqlWindowsSpooler) GetDisabled() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlWindowsSpooler) GetRegisterRemoteRpcEndpoint() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.RegisterRemoteRpcEndpoint, func() (int64, error) {
+func (c *mqlWindowsSpooler) GetRegisterRemoteRpcEndpoint() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RegisterRemoteRpcEndpoint, func() (bool, error) {
 		return c.registerRemoteRpcEndpoint()
 	})
 }
 
-func (c *mqlWindowsSpooler) GetRedirectionGuardPolicy() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.RedirectionGuardPolicy, func() (int64, error) {
+func (c *mqlWindowsSpooler) GetRedirectionGuardPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RedirectionGuardPolicy, func() (bool, error) {
 		return c.redirectionGuardPolicy()
 	})
 }
@@ -55785,8 +55785,8 @@ func (c *mqlWindowsSpooler) GetHttpPrintingDisabled() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlWindowsSpooler) GetCopyFilesPolicy() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.CopyFilesPolicy, func() (int64, error) {
+func (c *mqlWindowsSpooler) GetCopyFilesPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CopyFilesPolicy, func() (bool, error) {
 		return c.copyFilesPolicy()
 	})
 }
@@ -55797,8 +55797,8 @@ func (c *mqlWindowsSpooler) GetRpcAuthnLevelPrivacyEnabled() *plugin.TValue[bool
 	})
 }
 
-func (c *mqlWindowsSpooler) GetAddPrinterDriversRestricted() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.AddPrinterDriversRestricted, func() (int64, error) {
+func (c *mqlWindowsSpooler) GetAddPrinterDriversRestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AddPrinterDriversRestricted, func() (bool, error) {
 		return c.addPrinterDriversRestricted()
 	})
 }
@@ -55851,8 +55851,8 @@ func (c *mqlWindowsSpooler) GetIpp() *plugin.TValue[*mqlWindowsSpoolerIpp] {
 	})
 }
 
-func (c *mqlWindowsSpooler) GetWindowsProtectedPrintGroupPolicyState() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.WindowsProtectedPrintGroupPolicyState, func() (int64, error) {
+func (c *mqlWindowsSpooler) GetWindowsProtectedPrintGroupPolicyState() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WindowsProtectedPrintGroupPolicyState, func() (bool, error) {
 		return c.windowsProtectedPrintGroupPolicyState()
 	})
 }
@@ -55863,7 +55863,7 @@ type mqlWindowsSpoolerPointAndPrint struct {
 	__id       string
 	// optional: if you define mqlWindowsSpoolerPointAndPrintInternal it will be used here
 	RestrictDriverInstallationToAdministrators plugin.TValue[bool]
-	NoWarningNoElevationOnInstall              plugin.TValue[int64]
+	NoWarningNoElevationOnInstall              plugin.TValue[bool]
 	UpdatePromptSettings                       plugin.TValue[int64]
 }
 
@@ -55908,7 +55908,7 @@ func (c *mqlWindowsSpoolerPointAndPrint) GetRestrictDriverInstallationToAdminist
 	return &c.RestrictDriverInstallationToAdministrators
 }
 
-func (c *mqlWindowsSpoolerPointAndPrint) GetNoWarningNoElevationOnInstall() *plugin.TValue[int64] {
+func (c *mqlWindowsSpoolerPointAndPrint) GetNoWarningNoElevationOnInstall() *plugin.TValue[bool] {
 	return &c.NoWarningNoElevationOnInstall
 }
 
@@ -55921,7 +55921,7 @@ type mqlWindowsSpoolerRpc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsSpoolerRpcInternal it will be used here
-	UseNamedPipeProtocol plugin.TValue[int64]
+	UseNamedPipeProtocol plugin.TValue[bool]
 	Authentication       plugin.TValue[int64]
 	Protocols            plugin.TValue[int64]
 	TcpPort              plugin.TValue[int64]
@@ -55965,7 +55965,7 @@ func (c *mqlWindowsSpoolerRpc) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsSpoolerRpc) GetUseNamedPipeProtocol() *plugin.TValue[int64] {
+func (c *mqlWindowsSpoolerRpc) GetUseNamedPipeProtocol() *plugin.TValue[bool] {
 	return &c.UseNamedPipeProtocol
 }
 
@@ -56060,15 +56060,15 @@ type mqlWindowsTelemetry struct {
 	__id       string
 	// optional: if you define mqlWindowsTelemetryInternal it will be used here
 	AllowTelemetry                     plugin.TValue[int64]
-	DisableEnterpriseAuthProxy         plugin.TValue[int64]
-	DisableOneSettingsDownloads        plugin.TValue[int64]
-	DoNotShowFeedbackNotifications     plugin.TValue[int64]
-	EnableOneSettingsAuditing          plugin.TValue[int64]
-	LimitDiagnosticLogCollection       plugin.TValue[int64]
-	LimitDumpCollection                plugin.TValue[int64]
-	DisableCloudOptimizedContent       plugin.TValue[int64]
-	DisableConsumerAccountStateContent plugin.TValue[int64]
-	DisableWindowsConsumerFeatures     plugin.TValue[int64]
+	DisableEnterpriseAuthProxy         plugin.TValue[bool]
+	DisableOneSettingsDownloads        plugin.TValue[bool]
+	DoNotShowFeedbackNotifications     plugin.TValue[bool]
+	EnableOneSettingsAuditing          plugin.TValue[bool]
+	LimitDiagnosticLogCollection       plugin.TValue[bool]
+	LimitDumpCollection                plugin.TValue[bool]
+	DisableCloudOptimizedContent       plugin.TValue[bool]
+	DisableConsumerAccountStateContent plugin.TValue[bool]
+	DisableWindowsConsumerFeatures     plugin.TValue[bool]
 }
 
 // createWindowsTelemetry creates a new instance of this resource
@@ -56114,56 +56114,56 @@ func (c *mqlWindowsTelemetry) GetAllowTelemetry() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDisableEnterpriseAuthProxy() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableEnterpriseAuthProxy, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDisableEnterpriseAuthProxy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableEnterpriseAuthProxy, func() (bool, error) {
 		return c.disableEnterpriseAuthProxy()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDisableOneSettingsDownloads() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableOneSettingsDownloads, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDisableOneSettingsDownloads() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableOneSettingsDownloads, func() (bool, error) {
 		return c.disableOneSettingsDownloads()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDoNotShowFeedbackNotifications() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DoNotShowFeedbackNotifications, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDoNotShowFeedbackNotifications() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DoNotShowFeedbackNotifications, func() (bool, error) {
 		return c.doNotShowFeedbackNotifications()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetEnableOneSettingsAuditing() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.EnableOneSettingsAuditing, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetEnableOneSettingsAuditing() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableOneSettingsAuditing, func() (bool, error) {
 		return c.enableOneSettingsAuditing()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetLimitDiagnosticLogCollection() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.LimitDiagnosticLogCollection, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetLimitDiagnosticLogCollection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitDiagnosticLogCollection, func() (bool, error) {
 		return c.limitDiagnosticLogCollection()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetLimitDumpCollection() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.LimitDumpCollection, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetLimitDumpCollection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LimitDumpCollection, func() (bool, error) {
 		return c.limitDumpCollection()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDisableCloudOptimizedContent() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableCloudOptimizedContent, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDisableCloudOptimizedContent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableCloudOptimizedContent, func() (bool, error) {
 		return c.disableCloudOptimizedContent()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDisableConsumerAccountStateContent() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableConsumerAccountStateContent, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDisableConsumerAccountStateContent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableConsumerAccountStateContent, func() (bool, error) {
 		return c.disableConsumerAccountStateContent()
 	})
 }
 
-func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.DisableWindowsConsumerFeatures, func() (int64, error) {
+func (c *mqlWindowsTelemetry) GetDisableWindowsConsumerFeatures() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableWindowsConsumerFeatures, func() (bool, error) {
 		return c.disableWindowsConsumerFeatures()
 	})
 }
@@ -57336,11 +57336,11 @@ type mqlWindowsBitlockerPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlWindowsBitlockerPolicyInternal
-	UseAdvancedStartup            plugin.TValue[int64]
-	UseEnhancedPin                plugin.TValue[int64]
-	EnableBdeWithNoTpm            plugin.TValue[int64]
-	DisableExternalDmaUnderLock   plugin.TValue[int64]
-	OsAllowSecureBootForIntegrity plugin.TValue[int64]
+	UseAdvancedStartup            plugin.TValue[bool]
+	UseEnhancedPin                plugin.TValue[bool]
+	EnableBdeWithNoTpm            plugin.TValue[bool]
+	DisableExternalDmaUnderLock   plugin.TValue[bool]
+	OsAllowSecureBootForIntegrity plugin.TValue[bool]
 	OperatingSystemDrives         plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
 	FixedDataDrives               plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
 	RemovableDataDrives           plugin.TValue[*mqlWindowsBitlockerPolicyDriveSettings]
@@ -57383,23 +57383,23 @@ func (c *mqlWindowsBitlockerPolicy) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlWindowsBitlockerPolicy) GetUseAdvancedStartup() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicy) GetUseAdvancedStartup() *plugin.TValue[bool] {
 	return &c.UseAdvancedStartup
 }
 
-func (c *mqlWindowsBitlockerPolicy) GetUseEnhancedPin() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicy) GetUseEnhancedPin() *plugin.TValue[bool] {
 	return &c.UseEnhancedPin
 }
 
-func (c *mqlWindowsBitlockerPolicy) GetEnableBdeWithNoTpm() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicy) GetEnableBdeWithNoTpm() *plugin.TValue[bool] {
 	return &c.EnableBdeWithNoTpm
 }
 
-func (c *mqlWindowsBitlockerPolicy) GetDisableExternalDmaUnderLock() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicy) GetDisableExternalDmaUnderLock() *plugin.TValue[bool] {
 	return &c.DisableExternalDmaUnderLock
 }
 
-func (c *mqlWindowsBitlockerPolicy) GetOsAllowSecureBootForIntegrity() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicy) GetOsAllowSecureBootForIntegrity() *plugin.TValue[bool] {
 	return &c.OsAllowSecureBootForIntegrity
 }
 
@@ -57458,20 +57458,20 @@ type mqlWindowsBitlockerPolicyDriveSettings struct {
 	// optional: if you define mqlWindowsBitlockerPolicyDriveSettingsInternal it will be used here
 	DriveType                    plugin.TValue[string]
 	Recovery                     plugin.TValue[int64]
-	ManageDRA                    plugin.TValue[int64]
+	ManageDRA                    plugin.TValue[bool]
 	RecoveryPassword             plugin.TValue[int64]
 	RecoveryKey                  plugin.TValue[int64]
-	HideRecoveryPage             plugin.TValue[int64]
-	ActiveDirectoryBackup        plugin.TValue[int64]
+	HideRecoveryPage             plugin.TValue[bool]
+	ActiveDirectoryBackup        plugin.TValue[bool]
 	ActiveDirectoryInfoToStore   plugin.TValue[int64]
-	RequireActiveDirectoryBackup plugin.TValue[int64]
+	RequireActiveDirectoryBackup plugin.TValue[bool]
 	HardwareEncryption           plugin.TValue[int64]
 	Passphrase                   plugin.TValue[int64]
-	AllowUserCert                plugin.TValue[int64]
-	EnforceUserCert              plugin.TValue[int64]
+	AllowUserCert                plugin.TValue[bool]
+	EnforceUserCert              plugin.TValue[bool]
 	DiscoveryVolumeType          plugin.TValue[string]
-	DenyWriteAccess              plugin.TValue[int64]
-	DenyCrossOrg                 plugin.TValue[int64]
+	DenyWriteAccess              plugin.TValue[bool]
+	DenyCrossOrg                 plugin.TValue[bool]
 }
 
 // createWindowsBitlockerPolicyDriveSettings creates a new instance of this resource
@@ -57519,7 +57519,7 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecovery() *plugin.TValue[in
 	return &c.Recovery
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetManageDRA() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetManageDRA() *plugin.TValue[bool] {
 	return &c.ManageDRA
 }
 
@@ -57531,11 +57531,11 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRecoveryKey() *plugin.TValue
 	return &c.RecoveryKey
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHideRecoveryPage() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetHideRecoveryPage() *plugin.TValue[bool] {
 	return &c.HideRecoveryPage
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryBackup() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryBackup() *plugin.TValue[bool] {
 	return &c.ActiveDirectoryBackup
 }
 
@@ -57543,7 +57543,7 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetActiveDirectoryInfoToStore()
 	return &c.ActiveDirectoryInfoToStore
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRequireActiveDirectoryBackup() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetRequireActiveDirectoryBackup() *plugin.TValue[bool] {
 	return &c.RequireActiveDirectoryBackup
 }
 
@@ -57555,11 +57555,11 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetPassphrase() *plugin.TValue[
 	return &c.Passphrase
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetAllowUserCert() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetAllowUserCert() *plugin.TValue[bool] {
 	return &c.AllowUserCert
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetEnforceUserCert() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetEnforceUserCert() *plugin.TValue[bool] {
 	return &c.EnforceUserCert
 }
 
@@ -57567,11 +57567,11 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDiscoveryVolumeType() *plugi
 	return &c.DiscoveryVolumeType
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyWriteAccess() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyWriteAccess() *plugin.TValue[bool] {
 	return &c.DenyWriteAccess
 }
 
-func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValue[int64] {
+func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValue[bool] {
 	return &c.DenyCrossOrg
 }
 

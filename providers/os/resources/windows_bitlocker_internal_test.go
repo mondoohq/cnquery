@@ -88,6 +88,20 @@ func rawIntPtr(t *testing.T, args map[string]*llx.RawData, key string) *int64 {
 	return &v
 }
 
+// rawBoolPtr extracts the *bool carried by an args value, or nil when the
+// RawData represents a null value.
+func rawBoolPtr(t *testing.T, args map[string]*llx.RawData, key string) *bool {
+	t.Helper()
+	rd, ok := args[key]
+	require.True(t, ok, "missing arg %q", key)
+	if rd.Value == nil {
+		return nil
+	}
+	v, ok := rd.Value.(bool)
+	require.True(t, ok, "arg %q is not a bool", key)
+	return &v
+}
+
 func rawString(t *testing.T, args map[string]*llx.RawData, key string) any {
 	t.Helper()
 	rd, ok := args[key]
@@ -107,21 +121,21 @@ func TestComputeBitlockerGlobal(t *testing.T) {
 		args := computeBitlockerGlobal(items)
 
 		assert.Equal(t, "windows.bitlocker.policy", args["__id"].Value)
-		require.NotNil(t, rawIntPtr(t, args, "useAdvancedStartup"))
-		assert.Equal(t, int64(1), *rawIntPtr(t, args, "useAdvancedStartup"))
+		require.NotNil(t, rawBoolPtr(t, args, "useAdvancedStartup"))
+		assert.Equal(t, true, *rawBoolPtr(t, args, "useAdvancedStartup"))
 		// explicit 0 stays non-null
-		require.NotNil(t, rawIntPtr(t, args, "enableBdeWithNoTpm"))
-		assert.Equal(t, int64(0), *rawIntPtr(t, args, "enableBdeWithNoTpm"))
-		assert.Equal(t, int64(1), *rawIntPtr(t, args, "osAllowSecureBootForIntegrity"))
+		require.NotNil(t, rawBoolPtr(t, args, "enableBdeWithNoTpm"))
+		assert.Equal(t, false, *rawBoolPtr(t, args, "enableBdeWithNoTpm"))
+		assert.Equal(t, true, *rawBoolPtr(t, args, "osAllowSecureBootForIntegrity"))
 	})
 
 	t.Run("absent values are null", func(t *testing.T) {
 		args := computeBitlockerGlobal(map[string]registry.RegistryKeyItem{})
-		assert.Nil(t, rawIntPtr(t, args, "useAdvancedStartup"))
-		assert.Nil(t, rawIntPtr(t, args, "useEnhancedPin"))
-		assert.Nil(t, rawIntPtr(t, args, "enableBdeWithNoTpm"))
-		assert.Nil(t, rawIntPtr(t, args, "disableExternalDmaUnderLock"))
-		assert.Nil(t, rawIntPtr(t, args, "osAllowSecureBootForIntegrity"))
+		assert.Nil(t, rawBoolPtr(t, args, "useAdvancedStartup"))
+		assert.Nil(t, rawBoolPtr(t, args, "useEnhancedPin"))
+		assert.Nil(t, rawBoolPtr(t, args, "enableBdeWithNoTpm"))
+		assert.Nil(t, rawBoolPtr(t, args, "disableExternalDmaUnderLock"))
+		assert.Nil(t, rawBoolPtr(t, args, "osAllowSecureBootForIntegrity"))
 	})
 }
 
@@ -171,23 +185,23 @@ func TestComputeBitlockerDrive_OSDrive(t *testing.T) {
 	// common values present (including explicit zeros)
 	require.NotNil(t, rawIntPtr(t, args, "recovery"))
 	assert.Equal(t, int64(1), *rawIntPtr(t, args, "recovery"))
-	require.NotNil(t, rawIntPtr(t, args, "manageDRA"))
-	assert.Equal(t, int64(0), *rawIntPtr(t, args, "manageDRA"))
+	require.NotNil(t, rawBoolPtr(t, args, "manageDRA"))
+	assert.Equal(t, false, *rawBoolPtr(t, args, "manageDRA"))
 	assert.Equal(t, int64(2), *rawIntPtr(t, args, "recoveryPassword"))
 	assert.Equal(t, int64(2), *rawIntPtr(t, args, "recoveryKey"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "hideRecoveryPage"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "activeDirectoryBackup"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "hideRecoveryPage"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "activeDirectoryBackup"))
 	assert.Equal(t, int64(1), *rawIntPtr(t, args, "activeDirectoryInfoToStore"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "requireActiveDirectoryBackup"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "requireActiveDirectoryBackup"))
 	assert.Equal(t, int64(0), *rawIntPtr(t, args, "hardwareEncryption"))
 	assert.Equal(t, int64(0), *rawIntPtr(t, args, "passphrase"))
 
 	// fields OS drives don't define are null
-	assert.Nil(t, rawIntPtr(t, args, "allowUserCert"))
-	assert.Nil(t, rawIntPtr(t, args, "enforceUserCert"))
+	assert.Nil(t, rawBoolPtr(t, args, "allowUserCert"))
+	assert.Nil(t, rawBoolPtr(t, args, "enforceUserCert"))
 	assert.Nil(t, rawString(t, args, "discoveryVolumeType"))
-	assert.Nil(t, rawIntPtr(t, args, "denyWriteAccess"))
-	assert.Nil(t, rawIntPtr(t, args, "denyCrossOrg"))
+	assert.Nil(t, rawBoolPtr(t, args, "denyWriteAccess"))
+	assert.Nil(t, rawBoolPtr(t, args, "denyCrossOrg"))
 }
 
 func TestComputeBitlockerDrive_FixedData(t *testing.T) {
@@ -202,16 +216,16 @@ func TestComputeBitlockerDrive_FixedData(t *testing.T) {
 	args := computeBitlockerDrive(items, fveFDVPrefix)
 
 	assert.Equal(t, int64(1), *rawIntPtr(t, args, "recovery"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "allowUserCert"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "enforceUserCert"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "allowUserCert"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "enforceUserCert"))
 	assert.Equal(t, "FAT32", rawString(t, args, "discoveryVolumeType"))
 
 	// removable-only fields are null
-	assert.Nil(t, rawIntPtr(t, args, "denyWriteAccess"))
-	assert.Nil(t, rawIntPtr(t, args, "denyCrossOrg"))
+	assert.Nil(t, rawBoolPtr(t, args, "denyWriteAccess"))
+	assert.Nil(t, rawBoolPtr(t, args, "denyCrossOrg"))
 
 	// unset common field is null
-	assert.Nil(t, rawIntPtr(t, args, "manageDRA"))
+	assert.Nil(t, rawBoolPtr(t, args, "manageDRA"))
 }
 
 func TestComputeBitlockerDrive_RemovableData(t *testing.T) {
@@ -228,23 +242,28 @@ func TestComputeBitlockerDrive_RemovableData(t *testing.T) {
 	args := computeBitlockerDrive(items, fveRDVPrefix)
 
 	assert.Equal(t, int64(1), *rawIntPtr(t, args, "recovery"))
-	require.NotNil(t, rawIntPtr(t, args, "allowUserCert"))
-	assert.Equal(t, int64(0), *rawIntPtr(t, args, "allowUserCert"))
-	assert.Equal(t, int64(1), *rawIntPtr(t, args, "denyWriteAccess"))
-	require.NotNil(t, rawIntPtr(t, args, "denyCrossOrg"))
-	assert.Equal(t, int64(0), *rawIntPtr(t, args, "denyCrossOrg"))
+	require.NotNil(t, rawBoolPtr(t, args, "allowUserCert"))
+	assert.Equal(t, false, *rawBoolPtr(t, args, "allowUserCert"))
+	assert.Equal(t, true, *rawBoolPtr(t, args, "denyWriteAccess"))
+	require.NotNil(t, rawBoolPtr(t, args, "denyCrossOrg"))
+	assert.Equal(t, false, *rawBoolPtr(t, args, "denyCrossOrg"))
 	assert.Equal(t, "Default", rawString(t, args, "discoveryVolumeType"))
 }
 
 func TestComputeBitlockerDrive_AllAbsentAreNull(t *testing.T) {
 	args := computeBitlockerDrive(map[string]registry.RegistryKeyItem{}, fveRDVPrefix)
 	for _, k := range []string{
-		"recovery", "manageDRA", "recoveryPassword", "recoveryKey", "hideRecoveryPage",
-		"activeDirectoryBackup", "activeDirectoryInfoToStore", "requireActiveDirectoryBackup",
-		"hardwareEncryption", "passphrase", "allowUserCert", "enforceUserCert",
-		"denyWriteAccess", "denyCrossOrg",
+		"recovery", "recoveryPassword", "recoveryKey",
+		"activeDirectoryInfoToStore", "hardwareEncryption", "passphrase",
 	} {
 		assert.Nil(t, rawIntPtr(t, args, k), "expected %q to be null", k)
+	}
+	for _, k := range []string{
+		"manageDRA", "hideRecoveryPage", "activeDirectoryBackup",
+		"requireActiveDirectoryBackup", "allowUserCert", "enforceUserCert",
+		"denyWriteAccess", "denyCrossOrg",
+	} {
+		assert.Nil(t, rawBoolPtr(t, args, k), "expected %q to be null", k)
 	}
 	assert.Nil(t, rawString(t, args, "discoveryVolumeType"))
 	// driveType is always set even with no values

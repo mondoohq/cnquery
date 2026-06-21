@@ -6945,34 +6945,32 @@ private windows.update.config @defaults("catalogSource rebootPending") {
 private windows.update.policy @defaults("automaticUpdatesEnabled noAutoUpdate scheduledInstallDay") {
   // Whether automatic updates are configured and enabled (AU\NoAutoUpdate is present and 0)
   automaticUpdatesEnabled bool
-  // Configure Automatic Updates state (AU\NoAutoUpdate): 0 = automatic updates enabled, 1 = disabled; null when not configured
-  noAutoUpdate int
+  // Whether automatic updates are turned off (AU\NoAutoUpdate); null when not configured
+  noAutoUpdate bool
   // Scheduled install day (AU\ScheduledInstallDay): 0 = every day, 1-7 = Sunday-Saturday; null when not configured
   scheduledInstallDay int
   // Scheduled install time as the hour of day (AU\ScheduledInstallTime), 0-23; null when not configured
   scheduledInstallTime int
-  // No auto-restart with logged on users for scheduled installations (AU\NoAutoRebootWithLoggedOnUsers)
-  //
-  // 1 = do not auto-restart while users are logged on, 0 = allow auto-restart; null when not configured.
-  noAutoRebootWithLoggedOnUsers int
+  // Whether scheduled installations do not auto-restart while users are logged on (AU\NoAutoRebootWithLoggedOnUsers); null when not configured
+  noAutoRebootWithLoggedOnUsers bool
   // Manage preview builds (WindowsUpdate\ManagePreviewBuildsPolicyValue)
   //
   // 0 = disable preview builds, 1 = enable, 2 = enable for next release; null when not configured.
   managePreviewBuilds int
-  // Whether feature update deferral is enabled (WindowsUpdate\DeferFeatureUpdates): 1 = enabled, 0 = disabled; null when not configured
-  deferFeatureUpdates int
+  // Whether feature update deferral is enabled (WindowsUpdate\DeferFeatureUpdates); null when not configured
+  deferFeatureUpdates bool
   // Number of days feature updates are deferred (WindowsUpdate\DeferFeatureUpdatesPeriodInDays); null when not configured
   deferFeatureUpdatesPeriodInDays int
-  // Whether quality update deferral is enabled (WindowsUpdate\DeferQualityUpdates): 1 = enabled, 0 = disabled; null when not configured
-  deferQualityUpdates int
+  // Whether quality update deferral is enabled (WindowsUpdate\DeferQualityUpdates); null when not configured
+  deferQualityUpdates bool
   // Number of days quality updates are deferred (WindowsUpdate\DeferQualityUpdatesPeriodInDays); null when not configured
   deferQualityUpdatesPeriodInDays int
-  // Allow temporary enterprise feature control (WindowsUpdate\AllowTemporaryEnterpriseFeatureControl): 0 = disabled, 1 = enabled; null when not configured
-  allowTemporaryEnterpriseFeatureControl int
+  // Whether temporary enterprise feature control is allowed (WindowsUpdate\AllowTemporaryEnterpriseFeatureControl); null when not configured
+  allowTemporaryEnterpriseFeatureControl bool
   // Enable optional updates / optional content (WindowsUpdate\SetAllowOptionalContent); null when not configured
   allowOptionalContent int
-  // Remove access to pause updates (WindowsUpdate\SetDisablePauseUXAccess): 1 = remove the pause option, 0 = keep it; null when not configured
-  disablePauseUXAccess int
+  // Whether access to pause updates is removed (WindowsUpdate\SetDisablePauseUXAccess); null when not configured
+  disablePauseUXAccess bool
 }
 
 // Windows Server feature resource
@@ -7187,15 +7185,15 @@ private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
 // \Microsoft\Windows\DeviceGuard. These configure Virtualization-Based
 // Security (VBS), Hypervisor-Enforced Code Integrity (HVCI / Memory
 // Integrity), Credential Guard, System Guard Secure Launch, and kernel-mode
-// hardware-enforced stack protection. Every field is an int that reads null
-// when the underlying value is absent, so "not configured" is distinguishable
-// from an explicit 0. Read from the Windows registry, so it is available even
-// on connections that cannot run commands.
+// hardware-enforced stack protection. On/off settings are exposed as booleans
+// and graded settings (such as the HVCI and Credential Guard lock modes) as
+// integers. Every field reads null when the underlying value is absent, so "not
+// configured" is distinguishable from an explicit false or 0. Read from the
+// Windows registry, so it is available even on connections that cannot run
+// commands.
 private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hypervisorEnforcedCodeIntegrity credentialGuardConfig") {
   // Whether Virtualization-Based Security is enabled (EnableVirtualizationBasedSecurity)
-  //
-  // 1=enabled, 0=disabled. Null when the value is not configured.
-  virtualizationBasedSecurityEnabled int
+  virtualizationBasedSecurityEnabled bool
   // Required platform security features for VBS (RequirePlatformSecurityFeatures)
   //
   // 1=Secure Boot, 3=Secure Boot and DMA Protection. Null when not configured.
@@ -7206,18 +7204,14 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
   // not configured.
   hypervisorEnforcedCodeIntegrity int
   // Whether HVCI requires a Memory Access Table (HVCIMATRequired)
-  //
-  // 1=require MAT, 0=do not require. Null when not configured.
-  hvciMatRequired int
+  hvciMatRequired bool
   // Credential Guard configuration (LsaCfgFlags)
   //
   // 0=off, 1=enabled with UEFI lock, 2=enabled without lock. Null when not
   // configured.
   credentialGuardConfig int
-  // System Guard Secure Launch configuration (ConfigureSystemGuardLaunch)
-  //
-  // 1=enabled, 0=disabled. Null when not configured.
-  systemGuardLaunch int
+  // Whether System Guard Secure Launch is enabled (ConfigureSystemGuardLaunch)
+  systemGuardLaunch bool
   // Kernel-mode hardware-enforced stack protection (ConfigureKernelShadowStacksLaunch)
   //
   // 1=enabled in enforcement mode, 2=enabled in audit mode, 0=disabled. Null
@@ -7229,43 +7223,45 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
 //
 // Examine the Local Security Authority configuration that backs the
 // "Network access", "Network security", and related security options under
-// HKLM\SYSTEM\CurrentControlSet\Control\Lsa. These DWORD and SDDL values
-// control anonymous access restrictions, blank-password use, LAN Manager
-// authentication level, NTLM hashing, LSA protection (RunAsPPL), and audit
-// behaviour. NTLM (MSV1_0 and WDigest) settings are grouped under `ntlm` and
-// the Netlogon secure-channel settings under `secureChannel`. Values are
-// nullable: an absent value resolves to null so it is distinguishable from an
-// explicit 0, letting checks assert on configured-vs-default precisely.
+// HKLM\SYSTEM\CurrentControlSet\Control\Lsa. These values control anonymous
+// access restrictions, blank-password use, LAN Manager authentication level,
+// NTLM hashing, LSA protection (RunAsPPL), and audit behaviour. On/off settings
+// are exposed as booleans and graded settings (such as the LAN Manager
+// authentication level) as integers. NTLM (MSV1_0 and WDigest) settings are
+// grouped under `ntlm` and the Netlogon secure-channel settings under
+// `secureChannel`. Values are nullable: an absent value resolves to null so it
+// is distinguishable from an explicit false or 0, letting checks assert on
+// configured-vs-default precisely.
 windows.lsa {
-  // Whether storing network authentication credentials is disabled (Lsa\DisableDomainCreds; 1 disables)
-  disableDomainCreds() int
-  // Whether the Everyone permissions apply to anonymous users (Lsa\EveryoneIncludesAnonymous; 0 excludes anonymous)
-  everyoneIncludesAnonymous() int
-  // Sharing and security model for local accounts (Lsa\ForceGuest; 0 classic, 1 guest only)
-  forceGuest() int
-  // Whether local accounts with blank passwords are limited to console logon (Lsa\LimitBlankPasswordUse; 1 limits)
-  limitBlankPasswordUse() int
+  // Whether storing network authentication credentials is disabled (Lsa\DisableDomainCreds)
+  disableDomainCreds() bool
+  // Whether the Everyone permissions apply to anonymous users (Lsa\EveryoneIncludesAnonymous)
+  everyoneIncludesAnonymous() bool
+  // Whether the guest-only sharing and security model is used for local accounts (Lsa\ForceGuest)
+  forceGuest() bool
+  // Whether local accounts with blank passwords are limited to console logon (Lsa\LimitBlankPasswordUse)
+  limitBlankPasswordUse() bool
   // LAN Manager authentication level (Lsa\LmCompatibilityLevel; 0-5, higher is stronger)
   lmCompatibilityLevel() int
-  // Whether the LAN Manager (LM) hash of new passwords is not stored (Lsa\NoLMHash; 1 disables LM hash storage)
-  noLmHash() int
+  // Whether the LAN Manager (LM) hash of new passwords is not stored (Lsa\NoLMHash)
+  noLmHash() bool
   // Restrictions on anonymous (null session) connections (Lsa\RestrictAnonymous; higher is more restrictive)
   restrictAnonymous() int
-  // Whether anonymous enumeration of SAM accounts is disallowed (Lsa\RestrictAnonymousSAM; 1 disallows)
-  restrictAnonymousSam() int
+  // Whether anonymous enumeration of SAM accounts is disallowed (Lsa\RestrictAnonymousSAM)
+  restrictAnonymousSam() bool
   // SDDL string controlling which clients may make remote SAM calls (Lsa\restrictremotesam, REG_SZ)
   restrictRemoteSam() string
   // LSA protection / Run as Protected Process Light level (Lsa\RunAsPPL; 1 or 2 enables LSA protection)
   runAsPpl() int
   // Whether advanced audit policy is forced over legacy audit categories (Lsa\SCENoApplyLegacyAuditPolicy)
   //
-  // 1 forces the advanced audit policy subcategories and ignores the legacy
-  // audit categories.
-  sceNoApplyLegacyAuditPolicy() int
-  // Recovery console / authority delegation submit-control flag (Lsa\SubmitControl; 1 allows)
-  submitControl() int
-  // Whether the computer account identity is used for outbound authentication (Lsa\UseMachineId; 1 uses machine identity)
-  useMachineId() int
+  // When set, the advanced audit policy subcategories are forced and the
+  // legacy audit categories are ignored.
+  sceNoApplyLegacyAuditPolicy() bool
+  // Whether recovery console authority delegation submit-control is allowed (Lsa\SubmitControl)
+  submitControl() bool
+  // Whether the computer account identity is used for outbound authentication (Lsa\UseMachineId)
+  useMachineId() bool
   // NTLM authentication settings (Lsa\MSV1_0 and the WDigest provider)
   ntlm() windows.lsa.ntlm
   // Netlogon secure-channel settings (Services\Netlogon\Parameters)
@@ -7280,11 +7276,13 @@ windows.lsa {
 // HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest. These
 // control NULL session fallback, inbound/outbound NTLM auditing and
 // restriction, the minimum negotiated NTLM session security for clients and
-// servers, and whether WDigest caches plaintext credentials in memory. Values
-// are nullable so an absent value is distinguishable from an explicit 0.
+// servers, and whether WDigest caches plaintext credentials in memory. On/off
+// settings are exposed as booleans and graded settings (audit and restriction
+// levels, the minimum-session-security bitmasks) as integers. Values are
+// nullable so an absent value is distinguishable from an explicit false or 0.
 private windows.lsa.ntlm {
-  // Whether NTLM NULL session fallback is allowed (MSV1_0\AllowNullSessionFallback; 0 disallows)
-  allowNullSessionFallback int
+  // Whether NTLM NULL session fallback is allowed (MSV1_0\AllowNullSessionFallback)
+  allowNullSessionFallback bool
   // Audit level for incoming NTLM traffic (MSV1_0\AuditReceivingNTLMTraffic; 0 off, 1 allow, 2 deny-all)
   auditReceivingNtlmTraffic int
   // Minimum session security negotiated for NTLM SSP clients (MSV1_0\NTLMMinClientSec, bitmask)
@@ -7293,10 +7291,10 @@ private windows.lsa.ntlm {
   ntlmMinServerSec int
   // Restriction level for outgoing NTLM traffic to remote servers (MSV1_0\RestrictSendingNTLMTraffic; 0 allow, 1 audit, 2 deny-all)
   restrictSendingNtlmTraffic int
-  // Whether WDigest caches plaintext credentials in memory (WDigest\UseLogonCredential; 0 disables plaintext caching)
-  useLogonCredential int
-  // Whether online identities (PKU2U) may authenticate to this computer (Lsa\pku2u\AllowOnlineID; 0 disallows)
-  allowOnlineId int
+  // Whether WDigest caches plaintext credentials in memory (WDigest\UseLogonCredential)
+  useLogonCredential bool
+  // Whether online identities (PKU2U) may authenticate to this computer (Lsa\pku2u\AllowOnlineID)
+  allowOnlineId bool
 }
 
 // Windows LSA Netlogon secure-channel settings
@@ -7307,27 +7305,29 @@ private windows.lsa.ntlm {
 // password change behaviour and maximum age, strong session keys, NETBIOS
 // discovery, the vulnerable-channel allow list, and inbound NTLM auditing in
 // the domain. BlockNetbiosDiscovery is read from the GPO location
-// HKLM\SOFTWARE\Policies\Microsoft\Netlogon\Parameters. Values are nullable so
-// an absent value is distinguishable from an explicit 0.
+// HKLM\SOFTWARE\Policies\Microsoft\Netlogon\Parameters. On/off settings are
+// exposed as booleans and graded settings (the inbound NTLM audit bitmask and
+// the maximum password age) as integers. Values are nullable so an absent value
+// is distinguishable from an explicit false or 0.
 private windows.lsa.secureChannel {
   // Audit level for inbound NTLM traffic on domain controllers (Netlogon\Parameters\AuditNTLMInDomain, bitmask)
   auditNtlmInDomain int
-  // Whether NetBIOS-based domain controller discovery is blocked (Policies\Microsoft\Netlogon\Parameters\BlockNetbiosDiscovery; 1 blocks)
-  blockNetbiosDiscovery int
-  // Whether automatic machine account password changes are disabled (Netlogon\Parameters\DisablePasswordChange; 1 disables)
-  disablePasswordChange int
+  // Whether NetBIOS-based domain controller discovery is blocked (Policies\Microsoft\Netlogon\Parameters\BlockNetbiosDiscovery)
+  blockNetbiosDiscovery bool
+  // Whether automatic machine account password changes are disabled (Netlogon\Parameters\DisablePasswordChange)
+  disablePasswordChange bool
   // Maximum machine account password age in days (Netlogon\Parameters\MaximumPasswordAge)
   maximumPasswordAge int
-  // Whether the domain controller refuses machine account password changes (Netlogon\Parameters\RefusePasswordChange; 1 refuses)
-  refusePasswordChange int
-  // Whether secure-channel data is digitally signed or sealed when possible (Netlogon\Parameters\RequireSignOrSeal; 1 requires)
-  requireSignOrSeal int
-  // Whether a strong (128-bit) secure-channel session key is required (Netlogon\Parameters\RequireStrongKey; 1 requires)
-  requireStrongKey int
-  // Whether secure-channel data is digitally encrypted when possible (Netlogon\Parameters\SealSecureChannel; 1 seals)
-  sealSecureChannel int
-  // Whether secure-channel data is digitally signed when possible (Netlogon\Parameters\SignSecureChannel; 1 signs)
-  signSecureChannel int
+  // Whether the domain controller refuses machine account password changes (Netlogon\Parameters\RefusePasswordChange)
+  refusePasswordChange bool
+  // Whether secure-channel data is digitally signed or sealed when possible (Netlogon\Parameters\RequireSignOrSeal)
+  requireSignOrSeal bool
+  // Whether a strong (128-bit) secure-channel session key is required (Netlogon\Parameters\RequireStrongKey)
+  requireStrongKey bool
+  // Whether secure-channel data is digitally encrypted when possible (Netlogon\Parameters\SealSecureChannel)
+  sealSecureChannel bool
+  // Whether secure-channel data is digitally signed when possible (Netlogon\Parameters\SignSecureChannel)
+  signSecureChannel bool
   // Allow list of vulnerable Netlogon secure channels (Netlogon\Parameters\vulnerablechannelallowlist, REG_SZ)
   vulnerableChannelAllowList string
 }
@@ -7357,13 +7357,11 @@ windows.spooler {
   disabled() bool
   // Whether incoming remote RPC connections to the spooler are allowed (Printers\RegisterSpoolerRemoteRpcEndPoint)
   //
-  // 0 disables the remote RPC endpoint (the hardened state), 1 enables it.
-  // Null when not configured.
-  registerRemoteRpcEndpoint() int
-  // Redirection Guard policy state (Printers\RedirectionguardPolicy)
-  //
-  // 1 enables Redirection Guard. Null when not configured.
-  redirectionGuardPolicy() int
+  // The hardened state is false (the remote RPC endpoint is disabled). Null
+  // when not configured.
+  registerRemoteRpcEndpoint() bool
+  // Whether Redirection Guard is enabled (Printers\RedirectionguardPolicy). Null when not configured
+  redirectionGuardPolicy() bool
   // Whether downloading of print drivers over HTTP / Web Point-and-Print is disabled (Printers\DisableWebPnPDownload)
   //
   // Defaults to false (downloads allowed) when not configured.
@@ -7372,46 +7370,45 @@ windows.spooler {
   //
   // Defaults to false (HTTP printing allowed) when not configured.
   httpPrintingDisabled() bool
-  // Copy Files policy controlling which color profile / helper files the spooler may copy (Printers\CopyFilesPolicy)
-  //
-  // 1 restricts copied files to the Windows color system. Null when not configured.
-  copyFilesPolicy() int
+  // Whether the spooler restricts copied files to the Windows color system (Printers\CopyFilesPolicy). Null when not configured
+  copyFilesPolicy() bool
   // Whether incoming RPC connections to the spooler require packet privacy (Control\Print\RpcAuthnLevelPrivacyEnabled)
   //
   // Defaults to true (packet privacy enabled), the modern Windows default,
   // when not configured.
   rpcAuthnLevelPrivacyEnabled() bool
-  // Who may add printer drivers via the LanMan print provider (Control\Print\Providers\LanMan Print Services\Servers\AddPrinterDrivers)
+  // Whether adding printer drivers is restricted to administrators
   //
-  // 1 restricts adding printer drivers to administrators. Null when not configured.
-  addPrinterDriversRestricted() int
+  // Maps the LanMan print provider AddPrinterDrivers value
+  // (Control\Print\Providers\LanMan Print Services\Servers\AddPrinterDrivers).
+  // Null when not configured.
+  addPrinterDriversRestricted() bool
   // Point and Print restriction settings (Printers\PointAndPrint)
   pointAndPrint() windows.spooler.pointAndPrint
   // Spooler RPC settings (Printers\RPC)
   rpc() windows.spooler.rpc
   // Internet Printing Protocol (IPP) certificate validation settings (Printers\IPP)
   ipp() windows.spooler.ipp
-  // Windows Protected Print mode policy state (Printers\WPP\WindowsProtectedPrintGroupPolicyState)
-  //
-  // 1 enables Windows Protected Print. Null when not configured.
-  windowsProtectedPrintGroupPolicyState() int
+  // Whether Windows Protected Print mode is enabled (Printers\WPP\WindowsProtectedPrintGroupPolicyState). Null when not configured
+  windowsProtectedPrintGroupPolicyState() bool
 }
 
 // Windows Print Spooler Point and Print restrictions
 //
 // Settings under HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint
 // that govern how non-administrators may install printer drivers from a print
-// server. Integer values are null when not configured.
+// server. Values are null when not configured.
 private windows.spooler.pointAndPrint @defaults("restrictDriverInstallationToAdministrators") {
   // Whether printer driver installation is restricted to administrators (RestrictDriverInstallationToAdministrators)
   //
   // Defaults to true (the hardened Windows default introduced by the
   // PrintNightmare mitigations) when not configured.
   restrictDriverInstallationToAdministrators bool
-  // Whether to suppress elevation/warning prompts when installing a Point-and-Print driver (NoWarningNoElevationOnInstall)
+  // Whether elevation/warning prompts are suppressed when installing a Point-and-Print driver (NoWarningNoElevationOnInstall)
   //
-  // 0 keeps the warning/elevation prompt (the hardened state). Null when not configured.
-  noWarningNoElevationOnInstall int
+  // The hardened state is false (the warning/elevation prompt is kept). Null
+  // when not configured.
+  noWarningNoElevationOnInstall bool
   // Whether to suppress elevation/warning prompts when updating a Point-and-Print driver (UpdatePromptSettings)
   //
   // 0 keeps the warning/elevation prompt (the hardened state). Null when not configured.
@@ -7424,11 +7421,10 @@ private windows.spooler.pointAndPrint @defaults("restrictDriverInstallationToAdm
 // that control the transport and authentication used for spooler RPC.
 // Integer values are null when not configured.
 private windows.spooler.rpc @defaults("authentication protocols") {
-  // RPC over named pipes selection (RpcUseNamedPipeProtocol)
+  // Whether the spooler allows RPC over named pipes in addition to TCP (RpcUseNamedPipeProtocol)
   //
-  // 0 uses RPC over TCP only (the hardened state), 1 also allows named pipes.
-  // Null when not configured.
-  useNamedPipeProtocol int
+  // The hardened state is false (RPC over TCP only). Null when not configured.
+  useNamedPipeProtocol bool
   // RPC authentication requirement for incoming connections (RpcAuthentication)
   //
   // 1 = default, 2 = negotiate, 3 = none. Null when not configured.
@@ -7473,9 +7469,11 @@ private windows.spooler.ipp @defaults("requireIpps") {
 // Examine the effective Windows privacy and telemetry posture read from the
 // Group Policy keys HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection and
 // HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent. These are GPO-only
-// DWORD values; every field is nullable so that an absent value (the policy is
-// not configured) is distinguishable from an explicit 0. Read from the
-// registry, so it is available even on connections that cannot run commands.
+// DWORD values. The diagnostic data level is a graded integer; the remaining
+// settings are on/off booleans. Every field is nullable so that an absent value
+// (the policy is not configured) is distinguishable from an explicit false or
+// 0. Read from the registry, so it is available even on connections that cannot
+// run commands.
 windows.telemetry {
   // Diagnostic data level (DataCollection\AllowTelemetry): 0=Security, 1=Basic/Required, 2=Enhanced, 3=Full. Null when not configured.
   allowTelemetry() int
@@ -7483,32 +7481,32 @@ windows.telemetry {
   //
   // Applies to the Connected User Experiences and Telemetry service. Null when
   // the policy is not configured.
-  disableEnterpriseAuthProxy() int
+  disableEnterpriseAuthProxy() bool
   // Whether downloading configuration from the OneSettings service is disabled (DataCollection\DisableOneSettingsDownloads). Null when not configured.
-  disableOneSettingsDownloads() int
+  disableOneSettingsDownloads() bool
   // Whether feedback notifications are suppressed (DataCollection\DoNotShowFeedbackNotifications)
   //
   // When set, the user does not receive telemetry feedback notifications. Null
   // when the policy is not configured.
-  doNotShowFeedbackNotifications() int
+  doNotShowFeedbackNotifications() bool
   // Whether auditing of OneSettings usage is enabled (DataCollection\EnableOneSettingsAuditing). Null when not configured.
-  enableOneSettingsAuditing() int
+  enableOneSettingsAuditing() bool
   // Whether collection of diagnostic logs is limited (DataCollection\LimitDiagnosticLogCollection). Null when not configured.
-  limitDiagnosticLogCollection() int
+  limitDiagnosticLogCollection() bool
   // Whether collection of crash dumps is limited (DataCollection\LimitDumpCollection). Null when not configured.
-  limitDumpCollection() int
+  limitDumpCollection() bool
   // Whether cloud-optimized content is disabled (CloudContent\DisableCloudOptimizedContent)
   //
   // Cloud-optimized content tailors suggestions using cloud data. Null when the
   // policy is not configured.
-  disableCloudOptimizedContent() int
+  disableCloudOptimizedContent() bool
   // Whether consumer account state content is disabled (CloudContent\DisableConsumerAccountStateContent). Null when not configured.
-  disableConsumerAccountStateContent() int
+  disableConsumerAccountStateContent() bool
   // Whether Windows consumer features are disabled (CloudContent\DisableWindowsConsumerFeatures)
   //
   // Consumer features include app suggestions and consumer experiences. Null
   // when the policy is not configured.
-  disableWindowsConsumerFeatures() int
+  disableWindowsConsumerFeatures() bool
 }
 
 // Windows Trusted Platform Module (TPM)
@@ -7909,16 +7907,16 @@ windows.bitlocker {
 // `fixedDataDrives`, and `removableDataDrives`. A field is null when the
 // corresponding policy value is not configured.
 windows.bitlocker.policy {
-  // Require additional authentication at startup (UseAdvancedStartup)
-  useAdvancedStartup int
-  // Allow enhanced PINs for startup (UseEnhancedPin)
-  useEnhancedPin int
-  // Allow BitLocker without a compatible TPM (EnableBDEWithNoTPM)
-  enableBdeWithNoTpm int
-  // Disable new DMA devices when this computer is locked (DisableExternalDMAUnderLock)
-  disableExternalDmaUnderLock int
-  // Allow Secure Boot for integrity validation on operating system drives (OSAllowSecureBootForIntegrity)
-  osAllowSecureBootForIntegrity int
+  // Whether additional authentication is required at startup (UseAdvancedStartup)
+  useAdvancedStartup bool
+  // Whether enhanced PINs for startup are allowed (UseEnhancedPin)
+  useEnhancedPin bool
+  // Whether BitLocker is allowed without a compatible TPM (EnableBDEWithNoTPM)
+  enableBdeWithNoTpm bool
+  // Whether new DMA devices are disabled when this computer is locked (DisableExternalDMAUnderLock)
+  disableExternalDmaUnderLock bool
+  // Whether Secure Boot is allowed for integrity validation on operating system drives (OSAllowSecureBootForIntegrity)
+  osAllowSecureBootForIntegrity bool
   // BitLocker policy settings for operating system drives (OS* values)
   operatingSystemDrives() windows.bitlocker.policy.driveSettings
   // BitLocker policy settings for fixed data drives (FDV* values)
@@ -7939,34 +7937,41 @@ private windows.bitlocker.policy.driveSettings {
   driveType string
   // Choose how BitLocker-protected drives can be recovered (*Recovery)
   recovery int
-  // Allow data recovery agent (*ManageDRA)
-  manageDRA int
+  // Whether a data recovery agent is allowed (*ManageDRA)
+  manageDRA bool
   // Allow 48-digit recovery password (*RecoveryPassword)
+  //
+  // 0 = disallow, 1 = require, 2 = allow. Null when not configured.
   recoveryPassword int
   // Allow 256-bit recovery key (*RecoveryKey)
+  //
+  // 0 = disallow, 1 = require, 2 = allow. Null when not configured.
   recoveryKey int
-  // Omit recovery options from the BitLocker setup wizard (*HideRecoveryPage)
-  hideRecoveryPage int
-  // Save BitLocker recovery information to Active Directory Domain Services (*ActiveDirectoryBackup)
-  activeDirectoryBackup int
+  // Whether recovery options are omitted from the BitLocker setup wizard (*HideRecoveryPage)
+  hideRecoveryPage bool
+  // Whether BitLocker recovery information is saved to Active Directory Domain Services (*ActiveDirectoryBackup)
+  activeDirectoryBackup bool
   // Configure what BitLocker recovery information is stored in AD DS (*ActiveDirectoryInfoToStore)
+  //
+  // 1 = store recovery passwords and key packages, 2 = store recovery passwords
+  // only. Null when not configured.
   activeDirectoryInfoToStore int
-  // Do not enable BitLocker until recovery information is stored in AD DS (*RequireActiveDirectoryBackup)
-  requireActiveDirectoryBackup int
+  // Whether BitLocker is blocked until recovery information is stored in AD DS (*RequireActiveDirectoryBackup)
+  requireActiveDirectoryBackup bool
   // Configure use of hardware-based encryption (*HardwareEncryption)
   hardwareEncryption int
   // Configure use of passwords (*Passphrase)
   passphrase int
-  // Allow certificate-based data recovery agent / smart card (*AllowUserCert)
-  allowUserCert int
-  // Enforce certificate-based data recovery agent / smart card (*EnforceUserCert)
-  enforceUserCert int
+  // Whether a certificate-based data recovery agent / smart card is allowed (*AllowUserCert)
+  allowUserCert bool
+  // Whether a certificate-based data recovery agent / smart card is enforced (*EnforceUserCert)
+  enforceUserCert bool
   // Configure the format used when a drive is auto-unlocked / discovery volume type (*DiscoveryVolumeType)
   discoveryVolumeType string
-  // Deny write access to removable drives not protected by BitLocker (RDVDenyWriteAccess)
-  denyWriteAccess int
-  // Deny write access to devices configured in another organization (RDVDenyCrossOrg)
-  denyCrossOrg int
+  // Whether write access is denied to removable drives not protected by BitLocker (RDVDenyWriteAccess)
+  denyWriteAccess bool
+  // Whether write access is denied to devices configured in another organization (RDVDenyCrossOrg)
+  denyCrossOrg bool
 }
 
 // Windows BitLocker volume

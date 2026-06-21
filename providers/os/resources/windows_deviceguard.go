@@ -60,16 +60,17 @@ func regIntPtr(items map[string]registry.RegistryKeyItem, name string) *int64 {
 	return nil
 }
 
-// deviceGuardValues holds the extracted Device Guard DWORDs as nullable ints.
-// A nil pointer means the value name was absent from the registry ("not
-// configured"), which the resource surfaces as a null field rather than 0.
+// deviceGuardValues holds the extracted Device Guard DWORDs as nullable
+// pointers. A nil pointer means the value name was absent from the registry
+// ("not configured"), which the resource surfaces as a null field rather than
+// 0. On/off settings are bools; graded settings are int64s.
 type deviceGuardValues struct {
-	virtualizationBasedSecurityEnabled *int64
+	virtualizationBasedSecurityEnabled *bool
 	requirePlatformSecurityFeatures    *int64
 	hypervisorEnforcedCodeIntegrity    *int64
-	hvciMatRequired                    *int64
+	hvciMatRequired                    *bool
 	credentialGuardConfig              *int64
-	systemGuardLaunch                  *int64
+	systemGuardLaunch                  *bool
 	kernelShadowStacksLaunch           *int64
 }
 
@@ -78,12 +79,12 @@ type deviceGuardValues struct {
 // can tell "not configured" from an explicit 0. Pure function for unit testing.
 func computeDeviceGuard(items map[string]registry.RegistryKeyItem) deviceGuardValues {
 	return deviceGuardValues{
-		virtualizationBasedSecurityEnabled: regIntPtr(items, "EnableVirtualizationBasedSecurity"),
+		virtualizationBasedSecurityEnabled: regBoolPtr(items, "EnableVirtualizationBasedSecurity"),
 		requirePlatformSecurityFeatures:    regIntPtr(items, "RequirePlatformSecurityFeatures"),
 		hypervisorEnforcedCodeIntegrity:    regIntPtr(items, "HypervisorEnforcedCodeIntegrity"),
-		hvciMatRequired:                    regIntPtr(items, "HVCIMATRequired"),
+		hvciMatRequired:                    regBoolPtr(items, "HVCIMATRequired"),
 		credentialGuardConfig:              regIntPtr(items, "LsaCfgFlags"),
-		systemGuardLaunch:                  regIntPtr(items, "ConfigureSystemGuardLaunch"),
+		systemGuardLaunch:                  regBoolPtr(items, "ConfigureSystemGuardLaunch"),
 		kernelShadowStacksLaunch:           regIntPtr(items, "ConfigureKernelShadowStacksLaunch"),
 	}
 }
@@ -98,12 +99,12 @@ func (w *mqlWindows) deviceGuard() (*mqlWindowsDeviceGuard, error) {
 
 	o, err := CreateResource(w.MqlRuntime, "windows.deviceGuard", map[string]*llx.RawData{
 		"__id":                               llx.StringData("windows.deviceGuard"),
-		"virtualizationBasedSecurityEnabled": llx.IntDataPtr(v.virtualizationBasedSecurityEnabled),
+		"virtualizationBasedSecurityEnabled": llx.BoolDataPtr(v.virtualizationBasedSecurityEnabled),
 		"requirePlatformSecurityFeatures":    llx.IntDataPtr(v.requirePlatformSecurityFeatures),
 		"hypervisorEnforcedCodeIntegrity":    llx.IntDataPtr(v.hypervisorEnforcedCodeIntegrity),
-		"hvciMatRequired":                    llx.IntDataPtr(v.hvciMatRequired),
+		"hvciMatRequired":                    llx.BoolDataPtr(v.hvciMatRequired),
 		"credentialGuardConfig":              llx.IntDataPtr(v.credentialGuardConfig),
-		"systemGuardLaunch":                  llx.IntDataPtr(v.systemGuardLaunch),
+		"systemGuardLaunch":                  llx.BoolDataPtr(v.systemGuardLaunch),
 		"kernelShadowStacksLaunch":           llx.IntDataPtr(v.kernelShadowStacksLaunch),
 	})
 	if err != nil {

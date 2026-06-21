@@ -40,7 +40,7 @@ func TestComputeWindowsUpdatePolicy(t *testing.T) {
 		v := computeWindowsUpdatePolicy(nil, au)
 		assert.True(t, v.automaticUpdatesEnabled)
 		require.NotNil(t, v.noAutoUpdate)
-		assert.Equal(t, int64(0), *v.noAutoUpdate)
+		assert.False(t, *v.noAutoUpdate)
 		// ScheduledInstallDay=0 ("every day") must be distinguishable from absent.
 		require.NotNil(t, v.scheduledInstallDay)
 		assert.Equal(t, int64(0), *v.scheduledInstallDay)
@@ -51,7 +51,7 @@ func TestComputeWindowsUpdatePolicy(t *testing.T) {
 		v := computeWindowsUpdatePolicy(nil, au)
 		assert.False(t, v.automaticUpdatesEnabled)
 		require.NotNil(t, v.noAutoUpdate)
-		assert.Equal(t, int64(1), *v.noAutoUpdate)
+		assert.True(t, *v.noAutoUpdate)
 	})
 
 	t.Run("case-insensitive value names", func(t *testing.T) {
@@ -85,9 +85,9 @@ func TestComputeWindowsUpdatePolicy(t *testing.T) {
 		require.NotNil(t, v.deferQualityUpdatesPeriodInDays)
 		assert.Equal(t, int64(0), *v.deferQualityUpdatesPeriodInDays)
 		require.NotNil(t, v.disablePauseUXAccess)
-		assert.Equal(t, int64(1), *v.disablePauseUXAccess)
+		assert.True(t, *v.disablePauseUXAccess)
 		require.NotNil(t, v.noAutoRebootWithLoggedOnUsers)
-		assert.Equal(t, int64(0), *v.noAutoRebootWithLoggedOnUsers)
+		assert.False(t, *v.noAutoRebootWithLoggedOnUsers)
 	})
 }
 

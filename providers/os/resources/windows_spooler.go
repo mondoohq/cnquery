@@ -154,6 +154,18 @@ func resolveNullableInt(field *plugin.TValue[int64], v *int64) (int64, error) {
 	return *v, nil
 }
 
+// resolveNullableBool backs a lazily-computed bool field that must be able to
+// render as MQL null. When v is nil the field is set null proactively;
+// otherwise the boolean value is returned for GetOrCompute to cache. This keeps
+// "not configured" distinct from an explicit false.
+func resolveNullableBool(field *plugin.TValue[bool], v *bool) (bool, error) {
+	if v == nil {
+		*field = plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return false, nil
+	}
+	return *v, nil
+}
+
 // --- top-level fields -------------------------------------------------------
 
 func (r *mqlWindowsSpooler) startMode() (int64, error) {
@@ -187,22 +199,22 @@ func spoolerDisabled(service map[string]registry.RegistryKeyItem) bool {
 	return false
 }
 
-func (r *mqlWindowsSpooler) registerRemoteRpcEndpoint() (int64, error) {
+func (r *mqlWindowsSpooler) registerRemoteRpcEndpoint() (bool, error) {
 	reg, err := r.load()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return resolveNullableInt(&r.RegisterRemoteRpcEndpoint,
-		regIntPtr(reg.printers, "RegisterSpoolerRemoteRpcEndPoint"))
+	return resolveNullableBool(&r.RegisterRemoteRpcEndpoint,
+		regBoolPtr(reg.printers, "RegisterSpoolerRemoteRpcEndPoint"))
 }
 
-func (r *mqlWindowsSpooler) redirectionGuardPolicy() (int64, error) {
+func (r *mqlWindowsSpooler) redirectionGuardPolicy() (bool, error) {
 	reg, err := r.load()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return resolveNullableInt(&r.RedirectionGuardPolicy,
-		regIntPtr(reg.printers, "RedirectionguardPolicy"))
+	return resolveNullableBool(&r.RedirectionGuardPolicy,
+		regBoolPtr(reg.printers, "RedirectionguardPolicy"))
 }
 
 func (r *mqlWindowsSpooler) webPnpDownloadDisabled() (bool, error) {
@@ -221,12 +233,12 @@ func (r *mqlWindowsSpooler) httpPrintingDisabled() (bool, error) {
 	return regBoolDefault(reg.printers, "DisableHTTPPrinting", false), nil
 }
 
-func (r *mqlWindowsSpooler) copyFilesPolicy() (int64, error) {
+func (r *mqlWindowsSpooler) copyFilesPolicy() (bool, error) {
 	reg, err := r.load()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return resolveNullableInt(&r.CopyFilesPolicy, regIntPtr(reg.printers, "CopyFilesPolicy"))
+	return resolveNullableBool(&r.CopyFilesPolicy, regBoolPtr(reg.printers, "CopyFilesPolicy"))
 }
 
 func (r *mqlWindowsSpooler) rpcAuthnLevelPrivacyEnabled() (bool, error) {
@@ -238,22 +250,22 @@ func (r *mqlWindowsSpooler) rpcAuthnLevelPrivacyEnabled() (bool, error) {
 	return regBoolDefault(reg.controlPrint, "RpcAuthnLevelPrivacyEnabled", true), nil
 }
 
-func (r *mqlWindowsSpooler) addPrinterDriversRestricted() (int64, error) {
+func (r *mqlWindowsSpooler) addPrinterDriversRestricted() (bool, error) {
 	reg, err := r.load()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return resolveNullableInt(&r.AddPrinterDriversRestricted,
-		regIntPtr(reg.lanManServers, "AddPrinterDrivers"))
+	return resolveNullableBool(&r.AddPrinterDriversRestricted,
+		regBoolPtr(reg.lanManServers, "AddPrinterDrivers"))
 }
 
-func (r *mqlWindowsSpooler) windowsProtectedPrintGroupPolicyState() (int64, error) {
+func (r *mqlWindowsSpooler) windowsProtectedPrintGroupPolicyState() (bool, error) {
 	reg, err := r.load()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return resolveNullableInt(&r.WindowsProtectedPrintGroupPolicyState,
-		regIntPtr(reg.wpp, "WindowsProtectedPrintGroupPolicyState"))
+	return resolveNullableBool(&r.WindowsProtectedPrintGroupPolicyState,
+		regBoolPtr(reg.wpp, "WindowsProtectedPrintGroupPolicyState"))
 }
 
 // --- sub-resources ----------------------------------------------------------
@@ -273,14 +285,15 @@ func (r *mqlWindowsSpooler) pointAndPrint() (*mqlWindowsSpoolerPointAndPrint, er
 
 // spoolerPointAndPrintArgs builds the args for the PointAndPrint sub-resource.
 // restrictDriverInstallationToAdministrators defaults to true — the hardened
-// default established by the PrintNightmare mitigations — while the prompt
-// settings are nullable so an explicit 0 (keep the prompt) is preserved.
+// default established by the PrintNightmare mitigations — while
+// noWarningNoElevationOnInstall and updatePromptSettings are nullable so an
+// absent setting stays distinguishable from an explicit value.
 func spoolerPointAndPrintArgs(items map[string]registry.RegistryKeyItem) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id": llx.StringData("windows.spooler.pointAndPrint"),
 		"restrictDriverInstallationToAdministrators": llx.BoolData(
 			regBoolDefault(items, "RestrictDriverInstallationToAdministrators", true)),
-		"noWarningNoElevationOnInstall": llx.IntDataPtr(regIntPtr(items, "NoWarningNoElevationOnInstall")),
+		"noWarningNoElevationOnInstall": llx.BoolDataPtr(regBoolPtr(items, "NoWarningNoElevationOnInstall")),
 		"updatePromptSettings":          llx.IntDataPtr(regIntPtr(items, "UpdatePromptSettings")),
 	}
 }
@@ -298,12 +311,12 @@ func (r *mqlWindowsSpooler) rpc() (*mqlWindowsSpoolerRpc, error) {
 }
 
 // spoolerRpcArgs builds the args for the RPC sub-resource. All DWORD settings
-// are nullable so an unconfigured value (and the compliant 0 of
+// are nullable so an unconfigured value (and the compliant disabled state of
 // useNamedPipeProtocol) is distinguishable from a default.
 func spoolerRpcArgs(items map[string]registry.RegistryKeyItem) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id":                 llx.StringData("windows.spooler.rpc"),
-		"useNamedPipeProtocol": llx.IntDataPtr(regIntPtr(items, "RpcUseNamedPipeProtocol")),
+		"useNamedPipeProtocol": llx.BoolDataPtr(regBoolPtr(items, "RpcUseNamedPipeProtocol")),
 		"authentication":       llx.IntDataPtr(regIntPtr(items, "RpcAuthentication")),
 		"protocols":            llx.IntDataPtr(regIntPtr(items, "RpcProtocols")),
 		"tcpPort":              llx.IntDataPtr(regIntPtr(items, "RpcTcpPort")),

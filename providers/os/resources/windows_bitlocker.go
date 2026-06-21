@@ -168,27 +168,27 @@ func computeBitlockerDrive(items map[string]registry.RegistryKeyItem, prefix str
 		"driveType": llx.StringData(driveTypeForPrefix(prefix)),
 
 		"recovery":                     llx.IntDataPtr(fveIntPtr(items, prefix+"Recovery")),
-		"manageDRA":                    llx.IntDataPtr(fveIntPtr(items, prefix+"ManageDRA")),
+		"manageDRA":                    llx.BoolDataPtr(regBoolPtr(items, prefix+"ManageDRA")),
 		"recoveryPassword":             llx.IntDataPtr(fveIntPtr(items, prefix+"RecoveryPassword")),
 		"recoveryKey":                  llx.IntDataPtr(fveIntPtr(items, prefix+"RecoveryKey")),
-		"hideRecoveryPage":             llx.IntDataPtr(fveIntPtr(items, prefix+"HideRecoveryPage")),
-		"activeDirectoryBackup":        llx.IntDataPtr(fveIntPtr(items, prefix+"ActiveDirectoryBackup")),
+		"hideRecoveryPage":             llx.BoolDataPtr(regBoolPtr(items, prefix+"HideRecoveryPage")),
+		"activeDirectoryBackup":        llx.BoolDataPtr(regBoolPtr(items, prefix+"ActiveDirectoryBackup")),
 		"activeDirectoryInfoToStore":   llx.IntDataPtr(fveIntPtr(items, prefix+"ActiveDirectoryInfoToStore")),
-		"requireActiveDirectoryBackup": llx.IntDataPtr(fveIntPtr(items, prefix+"RequireActiveDirectoryBackup")),
+		"requireActiveDirectoryBackup": llx.BoolDataPtr(regBoolPtr(items, prefix+"RequireActiveDirectoryBackup")),
 		"hardwareEncryption":           llx.IntDataPtr(fveIntPtr(items, prefix+"HardwareEncryption")),
 		"passphrase":                   llx.IntDataPtr(fveIntPtr(items, prefix+"Passphrase")),
 
 		// AllowUserCert / EnforceUserCert exist only for FDV and RDV drives;
 		// for OS drives the values are absent and these become null.
-		"allowUserCert":   llx.IntDataPtr(fveIntPtr(items, prefix+"AllowUserCert")),
-		"enforceUserCert": llx.IntDataPtr(fveIntPtr(items, prefix+"EnforceUserCert")),
+		"allowUserCert":   llx.BoolDataPtr(regBoolPtr(items, prefix+"AllowUserCert")),
+		"enforceUserCert": llx.BoolDataPtr(regBoolPtr(items, prefix+"EnforceUserCert")),
 
 		// DiscoveryVolumeType is a REG_SZ and exists only for FDV and RDV drives.
 		"discoveryVolumeType": llx.StringDataPtr(fveStringPtr(items, prefix+"DiscoveryVolumeType")),
 
 		// DenyWriteAccess / DenyCrossOrg exist only for removable (RDV) drives.
-		"denyWriteAccess": llx.IntDataPtr(fveIntPtr(items, prefix+"DenyWriteAccess")),
-		"denyCrossOrg":    llx.IntDataPtr(fveIntPtr(items, prefix+"DenyCrossOrg")),
+		"denyWriteAccess": llx.BoolDataPtr(regBoolPtr(items, prefix+"DenyWriteAccess")),
+		"denyCrossOrg":    llx.BoolDataPtr(regBoolPtr(items, prefix+"DenyCrossOrg")),
 	}
 	return args
 }
@@ -199,11 +199,11 @@ func computeBitlockerDrive(items map[string]registry.RegistryKeyItem, prefix str
 func computeBitlockerGlobal(items map[string]registry.RegistryKeyItem) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id":                          llx.StringData("windows.bitlocker.policy"),
-		"useAdvancedStartup":            llx.IntDataPtr(fveIntPtr(items, "UseAdvancedStartup")),
-		"useEnhancedPin":                llx.IntDataPtr(fveIntPtr(items, "UseEnhancedPin")),
-		"enableBdeWithNoTpm":            llx.IntDataPtr(fveIntPtr(items, "EnableBDEWithNoTPM")),
-		"disableExternalDmaUnderLock":   llx.IntDataPtr(fveIntPtr(items, "DisableExternalDMAUnderLock")),
-		"osAllowSecureBootForIntegrity": llx.IntDataPtr(fveIntPtr(items, "OSAllowSecureBootForIntegrity")),
+		"useAdvancedStartup":            llx.BoolDataPtr(regBoolPtr(items, "UseAdvancedStartup")),
+		"useEnhancedPin":                llx.BoolDataPtr(regBoolPtr(items, "UseEnhancedPin")),
+		"enableBdeWithNoTpm":            llx.BoolDataPtr(regBoolPtr(items, "EnableBDEWithNoTPM")),
+		"disableExternalDmaUnderLock":   llx.BoolDataPtr(regBoolPtr(items, "DisableExternalDMAUnderLock")),
+		"osAllowSecureBootForIntegrity": llx.BoolDataPtr(regBoolPtr(items, "OSAllowSecureBootForIntegrity")),
 	}
 }
 

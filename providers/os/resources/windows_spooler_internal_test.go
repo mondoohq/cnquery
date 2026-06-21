@@ -90,13 +90,20 @@ func TestSpoolerPointAndPrintArgs(t *testing.T) {
 		assert.Nil(t, args["updatePromptSettings"].Value)
 	})
 
-	t.Run("explicit zero on prompt settings is preserved as 0, not null", func(t *testing.T) {
+	t.Run("explicit zero on prompt settings is preserved, not null", func(t *testing.T) {
 		args := spoolerPointAndPrintArgs(spoolerRegItems(map[string]int64{
 			"NoWarningNoElevationOnInstall": 0,
 			"UpdatePromptSettings":          0,
 		}))
-		assert.Equal(t, int64(0), args["noWarningNoElevationOnInstall"].Value)
+		assert.Equal(t, false, args["noWarningNoElevationOnInstall"].Value)
 		assert.Equal(t, int64(0), args["updatePromptSettings"].Value)
+	})
+
+	t.Run("noWarningNoElevationOnInstall non-zero resolves to true", func(t *testing.T) {
+		args := spoolerPointAndPrintArgs(spoolerRegItems(map[string]int64{
+			"NoWarningNoElevationOnInstall": 1,
+		}))
+		assert.Equal(t, true, args["noWarningNoElevationOnInstall"].Value)
 	})
 
 	t.Run("explicit restrict=false overrides the default", func(t *testing.T) {
@@ -117,13 +124,13 @@ func TestSpoolerRpcArgs(t *testing.T) {
 		assert.Equal(t, false, args["forceKerberos"].Value)
 	})
 
-	t.Run("compliant useNamedPipeProtocol=0 is preserved", func(t *testing.T) {
+	t.Run("compliant useNamedPipeProtocol=false is preserved", func(t *testing.T) {
 		args := spoolerRpcArgs(spoolerRegItems(map[string]int64{
 			"RpcUseNamedPipeProtocol": 0,
 			"RpcAuthentication":       1,
 			"ForceKerberosForRpc":     1,
 		}))
-		assert.Equal(t, int64(0), args["useNamedPipeProtocol"].Value)
+		assert.Equal(t, false, args["useNamedPipeProtocol"].Value)
 		assert.Equal(t, int64(1), args["authentication"].Value)
 		assert.Equal(t, true, args["forceKerberos"].Value)
 	})

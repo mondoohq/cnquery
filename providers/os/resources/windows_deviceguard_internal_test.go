@@ -84,17 +84,17 @@ func TestComputeDeviceGuard(t *testing.T) {
 			"configurekernelshadowstackslaunch": 1,
 		}))
 		require.NotNil(t, v.virtualizationBasedSecurityEnabled)
-		assert.Equal(t, int64(1), *v.virtualizationBasedSecurityEnabled)
+		assert.Equal(t, true, *v.virtualizationBasedSecurityEnabled)
 		require.NotNil(t, v.requirePlatformSecurityFeatures)
 		assert.Equal(t, int64(3), *v.requirePlatformSecurityFeatures)
 		require.NotNil(t, v.hypervisorEnforcedCodeIntegrity)
 		assert.Equal(t, int64(1), *v.hypervisorEnforcedCodeIntegrity)
 		require.NotNil(t, v.hvciMatRequired)
-		assert.Equal(t, int64(1), *v.hvciMatRequired)
+		assert.Equal(t, true, *v.hvciMatRequired)
 		require.NotNil(t, v.credentialGuardConfig)
 		assert.Equal(t, int64(1), *v.credentialGuardConfig)
 		require.NotNil(t, v.systemGuardLaunch)
-		assert.Equal(t, int64(1), *v.systemGuardLaunch)
+		assert.Equal(t, true, *v.systemGuardLaunch)
 		require.NotNil(t, v.kernelShadowStacksLaunch)
 		assert.Equal(t, int64(1), *v.kernelShadowStacksLaunch)
 	})
@@ -110,12 +110,12 @@ func TestComputeDeviceGuard(t *testing.T) {
 			"configuresystemguardlaunch":        0,
 			"configurekernelshadowstackslaunch": 2,
 		}))
-		assert.Equal(t, int64(1), *v.virtualizationBasedSecurityEnabled)
+		assert.Equal(t, true, *v.virtualizationBasedSecurityEnabled)
 		assert.Equal(t, int64(3), *v.requirePlatformSecurityFeatures)
 		assert.Equal(t, int64(2), *v.hypervisorEnforcedCodeIntegrity)
-		assert.Equal(t, int64(0), *v.hvciMatRequired)
+		assert.Equal(t, false, *v.hvciMatRequired)
 		assert.Equal(t, int64(2), *v.credentialGuardConfig)
-		assert.Equal(t, int64(0), *v.systemGuardLaunch)
+		assert.Equal(t, false, *v.systemGuardLaunch)
 		assert.Equal(t, int64(2), *v.kernelShadowStacksLaunch)
 	})
 
@@ -126,7 +126,7 @@ func TestComputeDeviceGuard(t *testing.T) {
 			"enablevirtualizationbasedsecurity": 0,
 		}))
 		require.NotNil(t, v.virtualizationBasedSecurityEnabled)
-		assert.Equal(t, int64(0), *v.virtualizationBasedSecurityEnabled)
+		assert.Equal(t, false, *v.virtualizationBasedSecurityEnabled)
 		assert.Nil(t, v.credentialGuardConfig)
 	})
 

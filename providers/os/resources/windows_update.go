@@ -232,18 +232,18 @@ func (c *mqlWindowsUpdateConfig) service() (*mqlService, error) {
 // the corresponding policy value is not configured.
 type windowsUpdatePolicyValues struct {
 	automaticUpdatesEnabled                bool
-	noAutoUpdate                           *int64
+	noAutoUpdate                           *bool
 	scheduledInstallDay                    *int64
 	scheduledInstallTime                   *int64
-	noAutoRebootWithLoggedOnUsers          *int64
+	noAutoRebootWithLoggedOnUsers          *bool
 	managePreviewBuilds                    *int64
-	deferFeatureUpdates                    *int64
+	deferFeatureUpdates                    *bool
 	deferFeatureUpdatesPeriodInDays        *int64
-	deferQualityUpdates                    *int64
+	deferQualityUpdates                    *bool
 	deferQualityUpdatesPeriodInDays        *int64
-	allowTemporaryEnterpriseFeatureControl *int64
+	allowTemporaryEnterpriseFeatureControl *bool
 	allowOptionalContent                   *int64
-	disablePauseUXAccess                   *int64
+	disablePauseUXAccess                   *bool
 }
 
 // computeWindowsUpdatePolicy maps the raw registry values from the
@@ -254,18 +254,18 @@ func computeWindowsUpdatePolicy(policy, au map[string]registry.RegistryKeyItem) 
 		// Automatic Updates is "enabled" only when NoAutoUpdate is explicitly
 		// present and set to 0; an absent value is the unmanaged default.
 		automaticUpdatesEnabled:                regHas(au, "NoAutoUpdate") && regInt(au, "NoAutoUpdate") == 0,
-		noAutoUpdate:                           regIntPtr(au, "NoAutoUpdate"),
+		noAutoUpdate:                           regBoolPtr(au, "NoAutoUpdate"),
 		scheduledInstallDay:                    regIntPtr(au, "ScheduledInstallDay"),
 		scheduledInstallTime:                   regIntPtr(au, "ScheduledInstallTime"),
-		noAutoRebootWithLoggedOnUsers:          regIntPtr(au, "NoAutoRebootWithLoggedOnUsers"),
+		noAutoRebootWithLoggedOnUsers:          regBoolPtr(au, "NoAutoRebootWithLoggedOnUsers"),
 		managePreviewBuilds:                    regIntPtr(policy, "ManagePreviewBuildsPolicyValue"),
-		deferFeatureUpdates:                    regIntPtr(policy, "DeferFeatureUpdates"),
+		deferFeatureUpdates:                    regBoolPtr(policy, "DeferFeatureUpdates"),
 		deferFeatureUpdatesPeriodInDays:        regIntPtr(policy, "DeferFeatureUpdatesPeriodInDays"),
-		deferQualityUpdates:                    regIntPtr(policy, "DeferQualityUpdates"),
+		deferQualityUpdates:                    regBoolPtr(policy, "DeferQualityUpdates"),
 		deferQualityUpdatesPeriodInDays:        regIntPtr(policy, "DeferQualityUpdatesPeriodInDays"),
-		allowTemporaryEnterpriseFeatureControl: regIntPtr(policy, "AllowTemporaryEnterpriseFeatureControl"),
+		allowTemporaryEnterpriseFeatureControl: regBoolPtr(policy, "AllowTemporaryEnterpriseFeatureControl"),
 		allowOptionalContent:                   regIntPtr(policy, "SetAllowOptionalContent"),
-		disablePauseUXAccess:                   regIntPtr(policy, "SetDisablePauseUXAccess"),
+		disablePauseUXAccess:                   regBoolPtr(policy, "SetDisablePauseUXAccess"),
 	}
 }
 
@@ -286,18 +286,18 @@ func (w *mqlWindowsUpdate) policy() (*mqlWindowsUpdatePolicy, error) {
 	o, err := CreateResource(w.MqlRuntime, "windows.update.policy", map[string]*llx.RawData{
 		"__id":                                   llx.StringData("windows.update.policy"),
 		"automaticUpdatesEnabled":                llx.BoolData(v.automaticUpdatesEnabled),
-		"noAutoUpdate":                           intPtrData(v.noAutoUpdate),
+		"noAutoUpdate":                           llx.BoolDataPtr(v.noAutoUpdate),
 		"scheduledInstallDay":                    intPtrData(v.scheduledInstallDay),
 		"scheduledInstallTime":                   intPtrData(v.scheduledInstallTime),
-		"noAutoRebootWithLoggedOnUsers":          intPtrData(v.noAutoRebootWithLoggedOnUsers),
+		"noAutoRebootWithLoggedOnUsers":          llx.BoolDataPtr(v.noAutoRebootWithLoggedOnUsers),
 		"managePreviewBuilds":                    intPtrData(v.managePreviewBuilds),
-		"deferFeatureUpdates":                    intPtrData(v.deferFeatureUpdates),
+		"deferFeatureUpdates":                    llx.BoolDataPtr(v.deferFeatureUpdates),
 		"deferFeatureUpdatesPeriodInDays":        intPtrData(v.deferFeatureUpdatesPeriodInDays),
-		"deferQualityUpdates":                    intPtrData(v.deferQualityUpdates),
+		"deferQualityUpdates":                    llx.BoolDataPtr(v.deferQualityUpdates),
 		"deferQualityUpdatesPeriodInDays":        intPtrData(v.deferQualityUpdatesPeriodInDays),
-		"allowTemporaryEnterpriseFeatureControl": intPtrData(v.allowTemporaryEnterpriseFeatureControl),
+		"allowTemporaryEnterpriseFeatureControl": llx.BoolDataPtr(v.allowTemporaryEnterpriseFeatureControl),
 		"allowOptionalContent":                   intPtrData(v.allowOptionalContent),
-		"disablePauseUXAccess":                   intPtrData(v.disablePauseUXAccess),
+		"disablePauseUXAccess":                   llx.BoolDataPtr(v.disablePauseUXAccess),
 	})
 	if err != nil {
 		return nil, err

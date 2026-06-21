@@ -141,31 +141,31 @@ func TestComputeLsa(t *testing.T) {
 		)
 		v := computeLsa(m)
 		require.NotNil(t, v.DisableDomainCreds)
-		assert.Equal(t, int64(1), *v.DisableDomainCreds)
+		assert.Equal(t, true, *v.DisableDomainCreds)
 		require.NotNil(t, v.EveryoneIncludesAnonymous)
-		assert.Equal(t, int64(0), *v.EveryoneIncludesAnonymous)
+		assert.Equal(t, false, *v.EveryoneIncludesAnonymous)
 		require.NotNil(t, v.ForceGuest)
-		assert.Equal(t, int64(0), *v.ForceGuest)
+		assert.Equal(t, false, *v.ForceGuest)
 		require.NotNil(t, v.LimitBlankPasswordUse)
-		assert.Equal(t, int64(1), *v.LimitBlankPasswordUse)
+		assert.Equal(t, true, *v.LimitBlankPasswordUse)
 		require.NotNil(t, v.LmCompatibilityLevel)
 		assert.Equal(t, int64(5), *v.LmCompatibilityLevel)
 		require.NotNil(t, v.NoLmHash)
-		assert.Equal(t, int64(1), *v.NoLmHash)
+		assert.Equal(t, true, *v.NoLmHash)
 		require.NotNil(t, v.RestrictAnonymous)
 		assert.Equal(t, int64(1), *v.RestrictAnonymous)
 		require.NotNil(t, v.RestrictAnonymousSam)
-		assert.Equal(t, int64(1), *v.RestrictAnonymousSam)
+		assert.Equal(t, true, *v.RestrictAnonymousSam)
 		require.NotNil(t, v.RestrictRemoteSam)
 		assert.Equal(t, "O:BAG:BAD:(A;;RC;;;BA)", *v.RestrictRemoteSam)
 		require.NotNil(t, v.RunAsPpl)
 		assert.Equal(t, int64(1), *v.RunAsPpl)
 		require.NotNil(t, v.SceNoApplyLegacyAuditPolicy)
-		assert.Equal(t, int64(1), *v.SceNoApplyLegacyAuditPolicy)
+		assert.Equal(t, true, *v.SceNoApplyLegacyAuditPolicy)
 		require.NotNil(t, v.SubmitControl)
-		assert.Equal(t, int64(0), *v.SubmitControl)
+		assert.Equal(t, false, *v.SubmitControl)
 		require.NotNil(t, v.UseMachineId)
-		assert.Equal(t, int64(1), *v.UseMachineId)
+		assert.Equal(t, true, *v.UseMachineId)
 	})
 
 	t.Run("partial config leaves unset fields null", func(t *testing.T) {
@@ -203,7 +203,7 @@ func TestComputeLsaNtlm(t *testing.T) {
 
 		v := computeLsaNtlm(msv10, wdigest, pku2u)
 		require.NotNil(t, v.AllowNullSessionFallback)
-		assert.Equal(t, int64(0), *v.AllowNullSessionFallback)
+		assert.Equal(t, false, *v.AllowNullSessionFallback)
 		require.NotNil(t, v.AuditReceivingNtlmTraffic)
 		assert.Equal(t, int64(2), *v.AuditReceivingNtlmTraffic)
 		require.NotNil(t, v.NtlmMinClientSec)
@@ -212,11 +212,11 @@ func TestComputeLsaNtlm(t *testing.T) {
 		assert.Equal(t, int64(537395200), *v.NtlmMinServerSec)
 		require.NotNil(t, v.RestrictSendingNtlmTraffic)
 		assert.Equal(t, int64(2), *v.RestrictSendingNtlmTraffic)
-		// UseLogonCredential==0 is the compliant value; absent must not look like 0
+		// UseLogonCredential==false is the compliant value; absent must not look like false
 		require.NotNil(t, v.UseLogonCredential)
-		assert.Equal(t, int64(0), *v.UseLogonCredential)
+		assert.Equal(t, false, *v.UseLogonCredential)
 		require.NotNil(t, v.AllowOnlineId)
-		assert.Equal(t, int64(0), *v.AllowOnlineId)
+		assert.Equal(t, false, *v.AllowOnlineId)
 	})
 
 	t.Run("WDigest value absent stays null while MSV1_0 set", func(t *testing.T) {
@@ -262,21 +262,21 @@ func TestComputeLsaSecureChannel(t *testing.T) {
 		require.NotNil(t, v.AuditNtlmInDomain)
 		assert.Equal(t, int64(7), *v.AuditNtlmInDomain)
 		require.NotNil(t, v.BlockNetbiosDiscovery)
-		assert.Equal(t, int64(1), *v.BlockNetbiosDiscovery)
+		assert.Equal(t, true, *v.BlockNetbiosDiscovery)
 		require.NotNil(t, v.DisablePasswordChange)
-		assert.Equal(t, int64(0), *v.DisablePasswordChange)
+		assert.Equal(t, false, *v.DisablePasswordChange)
 		require.NotNil(t, v.MaximumPasswordAge)
 		assert.Equal(t, int64(30), *v.MaximumPasswordAge)
 		require.NotNil(t, v.RefusePasswordChange)
-		assert.Equal(t, int64(0), *v.RefusePasswordChange)
+		assert.Equal(t, false, *v.RefusePasswordChange)
 		require.NotNil(t, v.RequireSignOrSeal)
-		assert.Equal(t, int64(1), *v.RequireSignOrSeal)
+		assert.Equal(t, true, *v.RequireSignOrSeal)
 		require.NotNil(t, v.RequireStrongKey)
-		assert.Equal(t, int64(1), *v.RequireStrongKey)
+		assert.Equal(t, true, *v.RequireStrongKey)
 		require.NotNil(t, v.SealSecureChannel)
-		assert.Equal(t, int64(1), *v.SealSecureChannel)
+		assert.Equal(t, true, *v.SealSecureChannel)
 		require.NotNil(t, v.SignSecureChannel)
-		assert.Equal(t, int64(1), *v.SignSecureChannel)
+		assert.Equal(t, true, *v.SignSecureChannel)
 		require.NotNil(t, v.VulnerableChannelAllowList)
 		assert.Equal(t, "", *v.VulnerableChannelAllowList)
 	})
@@ -310,6 +310,42 @@ func TestLsaIntFieldPtr(t *testing.T) {
 		assert.True(t, f.IsSet())
 		assert.False(t, f.IsNull())
 		assert.Equal(t, int64(0), f.Data)
+	})
+}
+
+func TestLsaRegBoolPtr(t *testing.T) {
+	m := items(d("RequireSignOrSeal", 1), d("DisablePasswordChange", 0))
+
+	t.Run("non-zero DWORD returns true", func(t *testing.T) {
+		p := regBoolPtr(m, "RequireSignOrSeal")
+		require.NotNil(t, p)
+		assert.True(t, *p)
+	})
+
+	t.Run("explicit 0 returns false, distinguishable from absent", func(t *testing.T) {
+		p := regBoolPtr(m, "DisablePasswordChange")
+		require.NotNil(t, p)
+		assert.False(t, *p)
+	})
+
+	t.Run("absent value returns nil", func(t *testing.T) {
+		assert.Nil(t, regBoolPtr(m, "DoesNotExist"))
+	})
+}
+
+func TestLsaBoolFieldPtr(t *testing.T) {
+	t.Run("nil pointer yields a null field", func(t *testing.T) {
+		f := boolFieldPtr(nil)
+		assert.True(t, f.IsSet())
+		assert.True(t, f.IsNull())
+	})
+
+	t.Run("explicit false is set and not null", func(t *testing.T) {
+		val := false
+		f := boolFieldPtr(&val)
+		assert.True(t, f.IsSet())
+		assert.False(t, f.IsNull())
+		assert.Equal(t, false, f.Data)
 	})
 }
 

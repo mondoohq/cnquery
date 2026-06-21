@@ -59,19 +59,19 @@ func (r *mqlWindowsTelemetry) readTelemetryKey(path string) (map[string]registry
 // telemetryValues holds the nullable DataCollection diagnostic-data settings.
 type telemetryValues struct {
 	allowTelemetry                 *int64
-	disableEnterpriseAuthProxy     *int64
-	disableOneSettingsDownloads    *int64
-	doNotShowFeedbackNotifications *int64
-	enableOneSettingsAuditing      *int64
-	limitDiagnosticLogCollection   *int64
-	limitDumpCollection            *int64
+	disableEnterpriseAuthProxy     *bool
+	disableOneSettingsDownloads    *bool
+	doNotShowFeedbackNotifications *bool
+	enableOneSettingsAuditing      *bool
+	limitDiagnosticLogCollection   *bool
+	limitDumpCollection            *bool
 }
 
 // consumerContentValues holds the nullable CloudContent consumer settings.
 type consumerContentValues struct {
-	disableCloudOptimizedContent       *int64
-	disableConsumerAccountStateContent *int64
-	disableWindowsConsumerFeatures     *int64
+	disableCloudOptimizedContent       *bool
+	disableConsumerAccountStateContent *bool
+	disableWindowsConsumerFeatures     *bool
 }
 
 // computeTelemetry extracts the DataCollection diagnostic-data DWORDs from the
@@ -80,12 +80,12 @@ type consumerContentValues struct {
 func computeTelemetry(items map[string]registry.RegistryKeyItem) telemetryValues {
 	return telemetryValues{
 		allowTelemetry:                 regIntPtr(items, "AllowTelemetry"),
-		disableEnterpriseAuthProxy:     regIntPtr(items, "DisableEnterpriseAuthProxy"),
-		disableOneSettingsDownloads:    regIntPtr(items, "DisableOneSettingsDownloads"),
-		doNotShowFeedbackNotifications: regIntPtr(items, "DoNotShowFeedbackNotifications"),
-		enableOneSettingsAuditing:      regIntPtr(items, "EnableOneSettingsAuditing"),
-		limitDiagnosticLogCollection:   regIntPtr(items, "LimitDiagnosticLogCollection"),
-		limitDumpCollection:            regIntPtr(items, "LimitDumpCollection"),
+		disableEnterpriseAuthProxy:     regBoolPtr(items, "DisableEnterpriseAuthProxy"),
+		disableOneSettingsDownloads:    regBoolPtr(items, "DisableOneSettingsDownloads"),
+		doNotShowFeedbackNotifications: regBoolPtr(items, "DoNotShowFeedbackNotifications"),
+		enableOneSettingsAuditing:      regBoolPtr(items, "EnableOneSettingsAuditing"),
+		limitDiagnosticLogCollection:   regBoolPtr(items, "LimitDiagnosticLogCollection"),
+		limitDumpCollection:            regBoolPtr(items, "LimitDumpCollection"),
 	}
 }
 
@@ -94,9 +94,9 @@ func computeTelemetry(items map[string]registry.RegistryKeyItem) telemetryValues
 // unit testing.
 func computeConsumerContent(items map[string]registry.RegistryKeyItem) consumerContentValues {
 	return consumerContentValues{
-		disableCloudOptimizedContent:       regIntPtr(items, "DisableCloudOptimizedContent"),
-		disableConsumerAccountStateContent: regIntPtr(items, "DisableConsumerAccountStateContent"),
-		disableWindowsConsumerFeatures:     regIntPtr(items, "DisableWindowsConsumerFeatures"),
+		disableCloudOptimizedContent:       regBoolPtr(items, "DisableCloudOptimizedContent"),
+		disableConsumerAccountStateContent: regBoolPtr(items, "DisableConsumerAccountStateContent"),
+		disableWindowsConsumerFeatures:     regBoolPtr(items, "DisableWindowsConsumerFeatures"),
 	}
 }
 
@@ -126,28 +126,36 @@ func (r *mqlWindowsTelemetry) populate() error {
 	c := computeConsumerContent(cloudContent)
 
 	r.AllowTelemetry = telemetryIntField(v.allowTelemetry)
-	r.DisableEnterpriseAuthProxy = telemetryIntField(v.disableEnterpriseAuthProxy)
-	r.DisableOneSettingsDownloads = telemetryIntField(v.disableOneSettingsDownloads)
-	r.DoNotShowFeedbackNotifications = telemetryIntField(v.doNotShowFeedbackNotifications)
-	r.EnableOneSettingsAuditing = telemetryIntField(v.enableOneSettingsAuditing)
-	r.LimitDiagnosticLogCollection = telemetryIntField(v.limitDiagnosticLogCollection)
-	r.LimitDumpCollection = telemetryIntField(v.limitDumpCollection)
-	r.DisableCloudOptimizedContent = telemetryIntField(c.disableCloudOptimizedContent)
-	r.DisableConsumerAccountStateContent = telemetryIntField(c.disableConsumerAccountStateContent)
-	r.DisableWindowsConsumerFeatures = telemetryIntField(c.disableWindowsConsumerFeatures)
+	r.DisableEnterpriseAuthProxy = boolFieldPtr(v.disableEnterpriseAuthProxy)
+	r.DisableOneSettingsDownloads = boolFieldPtr(v.disableOneSettingsDownloads)
+	r.DoNotShowFeedbackNotifications = boolFieldPtr(v.doNotShowFeedbackNotifications)
+	r.EnableOneSettingsAuditing = boolFieldPtr(v.enableOneSettingsAuditing)
+	r.LimitDiagnosticLogCollection = boolFieldPtr(v.limitDiagnosticLogCollection)
+	r.LimitDumpCollection = boolFieldPtr(v.limitDumpCollection)
+	r.DisableCloudOptimizedContent = boolFieldPtr(c.disableCloudOptimizedContent)
+	r.DisableConsumerAccountStateContent = boolFieldPtr(c.disableConsumerAccountStateContent)
+	r.DisableWindowsConsumerFeatures = boolFieldPtr(c.disableWindowsConsumerFeatures)
 	return nil
 }
 
-func (r *mqlWindowsTelemetry) allowTelemetry() (int64, error)                 { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) disableEnterpriseAuthProxy() (int64, error)     { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) disableOneSettingsDownloads() (int64, error)    { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) doNotShowFeedbackNotifications() (int64, error) { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) enableOneSettingsAuditing() (int64, error)      { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) limitDiagnosticLogCollection() (int64, error)   { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) limitDumpCollection() (int64, error)            { return 0, r.populate() }
-
-func (r *mqlWindowsTelemetry) disableCloudOptimizedContent() (int64, error) { return 0, r.populate() }
-func (r *mqlWindowsTelemetry) disableConsumerAccountStateContent() (int64, error) {
-	return 0, r.populate()
+func (r *mqlWindowsTelemetry) allowTelemetry() (int64, error)             { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) disableEnterpriseAuthProxy() (bool, error)  { return false, r.populate() }
+func (r *mqlWindowsTelemetry) disableOneSettingsDownloads() (bool, error) { return false, r.populate() }
+func (r *mqlWindowsTelemetry) doNotShowFeedbackNotifications() (bool, error) {
+	return false, r.populate()
 }
-func (r *mqlWindowsTelemetry) disableWindowsConsumerFeatures() (int64, error) { return 0, r.populate() }
+func (r *mqlWindowsTelemetry) enableOneSettingsAuditing() (bool, error) { return false, r.populate() }
+func (r *mqlWindowsTelemetry) limitDiagnosticLogCollection() (bool, error) {
+	return false, r.populate()
+}
+func (r *mqlWindowsTelemetry) limitDumpCollection() (bool, error) { return false, r.populate() }
+
+func (r *mqlWindowsTelemetry) disableCloudOptimizedContent() (bool, error) {
+	return false, r.populate()
+}
+func (r *mqlWindowsTelemetry) disableConsumerAccountStateContent() (bool, error) {
+	return false, r.populate()
+}
+func (r *mqlWindowsTelemetry) disableWindowsConsumerFeatures() (bool, error) {
+	return false, r.populate()
+}

@@ -80,66 +80,78 @@ func regStringPtr(items map[string]registry.RegistryKeyItem, name string) *strin
 	return nil
 }
 
+// regBoolPtr returns a pointer to the boolean interpretation of a registry
+// DWORD (true for any non-zero value), or nil when the value is absent. Used
+// for the on/off LSA settings whose registry value is a 0/1 DWORD.
+func regBoolPtr(items map[string]registry.RegistryKeyItem, name string) *bool {
+	if it, ok := items[strings.ToLower(name)]; ok {
+		v := it.Value.Number != 0
+		return &v
+	}
+	return nil
+}
+
 // lsaValues holds the extracted top-level Lsa values as nullable pointers.
+// On/off settings are bools; graded settings are int64s.
 type lsaValues struct {
-	DisableDomainCreds          *int64
-	EveryoneIncludesAnonymous   *int64
-	ForceGuest                  *int64
-	LimitBlankPasswordUse       *int64
+	DisableDomainCreds          *bool
+	EveryoneIncludesAnonymous   *bool
+	ForceGuest                  *bool
+	LimitBlankPasswordUse       *bool
 	LmCompatibilityLevel        *int64
-	NoLmHash                    *int64
+	NoLmHash                    *bool
 	RestrictAnonymous           *int64
-	RestrictAnonymousSam        *int64
+	RestrictAnonymousSam        *bool
 	RestrictRemoteSam           *string
 	RunAsPpl                    *int64
-	SceNoApplyLegacyAuditPolicy *int64
-	SubmitControl               *int64
-	UseMachineId                *int64
+	SceNoApplyLegacyAuditPolicy *bool
+	SubmitControl               *bool
+	UseMachineId                *bool
 }
 
 // computeLsa extracts the top-level Lsa values from the raw registry items.
 // Pure function for unit testing.
 func computeLsa(items map[string]registry.RegistryKeyItem) lsaValues {
 	return lsaValues{
-		DisableDomainCreds:          regIntPtr(items, "DisableDomainCreds"),
-		EveryoneIncludesAnonymous:   regIntPtr(items, "EveryoneIncludesAnonymous"),
-		ForceGuest:                  regIntPtr(items, "ForceGuest"),
-		LimitBlankPasswordUse:       regIntPtr(items, "LimitBlankPasswordUse"),
+		DisableDomainCreds:          regBoolPtr(items, "DisableDomainCreds"),
+		EveryoneIncludesAnonymous:   regBoolPtr(items, "EveryoneIncludesAnonymous"),
+		ForceGuest:                  regBoolPtr(items, "ForceGuest"),
+		LimitBlankPasswordUse:       regBoolPtr(items, "LimitBlankPasswordUse"),
 		LmCompatibilityLevel:        regIntPtr(items, "LmCompatibilityLevel"),
-		NoLmHash:                    regIntPtr(items, "NoLMHash"),
+		NoLmHash:                    regBoolPtr(items, "NoLMHash"),
 		RestrictAnonymous:           regIntPtr(items, "RestrictAnonymous"),
-		RestrictAnonymousSam:        regIntPtr(items, "RestrictAnonymousSAM"),
+		RestrictAnonymousSam:        regBoolPtr(items, "RestrictAnonymousSAM"),
 		RestrictRemoteSam:           regStringPtr(items, "restrictremotesam"),
 		RunAsPpl:                    regIntPtr(items, "RunAsPPL"),
-		SceNoApplyLegacyAuditPolicy: regIntPtr(items, "SCENoApplyLegacyAuditPolicy"),
-		SubmitControl:               regIntPtr(items, "SubmitControl"),
-		UseMachineId:                regIntPtr(items, "UseMachineId"),
+		SceNoApplyLegacyAuditPolicy: regBoolPtr(items, "SCENoApplyLegacyAuditPolicy"),
+		SubmitControl:               regBoolPtr(items, "SubmitControl"),
+		UseMachineId:                regBoolPtr(items, "UseMachineId"),
 	}
 }
 
 // lsaNtlmValues holds the extracted NTLM (MSV1_0 + WDigest + pku2u) values as
 // nullable pointers.
 type lsaNtlmValues struct {
-	AllowNullSessionFallback   *int64
+	AllowNullSessionFallback   *bool
 	AuditReceivingNtlmTraffic  *int64
 	NtlmMinClientSec           *int64
 	NtlmMinServerSec           *int64
 	RestrictSendingNtlmTraffic *int64
-	UseLogonCredential         *int64
-	AllowOnlineId              *int64
+	UseLogonCredential         *bool
+	AllowOnlineId              *bool
 }
 
 // computeLsaNtlm extracts the NTLM settings from the MSV1_0, WDigest, and pku2u
 // registry items. Pure function for unit testing.
 func computeLsaNtlm(msv10, wdigest, pku2u map[string]registry.RegistryKeyItem) lsaNtlmValues {
 	return lsaNtlmValues{
-		AllowNullSessionFallback:   regIntPtr(msv10, "AllowNullSessionFallback"),
+		AllowNullSessionFallback:   regBoolPtr(msv10, "AllowNullSessionFallback"),
 		AuditReceivingNtlmTraffic:  regIntPtr(msv10, "AuditReceivingNTLMTraffic"),
 		NtlmMinClientSec:           regIntPtr(msv10, "NTLMMinClientSec"),
 		NtlmMinServerSec:           regIntPtr(msv10, "NTLMMinServerSec"),
 		RestrictSendingNtlmTraffic: regIntPtr(msv10, "RestrictSendingNTLMTraffic"),
-		UseLogonCredential:         regIntPtr(wdigest, "UseLogonCredential"),
-		AllowOnlineId:              regIntPtr(pku2u, "AllowOnlineID"),
+		UseLogonCredential:         regBoolPtr(wdigest, "UseLogonCredential"),
+		AllowOnlineId:              regBoolPtr(pku2u, "AllowOnlineID"),
 	}
 }
 
@@ -147,14 +159,14 @@ func computeLsaNtlm(msv10, wdigest, pku2u map[string]registry.RegistryKeyItem) l
 // nullable pointers.
 type lsaSecureChannelValues struct {
 	AuditNtlmInDomain          *int64
-	BlockNetbiosDiscovery      *int64
-	DisablePasswordChange      *int64
+	BlockNetbiosDiscovery      *bool
+	DisablePasswordChange      *bool
 	MaximumPasswordAge         *int64
-	RefusePasswordChange       *int64
-	RequireSignOrSeal          *int64
-	RequireStrongKey           *int64
-	SealSecureChannel          *int64
-	SignSecureChannel          *int64
+	RefusePasswordChange       *bool
+	RequireSignOrSeal          *bool
+	RequireStrongKey           *bool
+	SealSecureChannel          *bool
+	SignSecureChannel          *bool
 	VulnerableChannelAllowList *string
 }
 
@@ -165,31 +177,31 @@ type lsaSecureChannelValues struct {
 func computeLsaSecureChannel(netlogon, netlogonPolicy map[string]registry.RegistryKeyItem) lsaSecureChannelValues {
 	return lsaSecureChannelValues{
 		AuditNtlmInDomain:          regIntPtr(netlogon, "AuditNTLMInDomain"),
-		BlockNetbiosDiscovery:      regIntPtr(netlogonPolicy, "BlockNetbiosDiscovery"),
-		DisablePasswordChange:      regIntPtr(netlogon, "DisablePasswordChange"),
+		BlockNetbiosDiscovery:      regBoolPtr(netlogonPolicy, "BlockNetbiosDiscovery"),
+		DisablePasswordChange:      regBoolPtr(netlogon, "DisablePasswordChange"),
 		MaximumPasswordAge:         regIntPtr(netlogon, "MaximumPasswordAge"),
-		RefusePasswordChange:       regIntPtr(netlogon, "RefusePasswordChange"),
-		RequireSignOrSeal:          regIntPtr(netlogon, "RequireSignOrSeal"),
-		RequireStrongKey:           regIntPtr(netlogon, "RequireStrongKey"),
-		SealSecureChannel:          regIntPtr(netlogon, "SealSecureChannel"),
-		SignSecureChannel:          regIntPtr(netlogon, "SignSecureChannel"),
+		RefusePasswordChange:       regBoolPtr(netlogon, "RefusePasswordChange"),
+		RequireSignOrSeal:          regBoolPtr(netlogon, "RequireSignOrSeal"),
+		RequireStrongKey:           regBoolPtr(netlogon, "RequireStrongKey"),
+		SealSecureChannel:          regBoolPtr(netlogon, "SealSecureChannel"),
+		SignSecureChannel:          regBoolPtr(netlogon, "SignSecureChannel"),
 		VulnerableChannelAllowList: regStringPtr(netlogon, "vulnerablechannelallowlist"),
 	}
 }
 
-func (r *mqlWindowsLsa) disableDomainCreds() (int64, error)          { return 0, r.populate() }
-func (r *mqlWindowsLsa) everyoneIncludesAnonymous() (int64, error)   { return 0, r.populate() }
-func (r *mqlWindowsLsa) forceGuest() (int64, error)                  { return 0, r.populate() }
-func (r *mqlWindowsLsa) limitBlankPasswordUse() (int64, error)       { return 0, r.populate() }
-func (r *mqlWindowsLsa) lmCompatibilityLevel() (int64, error)        { return 0, r.populate() }
-func (r *mqlWindowsLsa) noLmHash() (int64, error)                    { return 0, r.populate() }
-func (r *mqlWindowsLsa) restrictAnonymous() (int64, error)           { return 0, r.populate() }
-func (r *mqlWindowsLsa) restrictAnonymousSam() (int64, error)        { return 0, r.populate() }
-func (r *mqlWindowsLsa) restrictRemoteSam() (string, error)          { return "", r.populate() }
-func (r *mqlWindowsLsa) runAsPpl() (int64, error)                    { return 0, r.populate() }
-func (r *mqlWindowsLsa) sceNoApplyLegacyAuditPolicy() (int64, error) { return 0, r.populate() }
-func (r *mqlWindowsLsa) submitControl() (int64, error)               { return 0, r.populate() }
-func (r *mqlWindowsLsa) useMachineId() (int64, error)                { return 0, r.populate() }
+func (r *mqlWindowsLsa) disableDomainCreds() (bool, error)          { return false, r.populate() }
+func (r *mqlWindowsLsa) everyoneIncludesAnonymous() (bool, error)   { return false, r.populate() }
+func (r *mqlWindowsLsa) forceGuest() (bool, error)                  { return false, r.populate() }
+func (r *mqlWindowsLsa) limitBlankPasswordUse() (bool, error)       { return false, r.populate() }
+func (r *mqlWindowsLsa) lmCompatibilityLevel() (int64, error)       { return 0, r.populate() }
+func (r *mqlWindowsLsa) noLmHash() (bool, error)                    { return false, r.populate() }
+func (r *mqlWindowsLsa) restrictAnonymous() (int64, error)          { return 0, r.populate() }
+func (r *mqlWindowsLsa) restrictAnonymousSam() (bool, error)        { return false, r.populate() }
+func (r *mqlWindowsLsa) restrictRemoteSam() (string, error)         { return "", r.populate() }
+func (r *mqlWindowsLsa) runAsPpl() (int64, error)                   { return 0, r.populate() }
+func (r *mqlWindowsLsa) sceNoApplyLegacyAuditPolicy() (bool, error) { return false, r.populate() }
+func (r *mqlWindowsLsa) submitControl() (bool, error)               { return false, r.populate() }
+func (r *mqlWindowsLsa) useMachineId() (bool, error)                { return false, r.populate() }
 
 // populate reads the Lsa key once and fills every top-level field. Each field
 // accessor delegates here; the lazy-field machinery caches the results so the
@@ -201,19 +213,19 @@ func (r *mqlWindowsLsa) populate() error {
 	}
 	v := computeLsa(items)
 
-	r.DisableDomainCreds = intFieldPtr(v.DisableDomainCreds)
-	r.EveryoneIncludesAnonymous = intFieldPtr(v.EveryoneIncludesAnonymous)
-	r.ForceGuest = intFieldPtr(v.ForceGuest)
-	r.LimitBlankPasswordUse = intFieldPtr(v.LimitBlankPasswordUse)
+	r.DisableDomainCreds = boolFieldPtr(v.DisableDomainCreds)
+	r.EveryoneIncludesAnonymous = boolFieldPtr(v.EveryoneIncludesAnonymous)
+	r.ForceGuest = boolFieldPtr(v.ForceGuest)
+	r.LimitBlankPasswordUse = boolFieldPtr(v.LimitBlankPasswordUse)
 	r.LmCompatibilityLevel = intFieldPtr(v.LmCompatibilityLevel)
-	r.NoLmHash = intFieldPtr(v.NoLmHash)
+	r.NoLmHash = boolFieldPtr(v.NoLmHash)
 	r.RestrictAnonymous = intFieldPtr(v.RestrictAnonymous)
-	r.RestrictAnonymousSam = intFieldPtr(v.RestrictAnonymousSam)
+	r.RestrictAnonymousSam = boolFieldPtr(v.RestrictAnonymousSam)
 	r.RestrictRemoteSam = stringFieldPtr(v.RestrictRemoteSam)
 	r.RunAsPpl = intFieldPtr(v.RunAsPpl)
-	r.SceNoApplyLegacyAuditPolicy = intFieldPtr(v.SceNoApplyLegacyAuditPolicy)
-	r.SubmitControl = intFieldPtr(v.SubmitControl)
-	r.UseMachineId = intFieldPtr(v.UseMachineId)
+	r.SceNoApplyLegacyAuditPolicy = boolFieldPtr(v.SceNoApplyLegacyAuditPolicy)
+	r.SubmitControl = boolFieldPtr(v.SubmitControl)
+	r.UseMachineId = boolFieldPtr(v.UseMachineId)
 	return nil
 }
 
@@ -235,13 +247,13 @@ func (r *mqlWindowsLsa) ntlm() (*mqlWindowsLsaNtlm, error) {
 
 	o, err := CreateResource(r.MqlRuntime, "windows.lsa.ntlm", map[string]*llx.RawData{
 		"__id":                       llx.StringData("windows.lsa.ntlm"),
-		"allowNullSessionFallback":   llx.IntDataPtr(v.AllowNullSessionFallback),
+		"allowNullSessionFallback":   llx.BoolDataPtr(v.AllowNullSessionFallback),
 		"auditReceivingNtlmTraffic":  llx.IntDataPtr(v.AuditReceivingNtlmTraffic),
 		"ntlmMinClientSec":           llx.IntDataPtr(v.NtlmMinClientSec),
 		"ntlmMinServerSec":           llx.IntDataPtr(v.NtlmMinServerSec),
 		"restrictSendingNtlmTraffic": llx.IntDataPtr(v.RestrictSendingNtlmTraffic),
-		"useLogonCredential":         llx.IntDataPtr(v.UseLogonCredential),
-		"allowOnlineId":              llx.IntDataPtr(v.AllowOnlineId),
+		"useLogonCredential":         llx.BoolDataPtr(v.UseLogonCredential),
+		"allowOnlineId":              llx.BoolDataPtr(v.AllowOnlineId),
 	})
 	if err != nil {
 		return nil, err
@@ -264,14 +276,14 @@ func (r *mqlWindowsLsa) secureChannel() (*mqlWindowsLsaSecureChannel, error) {
 	o, err := CreateResource(r.MqlRuntime, "windows.lsa.secureChannel", map[string]*llx.RawData{
 		"__id":                       llx.StringData("windows.lsa.secureChannel"),
 		"auditNtlmInDomain":          llx.IntDataPtr(v.AuditNtlmInDomain),
-		"blockNetbiosDiscovery":      llx.IntDataPtr(v.BlockNetbiosDiscovery),
-		"disablePasswordChange":      llx.IntDataPtr(v.DisablePasswordChange),
+		"blockNetbiosDiscovery":      llx.BoolDataPtr(v.BlockNetbiosDiscovery),
+		"disablePasswordChange":      llx.BoolDataPtr(v.DisablePasswordChange),
 		"maximumPasswordAge":         llx.IntDataPtr(v.MaximumPasswordAge),
-		"refusePasswordChange":       llx.IntDataPtr(v.RefusePasswordChange),
-		"requireSignOrSeal":          llx.IntDataPtr(v.RequireSignOrSeal),
-		"requireStrongKey":           llx.IntDataPtr(v.RequireStrongKey),
-		"sealSecureChannel":          llx.IntDataPtr(v.SealSecureChannel),
-		"signSecureChannel":          llx.IntDataPtr(v.SignSecureChannel),
+		"refusePasswordChange":       llx.BoolDataPtr(v.RefusePasswordChange),
+		"requireSignOrSeal":          llx.BoolDataPtr(v.RequireSignOrSeal),
+		"requireStrongKey":           llx.BoolDataPtr(v.RequireStrongKey),
+		"sealSecureChannel":          llx.BoolDataPtr(v.SealSecureChannel),
+		"signSecureChannel":          llx.BoolDataPtr(v.SignSecureChannel),
 		"vulnerableChannelAllowList": llx.StringDataPtr(v.VulnerableChannelAllowList),
 	})
 	if err != nil {
@@ -287,6 +299,15 @@ func intFieldPtr(v *int64) plugin.TValue[int64] {
 		return plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 	return plugin.TValue[int64]{Data: *v, State: plugin.StateIsSet}
+}
+
+// boolFieldPtr converts a nullable *bool into the generated plugin.TValue[bool]
+// field representation, marking the field null when the source pointer is nil.
+func boolFieldPtr(v *bool) plugin.TValue[bool] {
+	if v == nil {
+		return plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return plugin.TValue[bool]{Data: *v, State: plugin.StateIsSet}
 }
 
 // stringFieldPtr converts a nullable *string into the generated
