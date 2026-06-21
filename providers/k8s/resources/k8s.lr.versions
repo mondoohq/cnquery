@@ -228,6 +228,7 @@ k8s.cronjob.hostIPC 13.2.2
 k8s.cronjob.hostNetwork 13.2.2
 k8s.cronjob.hostPID 13.2.2
 k8s.cronjob.id 9.0.0
+k8s.cronjob.imageRegistries 13.3.1
 k8s.cronjob.initContainers 9.0.0
 k8s.cronjob.jobs 13.0.16
 k8s.cronjob.kind 9.0.0
@@ -256,6 +257,8 @@ k8s.cronjob.timeZone 13.0.16
 k8s.cronjob.uid 9.0.0
 k8s.cronjob.usesHostNamespaces 13.2.2
 k8s.cronjob.usesHostPath 13.2.2
+k8s.cronjob.usesImageDigest 13.3.1
+k8s.cronjob.usesLatestTag 13.3.1
 k8s.cronjob.usesSecretsAsEnv 13.3.1
 k8s.cronjob.usesUnconfinedSeccomp 13.3.1
 k8s.cronjobs 9.0.0
@@ -296,6 +299,7 @@ k8s.daemonset.hostIPC 13.2.2
 k8s.daemonset.hostNetwork 13.2.2
 k8s.daemonset.hostPID 13.2.2
 k8s.daemonset.id 9.0.0
+k8s.daemonset.imageRegistries 13.3.1
 k8s.daemonset.initContainers 9.0.0
 k8s.daemonset.kind 9.0.0
 k8s.daemonset.labels 9.0.0
@@ -327,6 +331,8 @@ k8s.daemonset.updateStrategy 13.0.16
 k8s.daemonset.updatedNumberScheduled 13.0.16
 k8s.daemonset.usesHostNamespaces 13.2.2
 k8s.daemonset.usesHostPath 13.2.2
+k8s.daemonset.usesImageDigest 13.3.1
+k8s.daemonset.usesLatestTag 13.3.1
 k8s.daemonset.usesSecretsAsEnv 13.3.1
 k8s.daemonset.usesUnconfinedSeccomp 13.3.1
 k8s.daemonsets 9.0.0
@@ -353,6 +359,7 @@ k8s.deployment.hostIPC 13.2.2
 k8s.deployment.hostNetwork 13.2.2
 k8s.deployment.hostPID 13.2.2
 k8s.deployment.id 9.0.0
+k8s.deployment.imageRegistries 13.3.1
 k8s.deployment.initContainers 9.0.0
 k8s.deployment.kind 9.0.0
 k8s.deployment.labels 9.0.0
@@ -385,6 +392,8 @@ k8s.deployment.unavailableReplicas 13.0.16
 k8s.deployment.updatedReplicas 13.0.16
 k8s.deployment.usesHostNamespaces 13.2.2
 k8s.deployment.usesHostPath 13.2.2
+k8s.deployment.usesImageDigest 13.3.1
+k8s.deployment.usesLatestTag 13.3.1
 k8s.deployment.usesSecretsAsEnv 13.3.1
 k8s.deployment.usesUnconfinedSeccomp 13.3.1
 k8s.deployments 9.0.0
@@ -669,6 +678,7 @@ k8s.job.hostIPC 13.2.2
 k8s.job.hostNetwork 13.2.2
 k8s.job.hostPID 13.2.2
 k8s.job.id 9.0.0
+k8s.job.imageRegistries 13.3.1
 k8s.job.initContainers 9.0.0
 k8s.job.kind 9.0.0
 k8s.job.labels 9.0.0
@@ -700,6 +710,8 @@ k8s.job.ttlSecondsAfterFinished 13.0.16
 k8s.job.uid 9.0.0
 k8s.job.usesHostNamespaces 13.2.2
 k8s.job.usesHostPath 13.2.2
+k8s.job.usesImageDigest 13.3.1
+k8s.job.usesLatestTag 13.3.1
 k8s.job.usesSecretsAsEnv 13.3.1
 k8s.job.usesUnconfinedSeccomp 13.3.1
 k8s.jobs 9.0.0
@@ -955,6 +967,7 @@ k8s.pod.hostPID 13.0.16
 k8s.pod.hostname 13.0.16
 k8s.pod.id 9.0.0
 k8s.pod.imagePullSecrets 13.0.16
+k8s.pod.imageRegistries 13.3.1
 k8s.pod.initContainers 9.0.0
 k8s.pod.job 13.0.16
 k8s.pod.kind 9.0.0
@@ -1005,6 +1018,8 @@ k8s.pod.topologySpreadConstraints 13.0.16
 k8s.pod.uid 9.0.0
 k8s.pod.usesHostNamespaces 13.2.2
 k8s.pod.usesHostPath 13.2.2
+k8s.pod.usesImageDigest 13.3.1
+k8s.pod.usesLatestTag 13.3.1
 k8s.pod.usesSecretsAsEnv 13.3.1
 k8s.pod.usesUnconfinedSeccomp 13.3.1
 k8s.podDisruptionBudgets 13.0.16
@@ -1176,6 +1191,7 @@ k8s.replicaset.hostIPC 13.2.2
 k8s.replicaset.hostNetwork 13.2.2
 k8s.replicaset.hostPID 13.2.2
 k8s.replicaset.id 9.0.0
+k8s.replicaset.imageRegistries 13.3.1
 k8s.replicaset.initContainers 9.0.0
 k8s.replicaset.kind 9.0.0
 k8s.replicaset.labels 9.0.0
@@ -1202,6 +1218,8 @@ k8s.replicaset.selector 13.0.16
 k8s.replicaset.uid 9.0.0
 k8s.replicaset.usesHostNamespaces 13.2.2
 k8s.replicaset.usesHostPath 13.2.2
+k8s.replicaset.usesImageDigest 13.3.1
+k8s.replicaset.usesLatestTag 13.3.1
 k8s.replicaset.usesSecretsAsEnv 13.3.1
 k8s.replicaset.usesUnconfinedSeccomp 13.3.1
 k8s.replicasets 9.0.0
@@ -1329,6 +1347,7 @@ k8s.statefulset.hostIPC 13.2.2
 k8s.statefulset.hostNetwork 13.2.2
 k8s.statefulset.hostPID 13.2.2
 k8s.statefulset.id 9.0.0
+k8s.statefulset.imageRegistries 13.3.1
 k8s.statefulset.initContainers 9.0.0
 k8s.statefulset.kind 9.0.0
 k8s.statefulset.labels 9.0.0
@@ -1363,6 +1382,8 @@ k8s.statefulset.updateStrategy 13.0.16
 k8s.statefulset.updatedReplicas 13.0.16
 k8s.statefulset.usesHostNamespaces 13.2.2
 k8s.statefulset.usesHostPath 13.2.2
+k8s.statefulset.usesImageDigest 13.3.1
+k8s.statefulset.usesLatestTag 13.3.1
 k8s.statefulset.usesSecretsAsEnv 13.3.1
 k8s.statefulset.usesUnconfinedSeccomp 13.3.1
 k8s.statefulsets 9.0.0

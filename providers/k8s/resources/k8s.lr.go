@@ -872,6 +872,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.pod.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
 	},
@@ -1142,6 +1151,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.deployment.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1310,6 +1328,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.daemonset.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.daemonset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetId()).ToDataRes(types.String)
 	},
@@ -1474,6 +1501,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.statefulset.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.statefulset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetId()).ToDataRes(types.String)
@@ -1655,6 +1691,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.replicaset.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
 	},
@@ -1804,6 +1849,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.job.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.job.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.job.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetId()).ToDataRes(types.String)
@@ -1990,6 +2044,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.consumedSecrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetConsumedSecrets()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.cronjob.usesImageDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesImageDigest()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.usesLatestTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesLatestTag()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.cronjob.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetId()).ToDataRes(types.String)
@@ -5047,6 +5110,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5411,6 +5486,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5639,6 +5726,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5861,6 +5960,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.consumedSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6107,6 +6218,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6309,6 +6432,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.consumedSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6561,6 +6696,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.consumedSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).ConsumedSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesImageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesImageDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesLatestTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesLatestTag, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11887,6 +12034,9 @@ type mqlK8sPod struct {
 	UsesSecretsAsEnv              plugin.TValue[bool]
 	MountsSecretVolumes           plugin.TValue[bool]
 	ConsumedSecrets               plugin.TValue[[]any]
+	UsesImageDigest               plugin.TValue[bool]
+	UsesLatestTag                 plugin.TValue[bool]
+	ImageRegistries               plugin.TValue[[]any]
 	Id                            plugin.TValue[string]
 	Uid                           plugin.TValue[string]
 	ResourceVersion               plugin.TValue[string]
@@ -12108,6 +12258,24 @@ func (c *mqlK8sPod) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sPod) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -12655,6 +12823,9 @@ type mqlK8sDeployment struct {
 	UsesSecretsAsEnv             plugin.TValue[bool]
 	MountsSecretVolumes          plugin.TValue[bool]
 	ConsumedSecrets              plugin.TValue[[]any]
+	UsesImageDigest              plugin.TValue[bool]
+	UsesLatestTag                plugin.TValue[bool]
+	ImageRegistries              plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -12872,6 +13043,24 @@ func (c *mqlK8sDeployment) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sDeployment) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sDeployment) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -13127,6 +13316,9 @@ type mqlK8sDaemonset struct {
 	UsesSecretsAsEnv             plugin.TValue[bool]
 	MountsSecretVolumes          plugin.TValue[bool]
 	ConsumedSecrets              plugin.TValue[[]any]
+	UsesImageDigest              plugin.TValue[bool]
+	UsesLatestTag                plugin.TValue[bool]
+	ImageRegistries              plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -13343,6 +13535,24 @@ func (c *mqlK8sDaemonset) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sDaemonset) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -13592,6 +13802,9 @@ type mqlK8sStatefulset struct {
 	UsesSecretsAsEnv                     plugin.TValue[bool]
 	MountsSecretVolumes                  plugin.TValue[bool]
 	ConsumedSecrets                      plugin.TValue[[]any]
+	UsesImageDigest                      plugin.TValue[bool]
+	UsesLatestTag                        plugin.TValue[bool]
+	ImageRegistries                      plugin.TValue[[]any]
 	Id                                   plugin.TValue[string]
 	Uid                                  plugin.TValue[string]
 	ResourceVersion                      plugin.TValue[string]
@@ -13813,6 +14026,24 @@ func (c *mqlK8sStatefulset) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sStatefulset) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -14092,6 +14323,9 @@ type mqlK8sReplicaset struct {
 	UsesSecretsAsEnv             plugin.TValue[bool]
 	MountsSecretVolumes          plugin.TValue[bool]
 	ConsumedSecrets              plugin.TValue[[]any]
+	UsesImageDigest              plugin.TValue[bool]
+	UsesLatestTag                plugin.TValue[bool]
+	ImageRegistries              plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -14303,6 +14537,24 @@ func (c *mqlK8sReplicaset) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sReplicaset) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -14522,6 +14774,9 @@ type mqlK8sJob struct {
 	UsesSecretsAsEnv             plugin.TValue[bool]
 	MountsSecretVolumes          plugin.TValue[bool]
 	ConsumedSecrets              plugin.TValue[[]any]
+	UsesImageDigest              plugin.TValue[bool]
+	UsesLatestTag                plugin.TValue[bool]
+	ImageRegistries              plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -14745,6 +15000,24 @@ func (c *mqlK8sJob) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sJob) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sJob) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 
@@ -15036,6 +15309,9 @@ type mqlK8sCronjob struct {
 	UsesSecretsAsEnv             plugin.TValue[bool]
 	MountsSecretVolumes          plugin.TValue[bool]
 	ConsumedSecrets              plugin.TValue[[]any]
+	UsesImageDigest              plugin.TValue[bool]
+	UsesLatestTag                plugin.TValue[bool]
+	ImageRegistries              plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -15249,6 +15525,24 @@ func (c *mqlK8sCronjob) GetMountsSecretVolumes() *plugin.TValue[bool] {
 func (c *mqlK8sCronjob) GetConsumedSecrets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ConsumedSecrets, func() ([]any, error) {
 		return c.consumedSecrets()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesImageDigest() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesImageDigest, func() (bool, error) {
+		return c.usesImageDigest()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesLatestTag() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesLatestTag, func() (bool, error) {
+		return c.usesLatestTag()
+	})
+}
+
+func (c *mqlK8sCronjob) GetImageRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
+		return c.imageRegistries()
 	})
 }
 

@@ -267,3 +267,43 @@ spec:
       - name: tls
         secret:
           secretName: tls-secret
+---
+# All images pinned by digest (immutable). Used by image-provenance tests.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: digest-pinned
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: digest-pinned
+  template:
+    metadata:
+      labels:
+        app: digest-pinned
+    spec:
+      containers:
+      - name: app
+        image: nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000
+---
+# Uses the latest tag implicitly (nginx) and explicitly from another registry.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: latest-image
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: latest-image
+  template:
+    metadata:
+      labels:
+        app: latest-image
+    spec:
+      containers:
+      - name: app
+        image: nginx
+      - name: side
+        image: gcr.io/foo/bar:latest

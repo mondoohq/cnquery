@@ -442,6 +442,12 @@ private k8s.pod @defaults("namespace name created"){
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -658,6 +664,12 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -806,6 +818,12 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -953,6 +971,12 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1108,6 +1132,12 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1243,6 +1273,12 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1403,6 +1439,12 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   mountsSecretVolumes() bool
   // Names of every Secret the workload references (env vars, mounted/projected volumes, and image-pull secrets)
   consumedSecrets() []string
+  // Whether every container image is pinned by digest (immutable)
+  usesImageDigest() bool
+  // Whether any container image uses the mutable "latest" tag (explicitly or implicitly)
+  usesLatestTag() bool
+  // Distinct registry domains the container images are pulled from
+  imageRegistries() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
