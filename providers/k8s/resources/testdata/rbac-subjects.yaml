@@ -60,6 +60,24 @@ metadata:
   name: reader-sa
   namespace: default
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: named-sa
+  namespace: default
+---
+# Reads a single named secret only (ResourceNames-scoped), namespaced.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: named-secret-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+    resourceNames: ["app-secret"]
+---
 # Cluster-wide cluster-admin to a user and a group (no namespace on subjects).
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -137,3 +155,19 @@ subjects:
   - kind: User
     name: alice
     apiGroup: rbac.authorization.k8s.io
+---
+# Grants the named-secret-reader Role (get on secret "app-secret" only) to
+# named-sa, scoped to the default namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-named-secret
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: named-secret-reader
+subjects:
+  - kind: ServiceAccount
+    name: named-sa
+    namespace: default

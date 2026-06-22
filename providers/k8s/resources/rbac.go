@@ -43,11 +43,28 @@ func rbacListMatches(list []string, target string) bool {
 }
 
 // rbacRuleGrants reports whether the rule grants the given verb on the given
-// (apiGroup, resource), honoring wildcards in any of the three dimensions.
-func rbacRuleGrants(rule rbacv1.PolicyRule, apiGroup, resource, verb string) bool {
+// (apiGroup, resource, resourceName), honoring wildcards in the group, resource,
+// and verb dimensions. A rule with a non-empty ResourceNames list grants the
+// action only on those named objects; an empty list grants it on every object.
+// An empty resourceName means the action is not scoped to a specific object, so
+// a name-restricted rule still counts (the subject can act on at least the named
+// objects). This matches the API server's RBAC authorizer and keeps whoCan
+// consistent with k8s.accessReview.
+func rbacRuleGrants(rule rbacv1.PolicyRule, apiGroup, resource, verb, resourceName string) bool {
 	return rbacListMatches(rule.APIGroups, apiGroup) &&
 		rbacListMatches(rule.Resources, resource) &&
-		rbacListMatches(rule.Verbs, verb)
+		rbacListMatches(rule.Verbs, verb) &&
+		rbacRuleMatchesResourceName(rule, resourceName)
+}
+
+// rbacRuleMatchesResourceName reports whether a rule covers the named object.
+// An empty resourceName (unscoped query) or an empty ResourceNames list (rule
+// applies to all objects of the type) matches anything.
+func rbacRuleMatchesResourceName(rule rbacv1.PolicyRule, resourceName string) bool {
+	if resourceName == "" || len(rule.ResourceNames) == 0 {
+		return true
+	}
+	return stringx.Contains(rule.ResourceNames, resourceName)
 }
 
 // rbacHasWildcardRule reports whether any rule uses a wildcard for verbs, API
@@ -87,19 +104,19 @@ func rbacAllowsPrivilegeEscalation(rules []rbacv1.PolicyRule) bool {
 	for i := range rules {
 		rule := rules[i]
 		// escalate on roles/clusterroles
-		if rbacRuleGrants(rule, rbacGroup, "roles", "escalate") ||
-			rbacRuleGrants(rule, rbacGroup, "clusterroles", "escalate") {
+		if rbacRuleGrants(rule, rbacGroup, "roles", "escalate", "") ||
+			rbacRuleGrants(rule, rbacGroup, "clusterroles", "escalate", "") {
 			return true
 		}
 		// bind on roles/clusterroles
-		if rbacRuleGrants(rule, rbacGroup, "roles", "bind") ||
-			rbacRuleGrants(rule, rbacGroup, "clusterroles", "bind") {
+		if rbacRuleGrants(rule, rbacGroup, "roles", "bind", "") ||
+			rbacRuleGrants(rule, rbacGroup, "clusterroles", "bind", "") {
 			return true
 		}
 		// impersonate users/groups/serviceaccounts (core group)
-		if rbacRuleGrants(rule, "", "users", "impersonate") ||
-			rbacRuleGrants(rule, "", "groups", "impersonate") ||
-			rbacRuleGrants(rule, "", "serviceaccounts", "impersonate") {
+		if rbacRuleGrants(rule, "", "users", "impersonate", "") ||
+			rbacRuleGrants(rule, "", "groups", "impersonate", "") ||
+			rbacRuleGrants(rule, "", "serviceaccounts", "impersonate", "") {
 			return true
 		}
 	}
@@ -111,9 +128,9 @@ func rbacAllowsPrivilegeEscalation(rules []rbacv1.PolicyRule) bool {
 func rbacCanReadSecrets(rules []rbacv1.PolicyRule) bool {
 	for i := range rules {
 		rule := rules[i]
-		if rbacRuleGrants(rule, "", "secrets", "get") ||
-			rbacRuleGrants(rule, "", "secrets", "list") ||
-			rbacRuleGrants(rule, "", "secrets", "watch") {
+		if rbacRuleGrants(rule, "", "secrets", "get", "") ||
+			rbacRuleGrants(rule, "", "secrets", "list", "") ||
+			rbacRuleGrants(rule, "", "secrets", "watch", "") {
 			return true
 		}
 	}

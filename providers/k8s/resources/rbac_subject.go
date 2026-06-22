@@ -328,11 +328,12 @@ func (k *mqlK8sRbacWhoCan) subjects() ([]any, error) {
 	verb := k.Verb.Data
 	resource := k.Resource.Data
 	group := k.Group.Data
+	resourceName := k.Name.Data
 	queryNamespace := k.Namespace.Data
 
 	grants := func(rules []rbacv1.PolicyRule) bool {
 		for i := range rules {
-			if rbacRuleGrants(rules[i], group, resource, verb) {
+			if rbacRuleGrants(rules[i], group, resource, verb, resourceName) {
 				return true
 			}
 		}

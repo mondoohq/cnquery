@@ -51,13 +51,14 @@ func TestRbacSubjects_Enumeration(t *testing.T) {
 	subjects := subjectsByKey(t, k8s)
 
 	// alice is named in two bindings but must appear once (dedup).
-	assert.Len(t, subjects, 5)
+	assert.Len(t, subjects, 6)
 	for _, want := range []string{
 		"User//alice",
 		"Group//ops-admins",
 		"User//bob",
 		"ServiceAccount/default/secret-sa",
 		"ServiceAccount/default/reader-sa",
+		"ServiceAccount/default/named-sa",
 	} {
 		assert.Contains(t, subjects, want)
 	}
@@ -87,6 +88,9 @@ func TestRbacSubjects_Predicates(t *testing.T) {
 		{"User//bob", false, false, true, false},
 		// configmap-reader: benign.
 		{"ServiceAccount/default/reader-sa", false, false, false, false},
+		// named-secret-reader: reads secrets (the capability predicate is
+		// name-agnostic, so a ResourceNames-scoped grant still counts).
+		{"ServiceAccount/default/named-sa", false, true, false, false},
 	}
 
 	for _, tt := range tests {
@@ -217,5 +221,38 @@ func TestRbacWhoCan(t *testing.T) {
 		whoCanKeys(t, runtime, map[string]*llx.RawData{
 			"verb":     llx.StringData("delete"),
 			"resource": llx.StringData("pods"),
+		}))
+}
+
+func TestRbacWhoCan_ResourceName(t *testing.T) {
+	runtime := rbacSubjectsRuntime(t)
+
+	// Unscoped get on secrets: wildcard admins, secret-sa (unrestricted secret
+	// read), and named-sa (its grant is ResourceNames-scoped but still counts
+	// when no specific object is queried).
+	assert.ElementsMatch(t,
+		[]string{"User//alice", "Group//ops-admins", "ServiceAccount/default/secret-sa", "ServiceAccount/default/named-sa"},
+		whoCanKeys(t, runtime, map[string]*llx.RawData{
+			"verb":     llx.StringData("get"),
+			"resource": llx.StringData("secrets"),
+		}))
+
+	// Scoped to the object named-sa is allowed: named-sa is included.
+	assert.ElementsMatch(t,
+		[]string{"User//alice", "Group//ops-admins", "ServiceAccount/default/secret-sa", "ServiceAccount/default/named-sa"},
+		whoCanKeys(t, runtime, map[string]*llx.RawData{
+			"verb":     llx.StringData("get"),
+			"resource": llx.StringData("secrets"),
+			"name":     llx.StringData("app-secret"),
+		}))
+
+	// Scoped to a different object: named-sa's ResourceNames-restricted grant no
+	// longer matches, but the unrestricted secret-reader and wildcard admins do.
+	assert.ElementsMatch(t,
+		[]string{"User//alice", "Group//ops-admins", "ServiceAccount/default/secret-sa"},
+		whoCanKeys(t, runtime, map[string]*llx.RawData{
+			"verb":     llx.StringData("get"),
+			"resource": llx.StringData("secrets"),
+			"name":     llx.StringData("other-secret"),
 		}))
 }
