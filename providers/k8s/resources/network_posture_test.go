@@ -51,7 +51,7 @@ func TestServiceNetworkExposureArgsLoadBalancerPublic(t *testing.T) {
 	args := serviceNetworkExposureArgs(svc, nil)
 	require.Len(t, args, 1)
 
-	assert.Equal(t, "service:prod:web", args[0]["id"].Value)
+	assert.Equal(t, "service:prod:web", args[0]["__id"].Value)
 	assert.Equal(t, "Service:prod:web", args[0]["sourceRef"].Value)
 	assert.Equal(t, true, args[0]["internetExposed"].Value)
 	assert.Equal(t, "publicLoadBalancerAddress", args[0]["exposureReason"].Value)
@@ -258,7 +258,7 @@ func TestGatewayRouteNetworkExposureArgsHTTPRoutePublicHostname(t *testing.T) {
 	})
 	require.Len(t, args, 1)
 
-	assert.Equal(t, "httproute:prod:web", args[0]["id"].Value)
+	assert.Equal(t, "httproute:prod:web", args[0]["__id"].Value)
 	assert.Equal(t, "HTTPRoute", args[0]["sourceKind"].Value)
 	assert.Equal(t, true, args[0]["internetExposed"].Value)
 	assert.Equal(t, "gatewayRoutePublicHostname", args[0]["exposureReason"].Value)
@@ -431,7 +431,7 @@ func TestNetworkPolicyCoverageArgsDoesNotTreatAllowAllEgressAsDefaultDeny(t *tes
 	args, err := networkPolicyCoverageArgs(policy)
 	require.NoError(t, err)
 
-	assert.Equal(t, "networkpolicy:prod:allow-egress", args["id"].Value)
+	assert.Equal(t, "networkpolicy:prod:allow-egress", args["__id"].Value)
 	assert.Equal(t, "NetworkPolicy:prod:allow-egress", args["policyRef"].Value)
 	assert.Equal(t, true, args["defaultDenyIngress"].Value)
 	assert.Equal(t, false, args["defaultDenyEgress"].Value)
@@ -616,7 +616,7 @@ func TestPrimaryInterfaceCoverageArgsForPodCoveredByDefaultDenyPolicy(t *testing
 
 	args := primaryInterfaceCoverageArgsForPod(pod, policyCoverage)
 
-	assert.Equal(t, "primary-interface:prod:api-0", args["id"].Value)
+	assert.Equal(t, "primary-interface:prod:api-0", args["__id"].Value)
 	assert.Equal(t, "Pod:prod:api-0", args["workloadRef"].Value)
 	assert.Equal(t, []any{"primary"}, args["interfaces"].Value)
 	assert.Equal(t, true, args["defaultDenyEgress"].Value)
@@ -672,7 +672,7 @@ func TestPrimaryInterfaceCoverageArgsForPodReportsUncoveredPod(t *testing.T) {
 
 	args := primaryInterfaceCoverageArgsForPod(pod, nil)
 
-	assert.Equal(t, "primary-interface:prod:api-0", args["id"].Value)
+	assert.Equal(t, "primary-interface:prod:api-0", args["__id"].Value)
 	assert.Equal(t, false, args["defaultDenyIngress"].Value)
 	assert.Equal(t, false, args["defaultDenyEgress"].Value)
 	assert.Equal(t, []any{
@@ -922,7 +922,7 @@ func TestHBNNetworkExposureArgsPublicInbound(t *testing.T) {
 	args := hbnNetworkExposureArgs(inbound)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "hbn-inbound:prod:public-api", args[0]["id"].Value)
+	assert.Equal(t, "hbn-inbound:prod:public-api", args[0]["__id"].Value)
 	assert.Equal(t, "hbnInboundPublicDestination", args[0]["exposureReason"].Value)
 	assert.Equal(t, true, args[0]["internetExposed"].Value)
 	assert.Equal(t, []any{"8.8.8.8"}, args[0]["addresses"].Value)
@@ -986,7 +986,7 @@ func TestMultiNetworkPolicyCoverageArgs(t *testing.T) {
 	args := networkPolicyCoverageArgsFromUnstructured(policy)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "multinetworkpolicy:prod:allow-db", args[0]["id"].Value)
+	assert.Equal(t, "multinetworkpolicy:prod:allow-db", args[0]["__id"].Value)
 	assert.Equal(t, "MultiNetworkPolicy:prod:allow-db", args[0]["policyRef"].Value)
 	assert.Equal(t, []any{"prod/macvlan1", "secondary"}, args[0]["interfaces"].Value)
 	assert.Equal(t, []any{"MultiNetworkPolicy:prod:allow-db"}, args[0]["multiNetworkPolicies"].Value)
@@ -1031,7 +1031,7 @@ func TestSecondaryInterfaceCoverageArgsForPodUncoveredStringAnnotation(t *testin
 
 	require.Len(t, args, 2)
 	macvlanCoverage := coverageArgsWithInterface(t, args, "prod/macvlan1")
-	assert.Contains(t, macvlanCoverage["id"].Value, "secondary-interface:prod:api-0:")
+	assert.Contains(t, macvlanCoverage["__id"].Value, "secondary-interface:prod:api-0:")
 	assert.Equal(t, "Pod:prod:api-0", macvlanCoverage["workloadRef"].Value)
 	assert.Equal(t, "prod", macvlanCoverage["namespace"].Value)
 	assert.Equal(t, []any{"macvlan1", "net1", "prod/macvlan1", "secondary"}, macvlanCoverage["interfaces"].Value)
@@ -1284,7 +1284,7 @@ func TestAdminNetworkPolicyCoverageArgs(t *testing.T) {
 	args := networkPolicyCoverageArgsFromUnstructured(policy)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "adminnetworkpolicy:cluster-guardrails", args[0]["id"].Value)
+	assert.Equal(t, "adminnetworkpolicy:cluster-guardrails", args[0]["__id"].Value)
 	assert.Equal(t, "AdminNetworkPolicy:cluster-guardrails", args[0]["policyRef"].Value)
 	assert.Equal(t, []any{"AdminNetworkPolicy:cluster-guardrails"}, args[0]["adminNetworkPolicies"].Value)
 	assert.Equal(t, true, args[0]["defaultDenyIngress"].Value)
@@ -1343,7 +1343,7 @@ func TestBaselineAdminNetworkPolicyCoverageArgsMissingEgress(t *testing.T) {
 	args := networkPolicyCoverageArgsFromUnstructured(policy)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "baselineadminnetworkpolicy:default", args[0]["id"].Value)
+	assert.Equal(t, "baselineadminnetworkpolicy:default", args[0]["__id"].Value)
 	assert.Equal(t, []any{"BaselineAdminNetworkPolicy:default"}, args[0]["adminNetworkPolicies"].Value)
 	assert.Equal(t, true, args[0]["defaultDenyIngress"].Value)
 	assert.Equal(t, false, args[0]["defaultDenyEgress"].Value)
@@ -1597,7 +1597,7 @@ func TestCalicoGlobalNetworkPolicyCoverageArgs(t *testing.T) {
 	args := networkPolicyCoverageArgsFromUnstructured(policy)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "globalnetworkpolicy::deny-public-egress", args[0]["id"].Value)
+	assert.Equal(t, "globalnetworkpolicy::deny-public-egress", args[0]["__id"].Value)
 	assert.Equal(t, []any{"GlobalNetworkPolicy:deny-public-egress"}, args[0]["calicoPolicies"].Value)
 	assert.Equal(t, true, args[0]["defaultDenyEgress"].Value)
 	assert.Equal(t, []any{"calico ingress policy was not observed"}, args[0]["coverageGaps"].Value)
@@ -1687,7 +1687,7 @@ func TestCiliumClusterwideNetworkPolicyCoverageArgs(t *testing.T) {
 	args := networkPolicyCoverageArgsFromUnstructured(policy)
 
 	require.Len(t, args, 1)
-	assert.Equal(t, "ciliumclusterwidenetworkpolicy::cluster-deny", args[0]["id"].Value)
+	assert.Equal(t, "ciliumclusterwidenetworkpolicy::cluster-deny", args[0]["__id"].Value)
 	assert.Equal(t, []any{"CiliumClusterwideNetworkPolicy:cluster-deny"}, args[0]["ciliumPolicies"].Value)
 	assert.Equal(t, false, args[0]["defaultDenyIngress"].Value)
 	assert.Equal(t, true, args[0]["defaultDenyEgress"].Value)

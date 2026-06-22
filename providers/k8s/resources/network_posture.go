@@ -456,21 +456,13 @@ func (k *mqlK8sNetworkpolicy) coverage() (*mqlK8sNetworkPolicyCoverage, error) {
 	return coverage.(*mqlK8sNetworkPolicyCoverage), nil
 }
 
-func (k *mqlK8sNetworkExposure) id() (string, error) {
-	return k.Id.Data, nil
-}
-
-func (k *mqlK8sEgressRoute) id() (string, error) {
-	return k.Id.Data, nil
-}
-
-func (k *mqlK8sEgressNat) id() (string, error) {
-	return k.Id.Data, nil
-}
-
-func (k *mqlK8sNetworkPolicyCoverage) id() (string, error) {
-	return k.Id.Data, nil
-}
+// These synthetic resources have no public id field; their deterministic
+// identity is the __id set at construction. The generated __id fallback still
+// references id(), so keep a trivial accessor returning the internal id.
+func (k *mqlK8sNetworkExposure) id() (string, error)       { return k.__id, nil }
+func (k *mqlK8sEgressRoute) id() (string, error)           { return k.__id, nil }
+func (k *mqlK8sEgressNat) id() (string, error)             { return k.__id, nil }
+func (k *mqlK8sNetworkPolicyCoverage) id() (string, error) { return k.__id, nil }
 
 func (k *mqlK8s) publicNodeAddresses() ([]string, error) {
 	nodes := k.GetNodes()
@@ -932,7 +924,7 @@ func networkPolicyCoverageRawArgs(id, namespace, policyRef string, selector map[
 		selector = map[string]any{}
 	}
 	return map[string]*llx.RawData{
-		"id":                               llx.StringData(id),
+		"__id":                             llx.StringData(id),
 		"workloadRef":                      llx.StringData(""),
 		"policyRef":                        llx.StringData(policyRef),
 		"namespace":                        llx.StringData(namespace),
@@ -2599,7 +2591,7 @@ type networkExposureInput struct {
 
 func networkExposureArgs(in networkExposureInput) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":                     llx.StringData(in.id),
+		"__id":                   llx.StringData(in.id),
 		"sourceKind":             llx.StringData(in.sourceKind),
 		"sourceRef":              llx.StringData(in.sourceRef),
 		"namespace":              llx.StringData(in.namespace),
@@ -2622,7 +2614,7 @@ func networkExposureArgs(in networkExposureInput) map[string]*llx.RawData {
 
 func egressRouteArgs(in egressRouteInput) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":                     llx.StringData(in.id),
+		"__id":                   llx.StringData(in.id),
 		"sourceRef":              llx.StringData(in.sourceRef),
 		"vrf":                    llx.StringData(in.vrf),
 		"network":                llx.StringData(in.network),
@@ -2641,7 +2633,7 @@ func egressRouteArgs(in egressRouteInput) map[string]*llx.RawData {
 
 func egressNatArgs(in egressNatInput) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
-		"id":                     llx.StringData(in.id),
+		"__id":                   llx.StringData(in.id),
 		"sourceRef":              llx.StringData(in.sourceRef),
 		"vrf":                    llx.StringData(in.vrf),
 		"network":                llx.StringData(in.network),

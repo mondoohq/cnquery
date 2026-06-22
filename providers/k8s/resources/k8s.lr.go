@@ -3291,9 +3291,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.networkpolicy.coverage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetCoverage()).ToDataRes(types.Resource("k8s.networkPolicyCoverage"))
 	},
-	"k8s.networkExposure.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sNetworkExposure).GetId()).ToDataRes(types.String)
-	},
 	"k8s.networkExposure.sourceKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkExposure).GetSourceKind()).ToDataRes(types.String)
 	},
@@ -3345,9 +3342,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.networkExposure.confidence": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkExposure).GetConfidence()).ToDataRes(types.String)
 	},
-	"k8s.egressRoute.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sEgressRoute).GetId()).ToDataRes(types.String)
-	},
 	"k8s.egressRoute.sourceRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEgressRoute).GetSourceRef()).ToDataRes(types.String)
 	},
@@ -3387,9 +3381,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.egressRoute.confidence": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEgressRoute).GetConfidence()).ToDataRes(types.String)
 	},
-	"k8s.egressNat.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sEgressNat).GetId()).ToDataRes(types.String)
-	},
 	"k8s.egressNat.sourceRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEgressNat).GetSourceRef()).ToDataRes(types.String)
 	},
@@ -3419,9 +3410,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.egressNat.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEgressNat).GetOwner()).ToDataRes(types.String)
-	},
-	"k8s.networkPolicyCoverage.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sNetworkPolicyCoverage).GetId()).ToDataRes(types.String)
 	},
 	"k8s.networkPolicyCoverage.workloadRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkPolicyCoverage).GetWorkloadRef()).ToDataRes(types.String)
@@ -8914,10 +8902,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sNetworkExposure).__id, ok = v.Value.(string)
 		return
 	},
-	"k8s.networkExposure.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkExposure).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.networkExposure.sourceKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkExposure).SourceKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8990,10 +8974,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sEgressRoute).__id, ok = v.Value.(string)
 		return
 	},
-	"k8s.egressRoute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEgressRoute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.egressRoute.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEgressRoute).SourceRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9050,10 +9030,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sEgressNat).__id, ok = v.Value.(string)
 		return
 	},
-	"k8s.egressNat.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sEgressNat).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"k8s.egressNat.sourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEgressNat).SourceRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9096,10 +9072,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.networkPolicyCoverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkPolicyCoverage).__id, ok = v.Value.(string)
-		return
-	},
-	"k8s.networkPolicyCoverage.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlK8sNetworkPolicyCoverage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.networkPolicyCoverage.workloadRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20565,7 +20537,6 @@ type mqlK8sNetworkExposure struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlK8sNetworkExposureInternal it will be used here
-	Id                     plugin.TValue[string]
 	SourceKind             plugin.TValue[string]
 	SourceRef              plugin.TValue[string]
 	Namespace              plugin.TValue[string]
@@ -20620,10 +20591,6 @@ func (c *mqlK8sNetworkExposure) MqlName() string {
 
 func (c *mqlK8sNetworkExposure) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlK8sNetworkExposure) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlK8sNetworkExposure) GetSourceKind() *plugin.TValue[string] {
@@ -20699,7 +20666,6 @@ type mqlK8sEgressRoute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlK8sEgressRouteInternal it will be used here
-	Id                     plugin.TValue[string]
 	SourceRef              plugin.TValue[string]
 	Vrf                    plugin.TValue[string]
 	Network                plugin.TValue[string]
@@ -20750,10 +20716,6 @@ func (c *mqlK8sEgressRoute) MqlName() string {
 
 func (c *mqlK8sEgressRoute) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlK8sEgressRoute) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlK8sEgressRoute) GetSourceRef() *plugin.TValue[string] {
@@ -20813,7 +20775,6 @@ type mqlK8sEgressNat struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlK8sEgressNatInternal it will be used here
-	Id                     plugin.TValue[string]
 	SourceRef              plugin.TValue[string]
 	Vrf                    plugin.TValue[string]
 	Network                plugin.TValue[string]
@@ -20863,10 +20824,6 @@ func (c *mqlK8sEgressNat) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlK8sEgressNat) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlK8sEgressNat) GetSourceRef() *plugin.TValue[string] {
 	return &c.SourceRef
 }
@@ -20912,7 +20869,6 @@ type mqlK8sNetworkPolicyCoverage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlK8sNetworkPolicyCoverageInternal it will be used here
-	Id                               plugin.TValue[string]
 	WorkloadRef                      plugin.TValue[string]
 	PolicyRef                        plugin.TValue[string]
 	Namespace                        plugin.TValue[string]
@@ -20967,10 +20923,6 @@ func (c *mqlK8sNetworkPolicyCoverage) MqlName() string {
 
 func (c *mqlK8sNetworkPolicyCoverage) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlK8sNetworkPolicyCoverage) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlK8sNetworkPolicyCoverage) GetWorkloadRef() *plugin.TValue[string] {
