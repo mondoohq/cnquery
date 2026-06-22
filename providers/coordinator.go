@@ -209,29 +209,30 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 		}
 	}
 
-	// Shutdown any providers that are not being used anymore.
-	// We have runtimes that are used for initialising a scan, but are not
-	// used for the actual scan. They reference no providers, so shouldn't affect
-	// the shutdown of providers.
-	uprocessedRuntimeWithProviders := false
-	for _, rt := range c.unprocessedRuntimes {
-		if rt.Provider != nil {
-			uprocessedRuntimeWithProviders = true
+	// Shut down providers that are no longer referenced by any runtime.
+	// Build a set of provider IDs still in use.
+	usedProviders := map[string]bool{}
+	for _, rt := range c.runtimes {
+		for _, id := range rt.ConnectedProviderIDs() {
+			usedProviders[id] = true
 		}
 	}
-	if len(c.runtimes) == 0 && !uprocessedRuntimeWithProviders {
-		for _, p := range c.runningByID {
-			log.Debug().Msg("shutting down unused provider " + p.Name)
+	for _, rt := range c.unprocessedRuntimes {
+		for _, id := range rt.ConnectedProviderIDs() {
+			usedProviders[id] = true
+		}
+	}
+
+	for _, p := range c.runningByID {
+		if p.isCloseOrShutdown() {
+			log.Warn().Str("provider", p.Name).Msg("removing closed provider")
+			delete(c.runningByID, p.ID)
+			continue
+		}
+		if !usedProviders[p.ID] {
+			log.Debug().Msg("shutting down idle provider " + p.Name)
 			if err := c.stop(p); err != nil {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
-			}
-		}
-	} else {
-		// Check for killed/crashed providers and remove them from the list of running providers
-		for _, p := range c.runningByID {
-			if p.isCloseOrShutdown() {
-				log.Warn().Str("provider", p.Name).Msg("removing closed provider")
-				delete(c.runningByID, p.ID)
 			}
 		}
 	}
