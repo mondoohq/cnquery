@@ -5,12 +5,17 @@ package plugin
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	goruntime "runtime"
+	"runtime/debug"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	sync "sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/mql/v13/llx"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/memoize"
@@ -138,13 +143,46 @@ func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 }
 
 func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
-	s.runtimesLock.Lock()
-	defer s.runtimesLock.Unlock()
-	s.doDisconnect(req.Connection)
-	if len(s.runtimes) == 0 {
-		// flush our memoizer when there are no more connected runtimes
-		s.Flush()
+	var remaining int
+	func() {
+		s.runtimesLock.Lock()
+		defer s.runtimesLock.Unlock()
+		s.doDisconnect(req.Connection)
+		remaining = len(s.runtimes)
+		if remaining == 0 {
+			s.Flush()
+		}
+	}()
+
+	debug.FreeOSMemory()
+
+	if os.Getenv("DEBUG_PROVIDER_MEMORY") != "" {
+		var m goruntime.MemStats
+		goruntime.ReadMemStats(&m)
+		log.Info().
+			Int("remaining_runtimes", remaining).
+			Uint64("heap_alloc_mb", m.Alloc/1024/1024).
+			Uint64("heap_sys_mb", m.HeapSys/1024/1024).
+			Uint64("heap_inuse_mb", m.HeapInuse/1024/1024).
+			Uint64("total_alloc_mb", m.TotalAlloc/1024/1024).
+			Msg("provider memory stats after disconnect")
+
+		if remaining == 0 {
+			path := fmt.Sprintf("/tmp/provider_heap_%d_conn%d.pprof", os.Getpid(), req.Connection)
+			f, err := os.Create(path)
+			if err != nil {
+				log.Error().Err(err).Str("path", path).Msg("failed to create heap profile file")
+			} else {
+				defer f.Close()
+				if err := pprof.WriteHeapProfile(f); err != nil {
+					log.Error().Err(err).Msg("failed to write heap profile")
+				} else {
+					log.Info().Str("path", path).Msg("wrote heap profile after disconnect")
+				}
+			}
+		}
 	}
+
 	return &DisconnectRes{}, nil
 }
 
