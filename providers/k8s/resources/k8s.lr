@@ -484,6 +484,18 @@ private k8s.pod @defaults("namespace name created"){
   containers() []k8s.container
   // Container statuses
   containerStatuses() []k8s.containerStatus
+  // Running image digests
+  //
+  // Unique sha256 digests actually running in this pod, as resolved by the
+  // kubelet from container statuses. Carries a digest even when the spec used a
+  // mutable tag, so it reflects what is really executing rather than declared.
+  runningImageDigests() []string
+  // Whether a running image has drifted from its spec reference
+  //
+  // True when a container's spec references a mutable tag (not a digest) but the
+  // kubelet resolved it to a concrete digest, so a restart or reschedule could
+  // silently pull a different image for that tag.
+  hasImageDigestDrift() bool
   // Node the pod runs on
   node() k8s.node
   // Name of the node the pod is bound to

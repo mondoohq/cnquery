@@ -935,6 +935,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.containerStatuses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetContainerStatuses()).ToDataRes(types.Array(types.Resource("k8s.containerStatus")))
 	},
+	"k8s.pod.runningImageDigests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRunningImageDigests()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.pod.hasImageDigestDrift": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasImageDigestDrift()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
 	},
@@ -5192,6 +5198,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.pod.containerStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).ContainerStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.runningImageDigests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RunningImageDigests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasImageDigestDrift": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasImageDigestDrift, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12055,6 +12069,8 @@ type mqlK8sPod struct {
 	InitContainers                plugin.TValue[[]any]
 	Containers                    plugin.TValue[[]any]
 	ContainerStatuses             plugin.TValue[[]any]
+	RunningImageDigests           plugin.TValue[[]any]
+	HasImageDigestDrift           plugin.TValue[bool]
 	Node                          plugin.TValue[*mqlK8sNode]
 	NodeName                      plugin.TValue[string]
 	NodeSelector                  plugin.TValue[map[string]any]
@@ -12428,6 +12444,18 @@ func (c *mqlK8sPod) GetContainerStatuses() *plugin.TValue[[]any] {
 		}
 
 		return c.containerStatuses()
+	})
+}
+
+func (c *mqlK8sPod) GetRunningImageDigests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RunningImageDigests, func() ([]any, error) {
+		return c.runningImageDigests()
+	})
+}
+
+func (c *mqlK8sPod) GetHasImageDigestDrift() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasImageDigestDrift, func() (bool, error) {
+		return c.hasImageDigestDrift()
 	})
 }
 

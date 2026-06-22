@@ -954,6 +954,7 @@ k8s.pod.dropsAllCapabilities 13.2.2
 k8s.pod.enableServiceLinks 13.0.16
 k8s.pod.ephemeralContainers 9.0.0
 k8s.pod.hasCpuLimit 13.3.1
+k8s.pod.hasImageDigestDrift 13.3.1
 k8s.pod.hasMemoryLimit 13.3.1
 k8s.pod.hasResourceLimits 13.3.1
 k8s.pod.hasResourceRequests 13.3.1
@@ -1001,6 +1002,7 @@ k8s.pod.reason 13.0.16
 k8s.pod.replicaSet 13.0.16
 k8s.pod.resourceVersion 9.0.0
 k8s.pod.restartPolicy 13.0.16
+k8s.pod.runningImageDigests 13.3.1
 k8s.pod.runsAsRoot 13.2.2
 k8s.pod.runsPrivileged 13.2.2
 k8s.pod.runtimeClassName 13.0.16
