@@ -3576,7 +3576,10 @@ private k8s.managedField @defaults("manager operation") {
 // subject may perform a verb on a resource. Unlike the rule-derived RBAC
 // rollups, this folds in aggregated ClusterRoles, group bindings, and built-in
 // roles. Requires a live cluster connection; on a manifest scan the result
-// fields error.
+// fields error. Construct it with the action under test, for example
+// k8s.accessReview(subject: "system:serviceaccount:prod:web", verb: "create",
+// resource: "pods") or k8s.accessReview(subject: "alice", verb: "get",
+// resource: "secrets", namespace: "prod").
 private k8s.accessReview @defaults("subject verb resource allowed") {
   init(subject string, verb string, resource string, group string, namespace string, name string)
   // Subject under test (e.g. "system:serviceaccount:prod:web", a user, or a group)
