@@ -4,6 +4,7 @@
 package procfs
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -120,4 +121,26 @@ func TestParseProcCpuArm(t *testing.T) {
 			proc2,
 		},
 	}, cpuInfo)
+}
+
+func TestParseCpuInfoCacheSizeWithoutUnit(t *testing.T) {
+	// A cache size value with no unit token must not panic on value[1].
+	input := "processor\t: 0\n" +
+		"cache size\t: 8192\n"
+
+	cpuInfo, err := ParseCpuInfo(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, cpuInfo.Processors, 1)
+	assert.Equal(t, int64(8192), cpuInfo.Processors[0].CacheSize)
+}
+
+func TestParseCpuInfoCacheSizeMB(t *testing.T) {
+	// A cache size in MB is scaled to KB.
+	input := "processor\t: 0\n" +
+		"cache size\t: 16 MB\n"
+
+	cpuInfo, err := ParseCpuInfo(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, cpuInfo.Processors, 1)
+	assert.Equal(t, int64(16*1024), cpuInfo.Processors[0].CacheSize)
 }

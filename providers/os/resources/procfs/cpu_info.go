@@ -106,8 +106,8 @@ func ParseCpuInfo(r io.Reader) (*CpuInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			// we expect cache size to be in kb
-			if strings.HasSuffix(strings.ToLower(value[1]), "mb") {
+			// we expect cache size to be in kb; only scale when a unit is present
+			if len(value) > 1 && strings.HasSuffix(strings.ToLower(value[1]), "mb") {
 				v = v * 1024
 			}
 			cpuinfo.Processors[i].CacheSize = v
