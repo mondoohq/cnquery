@@ -66,6 +66,8 @@ k8s {
   roles() []k8s.rbac.role
   // Kubernetes RBAC RoleBindings
   rolebindings() []k8s.rbac.rolebinding
+  // Distinct RBAC subjects with their effective cluster permissions
+  rbacSubjects() []k8s.rbac.subject
   // Kubernetes network policies
   networkPolicies() []k8s.networkpolicy
   // Normalized network exposures from Services, Ingresses, Gateways, and network intent sources
@@ -2432,6 +2434,71 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   role() k8s.rbac.role
   // The ClusterRole granted by this binding (null when roleRef points to a Role)
   clusterRole() k8s.rbac.clusterrole
+}
+
+// RBAC subject and its effective cluster permissions
+//
+// A single user, group, or service account named as a subject in at least one
+// RoleBinding or ClusterRoleBinding, with the permissions of every bound Role
+// and ClusterRole folded into one view of what the subject is allowed to do.
+// The kind, name, and namespace fields identify the subject (namespace is set
+// only for service accounts), serviceAccount resolves a ServiceAccount subject
+// to its object, and roleBindings and clusterRoleBindings list the grants that
+// name the subject. The isClusterAdmin, canEscalatePrivileges, canReadSecrets,
+// and hasWildcardPermissions predicates summarize the most security-relevant
+// capabilities the bound roles confer. Enumerate every subject in the cluster
+// through k8s.rbacSubjects, or find the subjects allowed a specific action with
+// k8s.rbac.whoCan.
+private k8s.rbac.subject @defaults("kind name namespace isClusterAdmin") {
+  // Subject kind: User, Group, or ServiceAccount
+  kind string
+  // Subject name
+  name string
+  // Namespace of a service account subject (empty for users and groups)
+  namespace string
+  // ServiceAccount object for a service account subject (null for users and groups)
+  serviceAccount() k8s.serviceaccount
+  // RoleBindings that name this subject
+  roleBindings() []k8s.rbac.rolebinding
+  // ClusterRoleBindings that name this subject
+  clusterRoleBindings() []k8s.rbac.clusterrolebinding
+  // Whether any bound role confers cluster-admin (wildcard verbs, API groups, and resources)
+  isClusterAdmin() bool
+  // Whether any bound role allows RBAC privilege escalation (escalate, bind, or impersonate)
+  canEscalatePrivileges() bool
+  // Whether any bound role can read Secrets (get, list, or watch)
+  canReadSecrets() bool
+  // Whether any bound role has a wildcard rule (wildcard verbs, API groups, or resources)
+  hasWildcardPermissions() bool
+}
+
+// RBAC subjects permitted to perform an action
+//
+// Resolution of which users, groups, and service accounts the cluster's
+// RoleBindings and ClusterRoleBindings allow to perform a given action,
+// computed from the rules of the granted roles. The verb and resource arguments
+// select the action, group narrows it to an API group (empty for the core
+// group), namespace restricts the check to one namespace (empty considers every
+// namespace), and name targets a specific object. For example,
+// `k8s.rbac.whoCan(verb: "list", resource: "secrets").subjects` lists every
+// subject that can read Secrets across the cluster. The result reflects RBAC
+// grants only and does not account for the node or webhook authorizers; pair it
+// with k8s.accessReview for an authoritative per-subject decision from the API
+// server.
+private k8s.rbac.whoCan @defaults("verb resource namespace") {
+  init(verb string, resource string, group string, namespace string, name string)
+  // Kubernetes API verb the action requires (get, list, create, delete, and so on)
+  verb string
+  // Resource type the action targets (secrets, pods, and so on)
+  resource string
+  // API group of the resource (empty for the core group)
+  group string
+  // Namespace the action is checked in (empty considers every namespace)
+  namespace string
+  // Specific object name the action targets (empty matches any object)
+  name string
+  // Subjects whose bound roles allow the action
+  subjects() []k8s.rbac.subject
 }
 
 // Kubernetes Network Policy
