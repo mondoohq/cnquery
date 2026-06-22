@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -16,18 +15,15 @@ import (
 )
 
 type mqlK8sTlsrouteInternal struct {
-	lock sync.Mutex
-	obj  *unstructured.Unstructured
+	obj *unstructured.Unstructured
 }
 
 type mqlK8sTcprouteInternal struct {
-	lock sync.Mutex
-	obj  *unstructured.Unstructured
+	obj *unstructured.Unstructured
 }
 
 type mqlK8sUdprouteInternal struct {
-	lock sync.Mutex
-	obj  *unstructured.Unstructured
+	obj *unstructured.Unstructured
 }
 
 var (
