@@ -422,7 +422,6 @@ k8s.egressNat 13.2.2
 k8s.egressNat.addresses 13.2.2
 k8s.egressNat.cidrs 13.2.2
 k8s.egressNat.classification 13.2.2
-k8s.egressNat.id 13.2.2
 k8s.egressNat.metadataClassification 13.2.2
 k8s.egressNat.network 13.2.2
 k8s.egressNat.nodeStatuses 13.2.2
@@ -437,7 +436,6 @@ k8s.egressRoute.cidrs 13.2.2
 k8s.egressRoute.classification 13.2.2
 k8s.egressRoute.confidence 13.2.2
 k8s.egressRoute.destinations 13.2.2
-k8s.egressRoute.id 13.2.2
 k8s.egressRoute.metadataClassification 13.2.2
 k8s.egressRoute.nat 13.2.2
 k8s.egressRoute.network 13.2.2
@@ -863,7 +861,6 @@ k8s.networkExposure 13.2.2
 k8s.networkExposure.addresses 13.2.2
 k8s.networkExposure.confidence 13.2.2
 k8s.networkExposure.exposureReason 13.2.2
-k8s.networkExposure.id 13.2.2
 k8s.networkExposure.internetExposed 13.2.2
 k8s.networkExposure.metadataClassification 13.2.2
 k8s.networkExposure.name 13.2.2
@@ -889,7 +886,6 @@ k8s.networkPolicyCoverage.ciliumPolicies 13.2.2
 k8s.networkPolicyCoverage.coverageGaps 13.2.2
 k8s.networkPolicyCoverage.defaultDenyEgress 13.2.2
 k8s.networkPolicyCoverage.defaultDenyIngress 13.2.2
-k8s.networkPolicyCoverage.id 13.2.2
 k8s.networkPolicyCoverage.interfaces 13.2.2
 k8s.networkPolicyCoverage.multiNetworkPolicies 13.2.2
 k8s.networkPolicyCoverage.namespace 13.2.2

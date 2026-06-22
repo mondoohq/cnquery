@@ -2487,8 +2487,6 @@ private k8s.networkpolicy @defaults("namespace name created") {
 // available. The `confidence` field describes static-analysis confidence, not
 // packet-level reachability.
 private k8s.networkExposure @defaults("sourceKind namespace name internetExposed exposureReason") {
-  // Stable exposure identifier
-  id string
   // Source kind that produced the exposure, for example Service, Ingress, Gateway, HBNInbound, or LegacyHBN
   sourceKind string
   // Source object reference in kind:namespace:name or kind:name form
@@ -2531,8 +2529,6 @@ private k8s.networkExposure @defaults("sourceKind namespace name internetExposed
 // HBN network CRDs, Coil Egress resources, and compatible integrations.
 // Kubernetes-only clusters without those integrations expose an empty list.
 private k8s.egressRoute @defaults("sourceRef vrf network classification confidence") {
-  // Stable route identifier
-  id string
   // Source object reference in kind:namespace:name or kind:name form
   sourceRef string
   // VRF associated with this route
@@ -2567,8 +2563,6 @@ private k8s.egressRoute @defaults("sourceRef vrf network classification confiden
 // Calico IPPool, HBN, and compatible network integrations. Kubernetes-only
 // clusters without those integrations expose an empty list.
 private k8s.egressNat @defaults("sourceRef vrf network classification") {
-  // Stable NAT identifier
-  id string
   // Source object reference in kind:namespace:name or kind:name form
   sourceRef string
   // VRF associated with this NAT entry
@@ -2598,8 +2592,6 @@ private k8s.egressNat @defaults("sourceRef vrf network classification") {
 // CNI explicitly extends it; secondary-interface policy coverage is tracked
 // separately through MultiNetworkPolicy and compatible integrations.
 private k8s.networkPolicyCoverage @defaults("namespace policyRef defaultDenyIngress defaultDenyEgress") {
-  // Stable coverage identifier
-  id string
   // Workload reference when coverage is tied to a specific workload
   workloadRef string
   // Policy object reference
