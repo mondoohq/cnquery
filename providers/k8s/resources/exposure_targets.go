@@ -76,6 +76,40 @@ func (k *mqlK8sPod) services() ([]any, error) {
 	return out, nil
 }
 
+// exposures returns the network exposures that route to this pod, the inverse of
+// k8s.networkExposure.pods. It lets a query pivot from a risky workload to the
+// internet exposure that reaches it.
+func (k *mqlK8sPod) exposures() ([]any, error) {
+	cluster, err := k8sCluster(k.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	exps := cluster.GetNetworkExposures()
+	if exps.Error != nil {
+		return nil, exps.Error
+	}
+
+	podID := k.MqlID()
+	out := []any{}
+	for i := range exps.Data {
+		exp, ok := exps.Data[i].(*mqlK8sNetworkExposure)
+		if !ok {
+			continue
+		}
+		pods, err := exp.pods()
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range pods {
+			if mp, ok := p.(*mqlK8sPod); ok && mp.MqlID() == podID {
+				out = append(out, exp)
+				break
+			}
+		}
+	}
+	return out, nil
+}
+
 // pods returns the pods behind the ingress, resolved through the services its
 // rules and default backend route to.
 func (k *mqlK8sIngress) pods() ([]any, error) {

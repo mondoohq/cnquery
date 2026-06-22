@@ -4,7 +4,14 @@
 package resources
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"math/big"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/manifest"
 	"go.mondoo.com/mql/v13/utils/syncx"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func exposureRuntime(t *testing.T) *plugin.Runtime {
@@ -171,4 +179,115 @@ func TestSecretHygiene(t *testing.T) {
 			assert.Equal(t, tt.unused, unused.Data, "isUnused")
 		})
 	}
+}
+
+func TestPodExposures(t *testing.T) {
+	runtime := exposureRuntime(t)
+
+	// web-1 sits behind the public web-svc (and the ingress/gateway routing to
+	// it), so it must report at least the Service-sourced exposure.
+	web, err := NewResource(runtime, "k8s.pod", map[string]*llx.RawData{
+		"name":      llx.StringData("web-1"),
+		"namespace": llx.StringData("prod"),
+	})
+	require.NoError(t, err)
+	exps := web.(*mqlK8sPod).GetExposures()
+	require.NoError(t, exps.Error)
+
+	var sawServiceExposure bool
+	for i := range exps.Data {
+		e := exps.Data[i].(*mqlK8sNetworkExposure)
+		if e.SourceKind.Data == "Service" && e.Name.Data == "web-svc" {
+			sawServiceExposure = true
+		}
+	}
+	assert.True(t, sawServiceExposure, "web-1 must report the web-svc Service exposure")
+
+	// other-1 is selected by no service, so nothing exposes it.
+	other, err := NewResource(runtime, "k8s.pod", map[string]*llx.RawData{
+		"name":      llx.StringData("other-1"),
+		"namespace": llx.StringData("prod"),
+	})
+	require.NoError(t, err)
+	otherExps := other.(*mqlK8sPod).GetExposures()
+	require.NoError(t, otherExps.Error)
+	assert.Empty(t, otherExps.Data)
+}
+
+// testCertPEM generates a self-signed certificate that expires at notAfter.
+func testCertPEM(t *testing.T, notAfter time.Time) []byte {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "test"},
+		NotBefore:    notAfter.Add(-365 * 24 * time.Hour),
+		NotAfter:     notAfter,
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	require.NoError(t, err)
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+}
+
+func tlsSecret(certPEM []byte) *mqlK8sSecret {
+	s := &mqlK8sSecret{}
+	s.obj = &corev1.Secret{
+		Type: corev1.SecretTypeTLS,
+		Data: map[string][]byte{"tls.crt": certPEM},
+	}
+	return s
+}
+
+func TestSecretCertificateExpiry(t *testing.T) {
+	valid := testCertPEM(t, time.Now().Add(90*24*time.Hour))
+	expired := testCertPEM(t, time.Now().Add(-1*time.Hour))
+
+	t.Run("valid certificate", func(t *testing.T) {
+		s := tlsSecret(valid)
+		he, err := s.hasExpiredCertificate()
+		require.NoError(t, err)
+		assert.False(t, he)
+
+		exp, err := s.certificateExpiry()
+		require.NoError(t, err)
+		require.NotNil(t, exp)
+		assert.True(t, exp.After(time.Now()))
+	})
+
+	t.Run("expired certificate", func(t *testing.T) {
+		s := tlsSecret(expired)
+		he, err := s.hasExpiredCertificate()
+		require.NoError(t, err)
+		assert.True(t, he)
+	})
+
+	t.Run("chain reports earliest expiry and any expired", func(t *testing.T) {
+		chain := append(append([]byte{}, valid...), expired...)
+		s := tlsSecret(chain)
+
+		he, err := s.hasExpiredCertificate()
+		require.NoError(t, err)
+		assert.True(t, he, "a chain with one expired cert is expired")
+
+		exp, err := s.certificateExpiry()
+		require.NoError(t, err)
+		require.NotNil(t, exp)
+		assert.True(t, exp.Before(time.Now()), "earliest expiry is the already-expired cert")
+	})
+
+	t.Run("non-TLS secret has no certificates", func(t *testing.T) {
+		s := &mqlK8sSecret{}
+		s.obj = &corev1.Secret{
+			Type: corev1.SecretTypeOpaque,
+			Data: map[string][]byte{"key": []byte("value")},
+		}
+		he, err := s.hasExpiredCertificate()
+		require.NoError(t, err)
+		assert.False(t, he)
+
+		exp, err := s.certificateExpiry()
+		require.NoError(t, err)
+		assert.Nil(t, exp)
+	})
 }

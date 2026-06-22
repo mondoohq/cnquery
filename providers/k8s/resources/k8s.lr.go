@@ -1036,6 +1036,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetServices()).ToDataRes(types.Array(types.Resource("k8s.service")))
 	},
+	"k8s.pod.exposures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
 	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
 	},
@@ -2685,6 +2688,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.secret.isUnused": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sSecret).GetIsUnused()).ToDataRes(types.Bool)
+	},
+	"k8s.secret.hasExpiredCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetHasExpiredCertificate()).ToDataRes(types.Bool)
+	},
+	"k8s.secret.certificateExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetCertificateExpiry()).ToDataRes(types.Time)
 	},
 	"k8s.configmap.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sConfigmap).GetId()).ToDataRes(types.String)
@@ -5855,6 +5864,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.exposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Exposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
 		return
@@ -8097,6 +8110,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.secret.isUnused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sSecret).IsUnused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.hasExpiredCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).HasExpiredCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.certificateExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).CertificateExpiry, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"k8s.configmap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13589,6 +13610,7 @@ type mqlK8sPod struct {
 	RunningImageDigests           plugin.TValue[[]any]
 	HasImageDigestDrift           plugin.TValue[bool]
 	Services                      plugin.TValue[[]any]
+	Exposures                     plugin.TValue[[]any]
 	Node                          plugin.TValue[*mqlK8sNode]
 	NodeName                      plugin.TValue[string]
 	NodeSelector                  plugin.TValue[map[string]any]
@@ -14014,6 +14036,22 @@ func (c *mqlK8sPod) GetServices() *plugin.TValue[[]any] {
 		}
 
 		return c.services()
+	})
+}
+
+func (c *mqlK8sPod) GetExposures() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exposures, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "exposures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exposures()
 	})
 }
 
@@ -18278,6 +18316,8 @@ type mqlK8sSecret struct {
 	IsServiceAccountToken plugin.TValue[bool]
 	IsImagePullSecret     plugin.TValue[bool]
 	IsUnused              plugin.TValue[bool]
+	HasExpiredCertificate plugin.TValue[bool]
+	CertificateExpiry     plugin.TValue[*time.Time]
 }
 
 // createK8sSecret creates a new instance of this resource
@@ -18446,6 +18486,18 @@ func (c *mqlK8sSecret) GetIsImagePullSecret() *plugin.TValue[bool] {
 func (c *mqlK8sSecret) GetIsUnused() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsUnused, func() (bool, error) {
 		return c.isUnused()
+	})
+}
+
+func (c *mqlK8sSecret) GetHasExpiredCertificate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasExpiredCertificate, func() (bool, error) {
+		return c.hasExpiredCertificate()
+	})
+}
+
+func (c *mqlK8sSecret) GetCertificateExpiry() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CertificateExpiry, func() (*time.Time, error) {
+		return c.certificateExpiry()
 	})
 }
 

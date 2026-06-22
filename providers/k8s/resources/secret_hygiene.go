@@ -4,6 +4,10 @@
 package resources
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"time"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -57,4 +61,61 @@ func (k *mqlK8sSecret) isUnused() (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+// tlsCertificates parses the certificates in the secret's tls.crt chain. It
+// returns nil for non-TLS secrets and skips any PEM block that is not a
+// parseable certificate rather than failing the whole query.
+func (k *mqlK8sSecret) tlsCertificates() []*x509.Certificate {
+	if k.obj == nil || k.obj.Type != corev1.SecretTypeTLS {
+		return nil
+	}
+	raw, ok := k.obj.Data["tls.crt"]
+	if !ok {
+		return nil
+	}
+
+	var certs []*x509.Certificate
+	rest := raw
+	for {
+		var block *pem.Block
+		block, rest = pem.Decode(rest)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+		if cert, err := x509.ParseCertificate(block.Bytes); err == nil {
+			certs = append(certs, cert)
+		}
+	}
+	return certs
+}
+
+func (k *mqlK8sSecret) hasExpiredCertificate() (bool, error) {
+	now := time.Now()
+	for _, cert := range k.tlsCertificates() {
+		if now.After(cert.NotAfter) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// certificateExpiry returns the earliest notAfter across the secret's
+// certificates, the binding constraint for the chain. It is null when the
+// secret holds no certificate.
+func (k *mqlK8sSecret) certificateExpiry() (*time.Time, error) {
+	certs := k.tlsCertificates()
+	if len(certs) == 0 {
+		return nil, nil
+	}
+	earliest := certs[0].NotAfter
+	for _, cert := range certs[1:] {
+		if cert.NotAfter.Before(earliest) {
+			earliest = cert.NotAfter
+		}
+	}
+	return &earliest, nil
 }

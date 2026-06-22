@@ -526,6 +526,8 @@ private k8s.pod @defaults("namespace name created"){
   hasImageDigestDrift() bool
   // Services whose label selector matches this pod
   services() []k8s.service
+  // Network exposures that route to this pod through a Service, Ingress, or Gateway
+  exposures() []k8s.networkExposure
   // Node the pod runs on
   node() k8s.node
   // Name of the node the pod is bound to
@@ -1938,6 +1940,14 @@ private k8s.secret @defaults("namespace name created") {
   // variable, or image-pull reference, and no service account lists it among
   // its tokens or image-pull secrets. A signal for orphaned credentials.
   isUnused() bool
+  // Whether the secret holds a TLS certificate that has expired
+  hasExpiredCertificate() bool
+  // Earliest expiry among the secret's TLS certificates
+  //
+  // The notAfter of the soonest-expiring certificate in the tls.crt chain, so a
+  // single comparison covers the whole chain. Null when the secret holds no
+  // certificate.
+  certificateExpiry() time
 }
 
 // Kubernetes ConfigMap
