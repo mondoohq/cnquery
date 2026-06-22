@@ -2171,15 +2171,19 @@ registrykey 9.0.1
 registrykey.children 9.0.1
 registrykey.exists 9.0.1
 registrykey.items 9.0.1
+registrykey.ntuserDat 13.29.1
 registrykey.path 9.0.1
 registrykey.properties 9.0.1
 registrykey.property 9.0.1
 registrykey.property.data 9.0.1
 registrykey.property.exists 9.0.1
 registrykey.property.name 9.0.1
+registrykey.property.ntuserDat 13.29.1
 registrykey.property.path 9.0.1
 registrykey.property.type 9.0.1
+registrykey.property.userSid 13.29.1
 registrykey.property.value 9.0.1
+registrykey.userSid 13.29.1
 roo 13.13.1
 roo.configPath 13.13.1
 roo.skill 13.13.1
@@ -2641,6 +2645,7 @@ user.group 9.0.0
 user.home 9.0.0
 user.loggedIn 13.7.1
 user.name 9.0.0
+user.ntuserDat 13.29.1
 user.shell 9.0.0
 user.sid 9.0.0
 user.sshkeys 9.0.0

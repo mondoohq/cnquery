@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/mock"
@@ -18,12 +19,105 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 )
 
+// userHiveLoader is implemented by connections that can load a user's NTUSER.DAT
+// hive on demand (currently the local connection on Windows). registrykey uses it
+// to read the HKCU of a user who is not logged in.
+type userHiveLoader interface {
+	UserHiveRegistryHandler() *registry.RegistryHandler
+}
+
+// userHivePath builds the absolute HKEY_USERS path for a SID's hive plus an
+// optional sub-path, e.g. ("S-1-5-21-…", "Software\\X") -> "HKEY_USERS\\S-1-5-21-…\\Software\\X".
+func userHivePath(sid, subPath string) string {
+	subPath = strings.Trim(subPath, "\\")
+	if subPath == "" {
+		return `HKEY_USERS\` + sid
+	}
+	return `HKEY_USERS\` + sid + `\` + subPath
+}
+
 func (k *mqlRegistrykey) id() (string, error) {
+	// When reading a per-user hive, `path` is relative to that user's HKCU and is
+	// shared across users — fold the SID into the id so each user's key (and the
+	// properties derived from it) caches separately.
+	if k.UserSid.Data != "" {
+		return userHivePath(k.UserSid.Data, k.Path.Data), nil
+	}
 	return k.Path.Data, nil
+}
+
+// isUserHive reports whether this key targets a specific user's registry hive.
+func (k *mqlRegistrykey) isUserHive() bool {
+	return k.UserSid.Data != ""
+}
+
+// userHiveReader resolves how to read this key's per-user hive natively on a
+// local Windows host. It returns either a non-empty livePath to read directly
+// (the user is logged in, so HKEY_USERS\<sid> is live) or a non-nil handler to
+// read sub-paths through (the hive was loaded from NTUSER.DAT). When the hive
+// can't be read at all — no loader, missing NTUSER.DAT, or a load failure — it
+// returns ok=false, and callers treat the key as absent rather than erroring, so
+// a check degrades to a vacuous pass instead of a false positive.
+func (k *mqlRegistrykey) userHiveReader(conn shared.Connection) (livePath string, rh *registry.RegistryHandler, ok bool) {
+	sid := k.UserSid.Data
+	if registry.IsUserHiveLoaded(sid) {
+		return userHivePath(sid, k.Path.Data), nil, true
+	}
+	loader, isLoader := conn.(userHiveLoader)
+	if !isLoader || k.NtuserDat.Data == "" {
+		return "", nil, false
+	}
+	h := loader.UserHiveRegistryHandler()
+	if err := h.LoadUserHive(sid, k.NtuserDat.Data); err != nil {
+		log.Debug().Err(err).Str("sid", sid).Str("ntuserDat", k.NtuserDat.Data).
+			Msg("could not load user registry hive")
+		return "", nil, false
+	}
+	return "", h, true
+}
+
+func (k *mqlRegistrykey) nativeUserHiveItems(conn shared.Connection) ([]registry.RegistryKeyItem, error) {
+	livePath, rh, ok := k.userHiveReader(conn)
+	if !ok {
+		return nil, nil
+	}
+	if rh != nil {
+		return rh.GetUserHiveKeyItems(k.UserSid.Data, k.Path.Data)
+	}
+	return registry.GetNativeRegistryKeyItems(livePath)
+}
+
+func (k *mqlRegistrykey) nativeUserHiveChildren(conn shared.Connection) ([]registry.RegistryKeyChild, error) {
+	livePath, rh, ok := k.userHiveReader(conn)
+	if !ok {
+		return nil, nil
+	}
+	if rh != nil {
+		return rh.GetUserHiveKeyChildren(k.UserSid.Data, k.Path.Data)
+	}
+	return registry.GetNativeRegistryKeyChildren(livePath)
 }
 
 func (k *mqlRegistrykey) exists() (bool, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
+
+	// per-user hive read: resolve against the live HKEY_USERS\<sid> hive or the
+	// profile's NTUSER.DAT loaded on demand (local Windows), else fall back to the
+	// live hive over PowerShell (remote).
+	if k.isUserHive() {
+		if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+			items, err := k.nativeUserHiveItems(conn)
+			if err != nil {
+				if std, ok := status.FromError(err); ok && std.Code() == codes.NotFound {
+					return false, nil
+				}
+				return false, err
+			}
+			return len(items) > 0, nil
+		}
+		return k.powershellExists(userHivePath(k.UserSid.Data, k.Path.Data))
+	}
+
 	// if we are running locally on windows, we can use native api
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		items, err := registry.GetNativeRegistryKeyItems(k.Path.Data)
@@ -39,7 +133,14 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 		}
 	}
 
-	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
+	return k.powershellExists(k.Path.Data)
+}
+
+// powershellExists checks key existence at an absolute registry path by running
+// the PowerShell probe through the command resource (used for remote targets and
+// as the non-native fallback).
+func (k *mqlRegistrykey) powershellExists(path string) (bool, error) {
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(path))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -70,14 +171,27 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 
 // GetEntries returns a list of registry key property resources
 func (k *mqlRegistrykey) getEntries() ([]registry.RegistryKeyItem, error) {
-	// if we are running locally on windows, we can use native api
 	conn := k.MqlRuntime.Connection.(shared.Connection)
+
+	if k.isUserHive() {
+		if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+			return k.nativeUserHiveItems(conn)
+		}
+		return k.powershellItems(userHivePath(k.UserSid.Data, k.Path.Data))
+	}
+
+	// if we are running locally on windows, we can use native api
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		return registry.GetNativeRegistryKeyItems(k.Path.Data)
 	}
 
-	// parse the output of the powershell script
-	script := powershell.Encode(registry.GetRegistryKeyItemScript(k.Path.Data))
+	return k.powershellItems(k.Path.Data)
+}
+
+// powershellItems reads the values of a key at an absolute registry path via the
+// PowerShell command resource (used for remote targets and the non-native fallback).
+func (k *mqlRegistrykey) powershellItems(path string) ([]registry.RegistryKeyItem, error) {
+	script := powershell.Encode(registry.GetRegistryKeyItemScript(path))
 	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(script),
 	})
@@ -143,16 +257,20 @@ func (k *mqlRegistrykey) items() ([]any, error) {
 		return nil, nil
 	}
 
-	// create MQL mount entry resources for each mount
+	// create a registry property resource for each value. userSid/ntuserDat are
+	// carried over so each property's id stays user-distinct (the path alone is
+	// shared across users) and so direct reads resolve the same hive.
 	items := make([]any, len(entries))
 	for i, entry := range entries {
 		o, err := CreateResource(k.MqlRuntime, "registrykey.property", map[string]*llx.RawData{
-			"path":   llx.StringData(k.Path.Data),
-			"name":   llx.StringData(entry.Key),
-			"value":  llx.StringData(entry.String()),
-			"type":   llx.StringData(entry.Kind()),
-			"data":   llx.DictData(entry.GetRawValue()),
-			"exists": llx.BoolData(true),
+			"path":      llx.StringData(k.Path.Data),
+			"name":      llx.StringData(entry.Key),
+			"value":     llx.StringData(entry.String()),
+			"type":      llx.StringData(entry.Kind()),
+			"data":      llx.DictData(entry.GetRawValue()),
+			"exists":    llx.BoolData(true),
+			"userSid":   llx.StringData(k.UserSid.Data),
+			"ntuserDat": llx.StringData(k.NtuserDat.Data),
 		})
 		if err != nil {
 			return nil, err
@@ -168,38 +286,19 @@ func (k *mqlRegistrykey) children() ([]any, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
 	res := []any{}
 	var children []registry.RegistryKeyChild
-	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		var err error
+	var err error
+	switch {
+	case k.isUserHive() && conn.Type() == shared.Type_Local && runtime.GOOS == "windows":
+		children, err = k.nativeUserHiveChildren(conn)
+	case k.isUserHive():
+		children, err = k.powershellChildren(userHivePath(k.UserSid.Data, k.Path.Data))
+	case conn.Type() == shared.Type_Local && runtime.GOOS == "windows":
 		children, err = registry.GetNativeRegistryKeyChildren(k.Path.Data)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// parse powershell script
-		script := powershell.Encode(registry.GetRegistryKeyChildItemsScript(k.Path.Data))
-		o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
-			"command": llx.StringData(script),
-		})
-		if err != nil {
-			return res, err
-		}
-		cmd := o.(*mqlCommand)
-		exitcode := cmd.GetExitcode()
-		if exitcode.Error != nil {
-			return nil, exitcode.Error
-		}
-		if exitcode.Data != 0 {
-			return nil, errors.New("could not retrieve registry key")
-		}
-
-		stdout := cmd.GetStdout()
-		if stdout.Error != nil {
-			return res, stdout.Error
-		}
-		children, err = registry.ParsePowershellRegistryKeyChildren(strings.NewReader(stdout.Data))
-		if err != nil {
-			return nil, err
-		}
+	default:
+		children, err = k.powershellChildren(k.Path.Data)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	for i := range children {
@@ -210,13 +309,46 @@ func (k *mqlRegistrykey) children() ([]any, error) {
 	return res, nil
 }
 
+// powershellChildren reads the child keys at an absolute registry path via the
+// PowerShell command resource (used for remote targets and the non-native fallback).
+func (k *mqlRegistrykey) powershellChildren(path string) ([]registry.RegistryKeyChild, error) {
+	script := powershell.Encode(registry.GetRegistryKeyChildItemsScript(path))
+	o, err := CreateResource(k.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData(script),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cmd := o.(*mqlCommand)
+	exitcode := cmd.GetExitcode()
+	if exitcode.Error != nil {
+		return nil, exitcode.Error
+	}
+	if exitcode.Data != 0 {
+		return nil, errors.New("could not retrieve registry key")
+	}
+
+	stdout := cmd.GetStdout()
+	if stdout.Error != nil {
+		return nil, stdout.Error
+	}
+	return registry.ParsePowershellRegistryKeyChildren(strings.NewReader(stdout.Data))
+}
+
 func (p *mqlRegistrykeyProperty) id() (string, error) {
+	// Fold the SID in for per-user hive reads — see mqlRegistrykey.id.
+	if p.UserSid.Data != "" {
+		return userHivePath(p.UserSid.Data, p.Path.Data) + " - " + p.Name.Data, nil
+	}
 	return p.Path.Data + " - " + p.Name.Data, nil
 }
 
 func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// we either get an init with path+name or it is all initialized
-	if len(args) > 2 {
+	// If the resolved fields are already present (e.g. the property was built
+	// internally by registrykey.items), it is fully initialized — nothing to look
+	// up. Otherwise we only have the selectors (path, name, and optional userSid/
+	// ntuserDat) and need to resolve the value below.
+	if args["exists"] != nil || args["data"] != nil {
 		return args, nil, nil
 	}
 
@@ -230,10 +362,16 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, nil
 	}
 
-	// create resource here, but do not use it yet
-	obj, err := CreateResource(runtime, "registrykey", map[string]*llx.RawData{
-		"path": path,
-	})
+	// create resource here, but do not use it yet. Forward the per-user hive
+	// selectors so the lookup resolves against the right hive.
+	regArgs := map[string]*llx.RawData{"path": path}
+	if v := args["userSid"]; v != nil {
+		regArgs["userSid"] = v
+	}
+	if v := args["ntuserDat"]; v != nil {
+		regArgs["ntuserDat"] = v
+	}
+	obj, err := CreateResource(runtime, "registrykey", regArgs)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -3086,6 +3086,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"user.loggedIn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetLoggedIn()).ToDataRes(types.Bool)
 	},
+	"user.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetNtuserDat()).ToDataRes(types.String)
+	},
 	"privatekey.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrivatekey).GetPem()).ToDataRes(types.String)
 	},
@@ -6692,6 +6695,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"registrykey.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetPath()).ToDataRes(types.String)
 	},
+	"registrykey.userSid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykey).GetUserSid()).ToDataRes(types.String)
+	},
+	"registrykey.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykey).GetNtuserDat()).ToDataRes(types.String)
+	},
 	"registrykey.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetExists()).ToDataRes(types.Bool)
 	},
@@ -6709,6 +6718,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"registrykey.property.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetName()).ToDataRes(types.String)
+	},
+	"registrykey.property.userSid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetUserSid()).ToDataRes(types.String)
+	},
+	"registrykey.property.ntuserDat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetNtuserDat()).ToDataRes(types.String)
 	},
 	"registrykey.property.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetExists()).ToDataRes(types.Bool)
@@ -12484,6 +12499,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlUser).LoggedIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"user.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPrivatekey).__id, ok = v.Value.(string)
 		return
@@ -18044,6 +18063,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRegistrykey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"registrykey.userSid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykey).UserSid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykey).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"registrykey.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykey).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -18070,6 +18097,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"registrykey.property.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykeyProperty).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.userSid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).UserSid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.ntuserDat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).NtuserDat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"registrykey.property.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28803,6 +28838,7 @@ type mqlUser struct {
 	Sshkeys        plugin.TValue[[]any]
 	Group          plugin.TValue[*mqlGroup]
 	LoggedIn       plugin.TValue[bool]
+	NtuserDat      plugin.TValue[string]
 }
 
 // createUser creates a new instance of this resource
@@ -28931,6 +28967,17 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 func (c *mqlUser) GetLoggedIn() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.LoggedIn, func() (bool, error) {
 		return c.loggedIn()
+	})
+}
+
+func (c *mqlUser) GetNtuserDat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NtuserDat, func() (string, error) {
+		vargHome := c.GetHome()
+		if vargHome.Error != nil {
+			return "", vargHome.Error
+		}
+
+		return c.ntuserDat(vargHome.Data)
 	})
 }
 
@@ -45817,6 +45864,8 @@ type mqlRegistrykey struct {
 	__id       string
 	// optional: if you define mqlRegistrykeyInternal it will be used here
 	Path       plugin.TValue[string]
+	UserSid    plugin.TValue[string]
+	NtuserDat  plugin.TValue[string]
 	Exists     plugin.TValue[bool]
 	Properties plugin.TValue[map[string]any]
 	Items      plugin.TValue[[]any]
@@ -45864,6 +45913,14 @@ func (c *mqlRegistrykey) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 
+func (c *mqlRegistrykey) GetUserSid() *plugin.TValue[string] {
+	return &c.UserSid
+}
+
+func (c *mqlRegistrykey) GetNtuserDat() *plugin.TValue[string] {
+	return &c.NtuserDat
+}
+
 func (c *mqlRegistrykey) GetExists() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Exists, func() (bool, error) {
 		return c.exists()
@@ -45903,12 +45960,14 @@ type mqlRegistrykeyProperty struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlRegistrykeyPropertyInternal it will be used here
-	Path   plugin.TValue[string]
-	Name   plugin.TValue[string]
-	Exists plugin.TValue[bool]
-	Value  plugin.TValue[string]
-	Type   plugin.TValue[string]
-	Data   plugin.TValue[any]
+	Path      plugin.TValue[string]
+	Name      plugin.TValue[string]
+	UserSid   plugin.TValue[string]
+	NtuserDat plugin.TValue[string]
+	Exists    plugin.TValue[bool]
+	Value     plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Data      plugin.TValue[any]
 }
 
 // createRegistrykeyProperty creates a new instance of this resource
@@ -45954,6 +46013,14 @@ func (c *mqlRegistrykeyProperty) GetPath() *plugin.TValue[string] {
 
 func (c *mqlRegistrykeyProperty) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlRegistrykeyProperty) GetUserSid() *plugin.TValue[string] {
+	return &c.UserSid
+}
+
+func (c *mqlRegistrykeyProperty) GetNtuserDat() *plugin.TValue[string] {
+	return &c.NtuserDat
 }
 
 func (c *mqlRegistrykeyProperty) GetExists() *plugin.TValue[bool] {

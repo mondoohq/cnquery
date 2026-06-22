@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -59,6 +60,82 @@ func (r *RegistryHandler) LoadSubkey(registryId, filepath string) error {
 // we combine this with the prefix to get a subkey like "TmpReg_SOFTWARE"
 func buildSubKeyPath(registryId string) string {
 	return fmt.Sprintf("%s_%s", subkeyPrefix, registryId)
+}
+
+// userRegistryID derives a stable registry id for a per-user hive from the
+// user's SID. The leading "USER_" namespaces it away from the KnownRegistryFiles
+// ids (SOFTWARE, SYSTEM, ...) so the two never collide.
+func userRegistryID(sid string) string {
+	return "USER_" + sid
+}
+
+// LoadUserHive loads a per-user NTUSER.DAT hive into the handler, keyed by the
+// user's SID. Unlike LoadSubkey it is not restricted to KnownRegistryFiles — the
+// caller supplies an arbitrary NTUSER.DAT path (typically user.ntuserDat), which
+// is how we read the registry of a user who is not currently logged in (no live
+// HKEY_USERS\<sid> hive). Loading is idempotent: a hive already loaded for the
+// SID is a no-op, so concurrent reads of the same user coalesce onto one load.
+func (r *RegistryHandler) LoadUserHive(sid, filepath string) error {
+	if sid == "" {
+		return errors.New("cannot load user hive: empty sid")
+	}
+	if filepath == "" {
+		return errors.New("cannot load user hive: empty NTUSER.DAT path")
+	}
+	if runtime.GOOS != "windows" {
+		return errors.New("loading of registry subkeys is only supported on windows")
+	}
+
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	id := userRegistryID(sid)
+	if _, ok := r.registries[id]; ok {
+		return nil
+	}
+	key := buildSubKeyPath(id)
+	if err := LoadRegistrySubkey(key, filepath); err != nil {
+		return err
+	}
+	r.registries[id] = key
+	return nil
+}
+
+// GetUserHiveKeyItems returns the registry items at `path` (relative to the hive
+// root) for a user hive previously loaded with LoadUserHive.
+func (r *RegistryHandler) GetUserHiveKeyItems(sid, path string) ([]RegistryKeyItem, error) {
+	regPath, err := r.userHiveKeyPath(sid, path)
+	if err != nil {
+		return nil, err
+	}
+	return GetNativeRegistryKeyItems(regPath)
+}
+
+// GetUserHiveKeyChildren returns the child keys at `path` (relative to the hive
+// root) for a user hive previously loaded with LoadUserHive.
+func (r *RegistryHandler) GetUserHiveKeyChildren(sid, path string) ([]RegistryKeyChild, error) {
+	regPath, err := r.userHiveKeyPath(sid, path)
+	if err != nil {
+		return nil, err
+	}
+	return GetNativeRegistryKeyChildren(regPath)
+}
+
+// userHiveKeyPath builds the fully-qualified HKLM path to `path` under the loaded
+// user hive for `sid`. Loaded hives are mounted under HKLM (see getRegistryPath),
+// so we always prefix with HKLM here.
+func (r *RegistryHandler) userHiveKeyPath(sid, path string) (string, error) {
+	r.lock.Lock()
+	regRoot, ok := r.registries[userRegistryID(sid)]
+	r.lock.Unlock()
+	if !ok {
+		return "", fmt.Errorf("registry hive for %s not loaded", sid)
+	}
+	root := fmt.Sprintf("HKLM\\%s", regRoot)
+	path = strings.Trim(path, "\\")
+	if path == "" {
+		return root, nil
+	}
+	return fmt.Sprintf("%s\\%s", root, path), nil
 }
 
 // Unloads all the subkeys, that were loaded by the handler.

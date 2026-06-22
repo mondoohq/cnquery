@@ -101,6 +101,25 @@ func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 	return ak.(*mqlAuthorizedkeys), nil
 }
 
+// ntuserDat resolves the on-disk per-user registry hive at <home>\NTUSER.DAT for
+// Windows accounts, so resources like registrykey can read a user's HKCU even
+// when the user is not logged in. Empty on non-Windows platforms or when the home
+// directory is unknown.
+func (u *mqlUser) ntuserDat(home string) (string, error) {
+	conn, ok := u.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return "", nil
+	}
+	pf := conn.Asset().Platform
+	if pf == nil || !pf.IsFamily("windows") {
+		return "", nil
+	}
+	if home == "" {
+		return "", nil
+	}
+	return strings.TrimRight(home, `\`) + `\NTUSER.DAT`, nil
+}
+
 type mqlUsersInternal struct {
 	lock        sync.Mutex
 	usersByID   map[int64]*mqlUser

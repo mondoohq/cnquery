@@ -9,6 +9,13 @@ package registry
 import "errors"
 
 // non-windows stubs
+
+// IsUserHiveLoaded always reports false on non-windows platforms — there is no
+// HKEY_USERS to inspect.
+func IsUserHiveLoaded(sid string) bool {
+	return false
+}
+
 func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 	return nil, errors.New("native registry key items not supported on non-windows platforms")
 }

@@ -86,3 +86,29 @@ func TestResource_Registrykey(t *testing.T) {
 		}
 	})
 }
+
+func TestResource_RegistrykeyPerUserHive(t *testing.T) {
+	// A per-user read (userSid + ntuserDat) must resolve cleanly even when the
+	// hive can't be read (here: the mock has no recording for it). It degrades to
+	// "not present" rather than erroring, so callers don't get a false positive.
+	t.Run("property in an unreadable user hive does not exist", func(t *testing.T) {
+		res := testWindowsQuery(t, `registrykey.property(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies\Microsoft\Windows\CloudContent', name: 'DisableThirdPartySuggestions').exists`)
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, false, res[0].Data.Value)
+	})
+
+	t.Run("path is interpreted relative to the user hive", func(t *testing.T) {
+		res := testWindowsQuery(t, `registrykey(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies').path`)
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, `Software\Policies`, res[0].Data.Value)
+	})
+
+	t.Run("userSid is exposed on the key", func(t *testing.T) {
+		res := testWindowsQuery(t, `registrykey(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies').userSid`)
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "S-1-5-21-1-2-3-1001", res[0].Data.Value)
+	})
+}

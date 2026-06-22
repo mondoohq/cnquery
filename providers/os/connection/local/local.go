@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/v13/providers/os/registry"
 )
 
 type LocalConnection struct {
@@ -25,6 +27,39 @@ type LocalConnection struct {
 	fs    afero.Fs
 	Sudo  *inventory.Sudo
 	asset *inventory.Asset
+
+	// registryHandler lazily loads per-user registry hives (NTUSER.DAT) on
+	// Windows so resources can read another user's HKCU without an active
+	// session. Loaded hives are unloaded in Close().
+	registryHandler     *registry.RegistryHandler
+	registryHandlerLock sync.Mutex
+}
+
+// UserHiveRegistryHandler returns the connection-scoped RegistryHandler used to
+// load and read per-user registry hives, creating it on first use. Hives loaded
+// through it stay loaded for the lifetime of the connection (so repeated reads
+// across many checks share a single `reg load`) and are unloaded in Close().
+func (p *LocalConnection) UserHiveRegistryHandler() *registry.RegistryHandler {
+	p.registryHandlerLock.Lock()
+	defer p.registryHandlerLock.Unlock()
+	if p.registryHandler == nil {
+		p.registryHandler = registry.NewRegistryHandler()
+	}
+	return p.registryHandler
+}
+
+// Close unloads any per-user registry hives loaded during the scan. It satisfies
+// the plugin.Closer interface and is invoked when the provider shuts down the
+// connection.
+func (p *LocalConnection) Close() {
+	p.registryHandlerLock.Lock()
+	defer p.registryHandlerLock.Unlock()
+	if p.registryHandler != nil {
+		if err := p.registryHandler.UnloadSubkeys(); err != nil {
+			log.Debug().Err(err).Msg("could not unload user registry hives")
+		}
+		p.registryHandler = nil
+	}
 }
 
 func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {

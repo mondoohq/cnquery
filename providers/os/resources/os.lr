@@ -757,6 +757,14 @@ user @defaults("name uid gid") {
   group(gid) group
   // Whether the user is currently logged in
   loggedIn() bool
+  // Path to this user's NTUSER.DAT registry hive file (Windows)
+  //
+  // The per-user registry hive on disk, located at `<home>\NTUSER.DAT`. Pass
+  // it together with `sid` to `registrykey`/`registrykey.property` to read a
+  // user's HKCU settings even when their hive is not loaded — for example a
+  // SYSTEM scan running with no interactive session. Empty on non-Windows
+  // platforms or when the home directory is unknown.
+  ntuserDat(home) string
 }
 
 // Private key on disk
@@ -4886,9 +4894,23 @@ private apt.repo @defaults("type url distribution") {
 //
 // Examine items, child keys, and existence at a given registry path
 registrykey @defaults("path") {
-  init(path string)
+  init(path string, userSid? string, ntuserDat? string)
   // Registry key path
   path string
+  // SID of the user whose registry hive to read
+  //
+  // Optional. When set, `path` is interpreted relative to that user's
+  // per-user registry (HKCU): the loaded `HKEY_USERS\<sid>` hive when the
+  // user is logged in, otherwise the profile's `NTUSER.DAT` (see `ntuserDat`)
+  // loaded on demand. Leave empty to treat `path` as an absolute registry
+  // path.
+  userSid string
+  // Path to the user's NTUSER.DAT hive file
+  //
+  // Optional. Used with `userSid` to read a user's registry when their hive
+  // is not currently loaded — for example a SYSTEM scan running with no
+  // interactive session. Typically populated from `user.ntuserDat`.
+  ntuserDat string
   // Whether the property exists
   exists() bool
   // Properties of the registry key as a name-to-value map
@@ -4909,11 +4931,21 @@ registrykey @defaults("path") {
 // and the parsed `data`. Initialize by path and name to look up a specific
 // value, or iterate from `registrykey.items()`.
 registrykey.property @defaults("path name") {
-  init(path string, name string)
+  init(path string, name string, userSid? string, ntuserDat? string)
   // Registry key path
   path string
   // Registry key name
   name string
+  // SID of the user whose registry hive to read
+  //
+  // Optional. Forwarded to the underlying `registrykey` so `path` resolves
+  // against that user's per-user registry (HKCU). See `registrykey.userSid`.
+  userSid string
+  // Path to the user's NTUSER.DAT hive file
+  //
+  // Optional. Forwarded to the underlying `registrykey`. See
+  // `registrykey.ntuserDat`.
+  ntuserDat string
   // Whether the property exists
   exists() bool
   // Registry property value as a string
