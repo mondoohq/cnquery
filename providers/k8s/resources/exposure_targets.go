@@ -175,7 +175,10 @@ func (k *mqlK8sNetworkExposure) pods() ([]any, error) {
 			return nil, svcs.Error
 		}
 		for i := range svcs.Data {
-			s := svcs.Data[i].(*mqlK8sService)
+			s, ok := svcs.Data[i].(*mqlK8sService)
+			if !ok {
+				continue
+			}
 			if s.Namespace.Data == ns && s.Name.Data == name {
 				return s.pods()
 			}
@@ -186,7 +189,10 @@ func (k *mqlK8sNetworkExposure) pods() ([]any, error) {
 			return nil, ingresses.Error
 		}
 		for i := range ingresses.Data {
-			ing := ingresses.Data[i].(*mqlK8sIngress)
+			ing, ok := ingresses.Data[i].(*mqlK8sIngress)
+			if !ok {
+				continue
+			}
 			if ing.Namespace.Data == ns && ing.Name.Data == name {
 				return ing.pods()
 			}
@@ -197,7 +203,10 @@ func (k *mqlK8sNetworkExposure) pods() ([]any, error) {
 			return nil, gateways.Error
 		}
 		for i := range gateways.Data {
-			gw := gateways.Data[i].(*mqlK8sGateway)
+			gw, ok := gateways.Data[i].(*mqlK8sGateway)
+			if !ok {
+				continue
+			}
 			if gw.Namespace.Data == ns && gw.Name.Data == name {
 				return gw.pods()
 			}
@@ -285,7 +294,11 @@ func podsForServiceKeys(cluster *mqlK8s, keys map[serviceKey]struct{}) ([]any, e
 			return nil, err
 		}
 		for _, p := range pods {
-			id := p.(*mqlK8sPod).MqlID()
+			pod, ok := p.(*mqlK8sPod)
+			if !ok {
+				continue
+			}
+			id := pod.MqlID()
 			if _, dup := seen[id]; dup {
 				continue
 			}
