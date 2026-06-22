@@ -5,7 +5,12 @@ package connection
 
 import (
 	"crypto/tls"
+	"errors"
+	"os"
+	"strings"
 	"testing"
+
+	"github.com/jcmturner/gokrb5/v8/config"
 )
 
 func TestDomainToDN(t *testing.T) {
@@ -49,17 +54,132 @@ func TestSplitPrincipal(t *testing.T) {
 	}
 }
 
-func TestResolveKrb5Conf(t *testing.T) {
-	// Explicit path always wins.
-	if got := resolveKrb5Conf("/custom/krb5.conf"); got != "/custom/krb5.conf" {
+func TestExistingKrb5ConfPath(t *testing.T) {
+	// Explicit --krb5conf always wins, returned as-is even if missing so the
+	// later load surfaces a clear error.
+	if got := existingKrb5ConfPath(map[string]string{OptionKrb5Conf: "/custom/krb5.conf"}); got != "/custom/krb5.conf" {
 		t.Errorf("explicit: got %q, want /custom/krb5.conf", got)
 	}
 
-	// Empty explicit falls through to env or default.
-	got := resolveKrb5Conf("")
-	if got == "" {
-		t.Error("resolveKrb5Conf('') returned empty string")
+	// KRB5_CONFIG env is honored when no explicit flag is set.
+	t.Setenv("KRB5_CONFIG", "/env/krb5.conf")
+	if got := existingKrb5ConfPath(map[string]string{}); got != "/env/krb5.conf" {
+		t.Errorf("env: got %q, want /env/krb5.conf", got)
 	}
+
+	// With neither flag nor env and no default file, the path is empty so the
+	// caller falls back to generating a config.
+	t.Setenv("KRB5_CONFIG", "")
+	if _, err := os.Stat(defaultKrb5ConfPath); os.IsNotExist(err) {
+		if got := existingKrb5ConfPath(map[string]string{}); got != "" {
+			t.Errorf("no config: got %q, want empty", got)
+		}
+	}
+}
+
+func TestDomainFromHost(t *testing.T) {
+	tests := []struct {
+		host string
+		want string
+	}{
+		{"dc01.corp.local", "corp.local"},
+		{"DC01.CORP.LOCAL", "CORP.LOCAL"},
+		{"a.b.c.d", "b.c.d"},
+		{"singlelabel", ""},
+		{"", ""},
+		{"10.0.0.1", ""},
+		{"2001:db8::1", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			if got := domainFromHost(tt.host); got != tt.want {
+				t.Errorf("domainFromHost(%q) = %q, want %q", tt.host, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenerateKrb5Config(t *testing.T) {
+	t.Run("single realm from DC host and user", func(t *testing.T) {
+		text, desc, err := generateKrb5Config("dc01.corp.local", "", "admin@CORP.LOCAL")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		// The generated text must parse as a valid krb5 config.
+		cfg, err := config.NewFromString(text)
+		if err != nil {
+			t.Fatalf("generated config does not parse: %v\n---\n%s", err, text)
+		}
+		if cfg.LibDefaults.DefaultRealm != "CORP.LOCAL" {
+			t.Errorf("default_realm = %q, want CORP.LOCAL", cfg.LibDefaults.DefaultRealm)
+		}
+		if !cfg.LibDefaults.DNSLookupKDC {
+			t.Error("dns_lookup_kdc should be enabled for multi-forest KDC discovery")
+		}
+		// The DC realm's KDC must be pinned to the DC host.
+		_, kdcs, err := cfg.GetKDCs("CORP.LOCAL", true)
+		if err != nil {
+			t.Fatalf("GetKDCs: %v", err)
+		}
+		if len(kdcs) == 0 || !strings.Contains(kdcs[1], "dc01.corp.local") {
+			t.Errorf("KDCs for CORP.LOCAL = %v, want one containing dc01.corp.local", kdcs)
+		}
+		// The ldap/<dc> service principal must resolve to the DC realm.
+		if r := cfg.ResolveRealm("dc01.corp.local"); r != "CORP.LOCAL" {
+			t.Errorf("ResolveRealm(dc01.corp.local) = %q, want CORP.LOCAL", r)
+		}
+		if !strings.Contains(desc, "auto-generated") {
+			t.Errorf("desc = %q, want it to mention auto-generated", desc)
+		}
+	})
+
+	t.Run("cross-forest user in a different realm than the DC", func(t *testing.T) {
+		// User lives in FORESTA, the scanned DC in CORP.LOCAL (FORESTB).
+		text, _, err := generateKrb5Config("dc01.corp.local", "", "admin@FORESTA.EXAMPLE")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		cfg, err := config.NewFromString(text)
+		if err != nil {
+			t.Fatalf("generated config does not parse: %v\n---\n%s", err, text)
+		}
+		// AS exchange targets the user's own realm.
+		if cfg.LibDefaults.DefaultRealm != "FORESTA.EXAMPLE" {
+			t.Errorf("default_realm = %q, want FORESTA.EXAMPLE", cfg.LibDefaults.DefaultRealm)
+		}
+		// The DC's realm is still pinned so cross-realm referral can reach it.
+		if r := cfg.ResolveRealm("dc01.corp.local"); r != "CORP.LOCAL" {
+			t.Errorf("ResolveRealm(dc01.corp.local) = %q, want CORP.LOCAL", r)
+		}
+		// The user realm's KDC is found via DNS SRV (dns_lookup_kdc), not pinned.
+		if !cfg.LibDefaults.DNSLookupKDC {
+			t.Error("dns_lookup_kdc must be enabled so the user realm's KDC is discoverable")
+		}
+	})
+
+	t.Run("explicit domain overrides DC-host-derived realm", func(t *testing.T) {
+		text, _, err := generateKrb5Config("dc01.ad.internal", "corp.local", "admin")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		cfg, err := config.NewFromString(text)
+		if err != nil {
+			t.Fatalf("generated config does not parse: %v", err)
+		}
+		if cfg.LibDefaults.DefaultRealm != "CORP.LOCAL" {
+			t.Errorf("default_realm = %q, want CORP.LOCAL (from --domain)", cfg.LibDefaults.DefaultRealm)
+		}
+	})
+
+	t.Run("no derivable realm is an actionable error", func(t *testing.T) {
+		_, _, err := generateKrb5Config("10.0.0.1", "", "admin")
+		if err == nil {
+			t.Fatal("expected an error when no realm can be derived")
+		}
+		if !strings.Contains(err.Error(), "--krb5conf") {
+			t.Errorf("error %q should guide the user toward --krb5conf/--domain/--user@REALM", err)
+		}
+	})
 }
 
 func TestNewLDAPTLSConfig(t *testing.T) {
@@ -159,6 +279,54 @@ func TestResolveLDAPTransport(t *testing.T) {
 			}
 			if got := transport.usesStartTLS(); got != tt.wantStartTLS {
 				t.Fatalf("usesStartTLS(%q) = %v, want %v", transport, got, tt.wantStartTLS)
+			}
+		})
+	}
+}
+
+func TestNewKerberosClientRejectsNetBIOSUser(t *testing.T) {
+	// DOMAIN\user is valid for simple bind but not Kerberos; it must be
+	// rejected with guidance rather than failing obscurely at the KDC.
+	_, _, _, _, err := newKerberosClient(`CORP\admin`, "secret", "dc01.corp.local", map[string]string{})
+	if err == nil {
+		t.Fatal("expected an error for NetBIOS DOMAIN\\user with --kerberos")
+	}
+	if !strings.Contains(err.Error(), "user@REALM") {
+		t.Errorf("error %q should point the user at the user@REALM form", err)
+	}
+}
+
+func TestEnrichKerberosBindError(t *testing.T) {
+	tests := []struct {
+		name         string
+		err          error
+		krb5conf     string
+		wantContains string
+	}{
+		{
+			name:         "ldap signing requirement",
+			err:          errors.New("LDAP Result Code 49 ... 80090308: LdapErr ... data 57"),
+			krb5conf:     "/etc/krb5.conf",
+			wantContains: "LDAP signing",
+		},
+		{
+			name:         "auto-generated config cannot find KDC -> multi-forest hint",
+			err:          errors.New("no KDC SRV records found for realm FORESTA.EXAMPLE"),
+			krb5conf:     "auto-generated (default_realm=FORESTA.EXAMPLE, dc_realm=CORP.LOCAL, kdc=dc01.corp.local)",
+			wantContains: "--krb5conf",
+		},
+		{
+			name:         "generic failure is passed through with context",
+			err:          errors.New("some other failure"),
+			krb5conf:     "/etc/krb5.conf",
+			wantContains: "GSSAPI bind to ldap/dc01.corp.local failed",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := enrichKerberosBindError(tt.err, "ldap/dc01.corp.local", tt.krb5conf)
+			if got == nil || !strings.Contains(got.Error(), tt.wantContains) {
+				t.Errorf("enrichKerberosBindError = %v, want it to contain %q", got, tt.wantContains)
 			}
 		})
 	}

@@ -17,6 +17,9 @@ import (
 	"github.com/go-ldap/ldap/v3"
 	"github.com/go-ldap/ldap/v3/gssapi"
 	"github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/credentials"
+	"github.com/jcmturner/gokrb5/v8/keytab"
 	gosmb "github.com/jfjallid/go-smb/smb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -41,6 +44,10 @@ const (
 	OptionKeytab    = "keytab"
 	OptionKrb5Conf  = "krb5conf"
 	OptionCCache    = "ccache"
+	// defaultKrb5ConfPath is the conventional krb5.conf location on Unix-like
+	// systems. It does not exist on Windows, where we synthesize a config
+	// instead (see loadOrGenerateKrb5Config).
+	defaultKrb5ConfPath = "/etc/krb5.conf"
 	// dialTimeout caps how long we wait for TCP connection to the DC.
 	dialTimeout = 30 * time.Second
 	// Probe with non-sensitive invalid credentials so we never expose real
@@ -355,42 +362,71 @@ func bindLDAPConn(conn *ldap.Conn, dcHost, user, password string, opts map[strin
 	return nil
 }
 
-func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSAPIClient, func() error, kerberosAuthSource, string, error) {
+func newKerberosClient(user, password, dcHost string, opts map[string]string) (ldap.GSSAPIClient, func() error, kerberosAuthSource, string, error) {
 	source, err := selectKerberosAuthSource(user, password, opts)
+	if err != nil {
+		return nil, nil, "", "", err
+	}
+
+	// The current Windows logon session is sourced via SSPI and needs no
+	// krb5 config of its own.
+	if source == kerberosAuthSourceCurrentSession {
+		gssClient, cleanup, err := newImplicitKerberosClient()
+		if err != nil {
+			return nil, nil, "", "", err
+		}
+		return gssClient, cleanup, source, "", nil
+	}
+
+	// Kerberos identifies a principal as user@REALM. The NetBIOS DOMAIN\user
+	// form works for simple bind but not here — it would be parsed as a
+	// realm-less principal and fail obscurely against the KDC. Catch it early
+	// with a clear message.
+	if (source == kerberosAuthSourceKeytab || source == kerberosAuthSourcePassword) && strings.Contains(user, `\`) {
+		return nil, nil, "", "", fmt.Errorf("--kerberos requires the user as user@REALM (for example admin@CORP.LOCAL), "+
+			"not the NetBIOS DOMAIN\\user form %q; drop --kerberos to use simple bind with DOMAIN\\user", user)
+	}
+
+	// Keytab, ccache, and password auth all need a krb5 config. When no
+	// krb5.conf file is available — the default on Windows, where
+	// /etc/krb5.conf does not exist — synthesize one from the connection
+	// parameters so users don't have to hand-author a krb5.conf just to scan.
+	// We build the gokrb5 client from the in-memory *config.Config directly
+	// (rather than the file-path gssapi.NewClientWith* helpers) precisely so
+	// no file on disk is required.
+	krb5conf, krb5confDesc, err := loadOrGenerateKrb5Config(opts, user, dcHost)
 	if err != nil {
 		return nil, nil, "", "", err
 	}
 
 	switch source {
 	case kerberosAuthSourceKeytab:
-		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
 		principal, realm := splitPrincipal(user)
-		gssClient, err := gssapi.NewClientWithKeytab(principal, realm, opts[OptionKeytab], krb5confPath, client.DisablePAFXFAST(true))
+		kt, err := keytab.Load(opts[OptionKeytab])
 		if err != nil {
-			return nil, nil, "", "", fmt.Errorf("kerberos keytab client: %w", err)
+			return nil, nil, "", "", fmt.Errorf("kerberos keytab %q: %w", opts[OptionKeytab], err)
 		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		krbClient := client.NewWithKeytab(principal, realm, kt, krb5conf, client.DisablePAFXFAST(true))
+		gssClient := &gssapi.Client{Client: krbClient}
+		return gssClient, gssClient.Close, source, krb5confDesc, nil
 	case kerberosAuthSourceCCache:
-		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
-		gssClient, err := gssapi.NewClientFromCCache(opts[OptionCCache], krb5confPath, client.DisablePAFXFAST(true))
+		ccache, err := credentials.LoadCCache(opts[OptionCCache])
+		if err != nil {
+			return nil, nil, "", "", fmt.Errorf("kerberos ccache %q: %w", opts[OptionCCache], err)
+		}
+		krbClient, err := client.NewFromCCache(ccache, krb5conf, client.DisablePAFXFAST(true))
 		if err != nil {
 			return nil, nil, "", "", fmt.Errorf("kerberos ccache client: %w", err)
 		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		gssClient := &gssapi.Client{Client: krbClient}
+		return gssClient, gssClient.Close, source, krb5confDesc, nil
 	case kerberosAuthSourcePassword:
-		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
 		principal, realm := splitPrincipal(user)
-		gssClient, err := gssapi.NewClientWithPassword(principal, realm, password, krb5confPath, client.DisablePAFXFAST(true))
-		if err != nil {
-			return nil, nil, "", "", fmt.Errorf("kerberos password client: %w", err)
-		}
-		return gssClient, gssClient.Close, source, krb5confPath, nil
+		krbClient := client.NewWithPassword(principal, realm, password, krb5conf, client.DisablePAFXFAST(true))
+		gssClient := &gssapi.Client{Client: krbClient}
+		return gssClient, gssClient.Close, source, krb5confDesc, nil
 	default:
-		gssClient, cleanup, err := newImplicitKerberosClient()
-		if err != nil {
-			return nil, nil, "", "", err
-		}
-		return gssClient, cleanup, source, "", nil
+		return nil, nil, "", "", fmt.Errorf("unsupported Kerberos auth source %q", source)
 	}
 }
 
@@ -405,7 +441,7 @@ func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map
 	// LDAP service principal: ldap/<dc_hostname>
 	servicePrincipal := "ldap/" + dcHost
 
-	gssClient, cleanup, source, krb5confPath, err := newKerberosClient(user, password, opts)
+	gssClient, cleanup, source, krb5confDesc, err := newKerberosClient(user, password, dcHost, opts)
 	if err != nil {
 		return err
 	}
@@ -414,39 +450,199 @@ func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map
 	authLogger := log.Debug().
 		Str("servicePrincipal", servicePrincipal).
 		Str("credentialSource", string(source))
-	if krb5confPath != "" {
-		authLogger = authLogger.Str("krb5conf", krb5confPath)
+	if krb5confDesc != "" {
+		authLogger = authLogger.Str("krb5conf", krb5confDesc)
 	}
 	authLogger.Msg("performing GSSAPI/Kerberos bind")
 
 	if err := conn.GSSAPIBind(gssClient, servicePrincipal, ""); err != nil {
-		// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 typically means
-		// the DC requires LDAP signing/sealing for SASL binds but the go-ldap
-		// GSSAPI client does not negotiate SASL security layers (upstream
-		// issue: https://github.com/go-ldap/ldap/issues/552). SSPI-backed
-		// current-session auth changes how we source tickets on Windows, but it
-		// does not change this SASL-layer limitation.
-		if strings.Contains(err.Error(), "80090308") {
-			return fmt.Errorf("GSSAPI bind to %s failed (the domain controller likely requires "+
-				"LDAP signing for SASL binds; use LDAPS (the default transport) or --starttls, or fall back to "+
-				"simple bind with --user/--password without --kerberos): %w", servicePrincipal, err)
-		}
-		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
+		return enrichKerberosBindError(err, servicePrincipal, krb5confDesc)
 	}
 
 	return nil
 }
 
-// resolveKrb5Conf returns the krb5.conf path from the explicit option,
-// the KRB5_CONFIG environment variable, or the platform default.
-func resolveKrb5Conf(explicit string) string {
-	if explicit != "" {
-		return explicit
+// enrichKerberosBindError turns a raw GSSAPI/Kerberos bind failure into an
+// actionable message. The underlying gokrb5 errors (KDC unreachable, no SRV
+// records, invalid token) are terse and offer no remediation, which is
+// especially unhelpful for the multi-forest case where the right fix is a
+// hand-authored krb5.conf.
+func enrichKerberosBindError(err error, servicePrincipal, krb5confDesc string) error {
+	msg := err.Error()
+	autoGenerated := strings.HasPrefix(krb5confDesc, "auto-generated")
+
+	switch {
+	// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 typically means the
+	// DC requires LDAP signing/sealing for SASL binds but the go-ldap GSSAPI
+	// client does not negotiate SASL security layers (upstream issue:
+	// https://github.com/go-ldap/ldap/issues/552). SSPI-backed current-session
+	// auth changes how we source tickets on Windows, but it does not change
+	// this SASL-layer limitation.
+	case strings.Contains(msg, "80090308"):
+		return fmt.Errorf("GSSAPI bind to %s failed (the domain controller likely requires "+
+			"LDAP signing for SASL binds; use LDAPS (the default transport) or --starttls, or fall back to "+
+			"simple bind with --user/--password without --kerberos): %w", servicePrincipal, err)
+
+	// KDC could not be located or reached. With an auto-generated config this
+	// is the expected failure mode for a multi-forest topology whose foreign
+	// realm KDC is not discoverable via DNS SRV records.
+	case strings.Contains(msg, "no KDC") ||
+		strings.Contains(msg, "SRV records") ||
+		strings.Contains(msg, "lookup") ||
+		strings.Contains(msg, "AS Exchange Error") ||
+		strings.Contains(msg, "networking error"):
+		hint := "ensure the realm's KDC is reachable from this host"
+		if autoGenerated {
+			hint = "the Kerberos config was auto-generated from --dc/--domain/--user; ensure DNS can " +
+				"resolve the realm's _kerberos._tcp SRV records (and the KDCs are reachable), or supply a " +
+				"krb5.conf via --krb5conf that lists the KDCs for every realm involved — recommended for " +
+				"multi-forest setups where the user and the domain controller live in different forests"
+		}
+		return fmt.Errorf("GSSAPI bind to %s failed: could not obtain a Kerberos ticket (%s): %w", servicePrincipal, hint, err)
+
+	default:
+		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
 	}
-	if env := os.Getenv("KRB5_CONFIG"); env != "" {
-		return env
+}
+
+// loadOrGenerateKrb5Config returns a Kerberos configuration for keytab,
+// ccache, or password authentication. It honors an explicit --krb5conf, the
+// KRB5_CONFIG environment variable, or an existing default /etc/krb5.conf. When
+// none of those is present it synthesizes a config from the connection
+// parameters (see generateKrb5Config) — which is what lets
+// `--kerberos --user --password` work on Windows, where /etc/krb5.conf does
+// not exist. The second return value is a short description for logs: either
+// the file path used or "auto-generated (...)".
+func loadOrGenerateKrb5Config(opts map[string]string, user, dcHost string) (*config.Config, string, error) {
+	if path := existingKrb5ConfPath(opts); path != "" {
+		cfg, err := config.Load(path)
+		if err != nil {
+			return nil, "", fmt.Errorf("loading krb5.conf %q: %w", path, err)
+		}
+		return cfg, path, nil
 	}
-	return "/etc/krb5.conf"
+
+	confText, desc, err := generateKrb5Config(dcHost, opts[OptionDomain], user)
+	if err != nil {
+		return nil, "", err
+	}
+	cfg, err := config.NewFromString(confText)
+	if err != nil {
+		return nil, "", fmt.Errorf("parsing auto-generated krb5 config: %w", err)
+	}
+	return cfg, desc, nil
+}
+
+// existingKrb5ConfPath resolves the krb5.conf path to use, or "" when no file
+// is configured or present. An explicit --krb5conf or KRB5_CONFIG is returned
+// as-is (so a wrong path surfaces a clear load error rather than being silently
+// replaced by a generated config); the platform default is returned only when
+// the file actually exists.
+func existingKrb5ConfPath(opts map[string]string) string {
+	if p := opts[OptionKrb5Conf]; p != "" {
+		return p
+	}
+	if p := os.Getenv("KRB5_CONFIG"); p != "" {
+		return p
+	}
+	if _, err := os.Stat(defaultKrb5ConfPath); err == nil {
+		return defaultKrb5ConfPath
+	}
+	return ""
+}
+
+// generateKrb5Config builds an in-memory krb5.conf for Kerberos password,
+// keytab, or ccache authentication when no krb5.conf file is present (the
+// common case on Windows). The config is derived from the connection
+// parameters:
+//
+//   - The service (DC) realm comes from --domain, or from the DC hostname's
+//     DNS domain ("dc01.corp.local" -> "CORP.LOCAL"). Its KDC is pinned to the
+//     DC host so the common single-realm case works without DNS.
+//   - The user realm comes from the user@REALM principal and becomes the
+//     default realm, so the initial AS exchange targets the right realm even
+//     when the user lives in a different forest than the DC.
+//   - dns_lookup_kdc lets gokrb5 discover KDCs for any realm via DNS SRV
+//     records (_kerberos._tcp.<REALM>), which Active Directory publishes by
+//     default. This is what makes cross-realm / multi-forest authentication
+//     work without hand-listing every forest's KDC.
+//
+// It returns the config text and a short human-readable description for logs.
+func generateKrb5Config(dcHost, domain, user string) (string, string, error) {
+	dcRealm := strings.ToUpper(strings.TrimSpace(domain))
+	if dcRealm == "" {
+		dcRealm = strings.ToUpper(domainFromHost(dcHost))
+	}
+
+	_, userRealm := splitPrincipal(user)
+	userRealm = strings.ToUpper(userRealm)
+
+	// The user authenticates against their own realm when given as
+	// user@REALM, otherwise against the DC's realm.
+	defaultRealm := userRealm
+	if defaultRealm == "" {
+		defaultRealm = dcRealm
+	}
+	if defaultRealm == "" {
+		return "", "", errors.New("cannot determine a Kerberos realm for auto-configuration: " +
+			"pass a realm via --user <user@REALM>, set --domain, or provide a krb5.conf with --krb5conf")
+	}
+
+	var b strings.Builder
+	b.WriteString("[libdefaults]\n")
+	fmt.Fprintf(&b, "  default_realm = %s\n", defaultRealm)
+	// AD issues large PAC-bearing tickets; prefer TCP to avoid UDP truncation.
+	b.WriteString("  udp_preference_limit = 1\n")
+	// Discover KDCs for any realm (the user's and the DC's, which may live in
+	// different forests) from DNS SRV records.
+	b.WriteString("  dns_lookup_kdc = true\n")
+	b.WriteString("  dns_lookup_realm = false\n")
+
+	// Pin the DC's realm to the DC host so the common single-realm case works
+	// even without DNS, and map the DC's domain to that realm so the
+	// ldap/<dc> service principal resolves.
+	if dcRealm != "" && dcHost != "" {
+		b.WriteString("\n[realms]\n")
+		fmt.Fprintf(&b, "  %s = {\n", dcRealm)
+		fmt.Fprintf(&b, "    kdc = %s\n", dcHost)
+		b.WriteString("  }\n")
+
+		dcDomain := domainFromHost(dcHost)
+		if dcDomain == "" {
+			dcDomain = strings.TrimSpace(domain)
+		}
+		if dcDomain != "" {
+			dcDomain = strings.ToLower(dcDomain)
+			b.WriteString("\n[domain_realm]\n")
+			fmt.Fprintf(&b, "  .%s = %s\n", dcDomain, dcRealm)
+			fmt.Fprintf(&b, "  %s = %s\n", dcDomain, dcRealm)
+		}
+	}
+
+	desc := fmt.Sprintf("auto-generated (default_realm=%s", defaultRealm)
+	if dcRealm != "" && dcRealm != defaultRealm {
+		desc += fmt.Sprintf(", dc_realm=%s", dcRealm)
+	}
+	if dcHost != "" {
+		desc += fmt.Sprintf(", kdc=%s", dcHost)
+	}
+	desc += ")"
+	return b.String(), desc, nil
+}
+
+// domainFromHost strips the leftmost label from a hostname to get its DNS
+// domain: "dc01.corp.local" -> "corp.local". It returns "" when host is empty,
+// an IP address, or has no domain part (a single label), since none of those
+// yield a Kerberos realm.
+func domainFromHost(host string) string {
+	host = strings.TrimSpace(host)
+	if host == "" || net.ParseIP(host) != nil {
+		return ""
+	}
+	if idx := strings.Index(host, "."); idx >= 0 && idx+1 < len(host) {
+		return host[idx+1:]
+	}
+	return ""
 }
 
 // splitPrincipal splits a Kerberos principal like "user@REALM" into

@@ -31,6 +31,7 @@ var Config = plugin.Provider{
 	Notes:
   LDAPS (port 636) is the default transport. Use --starttls for LDAP+StartTLS on port 389, or --plain-ldap only for labs that cannot use TLS.
   Kerberos authentication supports keytabs, credential caches, user/password, and on Windows the current logon session when no explicit credentials are supplied.
+  When no krb5.conf is found (for example on Windows, which has no /etc/krb5.conf), one is generated automatically from --dc, --domain, and the user's realm; pass --krb5conf to use your own for complex or multi-forest topologies.
 `,
 		MinArgs:   0,
 		MaxArgs:   0,
@@ -48,7 +49,7 @@ var Config = plugin.Provider{
 			{Long: "insecure", Type: plugin.FlagType_Bool, Desc: "Skip TLS certificate verification"},
 			{Long: "kerberos", Type: plugin.FlagType_Bool, Desc: "Use Kerberos/GSSAPI authentication instead of simple bind (on Windows, omit explicit credentials to use the current logon session)"},
 			{Long: "keytab", Type: plugin.FlagType_String, Desc: "Path to Kerberos keytab file (requires --kerberos and --user)"},
-			{Long: "krb5conf", Type: plugin.FlagType_String, Desc: "Path to krb5.conf (default: KRB5_CONFIG env or /etc/krb5.conf)"},
+			{Long: "krb5conf", Type: plugin.FlagType_String, Desc: "Path to krb5.conf (defaults to KRB5_CONFIG env or /etc/krb5.conf; when none exists, a config is generated from --dc/--domain/--user)"},
 			{Long: "ccache", Type: plugin.FlagType_String, Desc: "Path to Kerberos credential cache file (requires --kerberos)"},
 			{Long: "backend", Type: plugin.FlagType_String, Default: "ldap", Desc: "Backend to use: ldap (default) or rsat (Windows only, not yet implemented)"},
 		},
