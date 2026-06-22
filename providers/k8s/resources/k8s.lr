@@ -2116,6 +2116,14 @@ private k8s.service @defaults("namespace name created") {
   endpointSlices() []k8s.endpointslice
   // Pods selected by the service's label selector (empty for selectorless and ExternalName services)
   pods() []k8s.pod
+  // Backend endpoint addresses that are not in-cluster pods
+  //
+  // Addresses from the service's EndpointSlices whose endpoints have no Pod
+  // targetRef, so the service forwards to manually managed targets that are
+  // often outside the cluster. Empty for an ordinary selector-backed service.
+  externalEndpoints() []string
+  // Whether the service forwards to a public, non-pod endpoint address
+  routesToPublicEndpoint() bool
   // Normalized network exposure records for this Service
   networkExposures() []k8s.networkExposure
 }
@@ -3214,6 +3222,11 @@ private k8s.endpointslice @defaults("namespace name addressType") {
   ports() []dict
   // The Service this slice backs (resolved from the kubernetes.io/service-name label)
   service() k8s.service
+  // Endpoint addresses not backed by an in-cluster pod
+  //
+  // Addresses of endpoints whose targetRef is not a Pod, i.e. manually managed
+  // targets. On a selectorless service these often point outside the cluster.
+  externalAddresses() []string
 }
 
 // Kubernetes AdmissionReview

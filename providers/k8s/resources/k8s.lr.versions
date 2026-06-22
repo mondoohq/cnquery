@@ -460,6 +460,7 @@ k8s.endpointslice.addressType 11.1.139
 k8s.endpointslice.annotations 11.1.139
 k8s.endpointslice.created 11.1.139
 k8s.endpointslice.endpoints 11.1.139
+k8s.endpointslice.externalAddresses 13.4.1
 k8s.endpointslice.id 11.1.139
 k8s.endpointslice.kind 11.1.139
 k8s.endpointslice.labels 11.1.139
@@ -1423,6 +1424,7 @@ k8s.service.clusterIP 13.0.16
 k8s.service.clusterIPs 13.0.16
 k8s.service.created 9.0.0
 k8s.service.endpointSlices 13.0.16
+k8s.service.externalEndpoints 13.4.1
 k8s.service.externalIPs 13.0.16
 k8s.service.externalName 13.0.16
 k8s.service.externalTrafficPolicy 13.0.16
@@ -1447,6 +1449,7 @@ k8s.service.pods 13.3.3
 k8s.service.ports 13.0.16
 k8s.service.publishNotReadyAddresses 13.0.16
 k8s.service.resourceVersion 9.0.0
+k8s.service.routesToPublicEndpoint 13.4.1
 k8s.service.selector 13.0.16
 k8s.service.sessionAffinity 13.0.16
 k8s.service.sessionAffinityConfig 13.0.16

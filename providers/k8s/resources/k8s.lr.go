@@ -2908,6 +2908,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.service.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
 	},
+	"k8s.service.externalEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetExternalEndpoints()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.service.routesToPublicEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetRoutesToPublicEndpoint()).ToDataRes(types.Bool)
+	},
 	"k8s.service.networkExposures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
@@ -4149,6 +4155,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.endpointslice.service": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetService()).ToDataRes(types.Resource("k8s.service"))
+	},
+	"k8s.endpointslice.externalAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetExternalAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.admissionreview.request": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionreview).GetRequest()).ToDataRes(types.Resource("k8s.admissionrequest"))
@@ -8478,6 +8487,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sService).Pods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.service.externalEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).ExternalEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.routesToPublicEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).RoutesToPublicEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.service.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sService).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -10248,6 +10265,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.endpointslice.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEndpointslice).Service, ok = plugin.RawToTValue[*mqlK8sService](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.externalAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).ExternalAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19005,6 +19026,8 @@ type mqlK8sService struct {
 	LoadBalancerIngress           plugin.TValue[[]any]
 	EndpointSlices                plugin.TValue[[]any]
 	Pods                          plugin.TValue[[]any]
+	ExternalEndpoints             plugin.TValue[[]any]
+	RoutesToPublicEndpoint        plugin.TValue[bool]
 	NetworkExposures              plugin.TValue[[]any]
 }
 
@@ -19278,6 +19301,18 @@ func (c *mqlK8sService) GetPods() *plugin.TValue[[]any] {
 		}
 
 		return c.pods()
+	})
+}
+
+func (c *mqlK8sService) GetExternalEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalEndpoints, func() ([]any, error) {
+		return c.externalEndpoints()
+	})
+}
+
+func (c *mqlK8sService) GetRoutesToPublicEndpoint() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RoutesToPublicEndpoint, func() (bool, error) {
+		return c.routesToPublicEndpoint()
 	})
 }
 
@@ -23458,22 +23493,23 @@ type mqlK8sEndpointslice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlK8sEndpointsliceInternal
-	Id              plugin.TValue[string]
-	Uid             plugin.TValue[string]
-	ResourceVersion plugin.TValue[string]
-	Labels          plugin.TValue[map[string]any]
-	Annotations     plugin.TValue[map[string]any]
-	OwnerReferences plugin.TValue[[]any]
-	ManagedFields   plugin.TValue[[]any]
-	Name            plugin.TValue[string]
-	Namespace       plugin.TValue[string]
-	Kind            plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	Manifest        plugin.TValue[any]
-	AddressType     plugin.TValue[string]
-	Endpoints       plugin.TValue[[]any]
-	Ports           plugin.TValue[[]any]
-	Service         plugin.TValue[*mqlK8sService]
+	Id                plugin.TValue[string]
+	Uid               plugin.TValue[string]
+	ResourceVersion   plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	Annotations       plugin.TValue[map[string]any]
+	OwnerReferences   plugin.TValue[[]any]
+	ManagedFields     plugin.TValue[[]any]
+	Name              plugin.TValue[string]
+	Namespace         plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	Manifest          plugin.TValue[any]
+	AddressType       plugin.TValue[string]
+	Endpoints         plugin.TValue[[]any]
+	Ports             plugin.TValue[[]any]
+	Service           plugin.TValue[*mqlK8sService]
+	ExternalAddresses plugin.TValue[[]any]
 }
 
 // createK8sEndpointslice creates a new instance of this resource
@@ -23620,6 +23656,12 @@ func (c *mqlK8sEndpointslice) GetService() *plugin.TValue[*mqlK8sService] {
 		}
 
 		return c.service()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetExternalAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalAddresses, func() ([]any, error) {
+		return c.externalAddresses()
 	})
 }
 
