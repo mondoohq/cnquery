@@ -233,6 +233,7 @@ k8s.cronjob.hasMemoryLimit 13.3.1
 k8s.cronjob.hasResourceLimits 13.3.1
 k8s.cronjob.hasResourceRequests 13.3.1
 k8s.cronjob.hasSeccompProfile 13.3.1
+k8s.cronjob.hasUnsafeSysctls 13.4.1
 k8s.cronjob.hasWritableRootFilesystem 13.2.2
 k8s.cronjob.hostIPC 13.2.2
 k8s.cronjob.hostNetwork 13.2.2
@@ -273,7 +274,9 @@ k8s.cronjob.usesHostPath 13.2.2
 k8s.cronjob.usesImageDigest 13.3.1
 k8s.cronjob.usesLatestTag 13.3.1
 k8s.cronjob.usesSecretsAsEnv 13.3.1
+k8s.cronjob.usesUnconfinedAppArmor 13.4.1
 k8s.cronjob.usesUnconfinedSeccomp 13.3.1
+k8s.cronjob.usesUnmaskedProcMount 13.4.1
 k8s.cronjobs 9.0.0
 k8s.customresource 9.0.0
 k8s.customresource.annotations 9.0.0
@@ -308,6 +311,7 @@ k8s.daemonset.hasMemoryLimit 13.3.1
 k8s.daemonset.hasResourceLimits 13.3.1
 k8s.daemonset.hasResourceRequests 13.3.1
 k8s.daemonset.hasSeccompProfile 13.3.1
+k8s.daemonset.hasUnsafeSysctls 13.4.1
 k8s.daemonset.hasWritableRootFilesystem 13.2.2
 k8s.daemonset.hostIPC 13.2.2
 k8s.daemonset.hostNetwork 13.2.2
@@ -351,7 +355,9 @@ k8s.daemonset.usesHostPath 13.2.2
 k8s.daemonset.usesImageDigest 13.3.1
 k8s.daemonset.usesLatestTag 13.3.1
 k8s.daemonset.usesSecretsAsEnv 13.3.1
+k8s.daemonset.usesUnconfinedAppArmor 13.4.1
 k8s.daemonset.usesUnconfinedSeccomp 13.3.1
+k8s.daemonset.usesUnmaskedProcMount 13.4.1
 k8s.daemonsets 9.0.0
 k8s.deployment 9.0.0
 k8s.deployment.addedCapabilities 13.2.2
@@ -372,6 +378,7 @@ k8s.deployment.hasMemoryLimit 13.3.1
 k8s.deployment.hasResourceLimits 13.3.1
 k8s.deployment.hasResourceRequests 13.3.1
 k8s.deployment.hasSeccompProfile 13.3.1
+k8s.deployment.hasUnsafeSysctls 13.4.1
 k8s.deployment.hasWritableRootFilesystem 13.2.2
 k8s.deployment.hostIPC 13.2.2
 k8s.deployment.hostNetwork 13.2.2
@@ -416,7 +423,9 @@ k8s.deployment.usesHostPath 13.2.2
 k8s.deployment.usesImageDigest 13.3.1
 k8s.deployment.usesLatestTag 13.3.1
 k8s.deployment.usesSecretsAsEnv 13.3.1
+k8s.deployment.usesUnconfinedAppArmor 13.4.1
 k8s.deployment.usesUnconfinedSeccomp 13.3.1
+k8s.deployment.usesUnmaskedProcMount 13.4.1
 k8s.deployments 9.0.0
 k8s.egressNat 13.3.2
 k8s.egressNat.addresses 13.3.2
@@ -726,6 +735,7 @@ k8s.job.hasMemoryLimit 13.3.1
 k8s.job.hasResourceLimits 13.3.1
 k8s.job.hasResourceRequests 13.3.1
 k8s.job.hasSeccompProfile 13.3.1
+k8s.job.hasUnsafeSysctls 13.4.1
 k8s.job.hasWritableRootFilesystem 13.2.2
 k8s.job.hostIPC 13.2.2
 k8s.job.hostNetwork 13.2.2
@@ -769,7 +779,9 @@ k8s.job.usesHostPath 13.2.2
 k8s.job.usesImageDigest 13.3.1
 k8s.job.usesLatestTag 13.3.1
 k8s.job.usesSecretsAsEnv 13.3.1
+k8s.job.usesUnconfinedAppArmor 13.4.1
 k8s.job.usesUnconfinedSeccomp 13.3.1
+k8s.job.usesUnmaskedProcMount 13.4.1
 k8s.jobs 9.0.0
 k8s.lease 13.0.16
 k8s.lease.acquireTime 13.0.16
@@ -1060,6 +1072,7 @@ k8s.pod.hasMemoryLimit 13.3.1
 k8s.pod.hasResourceLimits 13.3.1
 k8s.pod.hasResourceRequests 13.3.1
 k8s.pod.hasSeccompProfile 13.3.1
+k8s.pod.hasUnsafeSysctls 13.4.1
 k8s.pod.hasWritableRootFilesystem 13.2.2
 k8s.pod.hostAliases 13.0.16
 k8s.pod.hostIP 13.0.16
@@ -1128,7 +1141,9 @@ k8s.pod.usesHostPath 13.2.2
 k8s.pod.usesImageDigest 13.3.1
 k8s.pod.usesLatestTag 13.3.1
 k8s.pod.usesSecretsAsEnv 13.3.1
+k8s.pod.usesUnconfinedAppArmor 13.4.1
 k8s.pod.usesUnconfinedSeccomp 13.3.1
+k8s.pod.usesUnmaskedProcMount 13.4.1
 k8s.podDisruptionBudgets 13.0.16
 k8s.poddisruptionbudget 13.0.16
 k8s.poddisruptionbudget.annotations 13.0.16
@@ -1313,6 +1328,7 @@ k8s.replicaset.hasMemoryLimit 13.3.1
 k8s.replicaset.hasResourceLimits 13.3.1
 k8s.replicaset.hasResourceRequests 13.3.1
 k8s.replicaset.hasSeccompProfile 13.3.1
+k8s.replicaset.hasUnsafeSysctls 13.4.1
 k8s.replicaset.hasWritableRootFilesystem 13.2.2
 k8s.replicaset.hostIPC 13.2.2
 k8s.replicaset.hostNetwork 13.2.2
@@ -1351,7 +1367,9 @@ k8s.replicaset.usesHostPath 13.2.2
 k8s.replicaset.usesImageDigest 13.3.1
 k8s.replicaset.usesLatestTag 13.3.1
 k8s.replicaset.usesSecretsAsEnv 13.3.1
+k8s.replicaset.usesUnconfinedAppArmor 13.4.1
 k8s.replicaset.usesUnconfinedSeccomp 13.3.1
+k8s.replicaset.usesUnmaskedProcMount 13.4.1
 k8s.replicasets 9.0.0
 k8s.resourceQuotas 11.1.139
 k8s.resourcequota 11.1.139
@@ -1480,6 +1498,7 @@ k8s.statefulset.hasMemoryLimit 13.3.1
 k8s.statefulset.hasResourceLimits 13.3.1
 k8s.statefulset.hasResourceRequests 13.3.1
 k8s.statefulset.hasSeccompProfile 13.3.1
+k8s.statefulset.hasUnsafeSysctls 13.4.1
 k8s.statefulset.hasWritableRootFilesystem 13.2.2
 k8s.statefulset.hostIPC 13.2.2
 k8s.statefulset.hostNetwork 13.2.2
@@ -1526,7 +1545,9 @@ k8s.statefulset.usesHostPath 13.2.2
 k8s.statefulset.usesImageDigest 13.3.1
 k8s.statefulset.usesLatestTag 13.3.1
 k8s.statefulset.usesSecretsAsEnv 13.3.1
+k8s.statefulset.usesUnconfinedAppArmor 13.4.1
 k8s.statefulset.usesUnconfinedSeccomp 13.3.1
+k8s.statefulset.usesUnmaskedProcMount 13.4.1
 k8s.statefulsets 9.0.0
 k8s.storageClasses 11.1.139
 k8s.storageclass 11.1.139

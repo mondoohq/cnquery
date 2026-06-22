@@ -922,6 +922,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.pod.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHasCpuLimit()).ToDataRes(types.Bool)
 	},
@@ -1228,6 +1237,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.deployment.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
+	},
 	"k8s.deployment.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetHasCpuLimit()).ToDataRes(types.Bool)
 	},
@@ -1417,6 +1435,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.daemonset.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
+	},
 	"k8s.daemonset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetHasCpuLimit()).ToDataRes(types.Bool)
 	},
@@ -1602,6 +1629,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
 	},
 	"k8s.statefulset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetHasCpuLimit()).ToDataRes(types.Bool)
@@ -1804,6 +1840,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetHasSeccompProfile()).ToDataRes(types.Bool)
 	},
+	"k8s.replicaset.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
+	},
 	"k8s.replicaset.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetHasCpuLimit()).ToDataRes(types.Bool)
 	},
@@ -1974,6 +2019,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.job.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.job.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.job.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
 	},
 	"k8s.job.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetHasCpuLimit()).ToDataRes(types.Bool)
@@ -2181,6 +2235,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetHasSeccompProfile()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.usesUnconfinedAppArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesUnconfinedAppArmor()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.hasUnsafeSysctls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetHasUnsafeSysctls()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.usesUnmaskedProcMount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesUnmaskedProcMount()).ToDataRes(types.Bool)
 	},
 	"k8s.cronjob.hasCpuLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetHasCpuLimit()).ToDataRes(types.Bool)
@@ -5715,6 +5778,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -6127,6 +6202,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -6383,6 +6470,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -6633,6 +6732,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6907,6 +7018,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).HasCpuLimit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -7137,6 +7260,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.job.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7417,6 +7552,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.hasSeccompProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).HasSeccompProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesUnconfinedAppArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesUnconfinedAppArmor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.hasUnsafeSysctls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).HasUnsafeSysctls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesUnmaskedProcMount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesUnmaskedProcMount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.hasCpuLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13579,6 +13726,9 @@ type mqlK8sPod struct {
 	UsesHostPath                  plugin.TValue[bool]
 	UsesUnconfinedSeccomp         plugin.TValue[bool]
 	HasSeccompProfile             plugin.TValue[bool]
+	UsesUnconfinedAppArmor        plugin.TValue[bool]
+	HasUnsafeSysctls              plugin.TValue[bool]
+	UsesUnmaskedProcMount         plugin.TValue[bool]
 	HasCpuLimit                   plugin.TValue[bool]
 	HasMemoryLimit                plugin.TValue[bool]
 	HasResourceLimits             plugin.TValue[bool]
@@ -13762,6 +13912,24 @@ func (c *mqlK8sPod) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sPod) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -14451,6 +14619,9 @@ type mqlK8sDeployment struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	UsesUnconfinedAppArmor       plugin.TValue[bool]
+	HasUnsafeSysctls             plugin.TValue[bool]
+	UsesUnmaskedProcMount        plugin.TValue[bool]
 	HasCpuLimit                  plugin.TValue[bool]
 	HasMemoryLimit               plugin.TValue[bool]
 	HasResourceLimits            plugin.TValue[bool]
@@ -14625,6 +14796,24 @@ func (c *mqlK8sDeployment) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDeployment) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sDeployment) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -14972,6 +15161,9 @@ type mqlK8sDaemonset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	UsesUnconfinedAppArmor       plugin.TValue[bool]
+	HasUnsafeSysctls             plugin.TValue[bool]
+	UsesUnmaskedProcMount        plugin.TValue[bool]
 	HasCpuLimit                  plugin.TValue[bool]
 	HasMemoryLimit               plugin.TValue[bool]
 	HasResourceLimits            plugin.TValue[bool]
@@ -15145,6 +15337,24 @@ func (c *mqlK8sDaemonset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sDaemonset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -15486,6 +15696,9 @@ type mqlK8sStatefulset struct {
 	UsesHostPath                         plugin.TValue[bool]
 	UsesUnconfinedSeccomp                plugin.TValue[bool]
 	HasSeccompProfile                    plugin.TValue[bool]
+	UsesUnconfinedAppArmor               plugin.TValue[bool]
+	HasUnsafeSysctls                     plugin.TValue[bool]
+	UsesUnmaskedProcMount                plugin.TValue[bool]
 	HasCpuLimit                          plugin.TValue[bool]
 	HasMemoryLimit                       plugin.TValue[bool]
 	HasResourceLimits                    plugin.TValue[bool]
@@ -15664,6 +15877,24 @@ func (c *mqlK8sStatefulset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sStatefulset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -16035,6 +16266,9 @@ type mqlK8sReplicaset struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	UsesUnconfinedAppArmor       plugin.TValue[bool]
+	HasUnsafeSysctls             plugin.TValue[bool]
+	UsesUnmaskedProcMount        plugin.TValue[bool]
 	HasCpuLimit                  plugin.TValue[bool]
 	HasMemoryLimit               plugin.TValue[bool]
 	HasResourceLimits            plugin.TValue[bool]
@@ -16203,6 +16437,24 @@ func (c *mqlK8sReplicaset) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sReplicaset) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -16514,6 +16766,9 @@ type mqlK8sJob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	UsesUnconfinedAppArmor       plugin.TValue[bool]
+	HasUnsafeSysctls             plugin.TValue[bool]
+	UsesUnmaskedProcMount        plugin.TValue[bool]
 	HasCpuLimit                  plugin.TValue[bool]
 	HasMemoryLimit               plugin.TValue[bool]
 	HasResourceLimits            plugin.TValue[bool]
@@ -16694,6 +16949,24 @@ func (c *mqlK8sJob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sJob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sJob) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 
@@ -17077,6 +17350,9 @@ type mqlK8sCronjob struct {
 	UsesHostPath                 plugin.TValue[bool]
 	UsesUnconfinedSeccomp        plugin.TValue[bool]
 	HasSeccompProfile            plugin.TValue[bool]
+	UsesUnconfinedAppArmor       plugin.TValue[bool]
+	HasUnsafeSysctls             plugin.TValue[bool]
+	UsesUnmaskedProcMount        plugin.TValue[bool]
 	HasCpuLimit                  plugin.TValue[bool]
 	HasMemoryLimit               plugin.TValue[bool]
 	HasResourceLimits            plugin.TValue[bool]
@@ -17247,6 +17523,24 @@ func (c *mqlK8sCronjob) GetUsesUnconfinedSeccomp() *plugin.TValue[bool] {
 func (c *mqlK8sCronjob) GetHasSeccompProfile() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSeccompProfile, func() (bool, error) {
 		return c.hasSeccompProfile()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesUnconfinedAppArmor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnconfinedAppArmor, func() (bool, error) {
+		return c.usesUnconfinedAppArmor()
+	})
+}
+
+func (c *mqlK8sCronjob) GetHasUnsafeSysctls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnsafeSysctls, func() (bool, error) {
+		return c.hasUnsafeSysctls()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesUnmaskedProcMount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesUnmaskedProcMount, func() (bool, error) {
+		return c.usesUnmaskedProcMount()
 	})
 }
 

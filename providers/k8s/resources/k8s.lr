@@ -438,6 +438,12 @@ private k8s.pod @defaults("namespace name created"){
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -690,6 +696,12 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -852,6 +864,12 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -1013,6 +1031,12 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -1182,6 +1206,12 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -1331,6 +1361,12 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
@@ -1505,6 +1541,12 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   // (container-level setting wins over the pod default). An unset or Unconfined
   // profile on any container makes this false.
   hasSeccompProfile() bool
+  // Whether any container runs with an Unconfined AppArmor profile
+  usesUnconfinedAppArmor() bool
+  // Whether the pod requests a sysctl outside the kubelet safe set
+  hasUnsafeSysctls() bool
+  // Whether any container sets procMount to Unmasked
+  usesUnmaskedProcMount() bool
   // Whether every container sets a CPU limit (regular and init containers)
   hasCpuLimit() bool
   // Whether every container sets a memory limit (regular and init containers)
