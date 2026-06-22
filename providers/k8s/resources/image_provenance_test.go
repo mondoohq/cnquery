@@ -87,3 +87,77 @@ func TestImageProvenanceRollups_Helpers(t *testing.T) {
 		assert.True(t, specUsesLatestTag(spec), "init busybox is implicit latest")
 	})
 }
+
+func TestImagePullProvenance_Fixtures(t *testing.T) {
+	k8s := workloadSecurityK8s(t)
+
+	t.Run("digest-pinned is never stale and lists no unpinned images", func(t *testing.T) {
+		d := deploymentByName(t, k8s, "digest-pinned")
+		assert.False(t, d.GetRisksStaleImage().Data, "risksStaleImage")
+		assert.Empty(t, d.GetUnpinnedImages().Data, "unpinnedImages")
+		assert.Len(t, d.GetContainerImages().Data, 1, "containerImages")
+	})
+
+	t.Run("latest images default to Always pull", func(t *testing.T) {
+		d := deploymentByName(t, k8s, "latest-image")
+		assert.True(t, d.GetUsesAlwaysImagePullPolicy().Data, "usesAlwaysImagePullPolicy")
+		assert.False(t, d.GetRisksStaleImage().Data, "risksStaleImage (Always pull)")
+		assert.ElementsMatch(t, []any{"nginx", "gcr.io/foo/bar:latest"}, d.GetUnpinnedImages().Data, "unpinnedImages")
+	})
+
+	t.Run("pinned tag with default policy risks staleness", func(t *testing.T) {
+		d := deploymentByName(t, k8s, "hardened") // nginx:1.25, no explicit pull policy
+		assert.True(t, d.GetRisksStaleImage().Data, "risksStaleImage")
+		assert.False(t, d.GetUsesAlwaysImagePullPolicy().Data, "usesAlwaysImagePullPolicy")
+		assert.ElementsMatch(t, []any{"nginx:1.25"}, d.GetUnpinnedImages().Data, "unpinnedImages")
+	})
+}
+
+func TestImagePullProvenance_Helpers(t *testing.T) {
+	digest := "nginx@sha256:" + zeros64
+
+	t.Run("effective pull policy defaults", func(t *testing.T) {
+		assert.Equal(t, corev1.PullAlways, effectivePullPolicy(corev1.Container{Image: "nginx"}), "implicit latest")
+		assert.Equal(t, corev1.PullIfNotPresent, effectivePullPolicy(corev1.Container{Image: "nginx:1.25"}), "pinned tag")
+		assert.Equal(t, corev1.PullNever, effectivePullPolicy(corev1.Container{Image: "nginx:1.25", ImagePullPolicy: corev1.PullNever}), "explicit wins")
+	})
+
+	t.Run("risksStaleImage", func(t *testing.T) {
+		staleSpec := &corev1.PodSpec{Containers: []corev1.Container{{Image: "nginx:1.25", ImagePullPolicy: corev1.PullIfNotPresent}}}
+		assert.True(t, specRisksStaleImage(staleSpec), "mutable tag + IfNotPresent")
+
+		freshSpec := &corev1.PodSpec{Containers: []corev1.Container{{Image: "nginx:1.25", ImagePullPolicy: corev1.PullAlways}}}
+		assert.False(t, specRisksStaleImage(freshSpec), "mutable tag + Always")
+
+		digestSpec := &corev1.PodSpec{Containers: []corev1.Container{{Image: digest, ImagePullPolicy: corev1.PullIfNotPresent}}}
+		assert.False(t, specRisksStaleImage(digestSpec), "digest is always exact")
+	})
+
+	t.Run("unparseable image does not count as Always pull", func(t *testing.T) {
+		spec := &corev1.PodSpec{Containers: []corev1.Container{{Image: "UPPER CASE !! invalid"}}}
+		assert.Equal(t, corev1.PullIfNotPresent, effectivePullPolicy(spec.Containers[0]), "unparseable defaults to IfNotPresent")
+		assert.False(t, specUsesAlwaysImagePullPolicy(spec), "unparseable image is not Always")
+		assert.True(t, specRisksStaleImage(spec), "unparseable image is treated as a stale risk")
+	})
+
+	t.Run("usesAlwaysImagePullPolicy requires every container", func(t *testing.T) {
+		spec := &corev1.PodSpec{Containers: []corev1.Container{
+			{Image: "a:1", ImagePullPolicy: corev1.PullAlways},
+			{Image: "b:1", ImagePullPolicy: corev1.PullIfNotPresent},
+		}}
+		assert.False(t, specUsesAlwaysImagePullPolicy(spec))
+		assert.False(t, specUsesAlwaysImagePullPolicy(nil))
+	})
+
+	t.Run("image lists dedup and split on pinning", func(t *testing.T) {
+		spec := &corev1.PodSpec{
+			InitContainers: []corev1.Container{{Image: "shared:1"}},
+			Containers: []corev1.Container{
+				{Image: "shared:1"},
+				{Image: digest},
+			},
+		}
+		assert.ElementsMatch(t, []any{"shared:1", digest}, specContainerImages(spec), "containerImages dedup")
+		assert.ElementsMatch(t, []any{"shared:1"}, specUnpinnedImages(spec), "unpinnedImages excludes digest")
+	})
+}

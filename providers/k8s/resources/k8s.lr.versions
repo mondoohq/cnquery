@@ -214,6 +214,7 @@ k8s.cronjob.annotations 9.0.0
 k8s.cronjob.automountServiceAccountToken 13.2.2
 k8s.cronjob.concurrencyPolicy 13.0.16
 k8s.cronjob.consumedSecrets 13.3.1
+k8s.cronjob.containerImages 13.3.1
 k8s.cronjob.containers 9.0.0
 k8s.cronjob.created 9.0.0
 k8s.cronjob.dropsAllCapabilities 13.2.2
@@ -246,6 +247,7 @@ k8s.cronjob.ownerReferences 13.2.2
 k8s.cronjob.podSecurityStandard 13.3.1
 k8s.cronjob.podSpec 9.0.0
 k8s.cronjob.resourceVersion 9.0.0
+k8s.cronjob.risksStaleImage 13.3.1
 k8s.cronjob.runsAsRoot 13.2.2
 k8s.cronjob.runsPrivileged 13.2.2
 k8s.cronjob.schedule 13.0.16
@@ -255,6 +257,8 @@ k8s.cronjob.successfulJobsHistoryLimit 13.0.16
 k8s.cronjob.suspend 13.0.16
 k8s.cronjob.timeZone 13.0.16
 k8s.cronjob.uid 9.0.0
+k8s.cronjob.unpinnedImages 13.3.1
+k8s.cronjob.usesAlwaysImagePullPolicy 13.3.1
 k8s.cronjob.usesHostNamespaces 13.2.2
 k8s.cronjob.usesHostPath 13.2.2
 k8s.cronjob.usesImageDigest 13.3.1
@@ -284,6 +288,7 @@ k8s.daemonset.automountServiceAccountToken 13.2.2
 k8s.daemonset.collisionCount 13.0.16
 k8s.daemonset.conditions 13.0.16
 k8s.daemonset.consumedSecrets 13.3.1
+k8s.daemonset.containerImages 13.3.1
 k8s.daemonset.containers 9.0.0
 k8s.daemonset.created 9.0.0
 k8s.daemonset.currentNumberScheduled 13.0.16
@@ -322,13 +327,16 @@ k8s.daemonset.podSpec 9.0.0
 k8s.daemonset.pods 13.0.16
 k8s.daemonset.resourceVersion 9.0.0
 k8s.daemonset.revisionHistoryLimit 13.0.16
+k8s.daemonset.risksStaleImage 13.3.1
 k8s.daemonset.runsAsRoot 13.2.2
 k8s.daemonset.runsPrivileged 13.2.2
 k8s.daemonset.securityContext 13.2.2
 k8s.daemonset.selector 13.0.16
 k8s.daemonset.uid 9.0.0
+k8s.daemonset.unpinnedImages 13.3.1
 k8s.daemonset.updateStrategy 13.0.16
 k8s.daemonset.updatedNumberScheduled 13.0.16
+k8s.daemonset.usesAlwaysImagePullPolicy 13.3.1
 k8s.daemonset.usesHostNamespaces 13.2.2
 k8s.daemonset.usesHostPath 13.2.2
 k8s.daemonset.usesImageDigest 13.3.1
@@ -345,6 +353,7 @@ k8s.deployment.availableReplicas 13.0.16
 k8s.deployment.collisionCount 13.0.16
 k8s.deployment.conditions 13.0.16
 k8s.deployment.consumedSecrets 13.3.1
+k8s.deployment.containerImages 13.3.1
 k8s.deployment.containers 9.0.0
 k8s.deployment.created 9.0.0
 k8s.deployment.desiredReplicas 13.0.16
@@ -382,6 +391,7 @@ k8s.deployment.readyReplicas 13.0.16
 k8s.deployment.replicas 13.0.16
 k8s.deployment.resourceVersion 9.0.0
 k8s.deployment.revisionHistoryLimit 13.0.16
+k8s.deployment.risksStaleImage 13.3.1
 k8s.deployment.runsAsRoot 13.2.2
 k8s.deployment.runsPrivileged 13.2.2
 k8s.deployment.securityContext 13.2.2
@@ -389,7 +399,9 @@ k8s.deployment.selector 13.0.16
 k8s.deployment.strategy 13.0.16
 k8s.deployment.uid 9.0.0
 k8s.deployment.unavailableReplicas 13.0.16
+k8s.deployment.unpinnedImages 13.3.1
 k8s.deployment.updatedReplicas 13.0.16
+k8s.deployment.usesAlwaysImagePullPolicy 13.3.1
 k8s.deployment.usesHostNamespaces 13.2.2
 k8s.deployment.usesHostPath 13.2.2
 k8s.deployment.usesImageDigest 13.3.1
@@ -663,6 +675,7 @@ k8s.job.completionTime 13.0.16
 k8s.job.completions 13.0.16
 k8s.job.conditions 13.0.16
 k8s.job.consumedSecrets 13.3.1
+k8s.job.containerImages 13.3.1
 k8s.job.containers 9.0.0
 k8s.job.created 9.0.0
 k8s.job.dropsAllCapabilities 13.2.2
@@ -698,6 +711,7 @@ k8s.job.podSpec 9.0.0
 k8s.job.pods 13.0.16
 k8s.job.ready 13.0.16
 k8s.job.resourceVersion 9.0.0
+k8s.job.risksStaleImage 13.3.1
 k8s.job.runsAsRoot 13.2.2
 k8s.job.runsPrivileged 13.2.2
 k8s.job.securityContext 13.2.2
@@ -708,6 +722,8 @@ k8s.job.suspend 13.0.16
 k8s.job.terminating 13.0.16
 k8s.job.ttlSecondsAfterFinished 13.0.16
 k8s.job.uid 9.0.0
+k8s.job.unpinnedImages 13.3.1
+k8s.job.usesAlwaysImagePullPolicy 13.3.1
 k8s.job.usesHostNamespaces 13.2.2
 k8s.job.usesHostPath 13.2.2
 k8s.job.usesImageDigest 13.3.1
@@ -943,6 +959,7 @@ k8s.pod.apiVersion 9.0.0
 k8s.pod.automountServiceAccountToken 13.0.16
 k8s.pod.conditions 13.0.16
 k8s.pod.consumedSecrets 13.3.1
+k8s.pod.containerImages 13.3.1
 k8s.pod.containerStatuses 11.1.110
 k8s.pod.containers 9.0.0
 k8s.pod.created 9.0.0
@@ -1002,6 +1019,7 @@ k8s.pod.reason 13.0.16
 k8s.pod.replicaSet 13.0.16
 k8s.pod.resourceVersion 9.0.0
 k8s.pod.restartPolicy 13.0.16
+k8s.pod.risksStaleImage 13.3.1
 k8s.pod.runningImageDigests 13.3.1
 k8s.pod.runsAsRoot 13.2.2
 k8s.pod.runsPrivileged 13.2.2
@@ -1018,6 +1036,8 @@ k8s.pod.terminationGracePeriodSeconds 13.0.16
 k8s.pod.tolerations 13.0.16
 k8s.pod.topologySpreadConstraints 13.0.16
 k8s.pod.uid 9.0.0
+k8s.pod.unpinnedImages 13.3.1
+k8s.pod.usesAlwaysImagePullPolicy 13.3.1
 k8s.pod.usesHostNamespaces 13.2.2
 k8s.pod.usesHostPath 13.2.2
 k8s.pod.usesImageDigest 13.3.1
@@ -1178,6 +1198,7 @@ k8s.replicaset.automountServiceAccountToken 13.2.2
 k8s.replicaset.availableReplicas 13.0.16
 k8s.replicaset.conditions 13.0.16
 k8s.replicaset.consumedSecrets 13.3.1
+k8s.replicaset.containerImages 13.3.1
 k8s.replicaset.containers 9.0.0
 k8s.replicaset.created 9.0.0
 k8s.replicaset.desiredReplicas 13.0.16
@@ -1213,11 +1234,14 @@ k8s.replicaset.pods 13.0.16
 k8s.replicaset.readyReplicas 13.0.16
 k8s.replicaset.replicas 13.0.16
 k8s.replicaset.resourceVersion 9.0.0
+k8s.replicaset.risksStaleImage 13.3.1
 k8s.replicaset.runsAsRoot 13.2.2
 k8s.replicaset.runsPrivileged 13.2.2
 k8s.replicaset.securityContext 13.2.2
 k8s.replicaset.selector 13.0.16
 k8s.replicaset.uid 9.0.0
+k8s.replicaset.unpinnedImages 13.3.1
+k8s.replicaset.usesAlwaysImagePullPolicy 13.3.1
 k8s.replicaset.usesHostNamespaces 13.2.2
 k8s.replicaset.usesHostPath 13.2.2
 k8s.replicaset.usesImageDigest 13.3.1
@@ -1333,6 +1357,7 @@ k8s.statefulset.availableReplicas 13.0.16
 k8s.statefulset.collisionCount 13.0.16
 k8s.statefulset.conditions 13.0.16
 k8s.statefulset.consumedSecrets 13.3.1
+k8s.statefulset.containerImages 13.3.1
 k8s.statefulset.containers 9.0.0
 k8s.statefulset.created 9.0.0
 k8s.statefulset.currentReplicas 13.0.16
@@ -1373,15 +1398,18 @@ k8s.statefulset.readyReplicas 13.0.16
 k8s.statefulset.replicas 13.0.16
 k8s.statefulset.resourceVersion 9.0.0
 k8s.statefulset.revisionHistoryLimit 13.0.16
+k8s.statefulset.risksStaleImage 13.3.1
 k8s.statefulset.runsAsRoot 13.2.2
 k8s.statefulset.runsPrivileged 13.2.2
 k8s.statefulset.securityContext 13.2.2
 k8s.statefulset.selector 13.0.16
 k8s.statefulset.serviceName 13.0.16
 k8s.statefulset.uid 9.0.0
+k8s.statefulset.unpinnedImages 13.3.1
 k8s.statefulset.updateRevision 13.0.16
 k8s.statefulset.updateStrategy 13.0.16
 k8s.statefulset.updatedReplicas 13.0.16
+k8s.statefulset.usesAlwaysImagePullPolicy 13.3.1
 k8s.statefulset.usesHostNamespaces 13.2.2
 k8s.statefulset.usesHostPath 13.2.2
 k8s.statefulset.usesImageDigest 13.3.1

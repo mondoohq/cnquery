@@ -448,6 +448,14 @@ private k8s.pod @defaults("namespace name created"){
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -682,6 +690,14 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -836,6 +852,14 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -989,6 +1013,14 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1150,6 +1182,14 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1291,6 +1331,14 @@ private k8s.job @defaults("namespace name succeeded failed created") {
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -1457,6 +1505,14 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") {
   usesLatestTag() bool
   // Distinct registry domains the container images are pulled from
   imageRegistries() []string
+  // Whether every container uses imagePullPolicy Always (forces a registry re-pull, not a node cache)
+  usesAlwaysImagePullPolicy() bool
+  // Whether any container risks a stale or attacker-cached image: a mutable tag with a pull policy other than Always
+  risksStaleImage() bool
+  // Image references of all regular and init containers
+  containerImages() []string
+  // Image references that are not pinned by digest (mutable)
+  unpinnedImages() []string
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID

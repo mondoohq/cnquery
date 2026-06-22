@@ -881,6 +881,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.pod.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.pod.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.pod.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
 	},
@@ -1166,6 +1178,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.deployment.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.deployment.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.deployment.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
 	},
@@ -1343,6 +1367,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.daemonset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.daemonset.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.daemonset.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.daemonset.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.daemonset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetId()).ToDataRes(types.String)
 	},
@@ -1516,6 +1552,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.statefulset.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.statefulset.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.statefulset.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.statefulset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetId()).ToDataRes(types.String)
@@ -1706,6 +1754,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.replicaset.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetImageRegistries()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.replicaset.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.replicaset.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.replicaset.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
+	},
 	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
 	},
@@ -1864,6 +1924,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.job.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.job.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.job.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.job.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.job.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.job.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetId()).ToDataRes(types.String)
@@ -2059,6 +2131,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.imageRegistries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetImageRegistries()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.cronjob.usesAlwaysImagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUsesAlwaysImagePullPolicy()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.risksStaleImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetRisksStaleImage()).ToDataRes(types.Bool)
+	},
+	"k8s.cronjob.containerImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetContainerImages()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.cronjob.unpinnedImages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUnpinnedImages()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.cronjob.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetId()).ToDataRes(types.String)
@@ -5128,6 +5212,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5512,6 +5612,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5752,6 +5868,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDaemonset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.daemonset.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5986,6 +6118,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.statefulset.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStatefulset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.statefulset.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6244,6 +6392,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReplicaset).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -6458,6 +6622,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.job.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sJob).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.job.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.job.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6722,6 +6902,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.imageRegistries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).ImageRegistries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.usesAlwaysImagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UsesAlwaysImagePullPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.risksStaleImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).RisksStaleImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.containerImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).ContainerImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.unpinnedImages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).UnpinnedImages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12051,6 +12247,10 @@ type mqlK8sPod struct {
 	UsesImageDigest               plugin.TValue[bool]
 	UsesLatestTag                 plugin.TValue[bool]
 	ImageRegistries               plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy     plugin.TValue[bool]
+	RisksStaleImage               plugin.TValue[bool]
+	ContainerImages               plugin.TValue[[]any]
+	UnpinnedImages                plugin.TValue[[]any]
 	Id                            plugin.TValue[string]
 	Uid                           plugin.TValue[string]
 	ResourceVersion               plugin.TValue[string]
@@ -12292,6 +12492,30 @@ func (c *mqlK8sPod) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sPod) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sPod) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sPod) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sPod) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
@@ -12854,6 +13078,10 @@ type mqlK8sDeployment struct {
 	UsesImageDigest              plugin.TValue[bool]
 	UsesLatestTag                plugin.TValue[bool]
 	ImageRegistries              plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy    plugin.TValue[bool]
+	RisksStaleImage              plugin.TValue[bool]
+	ContainerImages              plugin.TValue[[]any]
+	UnpinnedImages               plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -13089,6 +13317,30 @@ func (c *mqlK8sDeployment) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sDeployment) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sDeployment) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sDeployment) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sDeployment) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
@@ -13347,6 +13599,10 @@ type mqlK8sDaemonset struct {
 	UsesImageDigest              plugin.TValue[bool]
 	UsesLatestTag                plugin.TValue[bool]
 	ImageRegistries              plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy    plugin.TValue[bool]
+	RisksStaleImage              plugin.TValue[bool]
+	ContainerImages              plugin.TValue[[]any]
+	UnpinnedImages               plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -13581,6 +13837,30 @@ func (c *mqlK8sDaemonset) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sDaemonset) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sDaemonset) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
@@ -13833,6 +14113,10 @@ type mqlK8sStatefulset struct {
 	UsesImageDigest                      plugin.TValue[bool]
 	UsesLatestTag                        plugin.TValue[bool]
 	ImageRegistries                      plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy            plugin.TValue[bool]
+	RisksStaleImage                      plugin.TValue[bool]
+	ContainerImages                      plugin.TValue[[]any]
+	UnpinnedImages                       plugin.TValue[[]any]
 	Id                                   plugin.TValue[string]
 	Uid                                  plugin.TValue[string]
 	ResourceVersion                      plugin.TValue[string]
@@ -14072,6 +14356,30 @@ func (c *mqlK8sStatefulset) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sStatefulset) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sStatefulset) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
@@ -14354,6 +14662,10 @@ type mqlK8sReplicaset struct {
 	UsesImageDigest              plugin.TValue[bool]
 	UsesLatestTag                plugin.TValue[bool]
 	ImageRegistries              plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy    plugin.TValue[bool]
+	RisksStaleImage              plugin.TValue[bool]
+	ContainerImages              plugin.TValue[[]any]
+	UnpinnedImages               plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -14586,6 +14898,30 @@ func (c *mqlK8sReplicaset) GetImageRegistries() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sReplicaset) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
+	})
+}
+
 func (c *mqlK8sReplicaset) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
@@ -14805,6 +15141,10 @@ type mqlK8sJob struct {
 	UsesImageDigest              plugin.TValue[bool]
 	UsesLatestTag                plugin.TValue[bool]
 	ImageRegistries              plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy    plugin.TValue[bool]
+	RisksStaleImage              plugin.TValue[bool]
+	ContainerImages              plugin.TValue[[]any]
+	UnpinnedImages               plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -15046,6 +15386,30 @@ func (c *mqlK8sJob) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sJob) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sJob) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sJob) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sJob) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sJob) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
@@ -15340,6 +15704,10 @@ type mqlK8sCronjob struct {
 	UsesImageDigest              plugin.TValue[bool]
 	UsesLatestTag                plugin.TValue[bool]
 	ImageRegistries              plugin.TValue[[]any]
+	UsesAlwaysImagePullPolicy    plugin.TValue[bool]
+	RisksStaleImage              plugin.TValue[bool]
+	ContainerImages              plugin.TValue[[]any]
+	UnpinnedImages               plugin.TValue[[]any]
 	Id                           plugin.TValue[string]
 	Uid                          plugin.TValue[string]
 	ResourceVersion              plugin.TValue[string]
@@ -15571,6 +15939,30 @@ func (c *mqlK8sCronjob) GetUsesLatestTag() *plugin.TValue[bool] {
 func (c *mqlK8sCronjob) GetImageRegistries() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ImageRegistries, func() ([]any, error) {
 		return c.imageRegistries()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUsesAlwaysImagePullPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesAlwaysImagePullPolicy, func() (bool, error) {
+		return c.usesAlwaysImagePullPolicy()
+	})
+}
+
+func (c *mqlK8sCronjob) GetRisksStaleImage() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RisksStaleImage, func() (bool, error) {
+		return c.risksStaleImage()
+	})
+}
+
+func (c *mqlK8sCronjob) GetContainerImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContainerImages, func() ([]any, error) {
+		return c.containerImages()
+	})
+}
+
+func (c *mqlK8sCronjob) GetUnpinnedImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UnpinnedImages, func() ([]any, error) {
+		return c.unpinnedImages()
 	})
 }
 
