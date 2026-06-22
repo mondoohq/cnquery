@@ -511,6 +511,7 @@ k8s.gateway.name 13.0.16
 k8s.gateway.namespace 13.0.16
 k8s.gateway.networkExposures 13.3.2
 k8s.gateway.ownerReferences 13.2.2
+k8s.gateway.pods 13.3.1
 k8s.gateway.resourceVersion 13.0.16
 k8s.gateway.statusAddresses 13.0.16
 k8s.gateway.uid 13.0.16
@@ -615,6 +616,7 @@ k8s.ingress.name 9.0.0
 k8s.ingress.namespace 9.0.0
 k8s.ingress.networkExposures 13.3.2
 k8s.ingress.ownerReferences 13.2.2
+k8s.ingress.pods 13.3.1
 k8s.ingress.resourceVersion 9.0.0
 k8s.ingress.rules 9.0.0
 k8s.ingress.tls 9.0.0
@@ -868,6 +870,7 @@ k8s.networkExposure.namespace 13.3.2
 k8s.networkExposure.network 13.3.2
 k8s.networkExposure.networkClassifications 13.3.2
 k8s.networkExposure.owner 13.3.2
+k8s.networkExposure.pods 13.3.1
 k8s.networkExposure.policyCoverage 13.3.2
 k8s.networkExposure.ports 13.3.2
 k8s.networkExposure.protocols 13.3.2
@@ -1107,6 +1110,7 @@ k8s.pod.schedulerName 13.0.16
 k8s.pod.securityContext 13.0.16
 k8s.pod.serviceAccount 13.0.16
 k8s.pod.serviceAccountName 13.0.16
+k8s.pod.services 13.3.1
 k8s.pod.shareProcessNamespace 13.0.16
 k8s.pod.startTime 13.0.16
 k8s.pod.statefulSet 13.0.16
@@ -1374,6 +1378,9 @@ k8s.secret.annotations 9.0.0
 k8s.secret.certificates 9.0.2
 k8s.secret.created 9.0.0
 k8s.secret.id 9.0.0
+k8s.secret.isImagePullSecret 13.3.1
+k8s.secret.isServiceAccountToken 13.3.1
+k8s.secret.isUnused 13.3.1
 k8s.secret.kind 9.0.0
 k8s.secret.labels 9.0.0
 k8s.secret.managedFields 13.2.2
@@ -1414,6 +1421,7 @@ k8s.service.name 9.0.0
 k8s.service.namespace 9.0.0
 k8s.service.networkExposures 13.3.2
 k8s.service.ownerReferences 13.2.2
+k8s.service.pods 13.3.1
 k8s.service.ports 13.0.16
 k8s.service.publishNotReadyAddresses 13.0.16
 k8s.service.resourceVersion 9.0.0

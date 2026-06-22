@@ -524,6 +524,8 @@ private k8s.pod @defaults("namespace name created"){
   // kubelet resolved it to a concrete digest, so a restart or reschedule could
   // silently pull a different image for that tag.
   hasImageDigestDrift() bool
+  // Services whose label selector matches this pod
+  services() []k8s.service
   // Node the pod runs on
   node() k8s.node
   // Name of the node the pod is bound to
@@ -1926,6 +1928,16 @@ private k8s.secret @defaults("namespace name created") {
   certificates() []network.certificate
   // Pods that reference this Secret through volumes, env, envFrom, or imagePullSecrets
   usedBy() []k8s.pod
+  // Whether this is a service account token Secret (type kubernetes.io/service-account-token)
+  isServiceAccountToken() bool
+  // Whether this is an image-pull Secret (type kubernetes.io/dockercfg or kubernetes.io/dockerconfigjson)
+  isImagePullSecret() bool
+  // Whether no pod and no service account reference this Secret
+  //
+  // True when no pod consumes the Secret through a volume, environment
+  // variable, or image-pull reference, and no service account lists it among
+  // its tokens or image-pull secrets. A signal for orphaned credentials.
+  isUnused() bool
 }
 
 // Kubernetes ConfigMap
@@ -2044,6 +2056,8 @@ private k8s.service @defaults("namespace name created") {
   loadBalancerIngress() []dict
   // EndpointSlices that back this service (filtered by the kubernetes.io/service-name label)
   endpointSlices() []k8s.endpointslice
+  // Pods selected by the service's label selector (empty for selectorless and ExternalName services)
+  pods() []k8s.pod
   // Normalized network exposure records for this Service
   networkExposures() []k8s.networkExposure
 }
@@ -2157,6 +2171,8 @@ private k8s.ingress @defaults("namespace name created") {
   ingressClass() k8s.ingressclass
   // Load-balancer ingress entries published in status (ip, hostname, ports)
   loadBalancerIngress() []dict
+  // Pods behind the ingress, resolved through its backend services
+  pods() []k8s.pod
   // Normalized network exposure records for this Ingress
   networkExposures() []k8s.networkExposure
 }
@@ -2588,6 +2604,8 @@ private k8s.networkExposure @defaults("sourceKind namespace name internetExposed
   policyCoverage []string
   // Static-analysis confidence: high, medium, or low
   confidence string
+  // Pods behind this exposure, resolved through the source Service, Ingress, or Gateway
+  pods() []k8s.pod
 }
 
 // Normalized Kubernetes egress route
@@ -3326,6 +3344,8 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
   listenerStatus []dict
   // Status conditions
   conditions []dict
+  // Pods behind the gateway, resolved through the HTTPRoutes and GRPCRoutes attached to it and their backend services
+  pods() []k8s.pod
   // Normalized network exposure records for this Gateway
   networkExposures() []k8s.networkExposure
 }
