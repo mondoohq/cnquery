@@ -993,6 +993,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.ske.cluster.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"stackit.ske.cluster.apiServerAclEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetApiServerAclEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.apiServerAclAllowedCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetApiServerAclAllowedCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.credentialsRotationPhase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationPhase()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.credentialsRotationLastInitiated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationLastInitiated()).ToDataRes(types.Time)
+	},
+	"stackit.ske.cluster.credentialsRotationLastCompleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetCredentialsRotationLastCompleted()).ToDataRes(types.Time)
+	},
+	"stackit.ske.cluster.egressAddressRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetEgressAddressRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.podAddressRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetPodAddressRanges()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetServiceAccountIssuer()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetIdpEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.idpType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetIdpType()).ToDataRes(types.String)
+	},
+	"stackit.ske.cluster.observabilityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetObservabilityEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.observabilityInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetObservabilityInstance()).ToDataRes(types.Resource("stackit.observability.instance"))
+	},
+	"stackit.ske.cluster.dnsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsEnabled()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.dnsGatewayApi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsGatewayApi()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.dnsZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetDnsZones()).ToDataRes(types.Array(types.String))
+	},
+	"stackit.ske.cluster.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetNetworkRef()).ToDataRes(types.Resource("stackit.network"))
+	},
 	"stackit.ske.cluster.nodePool.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeClusterNodePool).GetName()).ToDataRes(types.String)
 	},
@@ -1040,6 +1088,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.ske.cluster.nodePool.allowSystemComponents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeClusterNodePool).GetAllowSystemComponents()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.nodePool.kubernetesVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeClusterNodePool).GetKubernetesVersion()).ToDataRes(types.String)
 	},
 	"stackit.objectStorage.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitObjectStorage).GetBuckets()).ToDataRes(types.Array(types.Resource("stackit.objectStorage.bucket")))
@@ -2829,6 +2880,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitSkeCluster).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"stackit.ske.cluster.apiServerAclEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ApiServerAclEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.apiServerAclAllowedCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ApiServerAclAllowedCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationPhase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationPhase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationLastInitiated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationLastInitiated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.credentialsRotationLastCompleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).CredentialsRotationLastCompleted, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.egressAddressRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).EgressAddressRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.podAddressRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).PodAddressRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.serviceAccountIssuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ServiceAccountIssuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.idpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).IdpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.idpType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).IdpType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.observabilityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ObservabilityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.observabilityInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).ObservabilityInstance, ok = plugin.RawToTValue[*mqlStackitObservabilityInstance](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsGatewayApi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsGatewayApi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.dnsZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).DnsZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).NetworkRef, ok = plugin.RawToTValue[*mqlStackitNetwork](v.Value, v.Error)
+		return
+	},
 	"stackit.ske.cluster.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeClusterNodePool).__id, ok = v.Value.(string)
 		return
@@ -2895,6 +3010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.ske.cluster.nodePool.allowSystemComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeClusterNodePool).AllowSystemComponents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.nodePool.kubernetesVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeClusterNodePool).KubernetesVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.objectStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6511,16 +6630,32 @@ type mqlStackitSkeCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitSkeClusterInternal
-	Name              plugin.TValue[string]
-	Status            plugin.TValue[string]
-	StatusDetails     plugin.TValue[any]
-	KubernetesVersion plugin.TValue[string]
-	NodePools         plugin.TValue[[]any]
-	Hibernations      plugin.TValue[[]any]
-	Maintenance       plugin.TValue[any]
-	Extensions        plugin.TValue[any]
-	Network           plugin.TValue[any]
-	CreationTime      plugin.TValue[*time.Time]
+	Name                             plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	StatusDetails                    plugin.TValue[any]
+	KubernetesVersion                plugin.TValue[string]
+	NodePools                        plugin.TValue[[]any]
+	Hibernations                     plugin.TValue[[]any]
+	Maintenance                      plugin.TValue[any]
+	Extensions                       plugin.TValue[any]
+	Network                          plugin.TValue[any]
+	CreationTime                     plugin.TValue[*time.Time]
+	ApiServerAclEnabled              plugin.TValue[bool]
+	ApiServerAclAllowedCidrs         plugin.TValue[[]any]
+	CredentialsRotationPhase         plugin.TValue[string]
+	CredentialsRotationLastInitiated plugin.TValue[*time.Time]
+	CredentialsRotationLastCompleted plugin.TValue[*time.Time]
+	EgressAddressRanges              plugin.TValue[[]any]
+	PodAddressRanges                 plugin.TValue[[]any]
+	ServiceAccountIssuer             plugin.TValue[string]
+	IdpEnabled                       plugin.TValue[bool]
+	IdpType                          plugin.TValue[string]
+	ObservabilityEnabled             plugin.TValue[bool]
+	ObservabilityInstance            plugin.TValue[*mqlStackitObservabilityInstance]
+	DnsEnabled                       plugin.TValue[bool]
+	DnsGatewayApi                    plugin.TValue[bool]
+	DnsZones                         plugin.TValue[[]any]
+	NetworkRef                       plugin.TValue[*mqlStackitNetwork]
 }
 
 // createStackitSkeCluster creates a new instance of this resource
@@ -6612,6 +6747,94 @@ func (c *mqlStackitSkeCluster) GetCreationTime() *plugin.TValue[*time.Time] {
 	return &c.CreationTime
 }
 
+func (c *mqlStackitSkeCluster) GetApiServerAclEnabled() *plugin.TValue[bool] {
+	return &c.ApiServerAclEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetApiServerAclAllowedCidrs() *plugin.TValue[[]any] {
+	return &c.ApiServerAclAllowedCidrs
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationPhase() *plugin.TValue[string] {
+	return &c.CredentialsRotationPhase
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationLastInitiated() *plugin.TValue[*time.Time] {
+	return &c.CredentialsRotationLastInitiated
+}
+
+func (c *mqlStackitSkeCluster) GetCredentialsRotationLastCompleted() *plugin.TValue[*time.Time] {
+	return &c.CredentialsRotationLastCompleted
+}
+
+func (c *mqlStackitSkeCluster) GetEgressAddressRanges() *plugin.TValue[[]any] {
+	return &c.EgressAddressRanges
+}
+
+func (c *mqlStackitSkeCluster) GetPodAddressRanges() *plugin.TValue[[]any] {
+	return &c.PodAddressRanges
+}
+
+func (c *mqlStackitSkeCluster) GetServiceAccountIssuer() *plugin.TValue[string] {
+	return &c.ServiceAccountIssuer
+}
+
+func (c *mqlStackitSkeCluster) GetIdpEnabled() *plugin.TValue[bool] {
+	return &c.IdpEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetIdpType() *plugin.TValue[string] {
+	return &c.IdpType
+}
+
+func (c *mqlStackitSkeCluster) GetObservabilityEnabled() *plugin.TValue[bool] {
+	return &c.ObservabilityEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetObservabilityInstance() *plugin.TValue[*mqlStackitObservabilityInstance] {
+	return plugin.GetOrCompute[*mqlStackitObservabilityInstance](&c.ObservabilityInstance, func() (*mqlStackitObservabilityInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.ske.cluster", c.__id, "observabilityInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitObservabilityInstance), nil
+			}
+		}
+
+		return c.observabilityInstance()
+	})
+}
+
+func (c *mqlStackitSkeCluster) GetDnsEnabled() *plugin.TValue[bool] {
+	return &c.DnsEnabled
+}
+
+func (c *mqlStackitSkeCluster) GetDnsGatewayApi() *plugin.TValue[bool] {
+	return &c.DnsGatewayApi
+}
+
+func (c *mqlStackitSkeCluster) GetDnsZones() *plugin.TValue[[]any] {
+	return &c.DnsZones
+}
+
+func (c *mqlStackitSkeCluster) GetNetworkRef() *plugin.TValue[*mqlStackitNetwork] {
+	return plugin.GetOrCompute[*mqlStackitNetwork](&c.NetworkRef, func() (*mqlStackitNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.ske.cluster", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
+}
+
 // mqlStackitSkeClusterNodePool for the stackit.ske.cluster.nodePool resource
 type mqlStackitSkeClusterNodePool struct {
 	MqlRuntime *plugin.Runtime
@@ -6633,6 +6856,7 @@ type mqlStackitSkeClusterNodePool struct {
 	Taints                plugin.TValue[[]any]
 	Labels                plugin.TValue[map[string]any]
 	AllowSystemComponents plugin.TValue[bool]
+	KubernetesVersion     plugin.TValue[string]
 }
 
 // createStackitSkeClusterNodePool creates a new instance of this resource
@@ -6734,6 +6958,10 @@ func (c *mqlStackitSkeClusterNodePool) GetLabels() *plugin.TValue[map[string]any
 
 func (c *mqlStackitSkeClusterNodePool) GetAllowSystemComponents() *plugin.TValue[bool] {
 	return &c.AllowSystemComponents
+}
+
+func (c *mqlStackitSkeClusterNodePool) GetKubernetesVersion() *plugin.TValue[string] {
+	return &c.KubernetesVersion
 }
 
 // mqlStackitObjectStorage for the stackit.objectStorage resource

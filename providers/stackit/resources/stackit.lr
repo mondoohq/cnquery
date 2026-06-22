@@ -550,10 +550,44 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   maintenance dict
   // Extensions (acl, argus, dns) — observability/network add-ons
   extensions dict
-  // Cluster networking overrides (services range, pods range, …)
+  // Network association: the STACKIT network id and control-plane access scope
   network dict
   // Creation timestamp
   creationTime time
+  // Whether the kube-apiserver access ACL is enforced
+  apiServerAclEnabled bool
+  // CIDR blocks permitted to reach the kube-apiserver when the access ACL is enforced
+  apiServerAclAllowedCidrs []string
+  // Credentials-rotation phase
+  //
+  // One of NEVER, PREPARING, PREPARED, COMPLETING, or COMPLETED.
+  credentialsRotationPhase string
+  // Time the most recent credentials rotation was initiated
+  credentialsRotationLastInitiated time
+  // Time the most recent credentials rotation completed
+  credentialsRotationLastCompleted time
+  // Egress IP ranges from which cluster traffic originates
+  egressAddressRanges []string
+  // Pod IP ranges assigned to the cluster
+  podAddressRanges []string
+  // OIDC service-account token issuer URL
+  serviceAccountIssuer string
+  // Whether an identity provider is enabled for cluster access
+  idpEnabled bool
+  // Identity-provider type configured for cluster access
+  idpType string
+  // Whether the observability (argus) extension is enabled
+  observabilityEnabled bool
+  // Observability instance the cluster ships metrics and logs to
+  observabilityInstance() stackit.observability.instance
+  // Whether the DNS extension is enabled
+  dnsEnabled bool
+  // Whether the DNS extension exposes the Kubernetes Gateway API
+  dnsGatewayApi bool
+  // DNS zones managed by the DNS extension
+  dnsZones []string
+  // STACKIT network the cluster is attached to
+  networkRef() stackit.network
 }
 
 // SKE node pool
@@ -597,6 +631,8 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
   labels map[string]string
   // Whether DaemonSets/system components may schedule on this pool
   allowSystemComponents bool
+  // Kubernetes version running on this node pool, when it differs from the control plane
+  kubernetesVersion string
 }
 
 // STACKIT Object Storage namespace

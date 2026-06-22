@@ -39,20 +39,44 @@ func (r *mqlStackitSke) clusters() ([]any, error) {
 
 // mqlStackitSkeClusterInternal caches the raw SKE Nodepool slice so the
 // computed nodePools() field can build typed sub-resources on access
-// without a second API round-trip.
+// without a second API round-trip. It also caches the network and
+// observability instance ids so the typed-reference fields can resolve
+// them lazily.
 type mqlStackitSkeClusterInternal struct {
-	rawNodepools []ske.Nodepool
+	rawNodepools                 []ske.Nodepool
+	cacheNetworkId               string
+	cacheObservabilityInstanceId string
 }
 
 func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Resource, error) {
 	var aggregated string
 	var creationTime *time.Time
+	var credRotPhase, saIssuer string
+	var credRotInitiated, credRotCompleted *time.Time
+	egressRanges := []string{}
+	podRanges := []string{}
 	statusDict := toDict(cluster.GetStatus())
 	if status, ok := cluster.GetStatusOk(); ok {
 		aggregated = string(status.GetAggregated())
 		if ct, ok := status.GetCreationTimeOk(); ok && !ct.IsZero() {
 			creationTime = &ct
 		}
+		if cr, ok := status.GetCredentialsRotationOk(); ok {
+			credRotPhase = string(cr.GetPhase())
+			if t, ok := cr.GetLastInitiationTimeOk(); ok && !t.IsZero() {
+				credRotInitiated = &t
+			}
+			if t, ok := cr.GetLastCompletionTimeOk(); ok && !t.IsZero() {
+				credRotCompleted = &t
+			}
+		}
+		if r, ok := status.GetEgressAddressRangesOk(); ok {
+			egressRanges = r
+		}
+		if r, ok := status.GetPodAddressRangesOk(); ok {
+			podRanges = r
+		}
+		saIssuer = status.GetServiceAccountIssuer()
 	}
 
 	var kVersion string
@@ -65,16 +89,68 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		hibernations = anySliceToDict(h.GetSchedules())
 	}
 
+	var aclEnabled, obsEnabled, dnsEnabled, dnsGatewayApi bool
+	var obsInstanceId string
+	allowedCidrs := []string{}
+	dnsZones := []string{}
+	if ext, ok := cluster.GetExtensionsOk(); ok {
+		if acl, ok := ext.GetAclOk(); ok {
+			aclEnabled = acl.GetEnabled()
+			if c, ok := acl.GetAllowedCidrsOk(); ok {
+				allowedCidrs = c
+			}
+		}
+		if obs, ok := ext.GetObservabilityOk(); ok {
+			obsEnabled = obs.GetEnabled()
+			obsInstanceId = obs.GetInstanceId()
+		}
+		if dns, ok := ext.GetDnsOk(); ok {
+			dnsEnabled = dns.GetEnabled()
+			dnsGatewayApi = dns.GetGatewayApi()
+			if z, ok := dns.GetZonesOk(); ok {
+				dnsZones = z
+			}
+		}
+	}
+
+	var idpEnabled bool
+	var idpType string
+	if access, ok := cluster.GetAccessOk(); ok {
+		if idp, ok := access.GetIdpOk(); ok {
+			idpEnabled = idp.GetEnabled()
+			idpType = idp.GetType()
+		}
+	}
+
+	var networkId string
+	if n, ok := cluster.GetNetworkOk(); ok {
+		networkId = n.GetId()
+	}
+
 	args := map[string]*llx.RawData{
-		"name":              llx.StringData(cluster.GetName()),
-		"status":            llx.StringData(aggregated),
-		"statusDetails":     llx.DictData(statusDict),
-		"kubernetesVersion": llx.StringData(kVersion),
-		"hibernations":      llx.ArrayData(hibernations, types.Dict),
-		"maintenance":       llx.DictData(toDict(cluster.GetMaintenance())),
-		"extensions":        llx.DictData(toDict(cluster.GetExtensions())),
-		"network":           llx.DictData(toDict(cluster.GetNetwork())),
-		"creationTime":      llx.TimeDataPtr(creationTime),
+		"name":                             llx.StringData(cluster.GetName()),
+		"status":                           llx.StringData(aggregated),
+		"statusDetails":                    llx.DictData(statusDict),
+		"kubernetesVersion":                llx.StringData(kVersion),
+		"hibernations":                     llx.ArrayData(hibernations, types.Dict),
+		"maintenance":                      llx.DictData(toDict(cluster.GetMaintenance())),
+		"extensions":                       llx.DictData(toDict(cluster.GetExtensions())),
+		"network":                          llx.DictData(toDict(cluster.GetNetwork())),
+		"creationTime":                     llx.TimeDataPtr(creationTime),
+		"apiServerAclEnabled":              llx.BoolData(aclEnabled),
+		"apiServerAclAllowedCidrs":         strSliceData(allowedCidrs),
+		"credentialsRotationPhase":         llx.StringData(credRotPhase),
+		"credentialsRotationLastInitiated": llx.TimeDataPtr(credRotInitiated),
+		"credentialsRotationLastCompleted": llx.TimeDataPtr(credRotCompleted),
+		"egressAddressRanges":              strSliceData(egressRanges),
+		"podAddressRanges":                 strSliceData(podRanges),
+		"serviceAccountIssuer":             llx.StringData(saIssuer),
+		"idpEnabled":                       llx.BoolData(idpEnabled),
+		"idpType":                          llx.StringData(idpType),
+		"observabilityEnabled":             llx.BoolData(obsEnabled),
+		"dnsEnabled":                       llx.BoolData(dnsEnabled),
+		"dnsGatewayApi":                    llx.BoolData(dnsGatewayApi),
+		"dnsZones":                         strSliceData(dnsZones),
 	}
 	res, err := CreateResource(runtime, "stackit.ske.cluster", args)
 	if err != nil {
@@ -82,8 +158,41 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 	}
 	if mc, ok := res.(*mqlStackitSkeCluster); ok {
 		mc.rawNodepools = cluster.GetNodepools()
+		mc.cacheNetworkId = networkId
+		mc.cacheObservabilityInstanceId = obsInstanceId
 	}
 	return res, nil
+}
+
+// networkRef resolves the STACKIT network the cluster is attached to.
+func (c *mqlStackitSkeCluster) networkRef() (*mqlStackitNetwork, error) {
+	if c.cacheNetworkId == "" {
+		c.NetworkRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(c.MqlRuntime, "stackit.network", map[string]*llx.RawData{
+		"id": llx.StringData(c.cacheNetworkId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitNetwork), nil
+}
+
+// observabilityInstance resolves the observability instance the cluster
+// ships metrics and logs to, when the observability extension is enabled.
+func (c *mqlStackitSkeCluster) observabilityInstance() (*mqlStackitObservabilityInstance, error) {
+	if c.cacheObservabilityInstanceId == "" {
+		c.ObservabilityInstance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(c.MqlRuntime, "stackit.observability.instance", map[string]*llx.RawData{
+		"id": llx.StringData(c.cacheObservabilityInstanceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitObservabilityInstance), nil
 }
 
 func (r *mqlStackitSkeCluster) nodePools() ([]any, error) {
@@ -118,6 +227,11 @@ func (r *mqlStackitSkeCluster) nodePools() ([]any, error) {
 			taints = anySliceToDict(t)
 		}
 
+		var npVersion string
+		if k, ok := np.GetKubernetesOk(); ok {
+			npVersion = k.GetVersion()
+		}
+
 		args := map[string]*llx.RawData{
 			"name":                  llx.StringData(np.GetName()),
 			"clusterName":           llx.StringData(r.Name.Data),
@@ -135,6 +249,7 @@ func (r *mqlStackitSkeCluster) nodePools() ([]any, error) {
 			"taints":                llx.ArrayData(taints, types.Dict),
 			"labels":                stringMapData(np.GetLabels()),
 			"allowSystemComponents": llx.BoolData(np.GetAllowSystemComponents()),
+			"kubernetesVersion":     llx.StringData(npVersion),
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.ske.cluster.nodePool", args)
 		if err != nil {
