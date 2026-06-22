@@ -80,6 +80,7 @@ const (
 	ResourceK8sIngressclass                              string = "k8s.ingressclass"
 	ResourceK8sOwnerReference                            string = "k8s.ownerReference"
 	ResourceK8sManagedField                              string = "k8s.managedField"
+	ResourceK8sAccessReview                              string = "k8s.accessReview"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -341,6 +342,10 @@ func init() {
 		"k8s.managedField": {
 			// to override args, implement: initK8sManagedField(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sManagedField,
+		},
+		"k8s.accessReview": {
+			Init:   initK8sAccessReview,
+			Create: createK8sAccessReview,
 		},
 	}
 }
@@ -4453,6 +4458,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.managedField.fieldsV1": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sManagedField).GetFieldsV1()).ToDataRes(types.Dict)
+	},
+	"k8s.accessReview.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetSubject()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.verb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetVerb()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetResource()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetGroup()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetName()).ToDataRes(types.String)
+	},
+	"k8s.accessReview.allowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetAllowed()).ToDataRes(types.Bool)
+	},
+	"k8s.accessReview.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAccessReview).GetReason()).ToDataRes(types.String)
 	},
 }
 
@@ -10108,6 +10137,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.managedField.fieldsV1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sManagedField).FieldsV1, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.accessReview.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.verb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Verb, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Resource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.allowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Allowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.accessReview.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAccessReview).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -23415,4 +23480,87 @@ func (c *mqlK8sManagedField) GetFieldsType() *plugin.TValue[string] {
 
 func (c *mqlK8sManagedField) GetFieldsV1() *plugin.TValue[any] {
 	return &c.FieldsV1
+}
+
+// mqlK8sAccessReview for the k8s.accessReview resource
+type mqlK8sAccessReview struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sAccessReviewInternal
+	Subject   plugin.TValue[string]
+	Verb      plugin.TValue[string]
+	Resource  plugin.TValue[string]
+	Group     plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Allowed   plugin.TValue[bool]
+	Reason    plugin.TValue[string]
+}
+
+// createK8sAccessReview creates a new instance of this resource
+func createK8sAccessReview(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAccessReview{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.accessReview", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAccessReview) MqlName() string {
+	return "k8s.accessReview"
+}
+
+func (c *mqlK8sAccessReview) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAccessReview) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlK8sAccessReview) GetVerb() *plugin.TValue[string] {
+	return &c.Verb
+}
+
+func (c *mqlK8sAccessReview) GetResource() *plugin.TValue[string] {
+	return &c.Resource
+}
+
+func (c *mqlK8sAccessReview) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlK8sAccessReview) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sAccessReview) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAccessReview) GetAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Allowed, func() (bool, error) {
+		return c.allowed()
+	})
+}
+
+func (c *mqlK8sAccessReview) GetReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Reason, func() (string, error) {
+		return c.reason()
+	})
 }

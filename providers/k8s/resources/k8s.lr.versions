@@ -2,6 +2,15 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 k8s 9.0.0
+k8s.accessReview 13.3.1
+k8s.accessReview.allowed 13.3.1
+k8s.accessReview.group 13.3.1
+k8s.accessReview.name 13.3.1
+k8s.accessReview.namespace 13.3.1
+k8s.accessReview.reason 13.3.1
+k8s.accessReview.resource 13.3.1
+k8s.accessReview.subject 13.3.1
+k8s.accessReview.verb 13.3.1
 k8s.admission.mutatingwebhookconfiguration 13.0.16
 k8s.admission.mutatingwebhookconfiguration.annotations 13.0.16
 k8s.admission.mutatingwebhookconfiguration.created 13.0.16

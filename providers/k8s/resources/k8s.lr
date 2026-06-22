@@ -3569,3 +3569,30 @@ private k8s.managedField @defaults("manager operation") {
   // Set of fields this manager owns, as a nested map
   fieldsV1 dict
 }
+
+// Authoritative RBAC access check
+//
+// Answers, via the Kubernetes API server's SubjectAccessReview, whether a
+// subject may perform a verb on a resource. Unlike the rule-derived RBAC
+// rollups, this folds in aggregated ClusterRoles, group bindings, and built-in
+// roles. Requires a live cluster connection; on a manifest scan the result
+// fields error.
+private k8s.accessReview @defaults("subject verb resource allowed") {
+  init(subject string, verb string, resource string, group string, namespace string, name string)
+  // Subject under test (e.g. "system:serviceaccount:prod:web", a user, or a group)
+  subject string
+  // Kubernetes API verb (get, list, create, delete, *, ...)
+  verb string
+  // Resource type (secrets, pods, *, ...)
+  resource string
+  // API group of the resource ("" for the core group)
+  group string
+  // Namespace of the action ("" for a cluster-scoped check)
+  namespace string
+  // Optional specific object name
+  name string
+  // Whether the API server allows the action
+  allowed() bool
+  // Authorizer's explanation for the decision
+  reason() string
+}
