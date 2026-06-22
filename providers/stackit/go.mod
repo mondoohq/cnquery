@@ -7,32 +7,32 @@ go 1.26.3
 require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.26.0
-	github.com/stackitcloud/stackit-sdk-go/services/alb v0.14.2
+	github.com/stackitcloud/stackit-sdk-go/services/alb v0.15.0
 	github.com/stackitcloud/stackit-sdk-go/services/authorization v0.15.2
-	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.6.2
-	github.com/stackitcloud/stackit-sdk-go/services/dns v0.20.2
-	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.11.1
-	github.com/stackitcloud/stackit-sdk-go/services/kms v1.9.0
-	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.12.2
-	github.com/stackitcloud/stackit-sdk-go/services/logme v0.29.0
-	github.com/stackitcloud/stackit-sdk-go/services/mariadb v0.28.2
-	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.10.0
-	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.8.3
+	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.8.0
+	github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0
+	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.12.2
+	github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.14.0
+	github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.0
-	github.com/stackitcloud/stackit-sdk-go/services/observability v0.21.2
-	github.com/stackitcloud/stackit-sdk-go/services/opensearch v0.27.2
-	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.8.0
-	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v0.29.2
-	github.com/stackitcloud/stackit-sdk-go/services/redis v0.28.2
-	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.23.0
+	github.com/stackitcloud/stackit-sdk-go/services/observability v0.24.0
+	github.com/stackitcloud/stackit-sdk-go/services/opensearch v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.10.0
+	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/redis v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.24.0
 	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.18.1
-	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.19.0
-	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.10.1
-	github.com/stackitcloud/stackit-sdk-go/services/ske v1.14.0
-	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.0
+	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0
+	github.com/stackitcloud/stackit-sdk-go/services/ske v1.18.0
+	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.13.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0
-	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
+	go.mondoo.com/mql/v13 v13.23.0
 )
 
 require (
@@ -57,13 +57,13 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
-	github.com/cockroachdb/errors v1.13.0 // indirect
+	github.com/cockroachdb/errors v1.14.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
-	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
+	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.19.0 // indirect
-	github.com/getsentry/sentry-go v0.46.2 // indirect
+	github.com/getsentry/sentry-go v0.47.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
 	github.com/go-git/go-git/v5 v5.19.1 // indirect
@@ -119,7 +119,7 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
