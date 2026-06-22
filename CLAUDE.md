@@ -545,6 +545,8 @@ for {
 
   **Why:** A sub-resource has real cost — a generated struct, `__id` stability, serialization, test surface, and a `.lr.versions` entry per field. Creating them for pure data containers bloats the schema without new query power; scalars and maps on the parent are already queryable (e.g. `resourceRequirements["GPU"]`).
 
+  **Windows registry-backed checks** have their own version of this trade-off: a typed resource over a `registrykey` value is worth it only when it buys *correctness* (precedence across keys, default/sentinel/enum decoding, multi-key aggregation, or a non-registry source), not just a nicer name. See [providers/os/resources/WINDOWS_REGISTRY_ABSTRACTION.md](providers/os/resources/WINDOWS_REGISTRY_ABSTRACTION.md) for the decision gate and the rule that every registry-backed field must name the key it maps so authors can find it.
+
   **Examples (Batch):**
   - ✓ `aws.batch.jobQueue.computeEnvironmentOrder` — nests typed `computeEnvironment()` ref
   - ✓ `aws.batch.jobDefinition.containerProperties.secret` — `valueFrom` is the ARN (and will eventually resolve to a typed ref)
