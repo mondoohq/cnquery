@@ -3350,6 +3350,13 @@ private k8s.grpcroute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API TLSRoute
+//
+// Gateway API rules that route TLS traffic from Gateways to backend services by
+// SNI hostname without terminating the connection, selected by namespace and
+// name. The parentRefs field binds the route to the Gateways that delegate to
+// it, hostnames narrows the route to specific SNI hosts, and rules describes the
+// backend forwarding applied to connections. The parentStatus field reports
+// whether each parent accepted the route.
 private k8s.tlsroute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -3386,6 +3393,12 @@ private k8s.tlsroute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API TCPRoute
+//
+// Gateway API rules that route raw TCP traffic from Gateways to backend
+// services, selected by namespace and name. The parentRefs field binds the
+// route to the Gateways that delegate to it and rules describes the backend
+// forwarding applied to connections; TCPRoute does not match on hostnames. The
+// parentStatus field reports whether each parent accepted the route.
 private k8s.tcproute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
@@ -3422,6 +3435,12 @@ private k8s.tcproute @defaults("namespace name created") {
 }
 
 // Kubernetes Gateway API UDPRoute
+//
+// Gateway API rules that route raw UDP traffic from Gateways to backend
+// services, selected by namespace and name. The parentRefs field binds the
+// route to the Gateways that delegate to it and rules describes the backend
+// forwarding applied to datagrams; UDPRoute does not match on hostnames. The
+// parentStatus field reports whether each parent accepted the route.
 private k8s.udproute @defaults("namespace name created") {
   // Mondoo ID for the Kubernetes object
   id string
