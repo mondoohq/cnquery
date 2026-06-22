@@ -131,6 +131,9 @@ func (c *Connection) Close() {
 	if c.closeFN != nil {
 		c.closeFN()
 	}
+	if c.fs != nil {
+		c.fs.FileMap = nil
+	}
 }
 
 func (c *Connection) Load(stream io.Reader) error {
