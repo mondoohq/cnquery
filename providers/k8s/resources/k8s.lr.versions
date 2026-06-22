@@ -1052,6 +1052,7 @@ k8s.pod.dnsPolicy 13.0.16
 k8s.pod.dropsAllCapabilities 13.2.2
 k8s.pod.enableServiceLinks 13.0.16
 k8s.pod.ephemeralContainers 9.0.0
+k8s.pod.escapesNetworkPolicy 13.4.1
 k8s.pod.exposures 13.3.4
 k8s.pod.hasCpuLimit 13.3.1
 k8s.pod.hasImageDigestDrift 13.3.1

@@ -558,6 +558,12 @@ private k8s.pod @defaults("namespace name created"){
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
   hostNetwork() bool
+  // Whether NetworkPolicy does not apply to this pod
+  //
+  // True when the pod uses host networking, so Kubernetes NetworkPolicy governs
+  // neither its ingress nor its egress traffic. Such pods are a coverage gap for
+  // any default-deny posture.
+  escapesNetworkPolicy() bool
   // Whether the pod shares the host PID namespace
   hostPID() bool
   // Whether the pod shares the host IPC namespace
@@ -2580,7 +2586,7 @@ private k8s.networkpolicy @defaults("namespace name created") {
 // available. The `confidence` field describes static-analysis confidence, not
 // packet-level reachability.
 private k8s.networkExposure @defaults("sourceKind namespace name internetExposed exposureReason") {
-  // Source kind that produced the exposure, for example Service, Ingress, Gateway, HBNInbound, or LegacyHBN
+  // Source kind that produced the exposure, for example Service, Ingress, Gateway, Pod (hostNetwork or hostPort), HBNInbound, or LegacyHBN
   sourceKind string
   // Source object reference in kind:namespace:name or kind:name form
   sourceRef string

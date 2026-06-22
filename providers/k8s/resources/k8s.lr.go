@@ -1084,6 +1084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHostNetwork()).ToDataRes(types.Bool)
 	},
+	"k8s.pod.escapesNetworkPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetEscapesNetworkPolicy()).ToDataRes(types.Bool)
+	},
 	"k8s.pod.hostPID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetHostPID()).ToDataRes(types.Bool)
 	},
@@ -5926,6 +5929,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.pod.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.escapesNetworkPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).EscapesNetworkPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.hostPID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13626,6 +13633,7 @@ type mqlK8sPod struct {
 	ServiceAccount                plugin.TValue[*mqlK8sServiceaccount]
 	AutomountServiceAccountToken  plugin.TValue[bool]
 	HostNetwork                   plugin.TValue[bool]
+	EscapesNetworkPolicy          plugin.TValue[bool]
 	HostPID                       plugin.TValue[bool]
 	HostIPC                       plugin.TValue[bool]
 	ShareProcessNamespace         plugin.TValue[bool]
@@ -14172,6 +14180,12 @@ func (c *mqlK8sPod) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
 func (c *mqlK8sPod) GetHostNetwork() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HostNetwork, func() (bool, error) {
 		return c.hostNetwork()
+	})
+}
+
+func (c *mqlK8sPod) GetEscapesNetworkPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EscapesNetworkPolicy, func() (bool, error) {
+		return c.escapesNetworkPolicy()
 	})
 }
 

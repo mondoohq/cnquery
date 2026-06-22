@@ -245,6 +245,21 @@ func (k *mqlK8sNetworkExposure) pods() ([]any, error) {
 				return gw.pods()
 			}
 		}
+	case "Pod":
+		// Host-network and hostPort exposures are sourced from the pod itself.
+		k8sPods := cluster.GetPods()
+		if k8sPods.Error != nil {
+			return nil, k8sPods.Error
+		}
+		for i := range k8sPods.Data {
+			p, ok := k8sPods.Data[i].(*mqlK8sPod)
+			if !ok {
+				continue
+			}
+			if p.Namespace.Data == ns && p.Name.Data == name {
+				return []any{p}, nil
+			}
+		}
 	}
 
 	// HBN and other non-Kubernetes sources have no in-cluster workload to

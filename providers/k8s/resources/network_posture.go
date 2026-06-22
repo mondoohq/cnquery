@@ -211,6 +211,34 @@ func (k *mqlK8s) networkExposures() ([]any, error) {
 		}
 	}
 
+	// Pods that bind directly to the node network (hostNetwork or hostPort)
+	// are an ingress vector that bypasses Services, Ingresses, and Gateways.
+	nodePublicAddrs, err := k.nodePublicAddressesByName()
+	if err != nil {
+		return nil, err
+	}
+	pods := k.GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+	for _, item := range pods.Data {
+		pod, ok := item.(*mqlK8sPod)
+		if !ok {
+			continue
+		}
+		p, err := pod.getPod()
+		if err != nil {
+			return nil, err
+		}
+		for _, args := range podHostExposureArgs(p, nodePublicAddrs) {
+			exposure, err := CreateResource(k.MqlRuntime, "k8s.networkExposure", args)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, exposure)
+		}
+	}
+
 	if hbnKinds := enabledHBNOptionalKinds(settings, optionalHBNNetworkExposureKinds); len(hbnKinds) > 0 {
 		hbnObjects, err := optionalK8sResources(k.MqlRuntime, hbnKinds...)
 		if err != nil {
