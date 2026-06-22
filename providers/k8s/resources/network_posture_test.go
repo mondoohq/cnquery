@@ -1226,6 +1226,41 @@ func TestCalicoSelectorMatchesLabels(t *testing.T) {
 	assert.False(t, calicoSelectorMatchesLabels("global()", values))
 	assert.False(t, calicoSelectorMatchesLabels("app == 'worker'", values))
 	assert.False(t, calicoSelectorMatchesLabels("has(missing)", values))
+
+	// Disjunction (||): true when any branch matches, false when none do.
+	assert.True(t, calicoSelectorMatchesLabels("app == 'worker' || tier == 'frontend'", values))
+	assert.False(t, calicoSelectorMatchesLabels("app == 'worker' || tier == 'batch'", values))
+
+	// Negation, including !has().
+	assert.True(t, calicoSelectorMatchesLabels("!(app == 'worker')", values))
+	assert.False(t, calicoSelectorMatchesLabels("!(app == 'api')", values))
+	assert.True(t, calicoSelectorMatchesLabels("!has(missing)", values))
+	assert.False(t, calicoSelectorMatchesLabels("!has(app)", values))
+
+	// Precedence: && binds tighter than ||, so this is (worker && frontend) || core.
+	assert.True(t, calicoSelectorMatchesLabels("app == 'worker' && tier == 'frontend' || team == 'core'", values))
+	assert.False(t, calicoSelectorMatchesLabels("app == 'worker' && (tier == 'frontend' || team == 'core')", values))
+
+	// Parenthesized disjunction is not split at the top level by &&.
+	assert.True(t, calicoSelectorMatchesLabels("(app == 'api' || app == 'web') && has(team)", values))
+	assert.False(t, calicoSelectorMatchesLabels("(app == 'worker' || app == 'web') && has(team)", values))
+}
+
+func TestSelectorMatchLabelsPreservesEmptyValues(t *testing.T) {
+	// A matchLabels value of "" is a real constraint (label must equal ""), not
+	// an absent label; it must survive into the comparison set.
+	got := selectorMatchLabels(map[string]any{
+		"matchLabels": map[string]any{"role": "", "tier": "frontend"},
+	})
+	assert.Equal(t, map[string]string{"role": "", "tier": "frontend"}, got)
+
+	// An empty-value selector covers a target that sets the same label to "".
+	candidate := map[string]any{"matchLabels": map[string]any{"role": ""}}
+	target := map[string]any{"matchLabels": map[string]any{"role": "", "tier": "frontend"}}
+	assert.True(t, nativeNetworkPolicySelectorCovers(candidate, target))
+	// ...but not one that sets it to a different value.
+	mismatch := map[string]any{"matchLabels": map[string]any{"role": "admin"}}
+	assert.False(t, nativeNetworkPolicySelectorCovers(candidate, mismatch))
 }
 
 func TestSecondaryInterfaceAttachmentsFromNetworkStatusIgnoreDefaultInterface(t *testing.T) {

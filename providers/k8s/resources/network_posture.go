@@ -899,8 +899,16 @@ func nativeNetworkPolicySelectorCovers(candidate, target map[string]any) bool {
 func selectorMatchLabels(selector map[string]any) map[string]string {
 	out := map[string]string{}
 	for key, value := range nestedMap(selector, "matchLabels") {
-		if str := stringValue(value); str != "" {
-			out[key] = str
+		// Preserve genuine empty-string label values (matchLabels: {role: ""}
+		// legitimately selects pods whose label is the empty string); only skip
+		// non-string values. Using stringValue here would conflate the two.
+		switch v := value.(type) {
+		case string:
+			out[key] = strings.TrimSpace(v)
+		case *string:
+			if v != nil {
+				out[key] = strings.TrimSpace(*v)
+			}
 		}
 	}
 	return out
