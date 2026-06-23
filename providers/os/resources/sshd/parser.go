@@ -15,9 +15,12 @@ type SshdLine struct {
 	args string
 }
 
+// sshd_config keywords are case-insensitive, and ParseLine sees the raw
+// keyword before it is canonicalized to its mixed-case form, so the lookup
+// keys are stored lowercased and compared against the lowercased keyword.
 var keysWithTimeValue = map[string]int{
-	"ClientAliveInterval": 1,
-	"LoginGraceTime":      1,
+	"clientaliveinterval": 1,
+	"logingracetime":      1,
 }
 
 // ParseLine parses a single line of the sshd_config file
@@ -40,7 +43,7 @@ func ParseLine(s []rune) (SshdLine, error) {
 		return l, err
 	}
 
-	if _, ok := keysWithTimeValue[l.key]; ok {
+	if _, ok := keysWithTimeValue[strings.ToLower(l.key)]; ok {
 		duration, err := time.ParseDuration(l.args)
 		if err == nil {
 			l.args = fmt.Sprintf("%.0f", duration.Seconds())

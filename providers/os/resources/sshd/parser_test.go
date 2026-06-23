@@ -110,4 +110,20 @@ func TestParser(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, SshdLine{key: "key", args: "2h10m42s"}, line)
 	})
+
+	// sshd_config keywords are case-insensitive, so the time-value conversion
+	// must apply regardless of how the keyword is cased in the file.
+	t.Run("time value converted for lowercase keyword", func(t *testing.T) {
+		text := []rune("logingracetime 1m")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "logingracetime", args: "60"}, line)
+	})
+
+	t.Run("time value converted for uppercase keyword", func(t *testing.T) {
+		text := []rune("CLIENTALIVEINTERVAL 5m")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "CLIENTALIVEINTERVAL", args: "300"}, line)
+	})
 }
