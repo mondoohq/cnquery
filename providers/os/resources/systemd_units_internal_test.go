@@ -91,3 +91,45 @@ func TestInitSystemdSocketMissingResource(t *testing.T) {
 		})
 	}
 }
+
+func TestSystemdTimerPersistentBooleanForms(t *testing.T) {
+	// systemctl show emits "yes"/"no", but the filesystem path forwards the raw
+	// unit-file value, which may be true/1/on. All truthy forms must report true.
+	for _, v := range []string{"yes", "true", "1", "on"} {
+		timer := &mqlSystemdTimer{}
+		timer.fetched = true
+		timer.props = map[string]string{"Persistent": v}
+		got, err := timer.persistent()
+		require.NoError(t, err)
+		assert.True(t, got, "Persistent=%q should be true", v)
+	}
+
+	for _, v := range []string{"no", "false", "0", "off", ""} {
+		timer := &mqlSystemdTimer{}
+		timer.fetched = true
+		timer.props = map[string]string{"Persistent": v}
+		got, err := timer.persistent()
+		require.NoError(t, err)
+		assert.False(t, got, "Persistent=%q should be false", v)
+	}
+}
+
+func TestSystemdSocketAcceptBooleanForms(t *testing.T) {
+	for _, v := range []string{"yes", "true", "1", "on"} {
+		socket := &mqlSystemdSocket{}
+		socket.fetched = true
+		socket.props = map[string]string{"Accept": v}
+		got, err := socket.accept()
+		require.NoError(t, err)
+		assert.True(t, got, "Accept=%q should be true", v)
+	}
+
+	for _, v := range []string{"no", "false", "0", "off", ""} {
+		socket := &mqlSystemdSocket{}
+		socket.fetched = true
+		socket.props = map[string]string{"Accept": v}
+		got, err := socket.accept()
+		require.NoError(t, err)
+		assert.False(t, got, "Accept=%q should be false", v)
+	}
+}
