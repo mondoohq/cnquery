@@ -34,6 +34,42 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			Depth:       ptrInt64(12),
 			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -maxdepth 12",
 		},
+		{
+			// -name is single-quoted so glob characters reach find instead of being expanded by the shell.
+			From:        "/etc",
+			FileType:    "file",
+			Search:      "*.conf",
+			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -name '*.conf'",
+		},
+		{
+			// dotfile glob plus depth: the leading-dot pattern must reach find intact alongside -maxdepth.
+			From:        "/home/user",
+			FileType:    "file",
+			Search:      ".*",
+			Depth:       ptrInt64(1),
+			ExpectedCmd: "find -L \"/home/user\" -xdev -type f -perm -0 -name '.*' -maxdepth 1",
+		},
+		{
+			// single quotes prevent shell variable/command expansion of the name pattern.
+			From:        "/etc",
+			FileType:    "file",
+			Search:      "$HOME*",
+			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -name '$HOME*'",
+		},
+		{
+			// an embedded single quote is escaped with the '\'' idiom.
+			From:        "/etc",
+			FileType:    "file",
+			Search:      "a'b",
+			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -name 'a'\\''b'",
+		},
+		{
+			// regex is single-quoted as well (previously an unaddressed TODO).
+			From:        "/etc",
+			FileType:    "file",
+			Regex:       ".*\\.conf$",
+			ExpectedCmd: "find -L \"/etc\" -xdev -type f -regex '.*\\.conf$' -perm -0",
+		},
 	}
 
 	for _, tt := range tests {
