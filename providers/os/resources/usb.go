@@ -48,14 +48,12 @@ func (d *mqlUsb) listMacos() ([]any, error) {
 	var devices []usb.USBDevice
 	usb.ParseMacosIORegData(plistData, &devices)
 
+	// A device's LocationID is used as the usb.device resource's unique __id, so
+	// devices without one are skipped to avoid blank/colliding cache keys.
+	devices = usbDevicesWithLocation(devices)
+
 	mqlUsbDevices := make([]any, 0, len(devices))
 	for _, device := range devices {
-
-		if device.DeviceClass == "" {
-			// Skip devices without a location ID
-			continue
-		}
-
 		entry, err := CreateResource(d.MqlRuntime, "usb.device", map[string]*llx.RawData{
 			"__id":         llx.StringData(device.LocationID),
 			"vendorId":     llx.StringData(device.VendorID),
@@ -79,4 +77,19 @@ func (d *mqlUsb) listMacos() ([]any, error) {
 	}
 
 	return mqlUsbDevices, nil
+}
+
+// usbDevicesWithLocation keeps only devices that report a LocationID, which is
+// required as the usb.device resource's unique __id. Devices may legitimately
+// report an empty DeviceClass (class is often defined per-interface on
+// composite devices), so the LocationID — not the class — is the right filter.
+func usbDevicesWithLocation(devices []usb.USBDevice) []usb.USBDevice {
+	res := make([]usb.USBDevice, 0, len(devices))
+	for _, device := range devices {
+		if device.LocationID == "" {
+			continue
+		}
+		res = append(res, device)
+	}
+	return res
 }
