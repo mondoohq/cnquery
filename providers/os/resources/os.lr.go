@@ -119,6 +119,11 @@ const (
 	ResourceHaproxyConfigResolversSection                 string = "haproxy.config.resolversSection"
 	ResourceHaproxyConfigUserlist                         string = "haproxy.config.userlist"
 	ResourceHaproxyConfigPeersSection                     string = "haproxy.config.peersSection"
+	ResourcePostgresqlConf                                string = "postgresql.conf"
+	ResourcePostgresqlHba                                 string = "postgresql.hba"
+	ResourcePostgresqlHbaRule                             string = "postgresql.hba.rule"
+	ResourcePostgresqlIdent                               string = "postgresql.ident"
+	ResourcePostgresqlIdentMapping                        string = "postgresql.ident.mapping"
 	ResourceJournaldConfig                                string = "journald.config"
 	ResourceJournaldConfigSection                         string = "journald.config.section"
 	ResourceJournaldConfigSectionParam                    string = "journald.config.section.param"
@@ -913,6 +918,26 @@ func init() {
 		"haproxy.config.peersSection": {
 			// to override args, implement: initHaproxyConfigPeersSection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHaproxyConfigPeersSection,
+		},
+		"postgresql.conf": {
+			Init:   initPostgresqlConf,
+			Create: createPostgresqlConf,
+		},
+		"postgresql.hba": {
+			Init:   initPostgresqlHba,
+			Create: createPostgresqlHba,
+		},
+		"postgresql.hba.rule": {
+			// to override args, implement: initPostgresqlHbaRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPostgresqlHbaRule,
+		},
+		"postgresql.ident": {
+			Init:   initPostgresqlIdent,
+			Create: createPostgresqlIdent,
+		},
+		"postgresql.ident.mapping": {
+			// to override args, implement: initPostgresqlIdentMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPostgresqlIdentMapping,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -4571,6 +4596,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"haproxy.config.peersSection.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHaproxyConfigPeersSection).GetFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"postgresql.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"postgresql.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"postgresql.conf.listenAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetListenAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"postgresql.conf.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetPort()).ToDataRes(types.Int)
+	},
+	"postgresql.conf.sslEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslEnabled()).ToDataRes(types.Bool)
+	},
+	"postgresql.conf.sslCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslCertFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.sslKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslKeyFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.sslCaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslCaFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.sslMinProtocolVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslMinProtocolVersion()).ToDataRes(types.String)
+	},
+	"postgresql.conf.sslCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSslCiphers()).ToDataRes(types.String)
+	},
+	"postgresql.conf.passwordEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetPasswordEncryption()).ToDataRes(types.String)
+	},
+	"postgresql.conf.dataDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetDataDirectory()).ToDataRes(types.String)
+	},
+	"postgresql.conf.hbaFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetHbaFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.identFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetIdentFile()).ToDataRes(types.String)
+	},
+	"postgresql.conf.logDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetLogDestination()).ToDataRes(types.String)
+	},
+	"postgresql.conf.loggingCollector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetLoggingCollector()).ToDataRes(types.Bool)
+	},
+	"postgresql.conf.logConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetLogConnections()).ToDataRes(types.Bool)
+	},
+	"postgresql.conf.logDisconnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetLogDisconnections()).ToDataRes(types.Bool)
+	},
+	"postgresql.conf.logStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetLogStatement()).ToDataRes(types.String)
+	},
+	"postgresql.conf.sharedPreloadLibraries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlConf).GetSharedPreloadLibraries()).ToDataRes(types.Array(types.String))
+	},
+	"postgresql.hba.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHba).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"postgresql.hba.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHba).GetRules()).ToDataRes(types.Array(types.Resource("postgresql.hba.rule")))
+	},
+	"postgresql.hba.rule.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"postgresql.hba.rule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetType()).ToDataRes(types.String)
+	},
+	"postgresql.hba.rule.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetDatabase()).ToDataRes(types.String)
+	},
+	"postgresql.hba.rule.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetUser()).ToDataRes(types.String)
+	},
+	"postgresql.hba.rule.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetAddress()).ToDataRes(types.String)
+	},
+	"postgresql.hba.rule.authMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetAuthMethod()).ToDataRes(types.String)
+	},
+	"postgresql.hba.rule.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlHbaRule).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"postgresql.ident.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdent).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"postgresql.ident.mappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdent).GetMappings()).ToDataRes(types.Array(types.Resource("postgresql.ident.mapping")))
+	},
+	"postgresql.ident.mapping.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdentMapping).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"postgresql.ident.mapping.mapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdentMapping).GetMapName()).ToDataRes(types.String)
+	},
+	"postgresql.ident.mapping.systemUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdentMapping).GetSystemUsername()).ToDataRes(types.String)
+	},
+	"postgresql.ident.mapping.pgUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPostgresqlIdentMapping).GetPgUsername()).ToDataRes(types.String)
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -14990,6 +15123,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"haproxy.config.peersSection.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHaproxyConfigPeersSection).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).__id, ok = v.Value.(string)
+		return
+	},
+	"postgresql.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.listenAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).ListenAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslCaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslCaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslMinProtocolVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslMinProtocolVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sslCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SslCiphers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.passwordEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).PasswordEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.dataDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).DataDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.hbaFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).HbaFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.identFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).IdentFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.logDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).LogDestination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.loggingCollector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).LoggingCollector, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.logConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).LogConnections, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.logDisconnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).LogDisconnections, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.logStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).LogStatement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.conf.sharedPreloadLibraries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlConf).SharedPreloadLibraries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHba).__id, ok = v.Value.(string)
+		return
+	},
+	"postgresql.hba.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHba).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHba).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).__id, ok = v.Value.(string)
+		return
+	},
+	"postgresql.hba.rule.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.authMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).AuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.hba.rule.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlHbaRule).Options, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdent).__id, ok = v.Value.(string)
+		return
+	},
+	"postgresql.ident.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdent).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.mappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdent).Mappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.mapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdentMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"postgresql.ident.mapping.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdentMapping).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.mapping.mapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdentMapping).MapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.mapping.systemUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdentMapping).SystemUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"postgresql.ident.mapping.pgUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPostgresqlIdentMapping).PgUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35936,6 +36233,626 @@ func (c *mqlHaproxyConfigPeersSection) GetParams() *plugin.TValue[map[string]any
 
 func (c *mqlHaproxyConfigPeersSection) GetFile() *plugin.TValue[string] {
 	return &c.File
+}
+
+// mqlPostgresqlConf for the postgresql.conf resource
+type mqlPostgresqlConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPostgresqlConfInternal
+	File                   plugin.TValue[*mqlFile]
+	Files                  plugin.TValue[[]any]
+	Params                 plugin.TValue[map[string]any]
+	ListenAddresses        plugin.TValue[[]any]
+	Port                   plugin.TValue[int64]
+	SslEnabled             plugin.TValue[bool]
+	SslCertFile            plugin.TValue[string]
+	SslKeyFile             plugin.TValue[string]
+	SslCaFile              plugin.TValue[string]
+	SslMinProtocolVersion  plugin.TValue[string]
+	SslCiphers             plugin.TValue[string]
+	PasswordEncryption     plugin.TValue[string]
+	DataDirectory          plugin.TValue[string]
+	HbaFile                plugin.TValue[string]
+	IdentFile              plugin.TValue[string]
+	LogDestination         plugin.TValue[string]
+	LoggingCollector       plugin.TValue[bool]
+	LogConnections         plugin.TValue[bool]
+	LogDisconnections      plugin.TValue[bool]
+	LogStatement           plugin.TValue[string]
+	SharedPreloadLibraries plugin.TValue[[]any]
+}
+
+// createPostgresqlConf creates a new instance of this resource
+func createPostgresqlConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresqlConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgresql.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresqlConf) MqlName() string {
+	return "postgresql.conf"
+}
+
+func (c *mqlPostgresqlConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresqlConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlPostgresqlConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetListenAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenAddresses, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.listenAddresses(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Port, func() (int64, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return 0, vargParams.Error
+		}
+
+		return c.port(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SslEnabled, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.sslEnabled(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCertFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.sslCertFile(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslKeyFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.sslKeyFile(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslCaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCaFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.sslCaFile(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslMinProtocolVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslMinProtocolVersion, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.sslMinProtocolVersion(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSslCiphers() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SslCiphers, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.sslCiphers(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetPasswordEncryption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PasswordEncryption, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.passwordEncryption(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetDataDirectory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataDirectory, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.dataDirectory(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetHbaFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HbaFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.hbaFile(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetIdentFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IdentFile, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.identFile(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetLogDestination() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDestination, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.logDestination(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetLoggingCollector() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LoggingCollector, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.loggingCollector(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetLogConnections() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogConnections, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.logConnections(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetLogDisconnections() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogDisconnections, func() (bool, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return false, vargParams.Error
+		}
+
+		return c.logDisconnections(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetLogStatement() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogStatement, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.logStatement(vargParams.Data)
+	})
+}
+
+func (c *mqlPostgresqlConf) GetSharedPreloadLibraries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedPreloadLibraries, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.sharedPreloadLibraries(vargParams.Data)
+	})
+}
+
+// mqlPostgresqlHba for the postgresql.hba resource
+type mqlPostgresqlHba struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostgresqlHbaInternal it will be used here
+	File  plugin.TValue[*mqlFile]
+	Rules plugin.TValue[[]any]
+}
+
+// createPostgresqlHba creates a new instance of this resource
+func createPostgresqlHba(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresqlHba{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgresql.hba", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresqlHba) MqlName() string {
+	return "postgresql.hba"
+}
+
+func (c *mqlPostgresqlHba) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresqlHba) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.hba", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlPostgresqlHba) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.hba", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.rules(vargFile.Data)
+	})
+}
+
+// mqlPostgresqlHbaRule for the postgresql.hba.rule resource
+type mqlPostgresqlHbaRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostgresqlHbaRuleInternal it will be used here
+	LineNumber plugin.TValue[int64]
+	Type       plugin.TValue[string]
+	Database   plugin.TValue[string]
+	User       plugin.TValue[string]
+	Address    plugin.TValue[string]
+	AuthMethod plugin.TValue[string]
+	Options    plugin.TValue[map[string]any]
+}
+
+// createPostgresqlHbaRule creates a new instance of this resource
+func createPostgresqlHbaRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresqlHbaRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgresql.hba.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresqlHbaRule) MqlName() string {
+	return "postgresql.hba.rule"
+}
+
+func (c *mqlPostgresqlHbaRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresqlHbaRule) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlPostgresqlHbaRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlPostgresqlHbaRule) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlPostgresqlHbaRule) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlPostgresqlHbaRule) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlPostgresqlHbaRule) GetAuthMethod() *plugin.TValue[string] {
+	return &c.AuthMethod
+}
+
+func (c *mqlPostgresqlHbaRule) GetOptions() *plugin.TValue[map[string]any] {
+	return &c.Options
+}
+
+// mqlPostgresqlIdent for the postgresql.ident resource
+type mqlPostgresqlIdent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostgresqlIdentInternal it will be used here
+	File     plugin.TValue[*mqlFile]
+	Mappings plugin.TValue[[]any]
+}
+
+// createPostgresqlIdent creates a new instance of this resource
+func createPostgresqlIdent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresqlIdent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgresql.ident", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresqlIdent) MqlName() string {
+	return "postgresql.ident"
+}
+
+func (c *mqlPostgresqlIdent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresqlIdent) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.ident", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlPostgresqlIdent) GetMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Mappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("postgresql.ident", c.__id, "mappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.mappings(vargFile.Data)
+	})
+}
+
+// mqlPostgresqlIdentMapping for the postgresql.ident.mapping resource
+type mqlPostgresqlIdentMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPostgresqlIdentMappingInternal it will be used here
+	LineNumber     plugin.TValue[int64]
+	MapName        plugin.TValue[string]
+	SystemUsername plugin.TValue[string]
+	PgUsername     plugin.TValue[string]
+}
+
+// createPostgresqlIdentMapping creates a new instance of this resource
+func createPostgresqlIdentMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPostgresqlIdentMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("postgresql.ident.mapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPostgresqlIdentMapping) MqlName() string {
+	return "postgresql.ident.mapping"
+}
+
+func (c *mqlPostgresqlIdentMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPostgresqlIdentMapping) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlPostgresqlIdentMapping) GetMapName() *plugin.TValue[string] {
+	return &c.MapName
+}
+
+func (c *mqlPostgresqlIdentMapping) GetSystemUsername() *plugin.TValue[string] {
+	return &c.SystemUsername
+}
+
+func (c *mqlPostgresqlIdentMapping) GetPgUsername() *plugin.TValue[string] {
+	return &c.PgUsername
 }
 
 // mqlJournaldConfig for the journald.config resource

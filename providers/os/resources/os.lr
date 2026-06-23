@@ -2452,6 +2452,138 @@ private haproxy.config.peersSection @defaults("name") {
   file string
 }
 
+// PostgreSQL postgresql.conf file
+//
+// Settings from the main PostgreSQL configuration file on disk, useful for
+// auditing directives as they are written to the file (before the server
+// has been reloaded), for example to detect drift between the on-disk
+// configuration and a running server. The `include`, `include_if_exists`,
+// and `include_dir` directives are resolved so the fragments they pull in
+// are flattened into a single `params` map. `listenAddresses`, `port`,
+// `sslEnabled`, `sslCertFile`, `sslKeyFile`, `sslCaFile`, `dataDirectory`,
+// `hbaFile`, and `identFile` are convenience views into common directives.
+// Pair with `postgresql.hba` and `postgresql.ident` for the auxiliary
+// configuration files. By default the file is located by probing the
+// well-known paths for Debian/Ubuntu and RPM installations; pass an
+// explicit path with `postgresql.conf(path: "/path/to/postgresql.conf")`.
+postgresql.conf {
+  init(path? string)
+  // Primary configuration file
+  file() file
+  // All configuration files (main + included fragments)
+  files(file) []file
+  // Flattened key/value directives across the main file and includes
+  params(file) map[string]string
+  // listen_addresses directive split into individual addresses
+  listenAddresses(params) []string
+  // Effective port the server binds to (default 5432 when unset)
+  port(params) int
+  // Whether `ssl` is `on`
+  sslEnabled(params) bool
+  // ssl_cert_file directive
+  sslCertFile(params) string
+  // ssl_key_file directive
+  sslKeyFile(params) string
+  // ssl_ca_file directive (root CA for client cert verification)
+  sslCaFile(params) string
+  // ssl_min_protocol_version directive (TLSv1, TLSv1.1, TLSv1.2, TLSv1.3)
+  sslMinProtocolVersion(params) string
+  // ssl_ciphers directive
+  sslCiphers(params) string
+  // password_encryption directive (md5, scram-sha-256)
+  passwordEncryption(params) string
+  // data_directory directive (empty when implied by environment)
+  dataDirectory(params) string
+  // hba_file directive (absolute path to pg_hba.conf)
+  hbaFile(params) string
+  // ident_file directive (absolute path to pg_ident.conf)
+  identFile(params) string
+  // log_destination directive (csvlog, stderr, syslog, eventlog, jsonlog)
+  logDestination(params) string
+  // logging_collector directive (true when "on")
+  loggingCollector(params) bool
+  // log_connections directive (true when "on")
+  logConnections(params) bool
+  // log_disconnections directive (true when "on")
+  logDisconnections(params) bool
+  // log_statement directive (none, ddl, mod, all)
+  logStatement(params) string
+  // shared_preload_libraries directive split into individual library names
+  sharedPreloadLibraries(params) []string
+}
+
+// PostgreSQL pg_hba.conf file
+//
+// Host-based authentication rules as written on disk. Each non-blank,
+// non-comment line becomes a `postgresql.hba.rule` entry with the file's
+// order preserved (rule matching is first-rule-wins in PostgreSQL, so
+// order is significant). Audit the entries to flag insecure `authMethod`
+// values (`trust`, `password`) or overly broad client `address` ranges.
+// By default the file is located by probing the well-known paths for
+// Debian/Ubuntu and RPM installations; pass an explicit path with
+// `postgresql.hba(path: "/path/to/pg_hba.conf")`.
+postgresql.hba {
+  init(path? string)
+  // File backing this pg_hba.conf
+  file() file
+  // Rules, in file order
+  rules(file) []postgresql.hba.rule
+}
+
+// PostgreSQL pg_hba.conf rule
+//
+// A single host-based authentication rule parsed from disk. The
+// `authMethod` field flags insecure entries (`trust`, `password`) and
+// `address` flags overly broad client ranges (for example `0.0.0.0/0`).
+private postgresql.hba.rule @defaults("type database user address authMethod") {
+  // Line number in the source file
+  lineNumber int
+  // Connection type (local, host, hostssl, hostnossl, hostgssenc, hostnogssenc)
+  type string
+  // Database token as written (may be `all`, `replication`, `sameuser`, a comma-separated list, or `@filename`)
+  database string
+  // User token as written (may be `all`, a group prefixed with `+`, a comma-separated list, or `@filename`)
+  user string
+  // Client address (CIDR, hostname, or `samehost`/`samenet`; empty for local rules)
+  address string
+  // Authentication method (trust, reject, md5, scram-sha-256, gss, sspi, ident, peer, ldap, radius, cert, pam, bsd)
+  authMethod string
+  // Authentication method options (e.g. `ldapserver`, `clientcert`)
+  options map[string]string
+}
+
+// PostgreSQL pg_ident.conf file
+//
+// User-name mapping rules as written on disk. Mappings translate an
+// external authenticated identity (Kerberos principal, SSL CN, OS
+// username) into a PostgreSQL role for the `ident`, `peer`, `gss`, and
+// `cert` authentication methods. By default the file is located by
+// probing the well-known paths for Debian/Ubuntu and RPM installations;
+// pass an explicit path with `postgresql.ident(path: "/path/to/pg_ident.conf")`.
+postgresql.ident {
+  init(path? string)
+  // File backing this pg_ident.conf
+  file() file
+  // Mappings, in file order
+  mappings(file) []postgresql.ident.mapping
+}
+
+// PostgreSQL pg_ident.conf mapping
+//
+// A single user-name mapping parsed from disk. Maps an external
+// (system) identity to the PostgreSQL role it is allowed to connect as
+// under the map named by `mapName`.
+private postgresql.ident.mapping @defaults("mapName systemUsername pgUsername") {
+  // Line number in the source file
+  lineNumber int
+  // Map name referenced by `map=NAME` in pg_hba.conf
+  mapName string
+  // External (system) username or pattern
+  systemUsername string
+  // PostgreSQL role the external identity maps to
+  pgUsername string
+}
+
 // systemd journald configuration
 //
 // Configuration for the systemd journal daemon parsed from
