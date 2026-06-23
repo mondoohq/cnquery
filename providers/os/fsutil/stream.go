@@ -41,8 +41,9 @@ func StreamFileAsTar(
 		writer.Close()
 	}
 
-	// copy file content
-	if _, err := io.Copy(writer, bufReader); err != nil {
+	// copy file content through the tar writer so the body is framed
+	// with the rest of the archive (block padding + trailer)
+	if _, err := io.Copy(tw, bufReader); err != nil {
 		fmt.Print(err)
 		writer.Close()
 	}
