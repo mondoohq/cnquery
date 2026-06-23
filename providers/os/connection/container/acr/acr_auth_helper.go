@@ -83,6 +83,7 @@ func (a *acrAuthHelper) getRefreshToken(ctx context.Context, serverUrl string) (
 	if err != nil {
 		return "", err
 	}
+	defer httpResp.Body.Close()
 	resp, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return "", err
