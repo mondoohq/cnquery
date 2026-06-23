@@ -78,7 +78,7 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			return nil, err
 		}
 
-		serviceConfig, err := fnV2ServiceConfig(g.MqlRuntime, fn.Name, fn.ServiceConfig)
+		serviceConfig, err := fnV2ServiceConfig(g.MqlRuntime, fn.Name, projectId, fn.ServiceConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -255,7 +255,7 @@ func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
-func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
+func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
 	if cfg == nil {
 		return nil, nil
 	}
@@ -310,6 +310,7 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, cfg *function
 	// Populate Internal struct for cross-reference
 	sc := res.(*mqlGcpProjectCloudFunctionV2ServiceConfig)
 	sc.cacheServiceAccountEmail = cfg.ServiceAccountEmail
+	sc.cacheProjectId = projectId
 
 	return sc, nil
 }
@@ -320,6 +321,7 @@ func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) id() (string, error) {
 
 type mqlGcpProjectCloudFunctionV2ServiceConfigInternal struct {
 	cacheServiceAccountEmail string
+	cacheProjectId           string
 }
 
 func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
@@ -329,7 +331,8 @@ func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcp
 		return nil, nil
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
-		"email": llx.StringData(email),
+		"email":     llx.StringData(email),
+		"projectId": llx.StringData(g.cacheProjectId),
 	})
 	if err != nil {
 		return nil, err

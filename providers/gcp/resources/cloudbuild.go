@@ -204,7 +204,8 @@ func (g *mqlGcpProjectCloudBuildServiceTrigger) iamServiceAccount() (*mqlGcpProj
 		email = sa[idx+1:]
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
-		"email": llx.StringData(email),
+		"email":     llx.StringData(email),
+		"projectId": llx.StringData(g.ProjectId.Data),
 	})
 	if err != nil {
 		return nil, err
