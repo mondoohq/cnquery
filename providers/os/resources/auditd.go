@@ -327,7 +327,14 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 				resourceName = "auditd.rule.syscall"
 				arr := strings.SplitN(v, ",", 2)
 				args["action"] = llx.StringData(arr[0])
-				args["list"] = llx.StringData(arr[1])
+				// A well-formed rule is `-a action,list`, but malformed rules
+				// (e.g. `-a always` with no list) carry no comma; guard the
+				// optional second segment so we don't panic on bad input.
+				if len(arr) > 1 {
+					args["list"] = llx.StringData(arr[1])
+				} else {
+					args["list"] = llx.StringData("")
+				}
 
 			case "-F":
 				rawFields = append(rawFields, v)

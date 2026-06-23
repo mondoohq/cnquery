@@ -152,6 +152,26 @@ func TestNormalizeAuditdConfigFields(t *testing.T) {
 	})
 }
 
+func TestAuditdSyscallRuleMalformedAction(t *testing.T) {
+	runtime := newAuditdRulesTestRuntime(t)
+	rules := &mqlAuditdRules{MqlRuntime: runtime}
+
+	// A malformed `-a` rule carries no comma (the list segment is missing).
+	// Parsing must not panic; the action is captured and the list is empty.
+	content := "-a always -S execve -k t\n"
+
+	var errs multierr.Errors
+	require.NotPanics(t, func() {
+		rules.parse(content, &errs)
+	})
+	require.NoError(t, errs.Deduplicate())
+	require.Len(t, rules.Syscalls.Data, 1)
+
+	r := rules.Syscalls.Data[0].(*mqlAuditdRuleSyscall)
+	assert.Equal(t, "always", r.Action.Data)
+	assert.Equal(t, "", r.List.Data)
+}
+
 func TestAuditdControlRuleParsing(t *testing.T) {
 	runtime := newAuditdRulesTestRuntime(t)
 	rules := &mqlAuditdRules{MqlRuntime: runtime}
