@@ -152,7 +152,7 @@ func (g *mqlGcpProjectCloudFunctionV2) kmsKey() (*mqlGcpProjectKmsServiceKeyring
 		return nil, nil
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
-		"resourceName": llx.StringData(keyName),
+		"resourcePath": llx.StringData(keyName),
 	})
 	if err != nil {
 		return nil, err
