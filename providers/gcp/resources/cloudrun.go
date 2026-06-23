@@ -842,7 +842,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 	return jobs, nil
 }
 
-func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId string) (plugin.Resource, error) {
+func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId string, probeName string) (plugin.Resource, error) {
 	if probe == nil {
 		return nil, nil
 	}
@@ -869,7 +869,7 @@ func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId 
 	}
 
 	return CreateResource(runtime, "gcp.project.cloudRunService.container.probe", map[string]*llx.RawData{
-		"id":                  llx.StringData(fmt.Sprintf("%s/livenessProbe", containerId)),
+		"id":                  llx.StringData(fmt.Sprintf("%s/%s", containerId, probeName)),
 		"initialDelaySeconds": llx.IntData(int64(probe.InitialDelaySeconds)),
 		"timeoutSeconds":      llx.IntData(int64(probe.TimeoutSeconds)),
 		"periodSeconds":       llx.IntData(int64(probe.PeriodSeconds)),
@@ -982,12 +982,12 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 		}
 
 		containerId := fmt.Sprintf("%s/container/%s", templateId, c.Name)
-		mqlLivenessProbe, err := mqlContainerProbe(runtime, c.LivenessProbe, containerId)
+		mqlLivenessProbe, err := mqlContainerProbe(runtime, c.LivenessProbe, containerId, "livenessProbe")
 		if err != nil {
 			return nil, err
 		}
 
-		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId)
+		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId, "startupProbe")
 		if err != nil {
 			return nil, err
 		}
