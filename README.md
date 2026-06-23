@@ -138,6 +138,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Kubernetes workloads          | `k8s`                      | `mql shell k8s --discover pods,deployments`                                                                                                     |
 | Linux hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@host`                                                                                          |
 | macOS hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@IP_ADDRESS`                                                                                    |
+| MikroTik RouterOS devices     | `mikrotik`                 | `mql shell mikrotik admin@192.168.88.1 --password SECRET`                                                                                       |
 | Mistral AI accounts           | `mistral`                  | `mql shell mistral --token API_KEY`                                                                                                             |
 | Microsoft 365 tenants         | `ms365`                    | `mql shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                       |
 | Microsoft Azure instances     | `ssh`                      | `mql shell ssh user@host`                                                                                                                       |

@@ -220,6 +220,7 @@ use (
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/k8s
+   ./mql/providers/mikrotik
    ./mql/providers/mistral
    ./mql/providers/mondoo
    ./mql/providers/ms365

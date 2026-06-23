@@ -24,6 +24,8 @@ extend-exclude = [
 # baselined here and left for a separate, deliberate cleanup.
 [default.extend-words]
 # Technical terms, abbreviations, command names, and short identifier fragments.
+# MikroTik RouterOS (and the go-routeros SDK package name).
+routeros = "routeros"
 aks = "aks"
 nd = "nd"
 hashi = "hashi"

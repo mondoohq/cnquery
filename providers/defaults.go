@@ -486,6 +486,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"mikrotik": {
+		Provider: &plugin.Provider{
+			Name:            "mikrotik",
+			ID:              "go.mondoo.com/mql/providers/mikrotik",
+			ConnectionTypes: []string{"mikrotik"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "mikrotik",
+					Use:   "mikrotik [user@host] [flags]",
+					Short: "a MikroTik RouterOS device",
+				},
+			},
+		},
+	},
+
 	"mistral": {
 		Provider: &plugin.Provider{
 			Name:            "mistral",
