@@ -117,6 +117,37 @@ func TestParseLine(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expected, result)
 	})
+
+	t.Run("bracketed control running to end of line does not panic", func(t *testing.T) {
+		// A bracketed control with no module following it is malformed; it must
+		// return an error rather than panic with an out-of-range index.
+		require.NotPanics(t, func() {
+			_, err := ParseLine("auth [success=1 default=ignore]")
+			require.Error(t, err)
+		})
+	})
+
+	t.Run("unterminated bracketed control does not panic", func(t *testing.T) {
+		require.NotPanics(t, func() {
+			_, err := ParseLine("auth [success=1 default=ignore pam_unix.so")
+			require.Error(t, err)
+		})
+	})
+
+	t.Run("bracketed control with closing bracket in last token before module", func(t *testing.T) {
+		// Regression: the closing `]` lands in the final field that the loop
+		// previously refused to inspect.
+		line := "auth [success=1 default=ignore] pam_unix.so"
+		expected := &PamLine{
+			PamType: "auth",
+			Control: "[success=1 default=ignore]",
+			Module:  "pam_unix.so",
+			Options: []any{},
+		}
+		result, err := ParseLine(line)
+		require.NoError(t, err)
+		require.Equal(t, expected, result)
+	})
 }
 
 func parsePamContent(content string) ([]*PamLine, error) {
