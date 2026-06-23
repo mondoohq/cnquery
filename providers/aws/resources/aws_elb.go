@@ -837,8 +837,49 @@ func (a *mqlAwsElbLoadbalancer) instances() ([]any, error) {
 }
 
 func (a *mqlAwsElbTargetgroup) ec2Targets() ([]any, error) {
-	// TODO
-	return nil, nil
+	// Only instance-type target groups register EC2 instances; ip and lambda
+	// target groups resolve to other resource kinds, so there is nothing to do.
+	if a.targetGroup.TargetType != "" && a.targetGroup.TargetType != elbtypes.TargetTypeEnumInstance {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	region := a.region
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeTargetHealth(ctx, &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		// instance-type targets register the instance ID (i-...); ip-type
+		// targets register an IP address, which is not an EC2 instance.
+		instanceID := *desc.Target.Id
+		if !strings.HasPrefix(instanceID, "i-") {
+			continue
+		}
+		mqlInst, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), instanceID)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInst)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]any, error) {
