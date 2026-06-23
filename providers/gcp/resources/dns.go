@@ -529,8 +529,14 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	id := g.Name.Data
-	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
+	if g.Type.Error != nil {
+		return "", g.Type.Error
+	}
+	// A managed zone can hold several record sets that share a name but
+	// differ by type (e.g. an A and an MX record for the same domain), so
+	// the type must be part of the key. The authoritative cache key set at
+	// creation also includes the managed zone for cross-zone uniqueness.
+	return "gcp.project.dnsService.recordset/" + projectId + "/" + g.Name.Data + "/" + g.Type.Data, nil
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) dnsSecAlgorithmWeak() (bool, error) {
@@ -656,6 +662,9 @@ func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]any, error) {
 			rSet := page.Rrsets[i]
 
 			mqlDnsPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.recordset", map[string]*llx.RawData{
+				// Record sets are keyed by (zone, name, type); include all
+				// three so records that share a name don't alias in the cache.
+				"__id":             llx.StringData("gcp.project.dnsService.recordset/" + projectId + "/" + managedZone + "/" + rSet.Name + "/" + rSet.Type),
 				"projectId":        llx.StringData(projectId),
 				"name":             llx.StringData(rSet.Name),
 				"rrdatas":          llx.ArrayData(convert.SliceAnyToInterface(rSet.Rrdatas), types.String),

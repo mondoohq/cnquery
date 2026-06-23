@@ -682,11 +682,18 @@ func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]any, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.DatasetId.Error != nil {
+		return "", g.DatasetId.Error
+	}
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
-	name := g.Id.Data
-	return "gcp.project.bigqueryService.routine/" + name, nil
+	// Routine IDs are unique only within a dataset, so qualify with
+	// project + dataset (matches the model/table ids).
+	return fmt.Sprintf("gcp.project.bigqueryService.routine/%s/%s/%s", g.ProjectId.Data, g.DatasetId.Data, g.Id.Data), nil
 }
 
 func entityTypeToString(entityType bigquery.EntityType) string {

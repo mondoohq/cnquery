@@ -284,10 +284,15 @@ func (g *mqlGcpProjectBigtableServiceCluster) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	return fmt.Sprintf("gcp.project/%s/bigtableService/cluster/%s", g.ProjectId.Data, g.Name.Data), nil
+	// Cluster names are unique only within an instance, so the instance must
+	// be part of the cache key (matches the table/appProfile/backup ids).
+	return fmt.Sprintf("gcp.project/%s/bigtableService/%s/cluster/%s", g.ProjectId.Data, g.InstanceName.Data, g.Name.Data), nil
 }
 
 type mqlGcpProjectBigtableServiceClusterInternal struct {
