@@ -33,6 +33,32 @@ func ociNsgRuleOpensIngress(rule map[string]any) bool {
 	return ociCidrIsAny(source)
 }
 
+// ociCollectOpenNsgRules inspects the INGRESS rules of the given network
+// security group resources and returns the ones that admit traffic from any
+// address, along with whether the NSG set admits ingress at all. With no NSG
+// attached the resource falls back to its subnet's default security posture,
+// which OCI leaves open, so an empty NSG set counts as admitting ingress (the
+// "no firewall == open" convention shared with the other providers).
+func ociCollectOpenNsgRules(nsgs []any) ([]any, bool, error) {
+	openRules := []any{}
+	for _, g := range nsgs {
+		nsg, ok := g.(*mqlOciNetworkNetworkSecurityGroup)
+		if !ok {
+			continue
+		}
+		rules := nsg.GetIngressSecurityRules()
+		if rules.Error != nil {
+			return nil, false, rules.Error
+		}
+		for _, r := range rules.Data {
+			if rule, ok := r.(map[string]any); ok && ociNsgRuleOpensIngress(rule) {
+				openRules = append(openRules, rule)
+			}
+		}
+	}
+	return openRules, len(nsgs) == 0 || len(openRules) > 0, nil
+}
+
 // ociWhitelistOpensInternet reports whether an Autonomous Database access-control
 // allow-list admits any address. Unlike a security-group rule set, an *empty*
 // ADB allow-list with access control enabled denies everyone, so only an entry
@@ -109,25 +135,12 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		if nsgs.Error != nil {
 			return nil, nsgs.Error
 		}
-		vnicOpenRules := []any{}
-		for _, g := range nsgs.Data {
-			nsg, ok := g.(*mqlOciNetworkNetworkSecurityGroup)
-			if !ok {
-				continue
-			}
-			rules := nsg.GetIngressSecurityRules()
-			if rules.Error != nil {
-				return nil, rules.Error
-			}
-			for _, r := range rules.Data {
-				if rule, ok := r.(map[string]any); ok && ociNsgRuleOpensIngress(rule) {
-					vnicOpenRules = append(vnicOpenRules, rule)
-				}
-			}
+		vnicOpenRules, nsgAllows, err := ociCollectOpenNsgRules(nsgs.Data)
+		if err != nil {
+			return nil, err
 		}
 		openRules = append(openRules, vnicOpenRules...)
 
-		nsgAllows := len(vnicOpenRules) > 0 || len(nsgs.Data) == 0
 		if !subnetProhibits && nsgAllows {
 			ingressAllowed = true
 			if vnicHasPublicIp {
@@ -150,9 +163,11 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 }
 
 // exposure breaks down whether the load balancer is reachable from the internet:
-// it is not private, carries at least one public IP, and has at least one
-// listener accepting traffic. The listeners are surfaced as the open ingress
-// rules for triage.
+// it is not private, carries a public IP, has at least one listener accepting
+// traffic, and its attached network security groups admit inbound from any
+// address (or it has no NSG attached, OCI's default open posture). NSGs are
+// inspected so a public load balancer fronted by a restrictive NSG is not
+// reported reachable, matching the instance path.
 func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, error) {
 	id := l.GetId()
 	if id.Error != nil {
@@ -184,39 +199,24 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	if listeners.Error != nil {
 		return nil, listeners.Error
 	}
-	openRules := []any{}
-	for _, ln := range listeners.Data {
-		listener, ok := ln.(*mqlOciLoadBalancerListener)
-		if !ok {
-			continue
-		}
-		name := listener.GetName()
-		if name.Error != nil {
-			return nil, name.Error
-		}
-		port := listener.GetPort()
-		if port.Error != nil {
-			return nil, port.Error
-		}
-		protocol := listener.GetProtocol()
-		if protocol.Error != nil {
-			return nil, protocol.Error
-		}
-		openRules = append(openRules, map[string]any{
-			"name":     name.Data,
-			"port":     port.Data,
-			"protocol": protocol.Data,
-		})
+	hasListener := len(listeners.Data) > 0
+
+	nsgs := l.GetSecurityGroups()
+	if nsgs.Error != nil {
+		return nil, nsgs.Error
+	}
+	openRules, securityGroupAllowsIngress, err := ociCollectOpenNsgRules(nsgs.Data)
+	if err != nil {
+		return nil, err
 	}
 
-	hasListener := len(openRules) > 0
-	internetReachable := hasPublicIp && hasListener
+	internetReachable := hasPublicIp && hasListener && securityGroupAllowsIngress
 
 	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("oci.loadBalancer.loadBalancer/" + id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
-		"securityGroupAllowsIngress": llx.BoolData(hasListener),
+		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
 		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
 	})
 	if err != nil {

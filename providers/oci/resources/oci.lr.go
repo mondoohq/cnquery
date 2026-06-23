@@ -2603,6 +2603,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("oci.loadBalancer.listener")))
 	},
+	"oci.loadBalancer.loadBalancer.nsgIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetNsgIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.loadBalancer.loadBalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
 	"oci.loadBalancer.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetExposure()).ToDataRes(types.Resource("oci.network.exposure"))
 	},
@@ -8170,6 +8176,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.loadBalancer.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.loadBalancer.nsgIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).NsgIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.loadBalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19584,6 +19598,8 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	IsDeleteProtectionEnabled plugin.TValue[bool]
 	State                     plugin.TValue[string]
 	Listeners                 plugin.TValue[[]any]
+	NsgIds                    plugin.TValue[[]any]
+	SecurityGroups            plugin.TValue[[]any]
 	Exposure                  plugin.TValue[*mqlOciNetworkExposure]
 	BackendSets               plugin.TValue[[]any]
 	Created                   plugin.TValue[*time.Time]
@@ -19673,6 +19689,26 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetListeners() *plugin.TValue[[]any] {
 		}
 
 		return c.listeners()
+	})
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetNsgIds() *plugin.TValue[[]any] {
+	return &c.NsgIds
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.loadBalancer", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }
 

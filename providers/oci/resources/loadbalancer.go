@@ -122,6 +122,7 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					"shape":                     llx.StringDataPtr(lb.ShapeName),
 					"isPrivate":                 llx.BoolDataPtr(lb.IsPrivate),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
+					"nsgIds":                    llx.ArrayData(convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds), types.String),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
 					"created":                   llx.TimeDataPtr(created),

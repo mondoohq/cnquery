@@ -1664,7 +1664,13 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   state string
   // Load balancer listeners
   listeners() []oci.loadBalancer.listener
-  // Internet-exposure breakdown (a public IP combined with at least one listener)
+  // Network Security Group OCIDs attached to the load balancer
+  //
+  // Deprecated in favor of `securityGroups()`.
+  nsgIds @maturity("deprecated") []string
+  // Network Security Groups attached to the load balancer
+  securityGroups() []oci.network.networkSecurityGroup
+  // Internet-exposure breakdown (a public IP and a listener, gated on the network security group ingress rules)
   exposure() oci.network.exposure
   // Backend sets
   backendSets() []oci.loadBalancer.backendSet

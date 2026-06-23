@@ -157,6 +157,13 @@ func (o *mqlOciComputeVnic) securityGroups() ([]any, error) {
 	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
 }
 
+func (o *mqlOciLoadBalancerLoadBalancer) securityGroups() ([]any, error) {
+	if o.NsgIds.Error != nil {
+		return nil, o.NsgIds.Error
+	}
+	return resolveOciSecurityGroups(o.MqlRuntime, o.NsgIds.Data)
+}
+
 // ----- kms -----
 
 func (o *mqlOciKmsVault) compartment() (*mqlOciCompartment, error) {
