@@ -104,22 +104,32 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 		return s.Params.Error
 	}
 
+	normalized, err := normalizeAuditdConfigFields(fields)
+	maps.Copy(res, normalized)
+	s.Params.Error = err
+	return err
+}
+
+// normalizeAuditdConfigFields lowercases the keys of the parsed auditd config,
+// downcases the values of boolean/enum keywords, and reports any field whose
+// value is not a string.
+func normalizeAuditdConfigFields(fields map[string]any) (map[string]any, error) {
+	res := make(map[string]any, len(fields))
 	var errs multierr.Errors
 	for k, v := range fields {
 		key := strings.ToLower(k)
-		if s, ok := v.(string); ok {
-			if slices.Contains(auditdDowncaseKeywords, key) {
-				res[key] = strings.ToLower(s)
-			} else {
-				res[key] = s
-			}
+		s, ok := v.(string)
+		if !ok {
+			errs.Add(fmt.Errorf("can't parse field '%s', value is %+v", k, v))
+			continue
+		}
+		if slices.Contains(auditdDowncaseKeywords, key) {
+			res[key] = strings.ToLower(s)
 		} else {
-			errs.Add(fmt.Errorf("can't parse field '"+s+"', value is %+v", v))
+			res[key] = s
 		}
 	}
-
-	s.Params.Error = errs.Deduplicate()
-	return s.Params.Error
+	return res, errs.Deduplicate()
 }
 
 func (s *mqlAuditdConfig) params(file *mqlFile) (map[string]any, error) {

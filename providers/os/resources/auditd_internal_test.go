@@ -130,6 +130,28 @@ func TestAuditdSyscallRuleRepeatedFlags(t *testing.T) {
 	assert.Equal(t, []any{"open", "openat", "creat"}, r.Syscalls.Data)
 }
 
+func TestNormalizeAuditdConfigFields(t *testing.T) {
+	t.Run("lowercases keys and downcases enum values", func(t *testing.T) {
+		res, err := normalizeAuditdConfigFields(map[string]any{
+			"Log_Format": "ENABLED",
+			"Log_File":   "/var/log/audit/audit.log",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "enabled", res["log_format"])
+		// log_file is not a downcase keyword, so its value is preserved verbatim.
+		assert.Equal(t, "/var/log/audit/audit.log", res["log_file"])
+	})
+
+	t.Run("reports the offending field name for non-string values", func(t *testing.T) {
+		_, err := normalizeAuditdConfigFields(map[string]any{
+			"broken": map[string]any{"nested": "value"},
+		})
+		require.Error(t, err)
+		// The error must name the field that failed (`broken`), not an empty string.
+		assert.Contains(t, err.Error(), "broken")
+	})
+}
+
 func TestAuditdControlRuleParsing(t *testing.T) {
 	runtime := newAuditdRulesTestRuntime(t)
 	rules := &mqlAuditdRules{MqlRuntime: runtime}
