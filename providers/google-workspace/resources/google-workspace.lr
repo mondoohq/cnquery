@@ -52,6 +52,10 @@ googleworkspace {
   usersWithout2sv() []googleworkspace.user
   // Admin-configured policy settings resolved across the organization
   policies() []googleworkspace.policy
+  // Chrome OS devices enrolled in the organization
+  chromeOsDevices() []googleworkspace.chromeOsDevice
+  // Mobile devices (Android, iOS, Google Sync) managed by the organization
+  mobileDevices() []googleworkspace.mobileDevice
 }
 
 // Google Workspace calendar
@@ -811,4 +815,144 @@ private googleworkspace.policy @defaults("settingType type orgUnit") {
   // value carries `webSessionDuration`, while a `settings/security.password`
   // value carries `allowedStrength`, `minimumLength`, and `enforceRequirementsAtLogin`.
   value dict
+}
+
+// Chrome OS device
+//
+// Examine a single Chrome OS device enrolled in the organization through the
+// Admin SDK Directory API. Complements `googleworkspace.endpoint` with the
+// ChromeOS-specific posture signals auditors need: `bootMode` distinguishes
+// Verified Boot from developer mode, `autoUpdateExpiration` reports when the
+// device stops receiving Chrome OS security updates (AUE), `osVersion` /
+// `platformVersion` / `firmwareVersion` capture patch level, and `status`
+// reports the enrollment lifecycle. The `id` field is the device's stable
+// directory ID and selects the record — for example
+// `googleworkspace.chromeOsDevices.where(bootMode != "Verified")`.
+private googleworkspace.chromeOsDevice @defaults("serialNumber model osVersion status") {
+  // Stable directory device identifier
+  id string
+  // Serial number of the device
+  serialNumber string
+  // Status of the device. Possible values: ACTIVE, DEPROVISIONED, DISABLED, INACTIVE, RETURN_APPROVED, RETURN_REQUESTED, SHIPPED, UNKNOWN
+  status string
+  // Model name of the device
+  model string
+  // OS version running on the device
+  osVersion string
+  // Platform version of the device
+  platformVersion string
+  // Firmware version of the device
+  firmwareVersion string
+  // Boot mode of the device
+  //
+  // `Verified` indicates Verified Boot is active; `Dev` indicates developer
+  // mode, which disables OS verification and is a hardening concern.
+  bootMode string
+  // Reported compliance of the OS version against the configured policy
+  osVersionCompliance string
+  // The full path of the organizational unit the device is in
+  orgUnitPath string
+  // The MAC address of the device on the wireless network interface
+  macAddress string
+  // Annotated user assigned to the device by an administrator
+  annotatedUser string
+  // Annotated location of the device set by an administrator
+  annotatedLocation string
+  // Asset tag of the device set by an administrator
+  annotatedAssetId string
+  // Notes added by an administrator
+  notes string
+  // The reason the device was deprovisioned (empty unless deprovisioned)
+  deprovisionReason string
+  // The licensing model of the device
+  deviceLicenseType string
+  // Most recent time the device synced device-policy settings
+  lastSync time
+  // When the device was first enrolled
+  firstEnrollmentTime time
+  // Most recent time the device was enrolled
+  lastEnrollmentTime time
+  // Timestamp after which the device stops receiving Chrome OS updates and support (auto-update expiration)
+  autoUpdateExpiration time
+}
+
+// Mobile device
+//
+// Examine a single mobile device (Android, iOS, or Google Sync) managed by
+// the organization through the Admin SDK Directory API. Carries the device
+// posture signals mobile-hardening audits rely on: `deviceCompromisedStatus`
+// (root / jailbreak), `encryptionStatus`, `devicePasswordStatus`,
+// `developerOptionsStatus`, `adbStatus` (USB debugging), and
+// `unknownSourcesStatus` (sideloading). `type` reports the platform, `status`
+// the management lifecycle, and `securityPatchLevel` the patch timestamp. The
+// `id` field is the device's stable resource ID and selects the record — for
+// example `googleworkspace.mobileDevices.where(deviceCompromisedStatus == "Compromised")`.
+private googleworkspace.mobileDevice @defaults("model type status deviceCompromisedStatus") {
+  // Stable resource identifier of the device
+  id string
+  // The serial number-derived device ID
+  deviceId string
+  // The platform of the device. Possible values: ANDROID, IOS, GOOGLE_SYNC
+  type string
+  // The management status of the device
+  //
+  // Possible values include APPROVED, PENDING_APPROVAL, BLOCKED, WIPING,
+  // WIPED, ACCOUNT_WIPING, ACCOUNT_WIPED, and UNPROVISIONED.
+  status string
+  // The model name of the device
+  model string
+  // The operating system of the device (for example Android 8.1.0)
+  os string
+  // The OS release version
+  releaseVersion string
+  // Whether the device is compromised. Possible values: No (not compromised), Compromised (rooted / jailbroken), Undetected
+  deviceCompromisedStatus string
+  // The device encryption status. Possible values: disabled, enabled, none, unsupported
+  encryptionStatus string
+  // The device password status. Possible values: on, off, unknown
+  devicePasswordStatus string
+  // Whether developer options are enabled on the device
+  developerOptionsStatus bool
+  // Whether USB ADB (Android Debug Bridge) access is enabled on the device
+  adbStatus bool
+  // Whether installation of apps from unknown sources is enabled on the device
+  unknownSourcesStatus bool
+  // Whether the device supports a managed work profile
+  supportsWorkProfile bool
+  // Whether the managed account is on the device owner profile
+  managedAccountIsOnOwnerProfile bool
+  // The privilege level of the managing app on the device (for example deviceAdministrator)
+  privilege string
+  // The manufacturer of the device
+  manufacturer string
+  // The brand of the device
+  brand string
+  // The hardware (model) of the device
+  hardware string
+  // The IMEI number of the device
+  imei string
+  // The MEID number of the device
+  meid string
+  // The serial number of the device
+  serialNumber string
+  // The Wi-Fi MAC address of the device
+  wifiMacAddress string
+  // The mobile or network operator of the device
+  networkOperator string
+  // The default locale used on the device
+  defaultLanguage string
+  // The user-agent reported by the device
+  userAgent string
+  // The device security patch level (epoch milliseconds; 0 when not reported)
+  securityPatchLevel int
+  // The list of accounts registered on the device
+  emails []string
+  // The list of owner names registered on the device
+  names []string
+  // Domain names of other (non-Google) accounts on the device
+  otherAccountsInfo []string
+  // When the device first synced policy settings
+  firstSync time
+  // Most recent time the device synced policy settings
+  lastSync time
 }

@@ -44,6 +44,8 @@ const (
 	ResourceGoogleworkspaceEndpoint             string = "googleworkspace.endpoint"
 	ResourceGoogleworkspaceEndpointUser         string = "googleworkspace.endpoint.user"
 	ResourceGoogleworkspacePolicy               string = "googleworkspace.policy"
+	ResourceGoogleworkspaceChromeOsDevice       string = "googleworkspace.chromeOsDevice"
+	ResourceGoogleworkspaceMobileDevice         string = "googleworkspace.mobileDevice"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -162,6 +164,14 @@ func init() {
 			// to override args, implement: initGoogleworkspacePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspacePolicy,
 		},
+		"googleworkspace.chromeOsDevice": {
+			// to override args, implement: initGoogleworkspaceChromeOsDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceChromeOsDevice,
+		},
+		"googleworkspace.mobileDevice": {
+			// to override args, implement: initGoogleworkspaceMobileDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceMobileDevice,
+		},
 	}
 }
 
@@ -268,6 +278,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetPolicies()).ToDataRes(types.Array(types.Resource("googleworkspace.policy")))
+	},
+	"googleworkspace.chromeOsDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetChromeOsDevices()).ToDataRes(types.Array(types.Resource("googleworkspace.chromeOsDevice")))
+	},
+	"googleworkspace.mobileDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetMobileDevices()).ToDataRes(types.Array(types.Resource("googleworkspace.mobileDevice")))
 	},
 	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
@@ -1040,6 +1056,165 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.policy.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspacePolicy).GetValue()).ToDataRes(types.Dict)
 	},
+	"googleworkspace.chromeOsDevice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetStatus()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetModel()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetOsVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetPlatformVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.firmwareVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetFirmwareVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.bootMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetBootMode()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.osVersionCompliance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetOsVersionCompliance()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.orgUnitPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetOrgUnitPath()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetMacAddress()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.annotatedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetAnnotatedUser()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.annotatedLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetAnnotatedLocation()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.annotatedAssetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetAnnotatedAssetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetNotes()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.deprovisionReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetDeprovisionReason()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.deviceLicenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetDeviceLicenseType()).ToDataRes(types.String)
+	},
+	"googleworkspace.chromeOsDevice.lastSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetLastSync()).ToDataRes(types.Time)
+	},
+	"googleworkspace.chromeOsDevice.firstEnrollmentTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetFirstEnrollmentTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.chromeOsDevice.lastEnrollmentTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetLastEnrollmentTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.chromeOsDevice.autoUpdateExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceChromeOsDevice).GetAutoUpdateExpiration()).ToDataRes(types.Time)
+	},
+	"googleworkspace.mobileDevice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetDeviceId()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetStatus()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetModel()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.os": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetOs()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.releaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetReleaseVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.deviceCompromisedStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetDeviceCompromisedStatus()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.encryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetEncryptionStatus()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.devicePasswordStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetDevicePasswordStatus()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.developerOptionsStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetDeveloperOptionsStatus()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.mobileDevice.adbStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetAdbStatus()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.mobileDevice.unknownSourcesStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetUnknownSourcesStatus()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.mobileDevice.supportsWorkProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetSupportsWorkProfile()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.mobileDevice.managedAccountIsOnOwnerProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetManagedAccountIsOnOwnerProfile()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.mobileDevice.privilege": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetPrivilege()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetManufacturer()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.brand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetBrand()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.hardware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetHardware()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.imei": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetImei()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.meid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetMeid()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.wifiMacAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetWifiMacAddress()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.networkOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetNetworkOperator()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.defaultLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetDefaultLanguage()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.userAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetUserAgent()).ToDataRes(types.String)
+	},
+	"googleworkspace.mobileDevice.securityPatchLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetSecurityPatchLevel()).ToDataRes(types.Int)
+	},
+	"googleworkspace.mobileDevice.emails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetEmails()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.mobileDevice.names": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetNames()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.mobileDevice.otherAccountsInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetOtherAccountsInfo()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.mobileDevice.firstSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetFirstSync()).ToDataRes(types.Time)
+	},
+	"googleworkspace.mobileDevice.lastSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMobileDevice).GetLastSync()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1102,6 +1277,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspace).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).ChromeOsDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).MobileDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2240,6 +2423,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspacePolicy).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.chromeOsDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.chromeOsDevice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.firmwareVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).FirmwareVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.bootMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).BootMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.osVersionCompliance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).OsVersionCompliance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.orgUnitPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).OrgUnitPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.annotatedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).AnnotatedUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.annotatedLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).AnnotatedLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.annotatedAssetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).AnnotatedAssetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.deprovisionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).DeprovisionReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.deviceLicenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).DeviceLicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.lastSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).LastSync, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.firstEnrollmentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).FirstEnrollmentTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.lastEnrollmentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).LastEnrollmentTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.chromeOsDevice.autoUpdateExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceChromeOsDevice).AutoUpdateExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.mobileDevice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Os, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.releaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).ReleaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.deviceCompromisedStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).DeviceCompromisedStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.encryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).EncryptionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.devicePasswordStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).DevicePasswordStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.developerOptionsStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).DeveloperOptionsStatus, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.adbStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).AdbStatus, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.unknownSourcesStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).UnknownSourcesStatus, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.supportsWorkProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).SupportsWorkProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.managedAccountIsOnOwnerProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).ManagedAccountIsOnOwnerProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.privilege": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Privilege, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.brand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Brand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.hardware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Hardware, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.imei": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Imei, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.meid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Meid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.wifiMacAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).WifiMacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.networkOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).NetworkOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.defaultLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).DefaultLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.userAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).UserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.securityPatchLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).SecurityPatchLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Emails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.names": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).Names, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.otherAccountsInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).OtherAccountsInfo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.firstSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).FirstSync, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.mobileDevice.lastSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMobileDevice).LastSync, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2281,6 +2684,8 @@ type mqlGoogleworkspace struct {
 	SuspendedUsers  plugin.TValue[[]any]
 	UsersWithout2sv plugin.TValue[[]any]
 	Policies        plugin.TValue[[]any]
+	ChromeOsDevices plugin.TValue[[]any]
+	MobileDevices   plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -2509,6 +2914,38 @@ func (c *mqlGoogleworkspace) GetPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.policies()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetChromeOsDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ChromeOsDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "chromeOsDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.chromeOsDevices()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetMobileDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobileDevices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "mobileDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobileDevices()
 	})
 }
 
@@ -5062,4 +5499,357 @@ func (c *mqlGoogleworkspacePolicy) GetQuery() *plugin.TValue[string] {
 
 func (c *mqlGoogleworkspacePolicy) GetValue() *plugin.TValue[any] {
 	return &c.Value
+}
+
+// mqlGoogleworkspaceChromeOsDevice for the googleworkspace.chromeOsDevice resource
+type mqlGoogleworkspaceChromeOsDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceChromeOsDeviceInternal it will be used here
+	Id                   plugin.TValue[string]
+	SerialNumber         plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Model                plugin.TValue[string]
+	OsVersion            plugin.TValue[string]
+	PlatformVersion      plugin.TValue[string]
+	FirmwareVersion      plugin.TValue[string]
+	BootMode             plugin.TValue[string]
+	OsVersionCompliance  plugin.TValue[string]
+	OrgUnitPath          plugin.TValue[string]
+	MacAddress           plugin.TValue[string]
+	AnnotatedUser        plugin.TValue[string]
+	AnnotatedLocation    plugin.TValue[string]
+	AnnotatedAssetId     plugin.TValue[string]
+	Notes                plugin.TValue[string]
+	DeprovisionReason    plugin.TValue[string]
+	DeviceLicenseType    plugin.TValue[string]
+	LastSync             plugin.TValue[*time.Time]
+	FirstEnrollmentTime  plugin.TValue[*time.Time]
+	LastEnrollmentTime   plugin.TValue[*time.Time]
+	AutoUpdateExpiration plugin.TValue[*time.Time]
+}
+
+// createGoogleworkspaceChromeOsDevice creates a new instance of this resource
+func createGoogleworkspaceChromeOsDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceChromeOsDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.chromeOsDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) MqlName() string {
+	return "googleworkspace.chromeOsDevice"
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetFirmwareVersion() *plugin.TValue[string] {
+	return &c.FirmwareVersion
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetBootMode() *plugin.TValue[string] {
+	return &c.BootMode
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetOsVersionCompliance() *plugin.TValue[string] {
+	return &c.OsVersionCompliance
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetOrgUnitPath() *plugin.TValue[string] {
+	return &c.OrgUnitPath
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetAnnotatedUser() *plugin.TValue[string] {
+	return &c.AnnotatedUser
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetAnnotatedLocation() *plugin.TValue[string] {
+	return &c.AnnotatedLocation
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetAnnotatedAssetId() *plugin.TValue[string] {
+	return &c.AnnotatedAssetId
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetDeprovisionReason() *plugin.TValue[string] {
+	return &c.DeprovisionReason
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetDeviceLicenseType() *plugin.TValue[string] {
+	return &c.DeviceLicenseType
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetLastSync() *plugin.TValue[*time.Time] {
+	return &c.LastSync
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetFirstEnrollmentTime() *plugin.TValue[*time.Time] {
+	return &c.FirstEnrollmentTime
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetLastEnrollmentTime() *plugin.TValue[*time.Time] {
+	return &c.LastEnrollmentTime
+}
+
+func (c *mqlGoogleworkspaceChromeOsDevice) GetAutoUpdateExpiration() *plugin.TValue[*time.Time] {
+	return &c.AutoUpdateExpiration
+}
+
+// mqlGoogleworkspaceMobileDevice for the googleworkspace.mobileDevice resource
+type mqlGoogleworkspaceMobileDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceMobileDeviceInternal it will be used here
+	Id                             plugin.TValue[string]
+	DeviceId                       plugin.TValue[string]
+	Type                           plugin.TValue[string]
+	Status                         plugin.TValue[string]
+	Model                          plugin.TValue[string]
+	Os                             plugin.TValue[string]
+	ReleaseVersion                 plugin.TValue[string]
+	DeviceCompromisedStatus        plugin.TValue[string]
+	EncryptionStatus               plugin.TValue[string]
+	DevicePasswordStatus           plugin.TValue[string]
+	DeveloperOptionsStatus         plugin.TValue[bool]
+	AdbStatus                      plugin.TValue[bool]
+	UnknownSourcesStatus           plugin.TValue[bool]
+	SupportsWorkProfile            plugin.TValue[bool]
+	ManagedAccountIsOnOwnerProfile plugin.TValue[bool]
+	Privilege                      plugin.TValue[string]
+	Manufacturer                   plugin.TValue[string]
+	Brand                          plugin.TValue[string]
+	Hardware                       plugin.TValue[string]
+	Imei                           plugin.TValue[string]
+	Meid                           plugin.TValue[string]
+	SerialNumber                   plugin.TValue[string]
+	WifiMacAddress                 plugin.TValue[string]
+	NetworkOperator                plugin.TValue[string]
+	DefaultLanguage                plugin.TValue[string]
+	UserAgent                      plugin.TValue[string]
+	SecurityPatchLevel             plugin.TValue[int64]
+	Emails                         plugin.TValue[[]any]
+	Names                          plugin.TValue[[]any]
+	OtherAccountsInfo              plugin.TValue[[]any]
+	FirstSync                      plugin.TValue[*time.Time]
+	LastSync                       plugin.TValue[*time.Time]
+}
+
+// createGoogleworkspaceMobileDevice creates a new instance of this resource
+func createGoogleworkspaceMobileDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceMobileDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.mobileDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) MqlName() string {
+	return "googleworkspace.mobileDevice"
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetOs() *plugin.TValue[string] {
+	return &c.Os
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetReleaseVersion() *plugin.TValue[string] {
+	return &c.ReleaseVersion
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetDeviceCompromisedStatus() *plugin.TValue[string] {
+	return &c.DeviceCompromisedStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetEncryptionStatus() *plugin.TValue[string] {
+	return &c.EncryptionStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetDevicePasswordStatus() *plugin.TValue[string] {
+	return &c.DevicePasswordStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetDeveloperOptionsStatus() *plugin.TValue[bool] {
+	return &c.DeveloperOptionsStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetAdbStatus() *plugin.TValue[bool] {
+	return &c.AdbStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetUnknownSourcesStatus() *plugin.TValue[bool] {
+	return &c.UnknownSourcesStatus
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetSupportsWorkProfile() *plugin.TValue[bool] {
+	return &c.SupportsWorkProfile
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetManagedAccountIsOnOwnerProfile() *plugin.TValue[bool] {
+	return &c.ManagedAccountIsOnOwnerProfile
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetPrivilege() *plugin.TValue[string] {
+	return &c.Privilege
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetBrand() *plugin.TValue[string] {
+	return &c.Brand
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetHardware() *plugin.TValue[string] {
+	return &c.Hardware
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetImei() *plugin.TValue[string] {
+	return &c.Imei
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetMeid() *plugin.TValue[string] {
+	return &c.Meid
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetWifiMacAddress() *plugin.TValue[string] {
+	return &c.WifiMacAddress
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetNetworkOperator() *plugin.TValue[string] {
+	return &c.NetworkOperator
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetDefaultLanguage() *plugin.TValue[string] {
+	return &c.DefaultLanguage
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetUserAgent() *plugin.TValue[string] {
+	return &c.UserAgent
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetSecurityPatchLevel() *plugin.TValue[int64] {
+	return &c.SecurityPatchLevel
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetEmails() *plugin.TValue[[]any] {
+	return &c.Emails
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetNames() *plugin.TValue[[]any] {
+	return &c.Names
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetOtherAccountsInfo() *plugin.TValue[[]any] {
+	return &c.OtherAccountsInfo
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetFirstSync() *plugin.TValue[*time.Time] {
+	return &c.FirstSync
+}
+
+func (c *mqlGoogleworkspaceMobileDevice) GetLastSync() *plugin.TValue[*time.Time] {
+	return &c.LastSync
 }
