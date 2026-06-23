@@ -78,6 +78,25 @@ func TestWindowsAppPackagesParserWithPSPath(t *testing.T) {
 	assert.Equal(t, "x86", x86Pkg.Arch, "Wow6432Node path package should have x86 arch")
 }
 
+func TestWindowsAppxPackagesParserSkipsEmptyNames(t *testing.T) {
+	pf := &inventory.Platform{Name: "windows", Arch: "x86", Family: []string{"windows"}}
+
+	// the middle entry has an empty Name and must be omitted entirely,
+	// not turned into a zero-value Package hole
+	const data = `[
+		{"Name":"Microsoft.WindowsCalculator","Version":"1.0.0.0","Architecture":0,"Publisher":"CN=Microsoft"},
+		{"Name":"","Version":"","Architecture":0,"Publisher":""},
+		{"Name":"Microsoft.WindowsStore","Version":"2.0.0.0","Architecture":0,"Publisher":"CN=Microsoft"}
+	]`
+
+	pkgs, err := ParseWindowsAppxPackages(pf, strings.NewReader(data))
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pkgs), "empty-name entry should be skipped, no holes")
+	for _, p := range pkgs {
+		assert.NotEmpty(t, p.Name, "no empty/zero-value package should be present")
+	}
+}
+
 func TestWindowsAppxPackagesParser(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
