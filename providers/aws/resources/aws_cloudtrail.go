@@ -60,53 +60,59 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
 	}
 
-	// construct arn of cloudtrail if missing
-	var arnVal string
+	// We match the requested trail by ARN when supplied, otherwise by name.
+	// A CloudTrail ARN cannot be synthesized from the name alone (it needs the
+	// region and account), so never fabricate one — match the name directly.
+	var arnVal, nameVal string
 	if args["arn"] != nil {
 		arnVal = args["arn"].Value.(string)
-	} else {
-		nameVal := args["name"].Value.(string)
-		arnVal = fmt.Sprintf(s3ArnPattern, nameVal)
+	}
+	if args["name"] != nil {
+		nameVal = args["name"].Value.(string)
 	}
 
-	if arnVal == "" {
+	if arnVal == "" && nameVal == "" {
 		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
 	}
 
-	log.Debug().Str("arn", arnVal).Msg("init cloudtrail trail with arn")
+	log.Debug().Str("arn", arnVal).Str("name", nameVal).Msg("init cloudtrail trail")
 
-	// Targeted lookup: derive the home region from the ARN and fetch just this
-	// one trail instead of describing every trail in every region.
-	var region string
-	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "trail/") {
-		region = parsed.Region
-	}
-	if args["region"] != nil {
-		if r, ok := args["region"].Value.(string); ok && r != "" {
-			region = r
+	// Targeted lookup: when we have a real ARN, derive the home region from it
+	// (or use an explicit region arg) and fetch just this one trail instead of
+	// describing every trail in every region.
+	if arnVal != "" {
+		var region string
+		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "trail/") {
+			region = parsed.Region
 		}
-	}
-	if region != "" {
-		conn := runtime.Connection.(*connection.AwsConnection)
-		svc := conn.Cloudtrail(region)
-		resp, err := svc.GetTrail(context.Background(), &cloudtrail.GetTrailInput{Name: &arnVal})
-		if err != nil {
-			if !Is400AccessDeniedError(err) {
-				var notFound *types.TrailNotFoundException
-				if !errors.As(err, &notFound) {
+		if args["region"] != nil {
+			if r, ok := args["region"].Value.(string); ok && r != "" {
+				region = r
+			}
+		}
+		if region != "" {
+			conn := runtime.Connection.(*connection.AwsConnection)
+			svc := conn.Cloudtrail(region)
+			resp, err := svc.GetTrail(context.Background(), &cloudtrail.GetTrailInput{Name: &arnVal})
+			if err != nil {
+				if !Is400AccessDeniedError(err) {
+					var notFound *types.TrailNotFoundException
+					if !errors.As(err, &notFound) {
+						return nil, nil, err
+					}
+				}
+			} else if resp.Trail != nil {
+				trail, err := buildCloudtrailTrailResource(runtime, *resp.Trail)
+				if err != nil {
 					return nil, nil, err
 				}
+				return args, trail, nil
 			}
-		} else if resp.Trail != nil {
-			trail, err := buildCloudtrailTrailResource(runtime, *resp.Trail)
-			if err != nil {
-				return nil, nil, err
-			}
-			return args, trail, nil
 		}
 	}
 
-	// Fallback: scan all trails (e.g. when the ARN carries no usable region).
+	// Fallback: scan all trails (when we only have a name, or the ARN carries
+	// no usable region).
 	obj, err := CreateResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -120,7 +126,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	for _, rawResource := range rawResources.Data {
 		trail := rawResource.(*mqlAwsCloudtrailTrail)
-		if trail.Arn.Data == arnVal {
+		if (arnVal != "" && trail.Arn.Data == arnVal) || (nameVal != "" && trail.Name.Data == nameVal) {
 			return args, trail, nil
 		}
 	}
