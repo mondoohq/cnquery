@@ -691,6 +691,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				"statement":   llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
 				"ruleName":    llx.StringDataPtr(ruleName),
 			})
+			if err != nil {
+				return nil, err
+			}
 		}
 		if statement.OrStatement != nil {
 			kind = "OrStatement"
@@ -707,6 +710,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				"statements":  llx.ArrayData(statements, types.ResourceLike),
 				"ruleName":    llx.StringDataPtr(ruleName),
 			})
+			if err != nil {
+				return nil, err
+			}
 		}
 		if statement.RateBasedStatement != nil {
 			kind = "RateBasedStatement"
