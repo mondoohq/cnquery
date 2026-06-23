@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -45,6 +46,11 @@ func handleTargets(targets []string) []string {
 			connection.DiscoveryUsers,
 			connection.DiscoveryTerraform,
 			connection.DiscoveryK8sManifests,
+			connection.DiscoveryCloudformation,
+			connection.DiscoveryDockerfiles,
+			connection.DiscoveryBicep,
+			connection.DiscoveryHelm,
+			connection.DiscoveryKustomize,
 		}
 	}
 	return targets
@@ -146,20 +152,11 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				Connections: []*inventory.Config{cfg},
 			})
 
-			if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryTerraform) {
-				terraformAssets, err := discoverTerraform(conn, repo)
-				if err != nil {
-					return nil, err
-				}
-				assetList = append(assetList, terraformAssets...)
+			iacAssets, err := discoverRepoIac(conn, repo, targets)
+			if err != nil {
+				return nil, err
 			}
-			if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests) {
-				k8sAssets, err := discoverK8sManifests(conn, repo)
-				if err != nil {
-					return nil, err
-				}
-				assetList = append(assetList, k8sAssets...)
-			}
+			assetList = append(assetList, iacAssets...)
 		}
 	}
 	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers) {
@@ -208,20 +205,11 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		Connections: []*inventory.Config{cfg},
 	})
 
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryTerraform) {
-		terraformAssets, err := discoverTerraform(conn, repo)
-		if err != nil {
-			return nil, err
-		}
-		assetList = append(assetList, terraformAssets...)
+	iacAssets, err := discoverRepoIac(conn, repo, targets)
+	if err != nil {
+		return nil, err
 	}
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests) {
-		k8sAssets, err := discoverK8sManifests(conn, repo)
-		if err != nil {
-			return nil, err
-		}
-		assetList = append(assetList, k8sAssets...)
-	}
+	assetList = append(assetList, iacAssets...)
 
 	return assetList, nil
 }
@@ -320,18 +308,216 @@ func (f *ReposFilter) skipRepo(namespace string) bool {
 	return false
 }
 
-func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
-	// For git clone we need to set the user to oauth2 to be usable with the token.
-	conf := conn.Asset().Connections[0]
+// gitCredentials clones the parent GitHub connection credentials for use in a
+// git clone, defaulting the user to "oauth2" so the token works over HTTPS.
+func gitCredentials(conf *inventory.Config) []*vault.Credential {
 	creds := make([]*vault.Credential, len(conf.Credentials))
 	for i := range conf.Credentials {
-		cred := conf.Credentials[i]
-		cc := cred.CloneVT()
+		cc := conf.Credentials[i].CloneVT()
 		if cc.User == "" {
 			cc.User = "oauth2"
 		}
 		creds[i] = cc
 	}
+	return creds
+}
+
+// isHiddenPath reports whether any path segment is hidden (starts with a dot),
+// e.g. files under .github/ or a top-level .drone.yml.
+func isHiddenPath(p string) bool {
+	for _, fragment := range strings.Split(p, "/") {
+		if strings.HasPrefix(fragment, ".") {
+			return true
+		}
+	}
+	return false
+}
+
+// searchCode runs a GitHub code search and returns every matching result,
+// following pagination. The code search API returns at most 100 items per page
+// (30 by default), so a repo with many matching files would otherwise be
+// silently truncated to the first page.
+func searchCode(ctx context.Context, client *github.Client, query string) ([]*github.CodeResult, error) {
+	opts := &github.SearchOptions{ListOptions: github.ListOptions{PerPage: 100}}
+	var results []*github.CodeResult
+	for {
+		res, resp, err := client.Search.Code(ctx, query, opts)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, res.CodeResults...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	return results, nil
+}
+
+// discoverRepoIac runs every IaC discovery target for a single repository.
+//
+// Terraform (a language check) and CloudFormation (a content search for the
+// AWSTemplateFormatVersion marker) each need their own API call. The remaining
+// detectors — k8s manifests, Dockerfiles, Bicep, Helm, and Kustomize — are all
+// filename/extension based, so they share a single recursive git-tree walk
+// rather than spending one GitHub Code Search call per type. The Code Search
+// API is limited to 30 requests/minute, so the previous per-type approach made
+// `--discover all` start throttling at only a handful of repos per org.
+func discoverRepoIac(conn *connection.GithubConnection, repo *mqlGithubRepository, targets []string) ([]*inventory.Asset, error) {
+	var assetList []*inventory.Asset
+
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryTerraform) {
+		terraformAssets, err := discoverTerraform(conn, repo)
+		if err != nil {
+			return nil, err
+		}
+		assetList = append(assetList, terraformAssets...)
+	}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryCloudformation) {
+		cfAssets, err := discoverCloudformation(conn, repo)
+		if err != nil {
+			return nil, err
+		}
+		assetList = append(assetList, cfAssets...)
+	}
+
+	if !stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests,
+		connection.DiscoveryDockerfiles, connection.DiscoveryBicep, connection.DiscoveryHelm,
+		connection.DiscoveryKustomize) {
+		return assetList, nil
+	}
+
+	iac, err := repoIacFromTree(conn.Context(), conn.Client(), repo)
+	if err != nil {
+		// Tree discovery is best-effort; a missing/empty repo or permission
+		// issue should not fail discovery of the rest of the org.
+		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to walk repository tree for IaC discovery")
+		return assetList, nil
+	}
+
+	creds := gitCredentials(conn.Asset().Connections[0])
+	if iac.hasYaml && stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryK8sManifests) {
+		k8sAsset := gitAsset("k8s", repo, "", creds)
+		k8sAsset.Connections[0].Discover = &inventory.Discovery{Targets: []string{"auto"}}
+		assetList = append(assetList, k8sAsset)
+	}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryDockerfiles) {
+		for _, path := range iac.dockerfiles {
+			assetList = append(assetList, gitAsset("docker-file", repo, path, creds))
+		}
+	}
+	if iac.hasBicep && stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryBicep) {
+		assetList = append(assetList, gitAsset("bicep", repo, "", creds))
+	}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryHelm) {
+		for _, dir := range iac.helmChartDirs {
+			assetList = append(assetList, gitAsset("helm", repo, dir, creds))
+		}
+	}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryKustomize) {
+		for _, dir := range iac.kustomizeDirs {
+			assetList = append(assetList, gitAsset("kustomize", repo, dir, creds))
+		}
+	}
+	return assetList, nil
+}
+
+// repoIac holds the IaC entry points found by a single recursive git-tree walk.
+// CloudFormation is intentionally absent: it requires file-content inspection
+// (the AWSTemplateFormatVersion marker), not a path match.
+type repoIac struct {
+	hasYaml       bool // k8s manifests
+	hasBicep      bool
+	dockerfiles   []string
+	helmChartDirs []string
+	kustomizeDirs []string
+}
+
+// repoIacFromTree fetches the repository's default-branch tree once (recursively)
+// and classifies its files into the IaC entry points each detector needs. The
+// git-tree endpoint is on the generous core rate limit rather than the Code
+// Search limit, so this is one cheap call per repo instead of one Code Search
+// call per IaC type. The switch ordering mirrors the GitLab provider so the two
+// behave identically — notably, Chart.yaml and kustomization.yaml match their
+// own cases and so do not also count as k8s manifests.
+func repoIacFromTree(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (*repoIac, error) {
+	out := &repoIac{}
+
+	ref := repo.DefaultBranchName.Data
+	if ref == "" {
+		// Empty repositories have no default branch and therefore no tree.
+		return out, nil
+	}
+
+	tree, _, err := client.Git.GetTree(ctx, repo.Owner.Data.Login.Data, repo.Name.Data, ref, true)
+	if err != nil {
+		return nil, err
+	}
+	if tree.GetTruncated() {
+		// The recursive tree endpoint truncates rather than paginating, so for
+		// very large repositories some files may be missing from this walk.
+		log.Warn().Str("project", repo.FullName.Data).Msg("github repository tree is truncated; some IaC files may not be discovered")
+	}
+
+	helmSeen := map[string]bool{}
+	kustomizeSeen := map[string]bool{}
+	for _, entry := range tree.Entries {
+		if entry.GetType() != "blob" {
+			continue
+		}
+		path := entry.GetPath()
+		if isHiddenPath(path) {
+			continue
+		}
+
+		base := filepath.Base(path)
+		switch {
+		case strings.HasSuffix(path, ".bicep"):
+			out.hasBicep = true
+		case base == "Chart.yaml":
+			dir := iacDir(path)
+			if !helmSeen[dir] {
+				helmSeen[dir] = true
+				out.helmChartDirs = append(out.helmChartDirs, dir)
+			}
+		case isKustomization(base):
+			dir := iacDir(path)
+			if !kustomizeSeen[dir] {
+				kustomizeSeen[dir] = true
+				out.kustomizeDirs = append(out.kustomizeDirs, dir)
+			}
+		case isDockerfile(base):
+			out.dockerfiles = append(out.dockerfiles, path)
+		case (strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")) &&
+			!strings.HasSuffix(path, "mql.yaml") && !strings.HasSuffix(path, "mql.yml"):
+			out.hasYaml = true
+		}
+	}
+	return out, nil
+}
+
+// gitAsset builds a child asset that clones the repository and scans it with the
+// given connection type. path is the repo-relative file or directory to scan,
+// or "" when the connection scans the whole checkout.
+func gitAsset(connType string, repo *mqlGithubRepository, path string, creds []*vault.Credential) *inventory.Asset {
+	opts := map[string]string{
+		"ssh-url":  repo.SshUrl.Data,
+		"http-url": repo.CloneUrl.Data,
+	}
+	if path != "" {
+		opts["path"] = path
+	}
+	return &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Type:        connType,
+			Options:     opts,
+			Credentials: creds,
+		}},
+	}
+}
+
+func discoverTerraform(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
+	creds := gitCredentials(conn.Asset().Connections[0])
 
 	var res []*inventory.Asset
 	hasTf, err := hasTerraformHcl(conn.Context(), conn.Client(), repo)
@@ -364,70 +550,93 @@ func hasTerraformHcl(ctx context.Context, client *github.Client, repo *mqlGithub
 	return false, nil
 }
 
-func discoverK8sManifests(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
-	// For git clone we need to set the user to oauth2 to be usable with the token.
-	conf := conn.Asset().Connections[0]
-	creds := make([]*vault.Credential, len(conf.Credentials))
-	for i := range conf.Credentials {
-		cred := conf.Credentials[i]
-		cc := cred.CloneVT()
-		if cc.User == "" {
-			cc.User = "oauth2"
-		}
-		creds[i] = cc
+// discoverCloudformation emits one asset per CloudFormation template found in
+// the repository. The CloudFormation connection scans a single template file
+// (not a directory), so each asset carries its own repo-relative path and
+// performs its own shallow clone of the repo on connect. For a repo with many
+// templates this means several clones of the same repo — an accepted trade-off
+// that keeps the connection's single-template model and avoids a shared clone
+// cache.
+func discoverCloudformation(conn *connection.GithubConnection, repo *mqlGithubRepository) ([]*inventory.Asset, error) {
+	creds := gitCredentials(conn.Asset().Connections[0])
+
+	paths, err := cloudformationTemplatePaths(conn.Context(), conn.Client(), repo)
+	if err != nil {
+		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover cloudformation repo")
+		return nil, nil
 	}
 
 	var res []*inventory.Asset
-	hasTf, err := hasYaml(conn.Context(), conn.Client(), repo)
-	if err != nil {
-		log.Error().Err(err).Str("project", repo.FullName.Data).Msg("failed to discover k8s manifests repo")
-	} else if hasTf {
+	for _, path := range paths {
 		res = append(res, &inventory.Asset{
 			Connections: []*inventory.Config{{
-				Type: "k8s",
+				Type: "cloudformation",
 				Options: map[string]string{
 					"ssh-url":  repo.SshUrl.Data,
 					"http-url": repo.CloneUrl.Data,
+					"path":     path,
 				},
 				Credentials: creds,
-				Discover:    &inventory.Discovery{Targets: []string{"auto"}},
 			}},
 		})
 	}
 	return res, nil
 }
 
-// hasYaml will check if the repository contains YAML files
-func hasYaml(ctx context.Context, client *github.Client, repo *mqlGithubRepository) (bool, error) {
-	query := "repo:" + repo.FullName.Data + " extension:yaml OR extension:yml"
-	res, _, err := client.Search.Code(ctx, query, &github.SearchOptions{})
+// cloudformationTemplatePaths searches the repository for CloudFormation/SAM
+// templates. Because CloudFormation templates share the .yaml/.json extensions
+// with many other config files, we match on the template marker
+// `AWSTemplateFormatVersion` rather than the extension alone.
+func cloudformationTemplatePaths(ctx context.Context, client *github.Client, repo *mqlGithubRepository) ([]string, error) {
+	query := "repo:" + repo.FullName.Data + " AWSTemplateFormatVersion"
+	results, err := searchCode(ctx, client, query)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	// Ignore YAML files that are hidden or are in a hidden folder
-	nonHiddenYaml := 0
-	for _, code := range res.CodeResults {
+	var paths []string
+	seen := map[string]bool{}
+	for _, code := range results {
 		path := code.GetPath()
-
-		// Skip MQL files
-		if strings.HasSuffix(path, "mql.yaml") || strings.HasSuffix(path, "mql.yml") {
+		if isHiddenPath(path) || seen[path] {
 			continue
 		}
-
-		fragments := strings.Split(code.GetPath(), "/")
-		// skip hidden files
-		isHidden := false
-		for _, fragment := range fragments {
-			if strings.HasPrefix(fragment, ".") {
-				isHidden = true
-				break
-			}
-		}
-
-		if !isHidden {
-			nonHiddenYaml++
+		switch strings.ToLower(filepath.Ext(path)) {
+		case ".yaml", ".yml", ".json", ".template":
+			seen[path] = true
+			paths = append(paths, path)
 		}
 	}
-	return nonHiddenYaml > 0, nil
+	return paths, nil
+}
+
+// isDockerfile reports whether a base file name follows a Dockerfile naming
+// convention: `Dockerfile`, `Dockerfile.<suffix>` (e.g. Dockerfile.prod), or
+// `<prefix>.Dockerfile`/`<prefix>.dockerfile` (e.g. app.Dockerfile). It rejects
+// unrelated names that merely begin with "Dockerfile", like `DockerfileLint.md`.
+func isDockerfile(base string) bool {
+	return base == "Dockerfile" ||
+		strings.HasPrefix(base, "Dockerfile.") ||
+		strings.HasSuffix(base, ".Dockerfile") ||
+		strings.HasSuffix(base, ".dockerfile")
+}
+
+// iacDir returns the repo-relative directory containing the given file, with a
+// top-level file ("." from filepath.Dir) normalized to "" so it joins onto the
+// clone root cleanly.
+func iacDir(path string) string {
+	if dir := filepath.Dir(path); dir != "." {
+		return dir
+	}
+	return ""
+}
+
+// isKustomization reports whether a base file name is one of the recognized
+// Kustomize entry-point file names.
+func isKustomization(base string) bool {
+	switch base {
+	case "kustomization.yaml", "kustomization.yml", "Kustomization":
+		return true
+	}
+	return false
 }

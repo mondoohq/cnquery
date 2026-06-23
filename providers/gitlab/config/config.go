@@ -47,6 +47,11 @@ Notes:
 				provider.DiscoveryProject,
 				provider.DiscoveryTerraform,
 				provider.DiscoveryK8sManifests,
+				provider.DiscoveryCloudformation,
+				provider.DiscoveryDockerfiles,
+				provider.DiscoveryBicep,
+				provider.DiscoveryHelm,
+				provider.DiscoveryKustomize,
 			},
 			Flags: []plugin.Flag{
 				{

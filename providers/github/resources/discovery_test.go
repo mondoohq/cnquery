@@ -53,6 +53,11 @@ func TestHandleTargets(t *testing.T) {
 			connection.DiscoveryUsers,
 			connection.DiscoveryTerraform,
 			connection.DiscoveryK8sManifests,
+			connection.DiscoveryCloudformation,
+			connection.DiscoveryDockerfiles,
+			connection.DiscoveryBicep,
+			connection.DiscoveryHelm,
+			connection.DiscoveryKustomize,
 		}, got)
 	})
 
@@ -63,6 +68,11 @@ func TestHandleTargets(t *testing.T) {
 			connection.DiscoveryUsers,
 			connection.DiscoveryTerraform,
 			connection.DiscoveryK8sManifests,
+			connection.DiscoveryCloudformation,
+			connection.DiscoveryDockerfiles,
+			connection.DiscoveryBicep,
+			connection.DiscoveryHelm,
+			connection.DiscoveryKustomize,
 		}, got)
 	})
 

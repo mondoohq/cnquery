@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
 	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/mql/v13/utils/urlx"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/version"
@@ -106,9 +107,18 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		if err != nil {
 			return nil, err
 		}
-		// manifest parent directory name
-		clusterName = shared.ProjectNameFromPath(c.manifestFile)
-		clusterName = "K8s Manifest " + clusterName
+		// Prefer the git repo (org/repo) for a stable, human-friendly name,
+		// matching the Terraform static-analysis naming. The manifest path is a
+		// temporary clone directory (e.g. mql-git-clone3841…) when discovered
+		// from a git repository, so fall back to it only for local manifests.
+		if url := asset.Connections[0].Options["ssh-url"]; url != "" {
+			if _, org, repo, err := urlx.ParseGitSshUrl(url); err == nil {
+				clusterName = "K8s Manifest " + org + "/" + repo
+			}
+		}
+		if clusterName == "" {
+			clusterName = "K8s Manifest " + shared.ProjectNameFromPath(c.manifestFile)
+		}
 	}
 	// discovered assets pass by here
 	// They already have a name, so do not override it here.

@@ -15,7 +15,10 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-var _ plugin.Connection = (*BicepConnection)(nil)
+var (
+	_ plugin.Connection = (*BicepConnection)(nil)
+	_ plugin.Closer     = (*BicepConnection)(nil)
+)
 
 type BicepConnection struct {
 	plugin.Connection
@@ -25,6 +28,7 @@ type BicepConnection struct {
 	bicepFiles      []*BicepFile
 	bicepParamFiles []*BicepParamFile
 	armTemplate     *ARMTemplate
+	closer          func()
 }
 
 // BicepFile holds a Bicep source file path and its raw content.
@@ -60,8 +64,36 @@ func NewBicepConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		asset:      asset,
 	}
 
+	// If a git clone is performed below, clean up the temporary directory on any
+	// error path. Close() is a no-op when nothing was cloned, and the guard is
+	// disarmed once the connection is returned and takes ownership of cleanup.
+	cleanup := true
+	defer func() {
+		if cleanup {
+			conn.Close()
+		}
+	}()
+
 	cc := asset.Connections[0]
 	bicepPath := cc.Options["path"]
+	// When discovered from a git repository (e.g. by the GitHub provider) the
+	// asset carries the repo URL instead of a local path. Clone the repo and
+	// scan the resulting directory for Bicep/ARM files.
+	if bicepPath == "" {
+		if _, ok := cc.Options["http-url"]; ok {
+			clonePath, closer, err := plugin.NewGitClone(asset)
+			if err != nil {
+				return nil, err
+			}
+			conn.closer = closer
+			bicepPath = clonePath
+			// Intentionally do NOT overwrite cc.Options["path"]: the detector
+			// reads it to derive a platform ID, and a non-deterministic temp
+			// clone path would produce a different ID on every scan. The
+			// detector's git-discovered branch (ssh-url) handles naming for
+			// this path.
+		}
+	}
 	conn.path = bicepPath
 
 	fi, err := os.Stat(bicepPath)
@@ -108,7 +140,15 @@ func NewBicepConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		conn.bicepFiles = []*BicepFile{{Path: bicepPath, Content: string(content)}}
 	}
 
+	cleanup = false
 	return conn, nil
+}
+
+// Close cleans up any temporary directory created by a git clone.
+func (c *BicepConnection) Close() {
+	if c.closer != nil {
+		c.closer()
+	}
 }
 
 func (c *BicepConnection) Name() string {

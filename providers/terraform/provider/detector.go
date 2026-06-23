@@ -50,7 +50,7 @@ func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error
 			asset.PlatformIds = []string{platformID}
 		}
 		asset.Connections[0].PlatformId = asset.PlatformIds[0]
-		asset.Name = "Terraform Static Analysis " + org + "/" + repo
+		asset.Name = "Terraform HCL " + org + "/" + repo
 		return nil
 	}
 
@@ -65,7 +65,7 @@ func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error
 			asset.PlatformIds = []string{platformID}
 		}
 		asset.Connections[0].PlatformId = asset.PlatformIds[0]
-		asset.Name = "Terraform Static Analysis " + parseNameFromPath(projectPath)
+		asset.Name = "Terraform HCL " + parseNameFromPath(projectPath)
 		return nil
 	}
 

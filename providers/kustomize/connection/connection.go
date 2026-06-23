@@ -22,7 +22,10 @@ import (
 // parse failure on a file that exists.
 var ErrNoKustomization = errors.New("no kustomization file found")
 
-var _ plugin.Connection = (*KustomizeConnection)(nil)
+var (
+	_ plugin.Connection = (*KustomizeConnection)(nil)
+	_ plugin.Closer     = (*KustomizeConnection)(nil)
+)
 
 type KustomizeConnection struct {
 	plugin.Connection
@@ -30,6 +33,7 @@ type KustomizeConnection struct {
 	asset          *inventory.Asset
 	path           string
 	kustomizations []*KustomizationEntry
+	closer         func()
 }
 
 // KustomizationEntry holds a parsed kustomization and its directory path.
@@ -49,9 +53,32 @@ func NewKustomizeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		asset:      asset,
 	}
 
+	// If a git clone is performed below, clean up the temporary directory on any
+	// error path. Close() is a no-op when nothing was cloned, and the guard is
+	// disarmed once the connection is returned and takes ownership of cleanup.
+	cleanupClone := true
+	defer func() {
+		if cleanupClone {
+			conn.Close()
+		}
+	}()
+
 	cc := asset.Connections[0]
-	kustomizePath, ok := cc.Options["path"]
-	if !ok || kustomizePath == "" {
+	kustomizePath := cc.Options["path"]
+	// When discovered from a git repository (e.g. by the GitHub provider) the
+	// asset carries the repo URL plus a repo-relative path to the kustomization
+	// directory. Clone the repo and resolve the directory within the checkout.
+	// The path option is kept relative so the detector can name the asset from
+	// the repo rather than the temporary clone directory.
+	if _, ok := cc.Options["http-url"]; ok {
+		clonePath, closer, err := plugin.NewGitClone(asset)
+		if err != nil {
+			return nil, err
+		}
+		conn.closer = closer
+		kustomizePath = filepath.Join(clonePath, kustomizePath)
+	}
+	if kustomizePath == "" {
 		return nil, errors.New("kustomize provider requires a 'path' option")
 	}
 	conn.path = filepath.Clean(kustomizePath)
@@ -68,7 +95,15 @@ func NewKustomizeConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	}
 	conn.kustomizations = entries
 
+	cleanupClone = false
 	return conn, nil
+}
+
+// Close cleans up any temporary directory created by a git clone.
+func (c *KustomizeConnection) Close() {
+	if c.closer != nil {
+		c.closer()
+	}
 }
 
 func (c *KustomizeConnection) Name() string {
