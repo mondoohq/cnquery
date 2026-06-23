@@ -42,7 +42,7 @@ func (m *ebsMetadata) unixMetadata() (any, error) {
 				FQDN     string `json:"fqdn"`
 				Hostname string `json:"hostname"`
 			}
-			if err := json.Unmarshal(setHostnameData, &setHostname); err != nil {
+			if err := json.Unmarshal(setHostnameData, &setHostname); err == nil {
 				mdata["hostname"] = setHostname.FQDN
 			}
 		}
