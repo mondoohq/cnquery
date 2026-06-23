@@ -56,6 +56,8 @@ googleworkspace {
   chromeOsDevices() []googleworkspace.chromeOsDevice
   // Mobile devices (Android, iOS, Google Sync) managed by the organization
   mobileDevices() []googleworkspace.mobileDevice
+  // Admin role assignments to users and groups across the organization
+  roleAssignments() []googleworkspace.role.assignment
 }
 
 // Google Workspace calendar
@@ -240,6 +242,12 @@ private googleworkspace.user @defaults("primaryEmail") {
   // is registered. High-signal for audits scoping which identities can SSH
   // into GCE / POSIX-linked hosts.
   hasSshKeys() bool
+  // Admin roles assigned to the user
+  //
+  // Resolves the user's admin role assignments to their role definitions —
+  // the effective administrative privilege the user holds, including
+  // delegated admin roles that the `isAdmin` super-admin flag does not cover.
+  adminRoles() []googleworkspace.role
 }
 
 // Secondary email address attached to a Google Workspace user
@@ -551,6 +559,48 @@ private googleworkspace.role @defaults("name") {
   privileges []dict
   // The set of privileges as typed entries with `privilegeName` and `serviceId`
   rolePrivileges []googleworkspace.role.privilege
+  // Assignments of this role to users and groups
+  assignments() []googleworkspace.role.assignment
+}
+
+// Google Workspace admin role assignment
+//
+// Examine a single assignment of an admin role to a user or group — the
+// binding that actually grants administrative privilege, as opposed to the
+// `googleworkspace.role` definition that only describes a privilege set.
+// `assignedTo` is the unique ID of the assignee and `assigneeType` reports
+// whether it is a user or a group; `user()` resolves the assignee to a typed
+// `googleworkspace.user` when it is a user, and `role()` resolves the assigned
+// role. `scopeType` and `orgUnitId` report whether the grant is customer-wide
+// or scoped to an organizational unit. This is the surface for "who holds
+// super admin" and least-privilege reviews — for example
+// `googleworkspace.roleAssignments.where(assigneeType == "user")`.
+private googleworkspace.role.assignment @defaults("assignedTo assigneeType scopeType") {
+  // The unique ID of the role assignment
+  id string
+  // The ID of the assigned role (joins to googleworkspace.role.id)
+  roleId int
+  // The unique ID of the entity the role is assigned to (user, group, or service account)
+  assignedTo string
+  // The type of the assignee
+  //
+  // One of `user` or `group`.
+  assigneeType string
+  // The scope at which the role is granted
+  //
+  // One of `CUSTOMER` (customer-wide) or `ORG_UNIT` (scoped to an organizational unit).
+  scopeType string
+  // The organizational unit ID the assignment is scoped to (empty when CUSTOMER-scoped)
+  orgUnitId string
+  // The condition associated with this role assignment (empty when unconditional)
+  //
+  // When set, the role only takes effect when the accessed resource meets the
+  // condition — currently used to scope grants to or away from security groups.
+  condition string
+  // The user the role is assigned to (null when the assignee is a group)
+  user() googleworkspace.user
+  // The assigned role
+  role() googleworkspace.role
 }
 
 // Google Workspace role privilege

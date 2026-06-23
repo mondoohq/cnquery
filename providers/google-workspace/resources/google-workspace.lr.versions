@@ -235,6 +235,17 @@ googleworkspace.report.usage.userEmail 9.0.0
 googleworkspace.report.users 9.0.0
 googleworkspace.report.users.list 9.0.0
 googleworkspace.role 9.0.0
+googleworkspace.role.assignment 13.1.5
+googleworkspace.role.assignment.assignedTo 13.1.5
+googleworkspace.role.assignment.assigneeType 13.1.5
+googleworkspace.role.assignment.condition 13.1.5
+googleworkspace.role.assignment.id 13.1.5
+googleworkspace.role.assignment.orgUnitId 13.1.5
+googleworkspace.role.assignment.role 13.1.5
+googleworkspace.role.assignment.roleId 13.1.5
+googleworkspace.role.assignment.scopeType 13.1.5
+googleworkspace.role.assignment.user 13.1.5
+googleworkspace.role.assignments 13.1.5
 googleworkspace.role.description 9.0.0
 googleworkspace.role.id 9.0.0
 googleworkspace.role.isSuperAdminRole 9.0.0
@@ -245,6 +256,7 @@ googleworkspace.role.privilege.privilegeName 13.0.14
 googleworkspace.role.privilege.serviceId 13.0.14
 googleworkspace.role.privileges 9.0.0
 googleworkspace.role.rolePrivileges 13.0.14
+googleworkspace.roleAssignments 13.1.5
 googleworkspace.roles 9.0.0
 googleworkspace.superAdmins 13.1.5
 googleworkspace.suspendedUsers 13.1.5
@@ -271,6 +283,7 @@ googleworkspace.user.address.sourceIsStructured 13.0.14
 googleworkspace.user.address.streetAddress 13.0.14
 googleworkspace.user.address.type 13.0.14
 googleworkspace.user.addresses 13.0.14
+googleworkspace.user.adminRoles 13.1.5
 googleworkspace.user.agreedToTerms 9.0.0
 googleworkspace.user.aliases 9.0.0
 googleworkspace.user.archived 9.0.0

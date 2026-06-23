@@ -36,6 +36,7 @@ const (
 	ResourceGoogleworkspaceGroupSettingsConfig  string = "googleworkspace.group.settingsConfig"
 	ResourceGoogleworkspaceMember               string = "googleworkspace.member"
 	ResourceGoogleworkspaceRole                 string = "googleworkspace.role"
+	ResourceGoogleworkspaceRoleAssignment       string = "googleworkspace.role.assignment"
 	ResourceGoogleworkspaceRolePrivilege        string = "googleworkspace.role.privilege"
 	ResourceGoogleworkspaceReportApps           string = "googleworkspace.report.apps"
 	ResourceGoogleworkspaceReportActivity       string = "googleworkspace.report.activity"
@@ -131,6 +132,10 @@ func init() {
 		"googleworkspace.role": {
 			// to override args, implement: initGoogleworkspaceRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceRole,
+		},
+		"googleworkspace.role.assignment": {
+			// to override args, implement: initGoogleworkspaceRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceRoleAssignment,
 		},
 		"googleworkspace.role.privilege": {
 			// to override args, implement: initGoogleworkspaceRolePrivilege(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -284,6 +289,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.mobileDevices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetMobileDevices()).ToDataRes(types.Array(types.Resource("googleworkspace.mobileDevice")))
+	},
+	"googleworkspace.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("googleworkspace.role.assignment")))
 	},
 	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
@@ -485,6 +493,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.user.hasSshKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetHasSshKeys()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.adminRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetAdminRoles()).ToDataRes(types.Array(types.Resource("googleworkspace.role")))
 	},
 	"googleworkspace.user.email.address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUserEmail).GetAddress()).ToDataRes(types.String)
@@ -794,6 +805,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.role.rolePrivileges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceRole).GetRolePrivileges()).ToDataRes(types.Array(types.Resource("googleworkspace.role.privilege")))
+	},
+	"googleworkspace.role.assignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRole).GetAssignments()).ToDataRes(types.Array(types.Resource("googleworkspace.role.assignment")))
+	},
+	"googleworkspace.role.assignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.roleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetRoleId()).ToDataRes(types.Int)
+	},
+	"googleworkspace.role.assignment.assignedTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetAssignedTo()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.assigneeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetAssigneeType()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.scopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetScopeType()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.orgUnitId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetOrgUnitId()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetCondition()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.assignment.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetUser()).ToDataRes(types.Resource("googleworkspace.user"))
+	},
+	"googleworkspace.role.assignment.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRoleAssignment).GetRole()).ToDataRes(types.Resource("googleworkspace.role"))
 	},
 	"googleworkspace.role.privilege.privilegeName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceRolePrivilege).GetPrivilegeName()).ToDataRes(types.String)
@@ -1287,6 +1328,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspace).MobileDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceCalendar).__id, ok = v.Value.(string)
 		return
@@ -1577,6 +1622,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.user.hasSshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).HasSshKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.adminRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).AdminRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.user.email.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2041,6 +2090,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.role.rolePrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceRole).RolePrivileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRole).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.role.assignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.roleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).RoleId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.assignedTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).AssignedTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.assigneeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).AssigneeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.orgUnitId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).OrgUnitId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).User, ok = plugin.RawToTValue[*mqlGoogleworkspaceUser](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.assignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRoleAssignment).Role, ok = plugin.RawToTValue[*mqlGoogleworkspaceRole](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.role.privilege.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2686,6 +2779,7 @@ type mqlGoogleworkspace struct {
 	Policies        plugin.TValue[[]any]
 	ChromeOsDevices plugin.TValue[[]any]
 	MobileDevices   plugin.TValue[[]any]
+	RoleAssignments plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -2946,6 +3040,22 @@ func (c *mqlGoogleworkspace) GetMobileDevices() *plugin.TValue[[]any] {
 		}
 
 		return c.mobileDevices()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
 	})
 }
 
@@ -3342,6 +3452,7 @@ type mqlGoogleworkspaceUser struct {
 	Tokens                     plugin.TValue[[]any]
 	HasRecoveryConfigured      plugin.TValue[bool]
 	HasSshKeys                 plugin.TValue[bool]
+	AdminRoles                 plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceUser creates a new instance of this resource
@@ -3570,6 +3681,22 @@ func (c *mqlGoogleworkspaceUser) GetHasRecoveryConfigured() *plugin.TValue[bool]
 func (c *mqlGoogleworkspaceUser) GetHasSshKeys() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasSshKeys, func() (bool, error) {
 		return c.hasSshKeys()
+	})
+}
+
+func (c *mqlGoogleworkspaceUser) GetAdminRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdminRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.user", c.__id, "adminRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.adminRoles()
 	})
 }
 
@@ -4593,6 +4720,7 @@ type mqlGoogleworkspaceRole struct {
 	IsSuperAdminRole plugin.TValue[bool]
 	Privileges       plugin.TValue[[]any]
 	RolePrivileges   plugin.TValue[[]any]
+	Assignments      plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceRole creates a new instance of this resource
@@ -4658,6 +4786,135 @@ func (c *mqlGoogleworkspaceRole) GetPrivileges() *plugin.TValue[[]any] {
 
 func (c *mqlGoogleworkspaceRole) GetRolePrivileges() *plugin.TValue[[]any] {
 	return &c.RolePrivileges
+}
+
+func (c *mqlGoogleworkspaceRole) GetAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.role", c.__id, "assignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assignments()
+	})
+}
+
+// mqlGoogleworkspaceRoleAssignment for the googleworkspace.role.assignment resource
+type mqlGoogleworkspaceRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceRoleAssignmentInternal it will be used here
+	Id           plugin.TValue[string]
+	RoleId       plugin.TValue[int64]
+	AssignedTo   plugin.TValue[string]
+	AssigneeType plugin.TValue[string]
+	ScopeType    plugin.TValue[string]
+	OrgUnitId    plugin.TValue[string]
+	Condition    plugin.TValue[string]
+	User         plugin.TValue[*mqlGoogleworkspaceUser]
+	Role         plugin.TValue[*mqlGoogleworkspaceRole]
+}
+
+// createGoogleworkspaceRoleAssignment creates a new instance of this resource
+func createGoogleworkspaceRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.role.assignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) MqlName() string {
+	return "googleworkspace.role.assignment"
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetRoleId() *plugin.TValue[int64] {
+	return &c.RoleId
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetAssignedTo() *plugin.TValue[string] {
+	return &c.AssignedTo
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetAssigneeType() *plugin.TValue[string] {
+	return &c.AssigneeType
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetScopeType() *plugin.TValue[string] {
+	return &c.ScopeType
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetOrgUnitId() *plugin.TValue[string] {
+	return &c.OrgUnitId
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetUser() *plugin.TValue[*mqlGoogleworkspaceUser] {
+	return plugin.GetOrCompute[*mqlGoogleworkspaceUser](&c.User, func() (*mqlGoogleworkspaceUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.role.assignment", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGoogleworkspaceUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlGoogleworkspaceRoleAssignment) GetRole() *plugin.TValue[*mqlGoogleworkspaceRole] {
+	return plugin.GetOrCompute[*mqlGoogleworkspaceRole](&c.Role, func() (*mqlGoogleworkspaceRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.role.assignment", c.__id, "role")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGoogleworkspaceRole), nil
+			}
+		}
+
+		return c.role()
+	})
 }
 
 // mqlGoogleworkspaceRolePrivilege for the googleworkspace.role.privilege resource
