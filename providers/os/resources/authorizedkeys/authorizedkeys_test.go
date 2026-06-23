@@ -32,5 +32,10 @@ no-touch-required sk-ecdsa-sha2-nistp256@openssh.com AAAAB3NzaC1yc2EAAAADAQABAAA
 	assert.Equal(t, "user@example.net", entries[0].Label)
 	assert.Equal(t, "ssh-rsa", entries[0].Key.Type())
 
+	// Line is the physical 1-based line in the file: the first key sits on
+	// line 3 (after a leading blank line and a comment), and the next on line 4.
+	assert.Equal(t, int64(3), entries[0].Line)
+	assert.Equal(t, int64(4), entries[1].Line)
+
 	assert.Equal(t, "AAAAB3NzaC1yc2EAAAADAQABAAACAQDYuKamN4JXNYmolm+A9hM+xYanupG1VgbM/k0NwPiIPUdiU82IPbP7bunsngnOatSDyCrKrhL9FV3wuHFFBX0QE9KpS8bcIcT3ySsi3wgYV95P7anb7YhliDDx2w/QB97kCnAKjGFS1yphS6px0i9B29tGVJa22ODs/hebIKUCYKC9/+fnZ+bIqte1HctDP2lDBzMa/7j8BUXSwnTDXtAuEz5eSMIpv1ZdUdaSuO8xFbB0xrBHQJKuqboLPo3NSOCg6uhopO6GucZuNLJnqVLkyEPTKH0nv/8smz/q3v1GOGz8ZS0DIpkretKZmRB1VDhNqsAiOAWUTmg56xO7VZnlEvQRtyG8qyQHjlj6SDGtvxPDY58lz5nhIV9K6L7gHrOIcbSif5ZCt0e4DrKGaYXgH+mwIh2TMC2OCU6Xr6FRVQ9fBhilqMXuFIIezShN0hZb6mUCLkLVOzBBRKuz17S2a8twsuxix7ixqJPsIF3sI88tbxrFkSGSM02dhrmyZbkMr586rktVBB4T+8A28HJr4l9jkU0uk3l3le5bMcXhEuDkJUBnwEXEXfZa8Lw4sg2VuFgw0Ah0kw0/mAorpsFahXstNgrHhy3HoPKDCw/a/sXL4+fE72I1L96Lb7HOxTrdhEGnd65W4mPlTnbGW9YDQqTfZgRlpuffqQuWWYXolw==", entries[0].Base64Key())
 }
