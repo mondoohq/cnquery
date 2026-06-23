@@ -157,4 +157,27 @@ UUID=b411dc99-f0a0-4c87-9e05-184977be8539 /home ext4   defaults  0      A` // no
 		require.Error(t, err)
 		require.Nil(t, entries)
 	})
+
+	t.Run("indented comments and blank lines are skipped", func(t *testing.T) {
+		testdata := "# leading comment\n" +
+			"\t# indented comment with a tab\n" +
+			"   # indented comment with spaces\n" +
+			"   \t  \n" + // whitespace-only line
+			"\n" + // empty line
+			"  UUID=0a3407de-014b-458b-b5c1-848e92a327a3 / ext4 defaults 0 1\n"
+
+		reader := strings.NewReader(testdata)
+		entries, err := ParseFstab(reader)
+
+		require.NoError(t, err)
+		require.Len(t, entries, 1)
+		require.Equal(t, FstabEntry{
+			Device:     "UUID=0a3407de-014b-458b-b5c1-848e92a327a3",
+			Mountpoint: "/",
+			Fstype:     "ext4",
+			Options:    []string{"defaults"},
+			Dump:       ptr.To(0),
+			Fsck:       ptr.To(1),
+		}, entries[0])
+	})
 }
