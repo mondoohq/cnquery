@@ -89,11 +89,25 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	return getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+	net, err := getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if net == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return net, nil
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
-	return getSubnetworkByUrl(g.cacheSubnetworkUrl, g.MqlRuntime)
+	subnet, err := getSubnetworkByUrl(g.cacheSubnetworkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if subnet == nil {
+		g.Subnetwork.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return subnet, nil
 }
 
 // Instance group managers

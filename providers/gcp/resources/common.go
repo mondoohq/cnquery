@@ -381,6 +381,9 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "regions" || parts[4] != "subnetworks" {
+		return nil, fmt.Errorf("unrecognized subnetwork reference: %q", subnetUrl)
+	}
 	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 	// regionUrl is the full URL up to and including the region segment
 	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + resId.Project + "/regions/" + resId.Region

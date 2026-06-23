@@ -316,7 +316,14 @@ func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslPolicy() (*mqlGcpProjec
 		g.SslPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getSslPolicyByUrl(url, g.MqlRuntime)
+	policy, err := getSslPolicyByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		g.SslPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return policy, nil
 }
 
 func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslCertificates() ([]any, error) {
