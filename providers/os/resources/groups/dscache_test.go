@@ -4,9 +4,11 @@
 package groups_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/mock"
 	"go.mondoo.com/mql/v13/providers/os/resources/groups"
@@ -36,4 +38,27 @@ func TestParseDscacheutilResult(t *testing.T) {
 	assert.Equal(t, int64(216), grp.Gid, "detected group id")
 	assert.Equal(t, "_postgres", grp.Name, "detected group name")
 	assert.Equal(t, []string{"_devicemgr", "_calendar", "_teamsserver", "_xserverdocs"}, grp.Members, "detected group members")
+}
+
+func TestParseDscacheutilResult_InvalidGid(t *testing.T) {
+	// A group whose gid cannot be parsed must be dropped rather than recorded
+	// with a bogus (unparseable) ID and gid 0.
+	input := `name: brokengroup
+password: *
+gid: notanumber
+users: alice
+
+name: validgroup
+password: *
+gid: 501
+users: bob carol
+`
+	res, err := groups.ParseDscacheutilResult(strings.NewReader(input))
+	require.NoError(t, err)
+
+	require.Len(t, res, 1)
+	assert.Equal(t, "validgroup", res[0].Name)
+	assert.Equal(t, int64(501), res[0].Gid)
+	assert.Equal(t, "501", res[0].ID)
+	assert.Nil(t, findGroup(res, "notanumber"))
 }
