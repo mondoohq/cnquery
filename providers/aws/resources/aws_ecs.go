@@ -621,7 +621,7 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				"runtimeId":          llx.StringDataPtr(c.RuntimeId),
 				"status":             llx.StringDataPtr(c.LastStatus),
 				"taskArn":            llx.StringData(t.Arn.Data),
-				"taskDefinitionArn":  llx.StringData(t.Arn.Data),
+				"taskDefinitionArn":  llx.StringDataPtr(t.taskDefArn),
 				"memorySoftLimit":    llx.StringDataPtr(c.MemoryReservation),
 				"memoryHardLimit":    llx.StringDataPtr(c.Memory),
 				"reason":             llx.StringDataPtr(c.Reason),
