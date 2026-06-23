@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ptrInt64(v int64) *int64 { return &v }
+
 func TestUnixFilesCmdGeneration(t *testing.T) {
 	tests := []struct {
 		From        string
@@ -24,6 +26,13 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			From:        "/Users/john/.aws",
 			FileType:    "file",
 			ExpectedCmd: "find -L \"/Users/john/.aws\" -xdev -type f -perm -0",
+		},
+		{
+			// -maxdepth must be decimal: depth 12 stays 12, not octal 14.
+			From:        "/etc",
+			FileType:    "file",
+			Depth:       ptrInt64(12),
+			ExpectedCmd: "find -L \"/etc\" -xdev -type f -perm -0 -maxdepth 12",
 		},
 	}
 
