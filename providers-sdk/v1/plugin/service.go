@@ -143,16 +143,13 @@ func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 }
 
 func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
-	var remaining int
-	func() {
-		s.runtimesLock.Lock()
-		defer s.runtimesLock.Unlock()
-		s.doDisconnect(req.Connection)
-		remaining = len(s.runtimes)
-		if remaining == 0 {
-			s.Flush()
-		}
-	}()
+	s.runtimesLock.Lock()
+	s.doDisconnect(req.Connection)
+	remaining := len(s.runtimes)
+	if remaining == 0 {
+		s.Flush()
+	}
+	s.runtimesLock.Unlock()
 
 	debug.FreeOSMemory()
 
@@ -173,12 +170,12 @@ func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 			if err != nil {
 				log.Error().Err(err).Str("path", path).Msg("failed to create heap profile file")
 			} else {
-				defer f.Close()
 				if err := pprof.WriteHeapProfile(f); err != nil {
 					log.Error().Err(err).Msg("failed to write heap profile")
 				} else {
 					log.Info().Str("path", path).Msg("wrote heap profile after disconnect")
 				}
+				f.Close()
 			}
 		}
 	}

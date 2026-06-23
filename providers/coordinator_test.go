@@ -265,10 +265,10 @@ func TestRemoveRuntime_UsedProvider(t *testing.T) {
 		},
 	}
 
-	// Setup another provider with the same runtime
+	// Setup another runtime that also uses provider1
 	r2 := &Runtime{
 		providers: map[string]*ConnectedProvider{
-			"provider2": {Instance: p1},
+			"provider1": {Instance: p1},
 		},
 		Provider: &ConnectedProvider{
 			Instance: p1,
