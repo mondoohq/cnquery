@@ -189,7 +189,7 @@ func ParseAixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		}
 		uid, err := strconv.ParseInt(m[7], 10, 64)
 		if err != nil {
-			log.Error().Err(err).Msg("cannot parse unix uid " + m[9])
+			log.Error().Err(err).Msg("cannot parse unix uid " + m[7])
 			continue
 		}
 
