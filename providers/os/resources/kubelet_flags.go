@@ -94,10 +94,13 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 	if _, ok := flags["manifest-url"]; ok {
 		kubeletConfig["staticPodURL"] = flags["manifest-url"]
 	}
-	if _, ok := flags["manifest-url-header"]; ok {
+	if v, ok := flags["manifest-url-header"]; ok {
 		urlHeaders := map[string]string{}
-		for _, urlHeader := range strings.Split(flags["	"].(string), ",") {
-			urlHeaderSplit := strings.Split(urlHeader, ":")
+		for _, urlHeader := range strings.Split(v.(string), ",") {
+			urlHeaderSplit := strings.SplitN(urlHeader, ":", 2)
+			if len(urlHeaderSplit) < 2 {
+				continue
+			}
 			urlHeaders[urlHeaderSplit[0]] = urlHeaderSplit[1]
 		}
 		data, err := convert.JsonToDict(urlHeaders)
@@ -115,82 +118,90 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 	if _, ok := flags["read-only-port"]; ok {
 		kubeletConfig["readOnlyPort"] = flags["read-only-port"]
 	}
-	if _, ok := flags["anonymous-auth"]; ok {
+	if v, ok := flags["anonymous-auth"]; ok {
 		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
 		}
 		anon := map[string]any{}
-		if _, ok := auth["anonymous"]; ok {
-			anon = auth["anonymous"].(map[string]any)
+		if existing, ok := auth["anonymous"].(map[string]any); ok {
+			anon = existing
 		}
-		anon["enabled"] = flags["anonymous-auth"]
-	}
-	if _, ok := flags["authentication-token-webhook"]; ok {
-		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
-		}
-		webhook := map[string]any{}
-		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]any)
-		}
-		webhook["enabled"] = flags["authentication-token-webhook"]
-	}
-	if _, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
-		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
-		}
-		webhook := map[string]any{}
-		if _, ok := auth["webhook"]; ok {
-			webhook = auth["webhook"].(map[string]any)
-		}
-		webhook["cacheTTL"] = flags["authentication-token-webhook-cache-ttl"].(string)
+		anon["enabled"] = v
+		auth["anonymous"] = anon
 		kubeletConfig["authentication"] = auth
 	}
-	if _, ok := flags["client-ca-file"]; ok {
+	if v, ok := flags["authentication-token-webhook"]; ok {
 		auth := map[string]any{}
-		if _, ok := kubeletConfig["authentication"]; ok {
-			auth = kubeletConfig["authentication"].(map[string]any)
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
+		}
+		webhook := map[string]any{}
+		if existing, ok := auth["webhook"].(map[string]any); ok {
+			webhook = existing
+		}
+		webhook["enabled"] = v
+		auth["webhook"] = webhook
+		kubeletConfig["authentication"] = auth
+	}
+	if v, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
+		auth := map[string]any{}
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
+		}
+		webhook := map[string]any{}
+		if existing, ok := auth["webhook"].(map[string]any); ok {
+			webhook = existing
+		}
+		webhook["cacheTTL"] = v
+		auth["webhook"] = webhook
+		kubeletConfig["authentication"] = auth
+	}
+	if v, ok := flags["client-ca-file"]; ok {
+		auth := map[string]any{}
+		if existing, ok := kubeletConfig["authentication"].(map[string]any); ok {
+			auth = existing
 		}
 		x509 := map[string]any{}
-		if _, ok := auth["x509"]; ok {
-			x509 = auth["x509"].(map[string]any)
+		if existing, ok := auth["x509"].(map[string]any); ok {
+			x509 = existing
 		}
-		x509["clientCAFile"] = flags["client-ca-file"]
+		x509["clientCAFile"] = v
+		auth["x509"] = x509
 		kubeletConfig["authentication"] = auth
 	}
-	if _, ok := flags["authorization-mode"]; ok {
+	if v, ok := flags["authorization-mode"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
-		authz["mode"] = flags["authorization-mode"]
+		authz["mode"] = v
 		kubeletConfig["authorization"] = authz
 	}
-	if _, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
+	if v, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
 		webhook := map[string]any{}
-		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]any)
+		if existing, ok := authz["webhook"].(map[string]any); ok {
+			webhook = existing
 		}
-		webhook["cacheAuthorizedTTL"] = flags["authorization-webhook-cache-authorized-ttl"]
+		webhook["cacheAuthorizedTTL"] = v
+		authz["webhook"] = webhook
 		kubeletConfig["authorization"] = authz
 	}
-	if _, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
+	if v, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
 		authz := map[string]any{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]any)
+		if existing, ok := kubeletConfig["authorization"].(map[string]any); ok {
+			authz = existing
 		}
 		webhook := map[string]any{}
-		if _, ok := authz["webhook"]; ok {
-			webhook = authz["webhook"].(map[string]any)
+		if existing, ok := authz["webhook"].(map[string]any); ok {
+			webhook = existing
 		}
-		webhook["cacheUnauthorizedTTL"] = flags["authorization-webhook-cache-unauthorized-ttl"]
+		webhook["cacheUnauthorizedTTL"] = v
+		authz["webhook"] = webhook
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["tls-cert-file"]; ok {

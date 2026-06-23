@@ -4966,6 +4966,39 @@ kubelet {
   process process
   // Combination of config file parameters and CLI parameters
   configuration() dict
+  // Kubelet version reported by the running binary (for example "v1.34.0")
+  version() string
+  // Whether the kubelet server accepts anonymous, unauthenticated requests
+  anonymousAuthEnabled() bool
+  // Authorization mode the kubelet enforces on incoming requests
+  //
+  // Either "Webhook" (delegate authorization to the API server) or
+  // "AlwaysAllow" (no authorization, every authenticated request is granted).
+  authorizationMode() string
+  // Path to the CA bundle used to verify client certificates on the kubelet server
+  clientCAFile() string
+  // Read-only, unauthenticated port that serves the kubelet API; 0 disables it
+  readOnlyPort() int
+  // Idle timeout after which the kubelet closes streaming connections (for example "4h0m0s"); "0" disables it
+  streamingConnectionIdleTimeout() string
+  // Whether the kubelet refuses to start when kernel tunables differ from its expected values
+  protectKernelDefaults() bool
+  // Whether the kubelet manages the iptables utility chains on the node
+  makeIPTablesUtilChains() bool
+  // Maximum number of event creations per second the kubelet allows; 0 means unlimited
+  eventRecordQPS() int
+  // Path to the x509 certificate the kubelet uses to serve HTTPS
+  tlsCertFile() string
+  // Path to the private key matching the kubelet serving certificate
+  tlsPrivateKeyFile() string
+  // Whether the kubelet automatically rotates its client certificates as they near expiry
+  rotateCertificates() bool
+  // Whether the kubelet requests a serving certificate from the certificates API instead of self-signing
+  serverTLSBootstrap() bool
+  // TLS cipher suites the kubelet server accepts
+  tlsCipherSuites() []string
+  // Minimum TLS version the kubelet server accepts (for example "VersionTLS12")
+  tlsMinVersion() string
 }
 
 // Python package inventory

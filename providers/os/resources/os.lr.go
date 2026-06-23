@@ -6758,6 +6758,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kubelet.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKubelet).GetConfiguration()).ToDataRes(types.Dict)
 	},
+	"kubelet.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetVersion()).ToDataRes(types.String)
+	},
+	"kubelet.anonymousAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetAnonymousAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"kubelet.authorizationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetAuthorizationMode()).ToDataRes(types.String)
+	},
+	"kubelet.clientCAFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetClientCAFile()).ToDataRes(types.String)
+	},
+	"kubelet.readOnlyPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetReadOnlyPort()).ToDataRes(types.Int)
+	},
+	"kubelet.streamingConnectionIdleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetStreamingConnectionIdleTimeout()).ToDataRes(types.String)
+	},
+	"kubelet.protectKernelDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetProtectKernelDefaults()).ToDataRes(types.Bool)
+	},
+	"kubelet.makeIPTablesUtilChains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetMakeIPTablesUtilChains()).ToDataRes(types.Bool)
+	},
+	"kubelet.eventRecordQPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetEventRecordQPS()).ToDataRes(types.Int)
+	},
+	"kubelet.tlsCertFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsCertFile()).ToDataRes(types.String)
+	},
+	"kubelet.tlsPrivateKeyFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsPrivateKeyFile()).ToDataRes(types.String)
+	},
+	"kubelet.rotateCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetRotateCertificates()).ToDataRes(types.Bool)
+	},
+	"kubelet.serverTLSBootstrap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetServerTLSBootstrap()).ToDataRes(types.Bool)
+	},
+	"kubelet.tlsCipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"kubelet.tlsMinVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetTlsMinVersion()).ToDataRes(types.String)
+	},
 	"python.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPython).GetPath()).ToDataRes(types.String)
 	},
@@ -18146,6 +18191,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kubelet.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKubelet).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"kubelet.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.anonymousAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).AnonymousAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.authorizationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).AuthorizationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.clientCAFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ClientCAFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.readOnlyPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ReadOnlyPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kubelet.streamingConnectionIdleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).StreamingConnectionIdleTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.protectKernelDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ProtectKernelDefaults, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.makeIPTablesUtilChains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).MakeIPTablesUtilChains, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.eventRecordQPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).EventRecordQPS, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsCertFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsCertFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsPrivateKeyFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsPrivateKeyFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.rotateCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).RotateCertificates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.serverTLSBootstrap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ServerTLSBootstrap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsCipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsCipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kubelet.tlsMinVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).TlsMinVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"python.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46130,9 +46235,24 @@ type mqlKubelet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlKubeletInternal it will be used here
-	ConfigFile    plugin.TValue[*mqlFile]
-	Process       plugin.TValue[*mqlProcess]
-	Configuration plugin.TValue[any]
+	ConfigFile                     plugin.TValue[*mqlFile]
+	Process                        plugin.TValue[*mqlProcess]
+	Configuration                  plugin.TValue[any]
+	Version                        plugin.TValue[string]
+	AnonymousAuthEnabled           plugin.TValue[bool]
+	AuthorizationMode              plugin.TValue[string]
+	ClientCAFile                   plugin.TValue[string]
+	ReadOnlyPort                   plugin.TValue[int64]
+	StreamingConnectionIdleTimeout plugin.TValue[string]
+	ProtectKernelDefaults          plugin.TValue[bool]
+	MakeIPTablesUtilChains         plugin.TValue[bool]
+	EventRecordQPS                 plugin.TValue[int64]
+	TlsCertFile                    plugin.TValue[string]
+	TlsPrivateKeyFile              plugin.TValue[string]
+	RotateCertificates             plugin.TValue[bool]
+	ServerTLSBootstrap             plugin.TValue[bool]
+	TlsCipherSuites                plugin.TValue[[]any]
+	TlsMinVersion                  plugin.TValue[string]
 }
 
 // createKubelet creates a new instance of this resource
@@ -46178,6 +46298,96 @@ func (c *mqlKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
 func (c *mqlKubelet) GetConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Configuration, func() (any, error) {
 		return c.configuration()
+	})
+}
+
+func (c *mqlKubelet) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlKubelet) GetAnonymousAuthEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AnonymousAuthEnabled, func() (bool, error) {
+		return c.anonymousAuthEnabled()
+	})
+}
+
+func (c *mqlKubelet) GetAuthorizationMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthorizationMode, func() (string, error) {
+		return c.authorizationMode()
+	})
+}
+
+func (c *mqlKubelet) GetClientCAFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ClientCAFile, func() (string, error) {
+		return c.clientCAFile()
+	})
+}
+
+func (c *mqlKubelet) GetReadOnlyPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadOnlyPort, func() (int64, error) {
+		return c.readOnlyPort()
+	})
+}
+
+func (c *mqlKubelet) GetStreamingConnectionIdleTimeout() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StreamingConnectionIdleTimeout, func() (string, error) {
+		return c.streamingConnectionIdleTimeout()
+	})
+}
+
+func (c *mqlKubelet) GetProtectKernelDefaults() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProtectKernelDefaults, func() (bool, error) {
+		return c.protectKernelDefaults()
+	})
+}
+
+func (c *mqlKubelet) GetMakeIPTablesUtilChains() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MakeIPTablesUtilChains, func() (bool, error) {
+		return c.makeIPTablesUtilChains()
+	})
+}
+
+func (c *mqlKubelet) GetEventRecordQPS() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EventRecordQPS, func() (int64, error) {
+		return c.eventRecordQPS()
+	})
+}
+
+func (c *mqlKubelet) GetTlsCertFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsCertFile, func() (string, error) {
+		return c.tlsCertFile()
+	})
+}
+
+func (c *mqlKubelet) GetTlsPrivateKeyFile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsPrivateKeyFile, func() (string, error) {
+		return c.tlsPrivateKeyFile()
+	})
+}
+
+func (c *mqlKubelet) GetRotateCertificates() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RotateCertificates, func() (bool, error) {
+		return c.rotateCertificates()
+	})
+}
+
+func (c *mqlKubelet) GetServerTLSBootstrap() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServerTLSBootstrap, func() (bool, error) {
+		return c.serverTLSBootstrap()
+	})
+}
+
+func (c *mqlKubelet) GetTlsCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCipherSuites, func() ([]any, error) {
+		return c.tlsCipherSuites()
+	})
+}
+
+func (c *mqlKubelet) GetTlsMinVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TlsMinVersion, func() (string, error) {
+		return c.tlsMinVersion()
 	})
 }
 
