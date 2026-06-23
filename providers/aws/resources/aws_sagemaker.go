@@ -117,13 +117,19 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 }
 
 func (a *mqlAwsSagemakerEndpoint) config() (map[string]any, error) {
-	name := a.Name.Data
+	// The endpoint config has its own name, distinct from the endpoint name;
+	// resolve it via DescribeEndpoint rather than assuming they're equal.
+	details, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Sagemaker(region)
 	ctx := context.Background()
-	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: &name})
+	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: details.EndpointConfigName})
 	if err != nil {
 		return nil, err
 	}
