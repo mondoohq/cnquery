@@ -309,7 +309,10 @@ func (a *mqlAzureSubscriptionAuthorizationService) managedIdentities() ([]any, e
 			assignedRoles := []any{}
 			for i := range roleAssignments {
 				roleAssignment := roleAssignments[i].(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
-				if roleAssignment.PrincipalId == mqlManagedIdentity.PrincipalId {
+				// Compare the principal ID values, not the whole TValue structs
+				// (which also carry State/Error and would only match when those
+				// happen to be identical too).
+				if roleAssignment.PrincipalId.Data == mqlManagedIdentity.PrincipalId.Data {
 					assignedRoles = append(assignedRoles, roleAssignment)
 				}
 			}
