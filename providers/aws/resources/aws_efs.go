@@ -180,12 +180,13 @@ func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{
 		FileSystemId: &id,
 	})
-	var respErr *http.ResponseError
-	if err != nil && errors.As(err, &respErr) {
-		if respErr.HTTPStatusCode() == 404 {
+	if err != nil {
+		// A 404 means the filesystem has no backup policy; treat as absent.
+		// Any other error (403, 5xx, …) must propagate, not be swallowed.
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
 			return nil, nil
 		}
-	} else if err != nil {
 		return nil, err
 	}
 	res, err := convert.JsonToDict(backupPolicy)
