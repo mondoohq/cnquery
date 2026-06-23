@@ -100,7 +100,9 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
-		users[k].Shell = m[k]
+		if u, ok := users[k]; ok {
+			u.Shell = m[k]
+		}
 	}
 
 	// fetch home
@@ -114,7 +116,9 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
-		users[k].Home = m[k]
+		if u, ok := users[k]; ok {
+			u.Home = m[k]
+		}
 	}
 
 	// fetch usernames
@@ -128,7 +132,9 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
-		users[k].Description = m[k]
+		if u, ok := users[k]; ok {
+			u.Description = m[k]
+		}
 	}
 
 	// fetch gid
@@ -142,11 +148,15 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	for k := range m {
+		u, ok := users[k]
+		if !ok {
+			continue
+		}
 		gid, err := strconv.ParseInt(m[k], 10, 0)
 		if err != nil {
 			log.Error().Err(err).Str("user", k).Msg("could not parse gid")
 		}
-		users[k].Gid = gid
+		u.Gid = gid
 	}
 
 	// convert map to slice
