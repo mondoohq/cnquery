@@ -59,6 +59,19 @@ func TestParseStat(t *testing.T) {
 		assert.Equal(t, "0.0.0.0/0", result[0].Destination)
 	})
 
+	t.Run("non-numeric line number yields a descriptive error", func(t *testing.T) {
+		lines := []string{
+			"Chain INPUT (policy ACCEPT 0 packets, 0 bytes)",
+			"num      pkts      bytes target     prot opt in     out     source               destination",
+			"X           0        0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0",
+		}
+		_, err := ParseStat(lines, false)
+		require.Error(t, err)
+		// The diagnostic context must survive (previously it was dropped because
+		// the message was passed as an unused fmt.Errorf argument).
+		assert.Contains(t, err.Error(), "could not parse line number")
+	})
+
 	t.Run("ipv6 with opt field", func(t *testing.T) {
 		lines := []string{
 			"Chain OUTPUT (policy DROP 227 packets, 12904 bytes)",

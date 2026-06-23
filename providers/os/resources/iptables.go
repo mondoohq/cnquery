@@ -884,15 +884,15 @@ func ParseStat(lines []string, ipv6 bool) ([]Stat, error) {
 		}
 		ln, err := strconv.ParseInt(fields[0], 0, 64)
 		if err != nil {
-			return entries, fmt.Errorf(err.Error(), "could not parse line number")
+			return entries, fmt.Errorf("could not parse line number: %w", err)
 		}
 		pkts, err := strconv.ParseInt(fields[1], 0, 64)
 		if err != nil {
-			return entries, fmt.Errorf(err.Error(), "could not parse packets")
+			return entries, fmt.Errorf("could not parse packets: %w", err)
 		}
 		bts, err := strconv.ParseInt(fields[2], 0, 64)
 		if err != nil {
-			return entries, fmt.Errorf(err.Error(), "could not parse bytes")
+			return entries, fmt.Errorf("could not parse bytes: %w", err)
 		}
 		var opts string
 		// combine options if they exist
