@@ -109,11 +109,16 @@ func ParseWithGlob(rootPath string, fileContent fileContentFunc, globExpand glob
 		Params: map[string]any{},
 	}
 
-	parseWithGlobRecursive(cfg, rootPath, content, fileContent, globExpand, working)
+	// visited guards against include cycles (a file that includes itself, or a
+	// loop across files), which would otherwise recurse until the stack
+	// overflows. The root file is seeded as already-visited.
+	visited := map[string]bool{rootPath: true}
+
+	parseWithGlobRecursive(cfg, rootPath, content, fileContent, globExpand, working, visited)
 	return cfg, nil
 }
 
-func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string) {
+func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string, visited map[string]bool) {
 	lines := splitAndClean(content)
 	i := 0
 	for i < len(lines) {
@@ -156,7 +161,7 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 		case "include", "includeoptional":
 			cfg.Includes = append(cfg.Includes, value)
 			if globExpand != nil && fileContent != nil {
-				expandInclude(cfg, value, fileContent, globExpand, keyLower == "includeoptional", vars)
+				expandInclude(cfg, value, fileContent, globExpand, keyLower == "includeoptional", vars, visited)
 			}
 		case "loadmodule":
 			parts := strings.Fields(value)
@@ -257,7 +262,7 @@ func splitDefine(s string) (string, string, bool) {
 	return name, val, true
 }
 
-func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool, vars map[string]string) {
+func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool, vars map[string]string, visited map[string]bool) {
 	paths, err := globExpand(pattern)
 	if err != nil {
 		if !optional {
@@ -267,6 +272,12 @@ func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, glo
 	}
 
 	for _, p := range paths {
+		// Skip files already parsed to avoid infinite recursion on include cycles.
+		if visited[p] {
+			continue
+		}
+		visited[p] = true
+
 		content, err := fileContent(p)
 		if err != nil {
 			if !optional {
@@ -274,7 +285,7 @@ func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, glo
 			}
 			continue
 		}
-		parseWithGlobRecursive(cfg, p, content, fileContent, globExpand, vars)
+		parseWithGlobRecursive(cfg, p, content, fileContent, globExpand, vars, visited)
 	}
 }
 

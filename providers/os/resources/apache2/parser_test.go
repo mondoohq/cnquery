@@ -255,6 +255,56 @@ ServerSignature Off
 	assert.Equal(t, "Off", cfg.Params["ServerSignature"])
 }
 
+func TestParseWithGlobIncludeCycle(t *testing.T) {
+	// Two files that include each other (and the root re-including itself) must
+	// not recurse forever — the visited guard breaks the cycle.
+	files := map[string]string{
+		"/etc/httpd/conf/httpd.conf": `
+ServerName main.example.com
+Include conf.d/a.conf
+`,
+		"/etc/httpd/conf.d/a.conf": `
+ServerTokens Prod
+Include conf.d/b.conf
+`,
+		"/etc/httpd/conf.d/b.conf": `
+ServerSignature Off
+Include conf.d/a.conf
+Include conf/httpd.conf
+`,
+	}
+
+	fileContent := func(path string) (string, error) {
+		if c, ok := files[path]; ok {
+			return c, nil
+		}
+		return "", &fileNotFoundError{path: path}
+	}
+	globExpand := func(pattern string) ([]string, error) {
+		switch pattern {
+		case "conf.d/a.conf":
+			return []string{"/etc/httpd/conf.d/a.conf"}, nil
+		case "conf.d/b.conf":
+			return []string{"/etc/httpd/conf.d/b.conf"}, nil
+		case "conf/httpd.conf":
+			return []string{"/etc/httpd/conf/httpd.conf"}, nil
+		}
+		return nil, nil
+	}
+
+	var cfg *Config
+	var err error
+	require.NotPanics(t, func() {
+		cfg, err = ParseWithGlob("/etc/httpd/conf/httpd.conf", fileContent, globExpand, nil)
+	})
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	// Each file is still parsed exactly once.
+	assert.Equal(t, "main.example.com", cfg.Params["ServerName"])
+	assert.Equal(t, "Prod", cfg.Params["ServerTokens"])
+	assert.Equal(t, "Off", cfg.Params["ServerSignature"])
+}
+
 func TestParseVirtualHostNestedBlocks(t *testing.T) {
 	content := `
 <VirtualHost *:443>
