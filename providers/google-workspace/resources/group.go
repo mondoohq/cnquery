@@ -177,6 +177,107 @@ func (g *mqlGoogleworkspaceGroup) settings() (any, error) {
 	return convert.JsonToDict(settings)
 }
 
+// parseGroupSettingBool converts a Groups Settings API boolean, which the API
+// encodes as the string "true"/"false", into a typed bool.
+func parseGroupSettingBool(s string) bool {
+	return strings.EqualFold(s, "true")
+}
+
+// groupSettingsData is the plain-struct projection of groupssettings.Groups
+// used to build the typed resource. Boolean-valued API fields (returned as
+// "true"/"false" strings) are normalized to Go bools here.
+type groupSettingsData struct {
+	WhoCanJoin                 string
+	WhoCanViewMembership       string
+	WhoCanViewGroup            string
+	WhoCanPostMessage          string
+	WhoCanContactOwner         string
+	WhoCanModerateMembers      string
+	WhoCanModerateContent      string
+	WhoCanDiscoverGroup        string
+	WhoCanLeaveGroup           string
+	AllowExternalMembers       bool
+	AllowWebPosting            bool
+	ArchiveOnly                bool
+	IsArchived                 bool
+	MembersCanPostAsTheGroup   bool
+	IncludeInGlobalAddressList bool
+	EnableCollaborativeInbox   bool
+	MessageModerationLevel     string
+	SpamModerationLevel        string
+}
+
+func groupSettingsToData(settings *groupssettings.Groups) groupSettingsData {
+	return groupSettingsData{
+		WhoCanJoin:                 settings.WhoCanJoin,
+		WhoCanViewMembership:       settings.WhoCanViewMembership,
+		WhoCanViewGroup:            settings.WhoCanViewGroup,
+		WhoCanPostMessage:          settings.WhoCanPostMessage,
+		WhoCanContactOwner:         settings.WhoCanContactOwner,
+		WhoCanModerateMembers:      settings.WhoCanModerateMembers,
+		WhoCanModerateContent:      settings.WhoCanModerateContent,
+		WhoCanDiscoverGroup:        settings.WhoCanDiscoverGroup,
+		WhoCanLeaveGroup:           settings.WhoCanLeaveGroup,
+		AllowExternalMembers:       parseGroupSettingBool(settings.AllowExternalMembers),
+		AllowWebPosting:            parseGroupSettingBool(settings.AllowWebPosting),
+		ArchiveOnly:                parseGroupSettingBool(settings.ArchiveOnly),
+		IsArchived:                 parseGroupSettingBool(settings.IsArchived),
+		MembersCanPostAsTheGroup:   parseGroupSettingBool(settings.MembersCanPostAsTheGroup),
+		IncludeInGlobalAddressList: parseGroupSettingBool(settings.IncludeInGlobalAddressList),
+		EnableCollaborativeInbox:   parseGroupSettingBool(settings.EnableCollaborativeInbox),
+		MessageModerationLevel:     settings.MessageModerationLevel,
+		SpamModerationLevel:        settings.SpamModerationLevel,
+	}
+}
+
+func (g *mqlGoogleworkspaceGroup) groupSettings() (*mqlGoogleworkspaceGroupSettingsConfig, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	service, err := groupSettingsService(conn, groupssettings.AppsGroupsSettingsScope)
+	if err != nil {
+		return nil, err
+	}
+
+	if g.Email.Error != nil {
+		return nil, g.Email.Error
+	}
+	email := g.Email.Data
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+
+	settings, err := service.Groups.Get(email).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	d := groupSettingsToData(settings)
+	res, err := CreateResource(g.MqlRuntime, "googleworkspace.group.settingsConfig", map[string]*llx.RawData{
+		"__id":                       llx.StringData("googleworkspace.group.settingsConfig/" + g.Id.Data),
+		"whoCanJoin":                 llx.StringData(d.WhoCanJoin),
+		"whoCanViewMembership":       llx.StringData(d.WhoCanViewMembership),
+		"whoCanViewGroup":            llx.StringData(d.WhoCanViewGroup),
+		"whoCanPostMessage":          llx.StringData(d.WhoCanPostMessage),
+		"whoCanContactOwner":         llx.StringData(d.WhoCanContactOwner),
+		"whoCanModerateMembers":      llx.StringData(d.WhoCanModerateMembers),
+		"whoCanModerateContent":      llx.StringData(d.WhoCanModerateContent),
+		"whoCanDiscoverGroup":        llx.StringData(d.WhoCanDiscoverGroup),
+		"whoCanLeaveGroup":           llx.StringData(d.WhoCanLeaveGroup),
+		"allowExternalMembers":       llx.BoolData(d.AllowExternalMembers),
+		"allowWebPosting":            llx.BoolData(d.AllowWebPosting),
+		"archiveOnly":                llx.BoolData(d.ArchiveOnly),
+		"isArchived":                 llx.BoolData(d.IsArchived),
+		"membersCanPostAsTheGroup":   llx.BoolData(d.MembersCanPostAsTheGroup),
+		"includeInGlobalAddressList": llx.BoolData(d.IncludeInGlobalAddressList),
+		"enableCollaborativeInbox":   llx.BoolData(d.EnableCollaborativeInbox),
+		"messageModerationLevel":     llx.StringData(d.MessageModerationLevel),
+		"spamModerationLevel":        llx.StringData(d.SpamModerationLevel),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGoogleworkspaceGroupSettingsConfig), nil
+}
+
 func (g *mqlGoogleworkspaceGroup) securitySettings() (any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
 	service, err := cloudIdentityService(conn, cloudidentity.CloudIdentityGroupsReadonlyScope)

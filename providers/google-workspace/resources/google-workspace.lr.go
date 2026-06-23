@@ -33,6 +33,7 @@ const (
 	ResourceGoogleworkspaceToken                string = "googleworkspace.token"
 	ResourceGoogleworkspaceConnectedApp         string = "googleworkspace.connectedApp"
 	ResourceGoogleworkspaceGroup                string = "googleworkspace.group"
+	ResourceGoogleworkspaceGroupSettingsConfig  string = "googleworkspace.group.settingsConfig"
 	ResourceGoogleworkspaceMember               string = "googleworkspace.member"
 	ResourceGoogleworkspaceRole                 string = "googleworkspace.role"
 	ResourceGoogleworkspaceRolePrivilege        string = "googleworkspace.role.privilege"
@@ -115,6 +116,10 @@ func init() {
 		"googleworkspace.group": {
 			// to override args, implement: initGoogleworkspaceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceGroup,
+		},
+		"googleworkspace.group.settingsConfig": {
+			// to override args, implement: initGoogleworkspaceGroupSettingsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceGroupSettingsConfig,
 		},
 		"googleworkspace.member": {
 			// to override args, implement: initGoogleworkspaceMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -246,6 +251,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetEndpoints()).ToDataRes(types.Array(types.Resource("googleworkspace.endpoint")))
+	},
+	"googleworkspace.superAdmins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetSuperAdmins()).ToDataRes(types.Array(types.Resource("googleworkspace.user")))
+	},
+	"googleworkspace.suspendedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetSuspendedUsers()).ToDataRes(types.Array(types.Resource("googleworkspace.user")))
+	},
+	"googleworkspace.usersWithout2sv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetUsersWithout2sv()).ToDataRes(types.Array(types.Resource("googleworkspace.user")))
 	},
 	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
@@ -441,6 +455,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.user.tokens": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetTokens()).ToDataRes(types.Array(types.Resource("googleworkspace.token")))
+	},
+	"googleworkspace.user.hasRecoveryConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetHasRecoveryConfigured()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.hasSshKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetHasSshKeys()).ToDataRes(types.Bool)
 	},
 	"googleworkspace.user.email.address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUserEmail).GetAddress()).ToDataRes(types.String)
@@ -652,6 +672,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.group.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceGroup).GetSecuritySettings()).ToDataRes(types.Dict)
 	},
+	"googleworkspace.group.groupSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroup).GetGroupSettings()).ToDataRes(types.Resource("googleworkspace.group.settingsConfig"))
+	},
+	"googleworkspace.group.settingsConfig.whoCanJoin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanJoin()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanViewMembership": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanViewMembership()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanViewGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanViewGroup()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanPostMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanPostMessage()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanContactOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanContactOwner()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanModerateMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanModerateMembers()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanModerateContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanModerateContent()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanDiscoverGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanDiscoverGroup()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.whoCanLeaveGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetWhoCanLeaveGroup()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.allowExternalMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetAllowExternalMembers()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.allowWebPosting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetAllowWebPosting()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.archiveOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetArchiveOnly()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.isArchived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetIsArchived()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.membersCanPostAsTheGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetMembersCanPostAsTheGroup()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.includeInGlobalAddressList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetIncludeInGlobalAddressList()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.enableCollaborativeInbox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetEnableCollaborativeInbox()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.group.settingsConfig.messageModerationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetMessageModerationLevel()).ToDataRes(types.String)
+	},
+	"googleworkspace.group.settingsConfig.spamModerationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroupSettingsConfig).GetSpamModerationLevel()).ToDataRes(types.String)
+	},
 	"googleworkspace.member.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceMember).GetId()).ToDataRes(types.String)
 	},
@@ -753,6 +830,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportUsage).GetAppUsage()).ToDataRes(types.Dict)
+	},
+	"googleworkspace.report.usage.isDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetIsDisabled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.usage.isSuperAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetIsSuperAdmin()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.usage.is2svEnrolled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetIs2svEnrolled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.usage.is2svEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetIs2svEnforced()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.usage.passwordStrength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetPasswordStrength()).ToDataRes(types.String)
+	},
+	"googleworkspace.report.usage.passwordLengthCompliance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetPasswordLengthCompliance()).ToDataRes(types.String)
+	},
+	"googleworkspace.report.usage.isLessSecureAppsAccessAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetIsLessSecureAppsAccessAllowed()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.report.usage.numAuthorizedApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetNumAuthorizedApps()).ToDataRes(types.Int)
+	},
+	"googleworkspace.report.usage.numSecurityKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetNumSecurityKeys()).ToDataRes(types.Int)
+	},
+	"googleworkspace.report.usage.gmailUsedQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetGmailUsedQuotaInMb()).ToDataRes(types.Int)
+	},
+	"googleworkspace.report.usage.driveUsedQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetDriveUsedQuotaInMb()).ToDataRes(types.Int)
+	},
+	"googleworkspace.report.usage.usedQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceReportUsage).GetUsedQuotaInMb()).ToDataRes(types.Int)
 	},
 	"googleworkspace.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceEndpoint).GetId()).ToDataRes(types.String)
@@ -944,6 +1057,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspace).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.superAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).SuperAdmins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.suspendedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).SuspendedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.usersWithout2sv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).UsersWithout2sv, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1228,6 +1353,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.user.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.hasRecoveryConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).HasRecoveryConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.hasSshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).HasSshKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.user.email.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1550,6 +1683,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceGroup).SecuritySettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.group.groupSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroup).GroupSettings, ok = plugin.RawToTValue[*mqlGoogleworkspaceGroupSettingsConfig](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanJoin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanJoin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanViewMembership": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanViewMembership, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanViewGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanViewGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanPostMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanPostMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanContactOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanContactOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanModerateMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanModerateMembers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanModerateContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanModerateContent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanDiscoverGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanDiscoverGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.whoCanLeaveGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).WhoCanLeaveGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.allowExternalMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).AllowExternalMembers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.allowWebPosting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).AllowWebPosting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.archiveOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).ArchiveOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.isArchived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).IsArchived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.membersCanPostAsTheGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).MembersCanPostAsTheGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.includeInGlobalAddressList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).IncludeInGlobalAddressList, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.enableCollaborativeInbox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).EnableCollaborativeInbox, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.messageModerationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).MessageModerationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.group.settingsConfig.spamModerationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroupSettingsConfig).SpamModerationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceMember).__id, ok = v.Value.(string)
 		return
@@ -1712,6 +1925,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceReportUsage).AppUsage, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.isDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).IsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.isSuperAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).IsSuperAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.is2svEnrolled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).Is2svEnrolled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.is2svEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).Is2svEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.passwordStrength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).PasswordStrength, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.passwordLengthCompliance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).PasswordLengthCompliance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.isLessSecureAppsAccessAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).IsLessSecureAppsAccessAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.numAuthorizedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).NumAuthorizedApps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.numSecurityKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).NumSecurityKeys, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.gmailUsedQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).GmailUsedQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.driveUsedQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).DriveUsedQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.report.usage.usedQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceReportUsage).UsedQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1943,14 +2204,17 @@ type mqlGoogleworkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGoogleworkspaceInternal
-	OrgUnits      plugin.TValue[[]any]
-	Users         plugin.TValue[[]any]
-	Domains       plugin.TValue[[]any]
-	Groups        plugin.TValue[[]any]
-	Roles         plugin.TValue[[]any]
-	ConnectedApps plugin.TValue[[]any]
-	Calendars     plugin.TValue[[]any]
-	Endpoints     plugin.TValue[[]any]
+	OrgUnits        plugin.TValue[[]any]
+	Users           plugin.TValue[[]any]
+	Domains         plugin.TValue[[]any]
+	Groups          plugin.TValue[[]any]
+	Roles           plugin.TValue[[]any]
+	ConnectedApps   plugin.TValue[[]any]
+	Calendars       plugin.TValue[[]any]
+	Endpoints       plugin.TValue[[]any]
+	SuperAdmins     plugin.TValue[[]any]
+	SuspendedUsers  plugin.TValue[[]any]
+	UsersWithout2sv plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -2115,6 +2379,54 @@ func (c *mqlGoogleworkspace) GetEndpoints() *plugin.TValue[[]any] {
 		}
 
 		return c.endpoints()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetSuperAdmins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SuperAdmins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "superAdmins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.superAdmins()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetSuspendedUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SuspendedUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "suspendedUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.suspendedUsers()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetUsersWithout2sv() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsersWithout2sv, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "usersWithout2sv")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usersWithout2sv()
 	})
 }
 
@@ -2509,6 +2821,8 @@ type mqlGoogleworkspaceUser struct {
 	CustomSchemas              plugin.TValue[any]
 	UsageReport                plugin.TValue[*mqlGoogleworkspaceReportUsage]
 	Tokens                     plugin.TValue[[]any]
+	HasRecoveryConfigured      plugin.TValue[bool]
+	HasSshKeys                 plugin.TValue[bool]
 }
 
 // createGoogleworkspaceUser creates a new instance of this resource
@@ -2725,6 +3039,18 @@ func (c *mqlGoogleworkspaceUser) GetTokens() *plugin.TValue[[]any] {
 		}
 
 		return c.tokens()
+	})
+}
+
+func (c *mqlGoogleworkspaceUser) GetHasRecoveryConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasRecoveryConfigured, func() (bool, error) {
+		return c.hasRecoveryConfigured()
+	})
+}
+
+func (c *mqlGoogleworkspaceUser) GetHasSshKeys() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasSshKeys, func() (bool, error) {
+		return c.hasSshKeys()
 	})
 }
 
@@ -3400,6 +3726,7 @@ type mqlGoogleworkspaceGroup struct {
 	Members            plugin.TValue[[]any]
 	Settings           plugin.TValue[any]
 	SecuritySettings   plugin.TValue[any]
+	GroupSettings      plugin.TValue[*mqlGoogleworkspaceGroupSettingsConfig]
 }
 
 // createGoogleworkspaceGroup creates a new instance of this resource
@@ -3497,6 +3824,151 @@ func (c *mqlGoogleworkspaceGroup) GetSecuritySettings() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.SecuritySettings, func() (any, error) {
 		return c.securitySettings()
 	})
+}
+
+func (c *mqlGoogleworkspaceGroup) GetGroupSettings() *plugin.TValue[*mqlGoogleworkspaceGroupSettingsConfig] {
+	return plugin.GetOrCompute[*mqlGoogleworkspaceGroupSettingsConfig](&c.GroupSettings, func() (*mqlGoogleworkspaceGroupSettingsConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.group", c.__id, "groupSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGoogleworkspaceGroupSettingsConfig), nil
+			}
+		}
+
+		return c.groupSettings()
+	})
+}
+
+// mqlGoogleworkspaceGroupSettingsConfig for the googleworkspace.group.settingsConfig resource
+type mqlGoogleworkspaceGroupSettingsConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceGroupSettingsConfigInternal it will be used here
+	WhoCanJoin                 plugin.TValue[string]
+	WhoCanViewMembership       plugin.TValue[string]
+	WhoCanViewGroup            plugin.TValue[string]
+	WhoCanPostMessage          plugin.TValue[string]
+	WhoCanContactOwner         plugin.TValue[string]
+	WhoCanModerateMembers      plugin.TValue[string]
+	WhoCanModerateContent      plugin.TValue[string]
+	WhoCanDiscoverGroup        plugin.TValue[string]
+	WhoCanLeaveGroup           plugin.TValue[string]
+	AllowExternalMembers       plugin.TValue[bool]
+	AllowWebPosting            plugin.TValue[bool]
+	ArchiveOnly                plugin.TValue[bool]
+	IsArchived                 plugin.TValue[bool]
+	MembersCanPostAsTheGroup   plugin.TValue[bool]
+	IncludeInGlobalAddressList plugin.TValue[bool]
+	EnableCollaborativeInbox   plugin.TValue[bool]
+	MessageModerationLevel     plugin.TValue[string]
+	SpamModerationLevel        plugin.TValue[string]
+}
+
+// createGoogleworkspaceGroupSettingsConfig creates a new instance of this resource
+func createGoogleworkspaceGroupSettingsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceGroupSettingsConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.group.settingsConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) MqlName() string {
+	return "googleworkspace.group.settingsConfig"
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanJoin() *plugin.TValue[string] {
+	return &c.WhoCanJoin
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanViewMembership() *plugin.TValue[string] {
+	return &c.WhoCanViewMembership
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanViewGroup() *plugin.TValue[string] {
+	return &c.WhoCanViewGroup
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanPostMessage() *plugin.TValue[string] {
+	return &c.WhoCanPostMessage
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanContactOwner() *plugin.TValue[string] {
+	return &c.WhoCanContactOwner
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanModerateMembers() *plugin.TValue[string] {
+	return &c.WhoCanModerateMembers
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanModerateContent() *plugin.TValue[string] {
+	return &c.WhoCanModerateContent
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanDiscoverGroup() *plugin.TValue[string] {
+	return &c.WhoCanDiscoverGroup
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetWhoCanLeaveGroup() *plugin.TValue[string] {
+	return &c.WhoCanLeaveGroup
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetAllowExternalMembers() *plugin.TValue[bool] {
+	return &c.AllowExternalMembers
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetAllowWebPosting() *plugin.TValue[bool] {
+	return &c.AllowWebPosting
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetArchiveOnly() *plugin.TValue[bool] {
+	return &c.ArchiveOnly
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetIsArchived() *plugin.TValue[bool] {
+	return &c.IsArchived
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetMembersCanPostAsTheGroup() *plugin.TValue[bool] {
+	return &c.MembersCanPostAsTheGroup
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetIncludeInGlobalAddressList() *plugin.TValue[bool] {
+	return &c.IncludeInGlobalAddressList
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetEnableCollaborativeInbox() *plugin.TValue[bool] {
+	return &c.EnableCollaborativeInbox
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetMessageModerationLevel() *plugin.TValue[string] {
+	return &c.MessageModerationLevel
+}
+
+func (c *mqlGoogleworkspaceGroupSettingsConfig) GetSpamModerationLevel() *plugin.TValue[string] {
+	return &c.SpamModerationLevel
 }
 
 // mqlGoogleworkspaceMember for the googleworkspace.member resource
@@ -3936,16 +4408,28 @@ type mqlGoogleworkspaceReportUsage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceReportUsageInternal it will be used here
-	CustomerId plugin.TValue[string]
-	EntityId   plugin.TValue[string]
-	ProfileId  plugin.TValue[string]
-	Type       plugin.TValue[string]
-	UserEmail  plugin.TValue[string]
-	Date       plugin.TValue[*time.Time]
-	Parameters plugin.TValue[[]any]
-	Account    plugin.TValue[any]
-	Security   plugin.TValue[any]
-	AppUsage   plugin.TValue[any]
+	CustomerId                    plugin.TValue[string]
+	EntityId                      plugin.TValue[string]
+	ProfileId                     plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	UserEmail                     plugin.TValue[string]
+	Date                          plugin.TValue[*time.Time]
+	Parameters                    plugin.TValue[[]any]
+	Account                       plugin.TValue[any]
+	Security                      plugin.TValue[any]
+	AppUsage                      plugin.TValue[any]
+	IsDisabled                    plugin.TValue[bool]
+	IsSuperAdmin                  plugin.TValue[bool]
+	Is2svEnrolled                 plugin.TValue[bool]
+	Is2svEnforced                 plugin.TValue[bool]
+	PasswordStrength              plugin.TValue[string]
+	PasswordLengthCompliance      plugin.TValue[string]
+	IsLessSecureAppsAccessAllowed plugin.TValue[bool]
+	NumAuthorizedApps             plugin.TValue[int64]
+	NumSecurityKeys               plugin.TValue[int64]
+	GmailUsedQuotaInMb            plugin.TValue[int64]
+	DriveUsedQuotaInMb            plugin.TValue[int64]
+	UsedQuotaInMb                 plugin.TValue[int64]
 }
 
 // createGoogleworkspaceReportUsage creates a new instance of this resource
@@ -4029,6 +4513,54 @@ func (c *mqlGoogleworkspaceReportUsage) GetAppUsage() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.AppUsage, func() (any, error) {
 		return c.appUsage()
 	})
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetIsDisabled() *plugin.TValue[bool] {
+	return &c.IsDisabled
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetIsSuperAdmin() *plugin.TValue[bool] {
+	return &c.IsSuperAdmin
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetIs2svEnrolled() *plugin.TValue[bool] {
+	return &c.Is2svEnrolled
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetIs2svEnforced() *plugin.TValue[bool] {
+	return &c.Is2svEnforced
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetPasswordStrength() *plugin.TValue[string] {
+	return &c.PasswordStrength
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetPasswordLengthCompliance() *plugin.TValue[string] {
+	return &c.PasswordLengthCompliance
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetIsLessSecureAppsAccessAllowed() *plugin.TValue[bool] {
+	return &c.IsLessSecureAppsAccessAllowed
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetNumAuthorizedApps() *plugin.TValue[int64] {
+	return &c.NumAuthorizedApps
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetNumSecurityKeys() *plugin.TValue[int64] {
+	return &c.NumSecurityKeys
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetGmailUsedQuotaInMb() *plugin.TValue[int64] {
+	return &c.GmailUsedQuotaInMb
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetDriveUsedQuotaInMb() *plugin.TValue[int64] {
+	return &c.DriveUsedQuotaInMb
+}
+
+func (c *mqlGoogleworkspaceReportUsage) GetUsedQuotaInMb() *plugin.TValue[int64] {
+	return &c.UsedQuotaInMb
 }
 
 // mqlGoogleworkspaceEndpoint for the googleworkspace.endpoint resource

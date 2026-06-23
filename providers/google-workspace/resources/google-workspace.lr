@@ -34,6 +34,20 @@ googleworkspace {
   calendars() []googleworkspace.calendar
   // Managed endpoints reported by Google endpoint management and endpoint verification
   endpoints() []googleworkspace.endpoint
+  // Users with super administrator privileges
+  //
+  // Convenience filter over `users` for least-privilege reviews — equivalent
+  // to `users.where(isAdmin)`.
+  superAdmins() []googleworkspace.user
+  // Suspended user accounts
+  //
+  // Convenience filter over `users` — equivalent to `users.where(suspended)`.
+  suspendedUsers() []googleworkspace.user
+  // Active users not enrolled in 2-step verification
+  //
+  // Convenience filter over `users` for MFA-coverage audits — active
+  // (non-suspended, non-archived) users where `isEnrolledIn2Sv` is false.
+  usersWithout2sv() []googleworkspace.user
 }
 
 // Google Workspace calendar
@@ -206,6 +220,18 @@ private googleworkspace.user @defaults("primaryEmail") {
   usageReport() googleworkspace.report.usage
   // Returns the user-issued tokens to 3rd party applications
   tokens() []googleworkspace.token
+  // Whether the user has a recovery email or recovery phone configured
+  //
+  // Convenience predicate over `recoveryEmail` / `recoveryPhone` — true when
+  // either account-recovery channel is set. Recovery channels are an account-
+  // takeover surface, so audits frequently assert their presence (or absence).
+  hasRecoveryConfigured() bool
+  // Whether the user has any SSH public keys registered
+  //
+  // Convenience predicate over `sshPublicKeys` — true when at least one key
+  // is registered. High-signal for audits scoping which identities can SSH
+  // into GCE / POSIX-linked hosts.
+  hasSshKeys() bool
 }
 
 // Secondary email address attached to a Google Workspace user
@@ -414,10 +440,73 @@ private googleworkspace.group @defaults("email") {
   adminCreated bool
   // Retrieve members of the group
   members() []googleworkspace.member
-  // Group settings
-  settings() dict
+  // Group settings as a raw dict
+  //
+  // Deprecated in favor of groupSettings, which exposes the same Groups
+  // Settings API data as typed, queryable fields.
+  settings() @maturity("deprecated") dict
   // Group security settings
   securitySettings() dict
+  // Typed group settings from the Groups Settings API
+  //
+  // Examine sharing and moderation controls used by group-access audits —
+  // who can join, post, and view membership, whether external members and
+  // web posting are allowed, and the moderation levels.
+  groupSettings() googleworkspace.group.settingsConfig
+}
+
+// Google Workspace group settings
+//
+// Examine the sharing, membership, and moderation controls configured on a
+// group through the Groups Settings API — the surface group-access reviews
+// rely on. `whoCanJoin`, `whoCanPostMessage`, and `whoCanViewMembership`
+// report the access posture; `allowExternalMembers` and `allowWebPosting`
+// flag external exposure; the `*ModerationLevel` fields report content and
+// spam handling. Boolean-valued API fields (returned as `"true"`/`"false"`
+// strings by Google) are exposed as typed bools.
+private googleworkspace.group.settingsConfig @defaults("whoCanJoin whoCanPostMessage allowExternalMembers") {
+  // Who can join the group
+  //
+  // One of ANYONE_CAN_JOIN, ALL_IN_DOMAIN_CAN_JOIN, INVITED_CAN_JOIN, or CAN_REQUEST_TO_JOIN.
+  whoCanJoin string
+  // Who can view the group's membership list
+  whoCanViewMembership string
+  // Who can view the group
+  whoCanViewGroup string
+  // Who can post messages to the group
+  whoCanPostMessage string
+  // Who can contact the group owner
+  whoCanContactOwner string
+  // Who can moderate members (approve, ban, remove)
+  whoCanModerateMembers string
+  // Who can moderate content (approve, reject, remove messages)
+  whoCanModerateContent string
+  // Who can discover the group
+  whoCanDiscoverGroup string
+  // Who can leave the group
+  whoCanLeaveGroup string
+  // Whether members external to the organization can join the group
+  allowExternalMembers bool
+  // Whether posting from the web is allowed
+  allowWebPosting bool
+  // Whether the group is in archive-only mode (no new messages delivered)
+  archiveOnly bool
+  // Whether the group's message archive is enabled
+  isArchived bool
+  // Whether members can post as the group
+  membersCanPostAsTheGroup bool
+  // Whether the group is shown in the global address list
+  includeInGlobalAddressList bool
+  // Whether the collaborative inbox is enabled
+  enableCollaborativeInbox bool
+  // The moderation level for incoming messages
+  //
+  // One of MODERATE_ALL_MESSAGES, MODERATE_NON_MEMBERS, MODERATE_NEW_MEMBERS, or MODERATE_NONE.
+  messageModerationLevel string
+  // The moderation level for spam messages
+  //
+  // One of ALLOW, MODERATE, SILENTLY_MODERATE, or REJECT.
+  spamModerationLevel string
 }
 
 // Google Workspace group member
@@ -507,12 +596,44 @@ private googleworkspace.report.usage {
   date time
   // Parameter value pairs
   parameters []dict
-  // Account Settings
-  account() dict
-  // Security Settings
-  security() dict
+  // Account Settings as a raw dict
+  //
+  // Deprecated in favor of the typed isDisabled, isSuperAdmin, is2svEnrolled,
+  // is2svEnforced, passwordStrength, passwordLengthCompliance, and quota
+  // fields on this resource.
+  account() @maturity("deprecated") dict
+  // Security Settings as a raw dict
+  //
+  // Deprecated in favor of the typed is2svEnrolled, is2svEnforced,
+  // isLessSecureAppsAccessAllowed, numAuthorizedApps, and numSecurityKeys
+  // fields on this resource.
+  security() @maturity("deprecated") dict
   // App Usage
   appUsage() dict
+  // Whether the account is disabled
+  isDisabled bool
+  // Whether the account has super administrator privileges
+  isSuperAdmin bool
+  // Whether the user is enrolled in 2-step verification
+  is2svEnrolled bool
+  // Whether 2-step verification is enforced for the user
+  is2svEnforced bool
+  // Password strength reported for the account (for example STRONG or WEAK)
+  passwordStrength string
+  // Whether the account password meets the configured length requirement (for example COMPLIANT)
+  passwordLengthCompliance string
+  // Whether access by less secure apps is allowed for the account
+  isLessSecureAppsAccessAllowed bool
+  // Number of third-party applications the user has authorized
+  numAuthorizedApps int
+  // Number of security keys registered by the user
+  numSecurityKeys int
+  // Gmail storage used by the account in megabytes
+  gmailUsedQuotaInMb int
+  // Drive storage used by the account in megabytes
+  driveUsedQuotaInMb int
+  // Total storage used by the account in megabytes
+  usedQuotaInMb int
 }
 
 // Managed endpoint device
