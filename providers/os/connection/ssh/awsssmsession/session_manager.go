@@ -144,7 +144,7 @@ func (a *AwsSsmSessionConnection) Close() error {
 			return err
 		}
 		if processerr != nil {
-			return err
+			return processerr
 		}
 	}
 	return nil
