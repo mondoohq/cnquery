@@ -873,7 +873,7 @@ func TestCompiler_Switch(t *testing.T) {
 					// will already be available for any blocks
 					llx.RefPrimitiveV2((1 << 32) | 1),
 				}, types.Ref),
-				llx.BoolPrimitive(true),
+				llx.UnsetPrimitive,
 				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{
 					// TODO: this shouldn't be needed

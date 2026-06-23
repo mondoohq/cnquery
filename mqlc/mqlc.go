@@ -545,9 +545,12 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 }
 
 func (c *compiler) compileSwitchCase(expression *parser.Expression, bind *variable, chunk *llx.Chunk) error {
-	// for the default case, we get a nil expression
+	// for the default case, we get a nil expression. We mark it with an unset
+	// primitive (not `BoolPrimitive(true)`) so the runtime can tell the default
+	// apart from a real case whose condition happens to be a constant boolean,
+	// e.g. `case true:` / `case false:`. See mondoohq/mql#1174.
 	if expression == nil {
-		chunk.Function.Args = append(chunk.Function.Args, llx.BoolPrimitive(true))
+		chunk.Function.Args = append(chunk.Function.Args, llx.UnsetPrimitive)
 		return nil
 	}
 

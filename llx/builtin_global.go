@@ -128,7 +128,10 @@ func switchCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, 
 	max := len(f.Args)
 	defaultCaseIdx := -1
 	for idx+2 < max {
-		if types.Type(f.Args[idx].Type) == types.Bool {
+		// the default case is marked with an unset condition primitive by the
+		// compiler, so it can be told apart from a real case with a constant
+		// boolean condition (`case true:` / `case false:`). See mondoohq/mql#1174.
+		if types.Type(f.Args[idx].Type) == types.Unset {
 			defaultCaseIdx = idx
 			idx += 3
 			continue
