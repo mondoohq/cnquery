@@ -236,15 +236,19 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]any, error) 
 
 	res := []any{}
 	for _, roleAssignment := range roleAssignments {
-		principal, err := convert.JsonToDict(newDirectoryPrincipal(roleAssignment.GetPrincipal()))
+		directoryPrincipal := roleAssignment.GetPrincipal()
+		principal, err := convert.JsonToDict(newDirectoryPrincipal(directoryPrincipal))
 		if err != nil {
 			return nil, err
 		}
+		principalType, principalName := directoryPrincipalInfo(directoryPrincipal)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roleassignment",
 			map[string]*llx.RawData{
 				"id":               llx.StringDataPtr(roleAssignment.GetId()),
 				"roleDefinitionId": llx.StringDataPtr(roleAssignment.GetRoleDefinitionId()),
 				"principalId":      llx.StringDataPtr(roleAssignment.GetPrincipalId()),
+				"principalType":    llx.StringData(principalType),
+				"principalName":    llx.StringData(principalName),
 				"principal":        llx.DictData(principal),
 			})
 		if err != nil {
