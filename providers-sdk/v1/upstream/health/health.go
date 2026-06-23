@@ -23,6 +23,12 @@ type Status struct {
 }
 
 func CheckApiHealth(httpClient *http.Client, endpoint string) (Status, error) {
+	return CheckApiHealthContext(context.Background(), httpClient, endpoint)
+}
+
+// CheckApiHealthContext behaves like CheckApiHealth but honors the provided
+// context, so callers can bound the health check with a deadline or cancel it.
+func CheckApiHealthContext(ctx context.Context, httpClient *http.Client, endpoint string) (Status, error) {
 	status := Status{}
 	status.API.Endpoint = endpoint
 
@@ -31,7 +37,7 @@ func CheckApiHealth(httpClient *http.Client, endpoint string) (Status, error) {
 	if err != nil {
 		return status, err
 	}
-	healthResp, err := healthClient.Check(context.Background(), &HealthCheckRequest{})
+	healthResp, err := healthClient.Check(ctx, &HealthCheckRequest{})
 	if err != nil {
 		return status, err
 	} else {

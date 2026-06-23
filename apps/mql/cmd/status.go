@@ -33,6 +33,10 @@ func init() {
 	rootCmd.AddCommand(StatusCmd)
 }
 
+// statusTimeout bounds the total time the status command spends on network
+// calls so it cannot hang indefinitely when the API is unreachable.
+const statusTimeout = 30 * time.Second
+
 // StatusCmd represents the version command
 var StatusCmd = &cobra.Command{
 	Use:   "status",
@@ -48,7 +52,12 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 
 		config.DisplayUsedConfig()
 
-		s, err := checkStatus()
+		// Bound all network calls with a deadline so the command cannot hang
+		// indefinitely when the API is unreachable.
+		ctx, cancel := context.WithTimeout(cmd.Context(), statusTimeout)
+		defer cancel()
+
+		s, err := checkStatus(ctx)
 		if err != nil {
 			return err
 		}
@@ -59,7 +68,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		case "json":
 			s.RenderJson()
 		default:
-			s.RenderCliStatus()
+			s.RenderCliStatus(ctx)
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {
@@ -71,7 +80,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 	},
 }
 
-func checkStatus() (Status, error) {
+func checkStatus(ctx context.Context) (Status, error) {
 	s := Status{
 		Client: ClientStatus{
 			Timestamp: time.Now().Format(time.RFC3339),
@@ -98,7 +107,7 @@ func checkStatus() (Status, error) {
 	}
 
 	// check server health and clock skew
-	upstreamStatus, err := health.CheckApiHealth(httpClient, opts.UpstreamApiEndpoint())
+	upstreamStatus, err := health.CheckApiHealthContext(ctx, httpClient, opts.UpstreamApiEndpoint())
 	if err != nil {
 		log.Error().Err(err).Msg("could not check upstream health")
 	}
@@ -113,7 +122,7 @@ func checkStatus() (Status, error) {
 
 	// Fetch latest version using the configured updates URL
 	releaseURL := s.Client.UpdatesURL + "/mql/latest.json?ignoreCache=1"
-	latestVersion, err := mql.GetLatestReleaseName(releaseURL, httpClient)
+	latestVersion, err := mql.GetLatestReleaseNameContext(ctx, releaseURL, httpClient)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get latest version")
 	}
@@ -143,7 +152,7 @@ func checkStatus() (Status, error) {
 		// try to ping the server
 		client, err := upstream.NewAgentManagerClient(s.Upstream.API.Endpoint, httpClient, plugins...)
 		if err == nil {
-			_, err = client.PingPong(context.Background(), &upstream.Ping{})
+			_, err = client.PingPong(ctx, &upstream.Ping{})
 			if err != nil {
 				s.Client.PingPongError = err
 			}
@@ -192,7 +201,7 @@ type ClientStatus struct {
 	ProvidersURL   string              `json:"providersUrl,omitempty"`
 }
 
-func (s Status) RenderCliStatus() {
+func (s Status) RenderCliStatus(ctx context.Context) {
 	if s.Client.Platform != nil {
 		agent := s.Client
 		log.Info().Msg("Platform:\t\t" + agent.Platform.Name)
@@ -217,7 +226,7 @@ func (s Status) RenderCliStatus() {
 	log.Info().Msg("Updates URL:\t\t" + s.Client.UpdatesURL)
 	log.Info().Msg("Providers URL:\t" + s.Client.ProvidersURL)
 
-	installed, outdated, err := getProviders()
+	installed, outdated, err := getProviders(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get provider info")
 	}
@@ -281,7 +290,7 @@ func (s Status) RenderYaml() {
 	os.Stdout.Write(output)
 }
 
-func getProviders() ([]string, []string, error) {
+func getProviders(ctx context.Context) ([]string, []string, error) {
 	var installed []string
 	var outdated []string
 
@@ -293,11 +302,13 @@ func getProviders() ([]string, []string, error) {
 	for _, provider := range allProviders {
 		installed = append(installed, provider.Name)
 		if errCircuitBreaker == nil {
-			latestVersion, err := providers.LatestVersion(context.Background(), provider.Name)
+			latestVersion, err := providers.LatestVersion(ctx, provider.Name)
 			if err != nil {
-				// If we get a connection refused, we assume this will happen for all providers
-				// so we will return early
-				if errors.Is(err, syscall.ECONNREFUSED) {
+				// If we get a connection refused or the deadline expires, we assume
+				// this will happen for all providers, so we stop checking versions.
+				if errors.Is(err, syscall.ECONNREFUSED) ||
+					errors.Is(err, context.DeadlineExceeded) ||
+					errors.Is(err, context.Canceled) {
 					errCircuitBreaker = err
 				}
 				continue
