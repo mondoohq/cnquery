@@ -440,8 +440,8 @@ github.com/zclconf/go-cty v1.18.1 h1:yEGE8M4iIZlyKQURZNb2SnEyZlZHUcBCnx6KF81KuwM
 github.com/zclconf/go-cty v1.18.1/go.mod h1:qpnV6EDNgC1sns/AleL1fvatHw72j+S+nS+MJ+T2CSg=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940 h1:4r45xpDWB6ZMSMNJFMOjqrGHynW3DIBuR2H9j0ug+Mo=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940/go.mod h1:CmBdvvj3nqzfzJ6nTCIwDTPZ56aVGvDrmztiO5g3qrM=
-go.mondoo.com/mondoo-go v0.0.0-20260622135029-f8be23d7b004 h1:TFWeLMOBUKb31kELLlaifntW4WgQ39Hrx7bUrKzcL0A=
-go.mondoo.com/mondoo-go v0.0.0-20260622135029-f8be23d7b004/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mondoo-go v0.0.0-20260623125320-d927c90131ce h1:5aMohtAnGJIG+HBxb89tkSXvhXH2vEnFLvQLJwCd7oQ=
+go.mondoo.com/mondoo-go v0.0.0-20260623125320-d927c90131ce/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
 go.mondoo.com/ranger-rpc v0.8.0 h1:iBY34IhtPNPnEOZ9eS5t3Gp28HiTuv/M0SaHiBiRJlI=
 go.mondoo.com/ranger-rpc v0.8.0/go.mod h1:JbxC6J5d0pQwVGZ9efmq7amMzasEETKH80zPd0TcBug=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=

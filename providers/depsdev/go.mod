@@ -7,7 +7,7 @@ go 1.26.3
 require (
 	github.com/cockroachdb/errors v1.14.0
 	github.com/rs/zerolog v1.35.1
-	go.mondoo.com/mql/v13 v13.23.0
+	go.mondoo.com/mql/v13 v13.24.0
 	golang.org/x/mod v0.37.0
 )
 

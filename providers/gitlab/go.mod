@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	gitlab.com/gitlab-org/api/client-go v1.46.0
-	go.mondoo.com/mql/v13 v13.23.0
+	go.mondoo.com/mql/v13 v13.24.0
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
 )
 

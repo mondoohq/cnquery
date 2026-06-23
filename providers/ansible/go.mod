@@ -6,7 +6,7 @@ replace go.mondoo.com/mql/v13 => ../..
 
 require (
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.23.0
+	go.mondoo.com/mql/v13 v13.24.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

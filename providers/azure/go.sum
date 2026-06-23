@@ -80,8 +80,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cdn/armcdn/v2 v2.2.0 h1:kk
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cdn/armcdn/v2 v2.2.0/go.mod h1:pVreHmvznJ/D5Aqr8ZRO0UQx6VXJi84b7oYl0BgrWVo=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cognitiveservices/armcognitiveservices/v3 v3.0.0 h1:bYrZmRrdh61p92AMzz3tdI9e6SDidq4hUPUS/dFRg/8=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cognitiveservices/armcognitiveservices/v3 v3.0.0/go.mod h1:zf/MfKPM8qICo/InKfzHaFYsBp3MzWYL7/rjnrkbySM=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8 v8.0.0 h1:u8rqju4D8EUA/rDFA15vYlaEKFQZnAGHF+J6n35CfsU=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8 v8.0.0/go.mod h1:Npel16aQ3M16PODxqXx+j9IUfW+GUBRWSFoH++VSvgE=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8 v8.1.0 h1:NOptf7OJveKQlKX4meGgb7L6xDIK+94MD6qnlmBOW2Y=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8 v8.1.0/go.mod h1:E+lMyo/54sqYcxG3b2DJP+aUp2xP3VVDcYdyNYKdu74=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2 v2.4.0 h1:+dIXMjlifRbG3d01DF8dwckUSXADuW5dgBNt1fbkpv0=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2 v2.4.0/go.mod h1:FN0UJ15tJ7kV7JYrYAleEq44Ew1cUiyLcJrfrTxHGd0=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry/v3 v3.0.0 h1:07oYAINVqsub90MrYYdlTSwNSwqOM4OAAg5+35OMqn0=
@@ -922,8 +922,8 @@ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5t
 go.etcd.io/etcd/api/v3 v3.5.1/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.1/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.1/go.mod h1:pMEacxZW7o8pg4CrFE7pquyCJJzZvkvdD2RibOCCCGs=
-go.mondoo.com/mondoo-go v0.0.0-20260622135029-f8be23d7b004 h1:TFWeLMOBUKb31kELLlaifntW4WgQ39Hrx7bUrKzcL0A=
-go.mondoo.com/mondoo-go v0.0.0-20260622135029-f8be23d7b004/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mondoo-go v0.0.0-20260623125320-d927c90131ce h1:5aMohtAnGJIG+HBxb89tkSXvhXH2vEnFLvQLJwCd7oQ=
+go.mondoo.com/mondoo-go v0.0.0-20260623125320-d927c90131ce/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
 go.mondoo.com/ranger-rpc v0.8.0 h1:iBY34IhtPNPnEOZ9eS5t3Gp28HiTuv/M0SaHiBiRJlI=
 go.mondoo.com/ranger-rpc v0.8.0/go.mod h1:JbxC6J5d0pQwVGZ9efmq7amMzasEETKH80zPd0TcBug=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

@@ -32,7 +32,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.13.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.2.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.3.0
-	go.mondoo.com/mql/v13 v13.23.0
+	go.mondoo.com/mql/v13 v13.24.0
 )
 
 require (
