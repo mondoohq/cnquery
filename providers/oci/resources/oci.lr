@@ -426,7 +426,11 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   internetReachable bool
   // Whether the resource has a public IP
   hasPublicIp bool
-  // Whether an attached network security group (or, for compute, an unrestricted subnet with no NSG attached) admits inbound traffic from any address
+  // Whether an attached network security group admits inbound traffic from any address
+  //
+  // True also when no NSG is attached (OCI's default open posture). For compute,
+  // the subnet's internet-ingress policy is applied only to internetReachable,
+  // not here.
   securityGroupAllowsIngress bool
   // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0); for a load balancer, the listeners reachable from the internet
   openIngressRules []dict

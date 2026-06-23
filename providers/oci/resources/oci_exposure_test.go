@@ -46,6 +46,35 @@ func TestOciNsgRuleOpensIngress(t *testing.T) {
 	}
 }
 
+func TestOciNsgIngressVerdict(t *testing.T) {
+	open := map[string]any{"direction": "INGRESS", "sourceType": "CIDR_BLOCK", "source": "0.0.0.0/0"}
+	specific := map[string]any{"direction": "INGRESS", "sourceType": "CIDR_BLOCK", "source": "1.2.3.4/32"}
+
+	cases := []struct {
+		name          string
+		sets          [][]map[string]any
+		wantAllows    bool
+		wantOpenCount int
+	}{
+		{"no NSG attached is open", nil, true, 0},
+		{"empty outer slice is open", [][]map[string]any{}, true, 0},
+		{"one NSG with empty rule list is closed", [][]map[string]any{{}}, false, 0},
+		{"one NSG only specific rules is closed", [][]map[string]any{{specific}}, false, 0},
+		{"one NSG with an any-address rule is open", [][]map[string]any{{open}}, true, 1},
+		{"two NSGs one empty one open is open", [][]map[string]any{{}, {open}}, true, 1},
+		{"two NSGs both closed is closed", [][]map[string]any{{specific}, {}}, false, 0},
+	}
+	for _, c := range cases {
+		openRules, allows := ociNsgIngressVerdict(c.sets)
+		if allows != c.wantAllows {
+			t.Errorf("ociNsgIngressVerdict(%s) allows = %v, want %v", c.name, allows, c.wantAllows)
+		}
+		if len(openRules) != c.wantOpenCount {
+			t.Errorf("ociNsgIngressVerdict(%s) openRules len = %d, want %d", c.name, len(openRules), c.wantOpenCount)
+		}
+	}
+}
+
 func TestOciWhitelistOpensInternet(t *testing.T) {
 	cases := []struct {
 		name   string

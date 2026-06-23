@@ -40,7 +40,7 @@ func ociNsgRuleOpensIngress(rule map[string]any) bool {
 // which OCI leaves open, so an empty NSG set counts as admitting ingress (the
 // "no firewall == open" convention shared with the other providers).
 func ociCollectOpenNsgRules(nsgs []any) ([]any, bool, error) {
-	openRules := []any{}
+	ruleSets := make([][]map[string]any, 0, len(nsgs))
 	for _, g := range nsgs {
 		nsg, ok := g.(*mqlOciNetworkNetworkSecurityGroup)
 		if !ok {
@@ -50,13 +50,35 @@ func ociCollectOpenNsgRules(nsgs []any) ([]any, bool, error) {
 		if rules.Error != nil {
 			return nil, false, rules.Error
 		}
+		set := make([]map[string]any, 0, len(rules.Data))
 		for _, r := range rules.Data {
-			if rule, ok := r.(map[string]any); ok && ociNsgRuleOpensIngress(rule) {
+			if rule, ok := r.(map[string]any); ok {
+				set = append(set, rule)
+			}
+		}
+		ruleSets = append(ruleSets, set)
+	}
+	openRules, allowsIngress := ociNsgIngressVerdict(ruleSets)
+	return openRules, allowsIngress, nil
+}
+
+// ociNsgIngressVerdict evaluates the ingress rules of a set of attached network
+// security groups (one inner slice of rule dicts per NSG) and returns the rules
+// that admit traffic from any address, plus whether the set admits ingress at
+// all. No NSG attached (an empty outer slice) falls back to the subnet's default
+// posture, which OCI leaves open, so it counts as admitting ingress. NSGs that
+// are attached but whose rules never match — including NSGs with empty rule
+// lists — are a deliberate lock-down and count as closed.
+func ociNsgIngressVerdict(nsgRuleSets [][]map[string]any) ([]any, bool) {
+	openRules := []any{}
+	for _, rules := range nsgRuleSets {
+		for _, rule := range rules {
+			if ociNsgRuleOpensIngress(rule) {
 				openRules = append(openRules, rule)
 			}
 		}
 	}
-	return openRules, len(nsgs) == 0 || len(openRules) > 0, nil
+	return openRules, len(nsgRuleSets) == 0 || len(openRules) > 0
 }
 
 // ociWhitelistOpensInternet reports whether an Autonomous Database access-control
@@ -96,7 +118,7 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 	}
 
 	hasPublicIp := false
-	ingressAllowed := false
+	securityGroupAllowsIngress := false
 	internetReachable := false
 	openRules := []any{}
 
@@ -141,8 +163,14 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		}
 		openRules = append(openRules, vnicOpenRules...)
 
+		// securityGroupAllowsIngress reflects the NSG verdict alone, so it is not
+		// muddied by the subnet gate (a user seeing it false can conclude no NSG
+		// admits traffic). The subnet's internet-ingress policy is applied only to
+		// internetReachable.
+		if nsgAllows {
+			securityGroupAllowsIngress = true
+		}
 		if !subnetProhibits && nsgAllows {
-			ingressAllowed = true
 			if vnicHasPublicIp {
 				internetReachable = true
 			}
@@ -153,7 +181,7 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		"__id":                       llx.StringData("oci.compute.instance/" + id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
-		"securityGroupAllowsIngress": llx.BoolData(ingressAllowed),
+		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
 		"openIngressRules":           llx.ArrayData(openRules, types.Dict),
 	})
 	if err != nil {
