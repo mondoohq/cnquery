@@ -30,7 +30,7 @@ func main() {
 	normalizeAutoUpdateFlag()
 
 	// Check for self-update before anything else
-	if shouldTrySelfUpdate() {
+	if run, localOnly := selfUpdateMode(); run {
 		releaseURL := selfupdate.DefaultReleaseURL
 		if updatesURL := config.GetUpdatesURL(); updatesURL != "" {
 			releaseURL = updatesURL + "/mql/latest.json"
@@ -42,7 +42,13 @@ func main() {
 			BinaryName:      "mql",
 			CurrentVersion:  mql.GetVersion(),
 		}
-		if updated, err := selfupdate.CheckAndUpdate(cfg); err != nil {
+		// "version" does only the local switch (no network) so it stays fast while
+		// still reporting the version that other commands transparently exec into.
+		check := selfupdate.CheckAndUpdate
+		if localOnly {
+			check = selfupdate.CheckLocalAndUpdate
+		}
+		if updated, err := check(cfg); err != nil {
 			// Log warning but don't block - only show in debug mode
 			if os.Getenv("DEBUG") != "" {
 				os.Stderr.WriteString("self-update check failed: " + err.Error() + "\n")
@@ -89,23 +95,34 @@ func normalizeAutoUpdateFlag() {
 	os.Args = newArgs
 }
 
-// shouldTrySelfUpdate checks if a self-update should be attempted.
-// This uses viper config and CLI flags to determine if auto-update is enabled.
+// selfUpdateMode decides whether a self-update should be attempted, and whether
+// it must stay local-only (no network). It uses viper config and CLI flags to
+// determine if auto-update is enabled.
+//
+// The "version" command runs a local-only check: it must not pay a network
+// round-trip, but it still has to switch to a newer already-staged binary so it
+// reports the same version every other command transparently execs into (see
+// issue #7751). "help"/"-h" skip self-update entirely.
+//
 // Note: normalizeAutoUpdateFlag() must be called before this function to convert
 // space-separated flags (--auto-update false) to the = format (--auto-update=false).
-func shouldTrySelfUpdate() bool {
+func selfUpdateMode() (run, localOnly bool) {
 	// Skip if disabled via environment variable
 	// This also prevents infinite loops after an update (the updated process
 	// is spawned with MONDOO_AUTO_UPDATE=false)
 	if val := os.Getenv(selfupdate.EnvAutoUpdate); val == "false" || val == "0" {
-		return false
+		return false, false
 	}
 
-	// Skip for version/help commands - these should run fast
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
-		case "version", "help", "--help", "-h", "--version":
-			return false
+		case "help", "--help", "-h":
+			// Help output never represents "the version I'm running" and should
+			// be instant, so skip self-update entirely.
+			return false, false
+		case "version", "--version":
+			// Report the effective version without a network round-trip.
+			localOnly = true
 		}
 	}
 
@@ -114,7 +131,7 @@ func shouldTrySelfUpdate() bool {
 
 	// Check if the AutoUpdateEngine feature flag is enabled
 	if !config.GetFeatures().IsActive(mql.AutoUpdateEngine) {
-		return false
+		return false, false
 	}
 
 	// Get auto_update setting from config (defaults to true if not set)
@@ -123,12 +140,12 @@ func shouldTrySelfUpdate() bool {
 	// Check for --auto-update=VALUE flag (already normalized from space-separated format)
 	for _, arg := range os.Args {
 		if arg == "--auto-update=false" || arg == "--auto-update=0" {
-			return false
+			return false, false
 		}
 		if arg == "--auto-update=true" || arg == "--auto-update=1" {
-			return true
+			return true, localOnly
 		}
 	}
 
-	return autoUpdate
+	return autoUpdate, localOnly
 }

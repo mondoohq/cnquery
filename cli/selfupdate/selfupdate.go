@@ -78,40 +78,68 @@ type ReleaseFile struct {
 	Hash     string `json:"hash"`     // SHA256 hash
 }
 
-// CheckAndUpdate checks for updates and installs them if available.
-// Returns true if an update was installed and the process was replaced.
-func CheckAndUpdate(cfg Config) (bool, error) {
+// updatePreflight runs the guards shared by every self-update entry point and
+// resolves the bin path, platform binary name, and current version. ok is false
+// when self-update must be skipped entirely (disabled via config or environment,
+// or running a dev build); in that case the caller returns (false, err).
+func updatePreflight(cfg Config) (binPath, binName, currentVersion string, ok bool, err error) {
 	if !cfg.Enabled {
-		return false, nil
+		return "", "", "", false, nil
 	}
 
 	// Skip if auto-update is disabled via environment (disables both engine and providers)
 	if val := os.Getenv(EnvAutoUpdate); val == "false" || val == "0" {
 		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdate)
-		return false, nil
+		return "", "", "", false, nil
 	}
 
 	// Skip if engine auto-update is specifically disabled (e.g., after a binary self-update
 	// to prevent infinite loops, or when the user only wants provider auto-updates)
 	if val := os.Getenv(EnvAutoUpdateEngine); val == "false" || val == "0" {
 		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdateEngine)
-		return false, nil
+		return "", "", "", false, nil
 	}
 
 	// Skip if version is "rolling" (dev build)
-	currentVersion := cfg.CurrentVersion
+	currentVersion = cfg.CurrentVersion
 	if strings.HasSuffix(currentVersion, "-rolling") {
 		log.Debug().Msg("self-update: skipping, running unstable/dev build")
-		return false, nil
+		return "", "", "", false, nil
 	}
 
 	// Get the bin path for storing updated binaries
-	binPath, err := getBinPath()
+	binPath, err = getBinPath()
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get bin path")
+		return "", "", "", false, errors.Wrap(err, "failed to get bin path")
 	}
 
-	binName := platformBinaryName(cfg.BinaryName)
+	binName = platformBinaryName(cfg.BinaryName)
+	return binPath, binName, currentVersion, true, nil
+}
+
+// CheckLocalAndUpdate runs only the local portion of the self-update flow: if a
+// newer binary has already been staged in the bin path, it execs into it. It
+// performs no network access, so it is fast enough to run on quick commands like
+// "version" that still need to report the effective version after an update has
+// been staged (otherwise they report the stale compiled-in version while every
+// other command transparently execs into the newer binary).
+// Returns true if the process was (or is about to be) replaced by the new binary.
+func CheckLocalAndUpdate(cfg Config) (bool, error) {
+	binPath, binName, currentVersion, ok, err := updatePreflight(cfg)
+	if err != nil || !ok {
+		return false, err
+	}
+
+	return execLocalIfNewer(binPath, binName, currentVersion)
+}
+
+// CheckAndUpdate checks for updates and installs them if available.
+// Returns true if an update was installed and the process was replaced.
+func CheckAndUpdate(cfg Config) (bool, error) {
+	binPath, binName, currentVersion, ok, err := updatePreflight(cfg)
+	if err != nil || !ok {
+		return false, err
+	}
 
 	// First, check if there's already a newer binary installed locally.
 	// This allows us to immediately use an already-downloaded update without
