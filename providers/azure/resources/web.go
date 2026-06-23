@@ -285,7 +285,11 @@ func computeWebAppStack(runtime *plugin.Runtime, config *mqlAzureSubscriptionWeb
 
 		fxversion := strings.Split(*properties.LinuxFxVersion, "|")
 		runtimeInfo.Name = strings.ToLower(fxversion[0])
-		runtimeInfo.MinorVersion = strings.ToLower(fxversion[1])
+		// Some LinuxFxVersion values (e.g. a bare "DOCKER" or a custom image
+		// string) have no "|version" suffix; only read it when present.
+		if len(fxversion) > 1 {
+			runtimeInfo.MinorVersion = strings.ToLower(fxversion[1])
+		}
 	} else {
 		metadataMap, ok := metadata.(map[string]any)
 		if !ok {
