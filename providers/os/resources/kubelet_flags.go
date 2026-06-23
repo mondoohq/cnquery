@@ -65,6 +65,21 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]any, flags map[string]any) er
 	return nil
 }
 
+// parseKeyValueListFlag parses a comma-separated `key=value` flag list into a
+// map. Entries without a `=` are skipped rather than indexed out of range,
+// which previously panicked on malformed input (e.g. a trailing comma).
+func parseKeyValueListFlag(s string) map[string]string {
+	res := map[string]string{}
+	for _, item := range strings.Split(s, ",") {
+		kv := strings.SplitN(strings.TrimSpace(item), "=", 2)
+		if len(kv) < 2 {
+			continue
+		}
+		res[kv[0]] = kv[1]
+	}
+	return res
+}
+
 // mergeDeprecatedFlagsIntoConfig merges deprecated cli flags into the kubelet config
 // It only takes care of deprecated flags.
 // This is a separate function in hope we can get rid of it in the future
@@ -282,12 +297,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["volumeStatsAggPeriod"] = flags["volume-stats-agg-period"]
 	}
 	if _, ok := flags["feature-gates"]; ok {
-		featureFlags := map[string]string{}
-		for _, feature := range strings.Split(flags["feature-gates"].(string), ",") {
-			featureSplit := strings.Split(feature, "=")
-			featureFlags[featureSplit[0]] = featureSplit[1]
-		}
-		data, err := convert.JsonToDict(featureFlags)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["feature-gates"].(string)))
 		if err != nil {
 			return err
 		}
@@ -315,12 +325,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["cpuManagerPolicy"] = flags["cpu-manager-policy"]
 	}
 	if _, ok := flags["cpu-manager-policy-options"]; ok {
-		cpuPolicies := map[string]string{}
-		for _, cpuPolicy := range strings.Split(flags["cpu-manager-policy-options"].(string), ",") {
-			cpuPolicySplit := strings.Split(cpuPolicy, "=")
-			cpuPolicies[cpuPolicySplit[0]] = cpuPolicySplit[1]
-		}
-		data, err := convert.JsonToDict(cpuPolicies)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["cpu-manager-policy-options"].(string)))
 		if err != nil {
 			return err
 		}
@@ -330,12 +335,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["cpuManagerReconcilePeriod"] = flags["cpu-manager-reconcile-period"]
 	}
 	if _, ok := flags["qos-reserved"]; ok {
-		qosReserved := map[string]string{}
-		for _, qosReserve := range strings.Split(flags["qos-reserved"].(string), ",") {
-			qosReserveSplit := strings.Split(qosReserve, "=")
-			qosReserved[qosReserveSplit[0]] = qosReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(qosReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["qos-reserved"].(string)))
 		if err != nil {
 			return err
 		}
@@ -447,12 +447,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["evictionSoft"] = data
 	}
 	if _, ok := flags["eviction-soft-grace-period"]; ok {
-		softPeriods := map[string]string{}
-		for _, softPeriod := range strings.Split(flags["eviction-soft-grace-period"].(string), ",") {
-			softPeriodSplit := strings.Split(softPeriod, "=")
-			softPeriods[softPeriodSplit[0]] = softPeriodSplit[1]
-		}
-		data, err := convert.JsonToDict(softPeriods)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["eviction-soft-grace-period"].(string)))
 		if err != nil {
 			return err
 		}
@@ -465,12 +460,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["evictionMaxPodGracePeriod"] = flags["eviction-max-pod-grace-period"]
 	}
 	if _, ok := flags["eviction-minimum-reclaim"]; ok {
-		minReclaims := map[string]string{}
-		for _, minReclaim := range strings.Split(flags["eviction-minimum-reclaim"].(string), ",") {
-			minReclaimSplit := strings.Split(minReclaim, "=")
-			minReclaims[minReclaimSplit[0]] = minReclaimSplit[1]
-		}
-		data, err := convert.JsonToDict(minReclaims)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["eviction-minimum-reclaim"].(string)))
 		if err != nil {
 			return err
 		}
@@ -489,24 +479,14 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]any, flags map[stri
 		kubeletConfig["topologyManagerScope"] = flags["topology-manager-scope"]
 	}
 	if _, ok := flags["system-reserved"]; ok {
-		systemReserved := map[string]string{}
-		for _, systemReserve := range strings.Split(flags["system-reserved"].(string), ",") {
-			systemReserveSplit := strings.Split(systemReserve, "=")
-			systemReserved[systemReserveSplit[0]] = systemReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(systemReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["system-reserved"].(string)))
 		if err != nil {
 			return err
 		}
 		kubeletConfig["systemReserved"] = data
 	}
 	if _, ok := flags["kube-reserved"]; ok {
-		kubeReserved := map[string]string{}
-		for _, kubeReserve := range strings.Split(flags["kube-reserved"].(string), ",") {
-			kubeReserveSplit := strings.Split(kubeReserve, "=")
-			kubeReserved[kubeReserveSplit[0]] = kubeReserveSplit[1]
-		}
-		data, err := convert.JsonToDict(kubeReserved)
+		data, err := convert.JsonToDict(parseKeyValueListFlag(flags["kube-reserved"].(string)))
 		if err != nil {
 			return err
 		}
