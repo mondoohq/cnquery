@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	redshifttypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -131,7 +132,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"vpcId":                            llx.StringDataPtr(cluster.VpcId),
 							"clusterAvailabilityStatus":        llx.StringDataPtr(cluster.ClusterAvailabilityStatus),
 							"totalStorageCapacityInMegaBytes":  llx.IntDataDefault(cluster.TotalStorageCapacityInMegaBytes, 0),
-							"multiAZ":                          llx.BoolData(convert.ToValue(cluster.MultiAZ) == "enabled"),
+							"multiAZ":                          llx.BoolData(strings.EqualFold(convert.ToValue(cluster.MultiAZ), "enabled")),
 							"manualSnapshotRetentionPeriod":    llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
 							"ipAddressType":                    llx.StringDataPtr(cluster.IpAddressType),
 							"maintenanceTrackName":             llx.StringDataPtr(cluster.MaintenanceTrackName),
