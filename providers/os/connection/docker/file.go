@@ -134,9 +134,17 @@ func (f *File) WriteString(s string) (ret int, err error) {
 
 func (f *File) getFileDockerReader(path string) (io.ReadCloser, container.PathStat, error) {
 	res, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, client.CopyFromContainerOptions{SourcePath: path})
+	if err != nil {
+		return res.Content, res.Stat, err
+	}
 
 	// follow symlink if stat.LinkTarget is set
 	if len(res.Stat.LinkTarget) > 0 {
+		// close the reader we just opened before following the link,
+		// otherwise each symlink hop leaks the tar stream / connection
+		if res.Content != nil {
+			res.Content.Close()
+		}
 		return f.getFileDockerReader(res.Stat.LinkTarget)
 	}
 
