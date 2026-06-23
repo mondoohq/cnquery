@@ -60,7 +60,7 @@ func ParseProcessStatus(input io.Reader) (*LinuxProcessStatus, error) {
 				continue
 			}
 		case "PPid":
-			if lps.Pid, err = strconv.ParseInt(value, 10, 64); err != nil {
+			if lps.PPid, err = strconv.ParseInt(value, 10, 64); err != nil {
 				log.Warn().Err(err).Str("key", key).Msg("process> could not parse value")
 				continue
 			}
