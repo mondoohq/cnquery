@@ -58,6 +58,15 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		}
 	}
 
+	// If architecture could not be determined via command-based detection
+	// (e.g. a filesystem-only scan with no command capability), fall back to
+	// inspecting the ELF header of a well-known binary on the target.
+	if resolved && pi.Arch == "" {
+		if arch := archFromELF(conn.FileSystem()); arch != "" {
+			pi.Arch = arch
+		}
+	}
+
 	log.Debug().Str("platform", pi.Name).Strs("family", pi.Family).Msg("platform> detected os")
 	return pi, resolved
 }
