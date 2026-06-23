@@ -243,6 +243,10 @@ func (a *mqlAwsDynamodbExport) table() (*mqlAwsDynamodbTable, error) {
 	if err != nil {
 		return nil, err
 	}
+	if exp == nil {
+		a.Table.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	if exp.TableArn == nil || *exp.TableArn == "" {
 		a.Table.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
