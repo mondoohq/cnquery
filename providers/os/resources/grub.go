@@ -276,6 +276,10 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 	var entries []GrubEntry
 	var current *GrubEntry
 	depth := 0
+	// opened tracks whether the current entry's opening brace has been seen.
+	// GRUB allows the `{` on a line after `menuentry`, so until it appears we
+	// must not treat depth <= 0 as the entry having closed.
+	opened := false
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -288,8 +292,10 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 			}
 			current = &GrubEntry{Title: m[1]}
 			depth = 0
+			opened = false
 			if strings.Contains(line, "{") {
 				depth = 1
+				opened = true
 			}
 			continue
 		}
@@ -315,11 +321,18 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 
 		if current != nil {
 			if !isComment {
+				if strings.Contains(line, "{") {
+					opened = true
+				}
 				depth += strings.Count(line, "{") - strings.Count(line, "}")
-				if depth <= 0 {
+				// Only consider the entry closed once its opening brace has
+				// been seen; otherwise a blank or non-brace line before the
+				// `{` would prematurely flush an empty entry.
+				if opened && depth <= 0 {
 					entries = append(entries, *current)
 					current = nil
 					depth = 0
+					opened = false
 					continue
 				}
 			}
