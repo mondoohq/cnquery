@@ -401,21 +401,18 @@ func parseLine(line string) *parsedLine {
 			remaining = strings.TrimSpace(line[runasEnd+1:])
 		}
 	} else {
-		// No runas specification, need to find where host ends
-		// Look for the first whitespace after the second token
-		parts := smartSplit(line)
-		if len(parts) < 3 {
+		// No runas specification. The first `=` separates the "user host"
+		// portion from the command spec, and whitespace around it is optional
+		// (e.g. `root ALL=ALL` or `bob ALL=/bin/ls`). Splitting on whitespace
+		// alone misreads (or drops) these specs, so split on `=` here and
+		// reuse the shared user/host logic below — analogous to how the runas
+		// branch splits around `=(...)`.
+		eq := strings.Index(line, "=")
+		if eq == -1 {
 			return nil
 		}
-
-		// First part is user, second is host, rest is commands
-		result.users = splitAndTrim(parts[0], ",")
-		result.hosts = splitAndTrim(parts[1], ",")
-		remaining = strings.Join(parts[2:], " ")
-
-		// Extract tags and commands from remaining
-		extractTagsAndCommands(result, remaining)
-		return result
+		beforeRunas = strings.TrimSpace(line[:eq])
+		remaining = strings.TrimSpace(line[eq+1:])
 	}
 
 	// For lines with runas, split beforeRunas to get user and host

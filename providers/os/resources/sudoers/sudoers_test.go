@@ -25,6 +25,47 @@ func TestParseLine_BasicUserSpec(t *testing.T) {
 	assert.Equal(t, []string{"ALL"}, parsed.Commands)
 }
 
+func TestParseLine_NoRunasAllCommands(t *testing.T) {
+	// A user spec with no runas list and no whitespace around `=`. This is
+	// valid sudoers (`user host=command`) and must not be dropped.
+	line := "root ALL=ALL"
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
+
+	require.NotNil(t, parsed)
+	assert.Equal(t, "user_spec", parsed.EntryType)
+	assert.Equal(t, []string{"root"}, parsed.Users)
+	assert.Equal(t, []string{"ALL"}, parsed.Hosts)
+	assert.Empty(t, parsed.RunasUsers)
+	assert.Equal(t, []string{"ALL"}, parsed.Commands)
+}
+
+func TestParseLine_NoRunasSpecificCommand(t *testing.T) {
+	// No runas list, host followed directly by `=` and a specific command.
+	line := "bob server1=/usr/bin/ls"
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
+
+	require.NotNil(t, parsed)
+	assert.Equal(t, "user_spec", parsed.EntryType)
+	assert.Equal(t, []string{"bob"}, parsed.Users)
+	assert.Equal(t, []string{"server1"}, parsed.Hosts)
+	assert.Empty(t, parsed.RunasUsers)
+	assert.Equal(t, []string{"/usr/bin/ls"}, parsed.Commands)
+}
+
+func TestParseLine_NoRunasWithTag(t *testing.T) {
+	// No runas list, but a NOPASSWD tag attached after `host=`.
+	line := "john ALL=NOPASSWD: /usr/bin/systemctl"
+	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
+
+	require.NotNil(t, parsed)
+	assert.Equal(t, "user_spec", parsed.EntryType)
+	assert.Equal(t, []string{"john"}, parsed.Users)
+	assert.Equal(t, []string{"ALL"}, parsed.Hosts)
+	assert.Empty(t, parsed.RunasUsers)
+	assert.Equal(t, []string{"NOPASSWD"}, parsed.Tags)
+	assert.Equal(t, []string{"/usr/bin/systemctl"}, parsed.Commands)
+}
+
 func TestParseLine_GroupSpec(t *testing.T) {
 	line := "%sudo ALL=(ALL:ALL) ALL"
 	parsed := sudoers.ToParsedLine(sudoers.ParseLine(line))
