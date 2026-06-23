@@ -12,11 +12,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/google-workspace/resources"
 // registered domains and their verification state, the admin roles
 // and their privileges, the third-party OAuth-connected apps with
 // aggregated scopes, the user calendars together with their ACL
-// rules, and the managed endpoints (Chrome OS, Android, iOS, Windows,
+// rules, the managed endpoints (Chrome OS, Android, iOS, Windows,
 // macOS, Linux) reported through Google endpoint management and
-// endpoint verification — the surface auditors use for identity
-// hygiene, sharing reviews, 2-step-verification enforcement checks,
-// and device-compliance audits.
+// endpoint verification, and the admin-configured policy settings
+// resolved across the organization through the Cloud Identity Policy
+// API — the surface auditors use for identity hygiene, sharing
+// reviews, 2-step-verification enforcement checks, device-compliance
+// audits, and domain-wide security-posture review.
 googleworkspace {
   // Organizational units in the account hierarchy
   orgUnits() []googleworkspace.orgUnit
@@ -48,6 +50,8 @@ googleworkspace {
   // Convenience filter over `users` for MFA-coverage audits — active
   // (non-suspended, non-archived) users where `isEnrolledIn2Sv` is false.
   usersWithout2sv() []googleworkspace.user
+  // Admin-configured policy settings resolved across the organization
+  policies() []googleworkspace.policy
 }
 
 // Google Workspace calendar
@@ -762,4 +766,49 @@ private googleworkspace.endpoint.user @defaults("userEmail managementState") {
   firstSyncTime time
   // Last time the user synced with policies
   lastSyncTime time
+}
+
+// Google Workspace admin policy setting
+//
+// Examine a single policy setting resolved by the Cloud Identity Policy API —
+// the admin-configured settings that govern security posture across the
+// organization (2-step-verification enforcement, password strength and
+// length, session length, less-secure-app access, service on/off status,
+// and third-party app access), surfaced without navigating the Admin
+// Console. Each row is one resolved setting for one scope: `settingType`
+// names the setting (for example `settings/security.password` or
+// `settings/security.session_controls`), `value` carries the setting's
+// configured value as a dict (the schema varies per setting type), and
+// `orgUnit` / `group` report the organizational unit or group the setting
+// resolves to (empty when the policy applies customer-wide). `type`
+// distinguishes admin-configured policies (`ADMIN`) from Google's
+// system defaults (`SYSTEM`). Select by setting type — for example
+// `googleworkspace.policies.where(settingType == "settings/security.session_controls")`.
+// Requires a super-admin-impersonating service account with the
+// `cloud-identity.policies.readonly` scope.
+private googleworkspace.policy @defaults("settingType type orgUnit") {
+  // Resource name of the policy in the format policies/{policy}
+  name string
+  // The setting type identifier (for example settings/security.session_controls)
+  settingType string
+  // Policy type
+  //
+  // One of `ADMIN` (admin-configured) or `SYSTEM` (Google-managed default).
+  type string
+  // The organizational unit the policy resolves to (empty when customer-wide)
+  orgUnit string
+  // The group the policy resolves to (empty when not group-scoped)
+  group string
+  // The CEL query that defines which entities the policy applies to
+  //
+  // Empty for customer-wide policies. The `orgUnit` and `group` fields are
+  // decoded helpers extracted from this query.
+  query string
+  // The configured value of the setting
+  //
+  // The shape varies per `settingType`; kept as a dict because each setting
+  // carries its own schema. For example a `settings/security.session_controls`
+  // value carries `webSessionDuration`, while a `settings/security.password`
+  // value carries `allowedStrength`, `minimumLength`, and `enforceRequirementsAtLogin`.
+  value dict
 }

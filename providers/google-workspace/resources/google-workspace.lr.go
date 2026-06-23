@@ -43,6 +43,7 @@ const (
 	ResourceGoogleworkspaceReportUsage          string = "googleworkspace.report.usage"
 	ResourceGoogleworkspaceEndpoint             string = "googleworkspace.endpoint"
 	ResourceGoogleworkspaceEndpointUser         string = "googleworkspace.endpoint.user"
+	ResourceGoogleworkspacePolicy               string = "googleworkspace.policy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -157,6 +158,10 @@ func init() {
 			// to override args, implement: initGoogleworkspaceEndpointUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceEndpointUser,
 		},
+		"googleworkspace.policy": {
+			// to override args, implement: initGoogleworkspacePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspacePolicy,
+		},
 	}
 }
 
@@ -260,6 +265,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.usersWithout2sv": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetUsersWithout2sv()).ToDataRes(types.Array(types.Resource("googleworkspace.user")))
+	},
+	"googleworkspace.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetPolicies()).ToDataRes(types.Array(types.Resource("googleworkspace.policy")))
 	},
 	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
@@ -1011,6 +1019,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.endpoint.user.lastSyncTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceEndpointUser).GetLastSyncTime()).ToDataRes(types.Time)
 	},
+	"googleworkspace.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetName()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.settingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetSettingType()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.orgUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetOrgUnit()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetGroup()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetQuery()).ToDataRes(types.String)
+	},
+	"googleworkspace.policy.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspacePolicy).GetValue()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1069,6 +1098,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.usersWithout2sv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspace).UsersWithout2sv, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2175,6 +2208,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceEndpointUser).LastSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.settingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).SettingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.orgUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).OrgUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.policy.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspacePolicy).Value, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2215,6 +2280,7 @@ type mqlGoogleworkspace struct {
 	SuperAdmins     plugin.TValue[[]any]
 	SuspendedUsers  plugin.TValue[[]any]
 	UsersWithout2sv plugin.TValue[[]any]
+	Policies        plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -2427,6 +2493,22 @@ func (c *mqlGoogleworkspace) GetUsersWithout2sv() *plugin.TValue[[]any] {
 		}
 
 		return c.usersWithout2sv()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
 	})
 }
 
@@ -4901,4 +4983,83 @@ func (c *mqlGoogleworkspaceEndpointUser) GetFirstSyncTime() *plugin.TValue[*time
 
 func (c *mqlGoogleworkspaceEndpointUser) GetLastSyncTime() *plugin.TValue[*time.Time] {
 	return &c.LastSyncTime
+}
+
+// mqlGoogleworkspacePolicy for the googleworkspace.policy resource
+type mqlGoogleworkspacePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspacePolicyInternal it will be used here
+	Name        plugin.TValue[string]
+	SettingType plugin.TValue[string]
+	Type        plugin.TValue[string]
+	OrgUnit     plugin.TValue[string]
+	Group       plugin.TValue[string]
+	Query       plugin.TValue[string]
+	Value       plugin.TValue[any]
+}
+
+// createGoogleworkspacePolicy creates a new instance of this resource
+func createGoogleworkspacePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspacePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspacePolicy) MqlName() string {
+	return "googleworkspace.policy"
+}
+
+func (c *mqlGoogleworkspacePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspacePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGoogleworkspacePolicy) GetSettingType() *plugin.TValue[string] {
+	return &c.SettingType
+}
+
+func (c *mqlGoogleworkspacePolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspacePolicy) GetOrgUnit() *plugin.TValue[string] {
+	return &c.OrgUnit
+}
+
+func (c *mqlGoogleworkspacePolicy) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlGoogleworkspacePolicy) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlGoogleworkspacePolicy) GetValue() *plugin.TValue[any] {
+	return &c.Value
 }

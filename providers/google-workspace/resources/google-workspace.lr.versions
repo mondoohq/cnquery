@@ -134,6 +134,15 @@ googleworkspace.orgUnit.name 9.0.0
 googleworkspace.orgUnit.orgUnitPath 11.1.122
 googleworkspace.orgUnit.parentOrgUnitPath 11.1.122
 googleworkspace.orgUnits 9.0.0
+googleworkspace.policies 13.1.5
+googleworkspace.policy 13.1.5
+googleworkspace.policy.group 13.1.5
+googleworkspace.policy.name 13.1.5
+googleworkspace.policy.orgUnit 13.1.5
+googleworkspace.policy.query 13.1.5
+googleworkspace.policy.settingType 13.1.5
+googleworkspace.policy.type 13.1.5
+googleworkspace.policy.value 13.1.5
 googleworkspace.report.activity 9.0.0
 googleworkspace.report.activity.actor 9.0.0
 googleworkspace.report.activity.events 9.0.0
