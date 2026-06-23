@@ -620,6 +620,7 @@ oci.compute.instance.created 9.0.0
 oci.compute.instance.dedicatedVmHostId 11.1.0
 oci.compute.instance.definedTags 11.1.0
 oci.compute.instance.endpointProtectionScanResult 13.7.1
+oci.compute.instance.exposure 13.11.4
 oci.compute.instance.faultDomain 11.1.0
 oci.compute.instance.freeformTags 11.1.0
 oci.compute.instance.id 9.0.0
@@ -811,6 +812,7 @@ oci.database.autonomousDatabase.dbWorkload 13.1.1
 oci.database.autonomousDatabase.definedTags 13.1.1
 oci.database.autonomousDatabase.freeformTags 13.1.1
 oci.database.autonomousDatabase.id 13.1.1
+oci.database.autonomousDatabase.internetReachable 13.11.4
 oci.database.autonomousDatabase.isAccessControlEnabled 13.1.1
 oci.database.autonomousDatabase.isAutoScalingEnabled 13.1.1
 oci.database.autonomousDatabase.isBackupRetentionLocked 13.10.1
@@ -1171,6 +1173,7 @@ oci.loadBalancer.loadBalancer.backendSets 13.0.6
 oci.loadBalancer.loadBalancer.compartmentID 13.0.6
 oci.loadBalancer.loadBalancer.created 13.0.6
 oci.loadBalancer.loadBalancer.definedTags 13.7.2
+oci.loadBalancer.loadBalancer.exposure 13.11.4
 oci.loadBalancer.loadBalancer.freeformTags 13.7.2
 oci.loadBalancer.loadBalancer.id 13.0.6
 oci.loadBalancer.loadBalancer.ipAddresses 13.8.2
@@ -1221,6 +1224,11 @@ oci.monitoring.alarm.state 13.0.6
 oci.monitoring.alarm.topics 13.6.2
 oci.monitoring.alarms 13.0.6
 oci.network 9.0.0
+oci.network.exposure 13.11.4
+oci.network.exposure.hasPublicIp 13.11.4
+oci.network.exposure.internetReachable 13.11.4
+oci.network.exposure.openIngressRules 13.11.4
+oci.network.exposure.securityGroupAllowsIngress 13.11.4
 oci.network.internetGateway 13.1.1
 oci.network.internetGateway.compartmentID 13.1.1
 oci.network.internetGateway.created 13.1.1

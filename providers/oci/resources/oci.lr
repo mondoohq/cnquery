@@ -415,6 +415,23 @@ oci.compute {
   bootVolumes() []oci.compute.bootVolume
 }
 
+// OCI network internet-exposure breakdown
+//
+// Explains whether a resource is reachable from the internet by combining its
+// public-IP assignment with the network security group ingress rules (and, for
+// compute, the subnet's internet-ingress policy) that admit traffic from any
+// address. Shared by compute instances and load balancers.
+private oci.network.exposure @defaults("internetReachable hasPublicIp") {
+  // Whether the resource is reachable from the internet (a public IP and ingress that admits any address)
+  internetReachable bool
+  // Whether the resource has a public IP
+  hasPublicIp bool
+  // Whether an attached network security group (or, for compute, an unrestricted subnet with no NSG attached) admits inbound traffic from any address
+  securityGroupAllowsIngress bool
+  // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0); for a load balancer, the listeners reachable from the internet
+  openIngressRules []dict
+}
+
 // Oracle Cloud Infrastructure (OCI) Compute instance
 private oci.compute.instance @defaults("name") {
   // Instance OCID
@@ -487,6 +504,8 @@ private oci.compute.instance @defaults("name") {
   definedTags map[string]map[string]string
   // Virtual network interface cards attached to the instance
   vnics() []oci.compute.vnic
+  // Internet-exposure breakdown (public IP combined with NSG ingress and the subnet's internet-ingress policy)
+  exposure() oci.network.exposure
   // Most recent agent-based vulnerability scan result for this instance
   vulnerabilityScanResult() oci.vulnerabilityScanning.hostAgentScanResult
   // Most recent open-port scan result for this instance
@@ -1645,6 +1664,8 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   state string
   // Load balancer listeners
   listeners() []oci.loadBalancer.listener
+  // Internet-exposure breakdown (a public IP combined with at least one listener)
+  exposure() oci.network.exposure
   // Backend sets
   backendSets() []oci.loadBalancer.backendSet
   // Creation time
@@ -2291,6 +2312,13 @@ private oci.database.autonomousDatabase @defaults("name") {
   isAccessControlEnabled bool
   // Allowed client IP addresses (ACL)
   whitelistedIps []string
+  // Whether the database is reachable from the public internet
+  //
+  // True when the database has a public endpoint (no private endpoint) and
+  // either access control is disabled or its allow-list admits any address
+  // (0.0.0.0/0 or 0.0.0.0). mTLS may still be required to connect, but the
+  // listener itself is reachable from the internet.
+  internetReachable() bool
   // Allowed client IP addresses for the Data Guard standby (ACL)
   //
   // The standby's own access control list. When it diverges from

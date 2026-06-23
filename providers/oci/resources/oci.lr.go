@@ -36,6 +36,7 @@ const (
 	ResourceOciIdentityNetworkSource                                 string = "oci.identity.networkSource"
 	ResourceOciIdentityAuthenticationPolicy                          string = "oci.identity.authenticationPolicy"
 	ResourceOciCompute                                               string = "oci.compute"
+	ResourceOciNetworkExposure                                       string = "oci.network.exposure"
 	ResourceOciComputeInstance                                       string = "oci.compute.instance"
 	ResourceOciComputeVnic                                           string = "oci.compute.vnic"
 	ResourceOciComputeImage                                          string = "oci.compute.image"
@@ -254,6 +255,10 @@ func init() {
 		"oci.compute": {
 			// to override args, implement: initOciCompute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciCompute,
+		},
+		"oci.network.exposure": {
+			// to override args, implement: initOciNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkExposure,
 		},
 		"oci.compute.instance": {
 			// to override args, implement: initOciComputeInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1302,6 +1307,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.bootVolumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCompute).GetBootVolumes()).ToDataRes(types.Array(types.Resource("oci.compute.bootVolume")))
 	},
+	"oci.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
+	},
+	"oci.network.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
+	"oci.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"oci.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Dict))
+	},
 	"oci.compute.instance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetId()).ToDataRes(types.String)
 	},
@@ -1382,6 +1399,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.instance.vnics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetVnics()).ToDataRes(types.Array(types.Resource("oci.compute.vnic")))
+	},
+	"oci.compute.instance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetExposure()).ToDataRes(types.Resource("oci.network.exposure"))
 	},
 	"oci.compute.instance.vulnerabilityScanResult": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetVulnerabilityScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostAgentScanResult"))
@@ -2583,6 +2603,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.loadBalancer.listeners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetListeners()).ToDataRes(types.Array(types.Resource("oci.loadBalancer.listener")))
 	},
+	"oci.loadBalancer.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerLoadBalancer).GetExposure()).ToDataRes(types.Resource("oci.network.exposure"))
+	},
 	"oci.loadBalancer.loadBalancer.backendSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetBackendSets()).ToDataRes(types.Array(types.Resource("oci.loadBalancer.backendSet")))
 	},
@@ -3302,6 +3325,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.database.autonomousDatabase.whitelistedIps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetWhitelistedIps()).ToDataRes(types.Array(types.String))
+	},
+	"oci.database.autonomousDatabase.internetReachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetInternetReachable()).ToDataRes(types.Bool)
 	},
 	"oci.database.autonomousDatabase.standbyWhitelistedIps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetStandbyWhitelistedIps()).ToDataRes(types.Array(types.String))
@@ -6222,6 +6248,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCompute).BootVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.exposure.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).OpenIngressRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.compute.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).__id, ok = v.Value.(string)
 		return
@@ -6332,6 +6378,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.instance.vnics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).Vnics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).Exposure, ok = plugin.RawToTValue[*mqlOciNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.vulnerabilityScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8122,6 +8172,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerLoadBalancer).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.loadBalancer.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlOciNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"oci.loadBalancer.loadBalancer.backendSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerLoadBalancer).BackendSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -9168,6 +9222,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.autonomousDatabase.whitelistedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).WhitelistedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.standbyWhitelistedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14312,6 +14370,65 @@ func (c *mqlOciCompute) GetBootVolumes() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlOciNetworkExposure for the oci.network.exposure resource
+type mqlOciNetworkExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkExposureInternal it will be used here
+	InternetReachable          plugin.TValue[bool]
+	HasPublicIp                plugin.TValue[bool]
+	SecurityGroupAllowsIngress plugin.TValue[bool]
+	OpenIngressRules           plugin.TValue[[]any]
+}
+
+// createOciNetworkExposure creates a new instance of this resource
+func createOciNetworkExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.exposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkExposure) MqlName() string {
+	return "oci.network.exposure"
+}
+
+func (c *mqlOciNetworkExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkExposure) GetInternetReachable() *plugin.TValue[bool] {
+	return &c.InternetReachable
+}
+
+func (c *mqlOciNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
+	return &c.HasPublicIp
+}
+
+func (c *mqlOciNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlOciNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
+	return &c.OpenIngressRules
+}
+
 // mqlOciComputeInstance for the oci.compute.instance resource
 type mqlOciComputeInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -14344,6 +14461,7 @@ type mqlOciComputeInstance struct {
 	FreeformTags                 plugin.TValue[map[string]any]
 	DefinedTags                  plugin.TValue[map[string]any]
 	Vnics                        plugin.TValue[[]any]
+	Exposure                     plugin.TValue[*mqlOciNetworkExposure]
 	VulnerabilityScanResult      plugin.TValue[*mqlOciVulnerabilityScanningHostAgentScanResult]
 	PortScanResult               plugin.TValue[*mqlOciVulnerabilityScanningHostPortScanResult]
 	CisBenchmarkScanResult       plugin.TValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult]
@@ -14516,6 +14634,22 @@ func (c *mqlOciComputeInstance) GetVnics() *plugin.TValue[[]any] {
 		}
 
 		return c.vnics()
+	})
+}
+
+func (c *mqlOciComputeInstance) GetExposure() *plugin.TValue[*mqlOciNetworkExposure] {
+	return plugin.GetOrCompute[*mqlOciNetworkExposure](&c.Exposure, func() (*mqlOciNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -19450,6 +19584,7 @@ type mqlOciLoadBalancerLoadBalancer struct {
 	IsDeleteProtectionEnabled plugin.TValue[bool]
 	State                     plugin.TValue[string]
 	Listeners                 plugin.TValue[[]any]
+	Exposure                  plugin.TValue[*mqlOciNetworkExposure]
 	BackendSets               plugin.TValue[[]any]
 	Created                   plugin.TValue[*time.Time]
 	FreeformTags              plugin.TValue[map[string]any]
@@ -19538,6 +19673,22 @@ func (c *mqlOciLoadBalancerLoadBalancer) GetListeners() *plugin.TValue[[]any] {
 		}
 
 		return c.listeners()
+	})
+}
+
+func (c *mqlOciLoadBalancerLoadBalancer) GetExposure() *plugin.TValue[*mqlOciNetworkExposure] {
+	return plugin.GetOrCompute[*mqlOciNetworkExposure](&c.Exposure, func() (*mqlOciNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.loadBalancer", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -22066,6 +22217,7 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	IsMtlsConnectionRequired    plugin.TValue[bool]
 	IsAccessControlEnabled      plugin.TValue[bool]
 	WhitelistedIps              plugin.TValue[[]any]
+	InternetReachable           plugin.TValue[bool]
 	StandbyWhitelistedIps       plugin.TValue[[]any]
 	IsAutoScalingEnabled        plugin.TValue[bool]
 	IsLocalDataGuardEnabled     plugin.TValue[bool]
@@ -22196,6 +22348,12 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetIsAccessControlEnabled() *plugin.T
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetWhitelistedIps() *plugin.TValue[[]any] {
 	return &c.WhitelistedIps
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetInternetReachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
+		return c.internetReachable()
+	})
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetStandbyWhitelistedIps() *plugin.TValue[[]any] {
