@@ -382,9 +382,9 @@ func (s *mqlRsyslogConf) content(files []any) (string, error) {
 		file := files[i].(*mqlFile)
 		content := file.GetContent()
 		if content.Error != nil {
-			if errors.Is(content.Error, resources.NotFoundError{}) {
-				continue
-			}
+			// Skip files that cannot be read (not found, permission denied,
+			// IO errors) rather than appending an empty block for them.
+			continue
 		}
 
 		res.WriteString(content.Data)
