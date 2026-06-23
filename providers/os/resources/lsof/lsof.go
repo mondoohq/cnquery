@@ -303,18 +303,20 @@ func (p *Process) parseFileLines(lines []string) error {
 func parseProcessLines(lines []string) (Process, error) {
 	p := Process{}
 	for index, line := range lines {
+		// File descriptors are the trailing section of a process block.
+		// parseFileLines consumes every remaining line, so we must stop
+		// the outer loop here — otherwise a later "f" line re-enters
+		// parseFileLines and duplicates the descriptors already parsed.
 		if strings.HasPrefix(line, "f") {
 			err := p.parseFileLines(lines[index:])
 			if err != nil {
 				return p, err
 			}
-		} else if strings.HasPrefix(line, "o") {
 			break
-		} else {
-			err := p.parseField(line)
-			if err != nil {
-				return p, err
-			}
+		}
+		err := p.parseField(line)
+		if err != nil {
+			return p, err
 		}
 	}
 	return p, nil

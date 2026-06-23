@@ -111,6 +111,33 @@ TQS=0
 	assert.Equal(t, "10.184.10.188:64645->76.76.21.241:443", fd.Name)
 }
 
+func TestParseLsofFileDescriptorsWithoutOffsetField(t *testing.T) {
+	// lsof does not always emit an "o" (file offset) field — many socket
+	// file types omit it. With two descriptors and no offset line, the
+	// descriptors must not be duplicated.
+	s := `p37224
+cHyper Helper
+u501
+f24
+tIPv4
+PTCP
+n10.184.10.188:64647->76.76.21.61:443
+f25
+tIPv4
+PTCP
+n10.184.10.188:64645->76.76.21.241:443
+`
+
+	processes, err := Parse(strings.NewReader(s))
+	require.NoError(t, err)
+	require.Equal(t, 1, len(processes))
+
+	process := processes[0]
+	require.Equal(t, 2, len(process.FileDescriptors))
+	assert.Equal(t, "24", process.FileDescriptors[0].FileDescriptor)
+	assert.Equal(t, "25", process.FileDescriptors[1].FileDescriptor)
+}
+
 func TestParseLsofTcpStateKeys(t *testing.T) {
 	// lsof spells these states SYN_RCVD and FIN_WAIT2 (no underscore before the
 	// digit); the mapping keys must match exactly or TcpState falls back to 0.
