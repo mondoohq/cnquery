@@ -33,7 +33,7 @@ func initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 
 	kubeletFlagsData := p.GetFlags()
 	if kubeletFlagsData.Error != nil {
-		return nil, nil, err
+		return nil, nil, kubeletFlagsData.Error
 	}
 	kubeletFlags := kubeletFlagsData.Data
 
@@ -55,7 +55,7 @@ func initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 	mqlFile, ok := f.(*mqlFile)
 	if !ok {
-		return nil, nil, err
+		return nil, nil, errors.New("kubelet config file resource has unexpected type")
 	}
 	args["configFile"] = llx.ResourceData(mqlFile, "file")
 
