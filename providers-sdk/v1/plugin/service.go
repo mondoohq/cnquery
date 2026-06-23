@@ -142,14 +142,18 @@ func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 	return nil, errors.New("connection " + strconv.FormatUint(uint64(id), 10) + " not found")
 }
 
-func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
+func (s *Service) disconnectRuntime(id uint32) int {
 	s.runtimesLock.Lock()
-	s.doDisconnect(req.Connection)
-	remaining := len(s.runtimes)
-	if remaining == 0 {
+	defer s.runtimesLock.Unlock()
+	s.doDisconnect(id)
+	if len(s.runtimes) == 0 {
 		s.Flush()
 	}
-	s.runtimesLock.Unlock()
+	return len(s.runtimes)
+}
+
+func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
+	remaining := s.disconnectRuntime(req.Connection)
 
 	debug.FreeOSMemory()
 
