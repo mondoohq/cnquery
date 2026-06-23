@@ -206,8 +206,8 @@ func (a *mqlPlatformAdvisories) list() ([]any, error) {
 			"mrn":         llx.StringData(advisory.Mrn),
 			"title":       llx.StringData(advisory.Title),
 			"description": llx.StringData(advisory.Description),
-			"published":   llx.TimeData(*published),
-			"modified":    llx.TimeData(*modified),
+			"published":   llx.TimeDataPtr(published),
+			"modified":    llx.TimeDataPtr(modified),
 			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {
