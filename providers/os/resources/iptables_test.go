@@ -37,6 +37,28 @@ func TestParseStat(t *testing.T) {
 		require.Equal(t, expected, result)
 	})
 
+	t.Run("short/malformed lines are skipped without panicking", func(t *testing.T) {
+		lines := []string{
+			"Chain INPUT (policy ACCEPT 0 packets, 0 bytes)",
+			"num      pkts      bytes target     prot opt in     out     source               destination",
+			"",                              // blank line in the middle of a block
+			"1           0        0 ACCEPT", // truncated rule, fewer than 9 fields
+			"2           0        0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0",
+		}
+		var result []Stat
+		var err error
+		require.NotPanics(t, func() {
+			result, err = ParseStat(lines, false)
+		})
+		require.NoError(t, err)
+		// Only the well-formed rule survives; the blank and truncated lines are dropped.
+		require.Len(t, result, 1)
+		assert.Equal(t, int64(2), result[0].LineNumber)
+		assert.Equal(t, "ACCEPT", result[0].Target)
+		assert.Equal(t, "0.0.0.0/0", result[0].Source)
+		assert.Equal(t, "0.0.0.0/0", result[0].Destination)
+	})
+
 	t.Run("ipv6 with opt field", func(t *testing.T) {
 		lines := []string{
 			"Chain OUTPUT (policy DROP 227 packets, 12904 bytes)",

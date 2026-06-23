@@ -856,6 +856,13 @@ func ParseStat(lines []string, ipv6 bool) ([]Stat, error) {
 		line = strings.TrimSpace(line)
 		fields := strings.Fields(line)
 
+		// A rule needs at least the columns up to "source" (index 8); the IPv6
+		// opt-field heuristic below also reads fields[7]. Skip short/blank lines
+		// rather than indexing out of range and panicking on malformed output.
+		if len(fields) < 9 {
+			continue
+		}
+
 		// The ip6tables verbose output cannot be naively split due to the default "opt"
 		// field containing 2 single spaces.
 		if ipv6 {
