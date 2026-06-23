@@ -146,7 +146,7 @@ func pythonPackageDetailsWithDependenciesToResource(
 	newPyPkgDetails python.PackageDetails,
 	pythonPackageResourceMap map[string]plugin.Resource,
 ) (any, error) {
-	res := pythonPackageResourceMap[newPyPkgDetails.Name]
+	res := pythonPackageResourceMap[newPyPkgDetails.File]
 	if res != nil {
 		// already created the pythonPackage resource
 		return res, nil
