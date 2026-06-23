@@ -752,7 +752,7 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 				mqlKeypair, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Keypair,
 					map[string]*llx.RawData{
-						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), region, convert.ToValue(kp.KeyPairId))),
+						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, region, conn.AccountId(), convert.ToValue(kp.KeyPairId))),
 						"fingerprint": llx.StringDataPtr(kp.KeyFingerprint),
 						"name":        llx.StringDataPtr(kp.KeyName),
 						"type":        llx.StringData(string(kp.KeyType)),
@@ -818,7 +818,7 @@ func initAwsEc2Keypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["type"] = llx.StringData(string(kp.KeyType))
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(kp.Tags)), types.String)
 		args["region"] = llx.StringData(r)
-		args["arn"] = llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), r, convert.ToValue(kp.KeyPairId)))
+		args["arn"] = llx.StringData(fmt.Sprintf(keypairArnPattern, r, conn.AccountId(), convert.ToValue(kp.KeyPairId)))
 		args["createdAt"] = llx.TimeDataPtr(kp.CreateTime)
 
 		return args, nil, nil
