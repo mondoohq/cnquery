@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 	"sync"
 
@@ -25,8 +26,11 @@ func (o *mqlOpenstack) objectStorageAccount() (*mqlOpenstackObjectstorageAccount
 	c := conn(o.MqlRuntime)
 	client, err := c.ObjectStorageClient()
 	if err != nil {
-		o.ObjectStorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+		if serviceMissing(err) {
+			o.ObjectStorageAccount.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
 	}
 	getResult := accounts.Get(ctx(), client, accounts.GetOpts{})
 	resHdr, err := getResult.Extract()
@@ -106,7 +110,10 @@ func (o *mqlOpenstack) objectStorageContainers() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.ObjectStorageClient()
 	if err != nil {
-		return []any{}, nil
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	pages, err := containers.List(client, containers.ListOpts{}).AllPages(ctx())
 	if err != nil {
@@ -153,7 +160,10 @@ func (r *mqlOpenstackObjectstorageContainer) fetchHeader() (*containers.GetHeade
 	header, err := getResult.Extract()
 	if err != nil {
 		// 404 means the container was just deleted; treat as empty rather than failing the query.
-		if respErr, ok := err.(gophercloud.ErrUnexpectedResponseCode); ok && (respErr.Actual == 401 || respErr.Actual == 403 || respErr.Actual == 404) {
+		// gophercloud frequently wraps ErrUnexpectedResponseCode, so use errors.As, not a
+		// direct type assertion (which misses wrapped errors and would fail the query).
+		var respErr gophercloud.ErrUnexpectedResponseCode
+		if errors.As(err, &respErr) && (respErr.Actual == 401 || respErr.Actual == 403 || respErr.Actual == 404) {
 			r.headerFetched = true
 			r.headerMeta = map[string]string{}
 			return nil, r.headerMeta, nil
@@ -250,7 +260,10 @@ func (r *mqlOpenstackObjectstorageContainer) objects() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.ObjectStorageClient()
 	if err != nil {
-		return []any{}, nil
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
+		return nil, err
 	}
 	pages, err := objects.List(client, r.Name.Data, objects.ListOpts{}).AllPages(ctx())
 	if err != nil {

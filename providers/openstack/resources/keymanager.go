@@ -64,6 +64,9 @@ func (o *mqlOpenstack) secrets() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.KeyManagerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := secrets.List(client, secrets.ListOpts{}).AllPages(ctx())
@@ -174,6 +177,9 @@ func (o *mqlOpenstack) secretContainers() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.KeyManagerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := containers.List(client, containers.ListOpts{}).AllPages(ctx())
@@ -354,6 +360,9 @@ func (o *mqlOpenstack) secretOrders() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.KeyManagerClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := orders.List(client, orders.ListOpts{}).AllPages(ctx())

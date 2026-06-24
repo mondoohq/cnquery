@@ -47,6 +47,9 @@ func (o *mqlOpenstack) images() ([]any, error) {
 	c := conn(o.MqlRuntime)
 	client, err := c.ImageClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := images.List(client, images.ListOpts{}).AllPages(ctx())
@@ -183,6 +186,9 @@ func (r *mqlOpenstackImage) members() ([]any, error) {
 	c := conn(r.MqlRuntime)
 	client, err := c.ImageClient()
 	if err != nil {
+		if serviceMissing(err) {
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	pages, err := members.List(client, r.Id.Data).AllPages(ctx())
