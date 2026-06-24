@@ -9,7 +9,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vmware/govmomi v0.54.1
-	go.mondoo.com/mondoo-go v0.0.0-20260623125320-d927c90131ce
+	go.mondoo.com/mondoo-go v0.0.0-20260624002826-255868a855f8
 	go.mondoo.com/mql/v13 v13.24.0
 	golang.org/x/sync v0.21.0
 )
