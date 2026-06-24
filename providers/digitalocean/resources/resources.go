@@ -42,7 +42,7 @@ func (r *mqlDigitaloceanDatabase) users() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -88,7 +88,7 @@ func (r *mqlDigitaloceanDatabase) replicas() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -129,7 +129,7 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -175,7 +175,7 @@ func (r *mqlDigitalocean) vpcPeerings() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -245,7 +245,7 @@ func (r *mqlDigitaloceanKubernetesCluster) nodePools() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -397,7 +397,7 @@ func (r *mqlDigitaloceanRegistry) garbageCollections() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -499,7 +499,7 @@ func (r *mqlDigitaloceanRegistryRepository) tags() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -529,7 +529,7 @@ func (r *mqlDigitaloceanRegistryRepository) manifests() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -622,7 +622,7 @@ func (r *mqlDigitalocean) reservedIPs() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -740,7 +740,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -813,7 +813,7 @@ func (r *mqlDigitalocean) alertPolicies() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -860,7 +860,7 @@ func (r *mqlDigitalocean) uptimeChecks() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -904,7 +904,7 @@ func (r *mqlDigitalocean) cdnEndpoints() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -947,7 +947,7 @@ func (r *mqlDigitalocean) tags() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -1001,7 +1001,7 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}

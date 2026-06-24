@@ -242,7 +242,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -276,7 +276,7 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -310,7 +310,7 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -369,7 +369,7 @@ func (r *mqlDigitalocean) domains() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -413,7 +413,7 @@ func (r *mqlDigitaloceanDomain) records() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -471,7 +471,7 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.ListOptions.Page = page + 1
 	}
@@ -506,7 +506,7 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -555,7 +555,7 @@ func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -589,7 +589,7 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -632,7 +632,7 @@ func (r *mqlDigitalocean) projects() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -671,7 +671,7 @@ func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}
@@ -719,7 +719,7 @@ func (r *mqlDigitalocean) certificates() ([]interface{}, error) {
 		}
 		page, err := resp.Links.CurrentPage()
 		if err != nil {
-			break
+			return nil, err
 		}
 		opt.Page = page + 1
 	}

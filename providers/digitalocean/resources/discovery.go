@@ -69,7 +69,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			page, err := resp.Links.CurrentPage()
 			if err != nil {
-				break
+				return nil, err
 			}
 			opt.Page = page + 1
 		}
@@ -95,7 +95,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			page, err := resp.Links.CurrentPage()
 			if err != nil {
-				break
+				return nil, err
 			}
 			opt.Page = page + 1
 		}
@@ -121,7 +121,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			page, err := resp.Links.CurrentPage()
 			if err != nil {
-				break
+				return nil, err
 			}
 			opt.Page = page + 1
 		}
@@ -147,7 +147,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			page, err := resp.Links.CurrentPage()
 			if err != nil {
-				break
+				return nil, err
 			}
 			opt.Page = page + 1
 		}
