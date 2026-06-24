@@ -246,7 +246,17 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch %q: status %d", rawURL, resp.StatusCode)
 	}
-	return io.ReadAll(io.LimitReader(resp.Body, maxChartDownloadSize))
+	// Read up to one byte past the cap so we can tell "exactly at the limit"
+	// from "exceeds the limit". io.LimitReader alone returns EOF at the cap
+	// with no error, silently truncating an oversized archive/index.
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxChartDownloadSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > maxChartDownloadSize {
+		return nil, fmt.Errorf("response from %q exceeds the maximum allowed size of %d bytes", rawURL, maxChartDownloadSize)
+	}
+	return data, nil
 }
 
 // lastPathSegment returns the final path segment of a registry reference,
