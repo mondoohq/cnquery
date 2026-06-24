@@ -395,7 +395,7 @@ func (g *mqlTerraformBlock) context() (*mqlTerraformContext, error) {
 	cobj, err := CreateResource(runtime, "terraform.context", map[string]*llx.RawData{
 		"path":    llx.StringData(block.DefRange.Filename),
 		"range":   llx.RangeData(rnge),
-		"content": llx.StringData(string(content)),
+		"content": llx.StringData(content),
 	})
 	if err != nil {
 		return nil, err
