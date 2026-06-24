@@ -19,6 +19,7 @@ const (
 	ResourceTerraformResources                string = "terraform.resources"
 	ResourceTerraformFile                     string = "terraform.file"
 	ResourceTerraformFileposition             string = "terraform.fileposition"
+	ResourceTerraformContext                  string = "terraform.context"
 	ResourceTerraformBlock                    string = "terraform.block"
 	ResourceTerraformModule                   string = "terraform.module"
 	ResourceTerraformSettings                 string = "terraform.settings"
@@ -552,9 +553,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"terraform.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlTerraformContext).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlTerraformContext).__id, ok = v.Value.(string)
+		return
+	},
 	"terraform.context.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformContext).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -1301,10 +1302,10 @@ func (c *mqlTerraformFileposition) GetByte() *plugin.TValue[int64] {
 // mqlTerraformContext for the terraform.context resource
 type mqlTerraformContext struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlTerraformContextInternal it will be used here
-	Path plugin.TValue[string]
-	Range plugin.TValue[llx.Range]
+	Path    plugin.TValue[string]
+	Range   plugin.TValue[llx.Range]
 	Content plugin.TValue[string]
 }
 
@@ -1320,7 +1321,7 @@ func createTerraformContext(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1387,7 +1388,7 @@ type mqlTerraformBlock struct {
 	Blocks       plugin.TValue[[]any]
 	Related      plugin.TValue[[]any]
 	Snippet      plugin.TValue[string]
-	Context plugin.TValue[*mqlTerraformContext]
+	Context      plugin.TValue[*mqlTerraformContext]
 }
 
 // createTerraformBlock creates a new instance of this resource

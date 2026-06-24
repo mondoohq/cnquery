@@ -6,6 +6,7 @@ terraform.block 9.0.0
 terraform.block.arguments 9.0.0
 terraform.block.attributes 9.0.0
 terraform.block.blocks 9.0.0
+terraform.block.context 13.2.4
 terraform.block.end 9.0.0
 terraform.block.labels 9.0.0
 terraform.block.nameLabel 9.0.0
@@ -17,6 +18,10 @@ terraform.block.start 9.0.0
 terraform.block.type 9.0.0
 terraform.block.values 13.1.2
 terraform.blocks 9.0.0
+terraform.context 13.2.4
+terraform.context.content 13.2.4
+terraform.context.path 13.2.4
+terraform.context.range 13.2.4
 terraform.datasources 9.0.0
 terraform.file 9.0.0
 terraform.file.blocks 9.0.0
