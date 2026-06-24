@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -15,9 +16,20 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceNextdns        string = "nextdns"
-	ResourceNextdnsAccount string = "nextdns.account"
-	ResourceNextdnsProfile string = "nextdns.profile"
+	ResourceNextdns                               string = "nextdns"
+	ResourceNextdnsAccount                        string = "nextdns.account"
+	ResourceNextdnsProfile                        string = "nextdns.profile"
+	ResourceNextdnsProfileSecurity                string = "nextdns.profile.security"
+	ResourceNextdnsProfilePrivacy                 string = "nextdns.profile.privacy"
+	ResourceNextdnsProfileBlocklist               string = "nextdns.profile.blocklist"
+	ResourceNextdnsProfileParentalControl         string = "nextdns.profile.parentalControl"
+	ResourceNextdnsProfileParentalControlService  string = "nextdns.profile.parentalControl.service"
+	ResourceNextdnsProfileParentalControlCategory string = "nextdns.profile.parentalControl.category"
+	ResourceNextdnsProfileSettings                string = "nextdns.profile.settings"
+	ResourceNextdnsProfileSetup                   string = "nextdns.profile.setup"
+	ResourceNextdnsProfileDenylistEntry           string = "nextdns.profile.denylistEntry"
+	ResourceNextdnsProfileAllowlistEntry          string = "nextdns.profile.allowlistEntry"
+	ResourceNextdnsProfileRewrite                 string = "nextdns.profile.rewrite"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -35,6 +47,50 @@ func init() {
 		"nextdns.profile": {
 			// to override args, implement: initNextdnsProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNextdnsProfile,
+		},
+		"nextdns.profile.security": {
+			// to override args, implement: initNextdnsProfileSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileSecurity,
+		},
+		"nextdns.profile.privacy": {
+			// to override args, implement: initNextdnsProfilePrivacy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfilePrivacy,
+		},
+		"nextdns.profile.blocklist": {
+			// to override args, implement: initNextdnsProfileBlocklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileBlocklist,
+		},
+		"nextdns.profile.parentalControl": {
+			// to override args, implement: initNextdnsProfileParentalControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileParentalControl,
+		},
+		"nextdns.profile.parentalControl.service": {
+			// to override args, implement: initNextdnsProfileParentalControlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileParentalControlService,
+		},
+		"nextdns.profile.parentalControl.category": {
+			// to override args, implement: initNextdnsProfileParentalControlCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileParentalControlCategory,
+		},
+		"nextdns.profile.settings": {
+			// to override args, implement: initNextdnsProfileSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileSettings,
+		},
+		"nextdns.profile.setup": {
+			// to override args, implement: initNextdnsProfileSetup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileSetup,
+		},
+		"nextdns.profile.denylistEntry": {
+			// to override args, implement: initNextdnsProfileDenylistEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileDenylistEntry,
+		},
+		"nextdns.profile.allowlistEntry": {
+			// to override args, implement: initNextdnsProfileAllowlistEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileAllowlistEntry,
+		},
+		"nextdns.profile.rewrite": {
+			// to override args, implement: initNextdnsProfileRewrite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNextdnsProfileRewrite,
 		},
 	}
 }
@@ -128,6 +184,210 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nextdns.profile.fingerprint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNextdnsProfile).GetFingerprint()).ToDataRes(types.String)
 	},
+	"nextdns.profile.account": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetAccount()).ToDataRes(types.Resource("nextdns.account"))
+	},
+	"nextdns.profile.security": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetSecurity()).ToDataRes(types.Resource("nextdns.profile.security"))
+	},
+	"nextdns.profile.privacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetPrivacy()).ToDataRes(types.Resource("nextdns.profile.privacy"))
+	},
+	"nextdns.profile.parentalControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetParentalControl()).ToDataRes(types.Resource("nextdns.profile.parentalControl"))
+	},
+	"nextdns.profile.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetSettings()).ToDataRes(types.Resource("nextdns.profile.settings"))
+	},
+	"nextdns.profile.setup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetSetup()).ToDataRes(types.Resource("nextdns.profile.setup"))
+	},
+	"nextdns.profile.denylist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetDenylist()).ToDataRes(types.Array(types.Resource("nextdns.profile.denylistEntry")))
+	},
+	"nextdns.profile.allowlist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetAllowlist()).ToDataRes(types.Array(types.Resource("nextdns.profile.allowlistEntry")))
+	},
+	"nextdns.profile.rewrites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfile).GetRewrites()).ToDataRes(types.Array(types.Resource("nextdns.profile.rewrite")))
+	},
+	"nextdns.profile.security.threatIntelligenceFeeds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetThreatIntelligenceFeeds()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.aiThreatDetection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetAiThreatDetection()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.googleSafeBrowsing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetGoogleSafeBrowsing()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.cryptojacking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetCryptojacking()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.dnsRebinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetDnsRebinding()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.idnHomographs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetIdnHomographs()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.typosquatting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetTyposquatting()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.dga": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetDga()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.nrd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetNrd()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.ddns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetDdns()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.parking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetParking()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.csam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetCsam()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.security.tlds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSecurity).GetTlds()).ToDataRes(types.Array(types.String))
+	},
+	"nextdns.profile.privacy.disguisedTrackers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfilePrivacy).GetDisguisedTrackers()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.privacy.allowAffiliate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfilePrivacy).GetAllowAffiliate()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.privacy.natives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfilePrivacy).GetNatives()).ToDataRes(types.Array(types.String))
+	},
+	"nextdns.profile.privacy.blocklists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfilePrivacy).GetBlocklists()).ToDataRes(types.Array(types.Resource("nextdns.profile.blocklist")))
+	},
+	"nextdns.profile.blocklist.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileBlocklist).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.blocklist.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileBlocklist).GetName()).ToDataRes(types.String)
+	},
+	"nextdns.profile.blocklist.website": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileBlocklist).GetWebsite()).ToDataRes(types.String)
+	},
+	"nextdns.profile.blocklist.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileBlocklist).GetEntries()).ToDataRes(types.Int)
+	},
+	"nextdns.profile.blocklist.updatedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileBlocklist).GetUpdatedOn()).ToDataRes(types.Time)
+	},
+	"nextdns.profile.parentalControl.safeSearch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetSafeSearch()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.youtubeRestrictedMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetYoutubeRestrictedMode()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.blockBypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetBlockBypass()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.recreationTimezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetRecreationTimezone()).ToDataRes(types.String)
+	},
+	"nextdns.profile.parentalControl.recreationTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetRecreationTimes()).ToDataRes(types.Dict)
+	},
+	"nextdns.profile.parentalControl.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetServices()).ToDataRes(types.Array(types.Resource("nextdns.profile.parentalControl.service")))
+	},
+	"nextdns.profile.parentalControl.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControl).GetCategories()).ToDataRes(types.Array(types.Resource("nextdns.profile.parentalControl.category")))
+	},
+	"nextdns.profile.parentalControl.service.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlService).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.parentalControl.service.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlService).GetActive()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.service.recreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlService).GetRecreation()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.category.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlCategory).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.parentalControl.category.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlCategory).GetActive()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.parentalControl.category.recreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileParentalControlCategory).GetRecreation()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.logsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetLogsEnabled()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.logsDropIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetLogsDropIp()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.logsDropDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetLogsDropDomain()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.logsRetention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetLogsRetention()).ToDataRes(types.Int)
+	},
+	"nextdns.profile.settings.logsLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetLogsLocation()).ToDataRes(types.String)
+	},
+	"nextdns.profile.settings.blockPageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetBlockPageEnabled()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.ecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetEcs()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.cacheBoost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetCacheBoost()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.cnameFlattening": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetCnameFlattening()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.settings.web3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSettings).GetWeb3()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.setup.ipv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetIpv4()).ToDataRes(types.Array(types.String))
+	},
+	"nextdns.profile.setup.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetIpv6()).ToDataRes(types.Array(types.String))
+	},
+	"nextdns.profile.setup.dnscrypt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetDnscrypt()).ToDataRes(types.String)
+	},
+	"nextdns.profile.setup.linkedIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetLinkedIp()).ToDataRes(types.String)
+	},
+	"nextdns.profile.setup.linkedIpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetLinkedIpServers()).ToDataRes(types.Array(types.String))
+	},
+	"nextdns.profile.setup.linkedIpDdns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileSetup).GetLinkedIpDdns()).ToDataRes(types.String)
+	},
+	"nextdns.profile.denylistEntry.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileDenylistEntry).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.denylistEntry.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileDenylistEntry).GetActive()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.allowlistEntry.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileAllowlistEntry).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.allowlistEntry.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileAllowlistEntry).GetActive()).ToDataRes(types.Bool)
+	},
+	"nextdns.profile.rewrite.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileRewrite).GetId()).ToDataRes(types.String)
+	},
+	"nextdns.profile.rewrite.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileRewrite).GetName()).ToDataRes(types.String)
+	},
+	"nextdns.profile.rewrite.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileRewrite).GetType()).ToDataRes(types.String)
+	},
+	"nextdns.profile.rewrite.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNextdnsProfileRewrite).GetContent()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -178,6 +438,322 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nextdns.profile.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNextdnsProfile).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Account, ok = plugin.RawToTValue[*mqlNextdnsAccount](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Security, ok = plugin.RawToTValue[*mqlNextdnsProfileSecurity](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.privacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Privacy, ok = plugin.RawToTValue[*mqlNextdnsProfilePrivacy](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).ParentalControl, ok = plugin.RawToTValue[*mqlNextdnsProfileParentalControl](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Settings, ok = plugin.RawToTValue[*mqlNextdnsProfileSettings](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Setup, ok = plugin.RawToTValue[*mqlNextdnsProfileSetup](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.denylist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Denylist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.allowlist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Allowlist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.rewrites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfile).Rewrites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.security.threatIntelligenceFeeds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).ThreatIntelligenceFeeds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.aiThreatDetection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).AiThreatDetection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.googleSafeBrowsing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).GoogleSafeBrowsing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.cryptojacking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Cryptojacking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.dnsRebinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).DnsRebinding, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.idnHomographs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).IdnHomographs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.typosquatting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Typosquatting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.dga": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Dga, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.nrd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Nrd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.ddns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Ddns, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.parking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Parking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.csam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Csam, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.security.tlds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSecurity).Tlds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.privacy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfilePrivacy).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.privacy.disguisedTrackers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfilePrivacy).DisguisedTrackers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.privacy.allowAffiliate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfilePrivacy).AllowAffiliate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.privacy.natives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfilePrivacy).Natives, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.privacy.blocklists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfilePrivacy).Blocklists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.blocklist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.blocklist.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.blocklist.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.blocklist.website": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).Website, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.blocklist.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).Entries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.blocklist.updatedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileBlocklist).UpdatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.parentalControl.safeSearch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).SafeSearch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.youtubeRestrictedMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).YoutubeRestrictedMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.blockBypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).BlockBypass, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.recreationTimezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).RecreationTimezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.recreationTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).RecreationTimes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControl).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlService).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.parentalControl.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.service.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlService).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.service.recreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlService).Recreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.category.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlCategory).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.parentalControl.category.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlCategory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.category.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlCategory).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.parentalControl.category.recreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileParentalControlCategory).Recreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.settings.logsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).LogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.logsDropIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).LogsDropIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.logsDropDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).LogsDropDomain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.logsRetention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).LogsRetention, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.logsLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).LogsLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.blockPageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).BlockPageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.ecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).Ecs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.cacheBoost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).CacheBoost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.cnameFlattening": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).CnameFlattening, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.settings.web3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSettings).Web3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.setup.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).Ipv4, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).Ipv6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.dnscrypt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).Dnscrypt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.linkedIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).LinkedIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.linkedIpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).LinkedIpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.setup.linkedIpDdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileSetup).LinkedIpDdns, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.denylistEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileDenylistEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.denylistEntry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileDenylistEntry).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.denylistEntry.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileDenylistEntry).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.allowlistEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileAllowlistEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.allowlistEntry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileAllowlistEntry).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.allowlistEntry.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileAllowlistEntry).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.rewrite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileRewrite).__id, ok = v.Value.(string)
+		return
+	},
+	"nextdns.profile.rewrite.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileRewrite).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.rewrite.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileRewrite).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.rewrite.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileRewrite).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nextdns.profile.rewrite.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNextdnsProfileRewrite).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -352,10 +928,19 @@ func (c *mqlNextdnsAccount) GetProfiles() *plugin.TValue[[]any] {
 type mqlNextdnsProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNextdnsProfileInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Fingerprint plugin.TValue[string]
+	mqlNextdnsProfileInternal
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Fingerprint     plugin.TValue[string]
+	Account         plugin.TValue[*mqlNextdnsAccount]
+	Security        plugin.TValue[*mqlNextdnsProfileSecurity]
+	Privacy         plugin.TValue[*mqlNextdnsProfilePrivacy]
+	ParentalControl plugin.TValue[*mqlNextdnsProfileParentalControl]
+	Settings        plugin.TValue[*mqlNextdnsProfileSettings]
+	Setup           plugin.TValue[*mqlNextdnsProfileSetup]
+	Denylist        plugin.TValue[[]any]
+	Allowlist       plugin.TValue[[]any]
+	Rewrites        plugin.TValue[[]any]
 }
 
 // createNextdnsProfile creates a new instance of this resource
@@ -405,4 +990,872 @@ func (c *mqlNextdnsProfile) GetName() *plugin.TValue[string] {
 
 func (c *mqlNextdnsProfile) GetFingerprint() *plugin.TValue[string] {
 	return &c.Fingerprint
+}
+
+func (c *mqlNextdnsProfile) GetAccount() *plugin.TValue[*mqlNextdnsAccount] {
+	return plugin.GetOrCompute[*mqlNextdnsAccount](&c.Account, func() (*mqlNextdnsAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "account")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsAccount), nil
+			}
+		}
+
+		return c.account()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetSecurity() *plugin.TValue[*mqlNextdnsProfileSecurity] {
+	return plugin.GetOrCompute[*mqlNextdnsProfileSecurity](&c.Security, func() (*mqlNextdnsProfileSecurity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "security")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsProfileSecurity), nil
+			}
+		}
+
+		return c.security()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetPrivacy() *plugin.TValue[*mqlNextdnsProfilePrivacy] {
+	return plugin.GetOrCompute[*mqlNextdnsProfilePrivacy](&c.Privacy, func() (*mqlNextdnsProfilePrivacy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "privacy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsProfilePrivacy), nil
+			}
+		}
+
+		return c.privacy()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetParentalControl() *plugin.TValue[*mqlNextdnsProfileParentalControl] {
+	return plugin.GetOrCompute[*mqlNextdnsProfileParentalControl](&c.ParentalControl, func() (*mqlNextdnsProfileParentalControl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "parentalControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsProfileParentalControl), nil
+			}
+		}
+
+		return c.parentalControl()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetSettings() *plugin.TValue[*mqlNextdnsProfileSettings] {
+	return plugin.GetOrCompute[*mqlNextdnsProfileSettings](&c.Settings, func() (*mqlNextdnsProfileSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsProfileSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetSetup() *plugin.TValue[*mqlNextdnsProfileSetup] {
+	return plugin.GetOrCompute[*mqlNextdnsProfileSetup](&c.Setup, func() (*mqlNextdnsProfileSetup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "setup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNextdnsProfileSetup), nil
+			}
+		}
+
+		return c.setup()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetDenylist() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Denylist, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "denylist")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.denylist()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetAllowlist() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Allowlist, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "allowlist")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowlist()
+	})
+}
+
+func (c *mqlNextdnsProfile) GetRewrites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rewrites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nextdns.profile", c.__id, "rewrites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rewrites()
+	})
+}
+
+// mqlNextdnsProfileSecurity for the nextdns.profile.security resource
+type mqlNextdnsProfileSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileSecurityInternal it will be used here
+	ThreatIntelligenceFeeds plugin.TValue[bool]
+	AiThreatDetection       plugin.TValue[bool]
+	GoogleSafeBrowsing      plugin.TValue[bool]
+	Cryptojacking           plugin.TValue[bool]
+	DnsRebinding            plugin.TValue[bool]
+	IdnHomographs           plugin.TValue[bool]
+	Typosquatting           plugin.TValue[bool]
+	Dga                     plugin.TValue[bool]
+	Nrd                     plugin.TValue[bool]
+	Ddns                    plugin.TValue[bool]
+	Parking                 plugin.TValue[bool]
+	Csam                    plugin.TValue[bool]
+	Tlds                    plugin.TValue[[]any]
+}
+
+// createNextdnsProfileSecurity creates a new instance of this resource
+func createNextdnsProfileSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.security", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileSecurity) MqlName() string {
+	return "nextdns.profile.security"
+}
+
+func (c *mqlNextdnsProfileSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileSecurity) GetThreatIntelligenceFeeds() *plugin.TValue[bool] {
+	return &c.ThreatIntelligenceFeeds
+}
+
+func (c *mqlNextdnsProfileSecurity) GetAiThreatDetection() *plugin.TValue[bool] {
+	return &c.AiThreatDetection
+}
+
+func (c *mqlNextdnsProfileSecurity) GetGoogleSafeBrowsing() *plugin.TValue[bool] {
+	return &c.GoogleSafeBrowsing
+}
+
+func (c *mqlNextdnsProfileSecurity) GetCryptojacking() *plugin.TValue[bool] {
+	return &c.Cryptojacking
+}
+
+func (c *mqlNextdnsProfileSecurity) GetDnsRebinding() *plugin.TValue[bool] {
+	return &c.DnsRebinding
+}
+
+func (c *mqlNextdnsProfileSecurity) GetIdnHomographs() *plugin.TValue[bool] {
+	return &c.IdnHomographs
+}
+
+func (c *mqlNextdnsProfileSecurity) GetTyposquatting() *plugin.TValue[bool] {
+	return &c.Typosquatting
+}
+
+func (c *mqlNextdnsProfileSecurity) GetDga() *plugin.TValue[bool] {
+	return &c.Dga
+}
+
+func (c *mqlNextdnsProfileSecurity) GetNrd() *plugin.TValue[bool] {
+	return &c.Nrd
+}
+
+func (c *mqlNextdnsProfileSecurity) GetDdns() *plugin.TValue[bool] {
+	return &c.Ddns
+}
+
+func (c *mqlNextdnsProfileSecurity) GetParking() *plugin.TValue[bool] {
+	return &c.Parking
+}
+
+func (c *mqlNextdnsProfileSecurity) GetCsam() *plugin.TValue[bool] {
+	return &c.Csam
+}
+
+func (c *mqlNextdnsProfileSecurity) GetTlds() *plugin.TValue[[]any] {
+	return &c.Tlds
+}
+
+// mqlNextdnsProfilePrivacy for the nextdns.profile.privacy resource
+type mqlNextdnsProfilePrivacy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfilePrivacyInternal it will be used here
+	DisguisedTrackers plugin.TValue[bool]
+	AllowAffiliate    plugin.TValue[bool]
+	Natives           plugin.TValue[[]any]
+	Blocklists        plugin.TValue[[]any]
+}
+
+// createNextdnsProfilePrivacy creates a new instance of this resource
+func createNextdnsProfilePrivacy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfilePrivacy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.privacy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfilePrivacy) MqlName() string {
+	return "nextdns.profile.privacy"
+}
+
+func (c *mqlNextdnsProfilePrivacy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfilePrivacy) GetDisguisedTrackers() *plugin.TValue[bool] {
+	return &c.DisguisedTrackers
+}
+
+func (c *mqlNextdnsProfilePrivacy) GetAllowAffiliate() *plugin.TValue[bool] {
+	return &c.AllowAffiliate
+}
+
+func (c *mqlNextdnsProfilePrivacy) GetNatives() *plugin.TValue[[]any] {
+	return &c.Natives
+}
+
+func (c *mqlNextdnsProfilePrivacy) GetBlocklists() *plugin.TValue[[]any] {
+	return &c.Blocklists
+}
+
+// mqlNextdnsProfileBlocklist for the nextdns.profile.blocklist resource
+type mqlNextdnsProfileBlocklist struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileBlocklistInternal it will be used here
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Website   plugin.TValue[string]
+	Entries   plugin.TValue[int64]
+	UpdatedOn plugin.TValue[*time.Time]
+}
+
+// createNextdnsProfileBlocklist creates a new instance of this resource
+func createNextdnsProfileBlocklist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileBlocklist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.blocklist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileBlocklist) MqlName() string {
+	return "nextdns.profile.blocklist"
+}
+
+func (c *mqlNextdnsProfileBlocklist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileBlocklist) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileBlocklist) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNextdnsProfileBlocklist) GetWebsite() *plugin.TValue[string] {
+	return &c.Website
+}
+
+func (c *mqlNextdnsProfileBlocklist) GetEntries() *plugin.TValue[int64] {
+	return &c.Entries
+}
+
+func (c *mqlNextdnsProfileBlocklist) GetUpdatedOn() *plugin.TValue[*time.Time] {
+	return &c.UpdatedOn
+}
+
+// mqlNextdnsProfileParentalControl for the nextdns.profile.parentalControl resource
+type mqlNextdnsProfileParentalControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileParentalControlInternal it will be used here
+	SafeSearch            plugin.TValue[bool]
+	YoutubeRestrictedMode plugin.TValue[bool]
+	BlockBypass           plugin.TValue[bool]
+	RecreationTimezone    plugin.TValue[string]
+	RecreationTimes       plugin.TValue[any]
+	Services              plugin.TValue[[]any]
+	Categories            plugin.TValue[[]any]
+}
+
+// createNextdnsProfileParentalControl creates a new instance of this resource
+func createNextdnsProfileParentalControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileParentalControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.parentalControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileParentalControl) MqlName() string {
+	return "nextdns.profile.parentalControl"
+}
+
+func (c *mqlNextdnsProfileParentalControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetSafeSearch() *plugin.TValue[bool] {
+	return &c.SafeSearch
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetYoutubeRestrictedMode() *plugin.TValue[bool] {
+	return &c.YoutubeRestrictedMode
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetBlockBypass() *plugin.TValue[bool] {
+	return &c.BlockBypass
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetRecreationTimezone() *plugin.TValue[string] {
+	return &c.RecreationTimezone
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetRecreationTimes() *plugin.TValue[any] {
+	return &c.RecreationTimes
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetServices() *plugin.TValue[[]any] {
+	return &c.Services
+}
+
+func (c *mqlNextdnsProfileParentalControl) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
+}
+
+// mqlNextdnsProfileParentalControlService for the nextdns.profile.parentalControl.service resource
+type mqlNextdnsProfileParentalControlService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileParentalControlServiceInternal it will be used here
+	Id         plugin.TValue[string]
+	Active     plugin.TValue[bool]
+	Recreation plugin.TValue[bool]
+}
+
+// createNextdnsProfileParentalControlService creates a new instance of this resource
+func createNextdnsProfileParentalControlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileParentalControlService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.parentalControl.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileParentalControlService) MqlName() string {
+	return "nextdns.profile.parentalControl.service"
+}
+
+func (c *mqlNextdnsProfileParentalControlService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileParentalControlService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileParentalControlService) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlNextdnsProfileParentalControlService) GetRecreation() *plugin.TValue[bool] {
+	return &c.Recreation
+}
+
+// mqlNextdnsProfileParentalControlCategory for the nextdns.profile.parentalControl.category resource
+type mqlNextdnsProfileParentalControlCategory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileParentalControlCategoryInternal it will be used here
+	Id         plugin.TValue[string]
+	Active     plugin.TValue[bool]
+	Recreation plugin.TValue[bool]
+}
+
+// createNextdnsProfileParentalControlCategory creates a new instance of this resource
+func createNextdnsProfileParentalControlCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileParentalControlCategory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.parentalControl.category", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileParentalControlCategory) MqlName() string {
+	return "nextdns.profile.parentalControl.category"
+}
+
+func (c *mqlNextdnsProfileParentalControlCategory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileParentalControlCategory) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileParentalControlCategory) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlNextdnsProfileParentalControlCategory) GetRecreation() *plugin.TValue[bool] {
+	return &c.Recreation
+}
+
+// mqlNextdnsProfileSettings for the nextdns.profile.settings resource
+type mqlNextdnsProfileSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileSettingsInternal it will be used here
+	LogsEnabled      plugin.TValue[bool]
+	LogsDropIp       plugin.TValue[bool]
+	LogsDropDomain   plugin.TValue[bool]
+	LogsRetention    plugin.TValue[int64]
+	LogsLocation     plugin.TValue[string]
+	BlockPageEnabled plugin.TValue[bool]
+	Ecs              plugin.TValue[bool]
+	CacheBoost       plugin.TValue[bool]
+	CnameFlattening  plugin.TValue[bool]
+	Web3             plugin.TValue[bool]
+}
+
+// createNextdnsProfileSettings creates a new instance of this resource
+func createNextdnsProfileSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileSettings) MqlName() string {
+	return "nextdns.profile.settings"
+}
+
+func (c *mqlNextdnsProfileSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileSettings) GetLogsEnabled() *plugin.TValue[bool] {
+	return &c.LogsEnabled
+}
+
+func (c *mqlNextdnsProfileSettings) GetLogsDropIp() *plugin.TValue[bool] {
+	return &c.LogsDropIp
+}
+
+func (c *mqlNextdnsProfileSettings) GetLogsDropDomain() *plugin.TValue[bool] {
+	return &c.LogsDropDomain
+}
+
+func (c *mqlNextdnsProfileSettings) GetLogsRetention() *plugin.TValue[int64] {
+	return &c.LogsRetention
+}
+
+func (c *mqlNextdnsProfileSettings) GetLogsLocation() *plugin.TValue[string] {
+	return &c.LogsLocation
+}
+
+func (c *mqlNextdnsProfileSettings) GetBlockPageEnabled() *plugin.TValue[bool] {
+	return &c.BlockPageEnabled
+}
+
+func (c *mqlNextdnsProfileSettings) GetEcs() *plugin.TValue[bool] {
+	return &c.Ecs
+}
+
+func (c *mqlNextdnsProfileSettings) GetCacheBoost() *plugin.TValue[bool] {
+	return &c.CacheBoost
+}
+
+func (c *mqlNextdnsProfileSettings) GetCnameFlattening() *plugin.TValue[bool] {
+	return &c.CnameFlattening
+}
+
+func (c *mqlNextdnsProfileSettings) GetWeb3() *plugin.TValue[bool] {
+	return &c.Web3
+}
+
+// mqlNextdnsProfileSetup for the nextdns.profile.setup resource
+type mqlNextdnsProfileSetup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileSetupInternal it will be used here
+	Ipv4            plugin.TValue[[]any]
+	Ipv6            plugin.TValue[[]any]
+	Dnscrypt        plugin.TValue[string]
+	LinkedIp        plugin.TValue[string]
+	LinkedIpServers plugin.TValue[[]any]
+	LinkedIpDdns    plugin.TValue[string]
+}
+
+// createNextdnsProfileSetup creates a new instance of this resource
+func createNextdnsProfileSetup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileSetup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.setup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileSetup) MqlName() string {
+	return "nextdns.profile.setup"
+}
+
+func (c *mqlNextdnsProfileSetup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileSetup) GetIpv4() *plugin.TValue[[]any] {
+	return &c.Ipv4
+}
+
+func (c *mqlNextdnsProfileSetup) GetIpv6() *plugin.TValue[[]any] {
+	return &c.Ipv6
+}
+
+func (c *mqlNextdnsProfileSetup) GetDnscrypt() *plugin.TValue[string] {
+	return &c.Dnscrypt
+}
+
+func (c *mqlNextdnsProfileSetup) GetLinkedIp() *plugin.TValue[string] {
+	return &c.LinkedIp
+}
+
+func (c *mqlNextdnsProfileSetup) GetLinkedIpServers() *plugin.TValue[[]any] {
+	return &c.LinkedIpServers
+}
+
+func (c *mqlNextdnsProfileSetup) GetLinkedIpDdns() *plugin.TValue[string] {
+	return &c.LinkedIpDdns
+}
+
+// mqlNextdnsProfileDenylistEntry for the nextdns.profile.denylistEntry resource
+type mqlNextdnsProfileDenylistEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileDenylistEntryInternal it will be used here
+	Id     plugin.TValue[string]
+	Active plugin.TValue[bool]
+}
+
+// createNextdnsProfileDenylistEntry creates a new instance of this resource
+func createNextdnsProfileDenylistEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileDenylistEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.denylistEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileDenylistEntry) MqlName() string {
+	return "nextdns.profile.denylistEntry"
+}
+
+func (c *mqlNextdnsProfileDenylistEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileDenylistEntry) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileDenylistEntry) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+// mqlNextdnsProfileAllowlistEntry for the nextdns.profile.allowlistEntry resource
+type mqlNextdnsProfileAllowlistEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileAllowlistEntryInternal it will be used here
+	Id     plugin.TValue[string]
+	Active plugin.TValue[bool]
+}
+
+// createNextdnsProfileAllowlistEntry creates a new instance of this resource
+func createNextdnsProfileAllowlistEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileAllowlistEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.allowlistEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileAllowlistEntry) MqlName() string {
+	return "nextdns.profile.allowlistEntry"
+}
+
+func (c *mqlNextdnsProfileAllowlistEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileAllowlistEntry) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileAllowlistEntry) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+// mqlNextdnsProfileRewrite for the nextdns.profile.rewrite resource
+type mqlNextdnsProfileRewrite struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNextdnsProfileRewriteInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Type    plugin.TValue[string]
+	Content plugin.TValue[string]
+}
+
+// createNextdnsProfileRewrite creates a new instance of this resource
+func createNextdnsProfileRewrite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNextdnsProfileRewrite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nextdns.profile.rewrite", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNextdnsProfileRewrite) MqlName() string {
+	return "nextdns.profile.rewrite"
+}
+
+func (c *mqlNextdnsProfileRewrite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNextdnsProfileRewrite) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNextdnsProfileRewrite) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNextdnsProfileRewrite) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlNextdnsProfileRewrite) GetContent() *plugin.TValue[string] {
+	return &c.Content
 }
