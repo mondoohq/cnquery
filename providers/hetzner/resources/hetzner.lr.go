@@ -40,6 +40,12 @@ const (
 	ResourceHetznerIso                    string = "hetzner.iso"
 	ResourceHetznerLocation               string = "hetzner.location"
 	ResourceHetznerDatacenter             string = "hetzner.datacenter"
+	ResourceHetznerStorageBox             string = "hetzner.storageBox"
+	ResourceHetznerStorageBoxType         string = "hetzner.storageBoxType"
+	ResourceHetznerStorageBoxSubaccount   string = "hetzner.storageBox.subaccount"
+	ResourceHetznerStorageBoxSnapshot     string = "hetzner.storageBox.snapshot"
+	ResourceHetznerZone                   string = "hetzner.zone"
+	ResourceHetznerZoneRrset              string = "hetzner.zone.rrset"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -141,6 +147,30 @@ func init() {
 		"hetzner.datacenter": {
 			Init:   initHetznerDatacenter,
 			Create: createHetznerDatacenter,
+		},
+		"hetzner.storageBox": {
+			Init:   initHetznerStorageBox,
+			Create: createHetznerStorageBox,
+		},
+		"hetzner.storageBoxType": {
+			Init:   initHetznerStorageBoxType,
+			Create: createHetznerStorageBoxType,
+		},
+		"hetzner.storageBox.subaccount": {
+			// to override args, implement: initHetznerStorageBoxSubaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerStorageBoxSubaccount,
+		},
+		"hetzner.storageBox.snapshot": {
+			// to override args, implement: initHetznerStorageBoxSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerStorageBoxSnapshot,
+		},
+		"hetzner.zone": {
+			Init:   initHetznerZone,
+			Create: createHetznerZone,
+		},
+		"hetzner.zone.rrset": {
+			// to override args, implement: initHetznerZoneRrset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerZoneRrset,
 		},
 	}
 }
@@ -261,6 +291,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.datacenters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetzner).GetDatacenters()).ToDataRes(types.Array(types.Resource("hetzner.datacenter")))
 	},
+	"hetzner.storageBoxes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetzner).GetStorageBoxes()).ToDataRes(types.Array(types.Resource("hetzner.storageBox")))
+	},
+	"hetzner.storageBoxTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetzner).GetStorageBoxTypes()).ToDataRes(types.Array(types.Resource("hetzner.storageBoxType")))
+	},
+	"hetzner.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetzner).GetZones()).ToDataRes(types.Array(types.Resource("hetzner.zone")))
+	},
 	"hetzner.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetId()).ToDataRes(types.Int)
 	},
@@ -272,6 +311,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.server.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetCreated()).ToDataRes(types.Time)
+	},
+	"hetzner.server.primaryDiskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPrimaryDiskSize()).ToDataRes(types.Int)
 	},
 	"hetzner.server.serverType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetServerType()).ToDataRes(types.Resource("hetzner.serverType"))
@@ -819,6 +861,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.firewall.labelSelectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerFirewall).GetLabelSelectors()).ToDataRes(types.Array(types.String))
 	},
+	"hetzner.firewall.labelSelectorTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerFirewall).GetLabelSelectorTargets()).ToDataRes(types.Array(types.Resource("hetzner.server")))
+	},
 	"hetzner.firewall.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerFirewall).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -942,6 +987,240 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.datacenter.serverTypesAvailableForMigration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerDatacenter).GetServerTypesAvailableForMigration()).ToDataRes(types.Array(types.Resource("hetzner.serverType")))
 	},
+	"hetzner.storageBox.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetUsername()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetStatus()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.storageBoxType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetStorageBoxType()).ToDataRes(types.Resource("hetzner.storageBoxType"))
+	},
+	"hetzner.storageBox.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
+	},
+	"hetzner.storageBox.reachableExternally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetReachableExternally()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.sambaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSambaEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.sshEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSshEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.webdavEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetWebdavEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.zfsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetZfsEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.snapshotPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSnapshotPlan()).ToDataRes(types.Dict)
+	},
+	"hetzner.storageBox.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSize()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.sizeData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSizeData()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.sizeSnapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSizeSnapshots()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetServer()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.system": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSystem()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.protection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetProtection()).ToDataRes(types.Dict)
+	},
+	"hetzner.storageBox.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"hetzner.storageBox.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetCreated()).ToDataRes(types.Time)
+	},
+	"hetzner.storageBox.subaccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSubaccounts()).ToDataRes(types.Array(types.Resource("hetzner.storageBox.subaccount")))
+	},
+	"hetzner.storageBox.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBox).GetSnapshots()).ToDataRes(types.Array(types.Resource("hetzner.storageBox.snapshot")))
+	},
+	"hetzner.storageBoxType.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBoxType.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.storageBoxType.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetDescription()).ToDataRes(types.String)
+	},
+	"hetzner.storageBoxType.snapshotLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetSnapshotLimit()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBoxType.automaticSnapshotLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetAutomaticSnapshotLimit()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBoxType.subaccountsLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetSubaccountsLimit()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBoxType.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetSize()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBoxType.deprecated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxType).GetDeprecated()).ToDataRes(types.Time)
+	},
+	"hetzner.storageBox.subaccount.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.subaccount.storageBoxId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetStorageBoxId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.subaccount.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.subaccount.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetUsername()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.subaccount.homeDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetHomeDirectory()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.subaccount.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetServer()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.subaccount.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetDescription()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.subaccount.reachableExternally": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetReachableExternally()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.subaccount.readonly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetReadonly()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.subaccount.sambaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetSambaEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.subaccount.sshEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetSshEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.subaccount.webdavEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetWebdavEnabled()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.subaccount.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"hetzner.storageBox.subaccount.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSubaccount).GetCreated()).ToDataRes(types.Time)
+	},
+	"hetzner.storageBox.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.snapshot.storageBoxId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetStorageBoxId()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.snapshot.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetDescription()).ToDataRes(types.String)
+	},
+	"hetzner.storageBox.snapshot.isAutomatic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetIsAutomatic()).ToDataRes(types.Bool)
+	},
+	"hetzner.storageBox.snapshot.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetSize()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.snapshot.sizeFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetSizeFilesystem()).ToDataRes(types.Int)
+	},
+	"hetzner.storageBox.snapshot.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"hetzner.storageBox.snapshot.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerStorageBoxSnapshot).GetCreated()).ToDataRes(types.Time)
+	},
+	"hetzner.zone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetId()).ToDataRes(types.Int)
+	},
+	"hetzner.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.zone.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetMode()).ToDataRes(types.String)
+	},
+	"hetzner.zone.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetStatus()).ToDataRes(types.String)
+	},
+	"hetzner.zone.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetTtl()).ToDataRes(types.Int)
+	},
+	"hetzner.zone.recordCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetRecordCount()).ToDataRes(types.Int)
+	},
+	"hetzner.zone.registrar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetRegistrar()).ToDataRes(types.String)
+	},
+	"hetzner.zone.primaryNameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetPrimaryNameservers()).ToDataRes(types.Array(types.Dict))
+	},
+	"hetzner.zone.assignedNameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetAssignedNameservers()).ToDataRes(types.Array(types.String))
+	},
+	"hetzner.zone.delegatedNameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetDelegatedNameservers()).ToDataRes(types.Array(types.String))
+	},
+	"hetzner.zone.delegationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetDelegationStatus()).ToDataRes(types.String)
+	},
+	"hetzner.zone.delegationLastCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetDelegationLastCheck()).ToDataRes(types.Time)
+	},
+	"hetzner.zone.rrsets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetRrsets()).ToDataRes(types.Array(types.Resource("hetzner.zone.rrset")))
+	},
+	"hetzner.zone.protection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetProtection()).ToDataRes(types.Dict)
+	},
+	"hetzner.zone.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"hetzner.zone.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetCreated()).ToDataRes(types.Time)
+	},
+	"hetzner.zone.rrset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetId()).ToDataRes(types.String)
+	},
+	"hetzner.zone.rrset.zoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetZoneId()).ToDataRes(types.Int)
+	},
+	"hetzner.zone.rrset.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetZone()).ToDataRes(types.Resource("hetzner.zone"))
+	},
+	"hetzner.zone.rrset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetName()).ToDataRes(types.String)
+	},
+	"hetzner.zone.rrset.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetType()).ToDataRes(types.String)
+	},
+	"hetzner.zone.rrset.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetTtl()).ToDataRes(types.Int)
+	},
+	"hetzner.zone.rrset.records": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetRecords()).ToDataRes(types.Array(types.Dict))
+	},
+	"hetzner.zone.rrset.protection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetProtection()).ToDataRes(types.Dict)
+	},
+	"hetzner.zone.rrset.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZoneRrset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1022,6 +1301,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetzner).Datacenters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.storageBoxes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetzner).StorageBoxes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetzner).StorageBoxTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetzner).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).__id, ok = v.Value.(string)
 		return
@@ -1040,6 +1331,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.server.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.primaryDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PrimaryDiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"hetzner.server.serverType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1838,6 +2133,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerFirewall).LabelSelectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.firewall.labelSelectorTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerFirewall).LabelSelectorTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.firewall.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerFirewall).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -2022,6 +2321,342 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerDatacenter).ServerTypesAvailableForMigration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.storageBox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.storageBox.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.storageBoxType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).StorageBoxType, ok = plugin.RawToTValue[*mqlHetznerStorageBoxType](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Location, ok = plugin.RawToTValue[*mqlHetznerLocation](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.reachableExternally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).ReachableExternally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.sambaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).SambaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.sshEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).SshEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.webdavEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).WebdavEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.zfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).ZfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshotPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).SnapshotPlan, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.sizeData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).SizeData, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.sizeSnapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).SizeSnapshots, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).System, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Protection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Subaccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBox).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.storageBoxType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.snapshotLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).SnapshotLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.automaticSnapshotLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).AutomaticSnapshotLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.subaccountsLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).SubaccountsLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBoxType.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxType).Deprecated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.storageBox.subaccount.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.storageBoxId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).StorageBoxId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.homeDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).HomeDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Server, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.reachableExternally": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).ReachableExternally, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.readonly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Readonly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.sambaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).SambaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.sshEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).SshEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.webdavEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).WebdavEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.subaccount.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSubaccount).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.storageBox.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.storageBoxId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).StorageBoxId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.isAutomatic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).IsAutomatic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.sizeFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).SizeFilesystem, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.storageBox.snapshot.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerStorageBoxSnapshot).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.recordCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).RecordCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.registrar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Registrar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.primaryNameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).PrimaryNameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.assignedNameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).AssignedNameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.delegatedNameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).DelegatedNameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.delegationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).DelegationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.delegationLastCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).DelegationLastCheck, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Rrsets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Protection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.zone.rrset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).ZoneId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Zone, ok = plugin.RawToTValue[*mqlHetznerZone](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Records, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Protection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.rrset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZoneRrset).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2067,6 +2702,9 @@ type mqlHetzner struct {
 	Isos              plugin.TValue[[]any]
 	Locations         plugin.TValue[[]any]
 	Datacenters       plugin.TValue[[]any]
+	StorageBoxes      plugin.TValue[[]any]
+	StorageBoxTypes   plugin.TValue[[]any]
+	Zones             plugin.TValue[[]any]
 }
 
 // createHetzner creates a new instance of this resource
@@ -2362,6 +3000,54 @@ func (c *mqlHetzner) GetDatacenters() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlHetzner) GetStorageBoxes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageBoxes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner", c.__id, "storageBoxes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageBoxes()
+	})
+}
+
+func (c *mqlHetzner) GetStorageBoxTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageBoxTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner", c.__id, "storageBoxTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageBoxTypes()
+	})
+}
+
+func (c *mqlHetzner) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
 // mqlHetznerServer for the hetzner.server resource
 type mqlHetznerServer struct {
 	MqlRuntime *plugin.Runtime
@@ -2371,6 +3057,7 @@ type mqlHetznerServer struct {
 	Name              plugin.TValue[string]
 	Status            plugin.TValue[string]
 	Created           plugin.TValue[*time.Time]
+	PrimaryDiskSize   plugin.TValue[int64]
 	ServerType        plugin.TValue[*mqlHetznerServerType]
 	Datacenter        plugin.TValue[*mqlHetznerDatacenter]
 	Location          plugin.TValue[*mqlHetznerLocation]
@@ -2453,6 +3140,10 @@ func (c *mqlHetznerServer) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlHetznerServer) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlHetznerServer) GetPrimaryDiskSize() *plugin.TValue[int64] {
+	return &c.PrimaryDiskSize
 }
 
 func (c *mqlHetznerServer) GetServerType() *plugin.TValue[*mqlHetznerServerType] {
@@ -4478,13 +5169,14 @@ type mqlHetznerFirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerFirewallInternal
-	Id             plugin.TValue[int64]
-	Name           plugin.TValue[string]
-	Created        plugin.TValue[*time.Time]
-	Rules          plugin.TValue[[]any]
-	Servers        plugin.TValue[[]any]
-	LabelSelectors plugin.TValue[[]any]
-	Labels         plugin.TValue[map[string]any]
+	Id                   plugin.TValue[int64]
+	Name                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Rules                plugin.TValue[[]any]
+	Servers              plugin.TValue[[]any]
+	LabelSelectors       plugin.TValue[[]any]
+	LabelSelectorTargets plugin.TValue[[]any]
+	Labels               plugin.TValue[map[string]any]
 }
 
 // createHetznerFirewall creates a new instance of this resource
@@ -4558,6 +5250,22 @@ func (c *mqlHetznerFirewall) GetServers() *plugin.TValue[[]any] {
 
 func (c *mqlHetznerFirewall) GetLabelSelectors() *plugin.TValue[[]any] {
 	return &c.LabelSelectors
+}
+
+func (c *mqlHetznerFirewall) GetLabelSelectorTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LabelSelectorTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.firewall", c.__id, "labelSelectorTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.labelSelectorTargets()
+	})
 }
 
 func (c *mqlHetznerFirewall) GetLabels() *plugin.TValue[map[string]any] {
@@ -5066,4 +5774,730 @@ func (c *mqlHetznerDatacenter) GetServerTypesAvailableForMigration() *plugin.TVa
 
 		return c.serverTypesAvailableForMigration()
 	})
+}
+
+// mqlHetznerStorageBox for the hetzner.storageBox resource
+type mqlHetznerStorageBox struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHetznerStorageBoxInternal
+	Id                  plugin.TValue[int64]
+	Name                plugin.TValue[string]
+	Username            plugin.TValue[string]
+	Status              plugin.TValue[string]
+	StorageBoxType      plugin.TValue[*mqlHetznerStorageBoxType]
+	Location            plugin.TValue[*mqlHetznerLocation]
+	ReachableExternally plugin.TValue[bool]
+	SambaEnabled        plugin.TValue[bool]
+	SshEnabled          plugin.TValue[bool]
+	WebdavEnabled       plugin.TValue[bool]
+	ZfsEnabled          plugin.TValue[bool]
+	SnapshotPlan        plugin.TValue[any]
+	Size                plugin.TValue[int64]
+	SizeData            plugin.TValue[int64]
+	SizeSnapshots       plugin.TValue[int64]
+	Server              plugin.TValue[string]
+	System              plugin.TValue[string]
+	Protection          plugin.TValue[any]
+	Labels              plugin.TValue[map[string]any]
+	Created             plugin.TValue[*time.Time]
+	Subaccounts         plugin.TValue[[]any]
+	Snapshots           plugin.TValue[[]any]
+}
+
+// createHetznerStorageBox creates a new instance of this resource
+func createHetznerStorageBox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerStorageBox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.storageBox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerStorageBox) MqlName() string {
+	return "hetzner.storageBox"
+}
+
+func (c *mqlHetznerStorageBox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerStorageBox) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlHetznerStorageBox) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerStorageBox) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlHetznerStorageBox) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlHetznerStorageBox) GetStorageBoxType() *plugin.TValue[*mqlHetznerStorageBoxType] {
+	return plugin.GetOrCompute[*mqlHetznerStorageBoxType](&c.StorageBoxType, func() (*mqlHetznerStorageBoxType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.storageBox", c.__id, "storageBoxType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerStorageBoxType), nil
+			}
+		}
+
+		return c.storageBoxType()
+	})
+}
+
+func (c *mqlHetznerStorageBox) GetLocation() *plugin.TValue[*mqlHetznerLocation] {
+	return plugin.GetOrCompute[*mqlHetznerLocation](&c.Location, func() (*mqlHetznerLocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.storageBox", c.__id, "location")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerLocation), nil
+			}
+		}
+
+		return c.location()
+	})
+}
+
+func (c *mqlHetznerStorageBox) GetReachableExternally() *plugin.TValue[bool] {
+	return &c.ReachableExternally
+}
+
+func (c *mqlHetznerStorageBox) GetSambaEnabled() *plugin.TValue[bool] {
+	return &c.SambaEnabled
+}
+
+func (c *mqlHetznerStorageBox) GetSshEnabled() *plugin.TValue[bool] {
+	return &c.SshEnabled
+}
+
+func (c *mqlHetznerStorageBox) GetWebdavEnabled() *plugin.TValue[bool] {
+	return &c.WebdavEnabled
+}
+
+func (c *mqlHetznerStorageBox) GetZfsEnabled() *plugin.TValue[bool] {
+	return &c.ZfsEnabled
+}
+
+func (c *mqlHetznerStorageBox) GetSnapshotPlan() *plugin.TValue[any] {
+	return &c.SnapshotPlan
+}
+
+func (c *mqlHetznerStorageBox) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlHetznerStorageBox) GetSizeData() *plugin.TValue[int64] {
+	return &c.SizeData
+}
+
+func (c *mqlHetznerStorageBox) GetSizeSnapshots() *plugin.TValue[int64] {
+	return &c.SizeSnapshots
+}
+
+func (c *mqlHetznerStorageBox) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlHetznerStorageBox) GetSystem() *plugin.TValue[string] {
+	return &c.System
+}
+
+func (c *mqlHetznerStorageBox) GetProtection() *plugin.TValue[any] {
+	return &c.Protection
+}
+
+func (c *mqlHetznerStorageBox) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlHetznerStorageBox) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlHetznerStorageBox) GetSubaccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subaccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.storageBox", c.__id, "subaccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subaccounts()
+	})
+}
+
+func (c *mqlHetznerStorageBox) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.storageBox", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+// mqlHetznerStorageBoxType for the hetzner.storageBoxType resource
+type mqlHetznerStorageBoxType struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerStorageBoxTypeInternal it will be used here
+	Id                     plugin.TValue[int64]
+	Name                   plugin.TValue[string]
+	Description            plugin.TValue[string]
+	SnapshotLimit          plugin.TValue[int64]
+	AutomaticSnapshotLimit plugin.TValue[int64]
+	SubaccountsLimit       plugin.TValue[int64]
+	Size                   plugin.TValue[int64]
+	Deprecated             plugin.TValue[*time.Time]
+}
+
+// createHetznerStorageBoxType creates a new instance of this resource
+func createHetznerStorageBoxType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerStorageBoxType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.storageBoxType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerStorageBoxType) MqlName() string {
+	return "hetzner.storageBoxType"
+}
+
+func (c *mqlHetznerStorageBoxType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerStorageBoxType) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlHetznerStorageBoxType) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerStorageBoxType) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHetznerStorageBoxType) GetSnapshotLimit() *plugin.TValue[int64] {
+	return &c.SnapshotLimit
+}
+
+func (c *mqlHetznerStorageBoxType) GetAutomaticSnapshotLimit() *plugin.TValue[int64] {
+	return &c.AutomaticSnapshotLimit
+}
+
+func (c *mqlHetznerStorageBoxType) GetSubaccountsLimit() *plugin.TValue[int64] {
+	return &c.SubaccountsLimit
+}
+
+func (c *mqlHetznerStorageBoxType) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlHetznerStorageBoxType) GetDeprecated() *plugin.TValue[*time.Time] {
+	return &c.Deprecated
+}
+
+// mqlHetznerStorageBoxSubaccount for the hetzner.storageBox.subaccount resource
+type mqlHetznerStorageBoxSubaccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerStorageBoxSubaccountInternal it will be used here
+	Id                  plugin.TValue[int64]
+	StorageBoxId        plugin.TValue[int64]
+	Name                plugin.TValue[string]
+	Username            plugin.TValue[string]
+	HomeDirectory       plugin.TValue[string]
+	Server              plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ReachableExternally plugin.TValue[bool]
+	Readonly            plugin.TValue[bool]
+	SambaEnabled        plugin.TValue[bool]
+	SshEnabled          plugin.TValue[bool]
+	WebdavEnabled       plugin.TValue[bool]
+	Labels              plugin.TValue[map[string]any]
+	Created             plugin.TValue[*time.Time]
+}
+
+// createHetznerStorageBoxSubaccount creates a new instance of this resource
+func createHetznerStorageBoxSubaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerStorageBoxSubaccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.storageBox.subaccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) MqlName() string {
+	return "hetzner.storageBox.subaccount"
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetStorageBoxId() *plugin.TValue[int64] {
+	return &c.StorageBoxId
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetHomeDirectory() *plugin.TValue[string] {
+	return &c.HomeDirectory
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetServer() *plugin.TValue[string] {
+	return &c.Server
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetReachableExternally() *plugin.TValue[bool] {
+	return &c.ReachableExternally
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetReadonly() *plugin.TValue[bool] {
+	return &c.Readonly
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetSambaEnabled() *plugin.TValue[bool] {
+	return &c.SambaEnabled
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetSshEnabled() *plugin.TValue[bool] {
+	return &c.SshEnabled
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetWebdavEnabled() *plugin.TValue[bool] {
+	return &c.WebdavEnabled
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlHetznerStorageBoxSubaccount) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlHetznerStorageBoxSnapshot for the hetzner.storageBox.snapshot resource
+type mqlHetznerStorageBoxSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerStorageBoxSnapshotInternal it will be used here
+	Id             plugin.TValue[int64]
+	StorageBoxId   plugin.TValue[int64]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	IsAutomatic    plugin.TValue[bool]
+	Size           plugin.TValue[int64]
+	SizeFilesystem plugin.TValue[int64]
+	Labels         plugin.TValue[map[string]any]
+	Created        plugin.TValue[*time.Time]
+}
+
+// createHetznerStorageBoxSnapshot creates a new instance of this resource
+func createHetznerStorageBoxSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerStorageBoxSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.storageBox.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) MqlName() string {
+	return "hetzner.storageBox.snapshot"
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetStorageBoxId() *plugin.TValue[int64] {
+	return &c.StorageBoxId
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetIsAutomatic() *plugin.TValue[bool] {
+	return &c.IsAutomatic
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetSizeFilesystem() *plugin.TValue[int64] {
+	return &c.SizeFilesystem
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlHetznerStorageBoxSnapshot) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlHetznerZone for the hetzner.zone resource
+type mqlHetznerZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerZoneInternal it will be used here
+	Id                   plugin.TValue[int64]
+	Name                 plugin.TValue[string]
+	Mode                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Ttl                  plugin.TValue[int64]
+	RecordCount          plugin.TValue[int64]
+	Registrar            plugin.TValue[string]
+	PrimaryNameservers   plugin.TValue[[]any]
+	AssignedNameservers  plugin.TValue[[]any]
+	DelegatedNameservers plugin.TValue[[]any]
+	DelegationStatus     plugin.TValue[string]
+	DelegationLastCheck  plugin.TValue[*time.Time]
+	Rrsets               plugin.TValue[[]any]
+	Protection           plugin.TValue[any]
+	Labels               plugin.TValue[map[string]any]
+	Created              plugin.TValue[*time.Time]
+}
+
+// createHetznerZone creates a new instance of this resource
+func createHetznerZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerZone) MqlName() string {
+	return "hetzner.zone"
+}
+
+func (c *mqlHetznerZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerZone) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlHetznerZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerZone) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHetznerZone) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlHetznerZone) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlHetznerZone) GetRecordCount() *plugin.TValue[int64] {
+	return &c.RecordCount
+}
+
+func (c *mqlHetznerZone) GetRegistrar() *plugin.TValue[string] {
+	return &c.Registrar
+}
+
+func (c *mqlHetznerZone) GetPrimaryNameservers() *plugin.TValue[[]any] {
+	return &c.PrimaryNameservers
+}
+
+func (c *mqlHetznerZone) GetAssignedNameservers() *plugin.TValue[[]any] {
+	return &c.AssignedNameservers
+}
+
+func (c *mqlHetznerZone) GetDelegatedNameservers() *plugin.TValue[[]any] {
+	return &c.DelegatedNameservers
+}
+
+func (c *mqlHetznerZone) GetDelegationStatus() *plugin.TValue[string] {
+	return &c.DelegationStatus
+}
+
+func (c *mqlHetznerZone) GetDelegationLastCheck() *plugin.TValue[*time.Time] {
+	return &c.DelegationLastCheck
+}
+
+func (c *mqlHetznerZone) GetRrsets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rrsets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.zone", c.__id, "rrsets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rrsets()
+	})
+}
+
+func (c *mqlHetznerZone) GetProtection() *plugin.TValue[any] {
+	return &c.Protection
+}
+
+func (c *mqlHetznerZone) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlHetznerZone) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlHetznerZoneRrset for the hetzner.zone.rrset resource
+type mqlHetznerZoneRrset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerZoneRrsetInternal it will be used here
+	Id         plugin.TValue[string]
+	ZoneId     plugin.TValue[int64]
+	Zone       plugin.TValue[*mqlHetznerZone]
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Ttl        plugin.TValue[int64]
+	Records    plugin.TValue[[]any]
+	Protection plugin.TValue[any]
+	Labels     plugin.TValue[map[string]any]
+}
+
+// createHetznerZoneRrset creates a new instance of this resource
+func createHetznerZoneRrset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerZoneRrset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.zone.rrset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerZoneRrset) MqlName() string {
+	return "hetzner.zone.rrset"
+}
+
+func (c *mqlHetznerZoneRrset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerZoneRrset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHetznerZoneRrset) GetZoneId() *plugin.TValue[int64] {
+	return &c.ZoneId
+}
+
+func (c *mqlHetznerZoneRrset) GetZone() *plugin.TValue[*mqlHetznerZone] {
+	return plugin.GetOrCompute[*mqlHetznerZone](&c.Zone, func() (*mqlHetznerZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.zone.rrset", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerZone), nil
+			}
+		}
+
+		return c.zone()
+	})
+}
+
+func (c *mqlHetznerZoneRrset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHetznerZoneRrset) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlHetznerZoneRrset) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlHetznerZoneRrset) GetRecords() *plugin.TValue[[]any] {
+	return &c.Records
+}
+
+func (c *mqlHetznerZoneRrset) GetProtection() *plugin.TValue[any] {
+	return &c.Protection
+}
+
+func (c *mqlHetznerZoneRrset) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }

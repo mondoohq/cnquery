@@ -64,6 +64,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 		"name":              llx.StringData(s.Name),
 		"status":            llx.StringData(string(s.Status)),
 		"created":           llx.TimeDataPtr(timePtr(s.Created)),
+		"primaryDiskSize":   llx.IntData(int64(s.PrimaryDiskSize)),
 		"publicIpv4":        llx.StringData(ipString(s.PublicNet.IPv4.IP)),
 		"publicIpv4Blocked": llx.BoolData(s.PublicNet.IPv4.Blocked),
 		"publicIpv4DnsPtr":  llx.StringData(s.PublicNet.IPv4.DNSPtr),

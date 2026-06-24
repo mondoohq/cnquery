@@ -14,6 +14,11 @@ import (
 
 type mqlHetznerFirewallInternal struct {
 	cacheServerIDs []int64
+	// cacheLabelSelectorServerIDs holds the servers the firewall's
+	// label_selector bindings currently resolve to (from each binding's
+	// AppliedToResources), so labelSelectorTargets() can surface the
+	// effective blast radius without a refetch.
+	cacheLabelSelectorServerIDs []int64
 }
 
 func (r *mqlHetznerFirewall) id() (string, error) {
@@ -67,12 +72,27 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 
 	var serverIDs []int64
 	var labelSelectors []string
+	var labelSelectorServerIDs []int64
+	seenLabelServer := map[int64]struct{}{}
 	for _, a := range fw.AppliedTo {
 		if a.Server != nil {
 			serverIDs = append(serverIDs, a.Server.ID)
 		}
 		if a.LabelSelector != nil {
 			labelSelectors = append(labelSelectors, a.LabelSelector.Selector)
+		}
+		// AppliedToResources carries the servers a label_selector binding
+		// currently expands to. Dedupe across selectors so a server matched
+		// by multiple selectors is only listed once.
+		for _, applied := range a.AppliedToResources {
+			if applied.Server == nil {
+				continue
+			}
+			if _, ok := seenLabelServer[applied.Server.ID]; ok {
+				continue
+			}
+			seenLabelServer[applied.Server.ID] = struct{}{}
+			labelSelectorServerIDs = append(labelSelectorServerIDs, applied.Server.ID)
 		}
 	}
 
@@ -90,6 +110,7 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 	}
 	m := res.(*mqlHetznerFirewall)
 	m.cacheServerIDs = serverIDs
+	m.cacheLabelSelectorServerIDs = labelSelectorServerIDs
 	return m, nil
 }
 
@@ -115,9 +136,18 @@ func initHetznerFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 }
 
 func (m *mqlHetznerFirewall) servers() ([]any, error) {
-	out := make([]any, 0, len(m.cacheServerIDs))
-	for _, id := range m.cacheServerIDs {
-		ref, err := NewResource(m.MqlRuntime, "hetzner.server", map[string]*llx.RawData{
+	return serverRefs(m.MqlRuntime, m.cacheServerIDs)
+}
+
+func (m *mqlHetznerFirewall) labelSelectorTargets() ([]any, error) {
+	return serverRefs(m.MqlRuntime, m.cacheLabelSelectorServerIDs)
+}
+
+// serverRefs builds lazy hetzner.server references from a list of server IDs.
+func serverRefs(runtime *plugin.Runtime, ids []int64) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		ref, err := NewResource(runtime, "hetzner.server", map[string]*llx.RawData{
 			"id": llx.IntData(id),
 		})
 		if err != nil {

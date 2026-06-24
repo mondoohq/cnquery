@@ -15,8 +15,10 @@ option go_package = "go.mondoo.com/mql/v13/providers/hetzner/resources"
 // load balancers, `firewalls()` for stateful firewall rule sets,
 // `sshKeys()` for project SSH keys, `certificates()` for managed TLS
 // certs, `placementGroups()` for spread/anti-affinity placement,
-// `isos()` for boot ISOs, and `locations()`/`datacenters()` for the
-// regional and AZ-style topology.
+// `isos()` for boot ISOs, `locations()`/`datacenters()` for the
+// regional and AZ-style topology, `storageBoxes()` plus
+// `storageBoxTypes()` for managed backup/file storage, and `zones()`
+// for managed DNS zones and their records.
 hetzner {
   // Cloud servers (virtual machines)
   servers() []hetzner.server
@@ -50,6 +52,12 @@ hetzner {
   locations() []hetzner.location
   // Datacenters within locations
   datacenters() []hetzner.datacenter
+  // Storage Boxes (managed backup/file storage)
+  storageBoxes() []hetzner.storageBox
+  // Storage Box types (storage tiers)
+  storageBoxTypes() []hetzner.storageBoxType
+  // Managed DNS zones
+  zones() []hetzner.zone
 }
 
 // Hetzner Cloud server (virtual machine)
@@ -63,6 +71,8 @@ private hetzner.server @defaults("id name status") {
   status string
   // Creation timestamp
   created time
+  // Size of the server's primary (boot) disk in GB
+  primaryDiskSize int
   // Server type (VM size)
   serverType() hetzner.serverType
   // Datacenter the server runs in
@@ -533,6 +543,13 @@ hetzner.firewall @defaults("id name") {
   servers() []hetzner.server
   // Label selectors the firewall is applied to (type=label_selector entries)
   labelSelectors []string
+  // Servers resolved from the firewall's label selectors
+  //
+  // The effective set of servers the label_selector bindings currently
+  // expand to. Where `labelSelectors` lists the selector expressions,
+  // this lists the servers they actually match — the real blast radius
+  // of a selector-based binding.
+  labelSelectorTargets() []hetzner.server
   // User-defined labels for organizing the resource
   labels map[string]string
 }
@@ -640,4 +657,187 @@ private hetzner.datacenter @defaults("id name") {
   availableServerTypes() []hetzner.serverType
   // Server types available for migration into this datacenter
   serverTypesAvailableForMigration() []hetzner.serverType
+}
+
+// Hetzner Cloud Storage Box (managed backup/file storage)
+private hetzner.storageBox @defaults("id name status") {
+  init(id? int)
+  // Storage Box ID
+  id int
+  // Storage Box name
+  name string
+  // Login username
+  username string
+  // Status (active, initializing, locked)
+  status string
+  // Storage Box type (storage tier)
+  storageBoxType() hetzner.storageBoxType
+  // Location of the Storage Box
+  location() hetzner.location
+  // Whether the Storage Box is reachable from outside the Hetzner network
+  reachableExternally bool
+  // Whether the Samba/CIFS protocol is enabled
+  sambaEnabled bool
+  // Whether SSH/SFTP access is enabled
+  sshEnabled bool
+  // Whether the WebDAV protocol is enabled
+  webdavEnabled bool
+  // Whether ZFS snapshot directories are exposed
+  zfsEnabled bool
+  // Automated snapshot plan {maxSnapshots, minute, hour, dayOfWeek, dayOfMonth}; empty if no plan is configured
+  snapshotPlan dict
+  // Total used size in bytes
+  size int
+  // Used size of stored data in bytes
+  sizeData int
+  // Used size of snapshots in bytes
+  sizeSnapshots int
+  // Storage system hostname serving the Storage Box
+  server string
+  // Underlying storage system identifier
+  system string
+  // Resource protection (delete)
+  protection dict
+  // User-defined labels for organizing the resource
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // Subaccounts with independent credentials and access settings
+  subaccounts() []hetzner.storageBox.subaccount
+  // Snapshots of the Storage Box
+  snapshots() []hetzner.storageBox.snapshot
+}
+
+// Hetzner Cloud Storage Box type (storage tier)
+private hetzner.storageBoxType @defaults("id name size") {
+  init(id? int)
+  // Storage Box type ID
+  id int
+  // Slug name (bx11, bx21, ...)
+  name string
+  // Human-readable description
+  description string
+  // Maximum number of manual snapshots (0 when unlimited/unset)
+  snapshotLimit int
+  // Maximum number of automatic snapshots (0 when unlimited/unset)
+  automaticSnapshotLimit int
+  // Maximum number of subaccounts
+  subaccountsLimit int
+  // Included storage size in bytes
+  size int
+  // Deprecation timestamp (nullable)
+  deprecated time
+}
+
+// Hetzner Cloud Storage Box subaccount
+private hetzner.storageBox.subaccount @defaults("id username") {
+  // Subaccount ID
+  id int
+  // Parent Storage Box ID
+  storageBoxId int
+  // Subaccount name
+  name string
+  // Login username
+  username string
+  // Home directory the subaccount is scoped to
+  homeDirectory string
+  // Storage system hostname serving the subaccount
+  server string
+  // Description
+  description string
+  // Whether the subaccount is reachable from outside the Hetzner network
+  reachableExternally bool
+  // Whether the subaccount has read-only access
+  readonly bool
+  // Whether the Samba/CIFS protocol is enabled
+  sambaEnabled bool
+  // Whether SSH/SFTP access is enabled
+  sshEnabled bool
+  // Whether the WebDAV protocol is enabled
+  webdavEnabled bool
+  // User-defined labels for organizing the resource
+  labels map[string]string
+  // Creation timestamp
+  created time
+}
+
+// Hetzner Cloud Storage Box snapshot
+private hetzner.storageBox.snapshot @defaults("id name created") {
+  // Snapshot ID
+  id int
+  // Parent Storage Box ID
+  storageBoxId int
+  // Snapshot name
+  name string
+  // Description
+  description string
+  // Whether the snapshot was created automatically by the snapshot plan
+  isAutomatic bool
+  // Snapshot size in bytes
+  size int
+  // Size of the filesystem at snapshot time in bytes
+  sizeFilesystem int
+  // User-defined labels for organizing the resource
+  labels map[string]string
+  // Creation timestamp
+  created time
+}
+
+// Hetzner Cloud DNS zone
+private hetzner.zone @defaults("id name mode status") {
+  init(id? int)
+  // Zone ID
+  id int
+  // Zone name (the domain)
+  name string
+  // Mode (primary, secondary)
+  mode string
+  // Status (ok, updating, error)
+  status string
+  // Default TTL for records in seconds
+  ttl int
+  // Number of records in the zone
+  recordCount int
+  // Registrar managing the domain (hetzner, other, unknown)
+  registrar string
+  // Primary nameservers for secondary zones [{address, port, tsigAlgorithm}]
+  primaryNameservers []dict
+  // Nameservers assigned by Hetzner for this zone
+  assignedNameservers []string
+  // Nameservers the domain currently delegates to
+  delegatedNameservers []string
+  // Delegation status (valid, partially-valid, invalid, lame, unregistered, unknown)
+  delegationStatus string
+  // Last time delegation was checked (nullable)
+  delegationLastCheck time
+  // Resource records grouped by name and type
+  rrsets() []hetzner.zone.rrset
+  // Resource protection (delete)
+  protection dict
+  // User-defined labels for organizing the resource
+  labels map[string]string
+  // Creation timestamp
+  created time
+}
+
+// Hetzner Cloud DNS resource record set
+private hetzner.zone.rrset @defaults("name type") {
+  // Record set ID (name/type)
+  id string
+  // Parent zone ID
+  zoneId int
+  // Zone the record set belongs to
+  zone() hetzner.zone
+  // Record name relative to the zone (e.g., "@", "www")
+  name string
+  // Record type (A, AAAA, CNAME, MX, TXT, NS, CAA, DS, ...)
+  type string
+  // TTL in seconds (0 when the record falls back to the zone default)
+  ttl int
+  // Records in the set [{value, comment}]
+  records []dict
+  // Resource protection (change)
+  protection dict
+  // User-defined labels for organizing the resource
+  labels map[string]string
 }
