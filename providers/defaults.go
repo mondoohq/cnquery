@@ -147,6 +147,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"checkpoint": {
+		Provider: &plugin.Provider{
+			Name:            "checkpoint",
+			ID:              "go.mondoo.com/cnquery/providers/checkpoint",
+			ConnectionTypes: []string{"checkpoint"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "checkpoint",
+					Use:   "checkpoint",
+					Short: "a Check Point Security Management server",
+				},
+			},
+		},
+	},
+
 	"claude": {
 		Provider: &plugin.Provider{
 			Name:            "claude",
