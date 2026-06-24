@@ -225,8 +225,9 @@ func resolveChartInRepo(repoURL, chartName, version, username, password string) 
 var chartHTTPClient = &http.Client{Timeout: 60 * time.Second}
 
 // maxChartDownloadSize caps a downloaded chart archive or repository index
-// (128 MiB) so a misbehaving repo can't exhaust memory.
-const maxChartDownloadSize = 128 << 20
+// (128 MiB) so a misbehaving repo can't exhaust memory. It is a var (not a
+// const) only so tests can lower it without downloading 128 MiB.
+var maxChartDownloadSize int64 = 128 << 20
 
 // httpGetBytes fetches a URL with optional basic auth, a request timeout,
 // and a bounded read.
@@ -253,7 +254,7 @@ func httpGetBytes(rawURL, username, password string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(data) > maxChartDownloadSize {
+	if int64(len(data)) > maxChartDownloadSize {
 		return nil, fmt.Errorf("response from %q exceeds the maximum allowed size of %d bytes", rawURL, maxChartDownloadSize)
 	}
 	return data, nil

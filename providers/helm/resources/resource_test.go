@@ -426,3 +426,30 @@ func TestParseK8sResourcesDocumentSeparatorInValue(t *testing.T) {
 		require.Len(t, resources, 2)
 	})
 }
+
+// TestParseK8sResourcesSkipsMalformed ensures a rendered document that fails to
+// parse is skipped (and surfaced via a log) without dropping the valid
+// resources around it.
+func TestParseK8sResourcesSkipsMalformed(t *testing.T) {
+	yaml := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: good
+---
+- this is a yaml sequence, not a kubernetes object
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: also-good`
+
+	resources, err := parseK8sResources(newTestRuntime(), "mychart/templates/mixed.yaml", yaml, false)
+	require.NoError(t, err)
+	require.Len(t, resources, 2, "the malformed document is skipped; the two valid resources remain")
+
+	names := map[string]bool{}
+	for _, r := range resources {
+		names[r.(*mqlHelmResource).Name.Data] = true
+	}
+	assert.True(t, names["good"] && names["also-good"])
+}
