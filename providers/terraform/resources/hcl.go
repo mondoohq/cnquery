@@ -18,6 +18,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
+	mql "go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -60,7 +61,7 @@ func (t *mqlTerraform) files() ([]any, error) {
 
 func (t *mqlTerraform) tfvars() (any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	return hclAttributesToDict(conn.TfVars())
+	return hclAttributesToDict(conn.TfVars(), nil)
 }
 
 func (t *mqlTerraform) modules() ([]any, error) {
@@ -521,7 +522,23 @@ func (t *mqlTerraformBlock) attributes() (map[string]any, error) {
 
 	// do not handle diag information here, it also throws errors for blocks nearby
 	attributes, _ := hclBlock.Body.JustAttributes()
-	return hclAttributesToDict(attributes)
+	return hclAttributesToDict(attributes, t.evalContext())
+}
+
+// evalContext returns the HCL evaluation context used to resolve this block's
+// argument expressions. When the TerraformResolveVars feature flag is
+// active, it returns the connection's context that resolves var.*/local.*
+// references; otherwise it returns nil, preserving the historical behavior of
+// surfacing those references as strings.
+func (t *mqlTerraformBlock) evalContext() *hcl.EvalContext {
+	conn, ok := t.MqlRuntime.Connection.(*connection.Connection)
+	if !ok || conn == nil {
+		return nil
+	}
+	if !mql.Features(conn.Features()).IsActive(mql.TerraformResolveVars) {
+		return nil
+	}
+	return conn.VariableEvalContext()
 }
 
 func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
@@ -537,7 +554,26 @@ func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
 
 	// do not handle diag information here, it also throws errors for blocks nearby
 	attributes, _ := hclBlock.Body.JustAttributes()
-	return hclResolvedAttributesToDict(attributes)
+	return hclResolvedAttributesToDict(attributes, t.evalContext())
+}
+
+// argumentReferences returns the block's arguments with variable and local
+// references left unresolved (e.g. "var.bucket_acl"), regardless of the
+// TerraformResolveVars feature flag. Use it to inspect that a value is
+// parameterized even when arguments() resolves to the effective value.
+func (t *mqlTerraformBlock) argumentReferences() (map[string]any, error) {
+	var hclBlock *hcl.Block
+	if t.block.State == plugin.StateIsSet {
+		hclBlock = t.block.Data
+	} else {
+		if t.block.Error != nil {
+			return nil, t.block.Error
+		}
+		return nil, errors.New("cannot get hcl block")
+	}
+
+	attributes, _ := hclBlock.Body.JustAttributes()
+	return hclResolvedAttributesToDict(attributes, nil)
 }
 
 // hclBodyToValuesDict folds an HCL block body into a single dict in the same
@@ -546,7 +582,7 @@ func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
 // list-of-maps keyed by its block type (recursively). This lets one MQL body
 // run against terraform-hcl, terraform-plan, and terraform-state assets
 // instead of three separately-written variants.
-func hclBodyToValuesDict(rawBody hcl.Body) (map[string]any, error) {
+func hclBodyToValuesDict(rawBody hcl.Body, ctx *hcl.EvalContext) (map[string]any, error) {
 	dict := map[string]any{}
 
 	body, ok := rawBody.(*hclsyntax.Body)
@@ -554,14 +590,14 @@ func hclBodyToValuesDict(rawBody hcl.Body) (map[string]any, error) {
 		// .tf.json and other non-native bodies: best effort, attributes only.
 		// Nested-block traversal needs a schema we don't have here.
 		attributes, _ := rawBody.JustAttributes()
-		return hclResolvedAttributesToDict(attributes)
+		return hclResolvedAttributesToDict(attributes, ctx)
 	}
 
 	attributes := make(map[string]*hcl.Attribute, len(body.Attributes))
 	for name, attr := range body.Attributes {
 		attributes[name] = attr.AsHCLAttribute()
 	}
-	resolved, err := hclResolvedAttributesToDict(attributes)
+	resolved, err := hclResolvedAttributesToDict(attributes, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +606,7 @@ func hclBodyToValuesDict(rawBody hcl.Body) (map[string]any, error) {
 	}
 
 	for _, block := range body.Blocks {
-		child, err := hclBodyToValuesDict(block.Body)
+		child, err := hclBodyToValuesDict(block.Body, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -588,28 +624,36 @@ func (t *mqlTerraformBlock) values() (map[string]any, error) {
 		}
 		return nil, errors.New("cannot get hcl block")
 	}
-	return hclBodyToValuesDict(t.block.Data.Body)
+	return hclBodyToValuesDict(t.block.Data.Body, t.evalContext())
 }
 
-func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]any, error) {
+// hclEvalContextOrDefault returns ctx when it carries resolved variable/local
+// values, or a functions-only context (the historical, no-resolution behavior)
+// when ctx is nil.
+func hclEvalContextOrDefault(ctx *hcl.EvalContext) *hcl.EvalContext {
+	if ctx != nil {
+		return ctx
+	}
+	return &hcl.EvalContext{Functions: hclFunctions()}
+}
+
+func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute, ctx *hcl.EvalContext) (map[string]any, error) {
+	ctx = hclEvalContextOrDefault(ctx)
 	dict := map[string]any{}
 	for k := range attributes {
-		dict[k] = getCtyValue(attributes[k].Expr, &hcl.EvalContext{
-			Functions: hclFunctions(),
-		})
+		dict[k] = getCtyValue(attributes[k].Expr, ctx)
 	}
 	return dict, nil
 }
 
-func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]any, error) {
+func hclAttributesToDict(attributes map[string]*hcl.Attribute, ctx *hcl.EvalContext) (map[string]any, error) {
+	ctx = hclEvalContextOrDefault(ctx)
 	dict := map[string]any{}
 	for k := range attributes {
 		val, _ := attributes[k].Expr.Value(nil)
 		dict[k] = map[string]any{
-			"value": getCtyValue(attributes[k].Expr, &hcl.EvalContext{
-				Functions: hclFunctions(),
-			}),
-			"type": typeexpr.TypeString(val.Type()),
+			"value": getCtyValue(attributes[k].Expr, ctx),
+			"type":  typeexpr.TypeString(val.Type()),
 		}
 	}
 
@@ -637,6 +681,44 @@ func appendCtyResult(out *[]any, v any) {
 	}
 }
 
+// ctyValueToGo converts a fully-evaluated cty.Value into the plain Go types
+// used in the resource dict (string/bool/float64, []any, map[string]any). It
+// mirrors the scalar handling in getCtyValue's LiteralValueExpr case and
+// recurses into collections. Null/unknown values become nil.
+func ctyValueToGo(val cty.Value) any {
+	if val.IsNull() || !val.IsKnown() {
+		return nil
+	}
+
+	ty := val.Type()
+	switch {
+	case ty == cty.String:
+		return val.AsString()
+	case ty == cty.Bool:
+		return val.True()
+	case ty == cty.Number:
+		f, _ := val.AsBigFloat().Float64()
+		return f
+	case ty.IsListType() || ty.IsSetType() || ty.IsTupleType():
+		res := []any{}
+		for it := val.ElementIterator(); it.Next(); {
+			_, ev := it.Element()
+			res = append(res, ctyValueToGo(ev))
+		}
+		return res
+	case ty.IsMapType() || ty.IsObjectType():
+		res := map[string]any{}
+		for it := val.ElementIterator(); it.Next(); {
+			ek, ev := it.Element()
+			res[ek.AsString()] = ctyValueToGo(ev)
+		}
+		return res
+	default:
+		log.Warn().Msgf("unknown cty type %s", ty.GoString())
+		return nil
+	}
+}
+
 func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 	switch t := expr.(type) {
 	case *hclsyntax.TupleConsExpr:
@@ -652,6 +734,16 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		}
 		return results
 	case *hclsyntax.ScopeTraversalExpr:
+		// When the eval context carries resolved var.*/local.* values (the
+		// TerraformResolveVars feature flag), resolve the traversal to its
+		// effective value. If it can't be resolved (no such variable/local,
+		// data/resource references, …), fall back to surfacing the reference as
+		// a dotted string below.
+		if ctx != nil && len(ctx.Variables) > 0 {
+			if val, diags := t.Value(ctx); !diags.HasErrors() {
+				return ctyValueToGo(val)
+			}
+		}
 		traversal := t.Variables()
 		res := []string{}
 		for i := range traversal {
@@ -779,6 +871,16 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		}
 	case *hclsyntax.TemplateExpr:
 		// walk the parts of the expression to ensure that it has a literal value
+
+		// When the eval context carries resolved var.*/local.* values, a fully
+		// interpolated template (e.g. "app-${var.env}-bucket") can collapse to a
+		// single string. Attempt that first; otherwise fall back to surfacing the
+		// individual parts/references below (the historical behavior when off).
+		if len(ctx.Variables) > 0 {
+			if subVal, diags := t.Value(ctx); !diags.HasErrors() && subVal.Type() == cty.String {
+				return subVal.AsString()
+			}
+		}
 
 		if len(t.Parts) == 1 {
 			return getCtyValue(t.Parts[0], ctx)
@@ -1060,7 +1162,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 			requireProviderBlock := getBlockByName(hb, "required_providers")
 			if requireProviderBlock != nil {
 				attributes, _ := requireProviderBlock.Body.JustAttributes()
-				dict, err := hclResolvedAttributesToDict(attributes)
+				dict, err := hclResolvedAttributesToDict(attributes, nil)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -1095,7 +1197,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 			backendBlock := getBlockByName(hb, "backend")
 			if backendBlock != nil {
 				attributes, _ := backendBlock.Body.JustAttributes()
-				dict, err := hclResolvedAttributesToDict(attributes)
+				dict, err := hclResolvedAttributesToDict(attributes, nil)
 				if err != nil {
 					return nil, nil, err
 				}

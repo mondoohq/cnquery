@@ -95,6 +95,8 @@ private terraform.block @defaults("type labels") @context("terraform.context") {
   end terraform.fileposition
   // Block arguments
   arguments() dict
+  // Block arguments with variable and local references left unresolved (e.g. "var.bucket_acl"), regardless of the TerraformResolveVars feature flag
+  argumentReferences() dict
   // Arguments with child blocks folded in as lists-of-maps, mirroring the plan (change.after) and state (values) shape
   values() dict
   // Raw block attributes

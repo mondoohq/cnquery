@@ -168,6 +168,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, plugin.ErrUnsupportedProvider
 		}
 
+		conn.SetFeatures(req.Features)
+
 		var upstream *upstream.UpstreamClient
 		if req.Upstream != nil && !req.Upstream.Incognito {
 			upstream, err = req.Upstream.InitClient(context.Background())

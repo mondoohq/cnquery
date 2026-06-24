@@ -3,6 +3,7 @@
 
 terraform 9.0.0
 terraform.block 9.0.0
+terraform.block.argumentReferences 13.2.4
 terraform.block.arguments 9.0.0
 terraform.block.attributes 9.0.0
 terraform.block.blocks 9.0.0

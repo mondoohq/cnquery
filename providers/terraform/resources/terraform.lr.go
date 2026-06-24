@@ -260,6 +260,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.block.arguments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetArguments()).ToDataRes(types.Dict)
 	},
+	"terraform.block.argumentReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformBlock).GetArgumentReferences()).ToDataRes(types.Dict)
+	},
 	"terraform.block.values": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetValues()).ToDataRes(types.Dict)
 	},
@@ -602,6 +605,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.block.arguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).Arguments, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.block.argumentReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformBlock).ArgumentReferences, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"terraform.block.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1375,20 +1382,21 @@ type mqlTerraformBlock struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlTerraformBlockInternal
-	Type         plugin.TValue[string]
-	Labels       plugin.TValue[[]any]
-	NameLabel    plugin.TValue[string]
-	ResourceType plugin.TValue[string]
-	ResourceName plugin.TValue[string]
-	Start        plugin.TValue[*mqlTerraformFileposition]
-	End          plugin.TValue[*mqlTerraformFileposition]
-	Arguments    plugin.TValue[any]
-	Values       plugin.TValue[any]
-	Attributes   plugin.TValue[any]
-	Blocks       plugin.TValue[[]any]
-	Related      plugin.TValue[[]any]
-	Snippet      plugin.TValue[string]
-	Context      plugin.TValue[*mqlTerraformContext]
+	Type               plugin.TValue[string]
+	Labels             plugin.TValue[[]any]
+	NameLabel          plugin.TValue[string]
+	ResourceType       plugin.TValue[string]
+	ResourceName       plugin.TValue[string]
+	Start              plugin.TValue[*mqlTerraformFileposition]
+	End                plugin.TValue[*mqlTerraformFileposition]
+	Arguments          plugin.TValue[any]
+	ArgumentReferences plugin.TValue[any]
+	Values             plugin.TValue[any]
+	Attributes         plugin.TValue[any]
+	Blocks             plugin.TValue[[]any]
+	Related            plugin.TValue[[]any]
+	Snippet            plugin.TValue[string]
+	Context            plugin.TValue[*mqlTerraformContext]
 }
 
 // createTerraformBlock creates a new instance of this resource
@@ -1465,6 +1473,12 @@ func (c *mqlTerraformBlock) GetEnd() *plugin.TValue[*mqlTerraformFileposition] {
 func (c *mqlTerraformBlock) GetArguments() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Arguments, func() (any, error) {
 		return c.arguments()
+	})
+}
+
+func (c *mqlTerraformBlock) GetArgumentReferences() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ArgumentReferences, func() (any, error) {
+		return c.argumentReferences()
 	})
 }
 

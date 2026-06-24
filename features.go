@@ -92,9 +92,14 @@ const (
 	// status: new
 	ExchangeTokenForToken Feature = 16
 
+	// Resolve var.* and local.* references in Terraform HCL block arguments to their effective values (variable defaults overridden by .tfvars, locals evaluated from those). Unresolvable references fall back to their reference string; the unresolved view stays available via terraform.block.argumentReferences.
+	// start:  v13.x
+	// status: new
+	TerraformResolveVars Feature = 17
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 17
+	MAX_FEATURES byte = 18
 )
 
 var FeaturesValue = map[string]Feature{
@@ -114,6 +119,7 @@ var FeaturesValue = map[string]Feature{
 	"AutoUpdateEngine":      AutoUpdateEngine,
 	"BiosUUIDAsID":          BiosUUIDAsID,
 	"ExchangeTokenForToken": ExchangeTokenForToken,
+	"TerraformResolveVars":  TerraformResolveVars,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -131,4 +137,5 @@ var AvailableFeatures = Features{
 	byte(AutoUpdateEngine),
 	byte(BiosUUIDAsID),
 	byte(ExchangeTokenForToken),
+	byte(TerraformResolveVars),
 }

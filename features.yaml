@@ -93,3 +93,8 @@ Features:
   idx: 16
   start: v13.x
   status: new
+- id: TerraformResolveVars
+  desc: "Resolve var.* and local.* references in Terraform HCL block arguments to their effective values (variable defaults overridden by .tfvars, locals evaluated from those). Unresolvable references fall back to their reference string; the unresolved view stays available via terraform.block.argumentReferences."
+  idx: 17
+  start: v13.x
+  status: new
