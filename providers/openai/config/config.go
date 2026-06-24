@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "openai",
 	ID:              "go.mondoo.com/mql/providers/openai",
-	Version:         "13.0.4",
+	Version:         "13.0.5",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
