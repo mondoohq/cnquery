@@ -5,14 +5,46 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/nextdns/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// initNextdnsProfile resolves the top-level nextdns.profile resource. When the
+// scan is scoped to a single profile, it populates the profile from the
+// connection so checks can assert against `nextdns.profile` directly and have
+// findings attributed to that profile. An explicit `id` argument is honored as
+// well; without one, the connection must be scoped to a single profile.
+func initNextdnsProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if id, ok := args["id"]; ok && id.Value != nil && id.Value.(string) != "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.NextdnsConnection)
+	if conn.ProfileID() == "" {
+		return nil, nil, errors.New("nextdns.profile is only available when the scan is scoped to a single profile; use nextdns.profiles to enumerate every profile in an account")
+	}
+
+	profiles, err := fetchProfiles(conn)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(profiles) != 1 {
+		return nil, nil, errors.New("expected exactly one scoped NextDNS profile")
+	}
+
+	p := profiles[0]
+	args["id"] = llx.StringData(p.ID)
+	args["name"] = llx.StringData(p.Name)
+	args["fingerprint"] = llx.StringData(p.Fingerprint)
+	return args, nil, nil
+}
 
 // mqlNextdnsProfileInternal caches the full profile detail. Every section
 // (security, privacy, parentalControl, settings, setup, lists, rewrites) is

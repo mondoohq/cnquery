@@ -34,8 +34,10 @@ private nextdns.account @defaults("id") {
 // Examine a single NextDNS configuration profile: its security feeds,
 // privacy blocklists, parental-control rules, allow and deny lists, custom
 // DNS rewrites, logging settings, and setup endpoints. Select a profile by
-// `id`, for example `nextdns.profiles.where(id == "abc123")`.
-private nextdns.profile @defaults("id name") {
+// `id`, for example `nextdns.profiles.where(id == "abc123")`. When a scan is
+// scoped to a single profile, the top-level `nextdns.profile` resource
+// resolves to that profile.
+nextdns.profile @defaults("id name") {
   // Profile identifier (for example "abc123")
   id string
   // Display name of the profile
