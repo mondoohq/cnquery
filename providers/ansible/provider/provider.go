@@ -47,6 +47,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// Do custom flag parsing here
+	if len(req.Args) == 0 {
+		return nil, errors.New("no ansible project path provided")
+	}
 	conf.Options["path"] = req.Args[0]
 
 	asset := inventory.Asset{

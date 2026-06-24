@@ -273,11 +273,20 @@ func walkYAMLGroup(b *inventoryBuilder, name string, body any) {
 		return
 	}
 
-	if hosts, ok := m["hosts"].(map[string]any); ok {
+	switch hosts := m["hosts"].(type) {
+	case map[string]any:
 		for host, hv := range hosts {
 			b.addHostToGroup(name, host)
 			if vars, ok := hv.(map[string]any); ok {
 				maps.Copy(b.host(host).Vars, vars)
+			}
+		}
+	case []any:
+		// Ansible also accepts a `hosts:` list (each element a hostname with
+		// no per-host vars); a map type-assertion alone silently dropped them.
+		for _, hv := range hosts {
+			if host, ok := hv.(string); ok && host != "" {
+				b.addHostToGroup(name, host)
 			}
 		}
 	}
