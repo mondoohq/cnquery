@@ -1,0 +1,44 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/nextdns"
+option go_package = "go.mondoo.com/mql/v13/providers/nextdns/resources"
+
+// NextDNS
+//
+// Use this resource to access the NextDNS account behind the configured API
+// key and the DNS profiles it owns. Query `profiles` to enumerate every
+// profile, or `account` for the account that owns them.
+nextdns {
+  // Account that owns the configured API key
+  account() nextdns.account
+  // All profiles in the account
+  profiles() []nextdns.profile
+}
+
+// NextDNS account
+//
+// Examine the NextDNS account associated with the configured API key. The
+// account groups the DNS `profiles` it owns. NextDNS exposes no account
+// object of its own, so the `id` is a stable fingerprint derived from the
+// API key.
+private nextdns.account @defaults("id") {
+  // Stable account fingerprint derived from the API key
+  id string
+  // Profiles owned by this account
+  profiles() []nextdns.profile
+}
+
+// NextDNS profile
+//
+// Examine a single NextDNS configuration profile: its identifier, display
+// name, and device-linking fingerprint. Select a profile by `id`, for
+// example `nextdns.profiles.where(id == "abc123")`.
+private nextdns.profile @defaults("id name") {
+  // Profile identifier (for example "abc123")
+  id string
+  // Display name of the profile
+  name string
+  // Profile fingerprint used to link devices
+  fingerprint string
+}

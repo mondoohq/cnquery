@@ -546,6 +546,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"nextdns": {
+		Provider: &plugin.Provider{
+			Name:            "nextdns",
+			ID:              "go.mondoo.com/mql/providers/nextdns",
+			ConnectionTypes: []string{"nextdns"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "nextdns",
+					Use:   "nextdns",
+					Short: "a NextDNS account",
+				},
+			},
+		},
+	},
+
 	"nmap": {
 		Provider: &plugin.Provider{
 			Name:            "nmap",

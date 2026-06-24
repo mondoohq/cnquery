@@ -224,6 +224,7 @@ use (
    ./mql/providers/mistral
    ./mql/providers/mondoo
    ./mql/providers/ms365
+   ./mql/providers/nextdns
    ./mql/providers/nmap
    ./mql/providers/nutanix
    ./mql/providers/oci

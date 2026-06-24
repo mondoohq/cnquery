@@ -1,0 +1,12 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+
+nextdns 13.0.0
+nextdns.account 13.0.0
+nextdns.account.id 13.0.0
+nextdns.account.profiles 13.0.0
+nextdns.profile 13.0.0
+nextdns.profile.fingerprint 13.0.0
+nextdns.profile.id 13.0.0
+nextdns.profile.name 13.0.0
+nextdns.profiles 13.0.0

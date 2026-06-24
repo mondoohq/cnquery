@@ -231,6 +231,7 @@ PROVIDERS := \
 	mondoo \
 	ms365 \
 	network \
+	nextdns \
 	nmap \
 	nutanix \
 	oci \
