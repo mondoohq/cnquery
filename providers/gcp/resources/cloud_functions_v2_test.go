@@ -21,7 +21,7 @@ func TestFnV2BuildConfig(t *testing.T) {
 
 func TestFnV2ServiceConfig(t *testing.T) {
 	t.Run("nil input returns nil", func(t *testing.T) {
-		result, err := fnV2ServiceConfig(nil, "parent", nil)
+		result, err := fnV2ServiceConfig(nil, "parent", "", nil)
 		require.NoError(t, err)
 		assert.Nil(t, result)
 	})
