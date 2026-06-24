@@ -2,6 +2,11 @@ name: Spell Check
 permissions:
   contents: read
 on: [pull_request]
+
+concurrency:
+  group: spell-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   spelling:
     name: Spell Check with Typos

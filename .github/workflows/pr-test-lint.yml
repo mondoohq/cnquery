@@ -98,7 +98,7 @@ jobs:
 
   go-test:
     runs-on:
-      group: Default
+      group: arc-runners
     timeout-minutes: 120
     steps:
       - name: Checkout code
@@ -136,7 +136,7 @@ jobs:
 
   go-test-integration:
     runs-on:
-      group: Default
+      group: arc-runners
     timeout-minutes: 120
     steps:
       - name: Checkout code
