@@ -243,6 +243,17 @@ func TestCloudformationResources(t *testing.T) {
 		assert.Equal(t, []any{"MyMacro", "AWS::Serverless"}, tpl.Transform.Data)
 	})
 
+	t.Run("cloudformation scalar transform (SAM)", func(t *testing.T) {
+		// The canonical SAM header `Transform: AWS::Serverless-2016-10-31` is a
+		// scalar YAML node (no Content). It must surface as a single-element
+		// list rather than null.
+		path := "../testdata/transform-scalar.yaml"
+		tpl, err := loadTemplate(path)
+		require.NoError(t, err)
+
+		assert.Equal(t, []any{"AWS::Serverless-2016-10-31"}, tpl.Transform.Data)
+	})
+
 	t.Run("cloudformation resource policies + metadata", func(t *testing.T) {
 		tpl, err := loadTemplate("../testdata/policies.yaml")
 		require.NoError(t, err)
