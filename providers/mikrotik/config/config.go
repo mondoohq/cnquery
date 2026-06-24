@@ -71,7 +71,7 @@ Examples:
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=network", "provider=mikrotik"},
+			PathSegments: []string{"technology=network", "category=mikrotik"},
 			Key:          "kind",
 			Title:        "MikroTik Kind",
 			Values: map[string]*inventory.AssetUrlBranch{
