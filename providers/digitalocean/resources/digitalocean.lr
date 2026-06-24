@@ -84,6 +84,12 @@ digitalocean {
   spacesKeys() []digitalocean.spacesKey
   // Spaces (S3-compatible object storage) buckets — requires Spaces credentials (DIGITALOCEAN_SPACES_KEY / _SECRET)
   spacesBuckets() []digitalocean.spacesBucket
+  // Bring-your-own-IP prefixes advertised into the account
+  byoipPrefixes() []digitalocean.byoipPrefix
+  // Partner Network Connect attachments
+  partnerAttachments() []digitalocean.partnerAttachment
+  // Account billing balance and month-to-date usage
+  billing() digitalocean.billing
 }
 
 // DigitalOcean account
@@ -374,6 +380,8 @@ digitalocean.database @defaults("id name engine") {
   connectionHost string
   // Public connection port
   connectionPort int
+  // Whether the cluster's primary connection enforces TLS/SSL
+  connectionSslEnabled bool
   // Private connection host (reachable within the VPC)
   privateConnectionHost string
   // Private connection port (reachable within the VPC)
@@ -382,6 +390,12 @@ digitalocean.database @defaults("id name engine") {
   //
   // One of noeviction, allkeys_lru, allkeys_random, volatile_lru, volatile_random, volatile_ttl. Empty for other engines.
   evictionPolicy() string
+  // SQL mode flags configured on the cluster (MySQL only)
+  //
+  // The comma-separated SQL mode string returned by the MySQL engine
+  // (for example STRICT_TRANS_TABLES, NO_ZERO_DATE). Empty for non-MySQL
+  // engines. Fetched on demand from the cluster's SQL-mode endpoint.
+  sqlMode() string
   // Maintenance window configuration (day, hour, pending status)
   maintenanceWindow dict
   // Database users
@@ -2261,4 +2275,120 @@ private digitalocean.securityScan.finding @defaults("name severity") {
   mitigationSteps []dict
   // Resources affected by the finding (each dict: urn, name, type)
   affectedResources() []dict
+}
+
+// DigitalOcean bring-your-own-IP prefix
+//
+// Examine a customer-owned IP prefix advertised into the account
+// (BYOIP). Surfaces the `prefix` CIDR, advertisement `status`, the
+// `advertised` and `locked` flags, the `region` slug, any
+// `failureReason` from validation, the owning `project()`, and the
+// `resources()` the prefix's addresses are currently assigned to.
+// Customer-controlled address space is a real ownership and
+// attack-surface concern, so knowing which prefixes route into the
+// account matters for security. Select a prefix by its uuid with
+// `digitalocean.byoipPrefix(uuid: "...")`.
+digitalocean.byoipPrefix @defaults("prefix status region") {
+  init(uuid? string)
+  // Prefix UUID
+  uuid string
+  // IP prefix in CIDR notation
+  prefix string
+  // Advertisement status
+  status string
+  // Region slug
+  region string
+  // Whether the prefix is currently advertised
+  advertised bool
+  // Whether the prefix is locked (an operation is in flight)
+  locked bool
+  // Reason the prefix failed validation/advertisement; empty on success
+  failureReason string
+  // ID of the project the prefix belongs to
+  projectId string
+  // Project the prefix belongs to (resolved from projectId)
+  project() digitalocean.project
+  // Resources the prefix's addresses are currently assigned to
+  resources() []digitalocean.byoipPrefix.resource
+}
+
+// DigitalOcean BYOIP prefix resource assignment
+private digitalocean.byoipPrefix.resource @defaults("resource region") {
+  // Assignment ID
+  id int
+  // UUID of the parent prefix
+  prefixUuid string
+  // The specific BYOIP address assigned
+  byoip string
+  // URN of the resource the address is assigned to (e.g., do:droplet:123)
+  resource string
+  // Region slug
+  region string
+  // Time the address was assigned
+  assignedAt time
+}
+
+// DigitalOcean Partner Attachment (Partner Network Connect)
+//
+// Examine a Partner Network Connect attachment — a private circuit
+// (via a Network-as-a-Service provider such as Megaport) that bridges
+// an external network into the account's VPCs. Surfaces the connection
+// `state`, `connectionBandwidthInMbps`, `region`, `naasProvider`,
+// `redundancyZone`, the BGP peering configuration, the parent/child
+// relationships, and the typed `vpcs()` the attachment is connected to.
+// A private link bridging an external network into your VPCs is a
+// network-trust boundary worth inventorying. Select an attachment by id
+// with `digitalocean.partnerAttachment(id: "...")`.
+digitalocean.partnerAttachment @defaults("id name state") {
+  init(id? string)
+  // Attachment ID
+  id string
+  // Attachment name
+  name string
+  // State of the attachment
+  state string
+  // Connection bandwidth in Mbps
+  connectionBandwidthInMbps int
+  // Region slug
+  region string
+  // Network-as-a-Service provider (e.g., megaport)
+  naasProvider string
+  // Redundancy zone
+  redundancyZone string
+  // IDs of the VPCs the attachment connects
+  vpcIds []string
+  // VPCs the attachment connects (resolved from vpcIds)
+  vpcs() []digitalocean.vpc
+  // BGP peering configuration
+  //
+  // A dict with localAsn, localRouterIp, peerAsn, and peerRouterIp. The
+  // BGP authentication key is intentionally omitted as it is a shared
+  // secret.
+  bgp dict
+  // UUID of the parent attachment, if this is a child
+  parentUuid string
+  // UUIDs of child attachments, if any
+  children []string
+  // Time the resource was created
+  createdAt time
+}
+
+// DigitalOcean account billing balance
+//
+// Examine the account's billing balance: the `accountBalance` carried
+// over, the `monthToDateUsage` accrued so far this billing period, the
+// resulting `monthToDateBalance`, and the time the figures were
+// `generatedAt`. A sudden jump in month-to-date usage is a common early
+// signal of compromised resources (for example, crypto-mining
+// droplets), so this is useful for spend-anomaly auditing. Amounts are
+// USD strings as returned by the API to preserve exact formatting.
+digitalocean.billing @defaults("monthToDateBalance monthToDateUsage") {
+  // Total balance carried over at the start of the period (USD)
+  accountBalance string
+  // Usage accrued so far this billing period (USD)
+  monthToDateUsage string
+  // Current month-to-date balance (USD)
+  monthToDateBalance string
+  // Time these figures were generated
+  generatedAt time
 }

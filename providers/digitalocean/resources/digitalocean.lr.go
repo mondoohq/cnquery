@@ -82,6 +82,10 @@ const (
 	ResourceDigitaloceanGradientaiBatchJob                              string = "digitalocean.gradientai.batchJob"
 	ResourceDigitaloceanSecurityScan                                    string = "digitalocean.securityScan"
 	ResourceDigitaloceanSecurityScanFinding                             string = "digitalocean.securityScan.finding"
+	ResourceDigitaloceanByoipPrefix                                     string = "digitalocean.byoipPrefix"
+	ResourceDigitaloceanByoipPrefixResource                             string = "digitalocean.byoipPrefix.resource"
+	ResourceDigitaloceanPartnerAttachment                               string = "digitalocean.partnerAttachment"
+	ResourceDigitaloceanBilling                                         string = "digitalocean.billing"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -352,6 +356,22 @@ func init() {
 			// to override args, implement: initDigitaloceanSecurityScanFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanSecurityScanFinding,
 		},
+		"digitalocean.byoipPrefix": {
+			Init:   initDigitaloceanByoipPrefix,
+			Create: createDigitaloceanByoipPrefix,
+		},
+		"digitalocean.byoipPrefix.resource": {
+			// to override args, implement: initDigitaloceanByoipPrefixResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanByoipPrefixResource,
+		},
+		"digitalocean.partnerAttachment": {
+			Init:   initDigitaloceanPartnerAttachment,
+			Create: createDigitaloceanPartnerAttachment,
+		},
+		"digitalocean.billing": {
+			// to override args, implement: initDigitaloceanBilling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanBilling,
+		},
 	}
 }
 
@@ -518,6 +538,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.spacesBuckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetSpacesBuckets()).ToDataRes(types.Array(types.Resource("digitalocean.spacesBucket")))
+	},
+	"digitalocean.byoipPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetByoipPrefixes()).ToDataRes(types.Array(types.Resource("digitalocean.byoipPrefix")))
+	},
+	"digitalocean.partnerAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetPartnerAttachments()).ToDataRes(types.Array(types.Resource("digitalocean.partnerAttachment")))
+	},
+	"digitalocean.billing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetBilling()).ToDataRes(types.Resource("digitalocean.billing"))
 	},
 	"digitalocean.account.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAccount).GetEmail()).ToDataRes(types.String)
@@ -789,6 +818,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.database.connectionPort": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetConnectionPort()).ToDataRes(types.Int)
 	},
+	"digitalocean.database.connectionSslEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabase).GetConnectionSslEnabled()).ToDataRes(types.Bool)
+	},
 	"digitalocean.database.privateConnectionHost": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetPrivateConnectionHost()).ToDataRes(types.String)
 	},
@@ -797,6 +829,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.database.evictionPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetEvictionPolicy()).ToDataRes(types.String)
+	},
+	"digitalocean.database.sqlMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabase).GetSqlMode()).ToDataRes(types.String)
 	},
 	"digitalocean.database.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetMaintenanceWindow()).ToDataRes(types.Dict)
@@ -2733,6 +2768,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.securityScan.finding.affectedResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanSecurityScanFinding).GetAffectedResources()).ToDataRes(types.Array(types.Dict))
 	},
+	"digitalocean.byoipPrefix.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetPrefix()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.advertised": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetAdvertised()).ToDataRes(types.Bool)
+	},
+	"digitalocean.byoipPrefix.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetLocked()).ToDataRes(types.Bool)
+	},
+	"digitalocean.byoipPrefix.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetFailureReason()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetProjectId()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetProject()).ToDataRes(types.Resource("digitalocean.project"))
+	},
+	"digitalocean.byoipPrefix.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefix).GetResources()).ToDataRes(types.Array(types.Resource("digitalocean.byoipPrefix.resource")))
+	},
+	"digitalocean.byoipPrefix.resource.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetId()).ToDataRes(types.Int)
+	},
+	"digitalocean.byoipPrefix.resource.prefixUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetPrefixUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.resource.byoip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetByoip()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.resource.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetResource()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.resource.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.byoipPrefix.resource.assignedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanByoipPrefixResource).GetAssignedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.partnerAttachment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetState()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.connectionBandwidthInMbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetConnectionBandwidthInMbps()).ToDataRes(types.Int)
+	},
+	"digitalocean.partnerAttachment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetRegion()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.naasProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetNaasProvider()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.redundancyZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetRedundancyZone()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.vpcIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetVpcIds()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.partnerAttachment.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetVpcs()).ToDataRes(types.Array(types.Resource("digitalocean.vpc")))
+	},
+	"digitalocean.partnerAttachment.bgp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetBgp()).ToDataRes(types.Dict)
+	},
+	"digitalocean.partnerAttachment.parentUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetParentUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.partnerAttachment.children": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetChildren()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.partnerAttachment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.billing.accountBalance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanBilling).GetAccountBalance()).ToDataRes(types.String)
+	},
+	"digitalocean.billing.monthToDateUsage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanBilling).GetMonthToDateUsage()).ToDataRes(types.String)
+	},
+	"digitalocean.billing.monthToDateBalance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanBilling).GetMonthToDateBalance()).ToDataRes(types.String)
+	},
+	"digitalocean.billing.generatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanBilling).GetGeneratedAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2875,6 +3009,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.spacesBuckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).SpacesBuckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).ByoipPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).PartnerAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.billing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).Billing, ok = plugin.RawToTValue[*mqlDigitaloceanBilling](v.Value, v.Error)
 		return
 	},
 	"digitalocean.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3265,6 +3411,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDatabase).ConnectionPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"digitalocean.database.connectionSslEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabase).ConnectionSslEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"digitalocean.database.privateConnectionHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDatabase).PrivateConnectionHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3275,6 +3425,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.database.evictionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanDatabase).EvictionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.database.sqlMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabase).SqlMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"digitalocean.database.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6089,6 +6243,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanSecurityScanFinding).AffectedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.byoipPrefix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.byoipPrefix.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.advertised": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Advertised, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Project, ok = plugin.RawToTValue[*mqlDigitaloceanProject](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefix).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.prefixUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).PrefixUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.byoip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).Byoip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).Resource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.byoipPrefix.resource.assignedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanByoipPrefixResource).AssignedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.partnerAttachment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.connectionBandwidthInMbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).ConnectionBandwidthInMbps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.naasProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).NaasProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.redundancyZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).RedundancyZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.vpcIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).VpcIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Vpcs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.bgp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Bgp, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.parentUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).ParentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.children": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).Children, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.billing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanBilling).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.billing.accountBalance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanBilling).AccountBalance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.billing.monthToDateUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanBilling).MonthToDateUsage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.billing.monthToDateBalance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanBilling).MonthToDateBalance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.billing.generatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanBilling).GeneratedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -6150,6 +6452,9 @@ type mqlDigitalocean struct {
 	Tags                  plugin.TValue[[]any]
 	SpacesKeys            plugin.TValue[[]any]
 	SpacesBuckets         plugin.TValue[[]any]
+	ByoipPrefixes         plugin.TValue[[]any]
+	PartnerAttachments    plugin.TValue[[]any]
+	Billing               plugin.TValue[*mqlDigitaloceanBilling]
 }
 
 // createDigitalocean creates a new instance of this resource
@@ -6698,6 +7003,54 @@ func (c *mqlDigitalocean) GetSpacesBuckets() *plugin.TValue[[]any] {
 		}
 
 		return c.spacesBuckets()
+	})
+}
+
+func (c *mqlDigitalocean) GetByoipPrefixes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ByoipPrefixes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "byoipPrefixes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.byoipPrefixes()
+	})
+}
+
+func (c *mqlDigitalocean) GetPartnerAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PartnerAttachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "partnerAttachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.partnerAttachments()
+	})
+}
+
+func (c *mqlDigitalocean) GetBilling() *plugin.TValue[*mqlDigitaloceanBilling] {
+	return plugin.GetOrCompute[*mqlDigitaloceanBilling](&c.Billing, func() (*mqlDigitaloceanBilling, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "billing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanBilling), nil
+			}
+		}
+
+		return c.billing()
 	})
 }
 
@@ -7523,9 +7876,11 @@ type mqlDigitaloceanDatabase struct {
 	InternetReachable                plugin.TValue[bool]
 	ConnectionHost                   plugin.TValue[string]
 	ConnectionPort                   plugin.TValue[int64]
+	ConnectionSslEnabled             plugin.TValue[bool]
 	PrivateConnectionHost            plugin.TValue[string]
 	PrivateConnectionPort            plugin.TValue[int64]
 	EvictionPolicy                   plugin.TValue[string]
+	SqlMode                          plugin.TValue[string]
 	MaintenanceWindow                plugin.TValue[any]
 	Users                            plugin.TValue[[]any]
 	Replicas                         plugin.TValue[[]any]
@@ -7674,6 +8029,10 @@ func (c *mqlDigitaloceanDatabase) GetConnectionPort() *plugin.TValue[int64] {
 	return &c.ConnectionPort
 }
 
+func (c *mqlDigitaloceanDatabase) GetConnectionSslEnabled() *plugin.TValue[bool] {
+	return &c.ConnectionSslEnabled
+}
+
 func (c *mqlDigitaloceanDatabase) GetPrivateConnectionHost() *plugin.TValue[string] {
 	return &c.PrivateConnectionHost
 }
@@ -7685,6 +8044,12 @@ func (c *mqlDigitaloceanDatabase) GetPrivateConnectionPort() *plugin.TValue[int6
 func (c *mqlDigitaloceanDatabase) GetEvictionPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.EvictionPolicy, func() (string, error) {
 		return c.evictionPolicy()
+	})
+}
+
+func (c *mqlDigitaloceanDatabase) GetSqlMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SqlMode, func() (string, error) {
+		return c.sqlMode()
 	})
 }
 
@@ -14225,4 +14590,381 @@ func (c *mqlDigitaloceanSecurityScanFinding) GetAffectedResources() *plugin.TVal
 	return plugin.GetOrCompute[[]any](&c.AffectedResources, func() ([]any, error) {
 		return c.affectedResources()
 	})
+}
+
+// mqlDigitaloceanByoipPrefix for the digitalocean.byoipPrefix resource
+type mqlDigitaloceanByoipPrefix struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanByoipPrefixInternal it will be used here
+	Uuid          plugin.TValue[string]
+	Prefix        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Advertised    plugin.TValue[bool]
+	Locked        plugin.TValue[bool]
+	FailureReason plugin.TValue[string]
+	ProjectId     plugin.TValue[string]
+	Project       plugin.TValue[*mqlDigitaloceanProject]
+	Resources     plugin.TValue[[]any]
+}
+
+// createDigitaloceanByoipPrefix creates a new instance of this resource
+func createDigitaloceanByoipPrefix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanByoipPrefix{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.byoipPrefix", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanByoipPrefix) MqlName() string {
+	return "digitalocean.byoipPrefix"
+}
+
+func (c *mqlDigitaloceanByoipPrefix) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetAdvertised() *plugin.TValue[bool] {
+	return &c.Advertised
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetProject() *plugin.TValue[*mqlDigitaloceanProject] {
+	return plugin.GetOrCompute[*mqlDigitaloceanProject](&c.Project, func() (*mqlDigitaloceanProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.byoipPrefix", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlDigitaloceanByoipPrefix) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.byoipPrefix", c.__id, "resources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resources()
+	})
+}
+
+// mqlDigitaloceanByoipPrefixResource for the digitalocean.byoipPrefix.resource resource
+type mqlDigitaloceanByoipPrefixResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanByoipPrefixResourceInternal it will be used here
+	Id         plugin.TValue[int64]
+	PrefixUuid plugin.TValue[string]
+	Byoip      plugin.TValue[string]
+	Resource   plugin.TValue[string]
+	Region     plugin.TValue[string]
+	AssignedAt plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanByoipPrefixResource creates a new instance of this resource
+func createDigitaloceanByoipPrefixResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanByoipPrefixResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.byoipPrefix.resource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) MqlName() string {
+	return "digitalocean.byoipPrefix.resource"
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetPrefixUuid() *plugin.TValue[string] {
+	return &c.PrefixUuid
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetByoip() *plugin.TValue[string] {
+	return &c.Byoip
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetResource() *plugin.TValue[string] {
+	return &c.Resource
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanByoipPrefixResource) GetAssignedAt() *plugin.TValue[*time.Time] {
+	return &c.AssignedAt
+}
+
+// mqlDigitaloceanPartnerAttachment for the digitalocean.partnerAttachment resource
+type mqlDigitaloceanPartnerAttachment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanPartnerAttachmentInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	State                     plugin.TValue[string]
+	ConnectionBandwidthInMbps plugin.TValue[int64]
+	Region                    plugin.TValue[string]
+	NaasProvider              plugin.TValue[string]
+	RedundancyZone            plugin.TValue[string]
+	VpcIds                    plugin.TValue[[]any]
+	Vpcs                      plugin.TValue[[]any]
+	Bgp                       plugin.TValue[any]
+	ParentUuid                plugin.TValue[string]
+	Children                  plugin.TValue[[]any]
+	CreatedAt                 plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanPartnerAttachment creates a new instance of this resource
+func createDigitaloceanPartnerAttachment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanPartnerAttachment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.partnerAttachment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) MqlName() string {
+	return "digitalocean.partnerAttachment"
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetConnectionBandwidthInMbps() *plugin.TValue[int64] {
+	return &c.ConnectionBandwidthInMbps
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetNaasProvider() *plugin.TValue[string] {
+	return &c.NaasProvider
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetRedundancyZone() *plugin.TValue[string] {
+	return &c.RedundancyZone
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetVpcIds() *plugin.TValue[[]any] {
+	return &c.VpcIds
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetVpcs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vpcs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.partnerAttachment", c.__id, "vpcs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcs()
+	})
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetBgp() *plugin.TValue[any] {
+	return &c.Bgp
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetParentUuid() *plugin.TValue[string] {
+	return &c.ParentUuid
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetChildren() *plugin.TValue[[]any] {
+	return &c.Children
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanBilling for the digitalocean.billing resource
+type mqlDigitaloceanBilling struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanBillingInternal it will be used here
+	AccountBalance     plugin.TValue[string]
+	MonthToDateUsage   plugin.TValue[string]
+	MonthToDateBalance plugin.TValue[string]
+	GeneratedAt        plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanBilling creates a new instance of this resource
+func createDigitaloceanBilling(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanBilling{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.billing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanBilling) MqlName() string {
+	return "digitalocean.billing"
+}
+
+func (c *mqlDigitaloceanBilling) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanBilling) GetAccountBalance() *plugin.TValue[string] {
+	return &c.AccountBalance
+}
+
+func (c *mqlDigitaloceanBilling) GetMonthToDateUsage() *plugin.TValue[string] {
+	return &c.MonthToDateUsage
+}
+
+func (c *mqlDigitaloceanBilling) GetMonthToDateBalance() *plugin.TValue[string] {
+	return &c.MonthToDateBalance
+}
+
+func (c *mqlDigitaloceanBilling) GetGeneratedAt() *plugin.TValue[*time.Time] {
+	return &c.GeneratedAt
 }

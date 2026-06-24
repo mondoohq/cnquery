@@ -629,6 +629,21 @@ func (r *mqlDigitaloceanDatabase) evictionPolicy() (string, error) {
 	return policy, nil
 }
 
+// sqlMode returns the cluster's SQL mode flags. It is a MySQL-only setting,
+// so for any other engine the field is resolved to null without an API call.
+func (r *mqlDigitaloceanDatabase) sqlMode() (string, error) {
+	if r.Engine.Data != "mysql" {
+		r.SqlMode.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	mode, _, err := conn.Client().Databases.GetSQLMode(context.Background(), r.Id.Data)
+	if err != nil {
+		return "", err
+	}
+	return mode, nil
+}
+
 // --- LoadBalancer typed refs ---
 
 func (r *mqlDigitaloceanLoadBalancer) vpc() (*mqlDigitaloceanVpc, error) {

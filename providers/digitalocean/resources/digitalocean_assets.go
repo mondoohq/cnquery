@@ -41,9 +41,11 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 	// Host/port are exposed separately for connectivity checks.
 	connHost := ""
 	connPort := int64(0)
+	connSslEnabled := false
 	if db.Connection != nil {
 		connHost = db.Connection.Host
 		connPort = int64(db.Connection.Port)
+		connSslEnabled = db.Connection.SSL
 	}
 	privConnHost := ""
 	privConnPort := int64(0)
@@ -115,6 +117,7 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		"maintenanceWindow":                llx.DictData(mw),
 		"connectionHost":                   llx.StringData(connHost),
 		"connectionPort":                   llx.IntData(connPort),
+		"connectionSslEnabled":             llx.BoolData(connSslEnabled),
 		"privateConnectionHost":            llx.StringData(privConnHost),
 		"privateConnectionPort":            llx.IntData(privConnPort),
 		"storageAutoscaleEnabled":          llx.BoolData(storageAutoscaleEnabled),
