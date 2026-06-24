@@ -69,9 +69,20 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 }
 
 func handleTargets(targets []string) []string {
-	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll, connection.DiscoveryAuto) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAll) {
 		return []string{
 			connection.DiscoveryAccounts,
+			connection.DiscoveryProfiles,
+		}
+	}
+	// "auto" is the default, and it intentionally omits the account asset. The
+	// NextDNS API currently exposes no account-level information (no
+	// subscription status, 2FA status, or owner email; the account id is only a
+	// synthetic fingerprint of the API key), so discovering the account by
+	// default would just add an empty asset. It stays reachable through an
+	// explicit `--discover accounts` (or `--discover all`).
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryAuto) {
+		return []string{
 			connection.DiscoveryProfiles,
 		}
 	}
