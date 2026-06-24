@@ -37,7 +37,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 		case connection.DiscoveryProfiles:
 			profiles, err := fetchProfiles(conn)
 			if err != nil {
-				return in, err
+				return nil, err
 			}
 			for _, p := range profiles {
 				childConf := conf.Clone(

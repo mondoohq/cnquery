@@ -41,16 +41,23 @@ type NextdnsConnection struct {
 
 	// accountID is a stable fingerprint of the API key. NextDNS exposes no
 	// account object, so we derive a deterministic id to identify the account
-	// asset across scans.
+	// asset across scans. Note the coupling: the id is derived from the key, so
+	// rotating the API key yields a new account identity and breaks asset
+	// continuity (platform ids change) across scans.
 	accountID string
 }
 
 func NewNextdnsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*NextdnsConnection, error) {
-	apiKey := os.Getenv("NEXTDNS_API_KEY")
+	// Prefer credentials from the config (e.g. vault-injected) and only fall
+	// back to the environment, so a stale env var never shadows a real one.
+	var apiKey string
 	for _, cred := range conf.Credentials {
 		if cred.Type == vault.CredentialType_password && len(cred.Secret) > 0 {
 			apiKey = string(cred.Secret)
 		}
+	}
+	if apiKey == "" {
+		apiKey = os.Getenv("NEXTDNS_API_KEY")
 	}
 	if apiKey == "" {
 		return nil, errors.New("a valid NextDNS API key is required (set NEXTDNS_API_KEY or use --api-key)")

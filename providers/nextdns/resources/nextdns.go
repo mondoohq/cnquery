@@ -27,25 +27,26 @@ type profilesResponse struct {
 }
 
 // fetchProfiles returns the profiles visible to the connection. When the
-// connection is scoped to a single profile, only that profile is returned.
+// connection is scoped to a single profile, that profile is fetched directly
+// so we never list (or expose) profiles the connection shouldn't see.
 func fetchProfiles(conn *connection.NextdnsConnection) ([]profileData, error) {
+	if scoped := conn.ProfileID(); scoped != "" {
+		var resp profileDetailResponse
+		if err := conn.Get(context.Background(), "/profiles/"+scoped, &resp); err != nil {
+			return nil, err
+		}
+		return []profileData{{
+			ID:          scoped,
+			Name:        resp.Data.Name,
+			Fingerprint: resp.Data.Fingerprint,
+		}}, nil
+	}
+
 	var resp profilesResponse
 	if err := conn.Get(context.Background(), "/profiles", &resp); err != nil {
 		return nil, err
 	}
-
-	scoped := conn.ProfileID()
-	if scoped == "" {
-		return resp.Data, nil
-	}
-
-	filtered := make([]profileData, 0, 1)
-	for _, p := range resp.Data {
-		if p.ID == scoped {
-			filtered = append(filtered, p)
-		}
-	}
-	return filtered, nil
+	return resp.Data, nil
 }
 
 // profilesToResources fetches profiles for the connection and maps them to

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -16,10 +17,11 @@ import (
 // mqlNextdnsProfileInternal caches the full profile detail. Every section
 // (security, privacy, parentalControl, settings, setup, lists, rewrites) is
 // served by a single GET /profiles/:id call, so accessors share one fetch.
+// The detail is cached only on success so a transient failure can be retried.
 type mqlNextdnsProfileInternal struct {
-	detailOnce sync.Once
-	detail     *profileDetail
-	detailErr  error
+	fetched atomic.Bool
+	lock    sync.Mutex
+	detail  *profileDetail
 }
 
 func (r *mqlNextdnsProfile) id() (string, error) {
@@ -150,18 +152,27 @@ type rewriteData struct {
 	Content string `json:"content"`
 }
 
-// fetchDetail loads the full profile once and caches it.
+// fetchDetail loads the full profile once and caches it. The result is cached
+// only on success, so a transient failure on the first call can be retried by
+// later accessors rather than being remembered forever.
 func (r *mqlNextdnsProfile) fetchDetail() (*profileDetail, error) {
-	r.detailOnce.Do(func() {
-		conn := r.MqlRuntime.Connection.(*connection.NextdnsConnection)
-		var resp profileDetailResponse
-		if err := conn.Get(context.Background(), "/profiles/"+r.Id.Data, &resp); err != nil {
-			r.detailErr = err
-			return
-		}
-		r.detail = &resp.Data
-	})
-	return r.detail, r.detailErr
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched.Load() {
+		return r.detail, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.NextdnsConnection)
+	var resp profileDetailResponse
+	if err := conn.Get(context.Background(), "/profiles/"+r.Id.Data, &resp); err != nil {
+		return nil, err
+	}
+	r.detail = &resp.Data
+	r.fetched.Store(true)
+	return r.detail, nil
 }
 
 // account resolves the typed account that owns this profile, enabling
