@@ -421,9 +421,10 @@ func (r *mqlOpenstackBlockstorageSnapshot) user() (*mqlOpenstackUser, error) {
 // ---- openstack.blockstorage.volumeType ----
 
 type mqlOpenstackBlockstorageVolumeTypeInternal struct {
-	encOnce sync.Once
-	encErr  error
-	enc     *volumetypes.GetEncryptionType
+	encOnce        sync.Once
+	encErr         error
+	enc            *volumetypes.GetEncryptionType
+	cacheQosSpecID string
 }
 
 func (r *mqlOpenstackBlockstorageVolumeType) id() (string, error) {
@@ -484,6 +485,7 @@ func (o *mqlOpenstack) volumeTypes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlOpenstackBlockstorageVolumeType).cacheQosSpecID = vt.QosSpecID
 		out = append(out, res)
 	}
 	return out, nil

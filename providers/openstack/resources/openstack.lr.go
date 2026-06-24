@@ -89,6 +89,9 @@ const (
 	ResourceOpenstackBaremetalNode                   string = "openstack.baremetal.node"
 	ResourceOpenstackBaremetalPort                   string = "openstack.baremetal.port"
 	ResourceOpenstackOrchestrationStack              string = "openstack.orchestration.stack"
+	ResourceOpenstackComputeQuotaSet                 string = "openstack.compute.quotaSet"
+	ResourceOpenstackNetworkRbacPolicy               string = "openstack.network.rbacPolicy"
+	ResourceOpenstackBlockstorageQosSpec             string = "openstack.blockstorage.qosSpec"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -387,6 +390,18 @@ func init() {
 			Init:   initOpenstackOrchestrationStack,
 			Create: createOpenstackOrchestrationStack,
 		},
+		"openstack.compute.quotaSet": {
+			// to override args, implement: initOpenstackComputeQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackComputeQuotaSet,
+		},
+		"openstack.network.rbacPolicy": {
+			Init:   initOpenstackNetworkRbacPolicy,
+			Create: createOpenstackNetworkRbacPolicy,
+		},
+		"openstack.blockstorage.qosSpec": {
+			Init:   initOpenstackBlockstorageQosSpec,
+			Create: createOpenstackBlockstorageQosSpec,
+		},
 	}
 }
 
@@ -536,6 +551,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.networkQuotaSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetNetworkQuotaSet()).ToDataRes(types.Resource("openstack.network.quotaSet"))
 	},
+	"openstack.computeQuotaSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetComputeQuotaSet()).ToDataRes(types.Resource("openstack.compute.quotaSet"))
+	},
 	"openstack.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetNetworks()).ToDataRes(types.Array(types.Resource("openstack.network")))
 	},
@@ -565,6 +583,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.volumeTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetVolumeTypes()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.volumeType")))
+	},
+	"openstack.blockStorageQosSpecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetBlockStorageQosSpecs()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.qosSpec")))
 	},
 	"openstack.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetImages()).ToDataRes(types.Array(types.Resource("openstack.image")))
@@ -598,6 +619,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.qosPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetQosPolicies()).ToDataRes(types.Array(types.Resource("openstack.qosPolicy")))
+	},
+	"openstack.rbacPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetRbacPolicies()).ToDataRes(types.Array(types.Resource("openstack.network.rbacPolicy")))
 	},
 	"openstack.trunks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetTrunks()).ToDataRes(types.Array(types.Resource("openstack.trunk")))
@@ -838,6 +862,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.compute.server.hypervisorHostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeServer).GetHypervisorHostname()).ToDataRes(types.String)
+	},
+	"openstack.compute.server.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeServer).GetInstanceName()).ToDataRes(types.String)
 	},
 	"openstack.compute.server.userData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeServer).GetUserData()).ToDataRes(types.String)
@@ -1282,6 +1309,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.securityGroup.rule.remoteIpPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteIpPrefix()).ToDataRes(types.String)
+	},
+	"openstack.securityGroup.rule.remoteAddressGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackSecurityGroupRule).GetRemoteAddressGroupId()).ToDataRes(types.String)
 	},
 	"openstack.securityGroup.rule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroupRule).GetDescription()).ToDataRes(types.String)
@@ -2531,6 +2561,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.blockstorage.volumeType.encryptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionId()).ToDataRes(types.String)
 	},
+	"openstack.blockstorage.volumeType.qosSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetQosSpec()).ToDataRes(types.Resource("openstack.blockstorage.qosSpec"))
+	},
 	"openstack.blockstorage.volumeType.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolumeType).GetVolumes()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.volume")))
 	},
@@ -3467,6 +3500,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.orchestration.stack.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackOrchestrationStack).GetParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"openstack.compute.quotaSet.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.compute.quotaSet.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.compute.quotaSet.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetInstances()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.cores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetCores()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.ram": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetRam()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.keyPairs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetKeyPairs()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.metadataItems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetMetadataItems()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.serverGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetServerGroups()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.serverGroupMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetServerGroupMembers()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetSecurityGroups()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.securityGroupRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetSecurityGroupRules()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.fixedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetFixedIps()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetFloatingIps()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.injectedFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetInjectedFiles()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.injectedFileContentBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetInjectedFileContentBytes()).ToDataRes(types.Int)
+	},
+	"openstack.compute.quotaSet.injectedFilePathBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeQuotaSet).GetInjectedFilePathBytes()).ToDataRes(types.Int)
+	},
+	"openstack.network.rbacPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetId()).ToDataRes(types.String)
+	},
+	"openstack.network.rbacPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"openstack.network.rbacPolicy.objectType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetObjectType()).ToDataRes(types.String)
+	},
+	"openstack.network.rbacPolicy.objectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetObjectId()).ToDataRes(types.String)
+	},
+	"openstack.network.rbacPolicy.targetProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetTargetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.network.rbacPolicy.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetNetwork()).ToDataRes(types.Resource("openstack.network"))
+	},
+	"openstack.network.rbacPolicy.qosPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetQosPolicy()).ToDataRes(types.Resource("openstack.qosPolicy"))
+	},
+	"openstack.network.rbacPolicy.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkRbacPolicy).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.blockstorage.qosSpec.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQosSpec).GetId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.qosSpec.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQosSpec).GetName()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.qosSpec.consumer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQosSpec).GetConsumer()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.qosSpec.specs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQosSpec).GetSpecs()).ToDataRes(types.Map(types.String, types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -3587,6 +3704,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstack).NetworkQuotaSet, ok = plugin.RawToTValue[*mqlOpenstackNetworkQuotaSet](v.Value, v.Error)
 		return
 	},
+	"openstack.computeQuotaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).ComputeQuotaSet, ok = plugin.RawToTValue[*mqlOpenstackComputeQuotaSet](v.Value, v.Error)
+		return
+	},
 	"openstack.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).Networks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3625,6 +3746,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.volumeTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).VolumeTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.blockStorageQosSpecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).BlockStorageQosSpecs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3669,6 +3794,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.qosPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).QosPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.rbacPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).RbacPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.trunks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4021,6 +4150,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.compute.server.hypervisorHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackComputeServer).HypervisorHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.server.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeServer).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.compute.server.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4657,6 +4790,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.securityGroup.rule.remoteIpPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackSecurityGroupRule).RemoteIpPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.securityGroup.rule.remoteAddressGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackSecurityGroupRule).RemoteAddressGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.securityGroup.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6435,6 +6572,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openstack.blockstorage.volumeType.qosSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).QosSpec, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageQosSpec](v.Value, v.Error)
+		return
+	},
 	"openstack.blockstorage.volumeType.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackBlockstorageVolumeType).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -7783,6 +7924,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackOrchestrationStack).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"openstack.compute.quotaSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.compute.quotaSet.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).Instances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.cores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).Cores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.ram": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).Ram, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.keyPairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).KeyPairs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.metadataItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).MetadataItems, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.serverGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).ServerGroups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.serverGroupMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).ServerGroupMembers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).SecurityGroups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.securityGroupRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).SecurityGroupRules, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.fixedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).FixedIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).FloatingIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.injectedFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).InjectedFiles, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.injectedFileContentBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).InjectedFileContentBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.quotaSet.injectedFilePathBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeQuotaSet).InjectedFilePathBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.network.rbacPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.objectType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).ObjectType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.objectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).ObjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.targetProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).TargetProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).Network, ok = plugin.RawToTValue[*mqlOpenstackNetwork](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.qosPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).QosPolicy, ok = plugin.RawToTValue[*mqlOpenstackQosPolicy](v.Value, v.Error)
+		return
+	},
+	"openstack.network.rbacPolicy.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkRbacPolicy).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.qosSpec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQosSpec).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.blockstorage.qosSpec.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQosSpec).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.qosSpec.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQosSpec).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.qosSpec.consumer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQosSpec).Consumer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.qosSpec.specs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQosSpec).Specs, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -7838,6 +8103,7 @@ type mqlOpenstack struct {
 	ResourceProviders       plugin.TValue[[]any]
 	BlockStorageQuotaSet    plugin.TValue[*mqlOpenstackBlockstorageQuotaSet]
 	NetworkQuotaSet         plugin.TValue[*mqlOpenstackNetworkQuotaSet]
+	ComputeQuotaSet         plugin.TValue[*mqlOpenstackComputeQuotaSet]
 	Networks                plugin.TValue[[]any]
 	Subnets                 plugin.TValue[[]any]
 	Routers                 plugin.TValue[[]any]
@@ -7848,6 +8114,7 @@ type mqlOpenstack struct {
 	Snapshots               plugin.TValue[[]any]
 	Backups                 plugin.TValue[[]any]
 	VolumeTypes             plugin.TValue[[]any]
+	BlockStorageQosSpecs    plugin.TValue[[]any]
 	Images                  plugin.TValue[[]any]
 	Secrets                 plugin.TValue[[]any]
 	SecretContainers        plugin.TValue[[]any]
@@ -7859,6 +8126,7 @@ type mqlOpenstack struct {
 	L7Policies              plugin.TValue[[]any]
 	SubnetPools             plugin.TValue[[]any]
 	QosPolicies             plugin.TValue[[]any]
+	RbacPolicies            plugin.TValue[[]any]
 	Trunks                  plugin.TValue[[]any]
 	FirewallGroups          plugin.TValue[[]any]
 	FirewallPolicies        plugin.TValue[[]any]
@@ -8305,6 +8573,22 @@ func (c *mqlOpenstack) GetNetworkQuotaSet() *plugin.TValue[*mqlOpenstackNetworkQ
 	})
 }
 
+func (c *mqlOpenstack) GetComputeQuotaSet() *plugin.TValue[*mqlOpenstackComputeQuotaSet] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeQuotaSet](&c.ComputeQuotaSet, func() (*mqlOpenstackComputeQuotaSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "computeQuotaSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeQuotaSet), nil
+			}
+		}
+
+		return c.computeQuotaSet()
+	})
+}
+
 func (c *mqlOpenstack) GetNetworks() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Networks, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -8462,6 +8746,22 @@ func (c *mqlOpenstack) GetVolumeTypes() *plugin.TValue[[]any] {
 		}
 
 		return c.volumeTypes()
+	})
+}
+
+func (c *mqlOpenstack) GetBlockStorageQosSpecs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BlockStorageQosSpecs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "blockStorageQosSpecs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.blockStorageQosSpecs()
 	})
 }
 
@@ -8638,6 +8938,22 @@ func (c *mqlOpenstack) GetQosPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.qosPolicies()
+	})
+}
+
+func (c *mqlOpenstack) GetRbacPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RbacPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "rbacPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rbacPolicies()
 	})
 }
 
@@ -9685,6 +10001,7 @@ type mqlOpenstackComputeServer struct {
 	ConfigDrive        plugin.TValue[bool]
 	Host               plugin.TValue[string]
 	HypervisorHostname plugin.TValue[string]
+	InstanceName       plugin.TValue[string]
 	UserData           plugin.TValue[string]
 	Addresses          plugin.TValue[any]
 	Metadata           plugin.TValue[map[string]any]
@@ -9804,6 +10121,10 @@ func (c *mqlOpenstackComputeServer) GetHost() *plugin.TValue[string] {
 
 func (c *mqlOpenstackComputeServer) GetHypervisorHostname() *plugin.TValue[string] {
 	return &c.HypervisorHostname
+}
+
+func (c *mqlOpenstackComputeServer) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
 }
 
 func (c *mqlOpenstackComputeServer) GetUserData() *plugin.TValue[string] {
@@ -11352,6 +11673,7 @@ type mqlOpenstackSecurityGroupRule struct {
 	PortRangeMin         plugin.TValue[int64]
 	PortRangeMax         plugin.TValue[int64]
 	RemoteIpPrefix       plugin.TValue[string]
+	RemoteAddressGroupId plugin.TValue[string]
 	Description          plugin.TValue[string]
 	CreatedAt            plugin.TValue[*time.Time]
 	UpdatedAt            plugin.TValue[*time.Time]
@@ -11424,6 +11746,10 @@ func (c *mqlOpenstackSecurityGroupRule) GetPortRangeMax() *plugin.TValue[int64] 
 
 func (c *mqlOpenstackSecurityGroupRule) GetRemoteIpPrefix() *plugin.TValue[string] {
 	return &c.RemoteIpPrefix
+}
+
+func (c *mqlOpenstackSecurityGroupRule) GetRemoteAddressGroupId() *plugin.TValue[string] {
+	return &c.RemoteAddressGroupId
 }
 
 func (c *mqlOpenstackSecurityGroupRule) GetDescription() *plugin.TValue[string] {
@@ -15665,6 +15991,7 @@ type mqlOpenstackBlockstorageVolumeType struct {
 	EncryptionKeySize         plugin.TValue[int64]
 	EncryptionControlLocation plugin.TValue[string]
 	EncryptionId              plugin.TValue[string]
+	QosSpec                   plugin.TValue[*mqlOpenstackBlockstorageQosSpec]
 	Volumes                   plugin.TValue[[]any]
 }
 
@@ -15752,6 +16079,22 @@ func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionControlLocation() *plu
 func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionId() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.EncryptionId, func() (string, error) {
 		return c.encryptionId()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetQosSpec() *plugin.TValue[*mqlOpenstackBlockstorageQosSpec] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageQosSpec](&c.QosSpec, func() (*mqlOpenstackBlockstorageQosSpec, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.volumeType", c.__id, "qosSpec")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageQosSpec), nil
+			}
+		}
+
+		return c.qosSpec()
 	})
 }
 
@@ -19088,4 +19431,319 @@ func (c *mqlOpenstackOrchestrationStack) GetParameters() *plugin.TValue[map[stri
 	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
 		return c.parameters()
 	})
+}
+
+// mqlOpenstackComputeQuotaSet for the openstack.compute.quotaSet resource
+type mqlOpenstackComputeQuotaSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackComputeQuotaSetInternal it will be used here
+	ProjectId                plugin.TValue[string]
+	Project                  plugin.TValue[*mqlOpenstackProject]
+	Instances                plugin.TValue[int64]
+	Cores                    plugin.TValue[int64]
+	Ram                      plugin.TValue[int64]
+	KeyPairs                 plugin.TValue[int64]
+	MetadataItems            plugin.TValue[int64]
+	ServerGroups             plugin.TValue[int64]
+	ServerGroupMembers       plugin.TValue[int64]
+	SecurityGroups           plugin.TValue[int64]
+	SecurityGroupRules       plugin.TValue[int64]
+	FixedIps                 plugin.TValue[int64]
+	FloatingIps              plugin.TValue[int64]
+	InjectedFiles            plugin.TValue[int64]
+	InjectedFileContentBytes plugin.TValue[int64]
+	InjectedFilePathBytes    plugin.TValue[int64]
+}
+
+// createOpenstackComputeQuotaSet creates a new instance of this resource
+func createOpenstackComputeQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackComputeQuotaSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.compute.quotaSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackComputeQuotaSet) MqlName() string {
+	return "openstack.compute.quotaSet"
+}
+
+func (c *mqlOpenstackComputeQuotaSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.compute.quotaSet", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetInstances() *plugin.TValue[int64] {
+	return &c.Instances
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetCores() *plugin.TValue[int64] {
+	return &c.Cores
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetRam() *plugin.TValue[int64] {
+	return &c.Ram
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetKeyPairs() *plugin.TValue[int64] {
+	return &c.KeyPairs
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetMetadataItems() *plugin.TValue[int64] {
+	return &c.MetadataItems
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetServerGroups() *plugin.TValue[int64] {
+	return &c.ServerGroups
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetServerGroupMembers() *plugin.TValue[int64] {
+	return &c.ServerGroupMembers
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetSecurityGroups() *plugin.TValue[int64] {
+	return &c.SecurityGroups
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetSecurityGroupRules() *plugin.TValue[int64] {
+	return &c.SecurityGroupRules
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetFixedIps() *plugin.TValue[int64] {
+	return &c.FixedIps
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetFloatingIps() *plugin.TValue[int64] {
+	return &c.FloatingIps
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetInjectedFiles() *plugin.TValue[int64] {
+	return &c.InjectedFiles
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetInjectedFileContentBytes() *plugin.TValue[int64] {
+	return &c.InjectedFileContentBytes
+}
+
+func (c *mqlOpenstackComputeQuotaSet) GetInjectedFilePathBytes() *plugin.TValue[int64] {
+	return &c.InjectedFilePathBytes
+}
+
+// mqlOpenstackNetworkRbacPolicy for the openstack.network.rbacPolicy resource
+type mqlOpenstackNetworkRbacPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackNetworkRbacPolicyInternal
+	Id              plugin.TValue[string]
+	Action          plugin.TValue[string]
+	ObjectType      plugin.TValue[string]
+	ObjectId        plugin.TValue[string]
+	TargetProjectId plugin.TValue[string]
+	Network         plugin.TValue[*mqlOpenstackNetwork]
+	QosPolicy       plugin.TValue[*mqlOpenstackQosPolicy]
+	Project         plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackNetworkRbacPolicy creates a new instance of this resource
+func createOpenstackNetworkRbacPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackNetworkRbacPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.network.rbacPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) MqlName() string {
+	return "openstack.network.rbacPolicy"
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetObjectType() *plugin.TValue[string] {
+	return &c.ObjectType
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetObjectId() *plugin.TValue[string] {
+	return &c.ObjectId
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetTargetProjectId() *plugin.TValue[string] {
+	return &c.TargetProjectId
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetNetwork() *plugin.TValue[*mqlOpenstackNetwork] {
+	return plugin.GetOrCompute[*mqlOpenstackNetwork](&c.Network, func() (*mqlOpenstackNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.network.rbacPolicy", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetQosPolicy() *plugin.TValue[*mqlOpenstackQosPolicy] {
+	return plugin.GetOrCompute[*mqlOpenstackQosPolicy](&c.QosPolicy, func() (*mqlOpenstackQosPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.network.rbacPolicy", c.__id, "qosPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackQosPolicy), nil
+			}
+		}
+
+		return c.qosPolicy()
+	})
+}
+
+func (c *mqlOpenstackNetworkRbacPolicy) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.network.rbacPolicy", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackBlockstorageQosSpec for the openstack.blockstorage.qosSpec resource
+type mqlOpenstackBlockstorageQosSpec struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackBlockstorageQosSpecInternal it will be used here
+	Id       plugin.TValue[string]
+	Name     plugin.TValue[string]
+	Consumer plugin.TValue[string]
+	Specs    plugin.TValue[map[string]any]
+}
+
+// createOpenstackBlockstorageQosSpec creates a new instance of this resource
+func createOpenstackBlockstorageQosSpec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBlockstorageQosSpec{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.blockstorage.qosSpec", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) MqlName() string {
+	return "openstack.blockstorage.qosSpec"
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) GetConsumer() *plugin.TValue[string] {
+	return &c.Consumer
+}
+
+func (c *mqlOpenstackBlockstorageQosSpec) GetSpecs() *plugin.TValue[map[string]any] {
+	return &c.Specs
 }

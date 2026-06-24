@@ -82,6 +82,8 @@ openstack {
   blockStorageQuotaSet() openstack.blockstorage.quotaSet
   // Per-project Neutron quota
   networkQuotaSet() openstack.network.quotaSet
+  // Per-project Nova compute quota
+  computeQuotaSet() openstack.compute.quotaSet
 
   // Neutron networks
   networks() []openstack.network
@@ -104,6 +106,8 @@ openstack {
   backups() []openstack.blockstorage.backup
   // Cinder volume types (storage classes) visible to the scoped project
   volumeTypes() []openstack.blockstorage.volumeType
+  // Cinder QoS specifications (IOPS/bandwidth throttling policies); admin-only
+  blockStorageQosSpecs() []openstack.blockstorage.qosSpec
   // Glance images visible to the scoped project
   images() []openstack.image
   // Barbican secrets in the scoped project
@@ -126,6 +130,8 @@ openstack {
   subnetPools() []openstack.subnetPool
   // Neutron QoS policies in the scoped project
   qosPolicies() []openstack.qosPolicy
+  // Neutron RBAC policies controlling which projects a network or QoS policy is shared with
+  rbacPolicies() []openstack.network.rbacPolicy
   // Neutron trunks (parent/subport multi-VLAN containers) in the scoped project
   trunks() []openstack.trunk
   // Neutron FWaaS v2 firewall groups in the scoped project
@@ -345,6 +351,8 @@ private openstack.compute.server @defaults("id name status") {
   host string
   // Hypervisor hostname the server runs on (Nova `OS-EXT-SRV-ATTR:hypervisor_hostname`); admin-only, empty for non-admin tokens
   hypervisorHostname string
+  // Hypervisor-level instance name (Nova `OS-EXT-SRV-ATTR:instance_name`, e.g. "instance-0000004f"); admin-only, empty for non-admin tokens
+  instanceName string
   // Cloud-init user data the server was booted with (Nova `OS-EXT-SRV-ATTR:user_data`)
   //
   // Admin-only and empty for non-admin tokens. The raw value may embed bootstrap secrets, so auditing it for hardcoded credentials is a common use.
@@ -704,6 +712,8 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   portRangeMax int
   // Remote IP prefix (CIDR; empty when matched by remote group instead)
   remoteIpPrefix string
+  // Remote address group ID the rule matches; empty when matched by IP prefix or remote security group instead
+  remoteAddressGroupId string
   // Description
   description string
   // Creation timestamp
@@ -716,7 +726,7 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   remoteGroup() openstack.securityGroup
   // Whether the rule's source reaches the public internet
   //
-  // True when remoteIpPrefix is a public CIDR (a broad block such as 0.0.0.0/0 or ::/0, excluding private and reserved ranges) or when the rule is unscoped (no remote IP prefix and no remote group), which Neutron treats as any source. Direction-agnostic, so it also classifies egress destinations.
+  // True when remoteIpPrefix is a public CIDR (a broad block such as 0.0.0.0/0 or ::/0, excluding private and reserved ranges) or when the rule is unscoped (no remote IP prefix, no remote group, and no remote address group), which Neutron treats as any source. A rule scoped to a remote security group or remote address group is not public. Direction-agnostic, so it also classifies egress destinations.
   includesPublicSource() bool
   // Project that owns this security group rule
   project() openstack.project
@@ -1692,6 +1702,8 @@ private openstack.blockstorage.volumeType @defaults("id name isPublic encryption
   encryptionControlLocation() string
   // Encryption configuration ID (UUID); empty when the type is unencrypted
   encryptionId() string
+  // QoS specification (IOPS/bandwidth throttling) associated with this volume type; null when none
+  qosSpec() openstack.blockstorage.qosSpec
   // Volumes that use this volume type (filtered from the scoped project's volumes)
   volumes() []openstack.blockstorage.volume
 }
@@ -2578,4 +2590,95 @@ private openstack.orchestration.stack @defaults("id name status") {
   timeoutMinutes() int
   // Input parameters the stack was deployed with
   parameters() map[string]string
+}
+
+// OpenStack Nova compute quota for the scoped project
+private openstack.compute.quotaSet @defaults("instances cores ram") {
+  // Project ID the quota applies to
+  //
+  // Deprecated in favor of project.
+  projectId @maturity("deprecated") string
+  // Project the quota applies to
+  project() openstack.project
+  // Maximum number of instances
+  instances int
+  // Maximum number of instance cores (vCPUs)
+  cores int
+  // Maximum instance RAM in megabytes
+  ram int
+  // Maximum number of SSH keypairs
+  keyPairs int
+  // Maximum number of metadata items per instance
+  metadataItems int
+  // Maximum number of server groups
+  serverGroups int
+  // Maximum number of members per server group
+  serverGroupMembers int
+  // Maximum number of security groups (legacy nova-network)
+  securityGroups int
+  // Maximum number of security group rules (legacy nova-network)
+  securityGroupRules int
+  // Maximum number of fixed IPs (legacy nova-network)
+  fixedIps int
+  // Maximum number of floating IPs (legacy nova-network)
+  floatingIps int
+  // Maximum number of injected files
+  injectedFiles int
+  // Maximum bytes per injected file
+  injectedFileContentBytes int
+  // Maximum bytes for each injected file path
+  injectedFilePathBytes int
+}
+
+// Neutron RBAC policy
+//
+// Examine a Neutron role-based access control policy, which governs
+// cross-project sharing of a network or QoS policy. The `action`
+// distinguishes `access_as_shared` (other projects may use the object)
+// from `access_as_external` (the network may be used as an external
+// gateway), `objectType` and the typed `network()` / `qosPolicy()`
+// accessors identify the shared object, and `targetProjectId` names the
+// project the share is granted to — the literal `*` meaning every
+// project, a cloud-wide share worth flagging. Select a policy by id with
+// `openstack.network.rbacPolicy(id: "...")`.
+private openstack.network.rbacPolicy @defaults("id action objectType targetProjectId") {
+  init(id? string)
+  // RBAC policy ID (UUID)
+  id string
+  // Action (access_as_shared, access_as_external)
+  action string
+  // Type of the shared object (network, qos-policy)
+  objectType string
+  // ID of the shared object (a network ID or QoS policy ID, per objectType)
+  objectId string
+  // Project the share is granted to; the literal "*" means all projects (cloud-wide share)
+  targetProjectId string
+  // Shared network; null unless objectType is "network"
+  network() openstack.network
+  // Shared QoS policy; null unless objectType is "qos-policy"
+  qosPolicy() openstack.qosPolicy
+  // Project that owns the RBAC policy
+  project() openstack.project
+}
+
+// Cinder QoS specification
+//
+// Examine a Cinder quality-of-service specification — the IOPS and
+// bandwidth throttling limits a deployment can attach to volume types.
+// `consumer` records where the limits are enforced (`front-end` on the
+// Nova host, `back-end` on the storage system, or `both`), and `specs`
+// holds the rate-limit key/value pairs. Volume types reference a QoS
+// spec through `openstack.blockstorage.volumeType.qosSpec()`. Listing
+// QoS specs is admin-only. Select a spec by id with
+// `openstack.blockstorage.qosSpec(id: "...")`.
+private openstack.blockstorage.qosSpec @defaults("id name consumer") {
+  init(id? string)
+  // QoS spec ID (UUID)
+  id string
+  // QoS spec name
+  name string
+  // Where the QoS limits are enforced (front-end, back-end, both)
+  consumer string
+  // Rate-limit key/value pairs (e.g. total_iops_sec, read_bytes_sec)
+  specs map[string]string
 }
