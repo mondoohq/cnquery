@@ -159,9 +159,15 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.NextdnsConnect
 		return nil
 	}
 
+	// Without a profile scope the connection points at the whole account, which
+	// serves only as a discovery hub. The NextDNS API exposes no account-level
+	// resources worth scanning (the account id is a synthetic fingerprint of the
+	// API key), so the root is left without platform IDs and is not scanned
+	// itself — the scanner skips assets that have none. Discovery enumerates the
+	// profiles to scan, and a scannable account asset is emitted only when it is
+	// an explicit discovery target (`--discover accounts` or `--discover all`).
 	accountID := conn.AccountID()
 	asset.Id = accountID
-	asset.PlatformIds = []string{connection.NewNextdnsAccountIdentifier(accountID)}
 	if asset.Name == "" {
 		asset.Name = "NextDNS Account"
 	}
