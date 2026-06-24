@@ -66,7 +66,11 @@ terraform.fileposition {
   byte int
 }
 
-// Terraform context is a range of lines/columns in a Terraform file
+// Terraform block source context
+//
+// Examine the source location and raw text of a Terraform block: the file
+// path, the line/column range it spans, and the configuration text within
+// that range. Used to point reviewers at the exact source of a flagged block.
 private terraform.context @defaults("path range content") {
   path string
   range range

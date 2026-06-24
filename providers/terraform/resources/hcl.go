@@ -340,7 +340,12 @@ func (r *mqlTerraformContext) content(path string, rnge llx.Range) (string, erro
 	}
 
 	conn := r.MqlRuntime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+	// plan and state assets have no HCL parser; there is no source text to read.
+	parser := conn.Parser()
+	if parser == nil {
+		return "", errors.New("terraform.context content is not available for plan/state assets")
+	}
+	files := parser.Files()
 	if files == nil {
 		return "", errors.New("missing terraform files in cache")
 	}
@@ -361,7 +366,12 @@ func (g *mqlTerraformBlock) context() (*mqlTerraformContext, error) {
 	runtime := g.MqlRuntime
 
 	conn := runtime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+	// plan and state assets have no HCL parser; there is no source text to read.
+	parser := conn.Parser()
+	if parser == nil {
+		return nil, errors.New("terraform block context is not available for plan/state assets")
+	}
+	files := parser.Files()
 	if files == nil {
 		return nil, errors.New("missing terraform files in cache")
 	}
