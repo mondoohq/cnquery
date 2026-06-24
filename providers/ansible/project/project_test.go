@@ -66,3 +66,33 @@ func TestSymlinkVarsEscapeSkipped(t *testing.T) {
 		}
 	}
 }
+
+// A YAML inventory written with `hosts:` as a list (each element a bare
+// hostname, which Ansible accepts) must be honored, not silently dropped by a
+// map-only type assertion.
+func TestInventoryYAMLListHosts(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.WriteFile(
+		filepath.Join(root, "inventory.yml"),
+		[]byte("web:\n  hosts:\n    - web1\n    - web2\n"),
+		0o600,
+	))
+
+	inv, err := loadInventory(root)
+	require.NoError(t, err)
+	require.NotNil(t, inv)
+
+	groups := map[string]*InventoryGroup{}
+	for _, g := range inv.Groups {
+		groups[g.Name] = g
+	}
+	require.Contains(t, groups, "web")
+	assert.ElementsMatch(t, []string{"web1", "web2"}, groups["web"].Hosts)
+
+	hosts := map[string]*InventoryHost{}
+	for _, h := range inv.Hosts {
+		hosts[h.Name] = h
+	}
+	assert.Contains(t, hosts, "web1")
+	assert.Contains(t, hosts, "web2")
+}
