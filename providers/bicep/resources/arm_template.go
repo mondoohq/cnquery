@@ -61,7 +61,13 @@ func (t *mqlBicepTemplate) getARMTemplate() *connection.ARMTemplate {
 	}
 	// Re-fetch from connection when Internal struct wasn't populated
 	// (happens when resource is reconstructed via StoreData across gRPC).
-	conn := t.MqlRuntime.Connection.(*connection.BicepConnection)
+	// Guard the assertion: on a non-Bicep runtime (e.g. recording/replay)
+	// there's nothing to re-fetch — return nil rather than panicking, matching
+	// the comma-ok cast in id().
+	conn, ok := t.MqlRuntime.Connection.(*connection.BicepConnection)
+	if !ok {
+		return nil
+	}
 	tmpl := conn.ARMTemplate()
 	if tmpl != nil {
 		t.armTemplate = tmpl
@@ -299,7 +305,10 @@ func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, i
 	// Convert the manifest once, then peel `properties` out of the
 	// already-converted dict. JsonToDict walks every nested value, so a
 	// separate pass over obj["properties"] was redoing the same work.
-	manifest, _ := convert.JsonToDict(obj)
+	manifest, err := convert.JsonToDict(obj)
+	if err != nil {
+		log.Warn().Err(err).Str("name", name).Msg("failed to convert ARM template resource manifest")
+	}
 	var properties any
 	if manifest != nil {
 		properties = manifest["properties"]

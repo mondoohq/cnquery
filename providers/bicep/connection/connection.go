@@ -199,8 +199,16 @@ func findARMTemplate(dir string) *ARMTemplate {
 	}
 	for _, name := range candidates {
 		path := filepath.Join(dir, name)
-		if tmpl, err := loadARMTemplate(path); err == nil {
+		tmpl, err := loadARMTemplate(path)
+		if err == nil {
 			return tmpl
+		}
+		// A missing candidate is expected; a present-but-malformed template
+		// (invalid JSON or failing the deploymentTemplate check) is not — log
+		// it so a broken azuredeploy.json isn't silently indistinguishable
+		// from "no template here".
+		if !os.IsNotExist(err) {
+			log.Warn().Err(err).Str("path", path).Msg("failed to load ARM template candidate")
 		}
 	}
 	return nil

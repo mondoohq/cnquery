@@ -50,9 +50,26 @@ type exprNode struct {
 // bounded (literals, identifiers, member/index chains, function calls,
 // ternaries, arrays, and interpolated-string segments); this is structure
 // only, never evaluation.
+// maxExprDepth bounds recursion in the expression parser. Bicep expressions
+// are shallow in practice; the cap exists so a deeply nested, possibly
+// adversarial input (e.g. tens of thousands of nested parens / arrays /
+// interpolations in a single value) degrades to an `unknown` node instead of
+// driving super-linear work that wedges the query. See parsePrimary.
+const maxExprDepth = 200
+
 func parseExpression(raw string) *exprNode {
+	return parseExpressionDepth(raw, 0)
+}
+
+// parseExpressionDepth is parseExpression carrying the current recursion depth
+// across the new-parser boundary (sub-expressions and string interpolation
+// each start a fresh exprParser).
+func parseExpressionDepth(raw string, depth int) *exprNode {
 	trimmed := strings.TrimSpace(raw)
-	p := &exprParser{src: trimmed}
+	if depth > maxExprDepth {
+		return &exprNode{kind: exprKindUnknown, raw: trimmed}
+	}
+	p := &exprParser{src: trimmed, depth: depth}
 	node := p.parseTernary()
 	// If the parser couldn't consume the whole input, the expression is
 	// outside the supported grammar — fall back to "unknown" but keep the
@@ -70,8 +87,9 @@ func parseExpression(raw string) *exprNode {
 // package's string-aware scanState for skipping quoted literals when it
 // needs to find delimiters.
 type exprParser struct {
-	src string
-	pos int
+	src   string
+	pos   int
+	depth int
 }
 
 func (p *exprParser) atEnd() bool {
@@ -119,9 +137,9 @@ func (p *exprParser) parseTernary() *exprNode {
 		return p.parsePostfix()
 	}
 
-	cond := parseSubExpression(p.src[start:qPos])
-	thenNode := parseSubExpression(p.src[qPos+1 : cPos])
-	elseNode := parseSubExpression(p.src[cPos+1 : operandEnd])
+	cond := parseSubExpression(p.src[start:qPos], p.depth+1)
+	thenNode := parseSubExpression(p.src[qPos+1:cPos], p.depth+1)
+	elseNode := parseSubExpression(p.src[cPos+1:operandEnd], p.depth+1)
 	p.pos = operandEnd
 
 	return &exprNode{
@@ -165,8 +183,8 @@ func (p *exprParser) findTopLevelWithin(target byte, from, end int) int {
 // parseSubExpression parses a standalone sub-expression (a ternary branch or
 // condition). It never returns nil — anything outside the supported grammar
 // becomes an `unknown` node with raw preserved.
-func parseSubExpression(raw string) *exprNode {
-	return parseExpression(raw)
+func parseSubExpression(raw string, depth int) *exprNode {
+	return parseExpressionDepth(raw, depth)
 }
 
 // parsePostfix parses a primary expression followed by any chain of member
@@ -249,6 +267,14 @@ func (p *exprParser) parsePrimary() *exprNode {
 	if p.pos >= len(p.src) {
 		return nil
 	}
+	// parsePrimary is the choke point every nested operand descends through
+	// (parens, arrays). Bound the recursion so deeply nested input degrades to
+	// an unknown node rather than driving super-linear rescans.
+	p.depth++
+	defer func() { p.depth-- }()
+	if p.depth > maxExprDepth {
+		return nil
+	}
 	c := p.peek()
 
 	switch {
@@ -313,7 +339,7 @@ func (p *exprParser) parseString() *exprNode {
 			if !ok {
 				return nil
 			}
-			segments = append(segments, parseExpression(inner))
+			segments = append(segments, parseExpressionDepth(inner, p.depth+1))
 			continue
 		}
 		if ch == '\'' {

@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -235,4 +237,31 @@ func TestParseExpressionRawAlwaysPopulated(t *testing.T) {
 	node := parseExpression("   resourceGroup().location   ")
 	assert.Equal(t, "resourceGroup().location", node.raw)
 	assert.Equal(t, exprKindPropertyAccess, node.kind)
+}
+
+// TestParseExpressionDeepNestingTerminates ensures deeply nested input is
+// bounded by the recursion-depth guard: it must return promptly (not hang on
+// super-linear rescans) and degrade to an unknown node rather than panicking
+// or stack-overflowing. Regression test for the quadratic-blowup DoS.
+func TestParseExpressionDeepNestingTerminates(t *testing.T) {
+	cases := map[string]string{
+		"nested parens":        strings.Repeat("(", 100000) + "1" + strings.Repeat(")", 100000),
+		"nested arrays":        strings.Repeat("[", 100000) + strings.Repeat("]", 100000),
+		"nested interpolation": strings.Repeat("'${", 50000) + "x" + strings.Repeat("}'", 50000),
+	}
+	for name, raw := range cases {
+		t.Run(name, func(t *testing.T) {
+			done := make(chan *exprNode, 1)
+			go func() { done <- parseExpression(raw) }()
+			select {
+			case node := <-done:
+				// The guarantee is prompt termination (no super-linear rescans);
+				// the node is non-nil and the over-deep portion degraded to
+				// unknown rather than panicking or hanging.
+				require.NotNil(t, node)
+			case <-time.After(5 * time.Second):
+				t.Fatal("parseExpression did not terminate within 5s on deeply nested input")
+			}
+		})
+	}
 }
