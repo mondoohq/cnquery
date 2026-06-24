@@ -227,7 +227,7 @@ func (r *mqlNextdnsProfile) security() (*mqlNextdnsProfileSecurity, error) {
 		return nil, err
 	}
 	s := d.Security
-	res, err := CreateResource(r.MqlRuntime, "nextdns.profile.security", map[string]*llx.RawData{
+	res, err := CreateResource(r.MqlRuntime, "nextdns.profileSecurity", map[string]*llx.RawData{
 		"__id":                    llx.StringData(r.Id.Data + "/security"),
 		"threatIntelligenceFeeds": llx.BoolData(s.ThreatIntelligenceFeeds),
 		"aiThreatDetection":       llx.BoolData(s.AiThreatDetection),
@@ -258,7 +258,7 @@ func (r *mqlNextdnsProfile) privacy() (*mqlNextdnsProfilePrivacy, error) {
 
 	blocklists := make([]any, 0, len(p.Blocklists))
 	for _, bl := range p.Blocklists {
-		mqlBl, err := CreateResource(r.MqlRuntime, "nextdns.profile.blocklist", map[string]*llx.RawData{
+		mqlBl, err := CreateResource(r.MqlRuntime, "nextdns.profileBlocklist", map[string]*llx.RawData{
 			"__id":      llx.StringData(r.Id.Data + "/blocklist/" + bl.ID),
 			"id":        llx.StringData(bl.ID),
 			"name":      llx.StringData(bl.Name),
@@ -272,12 +272,12 @@ func (r *mqlNextdnsProfile) privacy() (*mqlNextdnsProfilePrivacy, error) {
 		blocklists = append(blocklists, mqlBl)
 	}
 
-	res, err := CreateResource(r.MqlRuntime, "nextdns.profile.privacy", map[string]*llx.RawData{
+	res, err := CreateResource(r.MqlRuntime, "nextdns.profilePrivacy", map[string]*llx.RawData{
 		"__id":              llx.StringData(r.Id.Data + "/privacy"),
 		"disguisedTrackers": llx.BoolData(p.DisguisedTrackers),
 		"allowAffiliate":    llx.BoolData(p.AllowAffiliate),
 		"natives":           strArray(idItemsToStrings(p.Natives)),
-		"blocklists":        llx.ArrayData(blocklists, types.Resource("nextdns.profile.blocklist")),
+		"blocklists":        llx.ArrayData(blocklists, types.Resource("nextdns.profileBlocklist")),
 	})
 	if err != nil {
 		return nil, err
@@ -292,24 +292,24 @@ func (r *mqlNextdnsProfile) parentalControl() (*mqlNextdnsProfileParentalControl
 	}
 	pc := d.ParentalControl
 
-	services, err := r.pcRules("nextdns.profile.parentalControl.service", "service", pc.Services)
+	services, err := r.pcRules("nextdns.profileParentalControlService", "service", pc.Services)
 	if err != nil {
 		return nil, err
 	}
-	categories, err := r.pcRules("nextdns.profile.parentalControl.category", "category", pc.Categories)
+	categories, err := r.pcRules("nextdns.profileParentalControlCategory", "category", pc.Categories)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := CreateResource(r.MqlRuntime, "nextdns.profile.parentalControl", map[string]*llx.RawData{
+	res, err := CreateResource(r.MqlRuntime, "nextdns.profileParentalControl", map[string]*llx.RawData{
 		"__id":                  llx.StringData(r.Id.Data + "/parentalControl"),
 		"safeSearch":            llx.BoolData(pc.SafeSearch),
 		"youtubeRestrictedMode": llx.BoolData(pc.YoutubeRestrictedMode),
 		"blockBypass":           llx.BoolData(pc.BlockBypass),
 		"recreationTimezone":    llx.StringData(pc.Recreation.Timezone),
 		"recreationTimes":       llx.DictData(pc.Recreation.Times),
-		"services":              llx.ArrayData(services, types.Resource("nextdns.profile.parentalControl.service")),
-		"categories":            llx.ArrayData(categories, types.Resource("nextdns.profile.parentalControl.category")),
+		"services":              llx.ArrayData(services, types.Resource("nextdns.profileParentalControlService")),
+		"categories":            llx.ArrayData(categories, types.Resource("nextdns.profileParentalControlCategory")),
 	})
 	if err != nil {
 		return nil, err
@@ -342,7 +342,7 @@ func (r *mqlNextdnsProfile) settings() (*mqlNextdnsProfileSettings, error) {
 		return nil, err
 	}
 	s := d.Settings
-	res, err := CreateResource(r.MqlRuntime, "nextdns.profile.settings", map[string]*llx.RawData{
+	res, err := CreateResource(r.MqlRuntime, "nextdns.profileSettings", map[string]*llx.RawData{
 		"__id":               llx.StringData(r.Id.Data + "/settings"),
 		"logsEnabled":        llx.BoolData(s.Logs.Enabled),
 		"logsDropIp":         llx.BoolData(s.Logs.Drop.IP),
@@ -378,7 +378,7 @@ func (r *mqlNextdnsProfile) setup() (*mqlNextdnsProfileSetup, error) {
 		linkedIPServers = s.LinkedIP.Servers
 	}
 
-	res, err := CreateResource(r.MqlRuntime, "nextdns.profile.setup", map[string]*llx.RawData{
+	res, err := CreateResource(r.MqlRuntime, "nextdns.profileSetup", map[string]*llx.RawData{
 		"__id":            llx.StringData(r.Id.Data + "/setup"),
 		"ipv4":            strArray(s.Ipv4),
 		"ipv6":            strArray(s.Ipv6),
@@ -398,7 +398,7 @@ func (r *mqlNextdnsProfile) denylist() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return r.listEntries("nextdns.profile.denylistEntry", "denylist", d.Denylist)
+	return r.listEntries("nextdns.profileDenylistEntry", "denylist", d.Denylist)
 }
 
 func (r *mqlNextdnsProfile) allowlist() ([]any, error) {
@@ -406,7 +406,7 @@ func (r *mqlNextdnsProfile) allowlist() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return r.listEntries("nextdns.profile.allowlistEntry", "allowlist", d.Allowlist)
+	return r.listEntries("nextdns.profileAllowlistEntry", "allowlist", d.Allowlist)
 }
 
 func (r *mqlNextdnsProfile) listEntries(resourceName, kind string, entries []listEntryData) ([]any, error) {
@@ -432,7 +432,7 @@ func (r *mqlNextdnsProfile) rewrites() ([]any, error) {
 	}
 	res := make([]any, 0, len(d.Rewrites))
 	for _, rw := range d.Rewrites {
-		mqlRewrite, err := CreateResource(r.MqlRuntime, "nextdns.profile.rewrite", map[string]*llx.RawData{
+		mqlRewrite, err := CreateResource(r.MqlRuntime, "nextdns.profileRewrite", map[string]*llx.RawData{
 			"__id":    llx.StringData(r.Id.Data + "/rewrite/" + rw.ID),
 			"id":      llx.StringData(rw.ID),
 			"name":    llx.StringData(rw.Name),
