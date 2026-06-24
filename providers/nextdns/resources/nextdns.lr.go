@@ -41,7 +41,7 @@ func init() {
 			Create: createNextdns,
 		},
 		"nextdns.account": {
-			// to override args, implement: initNextdnsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initNextdnsAccount,
 			Create: createNextdnsAccount,
 		},
 		"nextdns.profile": {
