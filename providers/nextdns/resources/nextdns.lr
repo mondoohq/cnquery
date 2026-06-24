@@ -210,6 +210,8 @@ private nextdns.profile.settings @defaults("logsEnabled logsLocation web3") {
   cacheBoost bool
   // Whether CNAME flattening is enabled
   cnameFlattening bool
+  // Whether block-bypass methods (VPNs, proxies, Tor, and public resolvers used to circumvent NextDNS) are blocked
+  blockBypassMethods bool
   // Whether Web3 name resolution is enabled
   web3 bool
 }
