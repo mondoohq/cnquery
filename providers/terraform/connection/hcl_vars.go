@@ -11,10 +11,11 @@ import (
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 )
 
-// hclEvalFunctions returns the function table used when evaluating HCL
-// expressions for variable/local resolution. It mirrors the small set
-// supported by the resource layer so resolution stays consistent.
-func hclEvalFunctions() map[string]function.Function {
+// HCLEvalFunctions returns the function table used when evaluating HCL
+// expressions. It is the single source of truth shared by both variable/local
+// resolution here and expression evaluation in the resource layer, so the two
+// can never diverge.
+func HCLEvalFunctions() map[string]function.Function {
 	return map[string]function.Function{
 		"jsondecode": stdlib.JSONDecodeFunc,
 		"jsonencode": stdlib.JSONEncodeFunc,
@@ -47,7 +48,7 @@ func (c *Connection) buildVariableEvalContext() *hcl.EvalContext {
 
 	// base context used to evaluate variable defaults and tfvars; these must not
 	// reference other vars/locals, so an empty (functions-only) context is right.
-	baseCtx := &hcl.EvalContext{Functions: hclEvalFunctions()}
+	baseCtx := &hcl.EvalContext{Functions: HCLEvalFunctions()}
 
 	vars := map[string]cty.Value{}
 	localExprs := map[string]hcl.Expression{}
@@ -86,7 +87,7 @@ func (c *Connection) buildVariableEvalContext() *hcl.EvalContext {
 	}
 
 	ctx := &hcl.EvalContext{
-		Functions: hclEvalFunctions(),
+		Functions: HCLEvalFunctions(),
 		Variables: map[string]cty.Value{},
 	}
 	if len(vars) > 0 {
@@ -98,7 +99,7 @@ func (c *Connection) buildVariableEvalContext() *hcl.EvalContext {
 	// now succeed. We stop early once a pass makes no progress. The pass cap
 	// (number of locals) bounds even a fully chained set of locals.
 	locals := map[string]cty.Value{}
-	for pass := 0; pass <= len(localExprs); pass++ {
+	for pass := 0; pass < len(localExprs); pass++ {
 		progress := false
 		for name, expr := range localExprs {
 			if _, done := locals[name]; done {

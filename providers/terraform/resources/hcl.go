@@ -17,7 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
-	"github.com/zclconf/go-cty/cty/function/stdlib"
 	mql "go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
@@ -61,6 +60,10 @@ func (t *mqlTerraform) files() ([]any, error) {
 
 func (t *mqlTerraform) tfvars() (any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	// .tfvars files hold the raw input values for variables, so they are
+	// surfaced verbatim here — we intentionally pass a nil eval context rather
+	// than resolving var.*/local.* references. (Variable resolution against
+	// these values happens in arguments() via the connection's eval context.)
 	return hclAttributesToDict(conn.TfVars(), nil)
 }
 
@@ -660,11 +663,11 @@ func hclAttributesToDict(attributes map[string]*hcl.Attribute, ctx *hcl.EvalCont
 	return dict, nil
 }
 
+// hclFunctions returns the HCL function table. It delegates to
+// connection.HCLEvalFunctions so expression evaluation here stays in lockstep
+// with the variable/local resolution done in the connection layer.
 func hclFunctions() map[string]function.Function {
-	return map[string]function.Function{
-		"jsondecode": stdlib.JSONDecodeFunc,
-		"jsonencode": stdlib.JSONEncodeFunc,
-	}
+	return connection.HCLEvalFunctions()
 }
 
 // appendCtyResult flattens nested []any results from getCtyValue into a single
@@ -876,7 +879,7 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		// interpolated template (e.g. "app-${var.env}-bucket") can collapse to a
 		// single string. Attempt that first; otherwise fall back to surfacing the
 		// individual parts/references below (the historical behavior when off).
-		if len(ctx.Variables) > 0 {
+		if ctx != nil && len(ctx.Variables) > 0 {
 			if subVal, diags := t.Value(ctx); !diags.HasErrors() && subVal.Type() == cty.String {
 				return subVal.AsString()
 			}
