@@ -335,8 +335,21 @@ func (r *mqlTerraformContext) id() (string, error) {
 }
 
 func (r *mqlTerraformContext) content(path string, rnge llx.Range) (string, error) {
-	// return rnge.ExtractString(content, llx.DefaultExtractConfig), nil
-	return "", errors.New("terraform.context must be initialized with content")
+	if path == "" {
+		return "", errors.New("no path information for terraform.context")
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.Connection)
+	files := conn.Parser().Files()
+	if files == nil {
+		return "", errors.New("missing terraform files in cache")
+	}
+	file := files[path]
+	if file == nil {
+		return "", errors.New("failed to get contents for terraform file '" + path + "'")
+	}
+
+	return rnge.ExtractString(string(file.Bytes), llx.DefaultExtractConfig), nil
 }
 
 func (g *mqlTerraformBlock) context() (*mqlTerraformContext, error) {
