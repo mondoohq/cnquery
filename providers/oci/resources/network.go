@@ -777,8 +777,10 @@ func (o *mqlOciNetworkNetworkSecurityGroup) id() (string, error) {
 // malformed "iaas..oraclecloud.com" endpoint. The region is recovered from the
 // OCID so the group can be fetched regardless of the compartment it lives in.
 func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// Already fully populated (enumerated path) — nothing to fetch.
-	if len(args) > 1 {
+	// Already populated (a caller passed the full field set) — nothing to
+	// fetch. `name` is always set alongside `id` on the populated path, so its
+	// presence distinguishes a fully-built group from a bare id reference.
+	if args["name"] != nil {
 		return args, nil, nil
 	}
 	if args["id"] == nil {
