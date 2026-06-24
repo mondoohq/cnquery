@@ -301,7 +301,7 @@ func init() {
 			Create: createOciNetworkSecurityList,
 		},
 		"oci.network.networkSecurityGroup": {
-			// to override args, implement: initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciNetworkNetworkSecurityGroup,
 			Create: createOciNetworkNetworkSecurityGroup,
 		},
 		"oci.network.internetGateway": {

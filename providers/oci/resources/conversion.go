@@ -46,6 +46,19 @@ func isOcid(s string) bool {
 	return strings.HasPrefix(s, "ocid1.")
 }
 
+// ociRegionFromOCID extracts the region from an OCI resource OCID. OCIDs have
+// the shape ocid1.<resourceType>.<realm>.<region>.<uniqueID>, so the region is
+// the fourth dot-separated segment (e.g. "us-sanjose-1"). It is empty for
+// global resources (ocid1.user.oc1..aaaa). Returns "" when the OCID is
+// malformed or carries no region; callers should fall back to a known region.
+func ociRegionFromOCID(ocid string) string {
+	parts := strings.Split(ocid, ".")
+	if len(parts) < 5 {
+		return ""
+	}
+	return parts[3]
+}
+
 func jobErr(err error) []*jobpool.Job {
 	return []*jobpool.Job{{Err: err}}
 }
