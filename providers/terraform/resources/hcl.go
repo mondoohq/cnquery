@@ -493,11 +493,27 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	var res []any
 	for i := range resources {
 		r := resources[i]
-		if matchResource != nil && !matchResource(r.Labels.Data[0].(string)) {
-			continue
+		// A resource block carries two labels (type, name), but a malformed
+		// config (e.g. `resource {}` or `resource "type" {}`) parses fine via
+		// the native HCL parser, which does not enforce label arity. Guard the
+		// label indices and assertions so a filtered query doesn't panic.
+		if matchResource != nil {
+			if len(r.Labels.Data) < 1 {
+				continue
+			}
+			s, ok := r.Labels.Data[0].(string)
+			if !ok || !matchResource(s) {
+				continue
+			}
 		}
-		if matchName != nil && !matchName(r.Labels.Data[1].(string)) {
-			continue
+		if matchName != nil {
+			if len(r.Labels.Data) < 2 {
+				continue
+			}
+			s, ok := r.Labels.Data[1].(string)
+			if !ok || !matchName(s) {
+				continue
+			}
 		}
 		res = append(res, r)
 	}
@@ -1079,7 +1095,12 @@ func (t *mqlTerraformFile) blocks() ([]any, error) {
 	}
 
 	files := parser.Files()
-	file := files[p]
+	file, ok := files[p]
+	if !ok || file == nil {
+		// The requested path isn't a parsed HCL file (unknown path, .tf.json,
+		// or case mismatch); there are no blocks to list rather than a panic.
+		return []any{}, nil
+	}
 	return listHclBlocks(t.MqlRuntime, file.Body, file)
 }
 

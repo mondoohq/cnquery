@@ -55,6 +55,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// and later on decide which thing to call based on the conn.Type
 	// below in this file we already have something similar:
 	// tc.Options["asset-type"] == "state"
+	if len(req.Args) == 0 {
+		return nil, errors.New("no arguments provided, use 'state <path>', 'plan <path>', 'hcl <path>', or a path")
+	}
 	action := req.Args[0]
 	switch action {
 	case CLIPlan, CLIHcl, CLIState:

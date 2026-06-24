@@ -152,7 +152,7 @@ func (t *mqlTerraformPlanResourceChange) id() (string, error) {
 
 func (t *mqlTerraformPlanProposedChange) id() (string, error) {
 	id := t.Address
-	return "terraform.plan.resourceChange/address/" + id.Data, nil
+	return "terraform.plan.proposedChange/address/" + id.Data, nil
 }
 
 func (t *mqlTerraformPlanConfiguration) id() (string, error) {
@@ -189,7 +189,9 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]any, error) {
 	}
 
 	pc := PlanConfiguration{}
-	err = json.Unmarshal(plan.Configuration, &pc)
+	if err = json.Unmarshal(plan.Configuration, &pc); err != nil {
+		return nil, err
+	}
 
 	res := []any{}
 	for i := range pc.ProviderConfig {
@@ -221,7 +223,9 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]any, error) {
 	}
 
 	pc := PlanConfiguration{}
-	err = json.Unmarshal(plan.Configuration, &pc)
+	if err = json.Unmarshal(plan.Configuration, &pc); err != nil {
+		return nil, err
+	}
 
 	res := []any{}
 	for i := range pc.RootModule.Resources {
