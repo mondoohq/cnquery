@@ -52,12 +52,23 @@ func initCloudformationTemplate(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 
 	transform, err := template.GetSection(cft.Transform)
-	if err == nil && len(transform.Content) > 0 {
+	if err == nil && transform != nil {
+		// Transform is commonly a single scalar (the canonical SAM header
+		// `Transform: AWS::Serverless-2016-10-31`), but may also be a list.
+		// A scalar YAML node has no Content, so handle both shapes.
 		var entries []string
-		for _, entry := range transform.Content {
-			entries = append(entries, entry.Value)
+		if transform.Kind == yaml.ScalarNode {
+			if transform.Value != "" {
+				entries = append(entries, transform.Value)
+			}
+		} else {
+			for _, entry := range transform.Content {
+				entries = append(entries, entry.Value)
+			}
 		}
-		args["transform"] = llx.ArrayData(convert.SliceAnyToInterface(entries), types.String)
+		if len(entries) > 0 {
+			args["transform"] = llx.ArrayData(convert.SliceAnyToInterface(entries), types.String)
+		}
 	}
 
 	return args, nil, nil

@@ -31,6 +31,9 @@ func NewCloudformationConnection(id uint32, asset *inventory.Asset, conf *invent
 		asset:      asset,
 	}
 	// initialize your connection here
+	if len(asset.Connections) == 0 {
+		return nil, errors.New("no connection options for asset")
+	}
 	cc := asset.Connections[0]
 	path := cc.Options["path"]
 	conn.path = path
