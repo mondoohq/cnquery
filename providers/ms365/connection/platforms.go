@@ -10,13 +10,6 @@ import (
 // Platforms is the static catalog of platforms this provider can emit.
 var Platforms = []*plugin.PlatformInfo{
 	{
-		Name:    "ms365",
-		Title:   "Microsoft 365",
-		Family:  []string{""},
-		Kind:    []string{"api"},
-		Runtime: []string{"ms365"},
-	},
-	{
 		Name:    "microsoft365",
 		Title:   "Microsoft 365",
 		Kind:    []string{"api"},
