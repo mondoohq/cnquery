@@ -449,8 +449,27 @@ func extractAWSPermissions(root string) []PermissionDetail {
 				return true
 			}
 
-			// Build variable -> service map for this function
+			// Build variable -> service map for this function.
 			varServices := map[string]string{}
+
+			// Pattern 1b: clients received as parameters. A shared helper such as
+			// `func batchFetchTags[T any](ctx, svc *route53.Client, ...)` makes API
+			// calls through a client it never created via conn.Service(), so the
+			// assignment scan below can't see it. Seed varServices from any
+			// parameter typed *<alias>.Client first; a same-named local assignment
+			// below overrides it, keeping the conn.Service() idiom authoritative.
+			if fn.Type != nil && fn.Type.Params != nil {
+				for _, param := range fn.Type.Params.List {
+					svcPkg, ok := awsClientParamService(param.Type, awsImports)
+					if !ok {
+						continue
+					}
+					for _, name := range param.Names {
+						varServices[name.Name] = svcPkg
+					}
+				}
+			}
+
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				assignStmt, ok := n.(*ast.AssignStmt)
 				if !ok {
@@ -557,6 +576,34 @@ func extractAWSImports(f *ast.File) map[string]string {
 		result[alias] = pkgName
 	}
 	return result
+}
+
+// awsClientParamService reports the AWS SDK package name for a function
+// parameter typed *<alias>.Client (or the rare non-pointer <alias>.Client),
+// where <alias> is an AWS SDK import in this file — e.g. `svc *route53.Client`
+// returns "route53". This lets the analyzer attribute API calls made through a
+// client received as a parameter (shared helpers like batchFetchTags), not only
+// clients created via the conn.Service() idiom. The returned package name
+// matches the values stored in awsImports, so it feeds awsServiceToIAM exactly
+// as the other patterns do (handling aliased imports such as elbv2 too).
+func awsClientParamService(expr ast.Expr, awsImports map[string]string) (string, bool) {
+	// Unwrap a leading pointer: *route53.Client -> route53.Client.
+	if star, ok := expr.(*ast.StarExpr); ok {
+		expr = star.X
+	}
+	sel, ok := expr.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "Client" {
+		return "", false
+	}
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return "", false
+	}
+	pkg, ok := awsImports[ident.Name]
+	if !ok {
+		return "", false
+	}
+	return pkg, true
 }
 
 // awsConnectionMethodToService maps AwsConnection method names to service names.
