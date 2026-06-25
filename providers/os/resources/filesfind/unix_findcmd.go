@@ -41,7 +41,15 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	if fileType != "" {
 		t, ok := findTypes[fileType]
 		if ok {
-			call.WriteString(" -type " + t)
+			// We run `find -L`, which follows symlinks. Under -L, `-type l`
+			// only matches dangling links because valid links are resolved to
+			// their target's type. `-xtype l` matches the symlink itself
+			// regardless of where it points, so searching for links works.
+			if t == "l" {
+				call.WriteString(" -xtype l")
+			} else {
+				call.WriteString(" -type " + t)
+			}
 		}
 	}
 

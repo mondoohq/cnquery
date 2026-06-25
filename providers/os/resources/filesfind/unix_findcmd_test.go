@@ -70,6 +70,15 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			Regex:       ".*\\.conf$",
 			ExpectedCmd: "find -L \"/etc\" -xdev -type f -regex '.*\\.conf$' -perm -0",
 		},
+		{
+			// Because we run `find -L` (follow symlinks), `-type l` only matches
+			// dangling links — valid links are resolved to their target's type.
+			// `-xtype l` matches the symlink itself regardless of its target, so
+			// `files.find(type: "link")` returns every symlink as users expect.
+			From:        "/home/user",
+			FileType:    "link",
+			ExpectedCmd: "find -L \"/home/user\" -xdev -xtype l -perm -0",
+		},
 	}
 
 	for _, tt := range tests {
