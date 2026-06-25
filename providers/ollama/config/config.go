@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "ollama",
 	ID:              "go.mondoo.com/mql/providers/ollama",
-	Version:         "13.0.5",
+	Version:         "13.0.6",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
