@@ -41,44 +41,42 @@ const (
 
 const platformIDBase = "//platformid.api.mondoo.app/runtime/digitalocean"
 
-func basePlatform(name, title string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:    name,
-		Title:   title,
-		Family:  []string{"digitalocean"},
-		Kind:    "api",
-		Runtime: "digitalocean",
-	}
+// basePlatform builds a runtime platform from the static catalog entry for the
+// given name, keeping the catalog (platforms.go) as the single source of truth.
+func basePlatform(name string) *inventory.Platform {
+	p := &inventory.Platform{}
+	PlatformByName(name).Apply(p)
+	return p
 }
 
 // AccountPlatform is the root DigitalOcean account asset.
 func AccountPlatform() *inventory.Platform {
-	return basePlatform("digitalocean", "DigitalOcean")
+	return basePlatform("digitalocean")
 }
 
 // DatabasePlatform is a single managed database cluster.
 func DatabasePlatform() *inventory.Platform {
-	return basePlatform("digitalocean-database", "DigitalOcean Database")
+	return basePlatform("digitalocean-database")
 }
 
 // KubernetesPlatform is a single DOKS cluster.
 func KubernetesPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-kubernetes-cluster", "DigitalOcean Kubernetes Cluster")
+	return basePlatform("digitalocean-kubernetes-cluster")
 }
 
 // LoadBalancerPlatform is a single load balancer.
 func LoadBalancerPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-loadbalancer", "DigitalOcean Load Balancer")
+	return basePlatform("digitalocean-loadbalancer")
 }
 
 // FirewallPlatform is a single cloud firewall.
 func FirewallPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-firewall", "DigitalOcean Cloud Firewall")
+	return basePlatform("digitalocean-firewall")
 }
 
 // SpacesBucketPlatform is a single Spaces bucket.
 func SpacesBucketPlatform() *inventory.Platform {
-	return basePlatform("digitalocean-spaces-bucket", "DigitalOcean Spaces Bucket")
+	return basePlatform("digitalocean-spaces-bucket")
 }
 
 // NewAccountIdentifier builds the platform id for the account root. The

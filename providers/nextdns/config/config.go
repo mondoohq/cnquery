@@ -14,6 +14,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/nextdns",
 	Version:         "13.0.3",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "nextdns",

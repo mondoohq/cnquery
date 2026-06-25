@@ -14,6 +14,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/digitalocean",
 	Version:         "13.10.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "digitalocean",

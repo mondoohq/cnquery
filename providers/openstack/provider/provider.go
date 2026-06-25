@@ -181,23 +181,18 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OpenstackConne
 		return nil
 	}
 
-	asset.Platform = &inventory.Platform{
-		Family:  []string{"openstack"},
-		Kind:    "api",
-		Runtime: "openstack",
-	}
+	asset.Platform = &inventory.Platform{}
 
+	var platformName string
 	switch {
 	case conn.ProjectID() != "":
-		asset.Platform.Name = "openstack-project"
-		asset.Platform.Title = "OpenStack Project"
+		platformName = "openstack-project"
 		asset.Id = connection.PlatformIdOpenstackProject + conn.ProjectID()
 		if asset.Name == "" {
 			asset.Name = "OpenStack project " + conn.ProjectID()
 		}
 	case conn.DomainID() != "":
-		asset.Platform.Name = "openstack-domain"
-		asset.Platform.Title = "OpenStack Domain"
+		platformName = "openstack-domain"
 		asset.Id = connection.PlatformIdOpenstackDomain + conn.DomainID()
 		if asset.Name == "" {
 			asset.Name = "OpenStack domain " + conn.DomainID()
@@ -208,13 +203,13 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OpenstackConne
 		// share an identity.
 		sum := sha256.Sum256([]byte(conn.AuthURL()))
 		fp := hex.EncodeToString(sum[:])
-		asset.Platform.Name = "openstack-system"
-		asset.Platform.Title = "OpenStack System Scope"
+		platformName = "openstack-system"
 		asset.Id = connection.PlatformIdOpenstackSystem + fp
 		if asset.Name == "" {
 			asset.Name = "OpenStack at " + conn.AuthURL()
 		}
 	}
+	connection.PlatformByName(platformName).Apply(asset.Platform)
 	asset.PlatformIds = []string{asset.Id}
 	return nil
 }

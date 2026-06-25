@@ -20,22 +20,6 @@ var (
 	PlatformIdCloudflareAccount = "//platformid.api.mondoo.app/runtime/cloudflare/account/"
 )
 
-var CloudflareZonePlatform = inventory.Platform{
-	Name:    "cloudflare-zone",
-	Title:   "Cloudflare Zone",
-	Family:  []string{"cloudflare"},
-	Kind:    "api",
-	Runtime: "cloudflare",
-}
-
-var CloudflareAccountPlatform = inventory.Platform{
-	Name:    "cloudflare-account",
-	Title:   "Cloudflare Account",
-	Family:  []string{"cloudflare"},
-	Kind:    "api",
-	Runtime: "cloudflare",
-}
-
 func (c *CloudflareConnection) PlatformInfo() (*inventory.Platform, error) {
 	conf := c.asset.Connections[0]
 	if zoneName := conf.Options["zone"]; zoneName != "" {
@@ -49,15 +33,19 @@ func (c *CloudflareConnection) PlatformInfo() (*inventory.Platform, error) {
 }
 
 func NewCloudflareZonePlatform(zoneId string) *inventory.Platform {
-	pf := CloudflareZonePlatform
-	pf.TechnologyUrlSegments = []string{"saas", "cloudflare", "zone", zoneId}
-	return &pf
+	pf := &inventory.Platform{
+		TechnologyUrlSegments: []string{"saas", "cloudflare", "zone", zoneId},
+	}
+	PlatformByName("cloudflare-zone").Apply(pf)
+	return pf
 }
 
 func NewCloudflareAccountPlatform(accountId string) *inventory.Platform {
-	pf := CloudflareAccountPlatform
-	pf.TechnologyUrlSegments = []string{"saas", "cloudflare", "account", accountId}
-	return &pf
+	pf := &inventory.Platform{
+		TechnologyUrlSegments: []string{"saas", "cloudflare", "account", accountId},
+	}
+	PlatformByName("cloudflare-account").Apply(pf)
+	return pf
 }
 
 func NewCloudflareZoneIdentifier(zoneId string) string {

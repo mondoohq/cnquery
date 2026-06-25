@@ -225,13 +225,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OciConnection)
 	}
 
 	asset.Platform = &inventory.Platform{
-		Name:                  "oci",
-		Title:                 "Oracle Cloud Infrastructure",
-		Runtime:               "oci",
-		Kind:                  "api",
-		Family:                []string{"oci"},
 		TechnologyUrlSegments: []string{"oci", "tenancy"},
 	}
+	resources.PlatformByName("oci").Apply(asset.Platform)
 
 	platformID := "//platformid.api.mondoo.app/runtime/oci/" + conn.TenantID()
 	asset.PlatformIds = []string{platformID}

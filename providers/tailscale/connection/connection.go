@@ -165,14 +165,11 @@ func (t *TailscaleConnection) Client() *tsclient.Client {
 }
 
 func (t *TailscaleConnection) PlatformInfo() (*inventory.Platform, error) {
-	return &inventory.Platform{
-		Name:                  "tailscale-org",
-		Title:                 "Tailscale",
-		Family:                []string{"tailscale"},
-		Kind:                  "api",
-		Runtime:               "tailscale",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "tailscale", "org"},
-	}, nil
+	}
+	PlatformByName("tailscale-org").Apply(p)
+	return p, nil
 }
 
 func (t *TailscaleConnection) Identifier() string {
@@ -193,26 +190,20 @@ func NewTailscaleDeviceIdentifier(deviceId string) string {
 	return PlatformIdTailscaleDevice + deviceId
 }
 func NewTailscaleDevicePlatform(deviceId string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "tailscale-device",
-		Title:                 "Tailscale Device",
-		Family:                []string{"tailscale"},
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "tailscale", "device", deviceId},
-		Kind:                  "api",
-		Runtime:               "tailscale",
 	}
+	PlatformByName("tailscale-device").Apply(p)
+	return p
 }
 
 func NewTailscaleUserIdentifier(userId string) string {
 	return PlatformIdTailscaleUser + userId
 }
 func NewTailscaleUserPlatform(userId string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "tailscale-user",
-		Title:                 "Tailscale User",
-		Family:                []string{"tailscale"},
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "tailscale", "user", userId},
-		Kind:                  "api",
-		Runtime:               "tailscale",
 	}
+	PlatformByName("tailscale-user").Apply(p)
+	return p
 }

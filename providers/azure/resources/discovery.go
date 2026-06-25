@@ -625,15 +625,13 @@ func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
 	if sub.TenantID != nil {
 		tenantId = *sub.TenantID
 	}
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: []string{"azure", tenantId, *sub.SubscriptionID, "account"},
+	}
+	PlatformByName("azure").Apply(platform)
 	return &inventory.Asset{
-		Id: platformId,
-		Platform: &inventory.Platform{
-			Title:                 "Azure Subscription",
-			Name:                  "azure",
-			Runtime:               "azure",
-			Kind:                  "api",
-			TechnologyUrlSegments: []string{"azure", tenantId, *sub.SubscriptionID, "account"},
-		},
+		Id:          platformId,
+		Platform:    platform,
 		Name:        fmt.Sprintf("Azure subscription %s", *sub.DisplayName),
 		Connections: []*inventory.Config{copyConf},
 		PlatformIds: []string{platformId},
@@ -777,16 +775,14 @@ func mqlObjectToAsset(mqlObject mqlObject, parentConf *inventory.Config, include
 	if includeObjectTypeInUrl {
 		assetUrl = append(assetUrl, mqlObject.azureObject.objectType)
 	}
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: assetUrl,
+	}
+	PlatformByName(info.platform).Apply(platform)
 	return &inventory.Asset{
 		PlatformIds: []string{platformid, mqlObject.azureObject.id},
 		Name:        mqlObject.name,
-		Platform: &inventory.Platform{
-			Name:                  info.platform,
-			Title:                 info.title,
-			Kind:                  "azure-object",
-			Runtime:               "azure",
-			TechnologyUrlSegments: assetUrl,
-		},
+		Platform:    platform,
 		State:       inventory.State_STATE_ONLINE,
 		Labels:      addInformationalLabels(mqlObject.labels, mqlObject),
 		Connections: []*inventory.Config{cfg},

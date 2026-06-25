@@ -45,13 +45,9 @@ func (c *OpenstackConnection) scopeIdentifier() string {
 // mirroring the naming of other providers' object platforms (aws-security-group,
 // digitalocean-firewall).
 func SecurityGroupPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:    "openstack-security-group",
-		Title:   "OpenStack Security Group",
-		Family:  []string{"openstack"},
-		Kind:    "api",
-		Runtime: "openstack",
-	}
+	p := &inventory.Platform{}
+	PlatformByName("openstack-security-group").Apply(p)
+	return p
 }
 
 // NewSecurityGroupIdentifier builds the platform id for a single security group,

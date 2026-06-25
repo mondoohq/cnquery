@@ -176,13 +176,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HelmConnection
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:                  "helm",
-		Family:                []string{"helm"},
-		Runtime:               "helm",
-		Kind:                  "api",
-		Title:                 "Helm Chart",
 		TechnologyUrlSegments: []string{"iac", "helm", "chart"},
 	}
+	PlatformByName("helm").Apply(asset.Platform)
 
 	projectPath, ok := asset.Connections[0].Options["path"]
 	if ok {

@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/vllm",
 	Version:         "13.0.12",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "vllm",

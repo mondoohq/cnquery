@@ -131,14 +131,11 @@ func (c *GrafanaConnection) Get(ctx context.Context, path string) (*http.Respons
 
 // grafanaOrgPlatform returns the canonical platform descriptor for a Grafana org.
 func grafanaOrgPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "grafana-org",
-		Title:                 "Grafana Organization",
-		Family:                []string{"grafana"},
-		Kind:                  "api",
-		Runtime:               "grafana",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "grafana", "org"},
 	}
+	PlatformByName("grafana-org").Apply(p)
+	return p
 }
 
 // PlatformInfo returns the platform descriptor for this connection.

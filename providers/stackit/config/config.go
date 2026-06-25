@@ -17,6 +17,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/stackit",
 	Version:         "13.2.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "stackit",

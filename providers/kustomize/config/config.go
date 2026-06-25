@@ -16,6 +16,7 @@ var Config = plugin.Provider{
 	Version:         "13.1.5",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "kustomize",

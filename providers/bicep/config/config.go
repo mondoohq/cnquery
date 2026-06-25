@@ -16,6 +16,7 @@ var Config = plugin.Provider{
 	Version:         "13.3.4",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "bicep",

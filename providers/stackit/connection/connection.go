@@ -424,14 +424,11 @@ func (c *StackitConnection) Asset() *inventory.Asset { return c.asset }
 func (c *StackitConnection) Name() string            { return "stackit" }
 
 func (c *StackitConnection) PlatformInfo() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "stackit-project",
-		Title:                 "STACKIT",
-		Family:                []string{"stackit"},
-		Kind:                  "api",
-		Runtime:               "stackit",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"cloud", "stackit", "project"},
 	}
+	PlatformByName("stackit-project").Apply(p)
+	return p
 }
 
 func (c *StackitConnection) Identifier() string {

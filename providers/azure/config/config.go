@@ -12,9 +12,10 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:    "azure",
-	ID:      "go.mondoo.com/cnquery/v9/providers/azure",
-	Version: "13.22.0",
+	Name:      "azure",
+	ID:        "go.mondoo.com/cnquery/v9/providers/azure",
+	Version:   "13.22.0",
+	Platforms: resources.Platforms,
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(azureinstancesnapshot.SnapshotConnectionType),

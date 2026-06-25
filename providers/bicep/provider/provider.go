@@ -133,13 +133,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.BicepConnectio
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:                  "bicep",
-		Family:                []string{"bicep"},
-		Runtime:               "bicep",
-		Kind:                  "api",
-		Title:                 "Azure Bicep",
 		TechnologyUrlSegments: []string{"iac", "bicep", "template"},
 	}
+	PlatformByName("bicep").Apply(asset.Platform)
 
 	projectPath, ok := asset.Connections[0].Options["path"]
 	if ok {

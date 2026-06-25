@@ -129,21 +129,15 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AnsibleConnect
 	nameKind := "Ansible Playbook Static Analysis "
 	if conn.IsProject() {
 		asset.Platform = &inventory.Platform{
-			Name:                  "ansible-project",
-			Family:                []string{"ansible"},
-			Kind:                  "api",
-			Title:                 "Ansible Project",
 			TechnologyUrlSegments: []string{"iac", "ansible", "project"},
 		}
+		PlatformByName("ansible-project").Apply(asset.Platform)
 		nameKind = "Ansible Project Static Analysis "
 	} else {
 		asset.Platform = &inventory.Platform{
-			Name:                  "ansible-playbook",
-			Family:                []string{"ansible"},
-			Kind:                  "api",
-			Title:                 "Ansible Playbook",
 			TechnologyUrlSegments: []string{"iac", "ansible", "playbook"},
 		}
+		PlatformByName("ansible-playbook").Apply(asset.Platform)
 	}
 
 	projectPath, ok := asset.Connections[0].Options["path"]

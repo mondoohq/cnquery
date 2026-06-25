@@ -79,23 +79,17 @@ var (
 )
 
 func NewHuggingfaceUserPlatform(name string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "huggingface-user",
-		Title:                 "Hugging Face User",
-		Family:                []string{"huggingface"},
-		Kind:                  "api",
-		Runtime:               "huggingface",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "huggingface", "user", name},
 	}
+	PlatformByName("huggingface-user").Apply(p)
+	return p
 }
 
 func NewHuggingfaceOrgPlatform(name string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "huggingface-org",
-		Title:                 "Hugging Face Organization",
-		Family:                []string{"huggingface"},
-		Kind:                  "api",
-		Runtime:               "huggingface",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "huggingface", "org", name},
 	}
+	PlatformByName("huggingface-org").Apply(p)
+	return p
 }

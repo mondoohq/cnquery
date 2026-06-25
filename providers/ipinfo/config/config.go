@@ -13,6 +13,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/cnquery/providers/ipinfo",
 	Version:         "13.0.18",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "ipinfo",

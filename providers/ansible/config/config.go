@@ -14,6 +14,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/v13/providers/ansible",
 	Version:         "13.2.4",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "ansible",

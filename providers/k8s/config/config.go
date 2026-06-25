@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/cnquery/v9/providers/k8s",
 	Version:         "13.5.2",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       resources.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:    "k8s",

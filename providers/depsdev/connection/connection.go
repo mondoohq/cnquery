@@ -69,14 +69,11 @@ func (c *DepsDevConnection) Asset() *inventory.Asset {
 }
 
 func (c *DepsDevConnection) PlatformInfo() (*inventory.Platform, error) {
-	return &inventory.Platform{
-		Name:                  "depsdev",
-		Title:                 "deps.dev",
-		Family:                []string{"depsdev"},
-		Kind:                  "api",
-		Runtime:               "depsdev",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"oss", "depsdev"},
-	}, nil
+	}
+	PlatformByName("depsdev").Apply(p)
+	return p, nil
 }
 
 func (c *DepsDevConnection) Identifier() string {

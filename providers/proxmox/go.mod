@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/proxmox
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/rs/zerolog v1.35.1

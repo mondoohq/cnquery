@@ -123,13 +123,9 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.OllamaConnecti
 
 	asset.Name = "Ollama (" + host + ")"
 	asset.Platform = &inventory.Platform{
-		Name:                  "ollama",
-		Title:                 "Ollama",
-		Family:                []string{"ollama"},
-		Kind:                  "api",
-		Runtime:               "ollama",
 		TechnologyUrlSegments: []string{"ai", "ollama", host},
 	}
+	PlatformByName("ollama").Apply(asset.Platform)
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/ollama/host/" + host}
 
 	return nil

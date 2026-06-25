@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/v13/providers/nutanix",
 	Version:         "13.1.3",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "nutanix",

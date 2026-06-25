@@ -5,6 +5,7 @@ package config
 
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/huggingface/connection"
 	"go.mondoo.com/mql/v13/providers/huggingface/provider"
 )
 
@@ -13,6 +14,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/huggingface",
 	Version:         "13.1.5",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:      "huggingface",

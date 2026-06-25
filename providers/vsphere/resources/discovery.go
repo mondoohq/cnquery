@@ -140,18 +140,16 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 				}
 			}
 
+			hostPlatform := &inventory.Platform{
+				Version:               esxiVersion.Version,
+				Build:                 esxiVersion.Build,
+				TechnologyUrlSegments: []string{"vmware", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
+			}
+			connection.PlatformByName(connection.EsxiPlatform).Apply(hostPlatform)
+
 			assetList = append(assetList, &inventory.Asset{
-				Name: mqlHost.Name.Data,
-				Platform: &inventory.Platform{
-					Title:                 "VMware ESXi",
-					Name:                  connection.EsxiPlatform,
-					Version:               esxiVersion.Version,
-					Build:                 esxiVersion.Build,
-					Kind:                  inventory.AssetKindBaremetal,
-					Runtime:               "vsphere-host",
-					Family:                []string{connection.Family},
-					TechnologyUrlSegments: []string{"vmware", "esxi", esxiVersion.Version + "-" + esxiVersion.Build},
-				},
+				Name:        mqlHost.Name.Data,
+				Platform:    hostPlatform,
 				Connections: []*inventory.Config{clonedConfig}, // pass-in the parent connection config
 				Labels:      labels,
 				State:       hostPowerState(mqlHost),

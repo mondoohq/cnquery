@@ -400,31 +400,6 @@ func getPlatformName(obj ociObject) string {
 	return ""
 }
 
-// getPlatformTitle returns the human-readable title displayed in cnspec/UI.
-func getPlatformTitle(platform string) string {
-	switch platform {
-	case "oci-network-securitylist":
-		return "OCI Network Security List"
-	case "oci-identity-user":
-		return "OCI Identity User"
-	case "oci-identity-policy":
-		return "OCI Identity Policy"
-	case "oci-objectstorage-bucket":
-		return "OCI Object Storage Bucket"
-	case "oci-apigateway-deployment":
-		return "OCI API Gateway Deployment"
-	case "oci-loadbalancer":
-		return "OCI Load Balancer"
-	case "oci-redis-cluster":
-		return "OCI Redis Cluster"
-	case "oci-vault-secret":
-		return "OCI Vault Secret"
-	case "oci-oke-cluster":
-		return "OCI OKE Cluster"
-	}
-	return ""
-}
-
 // ociObjectToAsset wraps an ociObject into an inventory.Asset suitable for
 // returning from Discover(). Returns nil if the object can't be mapped to a
 // known platform (discovery then skips it rather than emitting a broken asset).
@@ -447,16 +422,12 @@ func ociObjectToAsset(obj ociObject, name string, labels map[string]string, conn
 		inventory.WithParentConnectionId(conn.Conf.Id),
 	)
 	clonedConfig.PlatformId = platformID
+	platform := &inventory.Platform{}
+	PlatformByName(platformName).Apply(platform)
 	return &inventory.Asset{
 		PlatformIds: []string{platformID},
 		Name:        name,
-		Platform: &inventory.Platform{
-			Name:    platformName,
-			Title:   getPlatformTitle(platformName),
-			Runtime: "oci",
-			Kind:    "oci-object",
-			Family:  []string{"oci"},
-		},
+		Platform:    platform,
 		Labels:      labels,
 		Connections: []*inventory.Config{clonedConfig},
 	}

@@ -141,13 +141,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.MistralConnect
 		asset.Name = "Mistral AI (" + workspace + ")"
 	}
 
-	asset.Platform = &inventory.Platform{
-		Name:    "mistral",
-		Family:  []string{"mistral"},
-		Kind:    "api",
-		Runtime: "mistral",
-		Title:   "Mistral AI",
-	}
+	asset.Platform = &inventory.Platform{}
+	connection.PlatformByName("mistral").Apply(asset.Platform)
 
 	platformID := "//platformid.api.mondoo.app/runtime/mistral"
 	if workspace != "" {

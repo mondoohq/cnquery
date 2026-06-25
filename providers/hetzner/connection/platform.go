@@ -28,25 +28,22 @@ const (
 	OptionLoadBalancer = "loadbalancer"
 )
 
-func childPlatform(name, title, segment string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  name,
-		Title:                 title,
-		Family:                []string{"hetzner"},
-		Kind:                  "api",
-		Runtime:               "hetzner",
+func childPlatform(name, segment string) *inventory.Platform {
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"cloud", "hetzner", segment},
 	}
+	PlatformByName(name).Apply(p)
+	return p
 }
 
 // FirewallPlatform is a single Hetzner Cloud firewall.
 func FirewallPlatform() *inventory.Platform {
-	return childPlatform("hetzner-firewall", "Hetzner Cloud Firewall", "firewall")
+	return childPlatform("hetzner-firewall", "firewall")
 }
 
 // LoadBalancerPlatform is a single Hetzner Cloud load balancer.
 func LoadBalancerPlatform() *inventory.Platform {
-	return childPlatform("hetzner-loadbalancer", "Hetzner Cloud Load Balancer", "loadbalancer")
+	return childPlatform("hetzner-loadbalancer", "loadbalancer")
 }
 
 // NewFirewallIdentifier builds the platform id for a firewall, anchored

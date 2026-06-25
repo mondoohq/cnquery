@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/mistral",
 	Version:         "13.0.5",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "mistral",

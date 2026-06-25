@@ -16,6 +16,7 @@ var Config = plugin.Provider{
 	Version:         "13.3.2",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "helm",

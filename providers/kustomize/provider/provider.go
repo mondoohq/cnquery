@@ -128,13 +128,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.KustomizeConnection) error {
 	asset.Platform = &inventory.Platform{
-		Name:                  "kustomize",
-		Family:                []string{"kustomize"},
-		Runtime:               "kustomize",
-		Kind:                  "api",
-		Title:                 "Kustomize",
 		TechnologyUrlSegments: []string{"iac", "kustomize", "overlay"},
 	}
+	PlatformByName("kustomize").Apply(asset.Platform)
 
 	projectPath, ok := asset.Connections[0].Options["path"]
 	if ok {

@@ -18,36 +18,27 @@ var (
 )
 
 func NewClaudeOrgPlatform(orgID string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "claude-organization",
-		Title:                 "Claude Organization",
-		Family:                []string{"claude"},
-		Kind:                  "api",
-		Runtime:               "claude",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"ai", "claude", "organization", orgID},
 	}
+	PlatformByName("claude-organization").Apply(p)
+	return p
 }
 
 func NewClaudeWorkspacePlatform(orgID, workspaceID string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "claude-workspace",
-		Title:                 "Claude Workspace",
-		Family:                []string{"claude"},
-		Kind:                  "api",
-		Runtime:               "claude",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"ai", "claude", "organization", orgID, "workspace", workspaceID},
 	}
+	PlatformByName("claude-workspace").Apply(p)
+	return p
 }
 
 func NewClaudeAPIPlatform(host string) *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "claude",
-		Title:                 "Claude",
-		Family:                []string{"claude"},
-		Kind:                  "api",
-		Runtime:               "claude",
+	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"ai", "claude", host},
 	}
+	PlatformByName("claude").Apply(p)
+	return p
 }
 
 func NewClaudeOrgIdentifier(orgID string) string {

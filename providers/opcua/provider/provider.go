@@ -127,12 +127,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OpcuaConnection) error {
 	asset.Name = conn.Conf.Host
 
-	asset.Platform = &inventory.Platform{
-		Name:   "opcua",
-		Family: []string{"opcua"},
-		Kind:   "api",
-		Title:  "OPC UA",
-	}
+	asset.Platform = &inventory.Platform{}
+	PlatformByName("opcua").Apply(asset.Platform)
 
 	// Add platform ID
 	endpoint := conn.Endpoint()

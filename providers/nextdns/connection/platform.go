@@ -19,22 +19,6 @@ var (
 	PlatformIdNextdnsProfile = "//platformid.api.mondoo.app/runtime/nextdns/profile/"
 )
 
-var NextdnsAccountPlatform = inventory.Platform{
-	Name:    "nextdns-account",
-	Title:   "NextDNS Account",
-	Family:  []string{"nextdns"},
-	Kind:    "api",
-	Runtime: "nextdns",
-}
-
-var NextdnsProfilePlatform = inventory.Platform{
-	Name:    "nextdns-profile",
-	Title:   "NextDNS Profile",
-	Family:  []string{"nextdns"},
-	Kind:    "api",
-	Runtime: "nextdns",
-}
-
 // PlatformInfo returns the platform for the asset this connection is scoped to.
 // A connection carrying a profile option is a single profile; otherwise it is
 // the account root.
@@ -46,15 +30,19 @@ func (c *NextdnsConnection) PlatformInfo() *inventory.Platform {
 }
 
 func NewNextdnsAccountPlatform(accountID string) *inventory.Platform {
-	pf := NextdnsAccountPlatform
-	pf.TechnologyUrlSegments = []string{"saas", "nextdns", "account", accountID}
-	return &pf
+	pf := &inventory.Platform{
+		TechnologyUrlSegments: []string{"saas", "nextdns", "account", accountID},
+	}
+	PlatformByName("nextdns-account").Apply(pf)
+	return pf
 }
 
 func NewNextdnsProfilePlatform(profileID string) *inventory.Platform {
-	pf := NextdnsProfilePlatform
-	pf.TechnologyUrlSegments = []string{"saas", "nextdns", "profile", profileID}
-	return &pf
+	pf := &inventory.Platform{
+		TechnologyUrlSegments: []string{"saas", "nextdns", "profile", profileID},
+	}
+	PlatformByName("nextdns-profile").Apply(pf)
+	return pf
 }
 
 func NewNextdnsAccountIdentifier(accountID string) string {

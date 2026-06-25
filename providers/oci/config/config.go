@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
 	Version:         "13.12.1",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       resources.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "oci",
