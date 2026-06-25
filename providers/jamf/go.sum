@@ -51,8 +51,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.19.24 h1:2hQqYCV9yqyePQ9o6dCrZc/zO8U
 github.com/aws/aws-sdk-go-v2/credentials v1.19.24/go.mod h1:IDwpACtwqHLISdzfwUUNq4P9DsB/h5BLg4FwJPNfqFY=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 h1:r6qZHbT+wxgWO/e9vYNUEtg7lv5+UN3pRqKhLXvnArg=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29/go.mod h1:QRnaRcTVGKPGRy8w78HMQtKUGRYcnMZAANATkeVA6Mo=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.26 h1:YNUEPr7Yiako/MzR/h3woMREbdwj0hGiBsZc5ZM90yE=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.26/go.mod h1:KswdJ4xh+tUgW5CWx7sarhQuD+3iKgg46wojfmCA8q4=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.28 h1:ez4y5o7sa0uaRI8BquYOXtZpioUPhbQEh7Igm88oV9U=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.28/go.mod h1:TpmZOrQA12XKEpVypgBGZSQBsm1WUTndCiSnbDsbvug=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 h1:f3vKqSo13fhTYb+JEcXwXefZQE26I1FB5eTSniU67ko=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29/go.mod h1:MzoLFUArKGpGD+ukmPiTPG1X5x4o6M2kq4v2dr1FiEc=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 h1:RdwIf/CuUsvJX3RgJagbOyotl/cxoLY4xviKuE7p2GY=
@@ -138,8 +138,8 @@ github.com/deploymenttheory/go-api-http-client v0.4.5 h1:u6TWP+l1rCzqE4wOabD+XpL
 github.com/deploymenttheory/go-api-http-client v0.4.5/go.mod h1:Uvu2QslNE7Y6uBrNdEijq9Itatgkxr4BUyiUyjll1i4=
 github.com/deploymenttheory/go-api-http-client-integrations v0.1.1 h1:zyUAeD0rEXO5QDFMjyOecZb7FQh3TsKUMX/3AtMxZq0=
 github.com/deploymenttheory/go-api-http-client-integrations v0.1.1/go.mod h1:uzwptZvVRKbnjbsxLVLymB8Kk85GkY7QukNKQvNjVNw=
-github.com/deploymenttheory/go-api-sdk-jamfpro v1.49.1 h1:fmovFFWgj+so1Nv22QPKn80ODpXBTtsrJsAmU9nZryM=
-github.com/deploymenttheory/go-api-sdk-jamfpro v1.49.1/go.mod h1:PoJjsRjJ7xPxRxaTQYh8RpldhIJiwF449JW5m6TjHhc=
+github.com/deploymenttheory/go-api-sdk-jamfpro v1.50.0 h1:QihJ88vGTasqFpyvfYWTUXmiS38q0N7w7nzrTo6dvJg=
+github.com/deploymenttheory/go-api-sdk-jamfpro v1.50.0/go.mod h1:LWfTEGGTFRPld6W2Wy6crv96Yj3Z8DvqVp2y+Y4s97k=
 github.com/distribution/reference v0.6.0 h1:0IXCQ5g4/QMHHkarYzh5l+u8T3t73zM5QvfrDyIgxBk=
 github.com/distribution/reference v0.6.0/go.mod h1:BbU0aIcezP1/5jX/8MP0YiH4SdvB5Y4f/wlDRiLyi3E=
 github.com/docker/cli v29.6.0+incompatible h1:nw9himxMMZ7eIeherJNlKQq+acnlzGgHd+4uf10QRSc=
@@ -452,8 +452,8 @@ github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.mondoo.com/mondoo-go v0.0.0-20260624002826-255868a855f8 h1:hS0kq4vMjLPQ7p1A4/u4CvWjv5XJr29Ln7mEmejuds4=
-go.mondoo.com/mondoo-go v0.0.0-20260624002826-255868a855f8/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mondoo-go v0.0.0-20260625124450-d02b3d289fd3 h1:0S7iC4E4q80f/FGPFPmcscBpVBzXrj5Pd0bwV3Oeu2k=
+go.mondoo.com/mondoo-go v0.0.0-20260625124450-d02b3d289fd3/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
 go.mondoo.com/ranger-rpc v0.8.0 h1:iBY34IhtPNPnEOZ9eS5t3Gp28HiTuv/M0SaHiBiRJlI=
 go.mondoo.com/ranger-rpc v0.8.0/go.mod h1:JbxC6J5d0pQwVGZ9efmq7amMzasEETKH80zPd0TcBug=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=

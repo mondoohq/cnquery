@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/aws
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.42.0
@@ -129,7 +129,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 	golang.org/x/sync v0.21.0
 	k8s.io/client-go v0.36.2
 )
@@ -284,7 +284,7 @@ require (
 	github.com/vbatts/tar-split v0.12.3 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260624002826-255868a855f8 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260625124450-d02b3d289fd3 // indirect
 	go.mondoo.com/ranger-rpc v0.8.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 // indirect

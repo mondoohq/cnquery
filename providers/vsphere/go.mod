@@ -2,15 +2,15 @@ module go.mondoo.com/mql/v13/providers/vsphere
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vmware/govmomi v0.54.1
-	go.mondoo.com/mondoo-go v0.0.0-20260624002826-255868a855f8
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mondoo-go v0.0.0-20260625124450-d02b3d289fd3
+	go.mondoo.com/mql/v13 v13.24.1
 	golang.org/x/sync v0.21.0
 )
 

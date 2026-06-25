@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/nutanix
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.2
@@ -10,7 +10,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 )
 
 require (

@@ -2,9 +2,9 @@ module go.mondoo.com/mql/v13/providers/vllm
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
-require go.mondoo.com/mql/v13 v13.24.0
+require go.mondoo.com/mql/v13 v13.24.1
 
 require (
 	dario.cat/mergo v1.0.2 // indirect

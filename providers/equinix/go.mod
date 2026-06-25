@@ -2,12 +2,12 @@ module go.mondoo.com/mql/v13/providers/equinix
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/packethost/packngo v0.31.0
 	github.com/rs/zerolog v1.35.1
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 	go.mondoo.com/ranger-rpc v0.8.0
 )
 

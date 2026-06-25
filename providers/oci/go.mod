@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/v13/providers/oci
 
-go 1.26.3
+go 1.26.4
 
 replace go.mondoo.com/mql/v13 => ../..
 
@@ -8,7 +8,7 @@ require (
 	github.com/oracle/oci-go-sdk/v65 v65.118.1
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 )
 
 require (

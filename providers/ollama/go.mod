@@ -2,11 +2,11 @@ module go.mondoo.com/mql/v13/providers/ollama
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/ollama/ollama v0.30.10
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 )
 
 require (

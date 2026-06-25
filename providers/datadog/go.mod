@@ -2,12 +2,12 @@ module go.mondoo.com/mql/v13/providers/datadog
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/DataDog/datadog-api-client-go/v2 v2.61.0
 	github.com/rs/zerolog v1.35.1
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 )
 
 require (

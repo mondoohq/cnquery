@@ -7,14 +7,14 @@ replace go.mondoo.com/mql/v13 => ../..
 // Drop this once the next upstream release ships the fix.
 replace github.com/apache/thrift => github.com/apache/thrift v0.22.0
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v1.2.3
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.19.1
 	github.com/stretchr/testify v1.11.1 // indirect
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 	go.mondoo.com/ranger-rpc v0.8.0
 	golang.org/x/crypto v0.53.0
 )

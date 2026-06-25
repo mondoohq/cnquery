@@ -2,14 +2,14 @@ module go.mondoo.com/mql/v13/providers/slack
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/rs/zerolog v1.35.1
 	github.com/slack-go/slack v0.26.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.24.0
+	go.mondoo.com/mql/v13 v13.24.1
 )
 
 require (
