@@ -232,14 +232,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.ActiveDirectoryConnection) error {
 	asset.Name = "Active Directory " + conn.FQDN()
-	asset.Platform = &inventory.Platform{
-		Name:                  "activedirectory",
-		Runtime:               "activedirectory",
-		Family:                []string{"directory-service"},
-		Kind:                  "api",
-		Title:                 "Active Directory Domain Services",
+	platform := &inventory.Platform{
 		TechnologyUrlSegments: []string{"directory-service", "activedirectory"},
 	}
+	if pi, ok := PlatformByName("activedirectory"); ok {
+		pi.Apply(platform)
+	}
+	asset.Platform = platform
 	asset.PlatformIds = []string{conn.PlatformId()}
 
 	return nil

@@ -172,16 +172,15 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 		arch = aristaVersion.Architecture
 	}
 
-	asset.Platform = &inventory.Platform{
-		Name:                  "arista-eos",
+	platform := &inventory.Platform{
 		Version:               version,
 		Arch:                  arch,
-		Family:                []string{"arista"},
-		Kind:                  "network-device",
-		Title:                 "Arista EOS",
-		Runtime:               "arista",
 		TechnologyUrlSegments: []string{"network", "arista"},
 	}
+	if pi, ok := PlatformByName("arista-eos"); ok {
+		pi.Apply(platform)
+	}
+	asset.Platform = platform
 
 	eosClient := eos.NewEos(conn.Client())
 	hostname, err := eosClient.ShowHostname()

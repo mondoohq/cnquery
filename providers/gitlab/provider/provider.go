@@ -176,25 +176,19 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func projectPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "gitlab-project",
-		Title:                 "GitLab Project",
-		Family:                []string{"gitlab"},
-		Kind:                  "api",
-		Runtime:               "gitlab",
+	pf := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "gitlab", "project"},
 	}
+	PlatformByName("gitlab-project").Apply(pf)
+	return pf
 }
 
 func groupPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "gitlab-group",
-		Title:                 "GitLab Group",
-		Family:                []string{"gitlab"},
-		Kind:                  "api",
-		Runtime:               "gitlab",
+	pf := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "gitlab", "group"},
 	}
+	PlatformByName("gitlab-group").Apply(pf)
+	return pf
 }
 
 func newGitLabGroupID(groupID int64) string {

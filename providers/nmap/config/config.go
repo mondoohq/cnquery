@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/v13/providers/nmap",
 	Version:         "13.0.18",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "nmap",

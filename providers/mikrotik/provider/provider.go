@@ -181,13 +181,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.MikrotikConnec
 	version := resource["version"]
 
 	asset.Platform = &inventory.Platform{
-		Name:    "mikrotik",
-		Family:  []string{"mikrotik"},
-		Kind:    "api",
-		Runtime: "mikrotik",
-		Title:   "MikroTik RouterOS",
 		Version: version,
 		Labels:  map[string]string{},
+	}
+	if pi, ok := PlatformByName("mikrotik"); ok {
+		pi.Apply(asset.Platform)
 	}
 	if board := resource["board-name"]; board != "" {
 		asset.Platform.Labels["mikrotik.com/board-name"] = board

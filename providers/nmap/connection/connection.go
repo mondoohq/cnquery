@@ -44,36 +44,27 @@ func (c *NmapConnection) Asset() *inventory.Asset {
 }
 
 func nmapHostPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nmap-host",
-		Title:                 "Nmap Host",
-		Family:                []string{"nmap"},
-		Kind:                  "api",
-		Runtime:               "nmap",
+	pf := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "nmap", "host"},
 	}
+	PlatformByName("nmap-host").Apply(pf)
+	return pf
 }
 
 func nmapDomainPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nmap-domain",
-		Title:                 "Nmap Domain",
-		Family:                []string{"nmap"},
-		Kind:                  "api",
-		Runtime:               "nmap",
+	pf := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "nmap", "domain"},
 	}
+	PlatformByName("nmap-domain").Apply(pf)
+	return pf
 }
 
 func nmapPlatform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:                  "nmap-org",
-		Title:                 "Nmap",
-		Family:                []string{"nmap"},
-		Kind:                  "api",
-		Runtime:               "nmap",
+	pf := &inventory.Platform{
 		TechnologyUrlSegments: []string{"network", "nmap", "org"},
 	}
+	PlatformByName("nmap-org").Apply(pf)
+	return pf
 }
 
 func (c *NmapConnection) PlatformInfo() (*inventory.Platform, error) {

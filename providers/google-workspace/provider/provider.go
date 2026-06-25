@@ -205,14 +205,13 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GoogleWorkspac
 	} else {
 		asset.Name = fmt.Sprintf("Google Workspace %s (%s)", pd, conn.CustomerID())
 	}
-	asset.Platform = &inventory.Platform{
-		Name:                  "google-workspace",
-		Family:                []string{"google"},
-		Kind:                  "api",
-		Title:                 "Google Workspace",
-		Runtime:               "google-workspace",
+	platform := &inventory.Platform{
 		TechnologyUrlSegments: []string{"saas", "google-workspace", conn.CustomerID()},
 	}
+	if pi, ok := PlatformByName("google-workspace"); ok {
+		pi.Apply(platform)
+	}
+	asset.Platform = platform
 
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + conn.CustomerID()}
 	return nil

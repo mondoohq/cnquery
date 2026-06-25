@@ -6,12 +6,14 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/proxmox/connection"
 )
 
 var Config = plugin.Provider{
 	Name:            "proxmox",
 	ID:              "go.mondoo.com/mql/v13/providers/proxmox",
 	Version:         "0.2.2",
+	Platforms:       connection.Platforms,
 	ConnectionTypes: []string{"proxmox"},
 	Connectors: []plugin.Connector{
 		{

@@ -18,39 +18,24 @@ import (
 )
 
 func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error {
-	var p *inventory.Platform
+	var name string
+	var techSegments []string
 	connType := asset.Connections[0].Type
 	switch connType {
 	case StateConnectionType:
-		p = &inventory.Platform{
-			Name:                  "terraform-state",
-			Title:                 "Terraform State",
-			Family:                []string{"terraform"},
-			Kind:                  "code",
-			Runtime:               "terraform",
-			TechnologyUrlSegments: []string{"iac", "terraform", "state"},
-		}
+		name = "terraform-state"
+		techSegments = []string{"iac", "terraform", "state"}
 	case PlanConnectionType:
-		p = &inventory.Platform{
-			Name:                  "terraform-plan",
-			Title:                 "Terraform Plan",
-			Family:                []string{"terraform"},
-			Kind:                  "code",
-			Runtime:               "terraform",
-			TechnologyUrlSegments: []string{"iac", "terraform", "plan"},
-		}
+		name = "terraform-plan"
+		techSegments = []string{"iac", "terraform", "plan"}
 	case HclConnectionType:
 		fallthrough
 	default:
-		p = &inventory.Platform{
-			Name:                  "terraform-hcl",
-			Title:                 "Terraform HCL",
-			Family:                []string{"terraform"},
-			Kind:                  "code",
-			Runtime:               "terraform",
-			TechnologyUrlSegments: []string{"iac", "terraform", "hcl"},
-		}
+		name = "terraform-hcl"
+		techSegments = []string{"iac", "terraform", "hcl"}
 	}
+	p := &inventory.Platform{TechnologyUrlSegments: techSegments}
+	PlatformByName(name).Apply(p)
 	asset.MergePlatform(p)
 
 	// we always prefer the git url since it is more reliable
