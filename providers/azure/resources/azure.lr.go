@@ -2359,6 +2359,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.resource.changedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetChangedTime()).ToDataRes(types.Time)
 	},
+	"azure.subscription.resource.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionResource).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.systemData.createdBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSystemData).GetCreatedBy()).ToDataRes(types.String)
 	},
@@ -15815,6 +15818,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.resource.changedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionResource).ChangedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.resource.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionResource).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.systemData.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35985,7 +35992,7 @@ func (c *mqlAzureSubscriptionResourcegroup) GetDeployments() *plugin.TValue[[]an
 type mqlAzureSubscriptionResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionResourceInternal it will be used here
+	mqlAzureSubscriptionResourceInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Kind              plugin.TValue[string]
@@ -35999,6 +36006,7 @@ type mqlAzureSubscriptionResource struct {
 	ProvisioningState plugin.TValue[string]
 	CreatedTime       plugin.TValue[*time.Time]
 	ChangedTime       plugin.TValue[*time.Time]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionResource creates a new instance of this resource
@@ -36088,6 +36096,22 @@ func (c *mqlAzureSubscriptionResource) GetCreatedTime() *plugin.TValue[*time.Tim
 
 func (c *mqlAzureSubscriptionResource) GetChangedTime() *plugin.TValue[*time.Time] {
 	return &c.ChangedTime
+}
+
+func (c *mqlAzureSubscriptionResource) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.resource", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
 }
 
 // mqlAzureSubscriptionSystemData for the azure.subscription.systemData resource

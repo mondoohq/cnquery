@@ -3766,6 +3766,7 @@ azure.subscription.resource.name 9.0.0
 azure.subscription.resource.plan 9.0.0
 azure.subscription.resource.provisioningState 9.0.0
 azure.subscription.resource.sku 9.0.0
+azure.subscription.resource.systemMetadata 13.21.2
 azure.subscription.resource.tags 9.0.0
 azure.subscription.resource.type 9.0.0
 azure.subscription.resourceGroups 11.4.28

@@ -158,8 +158,10 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0/go.mod h1:5kakwfW5CjC9KK+Q4wjXAg+ShuIm2mBMua0ZFj2C8PE=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3 v3.0.1 h1:guyQA4b8XB2sbJZXzUnOF9mn0WDBv/ZT7me9wTipKtE=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3 v3.0.1/go.mod h1:8h8yhzh9o+0HeSIhUxYny+rEQajScrfIpNktvgYG3Q8=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0 h1:wxQx2Bt4xzPIKvW59WQf1tJNx/ZZKPfN+EhPX3Z6CYY=
-github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0/go.mod h1:TpiwjwnW/khS0LKs4vW5UmmT9OWcxaveS8U7+tlknzo=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4 v4.0.0 h1:LXGvNeGX6VLx1S+wk3bbWrYWZuVow84Mny4T1I0CgBw=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4 v4.0.0/go.mod h1:IJLGVEPS/CqR2k0Q+EzmHqus1F69g5TCYzLFSWUM0Yw=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2 v2.0.0 h1:TPaLKUUZw3XUaQy5aU+ApHXFKB2VnTWUA0xufkvFDE8=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2 v2.0.0/go.mod h1:Rn/a97OKDAoOGvk5/OFjqObHHqWyoMMVSGtikqbKcAg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/search/armsearch v1.4.0 h1:zBdabY8pMSMLPb1XJnFSEdJi9Bd0h+VMjh1uU8B6Yp8=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/search/armsearch v1.4.0/go.mod h1:Y2Q3nB3UfSnG9nALOpPAjflXPM3jL/n2ZmYIu2Occ9g=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.15.0 h1:5tRv65ZzstkUCQYFAcw2XtXkqxJdJ0ut1T0gyU1JB34=

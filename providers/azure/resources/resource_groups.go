@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	azureres "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
+	azureres "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
 )
 
 func (a *mqlAzureSubscription) resourceGroups() ([]any, error) {

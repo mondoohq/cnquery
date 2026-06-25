@@ -211,6 +211,8 @@ private azure.subscription.resource @defaults("id name location") {
   createdTime time
   // When the resource was last changed
   changedTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Resource Manager system metadata

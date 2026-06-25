@@ -66,6 +66,10 @@ func systemMetadataFromRaw(runtime *plugin.Runtime, parentID string, raw any, fi
 	return sd, nil
 }
 
+func (a *mqlAzureSubscriptionResource) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionComputeServiceVm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.GetSystemData().Data, &a.SystemMetadata)
 }
