@@ -15,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/cnquery/v9/providers/network",
 	Version:         "13.2.3",
 	ConnectionTypes: []string{provider.HostConnectionType},
+	Platforms:       provider.Platforms,
 	CrossProviderTypes: []string{
 		"go.mondoo.com/mql/providers/os",
 		"go.mondoo.com/mql/providers/k8s",

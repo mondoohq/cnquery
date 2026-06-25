@@ -18,6 +18,7 @@ var Config = plugin.Provider{
 		provider.GitlabGroupConnection,
 		provider.GitlabProjectConnection,
 	},
+	Platforms: provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gitlab",

@@ -13,6 +13,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/v13/providers/mondoo",
 	Version:         "13.1.7",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "mondoo",

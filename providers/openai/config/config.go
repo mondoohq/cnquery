@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/openai/connection"
 	"go.mondoo.com/mql/v13/providers/openai/provider"
 )
 
@@ -14,6 +15,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/mql/providers/openai",
 	Version:         "13.0.5",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:      "openai",

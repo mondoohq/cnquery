@@ -14,6 +14,7 @@ var Config = plugin.Provider{
 	ID:              "go.mondoo.com/cnquery/v9/providers/arista",
 	Version:         "13.3.6",
 	ConnectionTypes: []string{provider.ConnectionType},
+	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "arista",

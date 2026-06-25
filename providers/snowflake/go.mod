@@ -13,7 +13,7 @@ require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v1.2.3
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.19.1
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.24.1
 	go.mondoo.com/ranger-rpc v0.8.0
 	golang.org/x/crypto v0.53.0

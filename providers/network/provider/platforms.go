@@ -10,10 +10,10 @@ import (
 // Platforms is the static catalog of platforms this provider can emit.
 var Platforms = []*plugin.PlatformInfo{
 	{
-		Name:    "host",
-		Title:   "Network Host",
-		Family:  []string{"network"},
-		Kind:    []string{"network"},
+		Name:   "host",
+		Title:  "Network Host",
+		Family: []string{"network"},
+		Kind:   []string{"network"},
 	},
 }
 
