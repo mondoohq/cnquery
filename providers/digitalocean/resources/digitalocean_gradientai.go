@@ -661,6 +661,7 @@ func (r *mqlDigitaloceanGradientai) customModels() ([]interface{}, error) {
 					"name":                 llx.StringData(m.Name),
 					"description":          llx.StringData(m.Description),
 					"status":               llx.StringData(string(m.Status)),
+					"errorMessage":         llx.StringData(m.ErrorMessage),
 					"architecture":         llx.StringData(m.Architecture),
 					"sourceType":           llx.StringData(string(m.SourceType)),
 					"totalSizeBytes":       llx.StringData(m.TotalSizeBytes),

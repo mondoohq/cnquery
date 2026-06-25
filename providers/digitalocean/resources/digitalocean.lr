@@ -88,6 +88,8 @@ digitalocean {
   byoipPrefixes() []digitalocean.byoipPrefix
   // Partner Network Connect attachments
   partnerAttachments() []digitalocean.partnerAttachment
+  // Secrets held in the managed secrets store
+  secrets() []digitalocean.secret
   // Account billing balance and month-to-date usage
   billing() digitalocean.billing
 }
@@ -1526,8 +1528,79 @@ digitalocean.nfs @defaults("id name region status") {
   vpcIds []string
   // VPCs the share is reachable from
   vpcs() []digitalocean.vpc
+  // Access points that export the share to clients
+  accessPoints() []digitalocean.nfs.accessPoint
   // Time the share was created
   createdAt time
+}
+
+// DigitalOcean NFS access point
+//
+// An access point that exports a managed NFS share to clients under its
+// own `path` and export policy. Surfaces the access point `name`,
+// lifecycle `status` (ACCESS_POINT_CREATING, ACCESS_POINT_ACTIVE,
+// ACCESS_POINT_FAILED, ACCESS_POINT_DELETED), and whether it is the
+// share's default access point (`isDefault`). The export policy is
+// flattened from the share configuration: `protocols` lists the
+// permitted NFS protocols (NFS, NFS4), `squashConfig` sets the UID/GID
+// squash mode (NO_SQUASH, ROOT_SQUASH, ALL_SQUASH),
+// `identityEnforcementEnabled` gates identity checks, and `anonUid` /
+// `anonGid` are the anonymous identity applied to squashed requests.
+// `vpc` resolves the VPC the access point is reachable from.
+private digitalocean.nfs.accessPoint @defaults("id name status") {
+  // Access point ID
+  id string
+  // Name
+  name string
+  // ID of the NFS share the access point belongs to
+  shareId string
+  // Export path clients mount
+  path string
+  // Lifecycle status (ACCESS_POINT_CREATING, ACCESS_POINT_ACTIVE, ACCESS_POINT_FAILED, ACCESS_POINT_DELETED)
+  status string
+  // Whether this is the share's default access point
+  isDefault bool
+  // Permitted NFS protocols (NFS, NFS4)
+  protocols []string
+  // UID/GID squash mode (NO_SQUASH, ROOT_SQUASH, ALL_SQUASH)
+  squashConfig string
+  // Whether identity enforcement is enabled
+  identityEnforcementEnabled bool
+  // Anonymous UID applied to squashed requests
+  anonUid int
+  // Anonymous GID applied to squashed requests
+  anonGid int
+  // Time the access point was created
+  createdAt time
+  // Time the access point was last updated
+  updatedAt time
+  // VPC the access point is reachable from
+  vpc() digitalocean.vpc
+}
+
+// DigitalOcean secret
+//
+// A secret held in DigitalOcean's managed secrets store, scoped to a
+// `region`. Surfaces the secret `name`, current `version`, and the
+// `createdAt` and `updatedAt` timestamps. `deleteRequestedAt` is set
+// when the secret is pending deletion and null otherwise. Iterate
+// `versions` for the version history. Stored secret values are never
+// exposed.
+digitalocean.secret @defaults("name region version") {
+  // Secret name
+  name string
+  // Region slug the secret is stored in
+  region string
+  // Current version number
+  version int
+  // Time the secret was created
+  createdAt time
+  // Time the secret was last updated
+  updatedAt time
+  // Time deletion was requested; null when the secret is not pending deletion
+  deleteRequestedAt time
+  // Version history, each with the version number and create/update timestamps
+  versions() []dict
 }
 
 // DigitalOcean reserved IPv6 address
@@ -1927,6 +2000,8 @@ private digitalocean.gradientai.customModel @defaults("uuid name status") {
   description string
   // Lifecycle status
   status string
+  // Failure detail reported when the model is in an error state
+  errorMessage string
   // Model architecture
   architecture string
   // Source type the model was imported from
