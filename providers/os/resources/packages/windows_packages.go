@@ -913,10 +913,15 @@ func updateExchangePackage(pkgs []Package, latestExchangeCU Package) []Package {
 	for i, pkg := range pkgs {
 		if pkg.Name == "Microsoft Exchange Server" {
 			currentVersion := pkgs[i].Version
+			// Without a current version there is no `@<version>` to swap in the
+			// PURL; replacing the empty-anchored `"@"` would target the first `@`
+			// and corrupt the PURL, so skip the rewrite entirely.
+			if currentVersion == "" {
+				continue
+			}
 			pkgs[i].Version = latestExchangeCU.Version
 			log.Debug().Str("package", pkg.Name).Str("version", latestExchangeCU.Version).Msg("Updated Exchange package")
-			// Anchor on `@<version>` so an empty currentVersion can't prepend the
-			// new version to the PURL, and so we don't rewrite a substring match
+			// Anchor on `@<version>` so we don't rewrite a substring match
 			// elsewhere in the PURL.
 			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, "@"+currentVersion, "@"+latestExchangeCU.Version, 1)
 		}
