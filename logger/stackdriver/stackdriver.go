@@ -23,16 +23,43 @@ var logLevelMap = map[zerolog.Level]logging.Severity{
 	zerolog.TraceLevel: logging.Debug,
 }
 
+// Option configures the stackdriver writer.
+type Option func(*options)
+
+type options struct {
+	labels map[string]string
+}
+
+// WithLabels attaches the given key/value labels to every log entry written by
+// this writer (via logging.CommonLabels). Useful to tag logs with metadata such
+// as environment, team, or asset identifiers so they can be filtered in the GCP
+// Logs Explorer (e.g. `labels.env = "prod"`).
+func WithLabels(labels map[string]string) Option {
+	return func(o *options) {
+		o.labels = labels
+	}
+}
+
 // https://pkg.go.dev/cloud.google.com/go/logging
 // by default, everything is logged async, only zerolog fatal messages are logged synchronously
-func NewStackdriverWriter(projectID string, logID string) (zerolog.LevelWriter, error) {
+func NewStackdriverWriter(projectID string, logID string, opts ...Option) (zerolog.LevelWriter, error) {
+	o := &options{}
+	for _, fn := range opts {
+		fn(o)
+	}
+
 	client, err := logging.NewClient(context.Background(), projectID)
 	if err != nil {
 		return nil, err
 	}
 
+	var loggerOpts []logging.LoggerOption
+	if len(o.labels) > 0 {
+		loggerOpts = append(loggerOpts, logging.CommonLabels(o.labels))
+	}
+
 	return &stackdriverWriter{
-		logger: client.Logger(logID),
+		logger: client.Logger(logID, loggerOpts...),
 	}, nil
 }
 
