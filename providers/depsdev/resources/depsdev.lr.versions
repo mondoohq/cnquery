@@ -12,7 +12,11 @@ depsdev.package.versions 13.0.1
 depsdev.packageVersion 13.0.1
 depsdev.packageVersion.isDefault 13.0.1
 depsdev.packageVersion.licenses 13.0.1
+depsdev.packageVersion.links 13.0.20
 depsdev.packageVersion.publishedAt 13.0.1
+depsdev.packageVersion.registries 13.0.20
+depsdev.packageVersion.relatedProjects 13.0.20
+depsdev.packageVersion.slsaProvenances 13.0.20
 depsdev.packageVersion.version 13.0.1
 depsdev.packages 13.0.1
 depsdev.project 13.0.1
@@ -25,6 +29,10 @@ depsdev.project.license 13.0.1
 depsdev.project.openIssuesCount 13.0.1
 depsdev.project.scorecard 13.0.1
 depsdev.project.starsCount 13.0.1
+depsdev.relatedProject 13.0.20
+depsdev.relatedProject.project 13.0.20
+depsdev.relatedProject.relationProvenance 13.0.20
+depsdev.relatedProject.relationType 13.0.20
 depsdev.scorecard 13.0.1
 depsdev.scorecard.checks 13.0.1
 depsdev.scorecard.date 13.0.1

@@ -19,6 +19,7 @@ const (
 	ResourceDepsdev               string = "depsdev"
 	ResourceDepsdevPackage        string = "depsdev.package"
 	ResourceDepsdevPackageVersion string = "depsdev.packageVersion"
+	ResourceDepsdevRelatedProject string = "depsdev.relatedProject"
 	ResourceDepsdevProject        string = "depsdev.project"
 	ResourceDepsdevScorecard      string = "depsdev.scorecard"
 	ResourceDepsdevScorecardCheck string = "depsdev.scorecardCheck"
@@ -39,6 +40,10 @@ func init() {
 		"depsdev.packageVersion": {
 			// to override args, implement: initDepsdevPackageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDepsdevPackageVersion,
+		},
+		"depsdev.relatedProject": {
+			// to override args, implement: initDepsdevRelatedProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDepsdevRelatedProject,
 		},
 		"depsdev.project": {
 			Init:   initDepsdevProject,
@@ -156,6 +161,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"depsdev.packageVersion.licenses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDepsdevPackageVersion).GetLicenses()).ToDataRes(types.Array(types.String))
 	},
+	"depsdev.packageVersion.links": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevPackageVersion).GetLinks()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"depsdev.packageVersion.registries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevPackageVersion).GetRegistries()).ToDataRes(types.Array(types.String))
+	},
+	"depsdev.packageVersion.slsaProvenances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevPackageVersion).GetSlsaProvenances()).ToDataRes(types.Array(types.Dict))
+	},
+	"depsdev.packageVersion.relatedProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevPackageVersion).GetRelatedProjects()).ToDataRes(types.Array(types.Resource("depsdev.relatedProject")))
+	},
+	"depsdev.relatedProject.relationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevRelatedProject).GetRelationType()).ToDataRes(types.String)
+	},
+	"depsdev.relatedProject.relationProvenance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevRelatedProject).GetRelationProvenance()).ToDataRes(types.String)
+	},
+	"depsdev.relatedProject.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDepsdevRelatedProject).GetProject()).ToDataRes(types.Resource("depsdev.project"))
+	},
 	"depsdev.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDepsdevProject).GetId()).ToDataRes(types.String)
 	},
@@ -270,6 +296,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"depsdev.packageVersion.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDepsdevPackageVersion).Licenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"depsdev.packageVersion.links": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevPackageVersion).Links, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"depsdev.packageVersion.registries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevPackageVersion).Registries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"depsdev.packageVersion.slsaProvenances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevPackageVersion).SlsaProvenances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"depsdev.packageVersion.relatedProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevPackageVersion).RelatedProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"depsdev.relatedProject.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevRelatedProject).__id, ok = v.Value.(string)
+		return
+	},
+	"depsdev.relatedProject.relationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevRelatedProject).RelationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"depsdev.relatedProject.relationProvenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevRelatedProject).RelationProvenance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"depsdev.relatedProject.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDepsdevRelatedProject).Project, ok = plugin.RawToTValue[*mqlDepsdevProject](v.Value, v.Error)
 		return
 	},
 	"depsdev.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -540,10 +598,14 @@ type mqlDepsdevPackageVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlDepsdevPackageVersionInternal
-	Version     plugin.TValue[string]
-	PublishedAt plugin.TValue[*time.Time]
-	IsDefault   plugin.TValue[bool]
-	Licenses    plugin.TValue[[]any]
+	Version         plugin.TValue[string]
+	PublishedAt     plugin.TValue[*time.Time]
+	IsDefault       plugin.TValue[bool]
+	Licenses        plugin.TValue[[]any]
+	Links           plugin.TValue[map[string]any]
+	Registries      plugin.TValue[[]any]
+	SlsaProvenances plugin.TValue[[]any]
+	RelatedProjects plugin.TValue[[]any]
 }
 
 // createDepsdevPackageVersion creates a new instance of this resource
@@ -596,7 +658,114 @@ func (c *mqlDepsdevPackageVersion) GetIsDefault() *plugin.TValue[bool] {
 }
 
 func (c *mqlDepsdevPackageVersion) GetLicenses() *plugin.TValue[[]any] {
-	return &c.Licenses
+	return plugin.GetOrCompute[[]any](&c.Licenses, func() ([]any, error) {
+		return c.licenses()
+	})
+}
+
+func (c *mqlDepsdevPackageVersion) GetLinks() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Links, func() (map[string]any, error) {
+		return c.links()
+	})
+}
+
+func (c *mqlDepsdevPackageVersion) GetRegistries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Registries, func() ([]any, error) {
+		return c.registries()
+	})
+}
+
+func (c *mqlDepsdevPackageVersion) GetSlsaProvenances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SlsaProvenances, func() ([]any, error) {
+		return c.slsaProvenances()
+	})
+}
+
+func (c *mqlDepsdevPackageVersion) GetRelatedProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RelatedProjects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("depsdev.packageVersion", c.__id, "relatedProjects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.relatedProjects()
+	})
+}
+
+// mqlDepsdevRelatedProject for the depsdev.relatedProject resource
+type mqlDepsdevRelatedProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDepsdevRelatedProjectInternal
+	RelationType       plugin.TValue[string]
+	RelationProvenance plugin.TValue[string]
+	Project            plugin.TValue[*mqlDepsdevProject]
+}
+
+// createDepsdevRelatedProject creates a new instance of this resource
+func createDepsdevRelatedProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDepsdevRelatedProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("depsdev.relatedProject", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDepsdevRelatedProject) MqlName() string {
+	return "depsdev.relatedProject"
+}
+
+func (c *mqlDepsdevRelatedProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDepsdevRelatedProject) GetRelationType() *plugin.TValue[string] {
+	return &c.RelationType
+}
+
+func (c *mqlDepsdevRelatedProject) GetRelationProvenance() *plugin.TValue[string] {
+	return &c.RelationProvenance
+}
+
+func (c *mqlDepsdevRelatedProject) GetProject() *plugin.TValue[*mqlDepsdevProject] {
+	return plugin.GetOrCompute[*mqlDepsdevProject](&c.Project, func() (*mqlDepsdevProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("depsdev.relatedProject", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDepsdevProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 // mqlDepsdevProject for the depsdev.project resource

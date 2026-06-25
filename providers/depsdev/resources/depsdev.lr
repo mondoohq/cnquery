@@ -46,7 +46,28 @@ private depsdev.packageVersion @defaults("version publishedAt") {
   // Whether this is the default version
   isDefault bool
   // SPDX license identifiers
-  licenses []string
+  licenses() []string
+  // Source and metadata links keyed by label (e.g. SOURCE_REPO, ISSUE_TRACKER, ORIGIN)
+  links() map[string]string
+  // Package registries where this version is published
+  registries() []string
+  // SLSA build provenance attestations
+  //
+  // Each entry records the sourceRepository, commit, url, and verified
+  // flag of a build provenance attestation recorded for this version.
+  slsaProvenances() []dict
+  // Projects related to this version (e.g. source repository, issue tracker)
+  relatedProjects() []depsdev.relatedProject
+}
+
+// deps.dev related project
+private depsdev.relatedProject @defaults("relationType") {
+  // Relationship type (e.g. SOURCE_REPO, ISSUE_TRACKER, ORIGIN)
+  relationType string
+  // How the relationship was determined (e.g. GO_ORIGIN, SLSA_PROVENANCE)
+  relationProvenance string
+  // Related source project
+  project() depsdev.project
 }
 
 // deps.dev upstream source project (GitHub / GitLab repository)
