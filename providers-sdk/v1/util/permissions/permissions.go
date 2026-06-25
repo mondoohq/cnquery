@@ -70,11 +70,6 @@ func main() {
 	var details []PermissionDetail
 	switch providerName {
 	case "aws":
-		// Walk the whole provider tree (resources/, connection/, provider/, ...)
-		// rather than just resources/, so API calls made outside resources/
-		// aren't missed — e.g. ec2:DescribeRegions issued during region discovery
-		// in connection.go. listGoFiles recurses and already skips _test.go and
-		// generated .lr.go files.
 		details = extractAWSPermissions(providerPath)
 	case "gcp":
 		details = extractGCPPermissions(resourcesDir)
@@ -452,12 +447,7 @@ func extractAWSPermissions(root string) []PermissionDetail {
 			// Build variable -> service map for this function.
 			varServices := map[string]string{}
 
-			// Pattern 1b: clients received as parameters. A shared helper such as
-			// `func batchFetchTags[T any](ctx, svc *route53.Client, ...)` makes API
-			// calls through a client it never created via conn.Service(), so the
-			// assignment scan below can't see it. Seed varServices from any
-			// parameter typed *<alias>.Client first; a same-named local assignment
-			// below overrides it, keeping the conn.Service() idiom authoritative.
+			// Detect clients passe passed as function parameters.
 			if fn.Type != nil && fn.Type.Params != nil {
 				for _, param := range fn.Type.Params.List {
 					svcPkg, ok := awsClientParamService(param.Type, awsImports)
@@ -581,11 +571,7 @@ func extractAWSImports(f *ast.File) map[string]string {
 // awsClientParamService reports the AWS SDK package name for a function
 // parameter typed *<alias>.Client (or the rare non-pointer <alias>.Client),
 // where <alias> is an AWS SDK import in this file — e.g. `svc *route53.Client`
-// returns "route53". This lets the analyzer attribute API calls made through a
-// client received as a parameter (shared helpers like batchFetchTags), not only
-// clients created via the conn.Service() idiom. The returned package name
-// matches the values stored in awsImports, so it feeds awsServiceToIAM exactly
-// as the other patterns do (handling aliased imports such as elbv2 too).
+// returns "route53".
 func awsClientParamService(expr ast.Expr, awsImports map[string]string) (string, bool) {
 	// Unwrap a leading pointer: *route53.Client -> route53.Client.
 	if star, ok := expr.(*ast.StarExpr); ok {
