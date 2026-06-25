@@ -164,7 +164,7 @@ func ParseWindowsAppxPackages(platform *inventory.Platform, input io.Reader) ([]
 		return nil, err
 	}
 
-	pkgs := []Package{}
+	pkgs := make([]Package, 0, len(appxPackages))
 	for _, p := range appxPackages {
 		if p.Name == "" {
 			continue
