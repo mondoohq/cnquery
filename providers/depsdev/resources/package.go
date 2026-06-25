@@ -73,7 +73,12 @@ func (r *mqlDepsdevPackage) fetchPackageInfo() error {
 	for _, v := range pkg.Versions {
 		publishedAt := v.PublishedAt
 
+		// Pass __id explicitly: CreateResource calls id() before packageName is
+		// set below, so id() would otherwise build a key with an empty package
+		// name and collide across packages that share a version string.
+		vid := "depsdev.packageVersion/" + r.Name.Data + "@" + v.VersionKey.Version
 		vr, err := CreateResource(r.MqlRuntime, "depsdev.packageVersion", map[string]*llx.RawData{
+			"__id":        llx.StringData(vid),
 			"version":     llx.StringData(v.VersionKey.Version),
 			"publishedAt": llx.TimeData(publishedAt),
 			"isDefault":   llx.BoolData(v.IsDefault),
@@ -238,7 +243,11 @@ func (r *mqlDepsdevPackageVersion) fetchVersionDetail() error {
 	versionID := r.packageName + "@" + r.Version.Data
 	related := make([]any, 0, len(ver.RelatedProjects))
 	for _, rp := range ver.RelatedProjects {
+		// Pass __id explicitly: CreateResource calls id() before the Internal
+		// fields below are set, so id() cannot build the key from them.
+		id := "depsdev.relatedProject/" + versionID + "/" + rp.RelationType + "/" + rp.ProjectKey.ID
 		res, err := CreateResource(r.MqlRuntime, "depsdev.relatedProject", map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
 			"relationType":       llx.StringData(rp.RelationType),
 			"relationProvenance": llx.StringData(rp.RelationProvenance),
 		})

@@ -60,7 +60,7 @@ private depsdev.packageVersion @defaults("version publishedAt") {
   relatedProjects() []depsdev.relatedProject
 }
 
-// deps.dev related project
+// deps.dev package version related project
 private depsdev.relatedProject @defaults("relationType") {
   // Relationship type (e.g. SOURCE_REPO, ISSUE_TRACKER, ORIGIN)
   relationType string
