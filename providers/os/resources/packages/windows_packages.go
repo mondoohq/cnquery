@@ -762,6 +762,15 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 			break
 		}
 	}
+	// Without the Database Engine Services package there is no anchor version to
+	// match the other SQL Server packages against, so there is nothing to stamp.
+	// Bailing here also avoids a footgun below: strings.Replace with an empty
+	// `old` prepends `new` to the string, which would corrupt the PURL of any
+	// "SQL Server" product bundle entry that carries an empty DisplayVersion
+	// (e.g. "16.0.1150.1pkg:windows/windows/Microsoft%20SQL%20Server%202022...").
+	if currentVersion == "" {
+		return pkgs
+	}
 	// MSI registers SP-era SQL Server hotfix DisplayVersions with the SP level
 	// baked into the minor component (13.3.x for SP3, etc.). Microsoft's
 	// canonical product version uses .0 in the minor and encodes the SP in the
@@ -776,7 +785,9 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
 			pkgs[i].Version = normalizedVersion
 			log.Debug().Str("package", pkg.Name).Str("version", normalizedVersion).Msg("Updated SQL Server package")
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, normalizedVersion, 1)
+			// Replace only the version component (`@<version>`) so we never
+			// rewrite a matching substring elsewhere in the PURL (name, arch).
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, "@"+currentVersion, "@"+normalizedVersion, 1)
 		}
 	}
 	return pkgs
@@ -904,7 +915,10 @@ func updateExchangePackage(pkgs []Package, latestExchangeCU Package) []Package {
 			currentVersion := pkgs[i].Version
 			pkgs[i].Version = latestExchangeCU.Version
 			log.Debug().Str("package", pkg.Name).Str("version", latestExchangeCU.Version).Msg("Updated Exchange package")
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestExchangeCU.Version, 1)
+			// Anchor on `@<version>` so an empty currentVersion can't prepend the
+			// new version to the PURL, and so we don't rewrite a substring match
+			// elsewhere in the PURL.
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, "@"+currentVersion, "@"+latestExchangeCU.Version, 1)
 		}
 	}
 	return pkgs

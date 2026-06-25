@@ -490,6 +490,33 @@ func TestFindAndUpdateMsSqlGDR_de_special_characters(t *testing.T) {
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
 }
 
+// TestUpdateMsSqlPackages_NoEngineServicesPackage guards against corrupting the
+// PURL of a "SQL Server" product bundle entry that carries an empty
+// DisplayVersion when no "Database Engine Services" package is present (so the
+// anchor version is empty). The buggy behavior prepended the update version to
+// the PURL (e.g. "16.0.1150.1pkg:windows/windows/Microsoft%20SQL%20Server...").
+func TestUpdateMsSqlPackages_NoEngineServicesPackage(t *testing.T) {
+	packages := []Package{
+		// Product bundle entry from the registry Uninstall key with an empty
+		// DisplayVersion. The PURL has no version component.
+		{Name: "Microsoft SQL Server 2022 (64-bit)", Version: "", PUrl: "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20%2864-bit%29?arch=AMD64"},
+		{Name: "GDR 1150 for SQL Server 2022 (KB5042215) (64-bit)", Version: "16.0.1150.1", PUrl: "pkg:windows/windows/GDR%201150%20for%20SQL%20Server%202022%20%28KB5042215%29%20%2864-bit%29@16.0.1150.1?arch=AMD64"},
+	}
+
+	gdrUpdates := findMsSqlGdrUpdates(packages)
+	require.Len(t, gdrUpdates, 1, "expected 1 update")
+
+	updated := updateMsSqlPackages(packages, gdrUpdates[len(gdrUpdates)-1])
+
+	// Without a Database Engine Services anchor package, the bundle entry must be
+	// left untouched: its PURL must stay valid and not gain a prepended version.
+	pkg := findPkgByName(updated, "Microsoft SQL Server 2022 (64-bit)")
+	require.NotNil(t, pkg, "Microsoft SQL Server 2022 (64-bit) package should exist")
+	assert.Equal(t, "", pkg.Version, "expected bundle entry version to remain empty")
+	assert.Equal(t, "pkg:windows/windows/Microsoft%20SQL%20Server%202022%20%2864-bit%29?arch=AMD64", pkg.PUrl)
+	assert.True(t, strings.HasPrefix(pkg.PUrl, "pkg:"), "PURL must start with pkg:, not a version")
+}
+
 func TestNormalizeMsSqlVersion(t *testing.T) {
 	cases := []struct {
 		name string
