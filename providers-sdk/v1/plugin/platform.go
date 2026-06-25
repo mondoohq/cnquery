@@ -6,6 +6,7 @@ package plugin
 import (
 	"slices"
 
+	"github.com/rs/zerolog/log"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -17,6 +18,17 @@ import (
 // possible (the OS case) the connection-set value is left untouched, since the
 // connection is the sole authority for which one applies.
 func (pi *PlatformInfo) Apply(p *inventory.Platform) {
+	if pi == nil {
+		// A nil descriptor means a caller passed a platform name that is not in
+		// the provider's catalog (typically a typo in a PlatformByName argument).
+		// Log it and fall back to an unknown platform instead of crashing.
+		log.Error().Msg("plugin.PlatformInfo.Apply called on a nil descriptor: the platform name is not present in the provider catalog")
+		p.Name = "unknown"
+		p.Title = "Unknown"
+		p.Kind = "unknown"
+		p.Runtime = "unknown"
+		return
+	}
 	p.Name = pi.Name
 	if p.Title == "" {
 		p.Title = pi.Title

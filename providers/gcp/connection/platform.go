@@ -85,7 +85,7 @@ func newGcpPlatform(name string) *inventory.Platform {
 
 func GetTitleForPlatformName(name string) string {
 	switch name {
-	case "gcp-organization":
+	case "gcp-org":
 		return "GCP Organization"
 	case "gcp-folder":
 		return "GCP Folder"

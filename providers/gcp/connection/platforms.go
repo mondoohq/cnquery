@@ -33,15 +33,9 @@ var gcpPlatformNames = []string{
 var Platforms = func() []*plugin.PlatformInfo {
 	out := make([]*plugin.PlatformInfo, 0, len(gcpPlatformNames))
 	for _, name := range gcpPlatformNames {
-		title := GetTitleForPlatformName(name)
-		// gcp-org is not a GetTitleForPlatformName case (it returns the generic
-		// default); use the title the org resource-type path has always used.
-		if name == "gcp-org" {
-			title = "GCP Organization"
-		}
 		out = append(out, &plugin.PlatformInfo{
 			Name:    name,
-			Title:   title,
+			Title:   GetTitleForPlatformName(name),
 			Family:  []string{"google"},
 			Kind:    []string{"gcp-object"},
 			Runtime: []string{"gcp"},

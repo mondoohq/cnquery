@@ -59,6 +59,19 @@ func TestPlatformInfoApply(t *testing.T) {
 		p.Family[0] = "mutated"
 		assert.Equal(t, "linux", fam[0], "descriptor family must not be mutated via the applied platform")
 	})
+
+	t.Run("a nil descriptor falls back to an unknown platform", func(t *testing.T) {
+		// PlatformByName returns nil for an unknown name; calling Apply on that
+		// (e.g. a typo'd platform name at a call site) must not nil-deref. It
+		// logs and falls back to an "unknown" platform instead.
+		var pi *PlatformInfo
+		p := &inventory.Platform{}
+		assert.NotPanics(t, func() { pi.Apply(p) })
+		assert.Equal(t, "unknown", p.Name)
+		assert.Equal(t, "Unknown", p.Title)
+		assert.Equal(t, "unknown", p.Kind)
+		assert.Equal(t, "unknown", p.Runtime)
+	})
 }
 
 func TestPlatformInfoConsistent(t *testing.T) {
