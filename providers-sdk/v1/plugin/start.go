@@ -33,7 +33,30 @@ type Provider struct {
 	CrossProviderTypes []string
 	Connectors         []Connector
 	AssetUrlTrees      []*inventory.AssetUrlBranch
-	Maturity           string `json:",omitempty"`
+	// Platforms is the static catalog of platforms this provider can emit. It
+	// lets users see the supported platforms ahead of running, and lets the
+	// runtime construct platforms from a pre-defined descriptor instead of
+	// hardcoding name/family/kind/runtime inline.
+	Platforms []*PlatformInfo `json:",omitempty"`
+	Maturity  string          `json:",omitempty"`
+}
+
+// PlatformInfo is the static, pre-declarable description of one platform a
+// provider can emit. It captures the subset of inventory.Platform that is
+// known ahead of time. Dynamic fields (Arch, Build, Version, Metadata,
+// TechnologyUrlSegments, and often Title) are filled at runtime, not here.
+//
+// Kind and Runtime list ALL possible values the platform can take: cloud,
+// SaaS, and API platforms fix a single value per name, while OS platforms can
+// occur as several kinds/runtimes depending on the connection (e.g. the same
+// "ubuntu" may be baremetal, virtualmachine, container, or container-image).
+// The connection/detection picks the actual value at runtime.
+type PlatformInfo struct {
+	Name    string   `json:"name"`
+	Title   string   `json:"title,omitempty"`   // optional default title
+	Family  []string `json:"family,omitempty"`  // fixed family chain for this name
+	Kind    []string `json:"kind,omitempty"`    // set of possible kinds
+	Runtime []string `json:"runtime,omitempty"` // set of possible runtimes
 }
 
 type Connector struct {

@@ -10,22 +10,31 @@ func (a *AwsConnection) PlatformInfo() *inventory.Platform {
 }
 
 func GetPlatformForObject(platformName string, accountId string) *inventory.Platform {
-	if platformName != "aws" && platformName != "" {
+	if platformName == "" {
+		platformName = "aws"
+	}
+
+	// Fall back to a generic AWS object for names not in the static catalog, so
+	// new object types keep working before they are added to Platforms.
+	pi := PlatformByName(platformName)
+	if pi == nil {
 		return &inventory.Platform{
 			Name:                  platformName,
-			Title:                 getTitleForPlatformName(platformName),
+			Title:                 "Amazon Web Services",
 			Kind:                  "aws-object",
 			Runtime:               "aws",
 			TechnologyUrlSegments: getTechnologyUrlSegments(accountId, platformName),
 		}
 	}
-	return &inventory.Platform{
-		Name:                  "aws",
-		Title:                 "AWS Account",
-		Kind:                  "api",
-		Runtime:               "aws",
-		TechnologyUrlSegments: []string{"aws", accountId, "account"},
+
+	p := &inventory.Platform{}
+	pi.Apply(p)
+	if platformName == "aws" {
+		p.TechnologyUrlSegments = []string{"aws", accountId, "account"}
+	} else {
+		p.TechnologyUrlSegments = getTechnologyUrlSegments(accountId, platformName)
 	}
+	return p
 }
 
 func getTechnologyUrlSegments(accountId string, platformName string) []string {
@@ -110,88 +119,4 @@ func getServiceName(platformName string) string {
 		return "documentdb"
 	}
 	return "other"
-}
-
-func getTitleForPlatformName(name string) string {
-	switch name {
-	case "aws-s3-bucket":
-		return "AWS S3 Bucket"
-	case "aws-cloudtrail-trail":
-		return "AWS CloudTrail Trail"
-	case "aws-rds-dbinstance":
-		return "AWS RDS DB Instance"
-	case "aws-rds-dbcluster":
-		return "AWS RDS DB Cluster"
-	case "aws-dynamodb-table":
-		return "AWS DynamoDB Table"
-	case "aws-redshift-cluster":
-		return "AWS Redshift Cluster"
-	case "aws-vpc":
-		return "AWS VPC"
-	case "aws-security-group":
-		return "AWS Security Group"
-	case "aws-ebs-volume":
-		return "AWS EBS Volume"
-	case "aws-ebs-snapshot":
-		return "AWS EBS Snapshot"
-	case "aws-iam-user":
-		return "AWS IAM User"
-	case "aws-iam-group":
-		return "AWS IAM Group"
-	case "aws-cloudwatch-loggroup":
-		return "AWS CloudWatch Log Group"
-	case "aws-lambda-function":
-		return "AWS Lambda Function"
-	case "aws-ecs-container":
-		return "AWS ECS Container"
-	case "aws-efs-filesystem":
-		return "AWS EFS Filesystem"
-	case "aws-gateway-restapi":
-		return "AWS Gateway REST API"
-	case "aws-elb-loadbalancer":
-		return "AWS ELB Load Balancer"
-	case "aws-es-domain":
-		return "AWS ES Domain"
-	case "aws-opensearch-domain":
-		return "AWS OpenSearch Domain"
-	case "aws-kms-key":
-		return "AWS KMS Key"
-	case "aws-sagemaker-notebookinstance":
-		return "AWS SageMaker Notebook Instance"
-	case "aws-sagemaker-processingjob":
-		return "AWS SageMaker Processing Job"
-	case "aws-sagemaker-trainingjob":
-		return "AWS SageMaker Training Job"
-	case "aws-ec2-instance":
-		return "AWS EC2 Instance"
-	case "aws-ssm-instance":
-		return "AWS SSM Instance"
-	case "aws-ecr-image":
-		return "AWS ECR Image"
-	case "aws-ecr-repository":
-		return "AWS ECR Repository"
-	case "aws-ecs-taskdefinition":
-		return "AWS ECS Task Definition"
-	case "aws-route53-hostedzone":
-		return "AWS Route 53 Hosted Zone"
-	case "aws-msk-cluster":
-		return "AWS MSK Cluster"
-	case "aws-mq-broker":
-		return "AWS MQ Broker"
-	case "aws-eks-cluster":
-		return "AWS EKS Cluster"
-	case "aws-secretsmanager-secret":
-		return "AWS Secrets Manager Secret"
-	case "aws-elasticache-cluster":
-		return "AWS ElastiCache Cluster"
-	case "aws-cloudfront-distribution":
-		return "AWS CloudFront Distribution"
-	case "aws-neptune-cluster":
-		return "AWS Neptune Cluster"
-	case "aws-emr-cluster":
-		return "AWS EMR Cluster"
-	case "aws-documentdb-cluster":
-		return "AWS DocumentDB Cluster"
-	}
-	return "Amazon Web Services"
 }

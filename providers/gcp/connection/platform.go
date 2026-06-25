@@ -51,43 +51,36 @@ func (c *GcpConnection) ResourceID() string {
 func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	// TODO: this is a hack and we need to find a better way to do this
 	if c.opts.platformOverride != "" && c.opts.platformOverride != "gcp" {
-		return &inventory.Platform{
-			Name:    c.opts.platformOverride,
-			Title:   GetTitleForPlatformName(c.opts.platformOverride),
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform(c.opts.platformOverride), nil
 	}
 
 	switch c.ResourceType() {
 	case Organization:
-		return &inventory.Platform{
-			Name:    "gcp-org",
-			Title:   "GCP Organization",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-org"), nil
 	case Project:
-		return &inventory.Platform{
-			Name:    "gcp-project",
-			Title:   "GCP Project",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-project"), nil
 	case Folder:
-		return &inventory.Platform{
-			Name:    "gcp-folder",
-			Title:   "GCP Folder",
-			Family:  []string{"google"},
-			Kind:    "gcp-object",
-			Runtime: "gcp",
-		}, nil
+		return newGcpPlatform("gcp-folder"), nil
 	}
 
 	return nil, errors.New("unsupported resource type")
+}
+
+// newGcpPlatform builds a runtime platform from the static catalog. Names not
+// in the catalog fall back to a generic GCP object so new object types keep
+// working before they are added to Platforms.
+func newGcpPlatform(name string) *inventory.Platform {
+	pf := &inventory.Platform{}
+	if pi := PlatformByName(name); pi != nil {
+		pi.Apply(pf)
+		return pf
+	}
+	pf.Name = name
+	pf.Title = GetTitleForPlatformName(name)
+	pf.Family = []string{"google"}
+	pf.Kind = "gcp-object"
+	pf.Runtime = "gcp"
+	return pf
 }
 
 func GetTitleForPlatformName(name string) string {

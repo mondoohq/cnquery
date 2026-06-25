@@ -6,6 +6,7 @@ package connection
 import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 const (
@@ -18,29 +19,27 @@ const (
 	DiscoveryK8sManifests = "k8s-manifests"
 )
 
-var (
-	GithubRepoPlatform = inventory.Platform{
-		Name:    "github-repo",
-		Title:   "GitHub Repository",
-		Family:  []string{"github"},
-		Kind:    "api",
-		Runtime: "github",
-	}
-	GithubUserPlatform = inventory.Platform{
-		Name:    "github-user",
-		Title:   "GitHub User",
-		Family:  []string{"github"},
-		Kind:    "api",
-		Runtime: "github",
-	}
-	GithubOrgPlatform = inventory.Platform{
-		Name:    "github-org",
-		Title:   "GitHub Organization",
-		Family:  []string{"github"},
-		Kind:    "api",
-		Runtime: "github",
-	}
-)
+// Platforms is the static catalog of platforms the GitHub provider can emit.
+// It is the single source of truth for both the provider config and the
+// runtime platform builders (NewGithub*Platform).
+var Platforms = []*plugin.PlatformInfo{
+	{Name: "github-org", Title: "GitHub Organization", Family: []string{"github"}, Kind: []string{"api"}, Runtime: []string{"github"}},
+	{Name: "github-user", Title: "GitHub User", Family: []string{"github"}, Kind: []string{"api"}, Runtime: []string{"github"}},
+	{Name: "github-repo", Title: "GitHub Repository", Family: []string{"github"}, Kind: []string{"api"}, Runtime: []string{"github"}},
+}
+
+var platformsByName = plugin.PlatformsByName(Platforms)
+
+// PlatformByName returns the static descriptor for a platform name, or nil.
+func PlatformByName(name string) *plugin.PlatformInfo {
+	return platformsByName[name]
+}
+
+func newPlatform(name string) *inventory.Platform {
+	pf := &inventory.Platform{}
+	platformsByName[name].Apply(pf)
+	return pf
+}
 
 type OrganizationId struct {
 	Name string
@@ -74,21 +73,21 @@ func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
 }
 
 func NewGithubOrgPlatform(orgId string) *inventory.Platform {
-	pf := GithubOrgPlatform
+	pf := newPlatform("github-org")
 	pf.TechnologyUrlSegments = []string{"saas", "github", "organization", orgId, "organization"}
-	return &pf
+	return pf
 }
 
 func NewGithubUserPlatform(userId string) *inventory.Platform {
-	pf := GithubUserPlatform
+	pf := newPlatform("github-user")
 	pf.TechnologyUrlSegments = []string{"saas", "github", "user"}
-	return &pf
+	return pf
 }
 
 func NewGitHubRepoPlatform(owner, repo string) *inventory.Platform {
-	pf := GithubRepoPlatform
+	pf := newPlatform("github-repo")
 	pf.TechnologyUrlSegments = []string{"saas", "github", "organization", owner, "repository"}
-	return &pf
+	return pf
 }
 
 func NewGithubOrgIdentifier(orgId string) string {

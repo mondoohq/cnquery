@@ -130,4 +130,5 @@ Notes:
 			},
 		},
 	},
+	Platforms: connection.Platforms,
 }
