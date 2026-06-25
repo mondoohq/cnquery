@@ -70,7 +70,12 @@ func main() {
 	var details []PermissionDetail
 	switch providerName {
 	case "aws":
-		details = extractAWSPermissions(resourcesDir)
+		// Walk the whole provider tree (resources/, connection/, provider/, ...)
+		// rather than just resources/, so API calls made outside resources/
+		// aren't missed — e.g. ec2:DescribeRegions issued during region discovery
+		// in connection.go. listGoFiles recurses and already skips _test.go and
+		// generated .lr.go files.
+		details = extractAWSPermissions(providerPath)
 	case "gcp":
 		details = extractGCPPermissions(resourcesDir)
 	case "azure":
@@ -416,9 +421,9 @@ func awsApplyOverride(perm string) (string, bool) {
 	return perm, true
 }
 
-func extractAWSPermissions(resourcesDir string) []PermissionDetail {
+func extractAWSPermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
