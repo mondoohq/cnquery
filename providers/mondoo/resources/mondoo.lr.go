@@ -148,6 +148,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mondoo.asset.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetPlatform()).ToDataRes(types.String)
 	},
+	"mondoo.asset.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooAsset).GetState()).ToDataRes(types.String)
+	},
 	"mondoo.asset.annotations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooAsset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -241,6 +244,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mondoo.asset.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondooAsset).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mondoo.asset.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooAsset).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mondoo.asset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -501,6 +508,7 @@ type mqlMondooAsset struct {
 	Name                plugin.TValue[string]
 	Mrn                 plugin.TValue[string]
 	Platform            plugin.TValue[string]
+	State               plugin.TValue[string]
 	Annotations         plugin.TValue[map[string]any]
 	Labels              plugin.TValue[map[string]any]
 	UpdatedAt           plugin.TValue[*time.Time]
@@ -557,6 +565,10 @@ func (c *mqlMondooAsset) GetMrn() *plugin.TValue[string] {
 
 func (c *mqlMondooAsset) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
+}
+
+func (c *mqlMondooAsset) GetState() *plugin.TValue[string] {
+	return &c.State
 }
 
 func (c *mqlMondooAsset) GetAnnotations() *plugin.TValue[map[string]any] {

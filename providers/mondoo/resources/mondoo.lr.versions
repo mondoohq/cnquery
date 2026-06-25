@@ -11,6 +11,7 @@ mondoo.asset.platform 11.0.0
 mondoo.asset.resources 11.0.0
 mondoo.asset.scoreGrade 11.0.0
 mondoo.asset.scoreValue 11.0.0
+mondoo.asset.state 13.1.7
 mondoo.asset.updatedAt 11.0.0
 mondoo.client 11.1.0
 mondoo.client.mrn 11.1.0

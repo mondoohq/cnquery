@@ -53,6 +53,11 @@ private mondoo.asset @defaults("name platform") {
   mrn string
   // Platform name
   platform string
+  // Asset lifecycle state
+  //
+  // One of UNKNOWN, ERROR, DELETED, PENDING, RUNNING, STOPPING, STOPPED,
+  // SHUTDOWN, TERMINATED, REBOOT, ONLINE, or OFFLINE.
+  state string
   // Annotations associated with this asset
   annotations map[string]string
   // Labels associated with this asset
