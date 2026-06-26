@@ -76,10 +76,12 @@ func TestResultRawConversions(t *testing.T) {
 	}
 }
 
-// TestEmptyTypePrimitiveConvertsToNil ensures an empty (untyped) primitive is
-// converted to a Nil value instead of an error. An empty primitive represents
-// an unset/null value; erroring here used to abort conversion of the whole
-// surrounding array/map (see TestEmptyTypePrimitiveKeepsCollection).
+// TestEmptyTypePrimitiveConvertsToNil ensures a malformed (no-type) primitive is
+// coerced to a Nil value instead of returning an error (loud-and-narrow: it is
+// also logged). A no-type primitive only appears via an upstream bug (compiler
+// value-field binding, or an unset provider field); erroring here used to abort
+// conversion of the whole surrounding array/map (see
+// TestEmptyTypePrimitiveKeepsCollection).
 func TestEmptyTypePrimitiveConvertsToNil(t *testing.T) {
 	rd := (&llx.Primitive{}).RawData()
 	require.NoError(t, rd.Error)
@@ -116,4 +118,48 @@ func TestEmptyTypePrimitiveKeepsCollection(t *testing.T) {
 	got, ok := rd.Value.([]any)
 	require.True(t, ok, "expected the array to survive conversion")
 	assert.Len(t, got, 3, "the whole collection must be preserved, not emptied")
+}
+
+// TestMalformedElementKeepsCollection covers the converter-hardening half of
+// loud-and-narrow: during late value extraction, an element whose RawData()
+// genuinely errors (here an unregistered type) must not discard the surrounding
+// array or map. The bad element is nulled out (and logged); its siblings
+// survive. types.Any has no primitive converter, so it errors at conversion.
+func TestMalformedElementKeepsCollection(t *testing.T) {
+	bad := &llx.Primitive{Type: string(types.Any), Value: []byte{0x1}}
+	// sanity: the element really does error on its own
+	require.Error(t, bad.RawData().Error)
+
+	t.Run("array", func(t *testing.T) {
+		arr := llx.ArrayPrimitive([]*llx.Primitive{
+			llx.StringPrimitive("ok"), bad, llx.StringPrimitive("also-ok"),
+		}, types.String)
+
+		rd := arr.RawData()
+		require.NoError(t, rd.Error, "one bad element must not error the array")
+		got, ok := rd.Value.([]any)
+		require.True(t, ok)
+		require.Len(t, got, 3, "the whole collection must be preserved")
+		assert.Equal(t, "ok", got[0])
+		assert.Nil(t, got[1], "the malformed element is nulled out")
+		assert.Equal(t, "also-ok", got[2])
+	})
+
+	t.Run("map", func(t *testing.T) {
+		m := &llx.Primitive{
+			Type: string(types.MapLike),
+			Map: map[string]*llx.Primitive{
+				"good": llx.StringPrimitive("ok"),
+				"bad":  bad,
+			},
+		}
+
+		rd := m.RawData()
+		require.NoError(t, rd.Error, "one bad element must not error the map")
+		got, ok := rd.Value.(map[string]any)
+		require.True(t, ok)
+		require.Len(t, got, 2, "the whole map must be preserved")
+		assert.Equal(t, "ok", got["good"])
+		assert.Nil(t, got["bad"], "the malformed element is nulled out")
+	})
 }

@@ -711,7 +711,18 @@ func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]any, ui
 
 		if cur != nil {
 			if cur.Error != nil {
-				return nil, 0, cur.Error
+				// In execution mode (b != nil) a bad element is a real
+				// computation error and must propagate. During late value
+				// extraction (b == nil) it must not: discarding the whole
+				// collection here is what let one malformed element empty an
+				// entire array and surface as an empty assessment. Log it and
+				// null out just that element instead.
+				if b != nil {
+					return nil, 0, cur.Error
+				}
+				log.Error().Err(cur.Error).Int("index", i).Msg("llx: dropping malformed array element during value conversion, coercing to null")
+				res[i] = nil
+				continue
 			}
 			res[i] = cur.Value
 		}
@@ -734,7 +745,12 @@ func primitive2mapV2(m map[string]*Primitive) (map[string]any, error) {
 		}
 		cur := v.RawData()
 		if cur.Error != nil {
-			return nil, cur.Error
+			// Loud-and-narrow: a single malformed element must not discard the
+			// whole map. Log it and null out just this key. (Previously this
+			// propagated up and the surrounding collection was emptied.)
+			log.Error().Err(cur.Error).Str("key", k).Msg("llx: dropping malformed map element during value conversion, coercing to null")
+			res[k] = nil
+			continue
 		}
 		res[k] = cur.Value
 	}
@@ -756,7 +772,10 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 		}
 		cur := v.RawData()
 		if cur.Error != nil {
-			return nil, cur.Error
+			// Loud-and-narrow: keep the erroring RawData under its key so the
+			// error stays inspectable per-element, and log it — but never
+			// discard the surrounding map because one element is malformed.
+			log.Error().Err(cur.Error).Str("key", k).Msg("llx: malformed map element during value conversion, keeping per-key error")
 		}
 		res[k] = cur
 	}
