@@ -765,9 +765,16 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 // RawData converts the primitive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
-	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
+	// An empty primitive (no type, value, array, or map) represents an
+	// unset/null value. Treat it as null rather than returning an error: a
+	// single untyped nested field must not abort conversion of its surrounding
+	// block or array. Previously this error propagated through primitive2array /
+	// primitive2rawdataMapV2 and discarded the entire collection, which surfaced
+	// as empty assessments — e.g. `list.all(...)` over a resource with a
+	// `@context` field whose context had an unset sub-field would render no
+	// failing resources at all (and emit no SARIF locations).
 	if p.GetType() == "" {
-		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
+		return &RawData{Type: types.Nil}
 	}
 
 	typ := types.Type(p.Type)

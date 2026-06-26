@@ -75,3 +75,45 @@ func TestResultRawConversions(t *testing.T) {
 		})
 	}
 }
+
+// TestEmptyTypePrimitiveConvertsToNil ensures an empty (untyped) primitive is
+// converted to a Nil value instead of an error. An empty primitive represents
+// an unset/null value; erroring here used to abort conversion of the whole
+// surrounding array/map (see TestEmptyTypePrimitiveKeepsCollection).
+func TestEmptyTypePrimitiveConvertsToNil(t *testing.T) {
+	rd := (&llx.Primitive{}).RawData()
+	require.NoError(t, rd.Error)
+	assert.Equal(t, types.Nil, rd.Type)
+	assert.Nil(t, rd.Value)
+}
+
+// TestEmptyTypePrimitiveKeepsCollection is a regression test for empty
+// assessments: a single untyped nested field (e.g. an unset sub-field of a
+// resource's @context block) must not discard the entire surrounding array.
+// Previously RawData() errored on the untyped field and primitive2array /
+// primitive2rawdataMapV2 propagated that error, returning an empty slice — so
+// `list.all(...)` over @context resources rendered no failing resources at all.
+func TestEmptyTypePrimitiveKeepsCollection(t *testing.T) {
+	// A resource block whose nested context block carries an unset (untyped) field.
+	contextBlock := &llx.Primitive{
+		Type: string(types.Block),
+		Map: map[string]*llx.Primitive{
+			"path":  llx.StringPrimitive("main.tf"),
+			"range": {}, // untyped/null sub-field — the trigger
+		},
+	}
+	element := &llx.Primitive{
+		Type: string(types.Block),
+		Map: map[string]*llx.Primitive{
+			"name":    llx.StringPrimitive("resource"),
+			"context": contextBlock,
+		},
+	}
+	arr := llx.ArrayPrimitive([]*llx.Primitive{element, element, element}, types.Block)
+
+	rd := arr.RawData()
+	require.NoError(t, rd.Error)
+	got, ok := rd.Value.([]any)
+	require.True(t, ok, "expected the array to survive conversion")
+	assert.Len(t, got, 3, "the whole collection must be preserved, not emptied")
+}
