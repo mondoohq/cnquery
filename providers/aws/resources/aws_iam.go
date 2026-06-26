@@ -1104,11 +1104,14 @@ func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	// JsonToDictSlice already returns a []any of per-key dicts; return it
+	// directly. (The pre-refactor code wrapped it in another slice, yielding
+	// [[dict, …]] instead of [dict, …] — a latent bug, now fixed.)
 	dicts, err := convert.JsonToDictSlice(metadata)
 	if err != nil {
 		return nil, err
 	}
-	return []any{dicts}, nil
+	return dicts, nil
 }
 
 func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
