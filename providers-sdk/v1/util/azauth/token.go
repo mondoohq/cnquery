@@ -137,6 +137,17 @@ func (t *retryableManagedIdentityCredential) tryGetToken(ctx context.Context, op
 	return
 }
 
+// GetWorkloadIdentityToken builds a keyless credential that exchanges a
+// Mondoo-issued OIDC token (written to federatedTokenFile) for an Entra access
+// token via the federated identity credential on the app registration.
+func GetWorkloadIdentityToken(tenantId, clientId, federatedTokenFile string) (azcore.TokenCredential, error) {
+	return azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
+		TenantID:      tenantId,
+		ClientID:      clientId,
+		TokenFilePath: federatedTokenFile,
+	})
+}
+
 func GetTokenFromCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
