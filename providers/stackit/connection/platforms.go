@@ -9,7 +9,7 @@ import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 var Platforms = []*plugin.PlatformInfo{
 	{
 		Name:    "stackit-project",
-		Title:   "STACKIT",
+		Title:   "STACKIT Project",
 		Family:  []string{"stackit"},
 		Kind:    []string{"api"},
 		Runtime: []string{"stackit"},

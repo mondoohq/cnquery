@@ -11,7 +11,7 @@ import (
 var Platforms = []*plugin.PlatformInfo{
 	{
 		Name:   "datadog",
-		Title:  "Datadog",
+		Title:  "Datadog Organization",
 		Family: []string{"datadog"},
 		Kind:   []string{"api"},
 	},

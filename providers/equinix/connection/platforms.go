@@ -11,7 +11,7 @@ import (
 var Platforms = []*plugin.PlatformInfo{
 	{
 		Name:  "equinix",
-		Title: "Equinix Metal",
+		Title: "Equinix Metal Project",
 		Kind:  []string{"api"},
 	},
 }

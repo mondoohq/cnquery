@@ -23,7 +23,7 @@ var Platforms = []*plugin.PlatformInfo{
 	},
 	{
 		Name:    "shodan-org",
-		Title:   "Shodan",
+		Title:   "Shodan Organization",
 		Family:  []string{"shodan"},
 		Kind:    []string{"api"},
 		Runtime: []string{"shodan"},

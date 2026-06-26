@@ -11,7 +11,7 @@ import (
 var Platforms = []*plugin.PlatformInfo{
 	{
 		Name:   "snowflake",
-		Title:  "Snowflake",
+		Title:  "Snowflake Account",
 		Family: []string{"snowflake"},
 		Kind:   []string{"api"},
 	},
