@@ -107,6 +107,12 @@ Examples run in the Azure CLI:
 					Default: "",
 					Desc:    "Comma-separated list of Azure subscriptions to exclude",
 				},
+				{
+					Long:    "federated-token-file",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Path to a file containing an OIDC token to exchange via Azure workload identity federation",
+				},
 			},
 		},
 	},
