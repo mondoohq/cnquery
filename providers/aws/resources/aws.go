@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -76,6 +77,18 @@ func Is400AccessDeniedError(err error) bool {
 			strings.Contains(respErr.Error(), "UnauthorizedOperation") ||
 			strings.Contains(respErr.Error(), "AuthorizationError")
 		return statusCodeMatches && errorMessageMatches
+	}
+	return false
+}
+
+// isResourceNotFoundError reports whether err is an AWS "not found" API error
+// (e.g. LoadBalancerNotFound, RepositoryNotFoundException). Targeted single-
+// resource init lookups use it to fall through to their list-scan fallback for
+// stale ARNs instead of hard-failing the resolution.
+func isResourceNotFoundError(err error) bool {
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		return strings.Contains(ae.ErrorCode(), "NotFound")
 	}
 	return false
 }

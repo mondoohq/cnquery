@@ -955,38 +955,42 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 					RepositoryNames: []string{name},
 				}, withEcrPublicDescribeRetries)
 				if err != nil {
-					return nil, nil, err
-				}
-				if len(resp.Repositories) > 0 {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (RepositoryNotFoundException) fall through to the list-scan.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.Repositories) > 0 {
 					r, err := buildEcrPublicRepositoryResource(runtime, resp.Repositories[0])
 					if err != nil {
 						return nil, nil, err
 					}
 					return args, r, nil
 				}
-				return nil, nil, errors.New("ecr repository does not exist")
 			case "ecr":
 				svc := conn.Ecr(parsed.Region)
 				resp, err := svc.DescribeRepositories(context.Background(), &ecr.DescribeRepositoriesInput{
 					RepositoryNames: []string{name},
 				}, withEcrDescribeRetries)
 				if err != nil {
-					return nil, nil, err
-				}
-				if len(resp.Repositories) > 0 {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (RepositoryNotFoundException) fall through to the list-scan.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.Repositories) > 0 {
 					r, err := buildEcrPrivateRepositoryResource(runtime, parsed.Region, resp.Repositories[0])
 					if err != nil {
 						return nil, nil, err
 					}
 					return args, r, nil
 				}
-				return nil, nil, errors.New("ecr repository does not exist")
 			}
 		}
 	}
 
 	// Fallback: list private + public repositories and scan (e.g. when called
-	// with only a name and no ARN to branch the registry kind on).
+	// with only a name and no ARN, or the targeted lookup was denied/not found).
 	obj, err := CreateResource(runtime, ResourceAwsEcr, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

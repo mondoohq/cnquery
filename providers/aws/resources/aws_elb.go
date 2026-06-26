@@ -392,16 +392,18 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 					LoadBalancerNames: []string{name},
 				})
 				if err != nil {
-					return nil, nil, err
-				}
-				if len(resp.LoadBalancerDescriptions) > 0 {
+					// Surface unexpected errors; on access-denied or a stale ARN
+					// (deleted LB) fall through to the list-scan fallback below.
+					if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+						return nil, nil, err
+					}
+				} else if len(resp.LoadBalancerDescriptions) > 0 {
 					lb, err := buildElbClassicLoadBalancerResource(runtime, region, conn.AccountId(), resp.LoadBalancerDescriptions[0])
 					if err != nil {
 						return nil, nil, err
 					}
 					return args, lb, nil
 				}
-				return nil, nil, errors.New("elb load balancer does not exist")
 			}
 		} else {
 			svc := conn.Elbv2(region)
@@ -409,20 +411,23 @@ func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 				LoadBalancerArns: []string{arnVal},
 			})
 			if err != nil {
-				return nil, nil, err
-			}
-			if len(resp.LoadBalancers) > 0 {
+				// Surface unexpected errors; on access-denied or a stale ARN
+				// (deleted LB) fall through to the list-scan fallback below.
+				if !Is400AccessDeniedError(err) && !isResourceNotFoundError(err) {
+					return nil, nil, err
+				}
+			} else if len(resp.LoadBalancers) > 0 {
 				lb, err := buildElbV2LoadBalancerResource(runtime, region, conn.AccountId(), resp.LoadBalancers[0])
 				if err != nil {
 					return nil, nil, err
 				}
 				return args, lb, nil
 			}
-			return nil, nil, errors.New("elb load balancer does not exist")
 		}
 	}
 
-	// Fallback: no region hint, scan the cached lists.
+	// Fallback: no region hint (or the targeted lookup was denied/not found),
+	// scan the cached lists.
 	obj, err := CreateResource(runtime, ResourceAwsElb, map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

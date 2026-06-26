@@ -701,14 +701,21 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 	if region != "" && name != "" && sameAccount {
 		svc := conn.CloudwatchLogs(region)
-		out, err := svc.DescribeLogGroups(context.Background(), &cloudwatchlogs.DescribeLogGroupsInput{
+		// DescribeLogGroups only filters by name *prefix*, so other groups can
+		// share this group's prefix and the exact match may land on a later
+		// page. Paginate and match exactly; on access-denied fall through to the
+		// scan + placeholder path below.
+		paginator := cloudwatchlogs.NewDescribeLogGroupsPaginator(svc, &cloudwatchlogs.DescribeLogGroupsInput{
 			LogGroupNamePrefix: &name,
 		})
-		if err != nil {
-			if !Is400AccessDeniedError(err) {
+		for paginator.HasMorePages() {
+			out, err := paginator.NextPage(context.Background())
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					break
+				}
 				return nil, nil, err
 			}
-		} else {
 			for i := range out.LogGroups {
 				if convert.ToValue(out.LogGroups[i].LogGroupName) == name {
 					lg, err := buildLogGroupResource(runtime, region, out.LogGroups[i])
