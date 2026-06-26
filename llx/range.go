@@ -175,6 +175,32 @@ func (r Range) IsEmpty() bool {
 	return len(r) == 0
 }
 
+// Bounds returns the 1-based start/end line and column of the range's first
+// entry. hasCols is false for line-only ranges (no column information). ok is
+// false if the range is empty or cannot be decoded. Consumers that need a
+// numeric region (e.g. SARIF) should use this instead of re-decoding the
+// byte format. For line-only ranges startCol/endCol are 0.
+func (r Range) Bounds() (startLine, startCol, endLine, endCol uint32, hasCols, ok bool) {
+	items := r.ExtractAll()
+	if len(items) == 0 {
+		return 0, 0, 0, 0, false, false
+	}
+
+	x := items[0]
+	switch len(x) {
+	case 1: // single line
+		return x[0], 0, x[0], 0, false, true
+	case 2: // line range
+		return x[0], 0, x[1], 0, false, true
+	case 3: // single line with column range
+		return x[0], x[1], x[0], x[2], true, true
+	case 4: // line range with column range: [startLine, endLine, startCol, endCol]
+		return x[0], x[2], x[1], x[3], true, true
+	default:
+		return 0, 0, 0, 0, false, false
+	}
+}
+
 func (r Range) String() string {
 	var res strings.Builder
 

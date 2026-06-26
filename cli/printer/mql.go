@@ -552,58 +552,28 @@ func (print *Printer) intMap(typ types.Type, data map[int]any, indent string, ca
 }
 
 func (print *Printer) resourceContext(data any, checksum string, indent string, cache *printCache) (string, bool) {
-	m, ok := data.(map[string]any)
+	sc, ok := cache.bundle.ParseSourceContext(data)
 	if !ok {
 		return "", false
 	}
 
-	var path string
-	var rnge llx.Range
-	var content string
-
-	for k, v := range m {
-		label, ok := cache.bundle.Labels.Labels[k]
-		if !ok {
-			continue
-		}
-		vv, ok := v.(*llx.RawData)
-		if !ok {
-			continue
-		}
-
-		switch label {
-		case "content":
-			if vv.Type == types.String {
-				content, _ = vv.Value.(string)
-			}
-		case "range":
-			if vv.Type == types.Range {
-				rnge, _ = vv.Value.(llx.Range)
-			}
-		case "path", "file.path":
-			if vv.Type == types.String {
-				path, _ = vv.Value.(string)
-			}
-		}
-	}
-
 	var res strings.Builder
-	if path == "" {
-		if !rnge.IsEmpty() {
+	if sc.Path == "" {
+		if !sc.Range.IsEmpty() {
 			res.WriteString("<unknown>:")
-			res.WriteString(rnge.String())
+			res.WriteString(sc.Range.String())
 		}
 	} else {
-		res.WriteString(path)
-		if !rnge.IsEmpty() {
+		res.WriteString(sc.Path)
+		if !sc.Range.IsEmpty() {
 			res.WriteByte(':')
-			res.WriteString(rnge.String())
+			res.WriteString(sc.Range.String())
 		}
 	}
-	if content != "" {
+	if sc.Content != "" {
 		res.WriteByte('\n')
 		res.WriteString(indent)
-		res.WriteString(indentBlock(content, indent))
+		res.WriteString(indentBlock(sc.Content, indent))
 	}
 
 	r := res.String()
