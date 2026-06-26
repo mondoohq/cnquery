@@ -83,14 +83,6 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					tagsByArn = batchFetchLambdaTags(ctx, svc, functionsResp.Functions)
 				}
 				for _, function := range functionsResp.Functions {
-					vpcConfigJson, err := convert.JsonToDict(function.VpcConfig)
-					if err != nil {
-						return nil, err
-					}
-					var dlqTarget string
-					if function.DeadLetterConfig != nil {
-						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
-					}
 					var tags map[string]string
 					if conn.Filters.General.HasTags() {
 						// nil means batchFetchLambdaTags hit a per-function error;
@@ -104,147 +96,15 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						}
 					}
 
-					// Convert architectures to []any
-					architectures := make([]any, len(function.Architectures))
-					for i, arch := range function.Architectures {
-						architectures[i] = string(arch)
-					}
-
-					// Get ephemeral storage size (defaults to 512 MB if not set)
-					var ephemeralStorageSize int64 = 512
-					if function.EphemeralStorage != nil && function.EphemeralStorage.Size != nil {
-						ephemeralStorageSize = int64(*function.EphemeralStorage.Size)
-					}
-
-					var tracingMode string
-					if function.TracingConfig != nil {
-						tracingMode = string(function.TracingConfig.Mode)
-					}
-
-					var lastModifiedAt *time.Time
-					if function.LastModified != nil {
-						if t, err := time.Parse("2006-01-02T15:04:05.000-0700", *function.LastModified); err == nil {
-							lastModifiedAt = &t
-						}
-					}
-
-					// Extract SnapStart fields
-					var snapStartApplyOn, snapStartOptimizationStatus string
-					if function.SnapStart != nil {
-						snapStartApplyOn = string(function.SnapStart.ApplyOn)
-						snapStartOptimizationStatus = string(function.SnapStart.OptimizationStatus)
-					}
-
-					// Extract environment variables
-					envVars := map[string]any{}
-					if function.Environment != nil && function.Environment.Variables != nil {
-						for k, v := range function.Environment.Variables {
-							envVars[k] = v
-						}
-					}
-
-					// Convert file system configs to dict slice
-					fileSystemConfigs, err := convert.JsonToDictSlice(function.FileSystemConfigs)
+					f, err := newLambdaFunctionResource(a.MqlRuntime, region, conn.AccountId(), function)
 					if err != nil {
 						return nil, err
-					}
-
-					funcArn := convert.ToValue(function.FunctionArn)
-
-					// Create logging config sub-resource
-					var loggingConfigResource plugin.Resource
-					if function.LoggingConfig != nil {
-						lc, err := CreateResource(a.MqlRuntime, "aws.lambda.function.loggingConfig",
-							map[string]*llx.RawData{
-								"__id":                llx.StringData(funcArn + "/loggingConfig"),
-								"logFormat":           llx.StringData(string(function.LoggingConfig.LogFormat)),
-								"applicationLogLevel": llx.StringData(string(function.LoggingConfig.ApplicationLogLevel)),
-								"systemLogLevel":      llx.StringData(string(function.LoggingConfig.SystemLogLevel)),
-								"logGroup":            llx.StringDataPtr(function.LoggingConfig.LogGroup),
-							})
-						if err != nil {
-							return nil, err
-						}
-						loggingConfigResource = lc.(plugin.Resource)
-					}
-
-					// Create layer sub-resources
-					layers := make([]any, 0, len(function.Layers))
-					for _, layer := range function.Layers {
-						mqlLayer, err := CreateResource(a.MqlRuntime, "aws.lambda.function.layer",
-							map[string]*llx.RawData{
-								"__id":                     llx.StringDataPtr(layer.Arn),
-								"arn":                      llx.StringDataPtr(layer.Arn),
-								"codeSize":                 llx.IntData(layer.CodeSize),
-								"signingJobArn":            llx.StringDataPtr(layer.SigningJobArn),
-								"signingProfileVersionArn": llx.StringDataPtr(layer.SigningProfileVersionArn),
-							})
-						if err != nil {
-							return nil, err
-						}
-						layers = append(layers, mqlLayer)
-					}
-
-					args := map[string]*llx.RawData{
-						"arn":                         llx.StringDataPtr(function.FunctionArn),
-						"name":                        llx.StringDataPtr(function.FunctionName),
-						"runtime":                     llx.StringData(string(function.Runtime)),
-						"dlqTargetArn":                llx.StringData(dlqTarget),
-						"vpcConfig":                   llx.MapData(vpcConfigJson, types.Any),
-						"region":                      llx.StringData(region),
-						"architectures":               llx.ArrayData(architectures, types.String),
-						"ephemeralStorageSize":        llx.IntData(ephemeralStorageSize),
-						"memorySize":                  llx.IntDataDefault(function.MemorySize, 0),
-						"timeout":                     llx.IntDataDefault(function.Timeout, 3),
-						"handler":                     llx.StringDataPtr(function.Handler),
-						"tracingMode":                 llx.StringData(tracingMode),
-						"packageType":                 llx.StringData(string(function.PackageType)),
-						"codeSha256":                  llx.StringDataPtr(function.CodeSha256),
-						"description":                 llx.StringDataPtr(function.Description),
-						"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
-						"state":                       llx.StringData(string(function.State)),
-						"codeSize":                    llx.IntData(function.CodeSize),
-						"stateReason":                 llx.StringDataPtr(function.StateReason),
-						"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
-						"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
-						"kmsKeyArn":                   llx.StringDataPtr(function.KMSKeyArn),
-						"environment":                 llx.MapData(envVars, types.String),
-						"snapStartApplyOn":            llx.StringData(snapStartApplyOn),
-						"snapStartOptimizationStatus": llx.StringData(snapStartOptimizationStatus),
-						"fileSystemConfigs":           llx.ArrayData(fileSystemConfigs, types.Dict),
-						"signingProfileVersionArn":    llx.StringDataPtr(function.SigningProfileVersionArn),
-						"signingJobArn":               llx.StringDataPtr(function.SigningJobArn),
-						"layers":                      llx.ArrayData(layers, types.Resource("aws.lambda.function.layer")),
-					}
-
-					if loggingConfigResource != nil {
-						args["loggingConfig"] = llx.ResourceData(loggingConfigResource, "aws.lambda.function.loggingConfig")
-					} else {
-						args["loggingConfig"] = llx.NilData
-					}
-
-					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function", args)
-					if err != nil {
-						return nil, err
-					}
-					f := mqlFunc.(*mqlAwsLambdaFunction)
-					f.cacheRoleArn = function.Role
-					f.region = region
-					f.accountID = conn.AccountId()
-					if function.VpcConfig != nil {
-						f.cacheVpcId = function.VpcConfig.VpcId
-						f.cacheSubnetIds = function.VpcConfig.SubnetIds
-						var sgArns []string
-						for _, sgId := range function.VpcConfig.SecurityGroupIds {
-							sgArns = append(sgArns, NewSecurityGroupArn(region, conn.AccountId(), sgId))
-						}
-						f.setSecurityGroupArns(sgArns)
 					}
 					if tags != nil {
 						f.cacheTags = tags
 						f.tagsFetched = true
 					}
-					res = append(res, mqlFunc)
+					res = append(res, f)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -298,6 +158,160 @@ func getLambdaArn(name string, region string, accountId string) string {
 	}.String()
 }
 
+// newLambdaFunctionResource maps an SDK FunctionConfiguration into an
+// aws.lambda.function resource, building its sub-resources (loggingConfig,
+// layers) and priming every Internal cache (role ARN, region, account, VPC)
+// that the lazy accessors depend on. Shared by the list path and the targeted
+// init lookup.
+func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID string, function lambdatypes.FunctionConfiguration) (*mqlAwsLambdaFunction, error) {
+	vpcConfigJson, err := convert.JsonToDict(function.VpcConfig)
+	if err != nil {
+		return nil, err
+	}
+	var dlqTarget string
+	if function.DeadLetterConfig != nil {
+		dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
+	}
+
+	// Convert architectures to []any
+	architectures := make([]any, len(function.Architectures))
+	for i, arch := range function.Architectures {
+		architectures[i] = string(arch)
+	}
+
+	// Get ephemeral storage size (defaults to 512 MB if not set)
+	var ephemeralStorageSize int64 = 512
+	if function.EphemeralStorage != nil && function.EphemeralStorage.Size != nil {
+		ephemeralStorageSize = int64(*function.EphemeralStorage.Size)
+	}
+
+	var tracingMode string
+	if function.TracingConfig != nil {
+		tracingMode = string(function.TracingConfig.Mode)
+	}
+
+	var lastModifiedAt *time.Time
+	if function.LastModified != nil {
+		if t, err := time.Parse("2006-01-02T15:04:05.000-0700", *function.LastModified); err == nil {
+			lastModifiedAt = &t
+		}
+	}
+
+	// Extract SnapStart fields
+	var snapStartApplyOn, snapStartOptimizationStatus string
+	if function.SnapStart != nil {
+		snapStartApplyOn = string(function.SnapStart.ApplyOn)
+		snapStartOptimizationStatus = string(function.SnapStart.OptimizationStatus)
+	}
+
+	// Extract environment variables
+	envVars := map[string]any{}
+	if function.Environment != nil && function.Environment.Variables != nil {
+		for k, v := range function.Environment.Variables {
+			envVars[k] = v
+		}
+	}
+
+	// Convert file system configs to dict slice
+	fileSystemConfigs, err := convert.JsonToDictSlice(function.FileSystemConfigs)
+	if err != nil {
+		return nil, err
+	}
+
+	funcArn := convert.ToValue(function.FunctionArn)
+
+	// Create logging config sub-resource
+	var loggingConfigResource plugin.Resource
+	if function.LoggingConfig != nil {
+		lc, err := CreateResource(runtime, "aws.lambda.function.loggingConfig",
+			map[string]*llx.RawData{
+				"__id":                llx.StringData(funcArn + "/loggingConfig"),
+				"logFormat":           llx.StringData(string(function.LoggingConfig.LogFormat)),
+				"applicationLogLevel": llx.StringData(string(function.LoggingConfig.ApplicationLogLevel)),
+				"systemLogLevel":      llx.StringData(string(function.LoggingConfig.SystemLogLevel)),
+				"logGroup":            llx.StringDataPtr(function.LoggingConfig.LogGroup),
+			})
+		if err != nil {
+			return nil, err
+		}
+		loggingConfigResource = lc.(plugin.Resource)
+	}
+
+	// Create layer sub-resources
+	layers := make([]any, 0, len(function.Layers))
+	for _, layer := range function.Layers {
+		mqlLayer, err := CreateResource(runtime, "aws.lambda.function.layer",
+			map[string]*llx.RawData{
+				"__id":                     llx.StringDataPtr(layer.Arn),
+				"arn":                      llx.StringDataPtr(layer.Arn),
+				"codeSize":                 llx.IntData(layer.CodeSize),
+				"signingJobArn":            llx.StringDataPtr(layer.SigningJobArn),
+				"signingProfileVersionArn": llx.StringDataPtr(layer.SigningProfileVersionArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		layers = append(layers, mqlLayer)
+	}
+
+	args := map[string]*llx.RawData{
+		"arn":                         llx.StringDataPtr(function.FunctionArn),
+		"name":                        llx.StringDataPtr(function.FunctionName),
+		"runtime":                     llx.StringData(string(function.Runtime)),
+		"dlqTargetArn":                llx.StringData(dlqTarget),
+		"vpcConfig":                   llx.MapData(vpcConfigJson, types.Any),
+		"region":                      llx.StringData(region),
+		"architectures":               llx.ArrayData(architectures, types.String),
+		"ephemeralStorageSize":        llx.IntData(ephemeralStorageSize),
+		"memorySize":                  llx.IntDataDefault(function.MemorySize, 0),
+		"timeout":                     llx.IntDataDefault(function.Timeout, 3),
+		"handler":                     llx.StringDataPtr(function.Handler),
+		"tracingMode":                 llx.StringData(tracingMode),
+		"packageType":                 llx.StringData(string(function.PackageType)),
+		"codeSha256":                  llx.StringDataPtr(function.CodeSha256),
+		"description":                 llx.StringDataPtr(function.Description),
+		"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
+		"state":                       llx.StringData(string(function.State)),
+		"codeSize":                    llx.IntData(function.CodeSize),
+		"stateReason":                 llx.StringDataPtr(function.StateReason),
+		"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
+		"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
+		"kmsKeyArn":                   llx.StringDataPtr(function.KMSKeyArn),
+		"environment":                 llx.MapData(envVars, types.String),
+		"snapStartApplyOn":            llx.StringData(snapStartApplyOn),
+		"snapStartOptimizationStatus": llx.StringData(snapStartOptimizationStatus),
+		"fileSystemConfigs":           llx.ArrayData(fileSystemConfigs, types.Dict),
+		"signingProfileVersionArn":    llx.StringDataPtr(function.SigningProfileVersionArn),
+		"signingJobArn":               llx.StringDataPtr(function.SigningJobArn),
+		"layers":                      llx.ArrayData(layers, types.Resource("aws.lambda.function.layer")),
+	}
+
+	if loggingConfigResource != nil {
+		args["loggingConfig"] = llx.ResourceData(loggingConfigResource, "aws.lambda.function.loggingConfig")
+	} else {
+		args["loggingConfig"] = llx.NilData
+	}
+
+	mqlFunc, err := CreateResource(runtime, "aws.lambda.function", args)
+	if err != nil {
+		return nil, err
+	}
+	f := mqlFunc.(*mqlAwsLambdaFunction)
+	f.cacheRoleArn = function.Role
+	f.region = region
+	f.accountID = accountID
+	if function.VpcConfig != nil {
+		f.cacheVpcId = function.VpcConfig.VpcId
+		f.cacheSubnetIds = function.VpcConfig.SubnetIds
+		var sgArns []string
+		for _, sgId := range function.VpcConfig.SecurityGroupIds {
+			sgArns = append(sgArns, NewSecurityGroupArn(region, accountID, sgId))
+		}
+		f.setSecurityGroupArns(sgArns)
+	}
+	return f, nil
+}
+
 func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -310,19 +324,19 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 
-	name := args["name"]
-	region := args["region"]
+	nameArg := args["name"]
+	regionArg := args["region"]
 
 	var arnVal string
 	if args["arn"] == nil {
-		if name == nil {
+		if nameArg == nil {
 			return nil, nil, errors.New("name required to fetch lambda function")
 		}
-		if region == nil {
+		if regionArg == nil {
 			return nil, nil, errors.New("region required to fetch lambda function")
 		}
 		conn := runtime.Connection.(*connection.AwsConnection)
-		arnVal = getLambdaArn(name.String(), region.String(), conn.AccountId())
+		arnVal = getLambdaArn(nameArg.String(), regionArg.String(), conn.AccountId())
 		if arnVal == "" {
 			return nil, nil, errors.New("arn required to fetch lambda function")
 		}
@@ -330,7 +344,47 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		arnVal = args["arn"].Value.(string)
 	}
 
-	// load all lambda functions
+	// Targeted lookup: derive the region + function name from the ARN and fetch
+	// just this one function instead of listing every function in every region.
+	region := ""
+	funcName := ""
+	if parsed, parseErr := arn.Parse(arnVal); parseErr == nil && strings.HasPrefix(parsed.Resource, "function:") {
+		region = parsed.Region
+		funcName = strings.TrimPrefix(parsed.Resource, "function:")
+	}
+	if regionArg != nil {
+		if r, ok := regionArg.Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	if nameArg != nil {
+		if n, ok := nameArg.Value.(string); ok && n != "" {
+			funcName = n
+		}
+	}
+	if region != "" && funcName != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Lambda(region)
+		resp, err := svc.GetFunction(context.Background(), &lambda.GetFunctionInput{FunctionName: &funcName})
+		if err != nil {
+			// Fall through to the list-scan fallback on not-found / access-denied;
+			// surface any other error.
+			var respErr *http.ResponseError
+			notFound := errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404
+			if !notFound && !Is400AccessDeniedError(err) {
+				return nil, nil, err
+			}
+		} else if resp.Configuration != nil {
+			f, err := newLambdaFunctionResource(runtime, region, conn.AccountId(), *resp.Configuration)
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, f, nil
+		}
+	}
+
+	// Fallback: scan all functions (e.g. cross-account references or when the
+	// ARN carries no usable region).
 	obj, err := CreateResource(runtime, "aws.lambda", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

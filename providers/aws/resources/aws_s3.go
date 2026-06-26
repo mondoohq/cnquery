@@ -177,54 +177,47 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, errors.New("arn or name required to fetch aws s3 bucket")
 	}
 
-	// construct arn of bucket name if missing
-	var arnVal string
+	// Resolve the bucket name and ARN. The bucket name is encoded directly in
+	// the ARN (arn:aws:s3:::<name>), so we can build the resource without
+	// listing every bucket in every region. Per-bucket fields lazy-load.
+	var arnVal, name string
 	if args["arn"] != nil {
 		arnVal = args["arn"].Value.(string)
 		parsed, err := arn.Parse(arnVal)
 		if err != nil || parsed.Service != "s3" {
 			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arnVal)
 		}
+		name = parsed.Resource
 	} else {
-		nameVal := args["name"].Value.(string)
-		arnVal = fmt.Sprintf(s3ArnPattern, nameVal)
+		name = args["name"].Value.(string)
+		arnVal = fmt.Sprintf(s3ArnPattern, name)
 	}
 	log.Debug().Str("arn", arnVal).Msg("init s3 bucket with arn")
 
-	// load all s3 buckets
-	obj, err := runtime.CreateResource(runtime, "aws.s3", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, nil, err
+	// A single HeadBucket confirms existence without listing every bucket in
+	// every region. It is possible for a resource to reference a
+	// non-existent/deleted bucket; recording exists=false lets per-bucket field
+	// accessors short-circuit instead of erroring. A non-404 error (e.g. a
+	// cross-region redirect or access-denied) still means the bucket exists.
+	exists := true
+	conn := runtime.Connection.(*connection.AwsConnection)
+	if _, err := conn.S3("").HeadBucket(context.Background(), &s3.HeadBucketInput{
+		Bucket: aws.String(name),
+	}); err != nil && isNotFoundForS3(err) {
+		exists = false
+		log.Debug().Msgf("no bucket found for %s", arnVal)
 	}
-	awsS3 := obj.(*mqlAwsS3)
 
-	rawResources := awsS3.GetBuckets()
-	if rawResources.Error != nil {
-		return nil, nil, rawResources.Error
-	}
-
-	// iterate over security groups and find the one with the arn
-	for _, rawResource := range rawResources.Data {
-		bucket := rawResource.(*mqlAwsS3Bucket)
-		if bucket.Arn.Data == arnVal {
-			return args, bucket, nil
-		}
-	}
-	// it is possible for a resource to reference a non-existent/deleted bucket, so here we
-	// create the object, noting that it no longer exists but is still recorded as part of some resources
-	splitArn := strings.Split(arnVal, ":::")
-	if len(splitArn) != 2 {
-		return args, nil, nil
-	}
-	name := splitArn[1]
-	log.Debug().Msgf("no bucket found for %s", arnVal)
-	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
+	mqlAwsS3Bucket, err := CreateResource(runtime, ResourceAwsS3Bucket,
 		map[string]*llx.RawData{
 			"arn":    llx.StringData(arnVal),
 			"name":   llx.StringData(name),
-			"exists": llx.BoolData(false),
+			"exists": llx.BoolData(exists),
 		})
-	return nil, mqlAwsS3Bucket, err
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlAwsS3Bucket, nil
 }
 
 func (a *mqlAwsS3Bucket) id() (string, error) {

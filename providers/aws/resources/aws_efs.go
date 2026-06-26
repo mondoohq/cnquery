@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/smithy-go/transport/http"
@@ -77,31 +79,10 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 						continue
 					}
 
-					var sizeInBytes int64
-					if fs.SizeInBytes != nil {
-						sizeInBytes = fs.SizeInBytes.Value
-					}
-
-					args := map[string]*llx.RawData{
-						"id":               llx.StringDataPtr(fs.FileSystemId),
-						"arn":              llx.StringDataPtr(fs.FileSystemArn),
-						"name":             llx.StringDataPtr(fs.Name),
-						"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
-						"region":           llx.StringData(region),
-						"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
-						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
-						"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),
-						"performanceMode":  llx.StringData(string(fs.PerformanceMode)),
-						"throughputMode":   llx.StringData(string(fs.ThroughputMode)),
-						"sizeInBytes":      llx.IntData(sizeInBytes),
-						"lifecycleState":   llx.StringData(string(fs.LifeCycleState)),
-					}
-					mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem", args)
+					mqlFilesystem, err := buildEfsFilesystemResource(a.MqlRuntime, region, fs)
 					if err != nil {
 						return nil, err
 					}
-					mqlFilesystem.(*mqlAwsEfsFilesystem).cacheKmsKeyID = fs.KmsKeyId
-					mqlFilesystem.(*mqlAwsEfsFilesystem).cacheFileSystemProtection = fs.FileSystemProtection
 
 					res = append(res, mqlFilesystem)
 				}
@@ -116,6 +97,36 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 type mqlAwsEfsFilesystemInternal struct {
 	cacheKmsKeyID             *string
 	cacheFileSystemProtection *efstypes.FileSystemProtectionDescription
+}
+
+func buildEfsFilesystemResource(runtime *plugin.Runtime, region string, fs efstypes.FileSystemDescription) (*mqlAwsEfsFilesystem, error) {
+	var sizeInBytes int64
+	if fs.SizeInBytes != nil {
+		sizeInBytes = fs.SizeInBytes.Value
+	}
+
+	args := map[string]*llx.RawData{
+		"id":               llx.StringDataPtr(fs.FileSystemId),
+		"arn":              llx.StringDataPtr(fs.FileSystemArn),
+		"name":             llx.StringDataPtr(fs.Name),
+		"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
+		"region":           llx.StringData(region),
+		"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
+		"createdAt":        llx.TimeDataPtr(fs.CreationTime),
+		"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),
+		"performanceMode":  llx.StringData(string(fs.PerformanceMode)),
+		"throughputMode":   llx.StringData(string(fs.ThroughputMode)),
+		"sizeInBytes":      llx.IntData(sizeInBytes),
+		"lifecycleState":   llx.StringData(string(fs.LifeCycleState)),
+	}
+	mqlFilesystem, err := CreateResource(runtime, "aws.efs.filesystem", args)
+	if err != nil {
+		return nil, err
+	}
+	fsResource := mqlFilesystem.(*mqlAwsEfsFilesystem)
+	fsResource.cacheKmsKeyID = fs.KmsKeyId
+	fsResource.cacheFileSystemProtection = fs.FileSystemProtection
+	return fsResource, nil
 }
 
 func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
@@ -147,7 +158,37 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("arn required to fetch efs filesystem")
 	}
 
-	// load all efs filesystems
+	arnVal := args["arn"].Value.(string)
+
+	// Derive region + filesystem id for a single targeted DescribeFileSystems
+	// call instead of listing every filesystem in every region.
+	var region, fsId string
+	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "file-system/") {
+		region = parsed.Region
+		fsId = strings.TrimPrefix(parsed.Resource, "file-system/")
+	}
+
+	if region != "" && fsId != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Efs(region)
+		resp, err := svc.DescribeFileSystems(context.Background(), &efs.DescribeFileSystemsInput{
+			FileSystemId: &fsId,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.FileSystems) > 0 {
+			fs, err := buildEfsFilesystemResource(runtime, region, resp.FileSystems[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, fs, nil
+		}
+		return nil, nil, errors.New("efs filesystem does not exist")
+	}
+
+	// Fallback: scan the cached list when the ARN can't be parsed for a
+	// targeted lookup.
 	obj, err := CreateResource(runtime, "aws.efs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -159,7 +200,6 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		fs := rawResource.(*mqlAwsEfsFilesystem)
 		if fs.Arn.Data == arnVal {

@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 
@@ -60,21 +61,52 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	// construct arn of cloudtrail if missing
-	var arn string
+	var arnVal string
 	if args["arn"] != nil {
-		arn = args["arn"].Value.(string)
+		arnVal = args["arn"].Value.(string)
 	} else {
 		nameVal := args["name"].Value.(string)
-		arn = fmt.Sprintf(s3ArnPattern, nameVal)
+		arnVal = fmt.Sprintf(s3ArnPattern, nameVal)
 	}
 
-	if arn == "" {
+	if arnVal == "" {
 		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
 	}
 
-	log.Debug().Str("arn", arn).Msg("init cloudtrail trail with arn")
+	log.Debug().Str("arn", arnVal).Msg("init cloudtrail trail with arn")
 
-	// load all s3 buckets
+	// Targeted lookup: derive the home region from the ARN and fetch just this
+	// one trail instead of describing every trail in every region.
+	var region string
+	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "trail/") {
+		region = parsed.Region
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	if region != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Cloudtrail(region)
+		resp, err := svc.GetTrail(context.Background(), &cloudtrail.GetTrailInput{Name: &arnVal})
+		if err != nil {
+			if !Is400AccessDeniedError(err) {
+				var notFound *types.TrailNotFoundException
+				if !errors.As(err, &notFound) {
+					return nil, nil, err
+				}
+			}
+		} else if resp.Trail != nil {
+			trail, err := buildCloudtrailTrailResource(runtime, *resp.Trail)
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, trail, nil
+		}
+	}
+
+	// Fallback: scan all trails (e.g. when the ARN carries no usable region).
 	obj, err := CreateResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -88,11 +120,40 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	for _, rawResource := range rawResources.Data {
 		trail := rawResource.(*mqlAwsCloudtrailTrail)
-		if trail.Arn.Data == arn {
+		if trail.Arn.Data == arnVal {
 			return args, trail, nil
 		}
 	}
 	return args, nil, errors.New("cloudtrail trail does not exist")
+}
+
+// buildCloudtrailTrailResource maps an SDK trail into an aws.cloudtrail.trail
+// resource and primes the trailCache so the status / event-selector lazy
+// accessors resolve against the same data. Shared by the list path and the
+// targeted init lookup.
+func buildCloudtrailTrailResource(runtime *plugin.Runtime, trail types.Trail) (*mqlAwsCloudtrailTrail, error) {
+	args := map[string]*llx.RawData{
+		"arn":                        llx.StringDataPtr(trail.TrailARN),
+		"name":                       llx.StringDataPtr(trail.Name),
+		"isMultiRegionTrail":         llx.BoolDataPtr(trail.IsMultiRegionTrail),
+		"isOrganizationTrail":        llx.BoolDataPtr(trail.IsOrganizationTrail),
+		"logFileValidationEnabled":   llx.BoolDataPtr(trail.LogFileValidationEnabled),
+		"includeGlobalServiceEvents": llx.BoolDataPtr(trail.IncludeGlobalServiceEvents),
+		"snsTopicARN":                llx.StringDataPtr(trail.SnsTopicARN),
+		"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
+		"cloudWatchLogsLogGroupArn":  llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn),
+		"region":                     llx.StringDataPtr(trail.HomeRegion),
+		"hasInsightSelectors":        llx.BoolDataPtr(trail.HasInsightSelectors),
+		"hasCustomEventSelectors":    llx.BoolDataPtr(trail.HasCustomEventSelectors),
+	}
+
+	mqlTrail, err := CreateResource(runtime, "aws.cloudtrail.trail", args)
+	if err != nil {
+		return nil, err
+	}
+	cast := mqlTrail.(*mqlAwsCloudtrailTrail)
+	cast.trailCache = trail
+	return cast, nil
 }
 
 type mqlAwsCloudtrailTrailInternal struct {
@@ -132,26 +193,10 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 				if region != convert.ToValue(trail.HomeRegion) {
 					continue
 				}
-				args := map[string]*llx.RawData{
-					"arn":                        llx.StringDataPtr(trail.TrailARN),
-					"name":                       llx.StringDataPtr(trail.Name),
-					"isMultiRegionTrail":         llx.BoolDataPtr(trail.IsMultiRegionTrail),
-					"isOrganizationTrail":        llx.BoolDataPtr(trail.IsOrganizationTrail),
-					"logFileValidationEnabled":   llx.BoolDataPtr(trail.LogFileValidationEnabled),
-					"includeGlobalServiceEvents": llx.BoolDataPtr(trail.IncludeGlobalServiceEvents),
-					"snsTopicARN":                llx.StringDataPtr(trail.SnsTopicARN),
-					"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
-					"cloudWatchLogsLogGroupArn":  llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn),
-					"region":                     llx.StringDataPtr(trail.HomeRegion),
-					"hasInsightSelectors":        llx.BoolDataPtr(trail.HasInsightSelectors),
-					"hasCustomEventSelectors":    llx.BoolDataPtr(trail.HasCustomEventSelectors),
-				}
-
-				mqlTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
+				mqlTrail, err := buildCloudtrailTrailResource(a.MqlRuntime, trail)
 				if err != nil {
 					return nil, err
 				}
-				mqlTrail.(*mqlAwsCloudtrailTrail).trailCache = trail
 
 				res = append(res, mqlTrail)
 			}

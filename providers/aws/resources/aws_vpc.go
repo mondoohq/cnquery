@@ -28,6 +28,34 @@ func (a *mqlAwsVpc) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func buildVpcResource(runtime *plugin.Runtime, region, accountID string, vpc vpctypes.Vpc) (*mqlAwsVpc, error) {
+	tagsMap := ec2TagsToMap(vpc.Tags)
+	name := tagsMap["Name"]
+	mqlVpc, err := CreateResource(runtime, ResourceAwsVpc,
+		map[string]*llx.RawData{
+			"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, region, accountID, convert.ToValue(vpc.VpcId))),
+			"cidrBlock":       llx.StringDataPtr(vpc.CidrBlock),
+			"dhcpOptionsId":   llx.StringDataPtr(vpc.DhcpOptionsId),
+			"id":              llx.StringDataPtr(vpc.VpcId),
+			"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
+			"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
+			"name":            llx.StringData(name),
+			"region":          llx.StringData(region),
+			"state":           llx.StringData(string(vpc.State)),
+			"tags":            llx.MapData(toInterfaceMap(tagsMap), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlVpcRes := mqlVpc.(*mqlAwsVpc)
+	if vpc.BlockPublicAccessStates != nil {
+		mqlVpcRes.InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
+	}
+	mqlVpcRes.cacheCidrBlockAssociations = vpc.CidrBlockAssociationSet
+	mqlVpcRes.cacheIpv6CidrBlockAssociations = vpc.Ipv6CidrBlockAssociationSet
+	return mqlVpcRes, nil
+}
+
 func (a *mqlAws) vpcs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -81,30 +109,11 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 						continue
 					}
 
-					name := tagsMap["Name"]
-					mqlVpc, err := CreateResource(a.MqlRuntime, ResourceAwsVpc,
-						map[string]*llx.RawData{
-							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), convert.ToValue(vpc.VpcId))),
-							"cidrBlock":       llx.StringDataPtr(vpc.CidrBlock),
-							"dhcpOptionsId":   llx.StringDataPtr(vpc.DhcpOptionsId),
-							"id":              llx.StringDataPtr(vpc.VpcId),
-							"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
-							"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
-							"name":            llx.StringData(name),
-							"region":          llx.StringData(region),
-							"state":           llx.StringData(string(vpc.State)),
-							"tags":            llx.MapData(toInterfaceMap(ec2TagsToMap(vpc.Tags)), types.String),
-						})
+					mqlVpc, err := buildVpcResource(a.MqlRuntime, region, conn.AccountId(), vpc)
 					if err != nil {
 						log.Error().Msg(err.Error())
 						continue
 					}
-					if vpc.BlockPublicAccessStates != nil {
-						mqlVpc.(*mqlAwsVpc).InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
-					}
-					mqlVpcRes := mqlVpc.(*mqlAwsVpc)
-					mqlVpcRes.cacheCidrBlockAssociations = vpc.CidrBlockAssociationSet
-					mqlVpcRes.cacheIpv6CidrBlockAssociations = vpc.Ipv6CidrBlockAssociationSet
 					res = append(res, mqlVpc)
 				}
 			}
@@ -1109,25 +1118,73 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	return nil, nil, errors.New("subnet not found")
 }
 
+// deriveVpcTarget resolves the region and VPC id to look up. It pulls the ARN
+// from the asset identifier when args are empty, then derives the id from the
+// ARN's resource segment or an explicit "id" arg — never from the asset name
+// (which may be a "Name" tag, not the vpc-id), keeping asset-name-vs-id
+// resolution correct. It may populate args["arn"] from the asset identifier.
+func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string) {
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		// The VPC ARN uses a custom shape, vpcArnPattern =
+		// "arn:aws:vpc:<region>:<acct>:id/<vpc-id>", so the id lives behind an
+		// "id/" prefix (not the standard "vpc/").
+		if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "id/") {
+			region = parsed.Region
+			vpcId = strings.TrimPrefix(parsed.Resource, "id/")
+		}
+	}
+	if args["id"] != nil && vpcId == "" {
+		vpcId = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	return region, vpcId
+}
+
 func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			// Only use the ARN from asset identifiers. The asset name may be
-			// the VPC's "Name" tag (e.g. "my-vpc") rather than the VPC ID
-			// (e.g. "vpc-0abc123"), so it cannot be used as the "id" arg.
-			args["arn"] = llx.StringData(ids.arn)
-		}
-	}
+	// Derive region + vpcId for a single targeted DescribeVpcs call instead of
+	// listing every VPC in every region. This also pulls the ARN from the asset
+	// identifier when args are empty.
+	region, vpcId := deriveVpcTarget(runtime, args)
 
 	if args["arn"] == nil && args["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws vpc")
 	}
 
-	// load all vpcs
+	if region != "" && vpcId != "" {
+		conn := runtime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(region)
+		resp, err := svc.DescribeVpcs(context.Background(), &ec2.DescribeVpcsInput{
+			VpcIds: []string{vpcId},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(resp.Vpcs) > 0 {
+			vpc, err := buildVpcResource(runtime, region, conn.AccountId(), resp.Vpcs[0])
+			if err != nil {
+				return nil, nil, err
+			}
+			return args, vpc, nil
+		}
+		return nil, nil, errors.New("vpc does not exist")
+	}
+
+	// Fallback: scan the cached list (e.g. when called with just an opaque id
+	// and no region hint).
 	obj, err := CreateResource(runtime, "aws", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

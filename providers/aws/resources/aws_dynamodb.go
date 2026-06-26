@@ -6,10 +6,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
@@ -340,7 +342,46 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("arn required to fetch dynamodb table")
 	}
 
-	// load all rds db instances
+	arnVal := args["arn"].Value.(string)
+
+	// No API call is required: the DynamoDB table ARN
+	// (arn:aws:dynamodb:<region>:<acct>:table/<name>) carries both the region
+	// and the table name, and the list path only constructs a shell (arn / name
+	// / region / id) - the heavy fields lazy-load via fetchDetail->DescribeTable.
+	// So derive region + name from the ARN and build the shell directly instead
+	// of fanning ListTables across every region and scanning in memory.
+	var region, tableName string
+	if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "table/") {
+		region = parsed.Region
+		tableName = strings.TrimPrefix(parsed.Resource, "table/")
+	}
+	if args["region"] != nil {
+		if r, ok := args["region"].Value.(string); ok && r != "" {
+			region = r
+		}
+	}
+	if args["name"] != nil {
+		if n, ok := args["name"].Value.(string); ok && n != "" {
+			tableName = n
+		}
+	}
+
+	if region != "" && tableName != "" {
+		table, err := CreateResource(runtime, "aws.dynamodb.table",
+			map[string]*llx.RawData{
+				"arn":    llx.StringData(arnVal),
+				"name":   llx.StringData(tableName),
+				"region": llx.StringData(region),
+				"id":     llx.StringData(""),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		return args, table, nil
+	}
+
+	// Fallback: scan the cached list (e.g. when the ARN can't be parsed and
+	// there's no region hint).
 	obj, err := CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
@@ -352,7 +393,6 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
 		dbInstance := rawResource.(*mqlAwsDynamodbTable)
 		if dbInstance.Arn.Data == arnVal {
