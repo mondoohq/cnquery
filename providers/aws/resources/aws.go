@@ -88,7 +88,11 @@ func Is400AccessDeniedError(err error) bool {
 func isResourceNotFoundError(err error) bool {
 	var ae smithy.APIError
 	if errors.As(err, &ae) {
-		return strings.Contains(ae.ErrorCode(), "NotFound")
+		code := ae.ErrorCode()
+		// Most services use a "*NotFound*" code (e.g. RepositoryNotFoundException,
+		// LoadBalancerNotFound, ResourceNotFoundException); a few use a "NoSuch*"
+		// code instead (e.g. NoSuchEntity, NoSuchBucket).
+		return strings.Contains(code, "NotFound") || strings.HasPrefix(code, "NoSuch")
 	}
 	return false
 }

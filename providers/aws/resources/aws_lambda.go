@@ -369,9 +369,7 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		if err != nil {
 			// Fall through to the list-scan fallback on not-found / access-denied;
 			// surface any other error.
-			var respErr *http.ResponseError
-			notFound := errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404
-			if !notFound && !Is400AccessDeniedError(err) {
+			if !isResourceNotFoundError(err) && !Is400AccessDeniedError(err) {
 				return nil, nil, err
 			}
 		} else if resp.Configuration != nil {
