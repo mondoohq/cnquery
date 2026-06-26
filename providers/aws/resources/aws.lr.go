@@ -83387,7 +83387,7 @@ func (c *mqlAwsIamRole) GetExternalAccessFindings() *plugin.TValue[[]any] {
 type mqlAwsIamGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamGroupInternal it will be used here
+	mqlAwsIamGroupInternal
 	Arn              plugin.TValue[string]
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
@@ -83452,7 +83452,9 @@ func (c *mqlAwsIamGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]any] {
-	return &c.Usernames
+	return plugin.GetOrCompute[[]any](&c.Usernames, func() ([]any, error) {
+		return c.usernames()
+	})
 }
 
 func (c *mqlAwsIamGroup) GetInlinePolicies() *plugin.TValue[[]any] {

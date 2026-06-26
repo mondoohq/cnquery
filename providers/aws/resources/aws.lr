@@ -2255,7 +2255,7 @@ private aws.iam.group @defaults("arn name") {
   // Time when the group was created
   createdAt time
   // List of usernames that belong to the group
-  usernames []string
+  usernames() []string
   // List of inline policy names attached to the group
   inlinePolicies() []string
   // List of managed policies attached to the group

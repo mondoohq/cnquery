@@ -677,12 +677,8 @@ func (a *mqlAwsIam) groups() ([]any, error) {
 			return nil, err
 		}
 
-		for _, group := range groupsResp.Groups {
-			mqlAwsIamGroup, err := NewResource(a.MqlRuntime, ResourceAwsIamGroup,
-				map[string]*llx.RawData{
-					"arn":  llx.StringDataPtr(group.Arn),
-					"name": llx.StringDataPtr(group.GroupName),
-				})
+		for i := range groupsResp.Groups {
+			mqlAwsIamGroup, err := a.createIamGroup(&groupsResp.Groups[i])
 			if err != nil {
 				return nil, err
 			}
@@ -1040,9 +1036,9 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 type mqlAwsIamUserInternal struct {
-	accessKeysFetched atomic.Bool
-	accessKeysCache   []any
-	accessKeysLock    sync.Mutex
+	accessKeyMetaFetched atomic.Bool
+	accessKeyMetaCache   []iamtypes.AccessKeyMetadata
+	accessKeyMetaLock    sync.Mutex
 
 	policiesFetched atomic.Bool
 	policiesCache   []any
@@ -1068,54 +1064,25 @@ func (a *mqlAwsIamUser) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
-	if a.accessKeysFetched.Load() {
-		return a.accessKeysCache, nil
+// listAccessKeyMetadata fetches the user's access-key metadata once and caches
+// it, so accessKeys and accessKeyDetails share a single ListAccessKeys call
+// instead of each making their own.
+func (a *mqlAwsIamUser) listAccessKeyMetadata() ([]iamtypes.AccessKeyMetadata, error) {
+	if a.accessKeyMetaFetched.Load() {
+		return a.accessKeyMetaCache, nil
 	}
-	a.accessKeysLock.Lock()
-	defer a.accessKeysLock.Unlock()
-	if a.accessKeysFetched.Load() {
-		return a.accessKeysCache, nil
+	a.accessKeyMetaLock.Lock()
+	defer a.accessKeyMetaLock.Unlock()
+	if a.accessKeyMetaFetched.Load() {
+		return a.accessKeyMetaCache, nil
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	svc := conn.Iam("")
 	ctx := context.Background()
-
 	username := a.Name.Data
 
-	res := []any{}
-	params := &iam.ListAccessKeysInput{
-		UserName: &username,
-	}
-	paginator := iam.NewListAccessKeysPaginator(svc, params)
-	for paginator.HasMorePages() {
-		keysResp, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		metadata, err := convert.JsonToDictSlice(keysResp.AccessKeyMetadata)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, metadata)
-	}
-
-	a.accessKeysCache = res
-	a.accessKeysFetched.Store(true)
-	return res, nil
-}
-
-func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Iam("")
-	ctx := context.Background()
-
-	username := a.Name.Data
-
-	res := []any{}
+	res := []iamtypes.AccessKeyMetadata{}
 	paginator := iam.NewListAccessKeysPaginator(svc, &iam.ListAccessKeysInput{
 		UserName: &username,
 	})
@@ -1124,46 +1091,77 @@ func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		for i := range keysResp.AccessKeyMetadata {
-			key := keysResp.AccessKeyMetadata[i]
+		res = append(res, keysResp.AccessKeyMetadata...)
+	}
 
-			// One GetAccessKeyLastUsed call per key. IAM caps users at 2 access
-			// keys, so this loop makes at most 2 calls and is not an N+1 risk.
-			// AWS returns "N/A" for region and service and a nil date when the
-			// key has never been used.
-			lastUsedRegion := ""
-			lastUsedService := ""
-			var lastUsedDate *time.Time
-			if key.AccessKeyId != nil {
-				lastUsed, err := svc.GetAccessKeyLastUsed(ctx, &iam.GetAccessKeyLastUsedInput{
-					AccessKeyId: key.AccessKeyId,
-				})
-				if err != nil {
-					return nil, err
-				}
-				if lastUsed.AccessKeyLastUsed != nil {
-					lastUsedDate = lastUsed.AccessKeyLastUsed.LastUsedDate
-					lastUsedRegion = convert.ToValue(lastUsed.AccessKeyLastUsed.Region)
-					lastUsedService = convert.ToValue(lastUsed.AccessKeyLastUsed.ServiceName)
-				}
-			}
+	a.accessKeyMetaCache = res
+	a.accessKeyMetaFetched.Store(true)
+	return res, nil
+}
 
-			mqlKey, err := CreateResource(a.MqlRuntime, "aws.iam.user.accessKey",
-				map[string]*llx.RawData{
-					"__id":            llx.StringDataPtr(key.AccessKeyId),
-					"accessKeyId":     llx.StringDataPtr(key.AccessKeyId),
-					"username":        llx.StringDataPtr(key.UserName),
-					"status":          llx.StringData(string(key.Status)),
-					"createdAt":       llx.TimeDataPtr(key.CreateDate),
-					"lastUsedDate":    llx.TimeDataPtr(lastUsedDate),
-					"lastUsedRegion":  llx.StringData(lastUsedRegion),
-					"lastUsedService": llx.StringData(lastUsedService),
-				})
+func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
+	metadata, err := a.listAccessKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	dicts, err := convert.JsonToDictSlice(metadata)
+	if err != nil {
+		return nil, err
+	}
+	return []any{dicts}, nil
+}
+
+func (a *mqlAwsIamUser) accessKeyDetails() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	keys, err := a.listAccessKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i := range keys {
+		key := keys[i]
+
+		// One GetAccessKeyLastUsed call per key. IAM caps users at 2 access
+		// keys, so this loop makes at most 2 calls and is not an N+1 risk.
+		// AWS returns "N/A" for region and service and a nil date when the
+		// key has never been used.
+		lastUsedRegion := ""
+		lastUsedService := ""
+		var lastUsedDate *time.Time
+		if key.AccessKeyId != nil {
+			lastUsed, err := svc.GetAccessKeyLastUsed(ctx, &iam.GetAccessKeyLastUsedInput{
+				AccessKeyId: key.AccessKeyId,
+			})
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlKey)
+			if lastUsed.AccessKeyLastUsed != nil {
+				lastUsedDate = lastUsed.AccessKeyLastUsed.LastUsedDate
+				lastUsedRegion = convert.ToValue(lastUsed.AccessKeyLastUsed.Region)
+				lastUsedService = convert.ToValue(lastUsed.AccessKeyLastUsed.ServiceName)
+			}
 		}
+
+		mqlKey, err := CreateResource(a.MqlRuntime, "aws.iam.user.accessKey",
+			map[string]*llx.RawData{
+				"__id":            llx.StringDataPtr(key.AccessKeyId),
+				"accessKeyId":     llx.StringDataPtr(key.AccessKeyId),
+				"username":        llx.StringDataPtr(key.UserName),
+				"status":          llx.StringData(string(key.Status)),
+				"createdAt":       llx.TimeDataPtr(key.CreateDate),
+				"lastUsedDate":    llx.TimeDataPtr(lastUsedDate),
+				"lastUsedRegion":  llx.StringData(lastUsedRegion),
+				"lastUsedService": llx.StringData(lastUsedService),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlKey)
 	}
 	return res, nil
 }
@@ -1867,6 +1865,30 @@ func (a *mqlAwsIamRole) usedByInstances() ([]any, error) {
 	return res, nil
 }
 
+type mqlAwsIamGroupInternal struct {
+	usernamesFetched atomic.Bool
+	usernamesCache   []any
+	usernamesLock    sync.Mutex
+}
+
+// createIamGroup builds a group resource straight from a ListGroups summary,
+// which already carries every stored field. Group membership (usernames) is
+// not in that summary and is loaded lazily, so listing groups no longer makes
+// a GetGroup call per group.
+func (a *mqlAwsIam) createIamGroup(group *iamtypes.Group) (plugin.Resource, error) {
+	if group == nil {
+		return nil, errors.New("no iam group provided")
+	}
+	return CreateResource(a.MqlRuntime, ResourceAwsIamGroup,
+		map[string]*llx.RawData{
+			"arn":       llx.StringDataPtr(group.Arn),
+			"id":        llx.StringDataPtr(group.GroupId),
+			"name":      llx.StringDataPtr(group.GroupName),
+			"createdAt": llx.TimeDataPtr(group.CreateDate),
+			"path":      llx.StringDataPtr(group.Path),
+		})
+}
+
 func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1888,25 +1910,38 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 	if args["name"] != nil {
 		groupname := args["name"].Value.(string)
-		resp, err := svc.GetGroup(ctx, &iam.GetGroupInput{
+		usernames := []any{}
+		var grp *iamtypes.Group
+		paginator := iam.NewGetGroupPaginator(svc, &iam.GetGroupInput{
 			GroupName: &groupname,
 		})
-		if err != nil {
-			return nil, nil, err
-		}
-		usernames := []any{}
-		for _, user := range resp.Users {
-			usernames = append(usernames, convert.ToValue(user.UserName))
+		for paginator.HasMorePages() {
+			resp, err := paginator.NextPage(ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			grp = resp.Group
+			for _, user := range resp.Users {
+				usernames = append(usernames, convert.ToValue(user.UserName))
+			}
 		}
 
-		grp := resp.Group
 		args["arn"] = llx.StringDataPtr(grp.Arn)
 		args["id"] = llx.StringDataPtr(grp.GroupId)
 		args["name"] = llx.StringDataPtr(grp.GroupName)
 		args["createdAt"] = llx.TimeDataPtr(grp.CreateDate)
-		args["usernames"] = llx.ArrayData(usernames, types.String)
 		args["path"] = llx.StringDataPtr(grp.Path)
-		return args, nil, nil
+
+		mqlGroup, err := CreateResource(runtime, ResourceAwsIamGroup, args)
+		if err != nil {
+			return nil, nil, err
+		}
+		// We already paid for the membership list in GetGroup; seed the cache so
+		// reading usernames during the asset scan doesn't make a second call.
+		g := mqlGroup.(*mqlAwsIamGroup)
+		g.usernamesCache = usernames
+		g.usernamesFetched.Store(true)
+		return args, g, nil
 	}
 
 	return args, nil, nil
@@ -1914,6 +1949,43 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 func (a *mqlAwsIamGroup) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// usernames lists the group's members. ListGroups (used to build the group in
+// the first place) does not return membership, so this lazily calls GetGroup
+// only when the field is actually read.
+func (a *mqlAwsIamGroup) usernames() ([]any, error) {
+	if a.usernamesFetched.Load() {
+		return a.usernamesCache, nil
+	}
+	a.usernamesLock.Lock()
+	defer a.usernamesLock.Unlock()
+	if a.usernamesFetched.Load() {
+		return a.usernamesCache, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+	groupname := a.Name.Data
+
+	res := []any{}
+	paginator := iam.NewGetGroupPaginator(svc, &iam.GetGroupInput{
+		GroupName: &groupname,
+	})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, user := range resp.Users {
+			res = append(res, convert.ToValue(user.UserName))
+		}
+	}
+
+	a.usernamesCache = res
+	a.usernamesFetched.Store(true)
+	return res, nil
 }
 
 func (a *mqlAwsIamGroup) attachedPolicies() ([]any, error) {
