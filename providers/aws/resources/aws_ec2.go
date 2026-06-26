@@ -466,23 +466,14 @@ func (a *mqlAwsEc2NetworkaclEntry) portRange() (*mqlAwsEc2NetworkaclEntryPortran
 }
 
 func (a *mqlAwsEc2Securitygroup) isAttachedToNetworkInterface() (bool, error) {
-	sgId := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Ec2(region)
-	ctx := context.Background()
-
-	networkinterfaces, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{Filters: []ec2types.Filter{
-		{Name: aws.String("group-id"), Values: []string{sgId}},
-	}})
-	if err != nil {
-		return false, err
+	// Reuse the cached networkInterfaces field (same group-id DescribeNetworkInterfaces
+	// call) so a policy that queries both this and networkInterfaces/instances only
+	// hits the API once.
+	nis := a.GetNetworkInterfaces()
+	if nis.Error != nil {
+		return false, nis.Error
 	}
-	if len(networkinterfaces.NetworkInterfaces) > 0 {
-		return true, nil
-	}
-	return false, nil
+	return len(nis.Data) > 0, nil
 }
 
 type mqlAwsEc2SecuritygroupInternal struct {
