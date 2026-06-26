@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -765,17 +766,24 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 // RawData converts the primitive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
-	// An empty primitive (no type, value, array, or map) represents an
-	// unset/null value. Treat it as null rather than returning an error: a
-	// single untyped nested field must not abort conversion of its surrounding
-	// block or array, which would discard the entire collection (via
-	// primitive2array / primitive2rawdataMapV2) and surface as empty
-	// assessments — e.g. `list.all(...)` rendering no failing resources.
+	// A primitive with no type information is malformed: it is never produced
+	// deliberately (a genuine null is `NilPrimitive`, with Type == types.Nil).
+	// It only appears when an upstream layer — most often the compiler binding
+	// a predicate's value field to a resource that lacks it (see
+	// mqlc.addValueFieldChunks) — emits a broken primitive.
 	//
-	// This is defense in depth. The concrete known source of untyped fields —
-	// the compiler binding a predicate's value field to a nested `@context`
-	// resource that lacks it — is fixed at the root in mqlc.addValueFieldChunks.
+	// Behavior here is loud-and-narrow:
+	//   - narrow: coerce just this field to null instead of returning an error.
+	//     An error would propagate through primitive2array / primitive2rawdataMapV2
+	//     and discard the entire surrounding collection (parray2raw rewrites the
+	//     dropped slice to an empty `[]`), so one broken leaf would empty a whole
+	//     failing-resource list and surface as an empty assessment.
+	//   - loud: log it. Silently coercing to a fake-valid null is what made the
+	//     original compiler bug nearly impossible to find; logging keeps the
+	//     underlying (usually compiler) defect visible even though we degrade
+	//     gracefully for the surrounding data.
 	if p.GetType() == "" {
+		log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (this indicates an upstream/compiler bug producing a malformed primitive)")
 		return &RawData{Type: types.Nil}
 	}
 
