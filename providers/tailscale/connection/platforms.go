@@ -9,7 +9,7 @@ import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 var Platforms = []*plugin.PlatformInfo{
 	{
 		Name:    "tailscale-org",
-		Title:   "Tailscale",
+		Title:   "Tailscale Organization",
 		Family:  []string{"tailscale"},
 		Kind:    []string{"api"},
 		Runtime: []string{"tailscale"},
