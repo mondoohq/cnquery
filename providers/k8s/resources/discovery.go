@@ -1409,6 +1409,9 @@ func setNamespaceFilters(cfg *inventory.Config) NamespaceFilterOpts {
 	return nsFilter
 }
 
+// namespaceStageName returns a namespace only when the config targets exactly
+// one namespace, which indicates staged discovery should run the namespace stage.
+// Empty or multi-namespace filters fall through to cluster-stage discovery.
 func namespaceStageName(cfg *inventory.Config) (string, bool) {
 	namespaces := namespaceFilterValues(cfg.Options[shared.OPTION_NAMESPACE])
 	if len(namespaces) != 1 {
