@@ -207,6 +207,7 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 			"transitEncryptionMode":              llx.StringData(string(cluster.TransitEncryptionMode)),
 			"preferredMaintenanceWindow":         llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 			"replicationGroupLogDeliveryEnabled": llx.BoolDataPtr(cluster.ReplicationGroupLogDeliveryEnabled),
+			"replicationGroupId":                 llx.StringDataPtr(cluster.ReplicationGroupId),
 		})
 	if err != nil {
 		return nil, err

@@ -165,6 +165,7 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 		args["privilegedMode"] = llx.BoolData(false)
 	}
 	args["serviceRole"] = llx.StringDataPtr(project.ServiceRole)
+	args["sourceVersion"] = llx.StringDataPtr(project.SourceVersion)
 	args["queuedTimeoutInMinutes"] = llx.IntDataDefault(project.QueuedTimeoutInMinutes, 480)
 
 	if project.ConcurrentBuildLimit != nil {
@@ -353,6 +354,7 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 	mqlProject := obj.(*mqlAwsCodebuildProject)
 	mqlProject.cacheEncryptionKeyArn = project.EncryptionKey
 	mqlProject.cacheServiceRoleArn = project.ServiceRole
+	mqlProject.cacheResourceAccessRoleArn = project.ResourceAccessRole
 	mqlProject.cacheLogGroupArn = cacheLogGroupArn
 	mqlProject.cacheVpcId = cacheVpcId
 	mqlProject.cacheSubnetIds = subnetIds
@@ -369,13 +371,27 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 
 type mqlAwsCodebuildProjectInternal struct {
 	securityGroupIdHandler
-	cacheEncryptionKeyArn *string
-	cacheServiceRoleArn   *string
-	cacheLogGroupArn      *string
-	cacheVpcId            *string
-	cacheSubnetIds        []string
-	region                string
-	accountID             string
+	cacheEncryptionKeyArn      *string
+	cacheServiceRoleArn        *string
+	cacheResourceAccessRoleArn *string
+	cacheLogGroupArn           *string
+	cacheVpcId                 *string
+	cacheSubnetIds             []string
+	region                     string
+	accountID                  string
+}
+
+func (a *mqlAwsCodebuildProject) resourceAccessRole() (*mqlAwsIamRole, error) {
+	if a.cacheResourceAccessRoleArn == nil || *a.cacheResourceAccessRoleArn == "" {
+		a.ResourceAccessRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheResourceAccessRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsCodebuildProject) encryptionKey() (*mqlAwsKmsKey, error) {

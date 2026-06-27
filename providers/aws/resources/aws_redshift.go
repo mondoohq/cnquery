@@ -138,6 +138,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"maintenanceTrackName":             llx.StringDataPtr(cluster.MaintenanceTrackName),
 							"hsmStatus":                        llx.DictData(redshiftHsmStatusToDict(cluster.HsmStatus)),
 							"modifyStatus":                     llx.StringDataPtr(cluster.ModifyStatus),
+							"snapshotScheduleIdentifier":       llx.StringDataPtr(cluster.SnapshotScheduleIdentifier),
 						})
 					if err != nil {
 						return nil, err
@@ -343,6 +344,8 @@ func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot 
 			"arn":                           llx.StringDataPtr(snapshot.SnapshotArn),
 			"id":                            llx.StringDataPtr(snapshot.SnapshotIdentifier),
 			"clusterIdentifier":             llx.StringDataPtr(snapshot.ClusterIdentifier),
+			"ownerAccount":                  llx.StringDataPtr(snapshot.OwnerAccount),
+			"accountsWithRestoreAccess":     llx.ArrayData(redshiftRestoreAccessToDicts(snapshot.AccountsWithRestoreAccess), types.Dict),
 			"region":                        llx.StringData(region),
 			"snapshotType":                  llx.StringDataPtr(snapshot.SnapshotType),
 			"sourceRegion":                  llx.StringDataPtr(snapshot.SourceRegion),
@@ -372,6 +375,38 @@ func newMqlAwsRedshiftSnapshot(runtime *plugin.Runtime, region string, snapshot 
 
 type mqlAwsRedshiftSnapshotInternal struct {
 	cacheKmsKeyId *string
+}
+
+// redshiftRestoreAccessToDicts converts the accounts authorized to restore a
+// snapshot into a slice of dicts, each carrying the account id and optional
+// account alias.
+func redshiftRestoreAccessToDicts(accounts []redshifttypes.AccountWithRestoreAccess) []any {
+	res := make([]any, 0, len(accounts))
+	for _, acc := range accounts {
+		res = append(res, map[string]any{
+			"accountId":    convert.ToValue(acc.AccountId),
+			"accountAlias": convert.ToValue(acc.AccountAlias),
+		})
+	}
+	return res
+}
+
+// cluster resolves the source cluster the snapshot was taken from, when it is
+// still present in this account.
+func (a *mqlAwsRedshiftSnapshot) cluster() (*mqlAwsRedshiftCluster, error) {
+	if !a.ClusterIdentifier.IsSet() || a.ClusterIdentifier.Data == "" {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf(redshiftClusterArnPattern, a.Region.Data, conn.AccountId(), a.ClusterIdentifier.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.redshift.cluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRedshiftCluster), nil
 }
 
 func (a *mqlAwsRedshiftSnapshot) kmsKey() (*mqlAwsKmsKey, error) {

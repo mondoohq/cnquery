@@ -424,7 +424,7 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 		return nil, errors.New("no iam user provided")
 	}
 
-	return CreateResource(a.MqlRuntime, ResourceAwsIamUser,
+	res, err := CreateResource(a.MqlRuntime, ResourceAwsIamUser,
 		map[string]*llx.RawData{
 			"arn":              llx.StringDataPtr(usr.Arn),
 			"id":               llx.StringDataPtr(usr.UserId),
@@ -435,6 +435,46 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"path":             llx.StringDataPtr(usr.Path),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
+	mqlUser := res.(*mqlAwsIamUser)
+	if usr.PermissionsBoundary != nil {
+		mqlUser.permissionsBoundaryArn = convert.ToValue(usr.PermissionsBoundary.PermissionsBoundaryArn)
+		mqlUser.permissionsBoundaryArnSet = true
+	}
+	return res, nil
+}
+
+// permissionsBoundary resolves the managed policy that sets the user's
+// permissions boundary. ListUsers populates the boundary directly; resources
+// built via NewResource without it fall back to a targeted GetUser.
+func (a *mqlAwsIamUser) permissionsBoundary() (*mqlAwsIamPolicy, error) {
+	if !a.permissionsBoundaryArnSet {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Iam("")
+		userName := a.Name.Data
+		resp, err := svc.GetUser(context.Background(), &iam.GetUserInput{UserName: &userName})
+		if err != nil {
+			return nil, err
+		}
+		if resp.User != nil && resp.User.PermissionsBoundary != nil {
+			a.permissionsBoundaryArn = convert.ToValue(resp.User.PermissionsBoundary.PermissionsBoundaryArn)
+		}
+		a.permissionsBoundaryArnSet = true
+	}
+
+	if a.permissionsBoundaryArn == "" {
+		a.PermissionsBoundary.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	mqlPolicy, err := NewResource(a.MqlRuntime, "aws.iam.policy",
+		map[string]*llx.RawData{"arn": llx.StringData(a.permissionsBoundaryArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPolicy.(*mqlAwsIamPolicy), nil
 }
 
 func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
@@ -1055,6 +1095,9 @@ type mqlAwsIamUserInternal struct {
 	loginProfileFetched atomic.Bool
 	loginProfileCache   *mqlAwsIamLoginProfile
 	loginProfileLock    sync.Mutex
+
+	permissionsBoundaryArn    string
+	permissionsBoundaryArnSet bool
 }
 
 func (a *mqlAwsIamUser) id() (string, error) {

@@ -148,6 +148,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
 	mqlSecretRes.cacheRegion = region
 	mqlSecretRes.cacheType = convert.ToValue(resp.Type)
+	mqlSecretRes.cacheExternalRotationRoleArn = resp.ExternalSecretRotationRoleArn
 	mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: resp.DeletedDate, State: plugin.StateIsSet}
 
 	// We already have the replication status from DescribeSecret; populate
@@ -290,6 +291,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
 					mqlSecretRes.cacheRegion = region
 					mqlSecretRes.cacheType = convert.ToValue(secret.Type)
+					mqlSecretRes.cacheExternalRotationRoleArn = secret.ExternalSecretRotationRoleArn
 					mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: secret.DeletedDate, State: plugin.StateIsSet}
 					res = append(res, mqlSecret)
 				}
@@ -338,8 +340,22 @@ func (a *mqlAwsSecretsmanagerSecret) replicaRegions() ([]any, error) {
 }
 
 type mqlAwsSecretsmanagerSecretInternal struct {
-	cacheRegion string
-	cacheType   string
+	cacheRegion                  string
+	cacheType                    string
+	cacheExternalRotationRoleArn *string
+}
+
+func (a *mqlAwsSecretsmanagerSecret) externalRotationRole() (*mqlAwsIamRole, error) {
+	if a.cacheExternalRotationRoleArn == nil || *a.cacheExternalRotationRoleArn == "" {
+		a.ExternalRotationRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheExternalRotationRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsSecretsmanagerSecret) compute_type() (string, error) {

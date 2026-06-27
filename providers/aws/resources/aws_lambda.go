@@ -284,6 +284,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"signingProfileVersionArn":    llx.StringDataPtr(function.SigningProfileVersionArn),
 		"signingJobArn":               llx.StringDataPtr(function.SigningJobArn),
 		"layers":                      llx.ArrayData(layers, types.Resource("aws.lambda.function.layer")),
+		"masterArn":                   llx.StringDataPtr(function.MasterArn),
 	}
 
 	if loggingConfigResource != nil {
@@ -421,6 +422,7 @@ type mqlAwsLambdaFunctionInternal struct {
 	imageDataLock         sync.Mutex
 	cacheImageUri         *string
 	cacheResolvedImageUri *string
+	cacheSourceKmsKeyArn  *string
 }
 
 // fetchImageData resolves the container image URIs for Image package type
@@ -452,9 +454,46 @@ func (a *mqlAwsLambdaFunction) fetchImageData() error {
 	if resp.Code != nil {
 		a.cacheImageUri = resp.Code.ImageUri
 		a.cacheResolvedImageUri = resp.Code.ResolvedImageUri
+		a.cacheSourceKmsKeyArn = resp.Code.SourceKMSKeyArn
 	}
 	a.imageDataFetched = true
 	return nil
+}
+
+// sourceKmsKey resolves the KMS key used to encrypt the function's deployment
+// package, when one is configured. Backed by the same GetFunction call as the
+// image URIs.
+func (a *mqlAwsLambdaFunction) sourceKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchImageData(); err != nil {
+		return nil, err
+	}
+	if a.cacheSourceKmsKeyArn == nil || *a.cacheSourceKmsKeyArn == "" {
+		a.SourceKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheSourceKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+// masterFunction resolves the master function this Lambda was configured from,
+// when present in this account (set for replicated functions such as
+// Lambda@Edge replicas).
+func (a *mqlAwsLambdaFunction) masterFunction() (*mqlAwsLambdaFunction, error) {
+	if !a.MasterArn.IsSet() || a.MasterArn.Data == "" {
+		a.MasterFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.lambda.function",
+		map[string]*llx.RawData{"arn": llx.StringData(a.MasterArn.Data)})
+	if err != nil {
+		a.MasterFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsLambdaFunction), nil
 }
 
 func (a *mqlAwsLambdaFunction) imageUri() (string, error) {

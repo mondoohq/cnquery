@@ -475,6 +475,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["launchType"] = llx.StringData(string(t.LaunchType))
 	args["capacityProviderName"] = llx.StringData(convert.ToValue(t.CapacityProviderName))
 	args["group"] = llx.StringData(convert.ToValue(t.Group))
+	args["startedBy"] = llx.StringData(convert.ToValue(t.StartedBy))
 	args["enableExecuteCommand"] = llx.BoolData(t.EnableExecuteCommand)
 	args["stopCode"] = llx.StringData(string(t.StopCode))
 	args["stoppedReason"] = llx.StringData(convert.ToValue(t.StoppedReason))
@@ -1489,9 +1490,17 @@ func (a *mqlAwsEcsTaskDefinition) fetchDetail() error {
 	} else {
 		a.RegisteredAt = plugin.TValue[*time.Time]{Data: &llx.NeverFutureTime, State: plugin.StateIsSet}
 	}
+	a.RegisteredBy = plugin.TValue[string]{Data: convert.ToValue(td.RegisteredBy), State: plugin.StateIsSet}
 
 	a.fetched = true
 	return nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) registeredBy() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.RegisteredBy.Data, nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) family() (string, error) {
@@ -2083,7 +2092,7 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["status"] = llx.StringDataPtr(s.Status)
 	args["desiredCount"] = llx.IntData(int64(s.DesiredCount))
 	args["runningCount"] = llx.IntData(int64(s.RunningCount))
-	args["taskDefinition"] = llx.StringData(taskDefinition)
+	args["taskDefinitionArn"] = llx.StringData(taskDefinition)
 	args["launchType"] = llx.StringData(launchType)
 	// Always set deploymentConfiguration - AWS services should always have this, but handle nil case
 	if deploymentConfigResource != nil {
@@ -2435,6 +2444,24 @@ func (a *mqlAwsEcsContainer) task() (*mqlAwsEcsTask, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsEcsTask), nil
+}
+
+func (a *mqlAwsEcsService) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
+	arnVal := a.TaskDefinitionArn.Data
+	if arnVal == "" {
+		a.TaskDefinition.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal), "region": llx.StringData(region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsTaskDefinition), nil
 }
 
 func (a *mqlAwsEcsService) cluster() (*mqlAwsEcsCluster, error) {

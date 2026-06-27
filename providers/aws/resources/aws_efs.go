@@ -110,6 +110,7 @@ func buildEfsFilesystemResource(runtime *plugin.Runtime, region string, fs efsty
 		"arn":              llx.StringDataPtr(fs.FileSystemArn),
 		"name":             llx.StringDataPtr(fs.Name),
 		"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
+		"ownerId":          llx.StringDataPtr(fs.OwnerId),
 		"region":           llx.StringData(region),
 		"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
 		"createdAt":        llx.TimeDataPtr(fs.CreationTime),

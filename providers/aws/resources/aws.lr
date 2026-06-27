@@ -213,6 +213,8 @@ aws.organization @defaults("id masterAccountEmail") {
   featureSet string
   // ID of the organization's master account
   masterAccountId string
+  // ARN of the organization's master account
+  masterAccountArn string
   // Email owner of the organization's master account
   masterAccountEmail string
   // List of accounts that belong to the organization, if available to the caller
@@ -321,6 +323,8 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   isDefault bool
   // How instance hardware tenancy settings are enforced on instances launched in this VPC
   instanceTenancy string
+  // AWS account ID that owns the VPC
+  ownerId string
   // Region in which the VPC exists
   region string
   // List of endpoints for the VPC
@@ -473,6 +477,8 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   assignIpv6AddressOnCreation bool
   // State of the subnet: pending, available, unavailable, failed, or failed-insufficient-capacity
   state string
+  // AWS account ID that owns the subnet
+  ownerId string
   // Region in which the VPC subnet exists
   region string
   // The number of available IP addresses in the subnet
@@ -1365,6 +1371,8 @@ private aws.efs.filesystem @defaults("name id region") {
   arn string
   // Whether the file system is encrypted
   encrypted bool
+  // AWS account ID that owns the file system
+  ownerId string
   // KMS key used for encryption of the file system
   kmsKey() aws.kms.key
   // Backup policy for the file system
@@ -2053,6 +2061,8 @@ private aws.iam.user @defaults("arn name createdAt") {
   path string
   // List of MFA devices (virtual and hardware) assigned to the user
   mfaDevices() []dict
+  // Managed policy that sets the permissions boundary for the user, if one is set
+  permissionsBoundary() aws.iam.policy
 }
 
 // IAM user access key
@@ -4670,6 +4680,8 @@ private aws.sns.topic @defaults("arn") {
   tags() map[string]string
   // Signature version used for Amazon SNS message signing (1 or 2)
   signatureVersion() string
+  // AWS account ID of the topic owner
+  owner() string
   // KMS master key used for server-side encryption
   kmsMasterKey() aws.kms.key
   // Access policy for the topic (parsed JSON)
@@ -5561,6 +5573,10 @@ private aws.codebuild.project @defaults("arn name") {
   buildBatchConfig dict
   // Maximum number of concurrent builds allowed for this project
   concurrentBuildLimit int
+  // Default source version (branch, tag, or commit) builds use when none is specified
+  sourceVersion string
+  // IAM role that enables CodeBuild to access resources (such as Amazon EFS) in the customer VPC
+  resourceAccessRole() aws.iam.role
 }
 
 // AWS CodeBuild report group
@@ -6853,6 +6869,8 @@ aws.secretsmanager.secret @defaults("arn name") {
   rotationEnabled bool
   // Lambda function used for automatic rotation
   rotationLambda aws.lambda.function
+  // IAM role Secrets Manager assumes to rotate the secret with a customer-managed rotation Lambda, if configured
+  externalRotationRole() aws.iam.role
   // Rotation schedule configuration
   rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
@@ -7132,6 +7150,8 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   capacityProviderName string
   // Name of the task group
   group string
+  // Tag or identifier of whatever started the task (a deployment ID, a user, or an ECS service name)
+  startedBy string
   // Whether the execute command functionality is enabled for the task
   enableExecuteCommand bool
   // How the task was stopped
@@ -7252,6 +7272,8 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   memory() string
   // When the task definition was registered
   registeredAt() time
+  // ARN of the principal that registered this task definition revision
+  registeredBy() string
   // Launch types the task definition is compatible with (EC2, FARGATE, EXTERNAL)
   requiresCompatibilities() []string
   // CPU architecture the task runs on (X86_64, ARM64)
@@ -7285,7 +7307,11 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   // Number of running tasks for the service
   runningCount int
   // ARN of the task definition used by the service
-  taskDefinition string
+  //
+  // Deprecated in favor of `taskDefinition()`.
+  taskDefinitionArn @maturity("deprecated") string
+  // Task definition the service runs
+  taskDefinition() aws.ecs.taskDefinition
   // Launch type for the service (EC2, FARGATE, EXTERNAL, MANAGED_INSTANCES)
   launchType string
   // Deployment configuration for the service
@@ -11580,6 +11606,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   dbClusterParameterGroup() aws.rds.clusterParameterGroup
   // Whether the cluster is a clone of a cluster owned by a different account
   crossAccountClone bool
+  // Identifier of the clone group the cluster belongs to, shared across a cluster and its clones
+  cloneGroupId string
   // Identifier of the source DB cluster or DB instance if this cluster is a read replica
   replicationSourceIdentifier string
   // Status of write forwarding for a secondary cluster in an Aurora global cluster
@@ -11632,6 +11660,10 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   timezone string
   // Identifier or ARN of the snapshot this snapshot was copied from
   sourceSnapshot string
+  // Source DB instance the snapshot was taken from, when present in this account
+  sourceDbInstance() aws.rds.dbinstance
+  // Source DB cluster the snapshot was taken from, when present in this account
+  sourceDbCluster() aws.rds.dbcluster
   // Region the source snapshot was copied from (empty unless this is a cross-region copy)
   sourceRegion string
   // Original creation time of the snapshot before any copy (empty unless this snapshot is a copy)
@@ -11767,6 +11799,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   dbiResourceId string
   // Cluster identifier if the instance belongs to a DB cluster
   dbClusterIdentifier string
+  // DB cluster the instance belongs to, when present in this account
+  dbCluster() aws.rds.dbcluster
   // Identifier of the source DB instance if this instance is a read replica
   readReplicaSourceInstanceId string
   // Identifier of the source DB cluster if this instance is a read replica
@@ -12001,6 +12035,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   preferredMaintenanceWindow string
   // Whether log delivery is enabled for the replication group
   replicationGroupLogDeliveryEnabled bool
+  // Identifier of the replication group the cluster belongs to, when part of one
+  replicationGroupId string
   // Resource tags for the cluster
   tags() map[string]string
 }
@@ -12275,6 +12311,8 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   ipAddressType string
   // KMS key used to encrypt the master password secret in Secrets Manager
   masterPasswordSecretKmsKey() aws.kms.key
+  // Identifier of the snapshot schedule associated with the cluster, if any
+  snapshotScheduleIdentifier string
   // Snapshots for this cluster
   snapshots() []aws.redshift.snapshot
 }
@@ -12287,6 +12325,12 @@ private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt"
   id string
   // Cluster identifier
   clusterIdentifier string
+  // Cluster the snapshot was taken from, when present in this account
+  cluster() aws.redshift.cluster
+  // AWS account ID of the snapshot owner
+  ownerAccount string
+  // Accounts authorized to restore the snapshot, each with an account ID and optional alias
+  accountsWithRestoreAccess []dict
   // Region where the snapshot exists
   region string
   // Snapshot type (manual or automated)
@@ -14318,6 +14362,12 @@ private aws.lambda.function @defaults("arn") {
   imageUri() string
   // Resolved digest-pinned container image URI for Image package type functions (empty for Zip package type functions)
   resolvedImageUri() string
+  // ARN of the master function this Lambda was configured from (set for replicated functions such as Lambda@Edge replicas)
+  masterArn string
+  // Master function this Lambda was configured from, when present in this account
+  masterFunction() aws.lambda.function
+  // KMS key used to encrypt the function's deployment package, when configured
+  sourceKmsKey() aws.kms.key
 }
 
 // AWS Lambda function version
@@ -14638,6 +14688,16 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   lastPingedAt time
   // Fully qualified hostname of the managed node
   computerName string
+  // IAM role assigned to the managed instance for Systems Manager (set for hybrid/on-premises activations)
+  iamRole() aws.iam.role
+  // How the managed node was registered: AWS::EC2::Instance or AWS::SSM::ManagedInstance
+  sourceType string
+  // Identifier of the registration source (instance ID or activation-registered ID)
+  sourceId string
+  // Activation used to register the managed node, for hybrid/on-premises instances
+  activationId string
+  // Type of the managed resource: EC2Instance or ManagedInstance
+  resourceType string
 }
 
 // Amazon Elastic Compute Cloud (EC2)
@@ -15505,6 +15565,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   dataEncryptionKeyId string
   // Owner alias of the snapshot (for example, amazon or aws-backup-vault)
   ownerAlias string
+  // AWS account ID of the snapshot owner
+  ownerId string
   // ARN of the Outpost on which the snapshot is stored
   outpostArn string
   // Whether the snapshot is public (shared with all AWS accounts)
@@ -15939,6 +16001,14 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   placement aws.ec2.instance.placement
   // Virtualization type: hvm or paravirtual
   virtualizationType string
+  // Capacity reservation the instance runs in, when targeted to one
+  capacityReservation() aws.ec2.capacityReservation
+  // Auto Scaling group that manages this instance, when launched by one
+  autoScalingGroup() aws.autoscaling.group
+  // Whether the instance is managed by an AWS service provider on your behalf
+  managedByOperator bool
+  // Service provider principal that manages the instance, when operator-managed
+  operatorPrincipal string
 }
 
 // AWS EC2 network interface
@@ -15999,6 +16069,12 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   deviceIndex int
   // Whether the network interface is deleted when the instance is terminated
   deleteOnTermination bool
+  // AWS account ID that owns the network interface
+  ownerId string
+  // AWS account ID of the entity that requested the network interface (for service-managed interfaces)
+  requesterId string
+  // AWS account ID that owns the instance the network interface is attached to
+  instanceOwnerId string
 }
 
 // Amazon EC2 key pair
@@ -16150,6 +16226,8 @@ private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted"
   encrypted bool
   // ID of the snapshot used to create the volume
   snapshotId string
+  // Snapshot the volume is created from, when present in this account
+  snapshot() aws.ec2.snapshot
   // Size of the volume in GiB
   volumeSize int
   // Volume type (gp2, gp3, io1, io2, etc.)
@@ -16247,6 +16325,8 @@ private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   allowsUnrestrictedEgress() bool
   // Region associated with the security group
   region string
+  // AWS account ID that owns the security group
+  ownerId string
   // Whether the security group is attached to Amazon Elastic Compute Cloud
   isAttachedToNetworkInterface() bool
   // Network interfaces this security group is attached to
@@ -16558,6 +16638,10 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   nodeRepairEnabled() bool
   // Subnets associated with the node group
   nodegroupSubnets() []aws.vpc.subnet
+  // Launch template the node group uses to configure its instances, if any
+  launchTemplate() aws.ec2.launchtemplate
+  // Version of the launch template the node group uses, when a launch template is configured
+  launchTemplateVersion() string
 }
 
 // Amazon EKS add-on
@@ -22361,6 +22445,12 @@ private aws.cloudformation.stack @defaults("name status") {
   updatedAt time
   // Resources the stack provisioned, mapping each template entry to the concrete AWS resource
   resources() []aws.cloudformation.stack.resource
+  // ID of the change set that produced the most recent stack operation, if any
+  changeSetId string
+  // Direct parent stack when this is a nested stack, otherwise null
+  parentStack() aws.cloudformation.stack
+  // Top-level root stack of a nested-stack hierarchy, otherwise null
+  rootStack() aws.cloudformation.stack
 }
 
 // CloudFormation stack resource

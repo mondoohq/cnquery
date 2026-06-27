@@ -158,6 +158,14 @@ func (a *mqlAwsSnsTopic) signatureVersion() (string, error) {
 	return atts["SignatureVersion"], nil
 }
 
+func (a *mqlAwsSnsTopic) owner() (string, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return "", err
+	}
+	return atts["Owner"], nil
+}
+
 func (a *mqlAwsSnsTopic) kmsMasterKey() (*mqlAwsKmsKey, error) {
 	atts, err := a.fetchTopicAttributes()
 	if err != nil {

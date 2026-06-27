@@ -93,6 +93,7 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 			"id":                 llx.StringDataPtr(org.Organization.Id),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
 			"masterAccountId":    llx.StringDataPtr(org.Organization.MasterAccountId),
+			"masterAccountArn":   llx.StringDataPtr(org.Organization.MasterAccountArn),
 			"masterAccountEmail": llx.StringDataPtr(org.Organization.MasterAccountEmail),
 		})
 	return res.(*mqlAwsOrganization), err

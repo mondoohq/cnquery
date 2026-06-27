@@ -635,6 +635,41 @@ func (a *mqlAwsEksNodegroup) capacityType() (string, error) {
 	return string(ng.CapacityType), nil
 }
 
+func (a *mqlAwsEksNodegroup) launchTemplate() (*mqlAwsEc2Launchtemplate, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.LaunchTemplate == nil || (ng.LaunchTemplate.Id == nil && ng.LaunchTemplate.Name == nil) {
+		a.LaunchTemplate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	args := map[string]*llx.RawData{"region": llx.StringData(a.region)}
+	if ng.LaunchTemplate.Id != nil && *ng.LaunchTemplate.Id != "" {
+		args["id"] = llx.StringDataPtr(ng.LaunchTemplate.Id)
+	} else {
+		args["name"] = llx.StringDataPtr(ng.LaunchTemplate.Name)
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Launchtemplate, args)
+	if err != nil {
+		a.LaunchTemplate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEc2Launchtemplate), nil
+}
+
+func (a *mqlAwsEksNodegroup) launchTemplateVersion() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if ng.LaunchTemplate == nil {
+		a.LaunchTemplateVersion.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return convert.ToValue(ng.LaunchTemplate.Version), nil
+}
+
 func (a *mqlAwsEksNodegroup) status() (string, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {

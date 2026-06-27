@@ -173,6 +173,60 @@ type mqlAwsCloudformationStackInternal struct {
 	cacheParameters       []cf_types.Parameter
 	cacheOutputs          []cf_types.Output
 	cacheNotificationArns []string
+	cacheParentId         *string
+	cacheRootId           *string
+}
+
+// resolveStackById issues a targeted DescribeStacks for a single stack id in
+// the given region and builds the resource. Returns (nil, nil) when the stack
+// is empty/missing; callers set the field's null state before returning.
+func resolveStackById(runtime *plugin.Runtime, region string, stackID *string) (*mqlAwsCloudformationStack, error) {
+	if stackID == nil || *stackID == "" {
+		return nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudFormation(region)
+	resp, err := svc.DescribeStacks(context.Background(), &cloudformation.DescribeStacksInput{
+		StackName: stackID,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			return nil, nil
+		}
+		var oe interface{ ErrorCode() string }
+		if errors.As(err, &oe) && oe.ErrorCode() == "ValidationError" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(resp.Stacks) == 0 {
+		return nil, nil
+	}
+	return buildCloudformationStackResource(runtime, region, resp.Stacks[0])
+}
+
+func (a *mqlAwsCloudformationStack) parentStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := resolveStackById(a.MqlRuntime, a.Region.Data, a.cacheParentId)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.ParentStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
+}
+
+func (a *mqlAwsCloudformationStack) rootStack() (*mqlAwsCloudformationStack, error) {
+	stack, err := resolveStackById(a.MqlRuntime, a.Region.Data, a.cacheRootId)
+	if err != nil {
+		return nil, err
+	}
+	if stack == nil {
+		a.RootStack.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return stack, nil
 }
 
 func (a *mqlAwsCloudformationStack) iamRole() (*mqlAwsIamRole, error) {
@@ -536,6 +590,7 @@ func buildCloudformationStackResource(runtime *plugin.Runtime, region string, st
 			"tags":                        llx.MapData(cfnTagsToMap(stack.Tags), types.String),
 			"createdAt":                   llx.TimeDataPtr(stack.CreationTime),
 			"updatedAt":                   llx.TimeDataPtr(stack.LastUpdatedTime),
+			"changeSetId":                 llx.StringDataPtr(stack.ChangeSetId),
 		})
 	if err != nil {
 		return nil, err
@@ -545,6 +600,8 @@ func buildCloudformationStackResource(runtime *plugin.Runtime, region string, st
 	mqlStackRes.cacheParameters = stack.Parameters
 	mqlStackRes.cacheOutputs = stack.Outputs
 	mqlStackRes.cacheNotificationArns = stack.NotificationARNs
+	mqlStackRes.cacheParentId = stack.ParentId
+	mqlStackRes.cacheRootId = stack.RootId
 	return mqlStackRes, nil
 }
 

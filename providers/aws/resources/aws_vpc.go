@@ -40,6 +40,7 @@ func buildVpcResource(runtime *plugin.Runtime, region, accountID string, vpc vpc
 			"instanceTenancy": llx.StringData(string(vpc.InstanceTenancy)),
 			"isDefault":       llx.BoolData(convert.ToValue(vpc.IsDefault)),
 			"name":            llx.StringData(name),
+			"ownerId":         llx.StringDataPtr(vpc.OwnerId),
 			"region":          llx.StringData(region),
 			"state":           llx.StringData(string(vpc.State)),
 			"tags":            llx.MapData(toInterfaceMap(tagsMap), types.String),
@@ -1023,6 +1024,7 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 					"ipv6CidrBlock":               llx.StringData(ipv6CidrBlock),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
 					"name":                        llx.StringData(tagsMap["Name"]),
+					"ownerId":                     llx.StringDataPtr(subnet.OwnerId),
 					"region":                      llx.StringData(a.Region.Data),
 					"state":                       llx.StringData(string(subnet.State)),
 					"tags":                        llx.MapData(toInterfaceMap(tagsMap), types.String),
@@ -1103,6 +1105,7 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 		args["mapPublicIpOnLaunch"] = llx.BoolDataPtr(subnet.MapPublicIpOnLaunch)
 		args["name"] = llx.StringData(tagsMap["Name"])
+		args["ownerId"] = llx.StringDataPtr(subnet.OwnerId)
 		args["region"] = llx.StringData(region)
 		args["state"] = llx.StringData(string(subnet.State))
 		args["tags"] = llx.MapData(toInterfaceMap(tagsMap), types.String)

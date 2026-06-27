@@ -773,6 +773,24 @@ func (a *mqlAwsRdsDbinstance) readReplicaSourceCluster() (*mqlAwsRdsDbcluster, e
 	return res.(*mqlAwsRdsDbcluster), nil
 }
 
+// dbCluster resolves the DB cluster this instance belongs to, when it is
+// present in this account. Standalone instances and cross-account members
+// resolve to null; dbClusterIdentifier always carries the identifier.
+func (a *mqlAwsRdsDbinstance) dbCluster() (*mqlAwsRdsDbcluster, error) {
+	if !a.DbClusterIdentifier.IsSet() || a.DbClusterIdentifier.Data == "" {
+		a.DbCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := a.rdsSourceArn(a.DbClusterIdentifier.Data, "arn:aws:rds:%s:%s:cluster:%s")
+	res, err := NewResource(a.MqlRuntime, "aws.rds.dbcluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.DbCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRdsDbcluster), nil
+}
+
 func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 	if a.cacheSubnets != nil {
 		res := []any{}
@@ -1116,6 +1134,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"copyTagsToSnapshot":                 llx.BoolDataPtr(cluster.CopyTagsToSnapshot),
 			"databaseName":                       llx.StringDataPtr(cluster.DatabaseName),
 			"crossAccountClone":                  llx.BoolDataPtr(cluster.CrossAccountClone),
+			"cloneGroupId":                       llx.StringDataPtr(cluster.CloneGroupId),
 			"replicationSourceIdentifier":        llx.StringDataPtr(cluster.ReplicationSourceIdentifier),
 			"globalWriteForwardingStatus":        llx.StringData(string(cluster.GlobalWriteForwardingStatus)),
 			"upgradeRolloutOrder":                llx.StringData(string(cluster.UpgradeRolloutOrder)),
@@ -1261,6 +1280,7 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 	}
 	mqlSnapshot := res.(*mqlAwsRdsSnapshot)
 	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	mqlSnapshot.cacheSourceDbClusterId = snapshot.DBClusterIdentifier
 	return mqlSnapshot, nil
 }
 
@@ -1296,6 +1316,7 @@ func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds
 	}
 	mqlSnapshot := res.(*mqlAwsRdsSnapshot)
 	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	mqlSnapshot.cacheSourceDbInstanceId = snapshot.DBInstanceIdentifier
 	return mqlSnapshot, nil
 }
 
@@ -1304,7 +1325,52 @@ func (a *mqlAwsRdsSnapshot) id() (string, error) {
 }
 
 type mqlAwsRdsSnapshotInternal struct {
-	cacheKmsKeyId *string
+	cacheKmsKeyId           *string
+	cacheSourceDbInstanceId *string
+	cacheSourceDbClusterId  *string
+}
+
+// sourceDbInstance resolves the DB instance this snapshot was taken from, when
+// it is present in this account. Cluster snapshots and instances no longer in
+// the inventory resolve to null.
+func (a *mqlAwsRdsSnapshot) sourceDbInstance() (*mqlAwsRdsDbinstance, error) {
+	if a.cacheSourceDbInstanceId == nil || *a.cacheSourceDbInstanceId == "" {
+		a.SourceDbInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := *a.cacheSourceDbInstanceId
+	if !strings.HasPrefix(arnVal, "arn:") {
+		arnVal = fmt.Sprintf(rdsInstanceArnPattern, a.Region.Data, conn.AccountId(), arnVal)
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.rds.dbinstance",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.SourceDbInstance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRdsDbinstance), nil
+}
+
+// sourceDbCluster resolves the DB cluster this snapshot was taken from, when it
+// is present in this account.
+func (a *mqlAwsRdsSnapshot) sourceDbCluster() (*mqlAwsRdsDbcluster, error) {
+	if a.cacheSourceDbClusterId == nil || *a.cacheSourceDbClusterId == "" {
+		a.SourceDbCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := *a.cacheSourceDbClusterId
+	if !strings.HasPrefix(arnVal, "arn:") {
+		arnVal = fmt.Sprintf("arn:aws:rds:%s:%s:cluster:%s", a.Region.Data, conn.AccountId(), arnVal)
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.rds.dbcluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.SourceDbCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsRdsDbcluster), nil
 }
 
 func (a *mqlAwsRdsSnapshot) kmsKey() (*mqlAwsKmsKey, error) {

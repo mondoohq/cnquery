@@ -1415,6 +1415,15 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 		args["spotInstanceRequestId"] = llx.StringDataPtr(instance.SpotInstanceRequestId)
 		args["virtualizationType"] = llx.StringData(string(instance.VirtualizationType))
 
+		// Operator: whether an AWS service provider manages the instance
+		if instance.Operator != nil {
+			args["managedByOperator"] = llx.BoolDataPtr(instance.Operator.Managed)
+			args["operatorPrincipal"] = llx.StringDataPtr(instance.Operator.Principal)
+		} else {
+			args["managedByOperator"] = llx.BoolData(false)
+			args["operatorPrincipal"] = llx.StringData("")
+		}
+
 		// Placement
 		if instance.Placement != nil {
 			p := instance.Placement
@@ -1593,6 +1602,7 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 	var deviceIndex, networkCardIndex *int32
 	var deleteOnTermination bool
 	var attachmentInstanceID *string
+	var instanceOwnerID *string
 	if eni.Attachment != nil {
 		attachmentStatus = string(eni.Attachment.Status)
 		attachmentTime = eni.Attachment.AttachTime
@@ -1600,6 +1610,7 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 		networkCardIndex = eni.Attachment.NetworkCardIndex
 		deleteOnTermination = convert.ToValue(eni.Attachment.DeleteOnTermination)
 		attachmentInstanceID = eni.Attachment.InstanceId
+		instanceOwnerID = eni.Attachment.InstanceOwnerId
 	}
 
 	args := map[string]*llx.RawData{
@@ -1624,6 +1635,9 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 		"deviceIndex":         llx.IntDataPtr(deviceIndex),
 		"networkCardIndex":    llx.IntDataPtr(networkCardIndex),
 		"deleteOnTermination": llx.BoolData(deleteOnTermination),
+		"ownerId":             llx.StringDataPtr(eni.OwnerId),
+		"requesterId":         llx.StringDataPtr(eni.RequesterId),
+		"instanceOwnerId":     llx.StringDataPtr(instanceOwnerID),
 	}
 	res, err := CreateResource(runtime, ResourceAwsEc2Networkinterface, args)
 	if err != nil {
@@ -1836,6 +1850,21 @@ func (a *mqlAwsEc2ImageEbsBlockDevice) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsEc2ImageEbsBlockDevice) snapshot() (*mqlAwsEc2Snapshot, error) {
+	if a.SnapshotId.Data == "" {
+		a.Snapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlSnap, err := NewResource(a.MqlRuntime, ResourceAwsEc2Snapshot,
+		map[string]*llx.RawData{
+			"id": llx.StringData(a.SnapshotId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSnap.(*mqlAwsEc2Snapshot), nil
+}
+
 // sourceImage resolves the AMI this image was copied from when it is still
 // present in this account. The source may be owned by another account or
 // deregistered; in that case the reference is null and the sourceImageId field
@@ -2031,6 +2060,7 @@ func buildSecurityGroupResource(runtime *plugin.Runtime, region, accountID strin
 		"description": llx.StringDataPtr(group.Description),
 		"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(group.Tags)), types.String),
 		"region":      llx.StringData(region),
+		"ownerId":     llx.StringDataPtr(group.OwnerId),
 	}
 	mqlSG, err := CreateResource(runtime, ResourceAwsEc2Securitygroup, args)
 	if err != nil {
@@ -2610,6 +2640,7 @@ func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, sn
 			"volumeSize":          llx.IntDataDefault(snapshot.VolumeSize, 0),
 			"dataEncryptionKeyId": llx.StringDataPtr(snapshot.DataEncryptionKeyId),
 			"ownerAlias":          llx.StringDataPtr(snapshot.OwnerAlias),
+			"ownerId":             llx.StringDataPtr(snapshot.OwnerId),
 			"outpostArn":          llx.StringDataPtr(snapshot.OutpostArn),
 		})
 	if err != nil {
@@ -3621,27 +3652,10 @@ func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpoo
 					return nil, err
 				}
 				for _, lt := range page.LaunchTemplates {
-					ltId := convert.ToValue(lt.LaunchTemplateId)
-					ltArn := fmt.Sprintf(launchTemplateArnPattern, region, conn.AccountId(), ltId)
-
-					mqlLt, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Launchtemplate,
-						map[string]*llx.RawData{
-							"id":             llx.StringData(ltId),
-							"arn":            llx.StringData(ltArn),
-							"name":           llx.StringDataPtr(lt.LaunchTemplateName),
-							"region":         llx.StringData(region),
-							"createdAt":      llx.TimeDataPtr(lt.CreateTime),
-							"createdBy":      llx.StringDataPtr(lt.CreatedBy),
-							"defaultVersion": llx.IntData(convert.ToValue(lt.DefaultVersionNumber)),
-							"latestVersion":  llx.IntData(convert.ToValue(lt.LatestVersionNumber)),
-							"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(lt.Tags)), types.String),
-						})
+					mqlLtRes, err := buildLaunchTemplateResource(a.MqlRuntime, region, conn.AccountId(), lt)
 					if err != nil {
 						return nil, err
 					}
-					mqlLtRes := mqlLt.(*mqlAwsEc2Launchtemplate)
-					mqlLtRes.region = region
-					mqlLtRes.launchTemplateId = ltId
 					res = append(res, mqlLtRes)
 				}
 			}
@@ -3658,6 +3672,66 @@ type mqlAwsEc2LaunchtemplateInternal struct {
 	ltDataOnce       sync.Once
 	ltData           *ec2types.ResponseLaunchTemplateData
 	ltDataErr        error
+}
+
+func buildLaunchTemplateResource(runtime *plugin.Runtime, region, accountID string, lt ec2types.LaunchTemplate) (*mqlAwsEc2Launchtemplate, error) {
+	ltId := convert.ToValue(lt.LaunchTemplateId)
+	ltArn := fmt.Sprintf(launchTemplateArnPattern, region, accountID, ltId)
+
+	mqlLt, err := CreateResource(runtime, ResourceAwsEc2Launchtemplate,
+		map[string]*llx.RawData{
+			"id":             llx.StringData(ltId),
+			"arn":            llx.StringData(ltArn),
+			"name":           llx.StringDataPtr(lt.LaunchTemplateName),
+			"region":         llx.StringData(region),
+			"createdAt":      llx.TimeDataPtr(lt.CreateTime),
+			"createdBy":      llx.StringDataPtr(lt.CreatedBy),
+			"defaultVersion": llx.IntData(convert.ToValue(lt.DefaultVersionNumber)),
+			"latestVersion":  llx.IntData(convert.ToValue(lt.LatestVersionNumber)),
+			"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(lt.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlLtRes := mqlLt.(*mqlAwsEc2Launchtemplate)
+	mqlLtRes.region = region
+	mqlLtRes.launchTemplateId = ltId
+	return mqlLtRes, nil
+}
+
+func initAwsEc2Launchtemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["region"] == nil || (args["id"] == nil && args["name"] == nil) {
+		return nil, nil, errors.New("region and id or name required to fetch aws ec2 launch template")
+	}
+	region := args["region"].Value.(string)
+
+	input := &ec2.DescribeLaunchTemplatesInput{}
+	if args["id"] != nil {
+		input.LaunchTemplateIds = []string{args["id"].Value.(string)}
+	} else {
+		input.LaunchTemplateNames = []string{args["name"].Value.(string)}
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeLaunchTemplates(context.Background(), input)
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.LaunchTemplates) == 0 {
+		return args, nil, nil
+	}
+	mqlLt, err := buildLaunchTemplateResource(runtime, region, conn.AccountId(), resp.LaunchTemplates[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlLt, nil
 }
 
 func (a *mqlAwsEc2Launchtemplate) id() (string, error) {
@@ -4196,6 +4270,41 @@ func (i *mqlAwsEc2Instance) managedBy() (string, error) {
 
 func (a *mqlAwsEc2Securitygroup) managedBy() (string, error) {
 	return managedByFromTags(a.Tags.Data), nil
+}
+
+func (i *mqlAwsEc2Instance) capacityReservation() (*mqlAwsEc2CapacityReservation, error) {
+	crID := convert.ToValue(i.instanceCache.CapacityReservationId)
+	if crID == "" {
+		i.CapacityReservation.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(i.MqlRuntime, "aws.ec2.capacityReservation",
+		map[string]*llx.RawData{
+			"id":     llx.StringData(crID),
+			"region": llx.StringData(i.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2CapacityReservation), nil
+}
+
+func (i *mqlAwsEc2Instance) autoScalingGroup() (*mqlAwsAutoscalingGroup, error) {
+	raw, ok := i.Tags.Data["aws:autoscaling:groupName"]
+	groupName, _ := raw.(string)
+	if !ok || groupName == "" {
+		i.AutoScalingGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(i.MqlRuntime, ResourceAwsAutoscalingGroup,
+		map[string]*llx.RawData{
+			"name":   llx.StringData(groupName),
+			"region": llx.StringData(i.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAutoscalingGroup), nil
 }
 
 func (i *mqlAwsEc2Image) sharedWithAccounts() ([]any, error) {

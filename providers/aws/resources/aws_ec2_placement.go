@@ -7,7 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -145,28 +148,7 @@ func (a *mqlAwsEc2) getCapacityReservations(conn *connection.AwsConnection) []*j
 					if conn.Filters.General.MatchesExcludeTags(tags) {
 						continue
 					}
-					arn := fmt.Sprintf("arn:aws:ec2:%s:%s:capacity-reservation/%s", region, conn.AccountId(), convert.ToValue(cr.CapacityReservationId))
-
-					mqlCr, err := CreateResource(a.MqlRuntime, "aws.ec2.capacityReservation",
-						map[string]*llx.RawData{
-							"__id":                   llx.StringData(arn),
-							"id":                     llx.StringDataPtr(cr.CapacityReservationId),
-							"arn":                    llx.StringData(arn),
-							"region":                 llx.StringData(region),
-							"instanceType":           llx.StringDataPtr(cr.InstanceType),
-							"instancePlatform":       llx.StringData(string(cr.InstancePlatform)),
-							"availabilityZone":       llx.StringDataPtr(cr.AvailabilityZone),
-							"totalInstanceCount":     llx.IntDataDefault(cr.TotalInstanceCount, 0),
-							"availableInstanceCount": llx.IntDataDefault(cr.AvailableInstanceCount, 0),
-							"state":                  llx.StringData(string(cr.State)),
-							"instanceMatchCriteria":  llx.StringData(string(cr.InstanceMatchCriteria)),
-							"endDateType":            llx.StringData(string(cr.EndDateType)),
-							"tenancy":                llx.StringData(string(cr.Tenancy)),
-							"ebsOptimized":           llx.BoolData(convert.ToValue(cr.EbsOptimized)),
-							"ephemeralStorage":       llx.BoolData(convert.ToValue(cr.EphemeralStorage)),
-							"createdAt":              llx.TimeDataPtr(cr.CreateDate),
-							"tags":                   llx.MapData(toInterfaceMap(tags), types.String),
-						})
+					mqlCr, err := buildCapacityReservationResource(a.MqlRuntime, region, conn.AccountId(), cr)
 					if err != nil {
 						return nil, err
 					}
@@ -182,6 +164,65 @@ func (a *mqlAwsEc2) getCapacityReservations(conn *connection.AwsConnection) []*j
 
 func (a *mqlAwsEc2CapacityReservation) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func buildCapacityReservationResource(runtime *plugin.Runtime, region, accountID string, cr ec2types.CapacityReservation) (*mqlAwsEc2CapacityReservation, error) {
+	arn := fmt.Sprintf("arn:aws:ec2:%s:%s:capacity-reservation/%s", region, accountID, convert.ToValue(cr.CapacityReservationId))
+	mqlCr, err := CreateResource(runtime, "aws.ec2.capacityReservation",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(arn),
+			"id":                     llx.StringDataPtr(cr.CapacityReservationId),
+			"arn":                    llx.StringData(arn),
+			"region":                 llx.StringData(region),
+			"instanceType":           llx.StringDataPtr(cr.InstanceType),
+			"instancePlatform":       llx.StringData(string(cr.InstancePlatform)),
+			"availabilityZone":       llx.StringDataPtr(cr.AvailabilityZone),
+			"totalInstanceCount":     llx.IntDataDefault(cr.TotalInstanceCount, 0),
+			"availableInstanceCount": llx.IntDataDefault(cr.AvailableInstanceCount, 0),
+			"state":                  llx.StringData(string(cr.State)),
+			"instanceMatchCriteria":  llx.StringData(string(cr.InstanceMatchCriteria)),
+			"endDateType":            llx.StringData(string(cr.EndDateType)),
+			"tenancy":                llx.StringData(string(cr.Tenancy)),
+			"ebsOptimized":           llx.BoolData(convert.ToValue(cr.EbsOptimized)),
+			"ephemeralStorage":       llx.BoolData(convert.ToValue(cr.EphemeralStorage)),
+			"createdAt":              llx.TimeDataPtr(cr.CreateDate),
+			"tags":                   llx.MapData(toInterfaceMap(ec2TagsToMap(cr.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCr.(*mqlAwsEc2CapacityReservation), nil
+}
+
+func initAwsEc2CapacityReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil || args["region"] == nil {
+		return nil, nil, errors.New("id and region required to fetch aws ec2 capacity reservation")
+	}
+	id := args["id"].Value.(string)
+	region := args["region"].Value.(string)
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeCapacityReservations(context.Background(), &ec2.DescribeCapacityReservationsInput{
+		CapacityReservationIds: []string{id},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.CapacityReservations) == 0 {
+		return args, nil, nil
+	}
+	mqlCr, err := buildCapacityReservationResource(runtime, region, conn.AccountId(), resp.CapacityReservations[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlCr, nil
 }
 
 // Instance Connect Endpoints

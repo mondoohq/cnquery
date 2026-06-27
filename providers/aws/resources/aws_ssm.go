@@ -201,10 +201,15 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 						"agentVersion":    llx.StringDataPtr(instance.AgentVersion),
 						"lastPingedAt":    llx.TimeDataPtr(instance.LastPingDateTime),
 						"computerName":    llx.StringDataPtr(instance.ComputerName),
+						"sourceType":      llx.StringData(string(instance.SourceType)),
+						"sourceId":        llx.StringDataPtr(instance.SourceId),
+						"activationId":    llx.StringDataPtr(instance.ActivationId),
+						"resourceType":    llx.StringData(string(instance.ResourceType)),
 					})
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlAwsSsmInstance).iamRoleName = convert.ToValue(instance.IamRole)
 				res = append(res, mqlInstance)
 			}
 			return jobpool.JobResult(res), nil
@@ -224,6 +229,27 @@ func (a *mqlAwsSsmParameter) id() (string, error) {
 
 func (a *mqlAwsSsmInstance) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+type mqlAwsSsmInstanceInternal struct {
+	iamRoleName string
+}
+
+// iamRole resolves the IAM role assigned to the managed instance for Systems
+// Manager. It is set for hybrid and on-premises activations; standard EC2
+// instances report an empty role here (their profile is on the EC2 instance).
+func (a *mqlAwsSsmInstance) iamRole() (*mqlAwsIamRole, error) {
+	if a.iamRoleName == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"name": llx.StringData(a.iamRoleName)})
+	if err != nil {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 const ssmInstanceArnPattern = "arn:aws:ssm:%s:%s:instance/%s"
