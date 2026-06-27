@@ -748,6 +748,25 @@ func (a *mqlAwsLambdaFunction) urlConfig() (*mqlAwsLambdaFunctionUrlConfig, erro
 	return res.(*mqlAwsLambdaFunctionUrlConfig), nil
 }
 
+// urlConfigAuthType exposes the function URL's authentication type directly on
+// the function, returning "" when no URL is configured. Reading it avoids
+// dereferencing the nullable urlConfig sub-resource, so a policy can check URL
+// auth without a null-dereference on functions that have no URL.
+func (a *mqlAwsLambdaFunction) urlConfigAuthType() (string, error) {
+	cfg := a.GetUrlConfig()
+	if cfg.Error != nil {
+		return "", cfg.Error
+	}
+	if cfg.Data == nil {
+		return "", nil
+	}
+	authType := cfg.Data.GetAuthType()
+	if authType.Error != nil {
+		return "", authType.Error
+	}
+	return authType.Data, nil
+}
+
 func (a *mqlAwsLambdaFunctionUrlConfig) id() (string, error) {
 	return a.FunctionUrl.Data, nil
 }

@@ -12,6 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	aatypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
@@ -763,6 +765,39 @@ func (a *mqlAwsDynamodbTable) billingMode() (string, error) {
 
 func (a *mqlAwsDynamodbTable) replicaRegions() ([]any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) autoScalingEnabled() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	tableName := a.Name.Data
+	svc := conn.ApplicationAutoscaling(region)
+	ctx := context.Background()
+
+	// A table "scales with demand" when both its read and write capacity have
+	// Application Auto Scaling scalable targets. On-demand (PAY_PER_REQUEST)
+	// tables have none and are evaluated by their billing mode instead.
+	resp, err := svc.DescribeScalableTargets(ctx, &applicationautoscaling.DescribeScalableTargetsInput{
+		ServiceNamespace: aatypes.ServiceNamespaceDynamodb,
+		ResourceIds:      []string{"table/" + tableName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	var hasRead, hasWrite bool
+	for i := range resp.ScalableTargets {
+		switch resp.ScalableTargets[i].ScalableDimension {
+		case aatypes.ScalableDimensionDynamoDBTableReadCapacityUnits:
+			hasRead = true
+		case aatypes.ScalableDimensionDynamoDBTableWriteCapacityUnits:
+			hasWrite = true
+		}
+	}
+	return hasRead && hasWrite, nil
 }
 
 func (a *mqlAwsDynamodbTable) globalSecondaryIndexes() ([]any, error) {

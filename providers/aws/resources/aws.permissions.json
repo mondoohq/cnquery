@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.38.1",
-  "generated_at": "2026-06-26T13:29:39-07:00",
+  "generated_at": "2026-06-26T19:15:04-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -1003,6 +1003,12 @@
       "service": "application-autoscaling",
       "action": "DescribeScalableTargets",
       "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "application-autoscaling:DescribeScalableTargets",
+      "service": "application-autoscaling",
+      "action": "DescribeScalableTargets",
+      "source_file": "aws_dynamodb.go"
     },
     {
       "permission": "application-autoscaling:DescribeScalingPolicies",

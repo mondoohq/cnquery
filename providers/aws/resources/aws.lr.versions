@@ -2783,6 +2783,7 @@ aws.dynamodb.limit.tableMaxWrite 11.15.2
 aws.dynamodb.limits 11.15.2
 aws.dynamodb.table 11.15.2
 aws.dynamodb.table.arn 11.15.2
+aws.dynamodb.table.autoScalingEnabled 13.38.2
 aws.dynamodb.table.backups 11.15.2
 aws.dynamodb.table.billingMode 11.16.1
 aws.dynamodb.table.continuousBackups 11.15.2
@@ -5950,6 +5951,7 @@ aws.lambda.function.urlConfig.corsMaxAge 11.15.2
 aws.lambda.function.urlConfig.createdAt 11.15.2
 aws.lambda.function.urlConfig.functionUrl 11.15.2
 aws.lambda.function.urlConfig.lastModifiedAt 11.15.2
+aws.lambda.function.urlConfigAuthType 13.38.2
 aws.lambda.function.version 13.12.1
 aws.lambda.function.version.arn 13.12.1
 aws.lambda.function.version.codeSha256 13.12.1

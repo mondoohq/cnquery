@@ -16918,6 +16918,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.billingMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetBillingMode()).ToDataRes(types.String)
 	},
+	"aws.dynamodb.table.autoScalingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetAutoScalingEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.dynamodb.table.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetReplicaRegions()).ToDataRes(types.Array(types.String))
 	},
@@ -20235,6 +20238,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.urlConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetUrlConfig()).ToDataRes(types.Resource("aws.lambda.function.urlConfig"))
+	},
+	"aws.lambda.function.urlConfigAuthType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetUrlConfigAuthType()).ToDataRes(types.String)
 	},
 	"aws.lambda.function.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetState()).ToDataRes(types.String)
@@ -50912,6 +50918,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDynamodbTable).BillingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.autoScalingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).AutoScalingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.dynamodb.table.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).ReplicaRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -55670,6 +55680,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.urlConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).UrlConfig, ok = plugin.RawToTValue[*mqlAwsLambdaFunctionUrlConfig](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.urlConfigAuthType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).UrlConfigAuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -122518,6 +122532,7 @@ type mqlAwsDynamodbTable struct {
 	StreamEnabled             plugin.TValue[bool]
 	StreamViewType            plugin.TValue[string]
 	BillingMode               plugin.TValue[string]
+	AutoScalingEnabled        plugin.TValue[bool]
 	ReplicaRegions            plugin.TValue[[]any]
 	TtlDescription            plugin.TValue[any]
 	GlobalSecondaryIndexes    plugin.TValue[[]any]
@@ -122703,6 +122718,12 @@ func (c *mqlAwsDynamodbTable) GetStreamViewType() *plugin.TValue[string] {
 func (c *mqlAwsDynamodbTable) GetBillingMode() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.BillingMode, func() (string, error) {
 		return c.billingMode()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetAutoScalingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoScalingEnabled, func() (bool, error) {
+		return c.autoScalingEnabled()
 	})
 }
 
@@ -133772,6 +133793,7 @@ type mqlAwsLambdaFunction struct {
 	Description                   plugin.TValue[string]
 	LastModifiedAt                plugin.TValue[*time.Time]
 	UrlConfig                     plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
+	UrlConfigAuthType             plugin.TValue[string]
 	State                         plugin.TValue[string]
 	CodeSize                      plugin.TValue[int64]
 	StateReason                   plugin.TValue[string]
@@ -134029,6 +134051,12 @@ func (c *mqlAwsLambdaFunction) GetUrlConfig() *plugin.TValue[*mqlAwsLambdaFuncti
 		}
 
 		return c.urlConfig()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetUrlConfigAuthType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UrlConfigAuthType, func() (string, error) {
+		return c.urlConfigAuthType()
 	})
 }
 

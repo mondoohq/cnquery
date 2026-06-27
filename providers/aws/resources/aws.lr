@@ -11230,6 +11230,12 @@ private aws.dynamodb.table @defaults("name region") {
   streamViewType() string
   // Billing mode: PROVISIONED or PAY_PER_REQUEST
   billingMode() string
+  // Whether Application Auto Scaling is configured for both provisioned read and write capacity
+  //
+  // True when the table has Application Auto Scaling scalable targets for both
+  // the read and write capacity dimensions. Always false for PAY_PER_REQUEST
+  // (on-demand) tables, which scale with demand without auto scaling.
+  autoScalingEnabled() bool
   // Regions where the table is replicated (global tables)
   replicaRegions() []string
   // Time to live (TTL) settings for the table
@@ -14242,6 +14248,12 @@ private aws.lambda.function @defaults("arn") {
   lastModifiedAt time
   // Function URL configuration (null if no URL is configured)
   urlConfig() aws.lambda.function.urlConfig
+  // Authentication type of the function URL, empty if no URL is configured
+  //
+  // One of AWS_IAM or NONE, or an empty string when the function has no URL
+  // configured. NONE means the function URL is publicly invocable without
+  // authentication.
+  urlConfigAuthType() string
   // Current state of the function (Active, Inactive, Pending, Failed, Deactivating, Deactivated, ActiveNonInvocable, Deleting)
   state string
   // Size of the function deployment package in bytes
