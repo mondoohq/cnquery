@@ -117,6 +117,7 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 					"domain":               llx.StringDataPtr(s.Domain),
 					"listenerPort":         llx.IntData(intValue(s.ListenerPort)),
 					"scanDnsName":          llx.StringDataPtr(s.ScanDnsName),
+					"sourceDbSystemId":     llx.StringDataPtr(s.SourceDbSystemId),
 					"version":              llx.StringDataPtr(s.Version),
 					"cpuCoreCount":         llx.IntData(intValue(s.CpuCoreCount)),
 					"nodeCount":            llx.IntData(intValue(s.NodeCount)),
@@ -128,6 +129,7 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 					"created":              llx.TimeDataPtr(created),
 					"freeformTags":         llx.MapData(freeformTags, types.String),
 					"definedTags":          llx.MapData(definedTags, types.Any),
+					"systemTags":           llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -285,6 +287,8 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"name":                        llx.StringDataPtr(a.DisplayName),
 					"compartmentID":               llx.StringDataPtr(a.CompartmentId),
 					"dbName":                      llx.StringDataPtr(a.DbName),
+					"sourceId":                    llx.StringDataPtr(a.SourceId),
+					"isRefreshableClone":          llx.BoolDataPtr(a.IsRefreshableClone),
 					"dbVersion":                   llx.StringDataPtr(a.DbVersion),
 					"dbWorkload":                  llx.StringData(string(a.DbWorkload)),
 					"isDedicated":                 llx.BoolDataPtr(a.IsDedicated),
@@ -314,6 +318,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"created":                     llx.TimeDataPtr(created),
 					"freeformTags":                llx.MapData(freeformTags, types.String),
 					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"systemTags":                  llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

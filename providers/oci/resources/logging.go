@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciLogging) id() (string, error) {
@@ -112,6 +113,7 @@ func (o *mqlOciLogging) getLogGroups(conn *connection.OciConnection, regions []a
 					"compartmentID": llx.StringDataPtr(lg.CompartmentId),
 					"state":         llx.StringData(string(lg.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"systemTags":    llx.MapData(definedTagsToAny(lg.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -215,6 +217,7 @@ func (o *mqlOciLoggingLogGroup) logs() ([]any, error) {
 			"sourceResource":    llx.StringData(sourceResource),
 			"created":           llx.TimeDataPtr(logCreated),
 			"timeLastModified":  llx.TimeDataPtr(logLastModified),
+			"systemTags":        llx.MapData(definedTagsToAny(l.SystemTags), types.Dict),
 		})
 		if err != nil {
 			return nil, err

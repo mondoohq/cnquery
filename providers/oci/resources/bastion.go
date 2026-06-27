@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciBastion) id() (string, error) {
@@ -105,6 +106,7 @@ func (o *mqlOciBastion) getBastions(conn *connection.OciConnection, regions []an
 					"dnsProxyStatus": llx.StringData(string(b.DnsProxyStatus)),
 					"created":        llx.TimeDataPtr(created),
 					"timeUpdated":    llx.TimeDataPtr(timeUpdated),
+					"systemTags":     llx.MapData(definedTagsToAny(b.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

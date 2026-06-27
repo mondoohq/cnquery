@@ -565,6 +565,7 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 					"subnetDomainName":        llx.StringDataPtr(subnet.SubnetDomainName),
 					"prohibitPublicIpOnVnic":  llx.BoolDataPtr(subnet.ProhibitPublicIpOnVnic),
 					"prohibitInternetIngress": llx.BoolDataPtr(subnet.ProhibitInternetIngress),
+					"securityListIds":         llx.ArrayData(stringsToAny(subnet.SecurityListIds), types.String),
 					"created":                 llx.TimeDataPtr(created),
 					"freeformTags":            llx.MapData(freeformTags, types.String),
 					"definedTags":             llx.MapData(definedTags, types.Any),

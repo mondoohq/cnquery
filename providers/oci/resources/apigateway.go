@@ -117,6 +117,7 @@ func (o *mqlOciApigateway) getGateways(conn *connection.OciConnection, regions [
 					"timeUpdated":   llx.TimeDataPtr(updated),
 					"freeformTags":  llx.MapData(freeformTags, types.String),
 					"definedTags":   llx.MapData(definedTags, types.Any),
+					"systemTags":    llx.MapData(definedTagsToAny(g.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -368,6 +369,7 @@ func (o *mqlOciApigateway) getDeployments(conn *connection.OciConnection, region
 					"timeUpdated":   llx.TimeDataPtr(updated),
 					"freeformTags":  llx.MapData(freeformTags, types.String),
 					"definedTags":   llx.MapData(definedTags, types.Any),
+					"systemTags":    llx.MapData(definedTagsToAny(d.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -790,6 +792,7 @@ func (o *mqlOciApigateway) getCertificates(conn *connection.OciConnection, regio
 					"timeUpdated":       llx.TimeDataPtr(updated),
 					"freeformTags":      llx.MapData(freeformTags, types.String),
 					"definedTags":       llx.MapData(definedTags, types.Any),
+					"systemTags":        llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

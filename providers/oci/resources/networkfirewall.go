@@ -109,6 +109,7 @@ func (o *mqlOciNetworkFirewall) getFirewalls(conn *connection.OciConnection, reg
 					"created":            llx.TimeDataPtr(created),
 					"timeUpdated":        llx.TimeDataPtr(timeUpdated),
 					"securityAttributes": llx.MapData(definedTagsToAny(fw.SecurityAttributes), types.Dict),
+					"systemTags":         llx.MapData(definedTagsToAny(fw.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -257,6 +258,7 @@ func (o *mqlOciNetworkFirewall) getPolicies(conn *connection.OciConnection, regi
 					"compartmentID": llx.StringDataPtr(p.CompartmentId),
 					"state":         llx.StringData(string(p.LifecycleState)),
 					"created":       llx.TimeDataPtr(created),
+					"systemTags":    llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

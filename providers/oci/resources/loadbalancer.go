@@ -128,6 +128,7 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 					"created":                   llx.TimeDataPtr(created),
 					"freeformTags":              llx.MapData(freeformTags, types.String),
 					"definedTags":               llx.MapData(definedTags, types.Any),
+					"systemTags":                llx.MapData(definedTagsToAny(lb.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -136,6 +137,7 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 				mqlLb.cacheListeners = lb.Listeners
 				mqlLb.cacheBackendSets = lb.BackendSets
 				mqlLb.cacheRegion = regionResource.Id.Data
+				mqlLb.cacheSubnetIDs = lb.SubnetIds
 				res = append(res, mqlLb)
 			}
 
@@ -150,6 +152,7 @@ type mqlOciLoadBalancerLoadBalancerInternal struct {
 	cacheListeners   map[string]loadbalancer.Listener
 	cacheBackendSets map[string]loadbalancer.BackendSet
 	cacheRegion      string
+	cacheSubnetIDs   []string
 }
 
 func initOciLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

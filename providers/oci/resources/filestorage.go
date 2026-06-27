@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (o *mqlOciFileStorage) id() (string, error) {
@@ -124,6 +125,11 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 						created = &fs.TimeCreated.Time
 					}
 
+					var parentFileSystemId *string
+					if fs.SourceDetails != nil {
+						parentFileSystemId = fs.SourceDetails.ParentFileSystemId
+					}
+
 					mqlInstance, err := CreateResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
 						"id":                 llx.StringDataPtr(fs.Id),
 						"name":               llx.StringDataPtr(fs.DisplayName),
@@ -131,7 +137,10 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 						"availabilityDomain": llx.StringDataPtr(fs.AvailabilityDomain),
 						"state":              llx.StringData(string(fs.LifecycleState)),
 						"meteredBytes":       llx.IntDataPtr(fs.MeteredBytes),
+						"parentFileSystemId": llx.StringDataPtr(parentFileSystemId),
+						"isCloneParent":      llx.BoolDataPtr(fs.IsCloneParent),
 						"created":            llx.TimeDataPtr(created),
+						"systemTags":         llx.MapData(definedTagsToAny(fs.SystemTags), types.Dict),
 					})
 					if err != nil {
 						return nil, err

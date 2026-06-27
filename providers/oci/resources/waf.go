@@ -119,6 +119,7 @@ func (o *mqlOciWaf) getFirewalls(conn *connection.OciConnection, regions []any) 
 					"timeUpdated":   llx.TimeDataPtr(timeUpdated),
 					"freeformTags":  llx.MapData(freeformTags, types.String),
 					"definedTags":   llx.MapData(definedTags, types.Any),
+					"systemTags":    llx.MapData(definedTagsToAny(lbWaf.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -266,6 +267,7 @@ func (o *mqlOciWaf) getPolicies(conn *connection.OciConnection, regions []any) [
 					"timeUpdated":   llx.TimeDataPtr(timeUpdated),
 					"freeformTags":  llx.MapData(freeformTags, types.String),
 					"definedTags":   llx.MapData(definedTags, types.Any),
+					"systemTags":    llx.MapData(definedTagsToAny(p.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

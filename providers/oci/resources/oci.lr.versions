@@ -386,6 +386,7 @@ oci.ai.vision.project.state 13.9.2
 oci.ai.vision.projects 13.9.2
 oci.apigateway 13.4.1
 oci.apigateway.certificate 13.4.1
+oci.apigateway.certificate.compartment 13.12.2
 oci.apigateway.certificate.compartmentID 13.4.1
 oci.apigateway.certificate.created 13.4.1
 oci.apigateway.certificate.definedTags 13.4.1
@@ -394,11 +395,13 @@ oci.apigateway.certificate.id 13.4.1
 oci.apigateway.certificate.name 13.4.1
 oci.apigateway.certificate.state 13.4.1
 oci.apigateway.certificate.subjectNames 13.4.1
+oci.apigateway.certificate.systemTags 13.12.2
 oci.apigateway.certificate.timeNotValidAfter 13.4.1
 oci.apigateway.certificate.timeUpdated 13.4.1
 oci.apigateway.certificates 13.4.1
 oci.apigateway.deployment 13.4.1
 oci.apigateway.deployment.authenticationType 13.4.1
+oci.apigateway.deployment.compartment 13.12.2
 oci.apigateway.deployment.compartmentID 13.4.1
 oci.apigateway.deployment.corsAllowCredentials 13.4.1
 oci.apigateway.deployment.corsAllowedOrigins 13.4.1
@@ -419,11 +422,13 @@ oci.apigateway.deployment.pathPrefix 13.4.1
 oci.apigateway.deployment.rateLimitKey 13.4.1
 oci.apigateway.deployment.rateLimitPerSecond 13.4.1
 oci.apigateway.deployment.state 13.4.1
+oci.apigateway.deployment.systemTags 13.12.2
 oci.apigateway.deployment.timeUpdated 13.4.1
 oci.apigateway.deployments 13.4.1
 oci.apigateway.gateway 13.4.1
 oci.apigateway.gateway.caBundleIds 13.4.1
 oci.apigateway.gateway.certificate 13.4.1
+oci.apigateway.gateway.compartment 13.12.2
 oci.apigateway.gateway.compartmentID 13.4.1
 oci.apigateway.gateway.created 13.4.1
 oci.apigateway.gateway.definedTags 13.4.1
@@ -438,6 +443,7 @@ oci.apigateway.gateway.name 13.4.1
 oci.apigateway.gateway.networkSecurityGroups 13.4.1
 oci.apigateway.gateway.state 13.4.1
 oci.apigateway.gateway.subnet 13.4.1
+oci.apigateway.gateway.systemTags 13.12.2
 oci.apigateway.gateway.timeUpdated 13.4.1
 oci.apigateway.gateways 13.4.1
 oci.audit 13.0.6
@@ -453,11 +459,13 @@ oci.bastion.instance.dnsProxyStatus 13.0.6
 oci.bastion.instance.id 13.0.6
 oci.bastion.instance.name 13.0.6
 oci.bastion.instance.state 13.0.6
+oci.bastion.instance.systemTags 13.12.2
 oci.bastion.instance.targetSubnet 13.0.6
 oci.bastion.instance.targetVcn 13.0.6
 oci.bastion.instance.timeUpdated 13.0.6
 oci.certificates 13.4.1
 oci.certificates.caBundle 13.4.1
+oci.certificates.caBundle.compartment 13.12.2
 oci.certificates.caBundle.compartmentID 13.4.1
 oci.certificates.caBundle.created 13.4.1
 oci.certificates.caBundle.definedTags 13.4.1
@@ -469,6 +477,7 @@ oci.certificates.caBundle.state 13.4.1
 oci.certificates.caBundles 13.4.1
 oci.certificates.certificate 13.4.1
 oci.certificates.certificate.autoRenewalEnabled 13.4.1
+oci.certificates.certificate.compartment 13.12.2
 oci.certificates.certificate.compartmentID 13.4.1
 oci.certificates.certificate.configType 13.4.1
 oci.certificates.certificate.created 13.4.1
@@ -490,6 +499,7 @@ oci.certificates.certificate.validityNotAfter 13.4.1
 oci.certificates.certificate.validityNotBefore 13.4.1
 oci.certificates.certificateAuthorities 13.4.1
 oci.certificates.certificateAuthority 13.4.1
+oci.certificates.certificateAuthority.compartment 13.12.2
 oci.certificates.certificateAuthority.compartmentID 13.4.1
 oci.certificates.certificateAuthority.configType 13.4.1
 oci.certificates.certificateAuthority.created 13.4.1
@@ -509,6 +519,8 @@ oci.certificates.certificateAuthority.validityNotBefore 13.4.1
 oci.certificates.certificates 13.4.1
 oci.cloudGuard 13.0.6
 oci.cloudGuard.detectorRecipe 13.0.6
+oci.cloudGuard.detectorRecipe.compartment 13.12.2
+oci.cloudGuard.detectorRecipe.compartmentId 13.12.2
 oci.cloudGuard.detectorRecipe.created 13.0.6
 oci.cloudGuard.detectorRecipe.description 13.0.6
 oci.cloudGuard.detectorRecipe.detectorType 13.0.6
@@ -516,11 +528,13 @@ oci.cloudGuard.detectorRecipe.id 13.0.6
 oci.cloudGuard.detectorRecipe.name 13.0.6
 oci.cloudGuard.detectorRecipe.owner 13.0.6
 oci.cloudGuard.detectorRecipe.state 13.0.6
+oci.cloudGuard.detectorRecipe.systemTags 13.12.2
 oci.cloudGuard.detectorRecipes 13.0.6
 oci.cloudGuard.reportingRegion 13.0.6
 oci.cloudGuard.securityPolicies 13.5.1
 oci.cloudGuard.securityPolicy 13.5.1
 oci.cloudGuard.securityPolicy.category 13.5.1
+oci.cloudGuard.securityPolicy.compartment 13.12.2
 oci.cloudGuard.securityPolicy.compartmentID 13.5.1
 oci.cloudGuard.securityPolicy.created 13.5.1
 oci.cloudGuard.securityPolicy.description 13.5.1
@@ -530,7 +544,9 @@ oci.cloudGuard.securityPolicy.name 13.5.1
 oci.cloudGuard.securityPolicy.owner 13.5.1
 oci.cloudGuard.securityPolicy.services 13.5.1
 oci.cloudGuard.securityPolicy.state 13.5.1
+oci.cloudGuard.securityPolicy.systemTags 13.12.2
 oci.cloudGuard.securityZone 13.5.1
+oci.cloudGuard.securityZone.compartment 13.12.2
 oci.cloudGuard.securityZone.compartmentID 13.5.1
 oci.cloudGuard.securityZone.created 13.5.1
 oci.cloudGuard.securityZone.description 13.5.1
@@ -539,7 +555,9 @@ oci.cloudGuard.securityZone.isInheritanceAfterDeleteEnabled 13.5.1
 oci.cloudGuard.securityZone.name 13.5.1
 oci.cloudGuard.securityZone.securityZoneRecipe 13.5.1
 oci.cloudGuard.securityZone.state 13.5.1
+oci.cloudGuard.securityZone.systemTags 13.12.2
 oci.cloudGuard.securityZoneRecipe 13.5.1
+oci.cloudGuard.securityZoneRecipe.compartment 13.12.2
 oci.cloudGuard.securityZoneRecipe.compartmentID 13.5.1
 oci.cloudGuard.securityZoneRecipe.created 13.5.1
 oci.cloudGuard.securityZoneRecipe.description 13.5.1
@@ -548,17 +566,20 @@ oci.cloudGuard.securityZoneRecipe.name 13.5.1
 oci.cloudGuard.securityZoneRecipe.owner 13.5.1
 oci.cloudGuard.securityZoneRecipe.securityPolicies 13.5.1
 oci.cloudGuard.securityZoneRecipe.state 13.5.1
+oci.cloudGuard.securityZoneRecipe.systemTags 13.12.2
 oci.cloudGuard.securityZoneRecipes 13.5.1
 oci.cloudGuard.securityZones 13.5.1
 oci.cloudGuard.selfManageResources 13.0.6
 oci.cloudGuard.status 13.0.6
 oci.cloudGuard.target 13.0.6
+oci.cloudGuard.target.compartment 13.12.2
 oci.cloudGuard.target.compartmentID 13.0.6
 oci.cloudGuard.target.created 13.0.6
 oci.cloudGuard.target.id 13.0.6
 oci.cloudGuard.target.name 13.0.6
 oci.cloudGuard.target.recipeCount 13.0.6
 oci.cloudGuard.target.state 13.0.6
+oci.cloudGuard.target.systemTags 13.12.2
 oci.cloudGuard.target.targetResourceId 13.0.6
 oci.cloudGuard.target.targetResourceType 13.0.6
 oci.cloudGuard.targets 13.0.6
@@ -581,7 +602,10 @@ oci.compute.blockVolume.isHydrated 13.0.6
 oci.compute.blockVolume.kmsKey 13.0.6
 oci.compute.blockVolume.name 13.0.6
 oci.compute.blockVolume.sizeInGBs 13.0.6
+oci.compute.blockVolume.sourceVolume 13.12.2
+oci.compute.blockVolume.sourceVolumeBackupId 13.12.2
 oci.compute.blockVolume.state 13.0.6
+oci.compute.blockVolume.systemTags 13.12.2
 oci.compute.blockVolume.vpusPerGB 13.0.6
 oci.compute.blockVolumes 13.0.6
 oci.compute.bootVolume 13.0.6
@@ -595,9 +619,13 @@ oci.compute.bootVolume.imageId 13.0.6
 oci.compute.bootVolume.kmsKey 13.0.6
 oci.compute.bootVolume.name 13.0.6
 oci.compute.bootVolume.sizeInGBs 13.0.6
+oci.compute.bootVolume.sourceBootVolume 13.12.2
+oci.compute.bootVolume.sourceBootVolumeBackupId 13.12.2
 oci.compute.bootVolume.state 13.0.6
+oci.compute.bootVolume.systemTags 13.12.2
 oci.compute.bootVolumes 13.0.6
 oci.compute.image 9.0.0
+oci.compute.image.baseImage 13.12.2
 oci.compute.image.compartment 11.1.0
 oci.compute.image.created 9.0.0
 oci.compute.image.definedTags 11.1.0
@@ -614,6 +642,7 @@ oci.compute.instance 9.0.0
 oci.compute.instance.agentPlugins 13.10.1
 oci.compute.instance.allPluginsDisabled 13.10.1
 oci.compute.instance.availabilityDomain 11.1.0
+oci.compute.instance.bootVolume 13.12.2
 oci.compute.instance.cisBenchmarkScanResult 13.7.1
 oci.compute.instance.compartment 11.1.0
 oci.compute.instance.created 9.0.0
@@ -640,6 +669,7 @@ oci.compute.instance.shape 11.1.0
 oci.compute.instance.shapeConfig 13.0.6
 oci.compute.instance.sourceDetails 13.0.6
 oci.compute.instance.state 9.0.0
+oci.compute.instance.systemTags 13.12.2
 oci.compute.instance.timeMaintenanceRebootDue 13.0.6
 oci.compute.instance.vnics 13.1.1
 oci.compute.instance.vulnerabilityScanResult 13.7.1
@@ -665,6 +695,7 @@ oci.compute.vnic.subnet 13.1.1
 oci.containerInstances 13.1.1
 oci.containerInstances.container 13.1.1
 oci.containerInstances.container.availabilityDomain 13.1.1
+oci.containerInstances.container.compartment 13.12.2
 oci.containerInstances.container.compartmentID 13.1.1
 oci.containerInstances.container.containerInstanceId 13.1.1
 oci.containerInstances.container.created 13.1.1
@@ -676,9 +707,11 @@ oci.containerInstances.container.isResourcePrincipalDisabled 13.1.1
 oci.containerInstances.container.name 13.1.1
 oci.containerInstances.container.resourceConfig 13.1.1
 oci.containerInstances.container.state 13.1.1
+oci.containerInstances.container.systemTags 13.12.2
 oci.containerInstances.container.timeUpdated 13.1.1
 oci.containerInstances.instance 13.1.1
 oci.containerInstances.instance.availabilityDomain 13.1.1
+oci.containerInstances.instance.compartment 13.12.2
 oci.containerInstances.instance.compartmentID 13.1.1
 oci.containerInstances.instance.containerCount 13.1.1
 oci.containerInstances.instance.containerRestartPolicy 13.1.1
@@ -693,11 +726,13 @@ oci.containerInstances.instance.name 13.1.1
 oci.containerInstances.instance.shape 13.1.1
 oci.containerInstances.instance.shapeConfig 13.1.1
 oci.containerInstances.instance.state 13.1.1
+oci.containerInstances.instance.systemTags 13.12.2
 oci.containerInstances.instance.timeUpdated 13.1.1
 oci.containerInstances.instance.volumeCount 13.1.1
 oci.containerInstances.instances 13.1.1
 oci.dataSafe 13.5.5
 oci.dataSafe.configuration 13.5.5
+oci.dataSafe.configuration.compartment 13.12.2
 oci.dataSafe.configuration.compartmentId 13.5.5
 oci.dataSafe.configuration.definedTags 13.5.5
 oci.dataSafe.configuration.enabledAt 13.5.5
@@ -712,6 +747,7 @@ oci.dataSafe.configurations 13.5.5
 oci.dataSafe.maskingPolicies 13.5.5
 oci.dataSafe.maskingPolicy 13.5.5
 oci.dataSafe.maskingPolicy.columnSource 13.5.5
+oci.dataSafe.maskingPolicy.compartment 13.12.2
 oci.dataSafe.maskingPolicy.compartmentId 13.5.5
 oci.dataSafe.maskingPolicy.created 13.5.5
 oci.dataSafe.maskingPolicy.definedTags 13.5.5
@@ -723,6 +759,7 @@ oci.dataSafe.maskingPolicy.lifecycleState 13.5.5
 oci.dataSafe.maskingPolicy.region 13.5.5
 oci.dataSafe.maskingPolicy.timeUpdated 13.5.5
 oci.dataSafe.securityAssessment 13.5.5
+oci.dataSafe.securityAssessment.compartment 13.12.2
 oci.dataSafe.securityAssessment.compartmentId 13.5.5
 oci.dataSafe.securityAssessment.created 13.5.5
 oci.dataSafe.securityAssessment.definedTags 13.5.5
@@ -739,6 +776,7 @@ oci.dataSafe.securityAssessment.type 13.5.5
 oci.dataSafe.securityAssessments 13.5.5
 oci.dataSafe.sensitiveDataModel 13.5.5
 oci.dataSafe.sensitiveDataModel.appSuiteName 13.5.5
+oci.dataSafe.sensitiveDataModel.compartment 13.12.2
 oci.dataSafe.sensitiveDataModel.compartmentId 13.5.5
 oci.dataSafe.sensitiveDataModel.created 13.5.5
 oci.dataSafe.sensitiveDataModel.definedTags 13.5.5
@@ -752,6 +790,7 @@ oci.dataSafe.sensitiveDataModel.targetId 13.5.5
 oci.dataSafe.sensitiveDataModel.timeUpdated 13.5.5
 oci.dataSafe.sensitiveDataModels 13.5.5
 oci.dataSafe.sensitiveType 13.5.5
+oci.dataSafe.sensitiveType.compartment 13.12.2
 oci.dataSafe.sensitiveType.compartmentId 13.5.5
 oci.dataSafe.sensitiveType.created 13.5.5
 oci.dataSafe.sensitiveType.definedTags 13.5.5
@@ -767,6 +806,7 @@ oci.dataSafe.sensitiveType.timeUpdated 13.5.5
 oci.dataSafe.sensitiveTypes 13.5.5
 oci.dataSafe.targetDatabase 13.5.5
 oci.dataSafe.targetDatabase.associatedResourceIds 13.5.5
+oci.dataSafe.targetDatabase.compartment 13.12.2
 oci.dataSafe.targetDatabase.compartmentId 13.5.5
 oci.dataSafe.targetDatabase.created 13.5.5
 oci.dataSafe.targetDatabase.databaseType 13.5.5
@@ -779,8 +819,10 @@ oci.dataSafe.targetDatabase.infrastructureType 13.5.5
 oci.dataSafe.targetDatabase.lifecycleDetails 13.5.5
 oci.dataSafe.targetDatabase.lifecycleState 13.5.5
 oci.dataSafe.targetDatabase.region 13.5.5
+oci.dataSafe.targetDatabase.systemTags 13.12.2
 oci.dataSafe.targetDatabases 13.5.5
 oci.dataSafe.userAssessment 13.5.5
+oci.dataSafe.userAssessment.compartment 13.12.2
 oci.dataSafe.userAssessment.compartmentId 13.5.5
 oci.dataSafe.userAssessment.created 13.5.5
 oci.dataSafe.userAssessment.definedTags 13.5.5
@@ -821,6 +863,7 @@ oci.database.autonomousDatabase.isDedicated 13.1.1
 oci.database.autonomousDatabase.isFreeTier 13.1.1
 oci.database.autonomousDatabase.isLocalDataGuardEnabled 13.1.1
 oci.database.autonomousDatabase.isMtlsConnectionRequired 13.1.1
+oci.database.autonomousDatabase.isRefreshableClone 13.12.2
 oci.database.autonomousDatabase.isRemoteDataGuardEnabled 13.10.1
 oci.database.autonomousDatabase.kmsKey 13.1.1
 oci.database.autonomousDatabase.kmsVault 13.1.1
@@ -833,12 +876,15 @@ oci.database.autonomousDatabase.privateEndpointIp 13.1.1
 oci.database.autonomousDatabase.privateEndpointLabel 13.1.1
 oci.database.autonomousDatabase.publicConnectionUrls 13.8.2
 oci.database.autonomousDatabase.securityGroups 13.6.2
+oci.database.autonomousDatabase.sourceId 13.12.2
 oci.database.autonomousDatabase.standbyWhitelistedIps 13.10.1
 oci.database.autonomousDatabase.state 13.1.1
 oci.database.autonomousDatabase.subnet 13.1.1
+oci.database.autonomousDatabase.systemTags 13.12.2
 oci.database.autonomousDatabase.whitelistedIps 13.1.1
 oci.database.autonomousDatabaseBackup 13.4.1
 oci.database.autonomousDatabaseBackup.autonomousDatabase 13.4.1
+oci.database.autonomousDatabaseBackup.compartment 13.12.2
 oci.database.autonomousDatabaseBackup.compartmentID 13.4.1
 oci.database.autonomousDatabaseBackup.databaseSizeInTBs 13.4.1
 oci.database.autonomousDatabaseBackup.dbVersion 13.4.1
@@ -861,6 +907,7 @@ oci.database.autonomousDatabases 13.1.1
 oci.database.backup 13.4.1
 oci.database.backup.availabilityDomain 13.4.1
 oci.database.backup.backupDestinationType 13.4.1
+oci.database.backup.compartment 13.12.2
 oci.database.backup.compartmentID 13.4.1
 oci.database.backup.databaseEdition 13.4.1
 oci.database.backup.databaseId 13.4.1
@@ -884,6 +931,7 @@ oci.database.dbSystem 13.1.1
 oci.database.dbSystem.availabilityDomain 13.1.1
 oci.database.dbSystem.backupNetworkNsgIds 13.1.1
 oci.database.dbSystem.backupSecurityGroups 13.6.2
+oci.database.dbSystem.compartment 13.12.2
 oci.database.dbSystem.compartmentID 13.1.1
 oci.database.dbSystem.cpuCoreCount 13.1.1
 oci.database.dbSystem.created 13.1.1
@@ -904,8 +952,10 @@ oci.database.dbSystem.nsgIds 13.1.1
 oci.database.dbSystem.scanDnsName 13.10.1
 oci.database.dbSystem.securityGroups 13.6.2
 oci.database.dbSystem.shape 13.1.1
+oci.database.dbSystem.sourceDbSystemId 13.12.2
 oci.database.dbSystem.state 13.1.1
 oci.database.dbSystem.subnet 13.1.1
+oci.database.dbSystem.systemTags 13.12.2
 oci.database.dbSystem.version 13.1.1
 oci.database.dbSystems 13.1.1
 oci.events 13.0.6
@@ -924,16 +974,21 @@ oci.events.rules 13.0.6
 oci.fileStorage 13.0.6
 oci.fileStorage.fileSystem 13.0.6
 oci.fileStorage.fileSystem.availabilityDomain 13.0.6
+oci.fileStorage.fileSystem.compartment 13.12.2
 oci.fileStorage.fileSystem.compartmentID 13.0.6
 oci.fileStorage.fileSystem.created 13.0.6
 oci.fileStorage.fileSystem.id 13.0.6
+oci.fileStorage.fileSystem.isCloneParent 13.12.2
 oci.fileStorage.fileSystem.kmsKey 13.0.6
 oci.fileStorage.fileSystem.meteredBytes 13.0.6
 oci.fileStorage.fileSystem.name 13.0.6
+oci.fileStorage.fileSystem.parentFileSystemId 13.12.2
 oci.fileStorage.fileSystem.state 13.0.6
+oci.fileStorage.fileSystem.systemTags 13.12.2
 oci.fileStorage.fileSystems 13.0.6
 oci.functions 13.1.1
 oci.functions.application 13.1.1
+oci.functions.application.compartment 13.12.2
 oci.functions.application.compartmentID 13.1.1
 oci.functions.application.config 13.1.1
 oci.functions.application.created 13.1.1
@@ -953,6 +1008,7 @@ oci.functions.application.traceConfig 13.1.1
 oci.functions.applications 13.1.1
 oci.functions.function 13.1.1
 oci.functions.function.applicationId 13.1.1
+oci.functions.function.compartment 13.12.2
 oci.functions.function.compartmentID 13.1.1
 oci.functions.function.config 13.1.1
 oci.functions.function.created 13.1.1
@@ -1003,6 +1059,7 @@ oci.identity.dbCredential.expires 13.5.6
 oci.identity.dbCredential.id 13.5.6
 oci.identity.dbCredential.state 13.5.6
 oci.identity.dynamicGroup 13.5.6
+oci.identity.dynamicGroup.compartment 13.12.2
 oci.identity.dynamicGroup.compartmentID 13.5.6
 oci.identity.dynamicGroup.created 13.5.6
 oci.identity.dynamicGroup.definedTags 13.5.6
@@ -1014,6 +1071,7 @@ oci.identity.dynamicGroup.name 13.5.6
 oci.identity.dynamicGroup.state 13.5.6
 oci.identity.dynamicGroups 13.5.6
 oci.identity.group 9.0.0
+oci.identity.group.compartment 13.12.2
 oci.identity.group.compartmentID 9.0.0
 oci.identity.group.created 9.0.0
 oci.identity.group.definedTags 11.1.0
@@ -1025,6 +1083,7 @@ oci.identity.group.name 9.0.0
 oci.identity.group.state 9.0.0
 oci.identity.groups 9.0.0
 oci.identity.identityProvider 13.5.6
+oci.identity.identityProvider.compartment 13.12.2
 oci.identity.identityProvider.compartmentID 13.5.6
 oci.identity.identityProvider.created 13.5.6
 oci.identity.identityProvider.definedTags 13.5.6
@@ -1047,6 +1106,7 @@ oci.identity.mfaDevice.isActivated 13.1.1
 oci.identity.mfaDevice.state 13.1.1
 oci.identity.mfaDevice.userId 13.1.1
 oci.identity.networkSource 13.5.6
+oci.identity.networkSource.compartment 13.12.2
 oci.identity.networkSource.compartmentID 13.5.6
 oci.identity.networkSource.created 13.5.6
 oci.identity.networkSource.definedTags 13.5.6
@@ -1060,6 +1120,7 @@ oci.identity.networkSource.state 13.5.6
 oci.identity.networkSource.virtualSourceList 13.5.6
 oci.identity.networkSources 13.5.6
 oci.identity.oauth2ClientCredential 13.5.6
+oci.identity.oauth2ClientCredential.compartment 13.12.2
 oci.identity.oauth2ClientCredential.compartmentID 13.5.6
 oci.identity.oauth2ClientCredential.created 13.5.6
 oci.identity.oauth2ClientCredential.description 13.5.6
@@ -1070,6 +1131,7 @@ oci.identity.oauth2ClientCredential.scopes 13.5.6
 oci.identity.oauth2ClientCredential.state 13.5.6
 oci.identity.policies 9.0.0
 oci.identity.policy 9.0.0
+oci.identity.policy.compartment 13.12.2
 oci.identity.policy.compartmentID 9.0.0
 oci.identity.policy.created 9.0.0
 oci.identity.policy.definedTags 11.1.0
@@ -1091,6 +1153,7 @@ oci.identity.user 9.0.0
 oci.identity.user.apiKeys 9.0.0
 oci.identity.user.authTokens 9.0.0
 oci.identity.user.capabilities 9.0.0
+oci.identity.user.compartment 13.12.2
 oci.identity.user.compartmentID 9.0.0
 oci.identity.user.created 9.0.0
 oci.identity.user.customerSecretKeys 9.0.0
@@ -1103,6 +1166,7 @@ oci.identity.user.externalIdentifier 13.5.6
 oci.identity.user.freeformTags 11.1.0
 oci.identity.user.groups 9.0.0
 oci.identity.user.id 9.0.0
+oci.identity.user.identityProvider 13.12.2
 oci.identity.user.lastLogin 9.0.0
 oci.identity.user.mfaActivated 9.0.0
 oci.identity.user.mfaDevices 13.1.1
@@ -1170,6 +1234,7 @@ oci.loadBalancer.listener.trustedCaBundles 13.10.1
 oci.loadBalancer.listener.trustedCertificateAuthorities 13.10.1
 oci.loadBalancer.loadBalancer 13.0.6
 oci.loadBalancer.loadBalancer.backendSets 13.0.6
+oci.loadBalancer.loadBalancer.compartment 13.12.2
 oci.loadBalancer.loadBalancer.compartmentID 13.0.6
 oci.loadBalancer.loadBalancer.created 13.0.6
 oci.loadBalancer.loadBalancer.definedTags 13.7.2
@@ -1185,6 +1250,8 @@ oci.loadBalancer.loadBalancer.nsgIds 13.12.0
 oci.loadBalancer.loadBalancer.securityGroups 13.12.0
 oci.loadBalancer.loadBalancer.shape 13.0.6
 oci.loadBalancer.loadBalancer.state 13.0.6
+oci.loadBalancer.loadBalancer.subnets 13.12.2
+oci.loadBalancer.loadBalancer.systemTags 13.12.2
 oci.loadBalancer.loadBalancers 13.0.6
 oci.logging 13.0.6
 oci.logging.log 13.0.6
@@ -1200,8 +1267,10 @@ oci.logging.log.retentionDuration 13.0.6
 oci.logging.log.sourceResource 13.4.1
 oci.logging.log.sourceService 13.4.1
 oci.logging.log.state 13.0.6
+oci.logging.log.systemTags 13.12.2
 oci.logging.log.timeLastModified 13.0.6
 oci.logging.logGroup 13.0.6
+oci.logging.logGroup.compartment 13.12.2
 oci.logging.logGroup.compartmentID 13.0.6
 oci.logging.logGroup.created 13.0.6
 oci.logging.logGroup.description 13.0.6
@@ -1209,6 +1278,7 @@ oci.logging.logGroup.id 13.0.6
 oci.logging.logGroup.logs 13.0.6
 oci.logging.logGroup.name 13.0.6
 oci.logging.logGroup.state 13.0.6
+oci.logging.logGroup.systemTags 13.12.2
 oci.logging.logGroups 13.0.6
 oci.monitoring 13.0.6
 oci.monitoring.alarm 13.0.6
@@ -1232,6 +1302,7 @@ oci.network.exposure.internetReachable 13.12.0
 oci.network.exposure.openIngressRules 13.12.0
 oci.network.exposure.securityGroupAllowsIngress 13.12.0
 oci.network.internetGateway 13.1.1
+oci.network.internetGateway.compartment 13.12.2
 oci.network.internetGateway.compartmentID 13.1.1
 oci.network.internetGateway.created 13.1.1
 oci.network.internetGateway.definedTags 13.1.1
@@ -1244,6 +1315,7 @@ oci.network.internetGateway.vcn 13.1.1
 oci.network.internetGateways 13.1.1
 oci.network.natGateway 13.1.1
 oci.network.natGateway.blockTraffic 13.1.1
+oci.network.natGateway.compartment 13.12.2
 oci.network.natGateway.compartmentID 13.1.1
 oci.network.natGateway.created 13.1.1
 oci.network.natGateway.definedTags 13.1.1
@@ -1273,6 +1345,7 @@ oci.network.publicIp 13.8.2
 oci.network.publicIp.assignedEntityId 13.8.2
 oci.network.publicIp.assignedEntityType 13.8.2
 oci.network.publicIp.availabilityDomain 13.8.2
+oci.network.publicIp.compartment 13.12.2
 oci.network.publicIp.compartmentID 13.8.2
 oci.network.publicIp.created 13.8.2
 oci.network.publicIp.id 13.8.2
@@ -1283,6 +1356,7 @@ oci.network.publicIp.scope 13.8.2
 oci.network.publicIp.state 13.8.2
 oci.network.publicIps 13.8.2
 oci.network.routeTable 13.1.1
+oci.network.routeTable.compartment 13.12.2
 oci.network.routeTable.compartmentID 13.1.1
 oci.network.routeTable.created 13.1.1
 oci.network.routeTable.definedTags 13.1.1
@@ -1311,6 +1385,7 @@ oci.network.securityLists 9.0.0
 oci.network.subnet 13.0.6
 oci.network.subnet.availabilityDomain 13.0.6
 oci.network.subnet.cidrBlock 13.0.6
+oci.network.subnet.compartment 13.12.2
 oci.network.subnet.compartmentID 13.0.6
 oci.network.subnet.created 13.0.6
 oci.network.subnet.definedTags 13.0.6
@@ -1322,6 +1397,7 @@ oci.network.subnet.name 13.0.6
 oci.network.subnet.prohibitInternetIngress 13.0.6
 oci.network.subnet.prohibitPublicIpOnVnic 13.0.6
 oci.network.subnet.routeTable 13.1.1
+oci.network.subnet.securityListIds 13.12.2
 oci.network.subnet.state 13.0.6
 oci.network.subnet.subnetDomainName 13.0.6
 oci.network.subnet.vcn 13.0.6
@@ -1329,6 +1405,7 @@ oci.network.subnets 13.0.6
 oci.network.vcn 9.0.0
 oci.network.vcn.cidrBlock 9.0.0
 oci.network.vcn.cidrBlocks 9.0.0
+oci.network.vcn.compartment 13.12.2
 oci.network.vcn.compartmentID 9.0.0
 oci.network.vcn.created 9.0.0
 oci.network.vcn.defaultDhcpOptionsId 11.1.0
@@ -1345,6 +1422,7 @@ oci.network.vcn.vcnDomainName 11.1.0
 oci.network.vcns 9.0.0
 oci.networkFirewall 13.0.6
 oci.networkFirewall.firewall 13.0.6
+oci.networkFirewall.firewall.compartment 13.12.2
 oci.networkFirewall.firewall.compartmentID 13.0.6
 oci.networkFirewall.firewall.created 13.0.6
 oci.networkFirewall.firewall.healthStatus 13.8.2
@@ -1357,24 +1435,30 @@ oci.networkFirewall.firewall.securityAttributes 13.8.2
 oci.networkFirewall.firewall.shape 13.0.6
 oci.networkFirewall.firewall.state 13.0.6
 oci.networkFirewall.firewall.subnet 13.0.6
+oci.networkFirewall.firewall.systemTags 13.12.2
 oci.networkFirewall.firewall.timeUpdated 13.0.6
 oci.networkFirewall.firewalls 13.0.6
 oci.networkFirewall.policies 13.0.6
 oci.networkFirewall.policy 13.0.6
 oci.networkFirewall.policy.attachedFirewallCount 13.0.6
+oci.networkFirewall.policy.compartment 13.12.2
 oci.networkFirewall.policy.compartmentID 13.0.6
 oci.networkFirewall.policy.created 13.0.6
 oci.networkFirewall.policy.description 13.0.6
 oci.networkFirewall.policy.id 13.0.6
 oci.networkFirewall.policy.name 13.0.6
 oci.networkFirewall.policy.state 13.0.6
+oci.networkFirewall.policy.systemTags 13.12.2
 oci.objectStorage 9.0.0
 oci.objectStorage.bucket 9.0.0
 oci.objectStorage.bucket.approximateCount 11.1.0
 oci.objectStorage.bucket.approximateSize 11.1.0
 oci.objectStorage.bucket.autoTiering 9.0.0
+oci.objectStorage.bucket.compartment 13.12.2
 oci.objectStorage.bucket.compartmentID 9.0.0
 oci.objectStorage.bucket.created 9.0.0
+oci.objectStorage.bucket.createdBy 13.12.2
+oci.objectStorage.bucket.createdByUser 13.12.2
 oci.objectStorage.bucket.definedTags 11.1.0
 oci.objectStorage.bucket.etag 11.1.0
 oci.objectStorage.bucket.freeformTags 11.1.0
@@ -1413,6 +1497,7 @@ oci.objectStorage.retentionRule.timeRuleLocked 13.1.1
 oci.oke 13.0.6
 oci.oke.cluster 13.0.6
 oci.oke.cluster.availableKubernetesUpgrades 13.0.6
+oci.oke.cluster.compartment 13.12.2
 oci.oke.cluster.compartmentID 13.0.6
 oci.oke.cluster.created 13.0.6
 oci.oke.cluster.definedTags 13.7.2
@@ -1429,10 +1514,13 @@ oci.oke.cluster.privateEndpoint 13.0.6
 oci.oke.cluster.publicEndpoint 13.0.6
 oci.oke.cluster.securityAttributes 13.8.2
 oci.oke.cluster.state 13.0.6
+oci.oke.cluster.systemTags 13.12.2
 oci.oke.cluster.type 13.0.6
 oci.oke.cluster.vcn 13.0.6
 oci.oke.clusters 13.0.6
 oci.oke.nodePool 13.0.6
+oci.oke.nodePool.cluster 13.12.2
+oci.oke.nodePool.compartment 13.12.2
 oci.oke.nodePool.compartmentID 13.0.6
 oci.oke.nodePool.id 13.0.6
 oci.oke.nodePool.kubernetesVersion 13.0.6
@@ -1444,6 +1532,7 @@ oci.oke.nodePool.nodeShapeConfig 13.0.6
 oci.oke.nodePool.sshPublicKey 13.0.6
 oci.oke.nodePool.state 13.0.6
 oci.oke.nodePool.subnets 13.3.1
+oci.oke.nodePool.systemTags 13.12.2
 oci.ons 13.0.6
 oci.ons.subscription 13.0.6
 oci.ons.subscription.created 13.0.6
@@ -1465,6 +1554,7 @@ oci.ons.topics 13.0.6
 oci.redis 13.5.1
 oci.redis.cluster 13.5.1
 oci.redis.cluster.clusterMode 13.5.1
+oci.redis.cluster.compartment 13.12.2
 oci.redis.cluster.compartmentID 13.5.1
 oci.redis.cluster.created 13.5.1
 oci.redis.cluster.definedTags 13.5.1
@@ -1484,6 +1574,7 @@ oci.redis.cluster.shardCount 13.5.1
 oci.redis.cluster.softwareVersion 13.5.1
 oci.redis.cluster.state 13.5.1
 oci.redis.cluster.subnet 13.5.1
+oci.redis.cluster.systemTags 13.12.2
 oci.redis.cluster.timeUpdated 13.5.1
 oci.redis.clusters 13.5.1
 oci.region 9.0.0
@@ -1517,6 +1608,7 @@ oci.vault.secret.rotationInterval 13.1.1
 oci.vault.secret.rotationStatus 13.0.6
 oci.vault.secret.secretVersions 13.1.1
 oci.vault.secret.state 13.0.6
+oci.vault.secret.systemTags 13.12.2
 oci.vault.secret.timeOfCurrentVersionExpiry 13.1.1
 oci.vault.secretVersion 13.1.1
 oci.vault.secretVersion.contentType 13.1.1
@@ -1706,6 +1798,7 @@ oci.vulnerabilityScanning.vulnerability.vulnerabilityReference 13.7.1
 oci.vulnerabilityScanning.vulnerability.vulnerabilityType 13.7.1
 oci.waf 13.1.1
 oci.waf.firewall 13.1.1
+oci.waf.firewall.compartment 13.12.2
 oci.waf.firewall.compartmentID 13.1.1
 oci.waf.firewall.created 13.1.1
 oci.waf.firewall.definedTags 13.1.1
@@ -1715,10 +1808,12 @@ oci.waf.firewall.loadBalancer 13.1.1
 oci.waf.firewall.name 13.1.1
 oci.waf.firewall.policy 13.1.1
 oci.waf.firewall.state 13.1.1
+oci.waf.firewall.systemTags 13.12.2
 oci.waf.firewall.timeUpdated 13.1.1
 oci.waf.firewalls 13.1.1
 oci.waf.policies 13.1.1
 oci.waf.policy 13.1.1
+oci.waf.policy.compartment 13.12.2
 oci.waf.policy.compartmentID 13.1.1
 oci.waf.policy.created 13.1.1
 oci.waf.policy.definedTags 13.1.1
@@ -1726,4 +1821,5 @@ oci.waf.policy.freeformTags 13.1.1
 oci.waf.policy.id 13.1.1
 oci.waf.policy.name 13.1.1
 oci.waf.policy.state 13.1.1
+oci.waf.policy.systemTags 13.12.2
 oci.waf.policy.timeUpdated 13.1.1

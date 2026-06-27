@@ -213,6 +213,7 @@ func (o *mqlOciDataSafe) targetDatabases() ([]any, error) {
 					"created":               sdkTimeData(t.TimeCreated),
 					"freeformTags":          llx.MapData(strMapToAny(t.FreeformTags), types.String),
 					"definedTags":           llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
+					"systemTags":            llx.MapData(definedTagsToAny(t.SystemTags), types.Dict),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.targetDatabase", args)
 				if err != nil {

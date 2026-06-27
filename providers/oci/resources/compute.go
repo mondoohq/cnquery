@@ -207,12 +207,16 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
 					"freeformTags":                llx.MapData(freeformTags, types.String),
 					"definedTags":                 llx.MapData(definedTags, types.Any),
+					"systemTags":                  llx.MapData(definedTagsToAny(instance.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
 				}
 				mqlInst := mqlInstance.(*mqlOciComputeInstance)
 				mqlInst.cacheRegion = regionResource.Id.Data
+				if src, ok := instance.SourceDetails.(core.InstanceSourceViaBootVolumeDetails); ok {
+					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
+				}
 				res = append(res, mqlInst)
 			}
 
@@ -224,7 +228,8 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 }
 
 type mqlOciComputeInstanceInternal struct {
-	cacheRegion string
+	cacheRegion       string
+	cacheBootVolumeID string
 }
 
 func (o *mqlOciComputeInstance) id() (string, error) {
@@ -466,6 +471,7 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlOciComputeImage).cacheBaseImageID = stringValue(image.BaseImageId)
 				res = append(res, mqlInstance)
 			}
 
@@ -474,6 +480,10 @@ func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlOciComputeImageInternal struct {
+	cacheBaseImageID string
 }
 
 func (o *mqlOciComputeImage) id() (string, error) {
@@ -563,23 +573,35 @@ func (o *mqlOciCompute) getBlockVolumes(conn *connection.OciConnection, regions 
 					created = &vol.TimeCreated.Time
 				}
 
+				var sourceVolumeID, sourceVolumeBackupID string
+				switch d := vol.SourceDetails.(type) {
+				case core.VolumeSourceFromVolumeDetails:
+					sourceVolumeID = stringValue(d.Id)
+				case core.VolumeSourceFromVolumeBackupDetails:
+					sourceVolumeBackupID = stringValue(d.Id)
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.blockVolume", map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(vol.Id),
-					"name":               llx.StringDataPtr(vol.DisplayName),
-					"compartmentID":      llx.StringDataPtr(vol.CompartmentId),
-					"availabilityDomain": llx.StringDataPtr(vol.AvailabilityDomain),
-					"sizeInGBs":          llx.IntDataPtr(vol.SizeInGBs),
-					"vpusPerGB":          llx.IntDataPtr(vol.VpusPerGB),
-					"state":              llx.StringData(string(vol.LifecycleState)),
-					"isHydrated":         llx.BoolDataPtr(vol.IsHydrated),
-					"isAutoTuneEnabled":  llx.BoolDataPtr(vol.IsAutoTuneEnabled),
-					"created":            llx.TimeDataPtr(created),
+					"id":                   llx.StringDataPtr(vol.Id),
+					"name":                 llx.StringDataPtr(vol.DisplayName),
+					"compartmentID":        llx.StringDataPtr(vol.CompartmentId),
+					"availabilityDomain":   llx.StringDataPtr(vol.AvailabilityDomain),
+					"sizeInGBs":            llx.IntDataPtr(vol.SizeInGBs),
+					"vpusPerGB":            llx.IntDataPtr(vol.VpusPerGB),
+					"state":                llx.StringData(string(vol.LifecycleState)),
+					"isHydrated":           llx.BoolDataPtr(vol.IsHydrated),
+					"isAutoTuneEnabled":    llx.BoolDataPtr(vol.IsAutoTuneEnabled),
+					"sourceVolumeBackupId": llx.StringData(sourceVolumeBackupID),
+					"created":              llx.TimeDataPtr(created),
+					"systemTags":           llx.MapData(definedTagsToAny(vol.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciComputeBlockVolume).cacheKmsKeyId = stringValue(vol.KmsKeyId)
-				res = append(res, mqlInstance)
+				mqlBV := mqlInstance.(*mqlOciComputeBlockVolume)
+				mqlBV.cacheKmsKeyId = stringValue(vol.KmsKeyId)
+				mqlBV.cacheSourceVolumeID = sourceVolumeID
+				res = append(res, mqlBV)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -590,7 +612,8 @@ func (o *mqlOciCompute) getBlockVolumes(conn *connection.OciConnection, regions 
 }
 
 type mqlOciComputeBlockVolumeInternal struct {
-	cacheKmsKeyId string
+	cacheKmsKeyId       string
+	cacheSourceVolumeID string
 }
 
 func (o *mqlOciComputeBlockVolume) id() (string, error) {
@@ -694,21 +717,33 @@ func (o *mqlOciCompute) getBootVolumes(conn *connection.OciConnection, regions [
 					created = &bv.TimeCreated.Time
 				}
 
+				var sourceBootVolumeID, sourceBootVolumeBackupID string
+				switch d := bv.SourceDetails.(type) {
+				case core.BootVolumeSourceFromBootVolumeDetails:
+					sourceBootVolumeID = stringValue(d.Id)
+				case core.BootVolumeSourceFromBootVolumeBackupDetails:
+					sourceBootVolumeBackupID = stringValue(d.Id)
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.bootVolume", map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(bv.Id),
-					"name":               llx.StringDataPtr(bv.DisplayName),
-					"compartmentID":      llx.StringDataPtr(bv.CompartmentId),
-					"availabilityDomain": llx.StringDataPtr(bv.AvailabilityDomain),
-					"sizeInGBs":          llx.IntDataPtr(bv.SizeInGBs),
-					"imageId":            llx.StringDataPtr(bv.ImageId),
-					"state":              llx.StringData(string(bv.LifecycleState)),
-					"created":            llx.TimeDataPtr(created),
+					"id":                       llx.StringDataPtr(bv.Id),
+					"name":                     llx.StringDataPtr(bv.DisplayName),
+					"compartmentID":            llx.StringDataPtr(bv.CompartmentId),
+					"availabilityDomain":       llx.StringDataPtr(bv.AvailabilityDomain),
+					"sizeInGBs":                llx.IntDataPtr(bv.SizeInGBs),
+					"imageId":                  llx.StringDataPtr(bv.ImageId),
+					"state":                    llx.StringData(string(bv.LifecycleState)),
+					"sourceBootVolumeBackupId": llx.StringData(sourceBootVolumeBackupID),
+					"created":                  llx.TimeDataPtr(created),
+					"systemTags":               llx.MapData(definedTagsToAny(bv.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciComputeBootVolume).cacheKmsKeyId = stringValue(bv.KmsKeyId)
-				res = append(res, mqlInstance)
+				mqlBV := mqlInstance.(*mqlOciComputeBootVolume)
+				mqlBV.cacheKmsKeyId = stringValue(bv.KmsKeyId)
+				mqlBV.cacheSourceBootVolumeID = sourceBootVolumeID
+				res = append(res, mqlBV)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -719,7 +754,8 @@ func (o *mqlOciCompute) getBootVolumes(conn *connection.OciConnection, regions [
 }
 
 type mqlOciComputeBootVolumeInternal struct {
-	cacheKmsKeyId string
+	cacheKmsKeyId           string
+	cacheSourceBootVolumeID string
 }
 
 func (o *mqlOciComputeBootVolume) id() (string, error) {

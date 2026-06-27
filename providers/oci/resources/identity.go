@@ -148,6 +148,7 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 				if err != nil {
 					return nil, err
 				}
+				mqlInstance.(*mqlOciIdentityUser).cacheIdentityProviderID = stringValue(user.IdentityProviderId)
 				res = append(res, mqlInstance)
 			}
 
@@ -156,6 +157,10 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlOciIdentityUserInternal struct {
+	cacheIdentityProviderID string
 }
 
 func (o *mqlOciIdentityUser) id() (string, error) {
