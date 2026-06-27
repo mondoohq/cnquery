@@ -378,23 +378,24 @@ func (a *mqlAwsS3BucketAccessPoint) policy() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
+	region, ok, err := a.bucketRegion()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	bucketname := a.Name.Data
-	location := a.Location.Data
-	svc := conn.S3(location)
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isS3BucketInaccessible(err) {
 			a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -497,16 +498,13 @@ func isFalseConditionValue(v any) bool {
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
-		return nil, nil
+	region, ok, err := a.bucketRegion()
+	if err != nil || !ok {
+		return nil, err
 	}
-	bucketname := a.Name.Data
-	location := a.Location.Data
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(location)
+	bucketname := a.Name.Data
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	tags, err := svc.GetBucketTagging(ctx, &s3.GetBucketTaggingInput{
@@ -518,6 +516,9 @@ func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
 			if apiErr.ErrorCode() == "NoSuchTagSet" {
 				return nil, nil
 			}
+		}
+		if isS3BucketInaccessible(err) {
+			return nil, nil
 		}
 
 		return nil, err
@@ -548,6 +549,9 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
+		if isS3BucketInaccessible(err) {
+			return "", nil
+		}
 		return "", err
 	}
 
@@ -558,6 +562,32 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 		region = "us-east-1"
 	}
 	return region, nil
+}
+
+// bucketRegion resolves the bucket's home region for per-bucket data calls
+// (logging, ACL, policy, ...). Those must target the bucket's own region; a
+// client pointed at the wrong region answers with an HTTP 301 redirect. Buckets
+// discovered through the listing path carry their region, but a bucket reached by
+// name (e.g. aws.cloudtrail.trail.s3bucket) resolves it lazily here.
+//
+// ok is false — and the caller returns the field's empty value — when the bucket
+// can't be reached from the account being scanned: it's a placeholder for a
+// deleted bucket, or its region can't be determined because it lives in another
+// account we have no permission to read. A CloudTrail organization trail delivers
+// logs to a bucket owned by the management account, so a member-account scan
+// can't read it.
+func (a *mqlAwsS3Bucket) bucketRegion() (string, bool, error) {
+	if !a.Exists.Data {
+		return "", false, nil
+	}
+	loc := a.GetLocation()
+	if loc.Error != nil {
+		return "", false, loc.Error
+	}
+	if loc.Data == "" {
+		return "", false, nil
+	}
+	return loc.Data, true, nil
 }
 
 func (a *mqlAwsS3Bucket) cloudformationStack() (*mqlAwsCloudformationStack, error) {
@@ -594,15 +624,32 @@ func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 		return nil, nil
 	}
 	a.aclOnce.Do(func() {
-		bucketname := a.Name.Data
-		location := a.Location.Data
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.aclErr = err
+			return
+		}
+		if !ok {
+			// A cross-account or deleted bucket yields no ACL rather than an
+			// error; callers treat a nil result as "no grants".
+			return
+		}
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		svc := conn.S3(location)
+		bucketname := a.Name.Data
+		svc := conn.S3(region)
 		ctx := context.Background()
 
-		a.aclOutput, a.aclErr = svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
+		out, err := svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
 			Bucket: &bucketname,
 		})
+		if err != nil {
+			if isS3BucketInaccessible(err) {
+				return
+			}
+			a.aclErr = err
+			return
+		}
+		a.aclOutput = out
 	})
 	return a.aclOutput, a.aclErr
 }
@@ -613,6 +660,9 @@ func (a *mqlAwsS3Bucket) acl() ([]any, error) {
 	acl, err := a.gatherAcl()
 	if err != nil {
 		return nil, err
+	}
+	if acl == nil {
+		return []any{}, nil
 	}
 
 	res := []any{}
@@ -654,22 +704,25 @@ func (a *mqlAwsS3Bucket) acl() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) fetchPublicAccessBlock() (*s3types.PublicAccessBlockConfiguration, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
-		return nil, nil
-	}
 	a.publicAccessOnce.Do(func() {
-		bucketname := a.Name.Data
-		location := a.Location.Data
+		region, ok, err := a.bucketRegion()
+		if err != nil {
+			a.publicAccessErr = err
+			return
+		}
+		if !ok {
+			return
+		}
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		svc := conn.S3(location)
+		bucketname := a.Name.Data
+		svc := conn.S3(region)
 		ctx := context.Background()
 
 		resp, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
 			Bucket: &bucketname,
 		})
 		if err != nil {
-			if isNotFoundForS3(err) {
+			if isS3BucketInaccessible(err) {
 				return
 			}
 			a.publicAccessErr = err
@@ -726,6 +779,9 @@ func (a *mqlAwsS3Bucket) owner() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if acl == nil {
+		return nil, nil
+	}
 
 	if acl.Owner == nil {
 		return nil, errors.New("could not gather aws s3 bucket's owner information")
@@ -745,17 +801,14 @@ const (
 )
 
 func (a *mqlAwsS3Bucket) public() (bool, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
-		return false, nil
+	region, ok, err := a.bucketRegion()
+	if err != nil || !ok {
+		return false, err
 	}
-	var (
-		bucketname = a.Name.Data
-		location   = a.Location.Data
-		conn       = a.MqlRuntime.Connection.(*connection.AwsConnection)
-		svc        = conn.S3(location)
-		ctx        = context.Background()
-	)
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	bucketname := a.Name.Data
+	svc := conn.S3(region)
+	ctx := context.Background()
 
 	// Check Public Access Block settings first (reuses cached result)
 	accessBlock, err := a.fetchPublicAccessBlock()
@@ -786,7 +839,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 	statusOutput, err := svc.GetBucketPolicyStatus(ctx, &s3.GetBucketPolicyStatusInput{
 		Bucket: &bucketname,
 	})
-	if err != nil && !isNotFoundForS3(err) {
+	if err != nil && !isS3BucketInaccessible(err) {
 		return false, err
 	}
 	if statusOutput != nil &&
@@ -820,6 +873,9 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if acl == nil {
+		return false, nil
+	}
 
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
@@ -834,23 +890,20 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 }
 
 func (a *mqlAwsS3Bucket) cors() ([]any, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
-		return nil, nil
+	region, ok, err := a.bucketRegion()
+	if err != nil || !ok {
+		return nil, err
 	}
-	bucketname := a.Name.Data
-	location := a.Location.Data
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(location)
+	bucketname := a.Name.Data
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	cors, err := svc.GetBucketCors(ctx, &s3.GetBucketCorsInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		if isNotFoundForS3(err) {
+		if isS3BucketInaccessible(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -878,22 +931,22 @@ func (a *mqlAwsS3Bucket) cors() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) logging() (map[string]any, error) {
-	// Placeholder buckets (e.g., cross-account references) can't be queried
-	if !a.Exists.Data {
-		return nil, nil
+	region, ok, err := a.bucketRegion()
+	if err != nil || !ok {
+		return nil, err
 	}
-	bucketname := a.Name.Data
-	bucketlocation := a.Location.Data
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(bucketlocation)
+	bucketname := a.Name.Data
+	svc := conn.S3(region)
 	ctx := context.Background()
 
 	logging, err := svc.GetBucketLogging(ctx, &s3.GetBucketLoggingInput{
 		Bucket: &bucketname,
 	})
 	if err != nil {
+		if isS3BucketInaccessible(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -1889,5 +1942,28 @@ func isNotFoundForS3(err error) bool {
 		}
 	}
 
+	return false
+}
+
+// isS3BucketInaccessible reports whether err from an S3 bucket data call means
+// the bucket's data is unavailable from the account being scanned, rather than a
+// genuine failure worth surfacing. Two cases qualify: the bucket no longer
+// exists (404), or it lives in another account we have no permission to read
+// (403). A CloudTrail organization trail delivers logs to a bucket owned by the
+// management account, so a member-account scan hits a 403 on that bucket and
+// must treat it as "no data" instead of failing the query.
+func isS3BucketInaccessible(err error) bool {
+	if err == nil {
+		return false
+	}
+	if isNotFoundForS3(err) || Is400AccessDeniedError(err) {
+		return true
+	}
+	// A forbidden response from a HEAD request carries no AccessDenied body, so
+	// fall back to the raw status code.
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 403 {
+		return true
+	}
 	return false
 }

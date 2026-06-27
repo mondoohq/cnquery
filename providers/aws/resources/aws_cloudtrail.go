@@ -337,6 +337,12 @@ func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]any, error) {
 		TrailName: &arnValue,
 	})
 	if err != nil {
+		// An organization trail's event selectors are only readable from the
+		// management account that owns it; a member-account scan gets access
+		// denied, so report no selectors instead of failing the query.
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
