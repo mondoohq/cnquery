@@ -31,6 +31,7 @@ stackit.dns.recordSet 13.0.0
 stackit.dns.recordSet.active 13.0.0
 stackit.dns.recordSet.comment 13.0.0
 stackit.dns.recordSet.creationFinishedAt 13.0.0
+stackit.dns.recordSet.creationStartedAt 13.2.2
 stackit.dns.recordSet.id 13.0.0
 stackit.dns.recordSet.name 13.0.0
 stackit.dns.recordSet.records 13.0.0
@@ -43,6 +44,7 @@ stackit.dns.zone 13.0.0
 stackit.dns.zone.acl 13.0.0
 stackit.dns.zone.contactEmail 13.0.0
 stackit.dns.zone.creationFinishedAt 13.0.0
+stackit.dns.zone.creationStartedAt 13.2.2
 stackit.dns.zone.defaultTtl 13.0.0
 stackit.dns.zone.description 13.0.0
 stackit.dns.zone.dnsName 13.0.0
@@ -217,6 +219,7 @@ stackit.mongoDbFlex.instance.storage 13.0.0
 stackit.mongoDbFlex.instance.version 13.0.0
 stackit.mongoDbFlex.instances 13.0.0
 stackit.network 13.0.0
+stackit.network.createdAt 13.2.2
 stackit.network.exposure 13.0.6
 stackit.network.exposure.hasPublicIp 13.0.6
 stackit.network.exposure.internetReachable 13.0.6
@@ -336,6 +339,8 @@ stackit.secretsManager 13.0.0
 stackit.secretsManager.instance 13.0.0
 stackit.secretsManager.instance.acls 13.0.0
 stackit.secretsManager.instance.apiUrl 13.0.0
+stackit.secretsManager.instance.creationFinishedAt 13.2.2
+stackit.secretsManager.instance.creationStartedAt 13.2.2
 stackit.secretsManager.instance.id 13.0.0
 stackit.secretsManager.instance.name 13.0.0
 stackit.secretsManager.instance.secretCount 13.0.0
@@ -349,6 +354,7 @@ stackit.securityGroup.id 13.0.0
 stackit.securityGroup.labels 13.0.0
 stackit.securityGroup.name 13.0.0
 stackit.securityGroup.rule 13.0.0
+stackit.securityGroup.rule.createdAt 13.2.2
 stackit.securityGroup.rule.description 13.0.0
 stackit.securityGroup.rule.direction 13.0.0
 stackit.securityGroup.rule.ethertype 13.0.0

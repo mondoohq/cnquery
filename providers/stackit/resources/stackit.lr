@@ -316,6 +316,8 @@ private stackit.network @defaults("id name routed") {
   ipv6Prefixes []string
   // Network state (CREATING, CREATED, UPDATING, DELETING, FAILED)
   state string
+  // Creation timestamp
+  createdAt time
   // User-defined labels
   labels map[string]string
 }
@@ -393,6 +395,8 @@ private stackit.securityGroup.rule @defaults("id direction protocol") {
   ipRange string
   // Remote security group UUID (empty if remote is a CIDR)
   remoteSecurityGroupId string
+  // Creation timestamp
+  createdAt time
 }
 
 // Server internet-exposure breakdown
@@ -890,6 +894,8 @@ private stackit.dns.zone @defaults("id dnsName type state") {
   primaries []string
   // Whether DNSSEC is enabled for the zone
   isReverseZone bool
+  // When zone creation started
+  creationStartedAt time
   // Creation timestamp
   creationFinishedAt time
   // User-defined labels
@@ -923,6 +929,8 @@ private stackit.dns.recordSet @defaults("name type state") {
   records []string
   // Whether the record set is for active healthcheck failover
   active bool
+  // When record set creation started
+  creationStartedAt time
   // Creation timestamp
   creationFinishedAt time
   // Last update timestamp
@@ -1333,6 +1341,10 @@ private stackit.secretsManager.instance @defaults("id name state") {
   secretsEngine string
   // Number of secrets stored in the instance
   secretCount int
+  // When instance creation started
+  creationStartedAt time
+  // When instance creation finished
+  creationFinishedAt time
   // ACL CIDRs allowed to connect
   acls() []string
 }

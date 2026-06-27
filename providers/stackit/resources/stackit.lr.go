@@ -774,6 +774,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.network.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetState()).ToDataRes(types.String)
 	},
+	"stackit.network.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitNetwork).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"stackit.network.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetwork).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -848,6 +851,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.securityGroup.rule.remoteSecurityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecurityGroupRule).GetRemoteSecurityGroupId()).ToDataRes(types.String)
+	},
+	"stackit.securityGroup.rule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecurityGroupRule).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"stackit.network.exposure.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitNetworkExposure).GetInternetReachable()).ToDataRes(types.Bool)
@@ -1323,6 +1329,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.dns.zone.isReverseZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsZone).GetIsReverseZone()).ToDataRes(types.Bool)
 	},
+	"stackit.dns.zone.creationStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitDnsZone).GetCreationStartedAt()).ToDataRes(types.Time)
+	},
 	"stackit.dns.zone.creationFinishedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsZone).GetCreationFinishedAt()).ToDataRes(types.Time)
 	},
@@ -1358,6 +1367,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.dns.recordSet.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsRecordSet).GetActive()).ToDataRes(types.Bool)
+	},
+	"stackit.dns.recordSet.creationStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitDnsRecordSet).GetCreationStartedAt()).ToDataRes(types.Time)
 	},
 	"stackit.dns.recordSet.creationFinishedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitDnsRecordSet).GetCreationFinishedAt()).ToDataRes(types.Time)
@@ -1697,6 +1709,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.secretsManager.instance.secretCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetSecretCount()).ToDataRes(types.Int)
+	},
+	"stackit.secretsManager.instance.creationStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetCreationStartedAt()).ToDataRes(types.Time)
+	},
+	"stackit.secretsManager.instance.creationFinishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSecretsManagerInstance).GetCreationFinishedAt()).ToDataRes(types.Time)
 	},
 	"stackit.secretsManager.instance.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSecretsManagerInstance).GetAcls()).ToDataRes(types.Array(types.String))
@@ -2548,6 +2566,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitNetwork).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.network.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitNetwork).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"stackit.network.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitNetwork).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -2658,6 +2680,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.securityGroup.rule.remoteSecurityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecurityGroupRule).RemoteSecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.securityGroup.rule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecurityGroupRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.network.exposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3364,6 +3390,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitDnsZone).IsReverseZone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.dns.zone.creationStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitDnsZone).CreationStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"stackit.dns.zone.creationFinishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitDnsZone).CreationFinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -3414,6 +3444,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.dns.recordSet.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitDnsRecordSet).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.dns.recordSet.creationStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitDnsRecordSet).CreationStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.dns.recordSet.creationFinishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3938,6 +3972,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.secretsManager.instance.secretCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSecretsManagerInstance).SecretCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.creationStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).CreationStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.secretsManager.instance.creationFinishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSecretsManagerInstance).CreationFinishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.secretsManager.instance.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5772,6 +5814,7 @@ type mqlStackitNetwork struct {
 	Ipv6Nameservers plugin.TValue[[]any]
 	Ipv6Prefixes    plugin.TValue[[]any]
 	State           plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
 	Labels          plugin.TValue[map[string]any]
 }
 
@@ -5858,6 +5901,10 @@ func (c *mqlStackitNetwork) GetIpv6Prefixes() *plugin.TValue[[]any] {
 
 func (c *mqlStackitNetwork) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlStackitNetwork) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlStackitNetwork) GetLabels() *plugin.TValue[map[string]any] {
@@ -6041,6 +6088,7 @@ type mqlStackitSecurityGroupRule struct {
 	PortRangeMax          plugin.TValue[int64]
 	IpRange               plugin.TValue[string]
 	RemoteSecurityGroupId plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
 }
 
 // createStackitSecurityGroupRule creates a new instance of this resource
@@ -6126,6 +6174,10 @@ func (c *mqlStackitSecurityGroupRule) GetIpRange() *plugin.TValue[string] {
 
 func (c *mqlStackitSecurityGroupRule) GetRemoteSecurityGroupId() *plugin.TValue[string] {
 	return &c.RemoteSecurityGroupId
+}
+
+func (c *mqlStackitSecurityGroupRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlStackitNetworkExposure for the stackit.network.exposure resource
@@ -7770,6 +7822,7 @@ type mqlStackitDnsZone struct {
 	Acl                plugin.TValue[string]
 	Primaries          plugin.TValue[[]any]
 	IsReverseZone      plugin.TValue[bool]
+	CreationStartedAt  plugin.TValue[*time.Time]
 	CreationFinishedAt plugin.TValue[*time.Time]
 	Labels             plugin.TValue[map[string]any]
 	RecordSets         plugin.TValue[[]any]
@@ -7884,6 +7937,10 @@ func (c *mqlStackitDnsZone) GetIsReverseZone() *plugin.TValue[bool] {
 	return &c.IsReverseZone
 }
 
+func (c *mqlStackitDnsZone) GetCreationStartedAt() *plugin.TValue[*time.Time] {
+	return &c.CreationStartedAt
+}
+
 func (c *mqlStackitDnsZone) GetCreationFinishedAt() *plugin.TValue[*time.Time] {
 	return &c.CreationFinishedAt
 }
@@ -7922,6 +7979,7 @@ type mqlStackitDnsRecordSet struct {
 	Comment            plugin.TValue[string]
 	Records            plugin.TValue[[]any]
 	Active             plugin.TValue[bool]
+	CreationStartedAt  plugin.TValue[*time.Time]
 	CreationFinishedAt plugin.TValue[*time.Time]
 	UpdateFinishedAt   plugin.TValue[*time.Time]
 }
@@ -7997,6 +8055,10 @@ func (c *mqlStackitDnsRecordSet) GetRecords() *plugin.TValue[[]any] {
 
 func (c *mqlStackitDnsRecordSet) GetActive() *plugin.TValue[bool] {
 	return &c.Active
+}
+
+func (c *mqlStackitDnsRecordSet) GetCreationStartedAt() *plugin.TValue[*time.Time] {
+	return &c.CreationStartedAt
 }
 
 func (c *mqlStackitDnsRecordSet) GetCreationFinishedAt() *plugin.TValue[*time.Time] {
@@ -9441,13 +9503,15 @@ type mqlStackitSecretsManagerInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitSecretsManagerInstanceInternal it will be used here
-	Id            plugin.TValue[string]
-	Name          plugin.TValue[string]
-	State         plugin.TValue[string]
-	ApiUrl        plugin.TValue[string]
-	SecretsEngine plugin.TValue[string]
-	SecretCount   plugin.TValue[int64]
-	Acls          plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	State              plugin.TValue[string]
+	ApiUrl             plugin.TValue[string]
+	SecretsEngine      plugin.TValue[string]
+	SecretCount        plugin.TValue[int64]
+	CreationStartedAt  plugin.TValue[*time.Time]
+	CreationFinishedAt plugin.TValue[*time.Time]
+	Acls               plugin.TValue[[]any]
 }
 
 // createStackitSecretsManagerInstance creates a new instance of this resource
@@ -9509,6 +9573,14 @@ func (c *mqlStackitSecretsManagerInstance) GetSecretsEngine() *plugin.TValue[str
 
 func (c *mqlStackitSecretsManagerInstance) GetSecretCount() *plugin.TValue[int64] {
 	return &c.SecretCount
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetCreationStartedAt() *plugin.TValue[*time.Time] {
+	return &c.CreationStartedAt
+}
+
+func (c *mqlStackitSecretsManagerInstance) GetCreationFinishedAt() *plugin.TValue[*time.Time] {
+	return &c.CreationFinishedAt
 }
 
 func (c *mqlStackitSecretsManagerInstance) GetAcls() *plugin.TValue[[]any] {

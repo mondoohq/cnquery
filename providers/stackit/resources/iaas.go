@@ -535,10 +535,13 @@ func buildNetwork(runtime *plugin.Runtime, n *iaas.Network) (plugin.Resource, er
 		}
 	}
 
+	createdAt, okCreated := n.GetCreatedAtOk()
+
 	args := map[string]*llx.RawData{
 		"id":              llx.StringData(n.GetId()),
 		"name":            llx.StringData(n.GetName()),
 		"routed":          llx.BoolData(n.GetRouted()),
+		"createdAt":       llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
 		"ipv4Prefix":      llx.StringData(ipv4PrefixSing),
 		"ipv4Gateway":     llx.StringData(ipv4Gateway),
 		"ipv4Nameservers": strSliceData(ipv4Nameserv),
@@ -751,6 +754,8 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 			protocol = p.GetName()
 		}
 
+		createdAt, okCreated := rule.GetCreatedAtOk()
+
 		args := map[string]*llx.RawData{
 			"id":                    llx.StringData(rule.GetId()),
 			"securityGroupId":       llx.StringData(r.Id.Data),
@@ -764,6 +769,7 @@ func (r *mqlStackitSecurityGroup) rules() ([]any, error) {
 			"portRangeMax":          llx.IntData(portMax),
 			"ipRange":               llx.StringData(rule.GetIpRange()),
 			"remoteSecurityGroupId": llx.StringData(rule.GetRemoteSecurityGroupId()),
+			"createdAt":             llx.TimeDataPtr(timeOrNil(createdAt, okCreated)),
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.securityGroup.rule", args)
 		if err != nil {

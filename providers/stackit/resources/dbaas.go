@@ -498,12 +498,14 @@ func (r *mqlStackitSecretsManager) instances() ([]any, error) {
 	for i := range items {
 		inst := items[i]
 		args := map[string]*llx.RawData{
-			"id":            llx.StringData(inst.GetId()),
-			"name":          llx.StringData(inst.GetName()),
-			"state":         llx.StringData(inst.GetState()),
-			"apiUrl":        llx.StringData(inst.GetApiUrl()),
-			"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
-			"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+			"id":                 llx.StringData(inst.GetId()),
+			"name":               llx.StringData(inst.GetName()),
+			"state":              llx.StringData(inst.GetState()),
+			"apiUrl":             llx.StringData(inst.GetApiUrl()),
+			"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
+			"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
+			"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+			"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
 		}
 		res, err := CreateResource(r.MqlRuntime, "stackit.secretsManager.instance", args)
 		if err != nil {
@@ -872,12 +874,14 @@ func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]
 		return nil, nil, err
 	}
 	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
-		"id":            llx.StringData(inst.GetId()),
-		"name":          llx.StringData(inst.GetName()),
-		"state":         llx.StringData(inst.GetState()),
-		"apiUrl":        llx.StringData(inst.GetApiUrl()),
-		"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
-		"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+		"id":                 llx.StringData(inst.GetId()),
+		"name":               llx.StringData(inst.GetName()),
+		"state":              llx.StringData(inst.GetState()),
+		"apiUrl":             llx.StringData(inst.GetApiUrl()),
+		"secretsEngine":      llx.StringData(inst.GetSecretsEngine()),
+		"secretCount":        llx.IntData(int64(inst.GetSecretCount())),
+		"creationStartedAt":  llx.TimeDataPtr(parseDnsTime(inst.GetCreationStartDate())),
+		"creationFinishedAt": llx.TimeDataPtr(parseDnsTime(inst.GetCreationFinishedDate())),
 	})
 	if err != nil {
 		return nil, nil, err
