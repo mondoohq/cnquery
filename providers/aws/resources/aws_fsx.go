@@ -292,6 +292,7 @@ func (a *mqlAwsFsx) getCaches(conn *connection.AwsConnection) []*jobpool.Job {
 						"id":                         llx.StringDataPtr(cache.FileCacheId),
 						"arn":                        llx.StringDataPtr(cache.ResourceARN),
 						"lifecycle":                  llx.StringData(string(cache.Lifecycle)),
+						"createdAt":                  llx.TimeDataPtr(cache.CreationTime),
 						"storageCapacity":            llx.IntDataDefault(cache.StorageCapacity, 0),
 						"vpcId":                      llx.StringDataPtr(cache.VpcId),
 						"subnetIds":                  llx.ArrayData(convert.SliceAnyToInterface(cache.SubnetIds), types.String),

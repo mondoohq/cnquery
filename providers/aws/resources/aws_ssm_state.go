@@ -164,6 +164,14 @@ func (a *mqlAwsSsmMaintenanceWindow) modifiedDate() (*time.Time, error) {
 	return detail.ModifiedDate, nil
 }
 
+func (a *mqlAwsSsmMaintenanceWindow) createdDate() (*time.Time, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return detail.CreatedDate, nil
+}
+
 func (a *mqlAwsSsmMaintenanceWindow) tasks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ssmsvc := conn.Ssm(a.Region.Data)
@@ -329,6 +337,7 @@ func (a *mqlAwsSsmAssociation) fetchDetail() error {
 	}
 
 	a.Status = plugin.TValue[any]{Data: statusDict, State: plugin.StateIsSet}
+	a.CreatedDate = plugin.TValue[*time.Time]{Data: desc.Date, State: plugin.StateIsSet}
 	a.LastSuccessfulExecutionDate = plugin.TValue[*time.Time]{Data: desc.LastSuccessfulExecutionDate, State: plugin.StateIsSet}
 	a.ComplianceSeverity = plugin.TValue[string]{Data: string(desc.ComplianceSeverity), State: plugin.StateIsSet}
 	a.SyncCompliance = plugin.TValue[string]{Data: string(desc.SyncCompliance), State: plugin.StateIsSet}
@@ -340,6 +349,7 @@ func (a *mqlAwsSsmAssociation) fetchDetail() error {
 
 func (a *mqlAwsSsmAssociation) populateEmptyDetail() {
 	a.Status = plugin.TValue[any]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
+	a.CreatedDate = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	a.LastSuccessfulExecutionDate = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	a.ComplianceSeverity = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
 	a.SyncCompliance = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
@@ -347,6 +357,10 @@ func (a *mqlAwsSsmAssociation) populateEmptyDetail() {
 }
 
 func (a *mqlAwsSsmAssociation) status() (any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsSsmAssociation) createdDate() (*time.Time, error) {
 	return nil, a.fetchDetail()
 }
 

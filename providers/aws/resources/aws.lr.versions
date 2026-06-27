@@ -1758,6 +1758,7 @@ aws.cloudwatch.logInsightQuery.queryString 13.6.3
 aws.cloudwatch.logInsightQuery.region 13.6.3
 aws.cloudwatch.loggroup 11.15.2
 aws.cloudwatch.loggroup.arn 11.15.2
+aws.cloudwatch.loggroup.createdAt 13.38.2
 aws.cloudwatch.loggroup.dataProtectionPolicy 13.26.3
 aws.cloudwatch.loggroup.dataProtectionStatus 11.15.2
 aws.cloudwatch.loggroup.deletionProtectionEnabled 11.15.2
@@ -3333,6 +3334,7 @@ aws.ec2.transitgateway.amazonSideAsn 11.15.2
 aws.ec2.transitgateway.arn 11.15.2
 aws.ec2.transitgateway.associationDefaultRouteTableId 11.15.2
 aws.ec2.transitgateway.attachment 13.6.3
+aws.ec2.transitgateway.attachment.createdAt 13.38.2
 aws.ec2.transitgateway.attachment.id 13.6.3
 aws.ec2.transitgateway.attachment.region 13.6.3
 aws.ec2.transitgateway.attachment.resourceId 13.6.3
@@ -3364,6 +3366,7 @@ aws.ec2.transitgateway.peeringAttachments 13.6.3
 aws.ec2.transitgateway.propagationDefaultRouteTableId 11.15.2
 aws.ec2.transitgateway.region 11.15.2
 aws.ec2.transitgateway.routeTable 13.6.3
+aws.ec2.transitgateway.routeTable.createdAt 13.38.2
 aws.ec2.transitgateway.routeTable.defaultAssociationRouteTable 13.6.3
 aws.ec2.transitgateway.routeTable.defaultPropagationRouteTable 13.6.3
 aws.ec2.transitgateway.routeTable.id 13.6.3
@@ -3671,6 +3674,7 @@ aws.ecs.task.connectivity 11.15.2
 aws.ecs.task.containerInstanceArn 13.29.1
 aws.ecs.task.containers 11.15.2
 aws.ecs.task.cpu 13.29.1
+aws.ecs.task.createdAt 13.38.2
 aws.ecs.task.enableExecuteCommand 13.29.1
 aws.ecs.task.ephemeralStorageSizeInGiB 13.29.1
 aws.ecs.task.fargateEphemeralStorageKmsKey 13.29.1
@@ -4312,6 +4316,7 @@ aws.emr.cluster.bootstrapAction.name 13.12.1
 aws.emr.cluster.bootstrapAction.scriptPath 13.12.1
 aws.emr.cluster.bootstrapActions 13.12.1
 aws.emr.cluster.configurations 13.21.4
+aws.emr.cluster.createdAt 13.38.2
 aws.emr.cluster.ebsRootVolumeIops 13.21.4
 aws.emr.cluster.ebsRootVolumeSize 13.21.4
 aws.emr.cluster.ebsRootVolumeThroughput 13.21.4
@@ -4325,6 +4330,7 @@ aws.emr.cluster.instanceCollectionType 13.21.4
 aws.emr.cluster.instanceGroup 13.12.1
 aws.emr.cluster.instanceGroup.bidPrice 13.12.1
 aws.emr.cluster.instanceGroup.configurations 13.21.4
+aws.emr.cluster.instanceGroup.createdAt 13.38.2
 aws.emr.cluster.instanceGroup.customAmiId 13.21.4
 aws.emr.cluster.instanceGroup.ebsBlockDevices 13.21.4
 aws.emr.cluster.instanceGroup.ebsOptimized 13.12.1
@@ -4542,6 +4548,7 @@ aws.eventbridge.endpoint.stateReason 13.26.3
 aws.eventbridge.endpoints 13.26.3
 aws.eventbridge.eventBus 11.16.1
 aws.eventbridge.eventBus.arn 11.16.1
+aws.eventbridge.eventBus.creationTime 13.38.2
 aws.eventbridge.eventBus.name 11.16.1
 aws.eventbridge.eventBus.policy 13.23.2
 aws.eventbridge.eventBus.region 11.16.1
@@ -4896,6 +4903,7 @@ aws.fsx.backup.type 11.15.2
 aws.fsx.backups 11.15.2
 aws.fsx.cache 11.15.2
 aws.fsx.cache.arn 11.15.2
+aws.fsx.cache.createdAt 13.38.2
 aws.fsx.cache.dataRepositoryAssociations 11.15.2
 aws.fsx.cache.id 11.15.2
 aws.fsx.cache.lifecycle 11.15.2
@@ -5421,6 +5429,7 @@ aws.identitycenter.application.portalVisibility 13.20.1
 aws.identitycenter.application.signInOrigin 13.20.1
 aws.identitycenter.application.status 13.20.1
 aws.identitycenter.group 13.12.1
+aws.identitycenter.group.createdAt 13.38.2
 aws.identitycenter.group.description 13.12.1
 aws.identitycenter.group.displayName 13.12.1
 aws.identitycenter.group.externalIds 13.12.1
@@ -5451,6 +5460,7 @@ aws.identitycenter.permissionSet.relayState 13.6.3
 aws.identitycenter.permissionSet.sessionDuration 13.6.3
 aws.identitycenter.permissionSet.tags 13.6.3
 aws.identitycenter.user 13.12.1
+aws.identitycenter.user.createdAt 13.38.2
 aws.identitycenter.user.displayName 13.12.1
 aws.identitycenter.user.emails 13.12.1
 aws.identitycenter.user.externalIds 13.12.1
@@ -9181,6 +9191,7 @@ aws.ssm.association.applyOnlyAtCronInterval 13.26.3
 aws.ssm.association.associationId 13.6.3
 aws.ssm.association.associationName 13.26.3
 aws.ssm.association.complianceSeverity 13.26.3
+aws.ssm.association.createdDate 13.38.2
 aws.ssm.association.documentVersion 13.26.3
 aws.ssm.association.instanceId 13.26.3
 aws.ssm.association.lastExecutionDate 13.6.3
@@ -9237,6 +9248,7 @@ aws.ssm.instances 11.15.2
 aws.ssm.maintenanceWindow 13.6.3
 aws.ssm.maintenanceWindow.allowUnassociatedTargets 13.6.3
 aws.ssm.maintenanceWindow.arn 13.6.3
+aws.ssm.maintenanceWindow.createdDate 13.38.2
 aws.ssm.maintenanceWindow.cutoff 13.6.3
 aws.ssm.maintenanceWindow.description 13.6.3
 aws.ssm.maintenanceWindow.duration 13.6.3

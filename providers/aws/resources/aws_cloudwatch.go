@@ -629,6 +629,7 @@ func buildLogGroupResource(runtime *plugin.Runtime, region string, loggroup clou
 	args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 	args["region"] = llx.StringData(region)
 	args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
+	args["createdAt"] = llx.TimeDataPtr(int64MillisToTime(loggroup.CreationTime))
 	args["dataProtectionStatus"] = llx.StringData(string(loggroup.DataProtectionStatus))
 	args["deletionProtectionEnabled"] = llx.BoolDataPtr(loggroup.DeletionProtectionEnabled)
 	args["logGroupClass"] = llx.StringData(string(loggroup.LogGroupClass))

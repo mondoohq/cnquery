@@ -1564,6 +1564,8 @@ private aws.fsx.cache @defaults("id lifecycle") {
   arn string
   // Lifecycle status
   lifecycle string
+  // When the cache was created
+  createdAt time
   // Storage capacity in TiB
   storageCapacity int
   // VPC ID where the cache resides
@@ -7102,6 +7104,8 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   connectivity dict
   // Last reported status for the ECS task
   lastStatus string
+  // When the ECS task was created
+  createdAt time
   // Platform Family assigned to the ECS task
   platformFamily string
   // Platform Version assigned to the ECS task
@@ -7645,6 +7649,8 @@ private aws.emr.cluster @defaults("arn") {
   outpostArn string
   // Details about the current status of the cluster
   status dict
+  // When the cluster was created
+  createdAt time
   // List of master instances for the cluster
   masterInstances() []dict
   // EMR cluster ID
@@ -7791,6 +7797,8 @@ private aws.emr.cluster.instanceGroup @defaults("name instanceGroupType instance
   runningInstanceCount int
   // Instance group state
   status string
+  // When the instance group was created
+  createdAt time
   // Spot bid price (if market is SPOT)
   bidPrice string
   // Whether EBS optimization is enabled
@@ -7914,6 +7922,8 @@ private aws.eventbridge.eventBus @defaults("arn name") {
   arn string
   // Name of the event bus
   name string
+  // When the event bus was created
+  creationTime time
   // Region of the event bus
   region string
   // Tags for the event bus
@@ -8991,6 +9001,8 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   kmsKey() aws.kms.key
   // Region where the log group is stored
   region string
+  // When the log group was created
+  createdAt time
   // Number of days to retain the log events in the specified log group
   retentionInDays int
   // Tags for the log group
@@ -15017,6 +15029,8 @@ private aws.ec2.transitgateway.attachment @defaults("id resourceType state") {
   //
   // One of: initiating, initiatingRequest, pendingAcceptance, rollingBack, pending, available, modifying, deleting, deleted, failed, rejected, rejecting, failing.
   state string
+  // When the attachment was created
+  createdAt time
   // Tags on the attachment
   tags map[string]string
   // Region where the attachment exists
@@ -15035,6 +15049,8 @@ private aws.ec2.transitgateway.routeTable @defaults("id state") {
   defaultAssociationRouteTable bool
   // Whether this is the default propagation route table
   defaultPropagationRouteTable bool
+  // When the route table was created
+  createdAt time
   // Tags on the route table
   tags map[string]string
   // Region where the route table exists
@@ -22622,6 +22638,8 @@ private aws.ssm.maintenanceWindow @defaults("id name") {
   endDate time
   // Next scheduled execution time of the window
   nextExecutionTime time
+  // Date the window was created
+  createdDate() time
   // Date the window was last modified
   modifiedDate() time
   // Whether targets that are not associated with the window can be run
@@ -22728,6 +22746,8 @@ private aws.ssm.association @defaults("associationId name") {
   // Includes `date` (when the status changed), `name` (one of `Pending`, `Success`, or `Failed`),
   // `message` (human-readable reason), and `additionalInfo` (free-form user string).
   status() dict
+  // Date the association was created
+  createdDate() time
   // Last execution date
   lastExecutionDate time
   // Last date the association ran successfully
@@ -23863,6 +23883,8 @@ private aws.identitycenter.group @defaults("displayName") {
   groupId string
   // Display name of the group
   displayName string
+  // When the group was created
+  createdAt time
   // Description of the group
   description() string
   // External IDs from the identity provider
@@ -23877,6 +23899,8 @@ private aws.identitycenter.user @defaults("userName displayName") {
   userName string
   // Display name of the user
   displayName string
+  // When the user was created
+  createdAt time
   // Email addresses associated with the user
   emails() []dict
   // External IDs from the identity provider

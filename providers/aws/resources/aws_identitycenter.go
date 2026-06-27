@@ -479,6 +479,7 @@ func (a *mqlAwsIdentitycenterInstance) groups() ([]any, error) {
 					"__id":        llx.StringData("identitycenter/group/" + convert.ToValue(group.GroupId)),
 					"groupId":     llx.StringDataPtr(group.GroupId),
 					"displayName": llx.StringDataPtr(group.DisplayName),
+					"createdAt":   llx.TimeDataPtr(group.CreatedAt),
 				})
 			if err != nil {
 				return nil, err
@@ -540,6 +541,7 @@ func (a *mqlAwsIdentitycenterInstance) users() ([]any, error) {
 					"userId":      llx.StringDataPtr(user.UserId),
 					"userName":    llx.StringDataPtr(user.UserName),
 					"displayName": llx.StringDataPtr(user.DisplayName),
+					"createdAt":   llx.TimeDataPtr(user.CreatedAt),
 				})
 			if err != nil {
 				return nil, err

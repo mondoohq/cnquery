@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	emrtypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
@@ -78,6 +79,10 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
+					var createdAt *time.Time
+					if cluster.Status != nil && cluster.Status.Timeline != nil {
+						createdAt = cluster.Status.Timeline.CreationDateTime
+					}
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.emr.cluster",
 						map[string]*llx.RawData{
 							"arn":                     llx.StringDataPtr(cluster.ClusterArn),
@@ -85,6 +90,7 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 							"normalizedInstanceHours": llx.IntDataDefault(cluster.NormalizedInstanceHours, 0),
 							"outpostArn":              llx.StringDataPtr(cluster.OutpostArn),
 							"status":                  llx.MapData(jsonStatus, types.String),
+							"createdAt":               llx.TimeDataPtr(createdAt),
 							"id":                      llx.StringDataPtr(cluster.Id),
 						})
 					if err != nil {
@@ -879,8 +885,12 @@ func (a *mqlAwsEmrCluster) instanceGroups() ([]any, error) {
 		}
 		for _, ig := range page.InstanceGroups {
 			var status string
+			var createdAt *time.Time
 			if ig.Status != nil {
 				status = string(ig.Status.State)
+				if ig.Status.Timeline != nil {
+					createdAt = ig.Status.Timeline.CreationDateTime
+				}
 			}
 			var ebsBlockDevices []any
 			if devices, derr := convert.JsonToDictSlice(ig.EbsBlockDevices); derr == nil {
@@ -901,6 +911,7 @@ func (a *mqlAwsEmrCluster) instanceGroups() ([]any, error) {
 					"requestedInstanceCount": llx.IntDataDefault(ig.RequestedInstanceCount, 0),
 					"runningInstanceCount":   llx.IntDataDefault(ig.RunningInstanceCount, 0),
 					"status":                 llx.StringData(status),
+					"createdAt":              llx.TimeDataPtr(createdAt),
 					"bidPrice":               llx.StringDataPtr(ig.BidPrice),
 					"ebsOptimized":           llx.BoolDataPtr(ig.EbsOptimized),
 					"customAmiId":            llx.StringDataPtr(ig.CustomAmiId),

@@ -6241,6 +6241,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.cache.lifecycle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetLifecycle()).ToDataRes(types.String)
 	},
+	"aws.fsx.cache.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.fsx.cache.storageCapacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetStorageCapacity()).ToDataRes(types.Int)
 	},
@@ -12604,6 +12607,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.task.lastStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetLastStatus()).ToDataRes(types.String)
 	},
+	"aws.ecs.task.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.ecs.task.platformFamily": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetPlatformFamily()).ToDataRes(types.String)
 	},
@@ -13234,6 +13240,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetStatus()).ToDataRes(types.Dict)
 	},
+	"aws.emr.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.emr.cluster.masterInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetMasterInstances()).ToDataRes(types.Array(types.Dict))
 	},
@@ -13417,6 +13426,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.instanceGroup.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterInstanceGroup).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.emr.cluster.instanceGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterInstanceGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.emr.cluster.instanceGroup.bidPrice": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterInstanceGroup).GetBidPrice()).ToDataRes(types.String)
 	},
@@ -13536,6 +13548,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.eventBus.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"aws.eventbridge.eventBus.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetRegion()).ToDataRes(types.String)
@@ -14646,6 +14661,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudwatch.loggroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.loggroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetRetentionInDays()).ToDataRes(types.Int)
@@ -21136,6 +21154,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.transitgateway.attachment.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetState()).ToDataRes(types.String)
 	},
+	"aws.ec2.transitgateway.attachment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.ec2.transitgateway.attachment.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -21156,6 +21177,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.transitgateway.routeTable.defaultPropagationRouteTable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetDefaultPropagationRouteTable()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.transitgateway.routeTable.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.ec2.transitgateway.routeTable.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -29839,6 +29863,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.maintenanceWindow.nextExecutionTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetNextExecutionTime()).ToDataRes(types.Time)
 	},
+	"aws.ssm.maintenanceWindow.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetCreatedDate()).ToDataRes(types.Time)
+	},
 	"aws.ssm.maintenanceWindow.modifiedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetModifiedDate()).ToDataRes(types.Time)
 	},
@@ -29946,6 +29973,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.association.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetStatus()).ToDataRes(types.Dict)
+	},
+	"aws.ssm.association.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetCreatedDate()).ToDataRes(types.Time)
 	},
 	"aws.ssm.association.lastExecutionDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetLastExecutionDate()).ToDataRes(types.Time)
@@ -31171,6 +31201,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.group.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterGroup).GetDisplayName()).ToDataRes(types.String)
 	},
+	"aws.identitycenter.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.identitycenter.group.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterGroup).GetDescription()).ToDataRes(types.String)
 	},
@@ -31185,6 +31218,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.identitycenter.user.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterUser).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.user.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterUser).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.identitycenter.user.emails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterUser).GetEmails()).ToDataRes(types.Array(types.Dict))
@@ -35216,6 +35252,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.cache.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxCache).Lifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.cache.storageCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44506,6 +44546,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsTask).LastStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.task.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.task.platformFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTask).PlatformFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -45438,6 +45482,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.masterInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).MasterInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -45698,6 +45746,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrClusterInstanceGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.instanceGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterInstanceGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.instanceGroup.bidPrice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrClusterInstanceGroup).BidPrice, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -45872,6 +45924,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.eventBus.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeEventBus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.eventBus.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47568,6 +47624,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudwatch.loggroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56994,6 +57054,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2TransitgatewayAttachment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.transitgateway.attachment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayAttachment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.transitgateway.attachment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayAttachment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -57024,6 +57088,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.transitgateway.routeTable.defaultPropagationRouteTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayRouteTable).DefaultPropagationRouteTable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.transitgateway.routeTable.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.transitgateway.routeTable.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69610,6 +69678,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmMaintenanceWindow).NextExecutionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.maintenanceWindow.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.maintenanceWindow.modifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmMaintenanceWindow).ModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -69764,6 +69836,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.association.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmAssociation).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.association.lastExecutionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -71550,6 +71626,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIdentitycenterGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.identitycenter.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.identitycenter.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -71572,6 +71652,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.identitycenter.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.user.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterUser).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.identitycenter.user.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80691,6 +80775,7 @@ type mqlAwsFsxCache struct {
 	Id                         plugin.TValue[string]
 	Arn                        plugin.TValue[string]
 	Lifecycle                  plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
 	StorageCapacity            plugin.TValue[int64]
 	VpcId                      plugin.TValue[string]
 	Vpc                        plugin.TValue[*mqlAwsVpc]
@@ -80748,6 +80833,10 @@ func (c *mqlAwsFsxCache) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsFsxCache) GetLifecycle() *plugin.TValue[string] {
 	return &c.Lifecycle
+}
+
+func (c *mqlAwsFsxCache) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsFsxCache) GetStorageCapacity() *plugin.TValue[int64] {
@@ -105093,6 +105182,7 @@ type mqlAwsEcsTask struct {
 	ClusterName                   plugin.TValue[string]
 	Connectivity                  plugin.TValue[any]
 	LastStatus                    plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
 	PlatformFamily                plugin.TValue[string]
 	PlatformVersion               plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
@@ -105166,6 +105256,10 @@ func (c *mqlAwsEcsTask) GetConnectivity() *plugin.TValue[any] {
 
 func (c *mqlAwsEcsTask) GetLastStatus() *plugin.TValue[string] {
 	return &c.LastStatus
+}
+
+func (c *mqlAwsEcsTask) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsEcsTask) GetPlatformFamily() *plugin.TValue[string] {
@@ -107553,6 +107647,7 @@ type mqlAwsEmrCluster struct {
 	NormalizedInstanceHours    plugin.TValue[int64]
 	OutpostArn                 plugin.TValue[string]
 	Status                     plugin.TValue[any]
+	CreatedAt                  plugin.TValue[*time.Time]
 	MasterInstances            plugin.TValue[[]any]
 	Id                         plugin.TValue[string]
 	Tags                       plugin.TValue[map[string]any]
@@ -107641,6 +107736,10 @@ func (c *mqlAwsEmrCluster) GetOutpostArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEmrCluster) GetStatus() *plugin.TValue[any] {
 	return &c.Status
+}
+
+func (c *mqlAwsEmrCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsEmrCluster) GetMasterInstances() *plugin.TValue[[]any] {
@@ -108171,6 +108270,7 @@ type mqlAwsEmrClusterInstanceGroup struct {
 	RequestedInstanceCount plugin.TValue[int64]
 	RunningInstanceCount   plugin.TValue[int64]
 	Status                 plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
 	BidPrice               plugin.TValue[string]
 	EbsOptimized           plugin.TValue[bool]
 	CustomAmiId            plugin.TValue[string]
@@ -108245,6 +108345,10 @@ func (c *mqlAwsEmrClusterInstanceGroup) GetRunningInstanceCount() *plugin.TValue
 
 func (c *mqlAwsEmrClusterInstanceGroup) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlAwsEmrClusterInstanceGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsEmrClusterInstanceGroup) GetBidPrice() *plugin.TValue[string] {
@@ -108773,12 +108877,13 @@ type mqlAwsEventbridgeEventBus struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEventbridgeEventBusInternal it will be used here
-	Arn    plugin.TValue[string]
-	Name   plugin.TValue[string]
-	Region plugin.TValue[string]
-	Tags   plugin.TValue[map[string]any]
-	Rules  plugin.TValue[[]any]
-	Policy plugin.TValue[string]
+	Arn          plugin.TValue[string]
+	Name         plugin.TValue[string]
+	CreationTime plugin.TValue[*time.Time]
+	Region       plugin.TValue[string]
+	Tags         plugin.TValue[map[string]any]
+	Rules        plugin.TValue[[]any]
+	Policy       plugin.TValue[string]
 }
 
 // createAwsEventbridgeEventBus creates a new instance of this resource
@@ -108819,6 +108924,10 @@ func (c *mqlAwsEventbridgeEventBus) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEventbridgeEventBus) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAwsEventbridgeEventBus) GetRegion() *plugin.TValue[string] {
@@ -113839,6 +113948,7 @@ type mqlAwsCloudwatchLoggroup struct {
 	LogStreams                plugin.TValue[[]any]
 	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
 	Region                    plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
 	RetentionInDays           plugin.TValue[int64]
 	Tags                      plugin.TValue[map[string]any]
 	DataProtectionStatus      plugin.TValue[string]
@@ -113961,6 +114071,10 @@ func (c *mqlAwsCloudwatchLoggroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 
 func (c *mqlAwsCloudwatchLoggroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsCloudwatchLoggroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsCloudwatchLoggroup) GetRetentionInDays() *plugin.TValue[int64] {
@@ -137457,6 +137571,7 @@ type mqlAwsEc2TransitgatewayAttachment struct {
 	ResourceId       plugin.TValue[string]
 	ResourceType     plugin.TValue[string]
 	State            plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
 	Tags             plugin.TValue[map[string]any]
 	Region           plugin.TValue[string]
 }
@@ -137518,6 +137633,10 @@ func (c *mqlAwsEc2TransitgatewayAttachment) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
+func (c *mqlAwsEc2TransitgatewayAttachment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
 func (c *mqlAwsEc2TransitgatewayAttachment) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -137536,6 +137655,7 @@ type mqlAwsEc2TransitgatewayRouteTable struct {
 	State                        plugin.TValue[string]
 	DefaultAssociationRouteTable plugin.TValue[bool]
 	DefaultPropagationRouteTable plugin.TValue[bool]
+	CreatedAt                    plugin.TValue[*time.Time]
 	Tags                         plugin.TValue[map[string]any]
 	Region                       plugin.TValue[string]
 }
@@ -137595,6 +137715,10 @@ func (c *mqlAwsEc2TransitgatewayRouteTable) GetDefaultAssociationRouteTable() *p
 
 func (c *mqlAwsEc2TransitgatewayRouteTable) GetDefaultPropagationRouteTable() *plugin.TValue[bool] {
 	return &c.DefaultPropagationRouteTable
+}
+
+func (c *mqlAwsEc2TransitgatewayRouteTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsEc2TransitgatewayRouteTable) GetTags() *plugin.TValue[map[string]any] {
@@ -168567,6 +168691,7 @@ type mqlAwsSsmMaintenanceWindow struct {
 	StartDate                plugin.TValue[*time.Time]
 	EndDate                  plugin.TValue[*time.Time]
 	NextExecutionTime        plugin.TValue[*time.Time]
+	CreatedDate              plugin.TValue[*time.Time]
 	ModifiedDate             plugin.TValue[*time.Time]
 	AllowUnassociatedTargets plugin.TValue[bool]
 	Tasks                    plugin.TValue[[]any]
@@ -168665,6 +168790,12 @@ func (c *mqlAwsSsmMaintenanceWindow) GetEndDate() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsSsmMaintenanceWindow) GetNextExecutionTime() *plugin.TValue[*time.Time] {
 	return &c.NextExecutionTime
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedDate, func() (*time.Time, error) {
+		return c.createdDate()
+	})
 }
 
 func (c *mqlAwsSsmMaintenanceWindow) GetModifiedDate() *plugin.TValue[*time.Time] {
@@ -168941,6 +169072,7 @@ type mqlAwsSsmAssociation struct {
 	Targets                     plugin.TValue[[]any]
 	Schedule                    plugin.TValue[string]
 	Status                      plugin.TValue[any]
+	CreatedDate                 plugin.TValue[*time.Time]
 	LastExecutionDate           plugin.TValue[*time.Time]
 	LastSuccessfulExecutionDate plugin.TValue[*time.Time]
 	Overview                    plugin.TValue[any]
@@ -169021,6 +169153,12 @@ func (c *mqlAwsSsmAssociation) GetSchedule() *plugin.TValue[string] {
 func (c *mqlAwsSsmAssociation) GetStatus() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
 		return c.status()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedDate, func() (*time.Time, error) {
+		return c.createdDate()
 	})
 }
 
@@ -173467,6 +173605,7 @@ type mqlAwsIdentitycenterGroup struct {
 	// optional: if you define mqlAwsIdentitycenterGroupInternal it will be used here
 	GroupId     plugin.TValue[string]
 	DisplayName plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
 	Description plugin.TValue[string]
 	ExternalIds plugin.TValue[[]any]
 }
@@ -173516,6 +173655,10 @@ func (c *mqlAwsIdentitycenterGroup) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
 }
 
+func (c *mqlAwsIdentitycenterGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
 func (c *mqlAwsIdentitycenterGroup) GetDescription() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
 		return c.description()
@@ -173536,6 +173679,7 @@ type mqlAwsIdentitycenterUser struct {
 	UserId      plugin.TValue[string]
 	UserName    plugin.TValue[string]
 	DisplayName plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
 	Emails      plugin.TValue[[]any]
 	ExternalIds plugin.TValue[[]any]
 }
@@ -173587,6 +173731,10 @@ func (c *mqlAwsIdentitycenterUser) GetUserName() *plugin.TValue[string] {
 
 func (c *mqlAwsIdentitycenterUser) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
+}
+
+func (c *mqlAwsIdentitycenterUser) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsIdentitycenterUser) GetEmails() *plugin.TValue[[]any] {

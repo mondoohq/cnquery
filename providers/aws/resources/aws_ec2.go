@@ -3130,6 +3130,7 @@ func (a *mqlAwsEc2Transitgateway) attachments() ([]any, error) {
 					"resourceId":       llx.StringData(convert.ToValue(att.ResourceId)),
 					"resourceType":     llx.StringData(string(att.ResourceType)),
 					"state":            llx.StringData(string(att.State)),
+					"createdAt":        llx.TimeDataPtr(att.CreationTime),
 					"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(att.Tags)), types.String),
 					"region":           llx.StringData(a.region),
 				})
@@ -3172,6 +3173,7 @@ func (a *mqlAwsEc2Transitgateway) routeTables() ([]any, error) {
 					"state":                        llx.StringData(string(rt.State)),
 					"defaultAssociationRouteTable": llx.BoolData(convert.ToValue(rt.DefaultAssociationRouteTable)),
 					"defaultPropagationRouteTable": llx.BoolData(convert.ToValue(rt.DefaultPropagationRouteTable)),
+					"createdAt":                    llx.TimeDataPtr(rt.CreationTime),
 					"tags":                         llx.MapData(toInterfaceMap(ec2TagsToMap(rt.Tags)), types.String),
 					"region":                       llx.StringData(a.region),
 				})

@@ -478,6 +478,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["enableExecuteCommand"] = llx.BoolData(t.EnableExecuteCommand)
 	args["stopCode"] = llx.StringData(string(t.StopCode))
 	args["stoppedReason"] = llx.StringData(convert.ToValue(t.StoppedReason))
+	args["createdAt"] = llx.TimeDataPtr(t.CreatedAt)
 	args["startedAt"] = llx.TimeDataPtr(t.StartedAt)
 	args["stoppedAt"] = llx.TimeDataPtr(t.StoppedAt)
 
