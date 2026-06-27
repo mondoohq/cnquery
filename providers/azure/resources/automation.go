@@ -151,7 +151,45 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionAutomationServiceAccount), nil
+	mqlAccount := res.(*mqlAzureSubscriptionAutomationServiceAccount)
+	sysData, err := convert.JsonToDict(acct.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlAccount.cacheSystemData = sysData
+	return mqlAccount, nil
+}
+
+type mqlAzureSubscriptionAutomationServiceAccountInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionAutomationServiceAccountVariableInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionAutomationServiceAccountCredentialInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionAutomationServiceAccountCertificateInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionAutomationServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionAutomationServiceAccountVariable) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionAutomationServiceAccountCredential) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionAutomationServiceAccountCertificate) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // accountScope parses the resource group and account name out of the
@@ -214,6 +252,11 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) variables() ([]any, error
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(v.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlVar.(*mqlAzureSubscriptionAutomationServiceAccountVariable).cacheSystemData = sysData
 			res = append(res, mqlVar)
 		}
 	}
@@ -265,6 +308,11 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) credentials() ([]any, err
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(c.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCred.(*mqlAzureSubscriptionAutomationServiceAccountCredential).cacheSystemData = sysData
 			res = append(res, mqlCred)
 		}
 	}
@@ -319,6 +367,11 @@ func (a *mqlAzureSubscriptionAutomationServiceAccount) certificates() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(c.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCert.(*mqlAzureSubscriptionAutomationServiceAccountCertificate).cacheSystemData = sysData
 			res = append(res, mqlCert)
 		}
 	}

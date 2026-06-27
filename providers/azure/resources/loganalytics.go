@@ -28,6 +28,11 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceInternal struct {
 	cachePrivateLinkScopedResources []*armoperationalinsights.PrivateLinkScopedResource
 	cacheReplication                *armoperationalinsights.WorkspaceReplicationProperties
 	cacheFailover                   *armoperationalinsights.WorkspaceFailoverProperties
+	cacheSystemData                 any
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionMonitorServiceApplicationInsightInternal struct {
@@ -160,6 +165,11 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 	mqlWs.cachePrivateLinkScopedResources = props.PrivateLinkScopedResources
 	mqlWs.cacheReplication = props.Replication
 	mqlWs.cacheFailover = props.Failover
+	sysData, err := convert.JsonToDict(ws.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlWs.cacheSystemData = sysData
 
 	return mqlWs, nil
 }
@@ -633,6 +643,11 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) tables() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(t.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlT.(*mqlAzureSubscriptionMonitorServiceWorkspaceTable).cacheSystemData = sysData
 			res = append(res, mqlT)
 		}
 	}
@@ -641,6 +656,14 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) tables() ([]any, error) {
 
 func (a *mqlAzureSubscriptionMonitorServiceWorkspaceTable) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionMonitorServiceWorkspaceTableInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceTable) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // flattenNspProperties lifts the nested "properties" object of a Network
@@ -885,10 +908,31 @@ func (a *mqlAzureSubscriptionMonitorService) queryPacks() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(qp.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlQp.(*mqlAzureSubscriptionMonitorServiceQueryPack).cacheSystemData = sysData
 			res = append(res, mqlQp)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionMonitorServiceQueryPackInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionMonitorServiceQueryPackQueryInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceQueryPack) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceQueryPackQuery) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceQueryPack) id() (string, error) {
@@ -981,6 +1025,11 @@ func (a *mqlAzureSubscriptionMonitorServiceQueryPack) queries() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(q.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlQ.(*mqlAzureSubscriptionMonitorServiceQueryPackQuery).cacheSystemData = sysData
 			res = append(res, mqlQ)
 		}
 	}

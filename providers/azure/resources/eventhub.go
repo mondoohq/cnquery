@@ -30,6 +30,14 @@ type mqlAzureSubscriptionEventHubServiceNamespaceEventHubInternal struct {
 	cacheSystemData any
 }
 
+type mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionEventHubService) id() (string, error) {
 	return "azure.subscription.eventHub/" + a.SubscriptionId.Data, nil
 }
@@ -298,6 +306,11 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(cg.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCg.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).cacheSystemData = sysData
 			res = append(res, mqlCg)
 		}
 	}

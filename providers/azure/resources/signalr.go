@@ -130,7 +130,21 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionSignalRServiceSignalR), nil
+	sysData, err := convert.JsonToDict(sr.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlSr := res.(*mqlAzureSubscriptionSignalRServiceSignalR)
+	mqlSr.cacheSystemData = sysData
+	return mqlSr, nil
+}
+
+type mqlAzureSubscriptionSignalRServiceSignalRInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSignalRServiceSignalR) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func initAzureSubscriptionWebPubSubService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -242,5 +256,19 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub), nil
+	sysData, err := convert.JsonToDict(wps.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlWps := res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub)
+	mqlWps.cacheSystemData = sysData
+	return mqlWps, nil
+}
+
+type mqlAzureSubscriptionWebPubSubServiceWebPubSubInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

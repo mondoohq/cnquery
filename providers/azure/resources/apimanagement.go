@@ -23,6 +23,7 @@ import (
 
 type mqlAzureSubscriptionApiManagementServiceServiceInternal struct {
 	cachePublicIpAddressId string
+	cacheSystemData        any
 }
 
 func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
@@ -31,6 +32,10 @@ func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
 
 func (a *mqlAzureSubscriptionApiManagementServiceService) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func initAzureSubscriptionApiManagementService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -240,7 +245,13 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService).cachePublicIpAddressId = publicIpAddressId
+			svcRes := mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService)
+			svcRes.cachePublicIpAddressId = publicIpAddressId
+			sysData, err := convert.JsonToDict(svc.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			svcRes.cacheSystemData = sysData
 			res = append(res, mqlSvc)
 		}
 	}

@@ -215,5 +215,20 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		return nil, err
 	}
 
-	return res.(*mqlAzureSubscriptionDatabricksServiceWorkspace), nil
+	mqlWorkspace := res.(*mqlAzureSubscriptionDatabricksServiceWorkspace)
+	sysData, err := convert.JsonToDict(workspace.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlWorkspace.cacheSystemData = sysData
+
+	return mqlWorkspace, nil
+}
+
+type mqlAzureSubscriptionDatabricksServiceWorkspaceInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionDatabricksServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

@@ -427,6 +427,11 @@ func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.M
 	}
 	mqlCluster := resource.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster)
 	mqlCluster.cacheKeyVaultKeyUri = keyVaultKeyUri
+	sysData, err := convert.JsonToDict(cluster.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlCluster.cacheSystemData = sysData
 	return mqlCluster, nil
 }
 
@@ -552,7 +557,25 @@ func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpo
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster), nil
+	mqlCluster := resource.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster)
+	sysData, err := convert.JsonToDict(cluster.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlCluster.cacheSystemData = sysData
+	return mqlCluster, nil
+}
+
+type mqlAzureSubscriptionCosmosDbServicePostgresqlClusterInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceMongoCluster) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
@@ -565,6 +588,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureS
 
 type mqlAzureSubscriptionCosmosDbServiceMongoClusterInternal struct {
 	cacheKeyVaultKeyUri string
+	cacheSystemData     any
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceMongoCluster) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {

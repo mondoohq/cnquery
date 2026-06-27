@@ -126,6 +126,11 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure.(*mqlAzureSubscriptionMonitorServiceLogprofile).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}
@@ -376,10 +381,31 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			alert.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).cacheSystemData = sysData
 			res = append(res, alert)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionMonitorServiceLogprofileInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionMonitorServiceActivityLogAlertInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceLogprofile) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceActivityLogAlert) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceActivityLogEntry) id() (string, error) {

@@ -724,6 +724,8 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   provisioningState string
   // Identity configuration
   identity dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure disk access resource
@@ -752,6 +754,8 @@ azure.subscription.computeService.diskAccess @defaults("name location") {
   timeCreated time
   // Private endpoint connections
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure managed disk snapshot
@@ -947,6 +951,8 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   properties dict
   // Instance SKU (name, tier, capacity)
   sku dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Dedicated Host Group
@@ -981,6 +987,8 @@ azure.subscription.computeService.dedicatedHostGroup @defaults("name location pl
   instanceView dict
   // Dedicated hosts in this group
   hosts() []azure.subscription.computeService.dedicatedHost
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Dedicated Host
@@ -1021,6 +1029,8 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   timeCreated time
   // Instance view (host availability + assets)
   instanceView dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Proximity Placement Group
@@ -1286,6 +1296,8 @@ azure.subscription.batchService.account @defaults("id name location") {
   pools() []azure.subscription.batchService.account.pool
   // Batch account diagnostic settings
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Batch pool
@@ -1327,6 +1339,8 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   proxyAgentEnabled bool
   // Security encryption type for confidential computing (e.g., "DiskWithVMGuestState")
   securityEncryptionType string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Databricks
@@ -1395,6 +1409,8 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   managedServicesKeyName string
   // Managed-services CMK key version
   managedServicesKeyVersion string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure network
@@ -4432,6 +4448,8 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   ftp() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
   // SCM publishing method policies for the slot
   scm() azure.subscription.webService.appsite.basicPublishingCredentialsPolicies
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure AppSite basic publishing credentials policies
@@ -4720,6 +4738,8 @@ private azure.subscription.webService.staticSite @defaults("name defaultHostname
   linkedBackendCount int
   // Number of database connections bound to the static site
   databaseConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure App Service Hostname Binding
@@ -5447,6 +5467,8 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Database for PostgreSQL server
@@ -5774,6 +5796,8 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB
@@ -5932,6 +5956,8 @@ private azure.subscription.cosmosDbService.mongoCluster @defaults("computeTier s
   replicationSourceId string
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB for PostgreSQL cluster
@@ -5999,6 +6025,8 @@ private azure.subscription.cosmosDbService.postgresqlCluster @defaults("postgres
   maintenanceWindow dict
   // Server names in the cluster
   serverNames []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB SQL data-plane role definition (data-plane RBAC, separate from Azure ARM roles)
@@ -6181,6 +6209,8 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   regions []dict
   // Private endpoint connections
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Key Vault vault
@@ -6528,6 +6558,8 @@ private azure.subscription.monitorService.activityLog.alert @defaults("name type
   actions []dict
   // List of resource IDs that must be present to trigger the alert
   scopes []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Monitor activity log event
@@ -6603,6 +6635,8 @@ private azure.subscription.monitorService.logprofile @defaults("id name location
   storageAccountId string
   // Log profile storage account
   storageAccount() azure.subscription.storageService.account
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Monitor diagnostic setting
@@ -7453,6 +7487,8 @@ private azure.subscription.managedIdentity @defaults("name") {
   // `audiences`. A broad or unexpected issuer/subject is a privilege-
   // escalation path worth auditing.
   federatedIdentityCredentials() []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Kubernetes Service
@@ -7863,6 +7899,8 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
   enforcementMode string
   // Policy parameters
   parameters dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Policy definition
@@ -7887,6 +7925,8 @@ private azure.subscription.policy.definition @defaults("name displayName policyT
   metadata dict
   // Definition version in #.#.# format
   version string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Policy initiative
@@ -7909,6 +7949,8 @@ private azure.subscription.policy.setDefinition @defaults("name displayName poli
   metadata dict
   // Initiative version in #.#.# format
   version string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Policy exemption
@@ -8007,6 +8049,8 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   networkRuleSet dict
   // Diagnostic settings configured on the IoT hub (forwarding logs and metrics to Log Analytics, storage, or Event Hub)
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cache for Redis
@@ -8733,6 +8777,8 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   tables() []azure.subscription.monitorService.workspace.table
   // Network Security Perimeter configurations
   networkSecurityPerimeterConfigurations() []azure.subscription.monitorService.workspace.nspConfiguration
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Daily data volume capping for a Log Analytics workspace
@@ -8861,6 +8907,8 @@ private azure.subscription.monitorService.workspace.table @defaults("name plan r
   searchResults dict
   // Search job execution statistics
   resultStatistics dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network Security Perimeter configuration for a Log Analytics workspace
@@ -8936,6 +8984,8 @@ azure.subscription.monitorService.queryPack @defaults("id name location queryPac
   timeModified time
   // Saved KQL queries in this QueryPack
   queries() []azure.subscription.monitorService.queryPack.query
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Saved KQL query in a Log Analytics QueryPack
@@ -8960,6 +9010,8 @@ private azure.subscription.monitorService.queryPack.query @defaults("id name dis
   timeModified time
   // Tags associated with the query
   tags dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Recovery Services
@@ -9023,6 +9075,8 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   backupPolicies() []azure.subscription.recoveryServicesService.vault.backupPolicy
   // Protected (backed-up) items
   protectedItems() []azure.subscription.recoveryServicesService.vault.protectedItem
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Security settings for a Recovery Services vault
@@ -9183,6 +9237,8 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   //
   // Each entry has shape {name, type, hasKeyVaultReference, slotSetting}. Connection-string values are not returned.
   connectionStrings() []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Function App application setting
@@ -9226,6 +9282,8 @@ private azure.subscription.functionsService.functionApp.function @defaults("id n
   language string
   // Whether the function is disabled
   isDisabled bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // ===== Azure Service Bus Service =====
@@ -9285,6 +9343,8 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
   topics() []azure.subscription.serviceBusService.namespace.topic
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Service Bus namespace network rule set
@@ -9348,6 +9408,8 @@ private azure.subscription.serviceBusService.namespace.queue @defaults("id name"
   requiresSession bool
   // Whether partitioning is enabled
   enablePartitioning bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Service Bus topic
@@ -9372,6 +9434,8 @@ private azure.subscription.serviceBusService.namespace.topic @defaults("id name"
   defaultMessageTimeToLive string
   // Subscriptions on this topic
   subscriptions() []azure.subscription.serviceBusService.namespace.topic.subscription
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Service Bus topic subscription
@@ -9394,6 +9458,8 @@ private azure.subscription.serviceBusService.namespace.topic.subscription @defau
   defaultMessageTimeToLive string
   // Whether sessions are required
   requiresSession bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // ===== Azure Event Hubs Service =====
@@ -9524,6 +9590,8 @@ private azure.subscription.eventHubService.namespace.eventHub.consumerGroup @def
   name string
   // User-defined metadata
   userMetadata string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // ===== Azure Event Grid Service =====
@@ -9580,6 +9648,8 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   identityType string
   // Number of private endpoint connections to the topic
   privateEndpointConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Event Grid system topic
@@ -9609,6 +9679,8 @@ azure.subscription.eventGridService.systemTopic @defaults("name location topicTy
   metricResourceId string
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Event Grid domain
@@ -9656,6 +9728,8 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   identityType string
   // Number of private endpoint connections to the domain
   privateEndpointConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // ===== Azure DNS Service =====
@@ -9804,6 +9878,8 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   originGroups() []azure.subscription.frontDoorService.profile.originGroup
   // Security policies (Web Application Firewall associations) attached to this profile
   securityPolicies() []azure.subscription.frontDoorService.profile.securityPolicy
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door security policy associating a WAF policy with domains
@@ -9820,6 +9896,8 @@ private azure.subscription.frontDoorService.profile.securityPolicy @defaults("id
   associations []dict
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door / CDN endpoint
@@ -9838,6 +9916,8 @@ private azure.subscription.frontDoorService.profile.endpoint @defaults("id name 
   provisioningState string
   // Routes attached to this endpoint
   routes() []azure.subscription.frontDoorService.profile.endpoint.route
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door / CDN route attached to an endpoint
@@ -9866,6 +9946,8 @@ private azure.subscription.frontDoorService.profile.endpoint.route @defaults("id
   originGroupId string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door / CDN custom domain
@@ -9884,6 +9966,8 @@ private azure.subscription.frontDoorService.profile.customDomain @defaults("id n
   tlsMinimumVersion string
   // Certificate source ("CustomerCertificate", "ManagedCertificate", or "AzureFirstPartyManagedCertificate")
   tlsCertificateType string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door / CDN origin group
@@ -9900,6 +9984,8 @@ private azure.subscription.frontDoorService.profile.originGroup @defaults("id na
   loadBalancingSettings dict
   // Origins in this origin group
   origins() []azure.subscription.frontDoorService.profile.originGroup.origin
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Front Door / CDN origin
@@ -9924,6 +10010,8 @@ private azure.subscription.frontDoorService.profile.originGroup.origin @defaults
   enabledState string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Container Apps
@@ -10000,6 +10088,8 @@ azure.subscription.containerAppService.managedEnvironment @defaults("name locati
   httpRouteConfigs() []azure.subscription.containerAppService.managedEnvironment.httpRouteConfig
   // Env-scoped maintenance window configurations
   maintenanceConfigurations() []azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Private endpoint connection on a Container Apps managed environment
@@ -10020,6 +10110,8 @@ private azure.subscription.containerAppService.managedEnvironment.privateEndpoin
   groupIds []string
   // ARM resource ID of the private endpoint on the consumer side
   privateEndpointId string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // HTTP route config attached to a Container Apps managed environment
@@ -10042,6 +10134,8 @@ private azure.subscription.containerAppService.managedEnvironment.httpRouteConfi
   rules []dict
   // Errors encountered while reconciling routes
   provisioningErrors []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Maintenance configuration on a Container Apps managed environment
@@ -10057,6 +10151,8 @@ private azure.subscription.containerAppService.managedEnvironment.maintenanceCon
   name string
   // Scheduled maintenance windows — each entry has `weekDay`, `startHourUtc`, `durationHours`
   scheduledEntries []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Dapr component configured at the managed environment scope
@@ -10081,6 +10177,8 @@ private azure.subscription.containerAppService.managedEnvironment.daprComponent 
   provisioningState string
   // Free-form error string set by ARM when deployment or validation failed
   deploymentErrors string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Certificate uploaded to a Container Apps managed environment
@@ -10109,6 +10207,8 @@ private azure.subscription.containerAppService.managedEnvironment.certificate @d
   publicKeyHash string
   // Subject alternative names declared on the cert
   subjectAlternativeNames []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Container App
@@ -10198,6 +10298,8 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   authConfigs() []azure.subscription.containerAppService.containerApp.authConfig
   // Revision history
   revisions() []azure.subscription.containerAppService.containerApp.revision
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Container definition inside a Container App
@@ -10250,6 +10352,8 @@ private azure.subscription.containerAppService.containerApp.revision @defaults("
   createdTime time
   // Last active time
   lastActiveTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Container App Easy Auth (authConfig) configuration
@@ -10268,6 +10372,8 @@ private azure.subscription.containerAppService.containerApp.authConfig @defaults
   login dict
   // HTTP settings (requireHttps, route configuration, forward proxy)
   httpSettings dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Container Apps Job
@@ -10317,6 +10423,8 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   registryAuthUsesIdentity bool
   // Names of declared secrets (values are not returned by ARM on read)
   secretNames []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Container Instances
@@ -10639,6 +10747,8 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   publicIpAddress() azure.subscription.networkService.ipAddress
   // Service creation time
   createdAt time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Purview
@@ -10769,6 +10879,8 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   status string
   // Network rule set: IP firewall rules and the bypass setting governing public access
   networkRuleSet dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Machine Learning
@@ -10922,6 +11034,8 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("na
   provisioningState string
   // Model deployments behind the endpoint
   deployments() []azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Model deployment behind an online endpoint
@@ -10963,6 +11077,8 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment @d
   egressPublicNetworkAccess string
   // Provisioning state of the deployment
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Serverless (Models-as-a-Service) endpoint in an Azure Machine Learning workspace
@@ -10999,6 +11115,8 @@ azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults
   contentSafetyStatus string
   // Provisioning state of the endpoint
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Compute target in an Azure Machine Learning workspace
@@ -11042,6 +11160,8 @@ azure.subscription.machineLearningService.workspace.compute @defaults("name comp
   createdOn time
   // When the compute was last modified
   modifiedOn time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Registered model in an Azure Machine Learning workspace
@@ -11068,6 +11188,8 @@ azure.subscription.machineLearningService.workspace.model @defaults("name latest
   tags map[string]string
   // Provisioning state of the model container
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // App Configuration
@@ -11274,6 +11396,8 @@ azure.subscription.cognitiveServicesService.account.deployment @defaults("name m
   raiPolicyName string
   // Responsible AI content-filter policy applied to the deployment (null when none is attached)
   raiPolicy() azure.subscription.cognitiveServicesService.account.raiPolicy
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure AI Foundry project
@@ -11308,6 +11432,8 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   endpoints map[string]string
   // Project-scoped connections to external resources, model providers, data sources, and tool servers
   connections() []azure.subscription.cognitiveServicesService.account.project.connection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Connection on an Azure AI Foundry project
@@ -11354,6 +11480,8 @@ private azure.subscription.cognitiveServicesService.account.project.connection @
   error string
   // When the connection's credentials expire (null when they do not expire)
   expiryTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Connection on an Azure AI Services account
@@ -11400,6 +11528,8 @@ private azure.subscription.cognitiveServicesService.account.connection @defaults
   error string
   // When the connection's credentials expire (null when they do not expire)
   expiryTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Responsible AI content-filter policy on a Cognitive Services account
@@ -11426,6 +11556,8 @@ private azure.subscription.cognitiveServicesService.account.raiPolicy @defaults(
   customBlocklists []dict
   // Custom RAI topic references attached to the policy
   customTopics []azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Content filter on a Responsible AI policy
@@ -11492,6 +11624,8 @@ private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("
   createdAt time
   // When the topic was last modified
   lastModifiedAt time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Sentinel
@@ -11564,6 +11698,8 @@ private azure.subscription.sentinelService.alertRule @defaults("name kind enable
   description string
   // Kind-specific properties (e.g., for Scheduled rules: query, queryFrequency, queryPeriod, triggerThreshold)
   properties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SignalR Service
@@ -11620,6 +11756,8 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   networkAclsDefaultAction string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Web PubSub Service
@@ -11677,6 +11815,8 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   networkAclsDefaultAction string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer (Kusto)
@@ -11903,6 +12043,8 @@ private azure.subscription.kustoService.cluster.privateEndpointConnection @defau
   privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer cluster managed private endpoint
@@ -11927,6 +12069,8 @@ private azure.subscription.kustoService.cluster.managedPrivateEndpoint @defaults
   requestMessage string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer database data connection
@@ -12019,6 +12163,8 @@ azure.subscription.automationService.account @defaults("id name location publicN
   credentials() []azure.subscription.automationService.account.credential
   // Certificates stored in the account
   certificates() []azure.subscription.automationService.account.certificate
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Automation account variable
@@ -12035,6 +12181,8 @@ private azure.subscription.automationService.account.variable @defaults("name is
   creationTime time
   // When the variable was last modified
   lastModifiedTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Automation account credential
@@ -12051,6 +12199,8 @@ private azure.subscription.automationService.account.credential @defaults("name 
   creationTime time
   // When the credential was last modified
   lastModifiedTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Automation account certificate
@@ -12069,6 +12219,8 @@ private azure.subscription.automationService.account.certificate @defaults("name
   description string
   // When the certificate was created
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Virtual Desktop
@@ -12128,4 +12280,6 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   ssoSecretType string
   // Number of approved private endpoint connections to the host pool
   privateEndpointConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }

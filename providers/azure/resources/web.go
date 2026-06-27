@@ -150,18 +150,29 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 	if err != nil {
 		return nil, err
 	}
-	if resourceType == ResourceAzureSubscriptionWebServiceAppsite {
-		sysData, err := convert.JsonToDict(site.SystemData)
-		if err != nil {
-			return nil, err
-		}
+	sysData, err := convert.JsonToDict(site.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	switch resourceType {
+	case ResourceAzureSubscriptionWebServiceAppsite:
 		res.(*mqlAzureSubscriptionWebServiceAppsite).cacheSystemData = sysData
+	case ResourceAzureSubscriptionWebServiceAppslot:
+		res.(*mqlAzureSubscriptionWebServiceAppslot).cacheSystemData = sysData
 	}
 	return res, nil
 }
 
 type mqlAzureSubscriptionWebServiceAppsiteInternal struct {
 	cacheSystemData any
+}
+
+type mqlAzureSubscriptionWebServiceAppslotInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppslot) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type runtimeStackDescriptor struct {

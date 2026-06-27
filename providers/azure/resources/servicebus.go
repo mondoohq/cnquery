@@ -23,6 +23,35 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceInternal struct {
 	networkRuleSetFetched bool
 	networkRuleSetProps   *armservicebus.NetworkRuleSetProperties
 	networkRuleSetLock    sync.Mutex
+	cacheSystemData       any
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceQueueInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceTopicInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscriptionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionServiceBusService) id() (string, error) {
@@ -142,6 +171,11 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ns.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNs.(*mqlAzureSubscriptionServiceBusServiceNamespace).cacheSystemData = sysData
 			res = append(res, mqlNs)
 		}
 	}
@@ -237,6 +271,11 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) queues() ([]any, error)
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(q.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlQueue.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).cacheSystemData = sysData
 			res = append(res, mqlQueue)
 		}
 	}
@@ -320,6 +359,11 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) topics() ([]any, error)
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(t.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlTopic.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).cacheSystemData = sysData
 			res = append(res, mqlTopic)
 		}
 	}
@@ -408,6 +452,11 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(sub.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSub.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).cacheSystemData = sysData
 			res = append(res, mqlSub)
 		}
 	}

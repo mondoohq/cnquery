@@ -220,6 +220,19 @@ func (a *mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnection) id() (st
 
 type mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnectionInternal struct {
 	cachePrivateEndpointID string
+	cacheSystemData        any
+}
+
+type mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpointInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionKustoServiceClusterDatabaseDataConnectionInternal struct {
@@ -562,6 +575,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) privateEndpointConnections() (
 				return nil, err
 			}
 			mqlPec.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).cachePrivateEndpointID = privateEndpointID
+			sysData, err := convert.JsonToDict(pec.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPec.(*mqlAzureSubscriptionKustoServiceClusterPrivateEndpointConnection).cacheSystemData = sysData
 			res = append(res, mqlPec)
 		}
 	}
@@ -620,6 +638,11 @@ func (a *mqlAzureSubscriptionKustoServiceCluster) managedPrivateEndpoints() ([]a
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(mpe.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlMpe.(*mqlAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint).cacheSystemData = sysData
 			res = append(res, mqlMpe)
 		}
 	}

@@ -16,8 +16,16 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlAzureSubscriptionIotServiceIotHubInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionIotServiceIotHub) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionIotServiceIotHub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionIotServiceIotHub) diagnosticSettings() ([]any, error) {
@@ -166,6 +174,11 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(hub.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlHub.(*mqlAzureSubscriptionIotServiceIotHub).cacheSystemData = sysData
 			res = append(res, mqlHub)
 		}
 	}

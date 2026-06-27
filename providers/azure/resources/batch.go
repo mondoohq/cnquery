@@ -300,7 +300,21 @@ func batchAccountToMql(runtime *plugin.Runtime, account *armbatch.Account) (*mql
 		return nil, err
 	}
 
+	sysData, err := convert.JsonToDict(account.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionBatchServiceAccount).cacheSystemData = sysData
+
 	return res.(*mqlAzureSubscriptionBatchServiceAccount), nil
+}
+
+type mqlAzureSubscriptionBatchServiceAccountInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionBatchServiceAccount) pools() ([]any, error) {
@@ -487,5 +501,19 @@ func batchPoolToMql(runtime *plugin.Runtime, pool *armbatch.Pool) (*mqlAzureSubs
 		return nil, err
 	}
 
+	sysData, err := convert.JsonToDict(pool.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	resource.(*mqlAzureSubscriptionBatchServiceAccountPool).cacheSystemData = sysData
+
 	return resource.(*mqlAzureSubscriptionBatchServiceAccountPool), nil
+}
+
+type mqlAzureSubscriptionBatchServiceAccountPoolInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionBatchServiceAccountPool) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

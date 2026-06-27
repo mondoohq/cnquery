@@ -1593,6 +1593,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) id() (string, error) {
 
 type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
 	cachePrivateEndpointConnections []*keyvault.MHSMPrivateEndpointConnectionItem
+	cacheSystemData                 any
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
@@ -1694,6 +1699,12 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 			// Cache private endpoint connections for lazy loading
 			mqlHsmTyped := mqlHsm.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
 			mqlHsmTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			sysData, err := convert.JsonToDict(hsm.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlHsmTyped.cacheSystemData = sysData
 
 			res = append(res, mqlHsm)
 		}

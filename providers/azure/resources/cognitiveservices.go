@@ -399,7 +399,21 @@ func raiPolicyToMql(runtime *plugin.Runtime, pol *armcognitiveservices.RaiPolicy
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy), nil
+	mqlPolicy := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy)
+	sysData, err := convert.JsonToDict(pol.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlPolicy.cacheSystemData = sysData
+	return mqlPolicy, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func raiContentFilterToMql(runtime *plugin.Runtime, pol *armcognitiveservices.RaiPolicy, idx int, f *armcognitiveservices.RaiPolicyContentFilter) (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter, error) {
@@ -673,11 +687,21 @@ func cognitiveServicesDeploymentToMql(runtime *plugin.Runtime, dep *armcognitive
 				parsed.SubscriptionID, parsed.ResourceGroup, parsed.Path["accounts"])
 		}
 	}
+	sysData, err := convert.JsonToDict(dep.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlDep.cacheSystemData = sysData
 	return mqlDep, nil
 }
 
 type mqlAzureSubscriptionCognitiveServicesServiceAccountDeploymentInternal struct {
-	cacheAccountId string
+	cacheAccountId  string
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountDeployment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // raiPolicy resolves the deployment's content-filter policy by matching raiPolicyName
@@ -757,7 +781,21 @@ func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic), nil
+	mqlTopic := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic)
+	sysData, err := convert.JsonToDict(t.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlTopic.cacheSystemData = sysData
+	return mqlTopic, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopicInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) id() (string, error) {
@@ -862,7 +900,21 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject), nil
+	mqlProject := res.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject)
+	sysData, err := convert.JsonToDict(proj.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlProject.cacheSystemData = sysData
+	return mqlProject, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) connections() ([]any, error) {
@@ -1023,5 +1075,31 @@ func cognitiveServicesConnectionToMql(runtime *plugin.Runtime, resourceType stri
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(c.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	switch r := res.(type) {
+	case *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection:
+		r.cacheSystemData = sysData
+	case *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection:
+		r.cacheSystemData = sysData
+	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountConnectionInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountProjectConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

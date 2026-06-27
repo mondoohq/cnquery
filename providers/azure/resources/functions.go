@@ -189,7 +189,7 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		managedServiceIdentityId = *site.Identity.PrincipalID
 	}
 
-	return CreateResource(runtime, "azure.subscription.functionsService.functionApp", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "azure.subscription.functionsService.functionApp", map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(site.ID),
 		"name":                      llx.StringDataPtr(site.Name),
 		"location":                  llx.StringDataPtr(site.Location),
@@ -205,6 +205,31 @@ func functionAppSiteToMql(runtime *plugin.Runtime, site *web.Site) (plugin.Resou
 		"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
 		"properties":                llx.DictData(properties),
 	})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(site.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).cacheSystemData = sysData
+	return res, nil
+}
+
+type mqlAzureSubscriptionFunctionsServiceFunctionAppInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionFunctionsServiceFunctionAppFunctionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionAppFunction) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, error) {
@@ -266,6 +291,11 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(fn.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlFn.(*mqlAzureSubscriptionFunctionsServiceFunctionAppFunction).cacheSystemData = sysData
 			res = append(res, mqlFn)
 		}
 	}

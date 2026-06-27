@@ -222,6 +222,11 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					mqlServer.cacheGeoBackupKeyURI = *dbServer.Properties.DataEncryption.GeoBackupKeyURI
 				}
 			}
+			sysData, err := convert.JsonToDict(dbServer.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlServer.cacheSystemData = sysData
 			res = append(res, mqlAzureDbServer)
 		}
 	}
@@ -553,6 +558,11 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 type mqlAzureSubscriptionMySqlServiceFlexibleServerInternal struct {
 	cacheDataEncryptionKeyURI string
 	cacheGeoBackupKeyURI      string
+	cacheSystemData           any
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) dataEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {

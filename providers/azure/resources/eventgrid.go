@@ -20,8 +20,32 @@ func (a *mqlAzureSubscriptionEventGridService) id() (string, error) {
 	return "azure.subscription.eventGrid/" + a.SubscriptionId.Data, nil
 }
 
+type mqlAzureSubscriptionEventGridServiceTopicInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionEventGridServiceSystemTopicInternal struct {
+	cacheSystemData any
+}
+
+type mqlAzureSubscriptionEventGridServiceDomainInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionEventGridServiceTopic) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionEventGridServiceTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionEventGridServiceSystemTopic) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionEventGridServiceDomain) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionEventGridServiceSystemTopic) id() (string, error) {
@@ -151,6 +175,11 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(t.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlTopic.(*mqlAzureSubscriptionEventGridServiceTopic).cacheSystemData = sysData
 			res = append(res, mqlTopic)
 		}
 	}
@@ -207,6 +236,11 @@ func (a *mqlAzureSubscriptionEventGridService) systemTopics() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(st.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSt.(*mqlAzureSubscriptionEventGridServiceSystemTopic).cacheSystemData = sysData
 			res = append(res, mqlSt)
 		}
 	}
@@ -305,6 +339,11 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(d.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDomain.(*mqlAzureSubscriptionEventGridServiceDomain).cacheSystemData = sysData
 			res = append(res, mqlDomain)
 		}
 	}

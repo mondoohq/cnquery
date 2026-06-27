@@ -301,7 +301,20 @@ func vmScaleSetInstanceToMql(runtime *plugin.Runtime, inst compute.VirtualMachin
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(inst.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance), nil
+}
+
+type mqlAzureSubscriptionComputeServiceVmScaleSetInstanceInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) extensions() ([]any, error) {

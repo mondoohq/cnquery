@@ -118,11 +118,12 @@ func getServerVulnAssessmentSettings(ctx context.Context, conn armSecurityConn) 
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.authorization/policyassignments?pivots=deployment-language-bicep#property-values
 type PolicyAssignment struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Name     string `json:"name"`
-	Location string `json:"location,omitempty"`
-	Identity struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Location   string `json:"location,omitempty"`
+	SystemData any    `json:"systemData,omitempty"`
+	Identity   struct {
 		Type        string `json:"type"`
 		PrincipalID string `json:"principalId"`
 		TenantID    string `json:"tenantId"`

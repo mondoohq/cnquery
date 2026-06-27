@@ -141,6 +141,11 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) id() (string, erro
 type mqlAzureSubscriptionPostgreSqlServiceFlexibleServerInternal struct {
 	cachePrimaryKeyURI   string
 	cacheGeoBackupKeyURI string
+	cacheSystemData      any
+}
+
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error) {
@@ -239,6 +244,11 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					mqlServer.cacheGeoBackupKeyURI = *dbServer.Properties.DataEncryption.GeoBackupKeyURI
 				}
 			}
+			sysData, err := convert.JsonToDict(dbServer.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlServer.cacheSystemData = sysData
 			res = append(res, mqlAzurePostgresServer)
 		}
 	}

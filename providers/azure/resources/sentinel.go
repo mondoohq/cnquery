@@ -292,7 +292,22 @@ func sentinelAlertRuleToMql(runtime *plugin.Runtime, raw armsecurityinsights.Ale
 	if err != nil {
 		return nil, err
 	}
+
+	sysData, err := convert.JsonToDict(base.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSentinelServiceAlertRule).cacheSystemData = sysData
+
 	return res.(*mqlAzureSubscriptionSentinelServiceAlertRule), nil
+}
+
+type mqlAzureSubscriptionSentinelServiceAlertRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceAlertRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionSentinelServiceWorkspace) dataConnectors() ([]any, error) {

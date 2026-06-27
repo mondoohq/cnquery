@@ -379,6 +379,7 @@ func initAzureSubscriptionManagedIdentity(runtime *plugin.Runtime, args map[stri
 
 type mqlAzureSubscriptionManagedIdentityInternal struct {
 	cacheResourceID string
+	cacheSystemData any
 }
 
 func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Identity) (*mqlAzureSubscriptionManagedIdentity, error) {
@@ -404,7 +405,18 @@ func newMqlManagedIdentity(runtime *plugin.Runtime, managedIdentity *armmsi.Iden
 
 	mqlManagedIdentity := r.(*mqlAzureSubscriptionManagedIdentity)
 	mqlManagedIdentity.cacheResourceID = convert.ToValue(managedIdentity.ID)
+
+	sysData, err := convert.JsonToDict(managedIdentity.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlManagedIdentity.cacheSystemData = sysData
+
 	return mqlManagedIdentity, nil
+}
+
+func (a *mqlAzureSubscriptionManagedIdentity) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.__id, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]any, error) {

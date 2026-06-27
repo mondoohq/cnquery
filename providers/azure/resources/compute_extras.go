@@ -118,7 +118,20 @@ func dedicatedHostGroupToMql(runtime *plugin.Runtime, hg compute.DedicatedHostGr
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(hg.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDedicatedHostGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) hosts() ([]any, error) {
@@ -212,7 +225,20 @@ func dedicatedHostToMql(runtime *plugin.Runtime, host compute.DedicatedHost) (*m
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(host.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDedicatedHost).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDedicatedHost), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDedicatedHostInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDedicatedHost) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // ----- Proximity Placement Groups -----

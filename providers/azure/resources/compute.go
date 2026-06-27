@@ -1107,11 +1107,29 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(des.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+}
+
+type mqlAzureSubscriptionComputeServiceDiskEncryptionSetInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 type mqlAzureSubscriptionComputeServiceDiskAccessInternal struct {
 	cachePrivateEndpointConnections []*compute.PrivateEndpointConnection
+	cacheSystemData                 any
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskAccess) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionComputeService) diskAccesses() ([]any, error) {
@@ -1173,6 +1191,12 @@ func (a *mqlAzureSubscriptionComputeService) diskAccesses() ([]any, error) {
 			// Cache private endpoint connections for lazy loading
 			mqlDaTyped := mqlDa.(*mqlAzureSubscriptionComputeServiceDiskAccess)
 			mqlDaTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			sysData, err := convert.JsonToDict(da.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDaTyped.cacheSystemData = sysData
 
 			res = append(res, mqlDa)
 		}

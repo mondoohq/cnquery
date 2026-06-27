@@ -129,6 +129,11 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) securityPolicies() ([]any,
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(sp.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSp.(*mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy).cacheSystemData = sysData
 			res = append(res, mqlSp)
 		}
 	}
@@ -194,6 +199,11 @@ func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(profile.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlProfile.(*mqlAzureSubscriptionFrontDoorServiceProfile).cacheSystemData = sysData
 			res = append(res, mqlProfile)
 		}
 	}
@@ -258,6 +268,11 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) endpoints() ([]any, error)
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ep.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlEp.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpoint).cacheSystemData = sysData
 			res = append(res, mqlEp)
 		}
 	}
@@ -331,6 +346,11 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) customDomains() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(cd.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCd.(*mqlAzureSubscriptionFrontDoorServiceProfileCustomDomain).cacheSystemData = sysData
 			res = append(res, mqlCd)
 		}
 	}
@@ -398,6 +418,11 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) originGroups() ([]any, err
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(og.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlOg.(*mqlAzureSubscriptionFrontDoorServiceProfileOriginGroup).cacheSystemData = sysData
 			res = append(res, mqlOg)
 		}
 	}
@@ -487,6 +512,11 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfileOriginGroup) origins() ([]an
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(origin.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlOrigin.(*mqlAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin).cacheSystemData = sysData
 			res = append(res, mqlOrigin)
 		}
 	}
@@ -586,8 +616,69 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) routes() ([]any, e
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(rt.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRt.(*mqlAzureSubscriptionFrontDoorServiceProfileEndpointRoute).cacheSystemData = sysData
 			res = append(res, mqlRt)
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfile) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileEndpointInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileCustomDomainInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileCustomDomain) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileOriginGroupInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileOriginGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileOriginGroupOriginInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileEndpointRouteInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileEndpointRoute) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileSecurityPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }

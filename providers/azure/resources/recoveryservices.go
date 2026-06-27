@@ -26,6 +26,7 @@ type mqlAzureSubscriptionRecoveryServicesServiceVaultInternal struct {
 	cacheMonitoringSettings  *armrecoveryservices.MonitoringSettings
 	cacheRedundancySettings  *armrecoveryservices.VaultPropertiesRedundancySettings
 	cachePrivateEndpointConn []*armrecoveryservices.PrivateEndpointConnectionVaultProperties
+	cacheSystemData          any
 }
 
 func (a *mqlAzureSubscriptionRecoveryServicesService) id() (string, error) {
@@ -210,7 +211,17 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 	mqlVault.cacheRedundancySettings = props.RedundancySettings
 	mqlVault.cachePrivateEndpointConn = props.PrivateEndpointConnections
 
+	sysData, err := convert.JsonToDict(vault.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlVault.cacheSystemData = sysData
+
 	return mqlVault, nil
+}
+
+func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // securitySettings builds the security settings sub-resource from cached data.
