@@ -12299,7 +12299,7 @@ private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
   // ETag used for concurrency control on resource updates
   etag string
   // Time the access policy was created
-  createTime time
+  created time
   // Access levels within this policy
   accessLevels() []gcp.accesscontextmanager.accessLevel
   // Service perimeters within this policy

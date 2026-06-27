@@ -14680,8 +14680,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.accesscontextmanager.accessPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetEtag()).ToDataRes(types.String)
 	},
-	"gcp.accesscontextmanager.accessPolicy.createTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetCreateTime()).ToDataRes(types.Time)
+	"gcp.accesscontextmanager.accessPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetCreated()).ToDataRes(types.Time)
 	},
 	"gcp.accesscontextmanager.accessPolicy.accessLevels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetAccessLevels()).ToDataRes(types.Array(types.Resource("gcp.accesscontextmanager.accessLevel")))
@@ -34837,8 +34837,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpAccesscontextmanagerAccessPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.accesscontextmanager.accessPolicy.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpAccesscontextmanagerAccessPolicy).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"gcp.accesscontextmanager.accessPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpAccesscontextmanagerAccessPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.accesscontextmanager.accessPolicy.accessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80597,7 +80597,7 @@ type mqlGcpAccesscontextmanagerAccessPolicy struct {
 	Title             plugin.TValue[string]
 	Parent            plugin.TValue[string]
 	Etag              plugin.TValue[string]
-	CreateTime        plugin.TValue[*time.Time]
+	Created           plugin.TValue[*time.Time]
 	AccessLevels      plugin.TValue[[]any]
 	ServicePerimeters plugin.TValue[[]any]
 }
@@ -80655,8 +80655,8 @@ func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetEtag() *plugin.TValue[string
 	return &c.Etag
 }
 
-func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetCreateTime() *plugin.TValue[*time.Time] {
-	return &c.CreateTime
+func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetAccessLevels() *plugin.TValue[[]any] {
