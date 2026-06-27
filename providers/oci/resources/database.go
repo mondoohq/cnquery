@@ -117,7 +117,6 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 					"domain":               llx.StringDataPtr(s.Domain),
 					"listenerPort":         llx.IntData(intValue(s.ListenerPort)),
 					"scanDnsName":          llx.StringDataPtr(s.ScanDnsName),
-					"sourceDbSystemId":     llx.StringDataPtr(s.SourceDbSystemId),
 					"version":              llx.StringDataPtr(s.Version),
 					"cpuCoreCount":         llx.IntData(intValue(s.CpuCoreCount)),
 					"nodeCount":            llx.IntData(intValue(s.NodeCount)),
@@ -137,6 +136,7 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 				mqlDb := mqlInstance.(*mqlOciDatabaseDbSystem)
 				mqlDb.cacheKmsKeyId = stringValue(s.KmsKeyId)
 				mqlDb.cacheSubnetId = stringValue(s.SubnetId)
+				mqlDb.cacheSourceDbSystemId = stringValue(s.SourceDbSystemId)
 				res = append(res, mqlDb)
 			}
 
@@ -148,8 +148,9 @@ func (o *mqlOciDatabase) getDbSystems(conn *connection.OciConnection, regions []
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
-	cacheKmsKeyId string
-	cacheSubnetId string
+	cacheKmsKeyId         string
+	cacheSubnetId         string
+	cacheSourceDbSystemId string
 }
 
 func (o *mqlOciDatabaseDbSystem) id() (string, error) {
@@ -287,7 +288,6 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"name":                        llx.StringDataPtr(a.DisplayName),
 					"compartmentID":               llx.StringDataPtr(a.CompartmentId),
 					"dbName":                      llx.StringDataPtr(a.DbName),
-					"sourceId":                    llx.StringDataPtr(a.SourceId),
 					"isRefreshableClone":          llx.BoolDataPtr(a.IsRefreshableClone),
 					"dbVersion":                   llx.StringDataPtr(a.DbVersion),
 					"dbWorkload":                  llx.StringData(string(a.DbWorkload)),
@@ -327,6 +327,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 				mqlAdb.cacheKmsKeyId = stringValue(a.KmsKeyId)
 				mqlAdb.cacheVaultId = stringValue(a.VaultId)
 				mqlAdb.cacheSubnetId = stringValue(a.SubnetId)
+				mqlAdb.cacheSourceId = stringValue(a.SourceId)
 				res = append(res, mqlAdb)
 			}
 
@@ -341,6 +342,7 @@ type mqlOciDatabaseAutonomousDatabaseInternal struct {
 	cacheKmsKeyId string
 	cacheVaultId  string
 	cacheSubnetId string
+	cacheSourceId string
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {

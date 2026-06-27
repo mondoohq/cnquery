@@ -851,8 +851,8 @@ private oci.network.subnet @defaults("name") {
   prohibitInternetIngress bool
   // Route table used by this subnet
   routeTable() oci.network.routeTable
-  // OCIDs of the security lists applied to the subnet
-  securityListIds []string
+  // Security lists applied to the subnet
+  securityLists() []oci.network.securityList
   // Subnet creation time
   created time
   // Free-form tags for resource management
@@ -1345,8 +1345,8 @@ private oci.fileStorage.fileSystem @defaults("name") {
   kmsKey() oci.kms.key
   // Number of bytes consumed by the file system including snapshots
   meteredBytes int
-  // OCID of the file system this one was cloned from, when this is a clone
-  parentFileSystemId string
+  // File system this one was cloned from, when this is a clone
+  parentFileSystem() oci.fileStorage.fileSystem
   // Whether this file system is the parent of at least one clone
   isCloneParent bool
   // File system creation time
@@ -1467,7 +1467,9 @@ private oci.cloudGuard.detectorRecipe @defaults("name") {
   // Detector recipe description
   description string
   // Compartment OCID containing the detector recipe
-  compartmentId string
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
   // Compartment containing the detector recipe
   compartment() oci.compartment
   // Owner of the detector recipe (CUSTOMER or ORACLE)
@@ -2552,8 +2554,8 @@ private oci.database.dbSystem @defaults("name") {
   listenerPort int
   // Single Client Access Name (SCAN) DNS name for the database system
   scanDnsName string
-  // OCID of the source DB system this DB system was created from, when created from another DB system
-  sourceDbSystemId string
+  // Source DB system this DB system was created from, when created from another DB system
+  sourceDbSystem() oci.database.dbSystem
   // Oracle Database version
   version string
   // Number of CPU cores
@@ -2612,8 +2614,8 @@ private oci.database.autonomousDatabase @defaults("name") {
   compartment() oci.compartment
   // Database name
   dbName string
-  // OCID of the source Autonomous Database this database was provisioned or cloned from, when set
-  sourceId string
+  // Source Autonomous Database this database was provisioned or cloned from, when set
+  sourceDatabase() oci.database.autonomousDatabase
   // Whether this database is a refreshable clone of another Autonomous Database
   isRefreshableClone bool
   // Database version

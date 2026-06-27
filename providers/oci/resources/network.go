@@ -565,7 +565,6 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 					"subnetDomainName":        llx.StringDataPtr(subnet.SubnetDomainName),
 					"prohibitPublicIpOnVnic":  llx.BoolDataPtr(subnet.ProhibitPublicIpOnVnic),
 					"prohibitInternetIngress": llx.BoolDataPtr(subnet.ProhibitInternetIngress),
-					"securityListIds":         llx.ArrayData(stringsToAny(subnet.SecurityListIds), types.String),
 					"created":                 llx.TimeDataPtr(created),
 					"freeformTags":            llx.MapData(freeformTags, types.String),
 					"definedTags":             llx.MapData(definedTags, types.Any),
@@ -576,6 +575,7 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 				mqlSub := mqlInstance.(*mqlOciNetworkSubnet)
 				mqlSub.cacheVcnId = stringValue(subnet.VcnId)
 				mqlSub.cacheRouteTableId = stringValue(subnet.RouteTableId)
+				mqlSub.cacheSecurityListIds = subnet.SecurityListIds
 				res = append(res, mqlSub)
 			}
 
@@ -587,8 +587,9 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 }
 
 type mqlOciNetworkSubnetInternal struct {
-	cacheVcnId        string
-	cacheRouteTableId string
+	cacheVcnId           string
+	cacheRouteTableId    string
+	cacheSecurityListIds []string
 }
 
 func initOciNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

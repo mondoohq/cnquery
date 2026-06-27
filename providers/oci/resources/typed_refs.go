@@ -439,7 +439,7 @@ func (o *mqlOciDataSafeMaskingPolicy) compartment() (*mqlOciCompartment, error) 
 }
 
 func (o *mqlOciCloudGuardDetectorRecipe) compartment() (*mqlOciCompartment, error) {
-	return resolveOciCompartment(o.MqlRuntime, o.CompartmentId.Data, &o.Compartment)
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
 }
 
 // ----- source / lineage accessors -----
@@ -533,4 +533,63 @@ func (o *mqlOciLoadBalancerLoadBalancer) subnets() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+func (o *mqlOciNetworkSubnet) securityLists() ([]any, error) {
+	out := make([]any, 0, len(o.cacheSecurityListIds))
+	for _, id := range o.cacheSecurityListIds {
+		if id == "" {
+			continue
+		}
+		res, err := NewResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (o *mqlOciFileStorageFileSystem) parentFileSystem() (*mqlOciFileStorageFileSystem, error) {
+	if o.cacheParentFileSystemId == "" {
+		o.ParentFileSystem.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheParentFileSystemId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciFileStorageFileSystem), nil
+}
+
+func (o *mqlOciDatabaseDbSystem) sourceDbSystem() (*mqlOciDatabaseDbSystem, error) {
+	if o.cacheSourceDbSystemId == "" {
+		o.SourceDbSystem.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceDbSystemId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseDbSystem), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) sourceDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
+	if o.cacheSourceId == "" {
+		o.SourceDatabase.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSourceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseAutonomousDatabase), nil
 }

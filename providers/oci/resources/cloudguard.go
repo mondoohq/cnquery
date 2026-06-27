@@ -220,7 +220,7 @@ func (o *mqlOciCloudGuard) detectorRecipes() ([]any, error) {
 			"id":            llx.StringDataPtr(recipe.Id),
 			"name":          llx.StringDataPtr(recipe.DisplayName),
 			"description":   llx.StringDataPtr(recipe.Description),
-			"compartmentId": llx.StringDataPtr(recipe.CompartmentId),
+			"compartmentID": llx.StringDataPtr(recipe.CompartmentId),
 			"owner":         llx.StringData(string(recipe.Owner)),
 			"detectorType":  llx.StringData(string(recipe.Detector)),
 			"state":         llx.StringData(string(recipe.LifecycleState)),

@@ -1766,8 +1766,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.subnet.routeTable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSubnet).GetRouteTable()).ToDataRes(types.Resource("oci.network.routeTable"))
 	},
-	"oci.network.subnet.securityListIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkSubnet).GetSecurityListIds()).ToDataRes(types.Array(types.String))
+	"oci.network.subnet.securityLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSubnet).GetSecurityLists()).ToDataRes(types.Array(types.Resource("oci.network.securityList")))
 	},
 	"oci.network.subnet.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSubnet).GetCreated()).ToDataRes(types.Time)
@@ -2273,8 +2273,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.fileStorage.fileSystem.meteredBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetMeteredBytes()).ToDataRes(types.Int)
 	},
-	"oci.fileStorage.fileSystem.parentFileSystemId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciFileStorageFileSystem).GetParentFileSystemId()).ToDataRes(types.String)
+	"oci.fileStorage.fileSystem.parentFileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciFileStorageFileSystem).GetParentFileSystem()).ToDataRes(types.Resource("oci.fileStorage.fileSystem"))
 	},
 	"oci.fileStorage.fileSystem.isCloneParent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciFileStorageFileSystem).GetIsCloneParent()).ToDataRes(types.Bool)
@@ -2381,8 +2381,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.cloudGuard.detectorRecipe.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardDetectorRecipe).GetDescription()).ToDataRes(types.String)
 	},
-	"oci.cloudGuard.detectorRecipe.compartmentId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCompartmentId()).ToDataRes(types.String)
+	"oci.cloudGuard.detectorRecipe.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCompartmentID()).ToDataRes(types.String)
 	},
 	"oci.cloudGuard.detectorRecipe.compartment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciCloudGuardDetectorRecipe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
@@ -3461,8 +3461,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.dbSystem.scanDnsName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetScanDnsName()).ToDataRes(types.String)
 	},
-	"oci.database.dbSystem.sourceDbSystemId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseDbSystem).GetSourceDbSystemId()).ToDataRes(types.String)
+	"oci.database.dbSystem.sourceDbSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseDbSystem).GetSourceDbSystem()).ToDataRes(types.Resource("oci.database.dbSystem"))
 	},
 	"oci.database.dbSystem.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseDbSystem).GetVersion()).ToDataRes(types.String)
@@ -3527,8 +3527,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.autonomousDatabase.dbName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetDbName()).ToDataRes(types.String)
 	},
-	"oci.database.autonomousDatabase.sourceId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciDatabaseAutonomousDatabase).GetSourceId()).ToDataRes(types.String)
+	"oci.database.autonomousDatabase.sourceDatabase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetSourceDatabase()).ToDataRes(types.Resource("oci.database.autonomousDatabase"))
 	},
 	"oci.database.autonomousDatabase.isRefreshableClone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsRefreshableClone()).ToDataRes(types.Bool)
@@ -7206,8 +7206,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSubnet).RouteTable, ok = plugin.RawToTValue[*mqlOciNetworkRouteTable](v.Value, v.Error)
 		return
 	},
-	"oci.network.subnet.securityListIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkSubnet).SecurityListIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"oci.network.subnet.securityLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSubnet).SecurityLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.subnet.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7954,8 +7954,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciFileStorageFileSystem).MeteredBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"oci.fileStorage.fileSystem.parentFileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciFileStorageFileSystem).ParentFileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.fileStorage.fileSystem.parentFileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciFileStorageFileSystem).ParentFileSystem, ok = plugin.RawToTValue[*mqlOciFileStorageFileSystem](v.Value, v.Error)
 		return
 	},
 	"oci.fileStorage.fileSystem.isCloneParent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8118,8 +8118,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciCloudGuardDetectorRecipe).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.cloudGuard.detectorRecipe.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciCloudGuardDetectorRecipe).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.cloudGuard.detectorRecipe.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciCloudGuardDetectorRecipe).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.cloudGuard.detectorRecipe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9706,8 +9706,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseDbSystem).ScanDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.database.dbSystem.sourceDbSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseDbSystem).SourceDbSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.database.dbSystem.sourceDbSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseDbSystem).SourceDbSystem, ok = plugin.RawToTValue[*mqlOciDatabaseDbSystem](v.Value, v.Error)
 		return
 	},
 	"oci.database.dbSystem.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9798,8 +9798,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciDatabaseAutonomousDatabase).DbName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.database.autonomousDatabase.sourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciDatabaseAutonomousDatabase).SourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.database.autonomousDatabase.sourceDatabase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).SourceDatabase, ok = plugin.RawToTValue[*mqlOciDatabaseAutonomousDatabase](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.isRefreshableClone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16649,7 +16649,7 @@ type mqlOciNetworkSubnet struct {
 	ProhibitPublicIpOnVnic  plugin.TValue[bool]
 	ProhibitInternetIngress plugin.TValue[bool]
 	RouteTable              plugin.TValue[*mqlOciNetworkRouteTable]
-	SecurityListIds         plugin.TValue[[]any]
+	SecurityLists           plugin.TValue[[]any]
 	Created                 plugin.TValue[*time.Time]
 	FreeformTags            plugin.TValue[map[string]any]
 	DefinedTags             plugin.TValue[map[string]any]
@@ -16781,8 +16781,20 @@ func (c *mqlOciNetworkSubnet) GetRouteTable() *plugin.TValue[*mqlOciNetworkRoute
 	})
 }
 
-func (c *mqlOciNetworkSubnet) GetSecurityListIds() *plugin.TValue[[]any] {
-	return &c.SecurityListIds
+func (c *mqlOciNetworkSubnet) GetSecurityLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.subnet", c.__id, "securityLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityLists()
+	})
 }
 
 func (c *mqlOciNetworkSubnet) GetCreated() *plugin.TValue[*time.Time] {
@@ -18742,7 +18754,7 @@ type mqlOciFileStorageFileSystem struct {
 	State              plugin.TValue[string]
 	KmsKey             plugin.TValue[*mqlOciKmsKey]
 	MeteredBytes       plugin.TValue[int64]
-	ParentFileSystemId plugin.TValue[string]
+	ParentFileSystem   plugin.TValue[*mqlOciFileStorageFileSystem]
 	IsCloneParent      plugin.TValue[bool]
 	Created            plugin.TValue[*time.Time]
 	SystemTags         plugin.TValue[map[string]any]
@@ -18841,8 +18853,20 @@ func (c *mqlOciFileStorageFileSystem) GetMeteredBytes() *plugin.TValue[int64] {
 	return &c.MeteredBytes
 }
 
-func (c *mqlOciFileStorageFileSystem) GetParentFileSystemId() *plugin.TValue[string] {
-	return &c.ParentFileSystemId
+func (c *mqlOciFileStorageFileSystem) GetParentFileSystem() *plugin.TValue[*mqlOciFileStorageFileSystem] {
+	return plugin.GetOrCompute[*mqlOciFileStorageFileSystem](&c.ParentFileSystem, func() (*mqlOciFileStorageFileSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.fileStorage.fileSystem", c.__id, "parentFileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciFileStorageFileSystem), nil
+			}
+		}
+
+		return c.parentFileSystem()
+	})
 }
 
 func (c *mqlOciFileStorageFileSystem) GetIsCloneParent() *plugin.TValue[bool] {
@@ -19290,7 +19314,7 @@ type mqlOciCloudGuardDetectorRecipe struct {
 	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Description   plugin.TValue[string]
-	CompartmentId plugin.TValue[string]
+	CompartmentID plugin.TValue[string]
 	Compartment   plugin.TValue[*mqlOciCompartment]
 	Owner         plugin.TValue[string]
 	DetectorType  plugin.TValue[string]
@@ -19348,8 +19372,8 @@ func (c *mqlOciCloudGuardDetectorRecipe) GetDescription() *plugin.TValue[string]
 	return &c.Description
 }
 
-func (c *mqlOciCloudGuardDetectorRecipe) GetCompartmentId() *plugin.TValue[string] {
-	return &c.CompartmentId
+func (c *mqlOciCloudGuardDetectorRecipe) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
 }
 
 func (c *mqlOciCloudGuardDetectorRecipe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
@@ -23590,7 +23614,7 @@ type mqlOciDatabaseDbSystem struct {
 	Domain               plugin.TValue[string]
 	ListenerPort         plugin.TValue[int64]
 	ScanDnsName          plugin.TValue[string]
-	SourceDbSystemId     plugin.TValue[string]
+	SourceDbSystem       plugin.TValue[*mqlOciDatabaseDbSystem]
 	Version              plugin.TValue[string]
 	CpuCoreCount         plugin.TValue[int64]
 	NodeCount            plugin.TValue[int64]
@@ -23706,8 +23730,20 @@ func (c *mqlOciDatabaseDbSystem) GetScanDnsName() *plugin.TValue[string] {
 	return &c.ScanDnsName
 }
 
-func (c *mqlOciDatabaseDbSystem) GetSourceDbSystemId() *plugin.TValue[string] {
-	return &c.SourceDbSystemId
+func (c *mqlOciDatabaseDbSystem) GetSourceDbSystem() *plugin.TValue[*mqlOciDatabaseDbSystem] {
+	return plugin.GetOrCompute[*mqlOciDatabaseDbSystem](&c.SourceDbSystem, func() (*mqlOciDatabaseDbSystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.database.dbSystem", c.__id, "sourceDbSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciDatabaseDbSystem), nil
+			}
+		}
+
+		return c.sourceDbSystem()
+	})
 }
 
 func (c *mqlOciDatabaseDbSystem) GetVersion() *plugin.TValue[string] {
@@ -23832,7 +23868,7 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	CompartmentID               plugin.TValue[string]
 	Compartment                 plugin.TValue[*mqlOciCompartment]
 	DbName                      plugin.TValue[string]
-	SourceId                    plugin.TValue[string]
+	SourceDatabase              plugin.TValue[*mqlOciDatabaseAutonomousDatabase]
 	IsRefreshableClone          plugin.TValue[bool]
 	DbVersion                   plugin.TValue[string]
 	DbWorkload                  plugin.TValue[string]
@@ -23941,8 +23977,20 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetDbName() *plugin.TValue[string] {
 	return &c.DbName
 }
 
-func (c *mqlOciDatabaseAutonomousDatabase) GetSourceId() *plugin.TValue[string] {
-	return &c.SourceId
+func (c *mqlOciDatabaseAutonomousDatabase) GetSourceDatabase() *plugin.TValue[*mqlOciDatabaseAutonomousDatabase] {
+	return plugin.GetOrCompute[*mqlOciDatabaseAutonomousDatabase](&c.SourceDatabase, func() (*mqlOciDatabaseAutonomousDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.database.autonomousDatabase", c.__id, "sourceDatabase")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciDatabaseAutonomousDatabase), nil
+			}
+		}
+
+		return c.sourceDatabase()
+	})
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetIsRefreshableClone() *plugin.TValue[bool] {

@@ -125,9 +125,9 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 						created = &fs.TimeCreated.Time
 					}
 
-					var parentFileSystemId *string
+					var parentFileSystemId string
 					if fs.SourceDetails != nil {
-						parentFileSystemId = fs.SourceDetails.ParentFileSystemId
+						parentFileSystemId = stringValue(fs.SourceDetails.ParentFileSystemId)
 					}
 
 					mqlInstance, err := CreateResource(o.MqlRuntime, "oci.fileStorage.fileSystem", map[string]*llx.RawData{
@@ -137,7 +137,6 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 						"availabilityDomain": llx.StringDataPtr(fs.AvailabilityDomain),
 						"state":              llx.StringData(string(fs.LifecycleState)),
 						"meteredBytes":       llx.IntDataPtr(fs.MeteredBytes),
-						"parentFileSystemId": llx.StringDataPtr(parentFileSystemId),
 						"isCloneParent":      llx.BoolDataPtr(fs.IsCloneParent),
 						"created":            llx.TimeDataPtr(created),
 						"systemTags":         llx.MapData(definedTagsToAny(fs.SystemTags), types.Dict),
@@ -145,8 +144,10 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 					if err != nil {
 						return nil, err
 					}
-					mqlInstance.(*mqlOciFileStorageFileSystem).cacheKmsKeyId = stringValue(fs.KmsKeyId)
-					res = append(res, mqlInstance)
+					mqlFs := mqlInstance.(*mqlOciFileStorageFileSystem)
+					mqlFs.cacheKmsKeyId = stringValue(fs.KmsKeyId)
+					mqlFs.cacheParentFileSystemId = parentFileSystemId
+					res = append(res, mqlFs)
 				}
 			}
 
@@ -158,7 +159,8 @@ func (o *mqlOciFileStorage) getFileSystems(conn *connection.OciConnection, regio
 }
 
 type mqlOciFileStorageFileSystemInternal struct {
-	cacheKmsKeyId string
+	cacheKmsKeyId           string
+	cacheParentFileSystemId string
 }
 
 func (o *mqlOciFileStorageFileSystem) id() (string, error) {

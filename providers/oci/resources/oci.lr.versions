@@ -520,7 +520,7 @@ oci.certificates.certificates 13.4.1
 oci.cloudGuard 13.0.6
 oci.cloudGuard.detectorRecipe 13.0.6
 oci.cloudGuard.detectorRecipe.compartment 13.12.2
-oci.cloudGuard.detectorRecipe.compartmentId 13.12.2
+oci.cloudGuard.detectorRecipe.compartmentID 13.12.2
 oci.cloudGuard.detectorRecipe.created 13.0.6
 oci.cloudGuard.detectorRecipe.description 13.0.6
 oci.cloudGuard.detectorRecipe.detectorType 13.0.6
@@ -876,7 +876,7 @@ oci.database.autonomousDatabase.privateEndpointIp 13.1.1
 oci.database.autonomousDatabase.privateEndpointLabel 13.1.1
 oci.database.autonomousDatabase.publicConnectionUrls 13.8.2
 oci.database.autonomousDatabase.securityGroups 13.6.2
-oci.database.autonomousDatabase.sourceId 13.12.2
+oci.database.autonomousDatabase.sourceDatabase 13.12.2
 oci.database.autonomousDatabase.standbyWhitelistedIps 13.10.1
 oci.database.autonomousDatabase.state 13.1.1
 oci.database.autonomousDatabase.subnet 13.1.1
@@ -952,7 +952,7 @@ oci.database.dbSystem.nsgIds 13.1.1
 oci.database.dbSystem.scanDnsName 13.10.1
 oci.database.dbSystem.securityGroups 13.6.2
 oci.database.dbSystem.shape 13.1.1
-oci.database.dbSystem.sourceDbSystemId 13.12.2
+oci.database.dbSystem.sourceDbSystem 13.12.2
 oci.database.dbSystem.state 13.1.1
 oci.database.dbSystem.subnet 13.1.1
 oci.database.dbSystem.systemTags 13.12.2
@@ -982,7 +982,7 @@ oci.fileStorage.fileSystem.isCloneParent 13.12.2
 oci.fileStorage.fileSystem.kmsKey 13.0.6
 oci.fileStorage.fileSystem.meteredBytes 13.0.6
 oci.fileStorage.fileSystem.name 13.0.6
-oci.fileStorage.fileSystem.parentFileSystemId 13.12.2
+oci.fileStorage.fileSystem.parentFileSystem 13.12.2
 oci.fileStorage.fileSystem.state 13.0.6
 oci.fileStorage.fileSystem.systemTags 13.12.2
 oci.fileStorage.fileSystems 13.0.6
@@ -1397,7 +1397,7 @@ oci.network.subnet.name 13.0.6
 oci.network.subnet.prohibitInternetIngress 13.0.6
 oci.network.subnet.prohibitPublicIpOnVnic 13.0.6
 oci.network.subnet.routeTable 13.1.1
-oci.network.subnet.securityListIds 13.12.2
+oci.network.subnet.securityLists 13.12.2
 oci.network.subnet.state 13.0.6
 oci.network.subnet.subnetDomainName 13.0.6
 oci.network.subnet.vcn 13.0.6
