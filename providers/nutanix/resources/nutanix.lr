@@ -51,6 +51,8 @@ nutanix {
 private nutanix.cluster @defaults("name version nodeCount") {
   // External UUID of the cluster
   id string
+  // External UUID of the tenant that owns the cluster
+  tenantId string
   // Cluster name
   name string
   // Software version, for example "6.8.1"
@@ -233,6 +235,8 @@ private nutanix.cluster.node @defaults("id hostIp") {
 private nutanix.host @defaults("name cpuModel hypervisorType") {
   // External UUID of the host
   id string
+  // External UUID of the tenant that owns the host
+  tenantId string
   // Host name
   name string
   // Host type
@@ -440,6 +444,20 @@ private nutanix.vm @defaults("name powerState memorySizeBytes") {
   createTime time
   // Time the virtual machine was last updated
   updateTime time
+  // External UUID of the tenant that owns the virtual machine
+  tenantId string
+  // External UUID of the project the virtual machine belongs to
+  projectId string
+  // Source entity type the virtual machine was created from
+  //
+  // One of VM, VM_RECOVERY_POINT, or UNKNOWN.
+  sourceType string
+  // External UUID of the source entity when it is not a virtual machine
+  sourceId string
+  // Owner of the virtual machine
+  owner() nutanix.iam.user
+  // Virtual machine this virtual machine was created from
+  sourceVm() nutanix.vm
   // Cluster the virtual machine runs on
   cluster() nutanix.cluster
   // Host the virtual machine runs on
@@ -473,8 +491,16 @@ private nutanix.vm.disk @defaults("id busType sizeBytes") {
   sizeBytes int
   // UUID of the backing virtual disk
   diskExtId string
+  // External UUID of the tenant that owns the disk
+  tenantId string
+  // External UUID of the image backing the disk's initial contents
+  sourceImageId string
+  // External UUID of the source virtual disk backing the disk's initial contents
+  sourceDiskId string
   // Storage container backing the disk
   storageContainer() nutanix.storage.container
+  // Virtual machine whose disk backed the disk's initial contents
+  sourceVm() nutanix.vm
   // Whether the disk is migrating to another container
   isMigrationInProgress bool
 }
@@ -599,6 +625,8 @@ private nutanix.vm.guestToolsInfo @defaults("version isEnabled isInstalled") {
 private nutanix.iam.user @defaults("username userType status") {
   // External UUID of the user
   id string
+  // External UUID of the tenant that owns the user
+  tenantId string
   // Login identifier of the user
   username string
   // User type
@@ -676,6 +704,8 @@ private nutanix.iam.group @defaults("name groupType") {
 private nutanix.iam.role @defaults("displayName isSystemDefined") {
   // External UUID of the role
   id string
+  // External UUID of the tenant that owns the role
+  tenantId string
   // Display name of the role
   displayName string
   // Description of the role
@@ -707,6 +737,8 @@ private nutanix.iam.role @defaults("displayName isSystemDefined") {
 private nutanix.iam.authorizationPolicy @defaults("displayName authorizationPolicyType") {
   // External UUID of the authorization policy
   id string
+  // External UUID of the tenant that owns the authorization policy
+  tenantId string
   // Display name of the authorization policy
   displayName string
   // Description of the authorization policy
@@ -824,6 +856,16 @@ private nutanix.network.vpc @defaults("name vpcType") {
   snatIps []string
   // External routing domain associated with the VPC
   externalRoutingDomainReference string
+  // External UUID of the tenant that owns the VPC
+  tenantId string
+  // User name of the owner of the VPC
+  ownerUserName string
+  // External UUID of the project the VPC belongs to
+  projectId string
+  // Name of the project the VPC belongs to
+  projectName string
+  // Owner of the VPC
+  owner() nutanix.iam.user
 }
 
 // Nutanix subnet
@@ -862,10 +904,20 @@ private nutanix.network.subnet @defaults("name subnetType ipPrefix") {
   numFreeIps int
   // IP addresses excluded from allocation
   reservedIpAddresses []string
+  // External UUID of the tenant that owns the subnet
+  tenantId string
+  // User name of the owner of the subnet
+  ownerUserName string
+  // External UUID of the project the subnet belongs to
+  projectId string
+  // Name of the project the subnet belongs to
+  projectName string
   // Cluster the subnet belongs to
   cluster() nutanix.cluster
   // VPC the subnet belongs to (overlay subnets)
   vpc() nutanix.network.vpc
+  // Owner of the subnet
+  owner() nutanix.iam.user
 }
 
 // Nutanix floating IP address
@@ -893,10 +945,20 @@ private nutanix.network.floatingIp @defaults("name floatingIpValue associationSt
   vmNicReference string
   // External UUID of the associated load-balancer session
   loadBalancerSessionReference string
+  // External UUID of the tenant that owns the floating IP
+  tenantId string
+  // User name of the owner of the floating IP
+  ownerUserName string
+  // External UUID of the project the floating IP belongs to
+  projectId string
+  // Name of the project the floating IP belongs to
+  projectName string
   // VPC the floating IP belongs to
   vpc() nutanix.network.vpc
   // External subnet the floating IP is allocated from
   externalSubnet() nutanix.network.subnet
+  // Owner of the floating IP
+  owner() nutanix.iam.user
 }
 
 // Nutanix storage container
@@ -954,8 +1016,12 @@ private nutanix.storage.container @defaults("name replicationFactor isEncrypted"
   isMarkedForRemoval bool
   // External UUID of the owning storage pool
   storagePoolId string
+  // External UUID of the tenant that owns the storage container
+  tenantId string
   // Cluster the container belongs to
   cluster() nutanix.cluster
+  // Owner of the storage container
+  owner() nutanix.iam.user
 }
 
 // Nutanix volume group
@@ -1000,6 +1066,10 @@ private nutanix.storage.volumeGroup @defaults("name sharingStatus enabledAuthent
   isHidden bool
   // Whether VM-attachment load balancing is enabled
   shouldLoadBalanceVmAttachments bool
+  // External UUID of the tenant that owns the volume group
+  tenantId string
+  // Identity that created the volume group
+  createdBy string
   // Cluster hosting the volume group
   cluster() nutanix.cluster
   // Disks belonging to the volume group

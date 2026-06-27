@@ -20,6 +20,47 @@ import (
 // users
 // ---------------------------------------------------------------------------
 
+func newMqlUser(runtime *plugin.Runtime, u *authn.User) (*mqlNutanixIamUser, error) {
+	userType := ""
+	if u.UserType != nil {
+		userType = u.UserType.GetName()
+	}
+	status := ""
+	if u.Status != nil {
+		status = u.Status.GetName()
+	}
+	creationType := ""
+	if u.CreationType != nil {
+		creationType = u.CreationType.GetName()
+	}
+	res, err := CreateResource(runtime, "nutanix.iam.user", map[string]*llx.RawData{
+		"__id":                        llx.StringDataPtr(u.ExtId),
+		"id":                          llx.StringDataPtr(u.ExtId),
+		"tenantId":                    llx.StringDataPtr(u.TenantId),
+		"username":                    llx.StringDataPtr(u.Username),
+		"userType":                    llx.StringData(userType),
+		"status":                      llx.StringData(status),
+		"creationType":                llx.StringData(creationType),
+		"displayName":                 llx.StringDataPtr(u.DisplayName),
+		"firstName":                   llx.StringDataPtr(u.FirstName),
+		"lastName":                    llx.StringDataPtr(u.LastName),
+		"emailId":                     llx.StringDataPtr(u.EmailId),
+		"description":                 llx.StringDataPtr(u.Description),
+		"idpId":                       llx.StringDataPtr(u.IdpId),
+		"locale":                      llx.StringDataPtr(u.Locale),
+		"region":                      llx.StringDataPtr(u.Region),
+		"isForceResetPasswordEnabled": llx.BoolData(derefBool(u.IsForceResetPasswordEnabled)),
+		"createdBy":                   llx.StringDataPtr(u.CreatedBy),
+		"createdTime":                 llx.TimeDataPtr(u.CreatedTime),
+		"lastLoginTime":               llx.TimeDataPtr(u.LastLoginTime),
+		"lastUpdatedTime":             llx.TimeDataPtr(u.LastUpdatedTime),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlNutanixIamUser), nil
+}
+
 func (a *mqlNutanix) users() ([]any, error) {
 	conn := a.conn()
 	api := conn.UsersApi()
@@ -42,40 +83,7 @@ func (a *mqlNutanix) users() ([]any, error) {
 			return nil, fmt.Errorf("nutanix: unexpected response type %T from ListUsers", data)
 		}
 		for i := range items {
-			u := items[i]
-			userType := ""
-			if u.UserType != nil {
-				userType = u.UserType.GetName()
-			}
-			status := ""
-			if u.Status != nil {
-				status = u.Status.GetName()
-			}
-			creationType := ""
-			if u.CreationType != nil {
-				creationType = u.CreationType.GetName()
-			}
-			mqlUser, err := CreateResource(a.MqlRuntime, "nutanix.iam.user", map[string]*llx.RawData{
-				"__id":                        llx.StringDataPtr(u.ExtId),
-				"id":                          llx.StringDataPtr(u.ExtId),
-				"username":                    llx.StringDataPtr(u.Username),
-				"userType":                    llx.StringData(userType),
-				"status":                      llx.StringData(status),
-				"creationType":                llx.StringData(creationType),
-				"displayName":                 llx.StringDataPtr(u.DisplayName),
-				"firstName":                   llx.StringDataPtr(u.FirstName),
-				"lastName":                    llx.StringDataPtr(u.LastName),
-				"emailId":                     llx.StringDataPtr(u.EmailId),
-				"description":                 llx.StringDataPtr(u.Description),
-				"idpId":                       llx.StringDataPtr(u.IdpId),
-				"locale":                      llx.StringDataPtr(u.Locale),
-				"region":                      llx.StringDataPtr(u.Region),
-				"isForceResetPasswordEnabled": llx.BoolData(derefBool(u.IsForceResetPasswordEnabled)),
-				"createdBy":                   llx.StringDataPtr(u.CreatedBy),
-				"createdTime":                 llx.TimeDataPtr(u.CreatedTime),
-				"lastLoginTime":               llx.TimeDataPtr(u.LastLoginTime),
-				"lastUpdatedTime":             llx.TimeDataPtr(u.LastUpdatedTime),
-			})
+			mqlUser, err := newMqlUser(a.MqlRuntime, &items[i])
 			if err != nil {
 				return nil, err
 			}
@@ -86,6 +94,32 @@ func (a *mqlNutanix) users() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// userByID resolves a Nutanix IAM user by its external UUID, returning the
+// cached resource when it was already created during this scan and otherwise
+// fetching it on demand. A nil result means the user could not be found.
+func userByID(runtime *plugin.Runtime, userID string) (*mqlNutanixIamUser, error) {
+	if u, ok := cachedResource[*mqlNutanixIamUser](runtime, "nutanix.iam.user", userID); ok {
+		return u, nil
+	}
+	conn := runtime.Connection.(*connection.NutanixConnection)
+	id := userID
+	resp, err := guard(conn.IamMu(), func() (*authn.GetUserApiResponse, error) {
+		return conn.UsersApi().GetUserById(&id)
+	})
+	if err != nil {
+		return nil, err
+	}
+	data := resp.GetData()
+	if data == nil {
+		return nil, nil
+	}
+	user, ok := data.(authn.User)
+	if !ok {
+		return nil, nil
+	}
+	return newMqlUser(runtime, &user)
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +192,7 @@ func newMqlRole(runtime *plugin.Runtime, r *authz.Role) (*mqlNutanixIamRole, err
 	res, err := CreateResource(runtime, "nutanix.iam.role", map[string]*llx.RawData{
 		"__id":                    llx.StringDataPtr(r.ExtId),
 		"id":                      llx.StringDataPtr(r.ExtId),
+		"tenantId":                llx.StringDataPtr(r.TenantId),
 		"displayName":             llx.StringDataPtr(r.DisplayName),
 		"description":             llx.StringDataPtr(r.Description),
 		"isSystemDefined":         llx.BoolData(derefBool(r.IsSystemDefined)),
@@ -252,6 +287,7 @@ func (a *mqlNutanix) authorizationPolicies() ([]any, error) {
 			mqlPolicy, err := CreateResource(a.MqlRuntime, "nutanix.iam.authorizationPolicy", map[string]*llx.RawData{
 				"__id":                    llx.StringDataPtr(ap.ExtId),
 				"id":                      llx.StringDataPtr(ap.ExtId),
+				"tenantId":                llx.StringDataPtr(ap.TenantId),
 				"displayName":             llx.StringDataPtr(ap.DisplayName),
 				"description":             llx.StringDataPtr(ap.Description),
 				"authorizationPolicyType": llx.StringData(policyType),

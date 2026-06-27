@@ -67,6 +67,7 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 	res, err := CreateResource(runtime, "nutanix.storage.container", map[string]*llx.RawData{
 		"__id":                                 llx.StringDataPtr(c.ExtId),
 		"id":                                   llx.StringDataPtr(c.ExtId),
+		"tenantId":                             llx.StringDataPtr(c.TenantId),
 		"name":                                 llx.StringDataPtr(c.Name),
 		"maxCapacityBytes":                     llx.IntData(derefInt64(c.MaxCapacityBytes)),
 		"logicalAdvertisedCapacityBytes":       llx.IntData(derefInt64(c.LogicalAdvertisedCapacityBytes)),
@@ -94,6 +95,9 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 	mqlContainer := res.(*mqlNutanixStorageContainer)
 	if c.ClusterExtId != nil {
 		mqlContainer.cacheClusterId = *c.ClusterExtId
+	}
+	if c.OwnerExtId != nil {
+		mqlContainer.cacheOwnerId = *c.OwnerExtId
 	}
 	return mqlContainer, nil
 }
@@ -130,6 +134,22 @@ func (a *mqlNutanixCluster) storageContainers() ([]any, error) {
 
 type mqlNutanixStorageContainerInternal struct {
 	cacheClusterId string
+	cacheOwnerId   string
+}
+
+func (a *mqlNutanixStorageContainer) owner() (*mqlNutanixIamUser, error) {
+	if a.cacheOwnerId == "" {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := userByID(a.MqlRuntime, a.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixStorageContainer) cluster() (*mqlNutanixCluster, error) {
@@ -197,6 +217,8 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 			mqlVg, err := CreateResource(a.MqlRuntime, "nutanix.storage.volumeGroup", map[string]*llx.RawData{
 				"__id":                           llx.StringDataPtr(vg.ExtId),
 				"id":                             llx.StringDataPtr(vg.ExtId),
+				"tenantId":                       llx.StringDataPtr(vg.TenantId),
+				"createdBy":                      llx.StringDataPtr(vg.CreatedBy),
 				"name":                           llx.StringDataPtr(vg.Name),
 				"description":                    llx.StringDataPtr(vg.Description),
 				"sharingStatus":                  llx.StringData(sharingStatus),
