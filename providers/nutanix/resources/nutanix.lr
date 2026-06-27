@@ -16,6 +16,8 @@ nutanix {
   hosts() []nutanix.host
   // Virtual machines across all registered clusters
   vms() []nutanix.vm
+  // Disk images available for creating virtual machines
+  images() []nutanix.image
   // IAM users
   users() []nutanix.iam.user
   // IAM user groups
@@ -373,6 +375,29 @@ private nutanix.host.disk @defaults("id storageTier sizeInBytes") {
   storageTier string
 }
 
+// Nutanix disk image
+//
+// A disk image registered with Prism Central, used as the template from which
+// virtual-machine disks are created. Select an image by its `id` (external
+// UUID), for example `nutanix.images.where(name == "ubuntu-22.04")`. Each
+// record exposes the image name, type, size in bytes, and creation time.
+private nutanix.image @defaults("id name type") {
+  // External UUID of the image
+  id string
+  // External UUID of the tenant that owns the image
+  tenantId string
+  // Image name
+  name string
+  // Image description
+  description string
+  // Image type (for example "DISK_IMAGE" or "ISO_IMAGE")
+  type string
+  // Image size in bytes
+  sizeBytes int
+  // When the image was created
+  createTime time
+}
+
 // Nutanix virtual machine
 //
 // Examine a single virtual machine: its power state, vCPU topology, memory
@@ -493,10 +518,10 @@ private nutanix.vm.disk @defaults("id busType sizeBytes") {
   diskExtId string
   // External UUID of the tenant that owns the disk
   tenantId string
-  // External UUID of the image backing the disk's initial contents
-  sourceImageId string
   // External UUID of the source virtual disk backing the disk's initial contents
   sourceDiskId string
+  // Image backing the disk's initial contents
+  sourceImage() nutanix.image
   // Storage container backing the disk
   storageContainer() nutanix.storage.container
   // Virtual machine whose disk backed the disk's initial contents
@@ -858,8 +883,6 @@ private nutanix.network.vpc @defaults("name vpcType") {
   externalRoutingDomainReference string
   // External UUID of the tenant that owns the VPC
   tenantId string
-  // User name of the owner of the VPC
-  ownerUserName string
   // External UUID of the project the VPC belongs to
   projectId string
   // Name of the project the VPC belongs to
@@ -906,8 +929,6 @@ private nutanix.network.subnet @defaults("name subnetType ipPrefix") {
   reservedIpAddresses []string
   // External UUID of the tenant that owns the subnet
   tenantId string
-  // User name of the owner of the subnet
-  ownerUserName string
   // External UUID of the project the subnet belongs to
   projectId string
   // Name of the project the subnet belongs to
@@ -947,8 +968,6 @@ private nutanix.network.floatingIp @defaults("name floatingIpValue associationSt
   loadBalancerSessionReference string
   // External UUID of the tenant that owns the floating IP
   tenantId string
-  // User name of the owner of the floating IP
-  ownerUserName string
   // External UUID of the project the floating IP belongs to
   projectId string
   // Name of the project the floating IP belongs to

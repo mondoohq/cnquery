@@ -62,7 +62,7 @@ func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc
 	for i := range v.SnatIps {
 		snatIps = append(snatIps, netIPToString(&v.SnatIps[i]))
 	}
-	ownerUserName, projectName, ownerId, projectId := metadataProvenance(v.Metadata)
+	projectName, ownerId, projectId := metadataProvenance(v.Metadata)
 
 	res, err := CreateResource(runtime, "nutanix.network.vpc", map[string]*llx.RawData{
 		"__id":                           llx.StringDataPtr(v.ExtId),
@@ -74,7 +74,6 @@ func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc
 		"externallyRoutablePrefixes":     llx.ArrayData(prefixes, types.String),
 		"snatIps":                        llx.ArrayData(snatIps, types.String),
 		"externalRoutingDomainReference": llx.StringDataPtr(v.ExternalRoutingDomainReference),
-		"ownerUserName":                  llx.StringData(ownerUserName),
 		"projectId":                      llx.StringData(projectId),
 		"projectName":                    llx.StringData(projectName),
 	})
@@ -105,14 +104,11 @@ func (a *mqlNutanixNetworkVpc) owner() (*mqlNutanixIamUser, error) {
 	return res, nil
 }
 
-// metadataProvenance extracts the owner user name, project name, owner external
-// UUID, and project external UUID from a networking resource's metadata.
-func metadataProvenance(m *netcommon.Metadata) (ownerUserName, projectName, ownerId, projectId string) {
+// metadataProvenance extracts the project name, owner external UUID, and
+// project external UUID from a networking resource's metadata.
+func metadataProvenance(m *netcommon.Metadata) (projectName, ownerId, projectId string) {
 	if m == nil {
-		return "", "", "", ""
-	}
-	if m.OwnerUserName != nil {
-		ownerUserName = *m.OwnerUserName
+		return "", "", ""
 	}
 	if m.ProjectName != nil {
 		projectName = *m.ProjectName
@@ -123,7 +119,7 @@ func metadataProvenance(m *netcommon.Metadata) (ownerUserName, projectName, owne
 	if m.ProjectReferenceId != nil {
 		projectId = *m.ProjectReferenceId
 	}
-	return ownerUserName, projectName, ownerId, projectId
+	return projectName, ownerId, projectId
 }
 
 func (a *mqlNutanix) vpcs() ([]any, error) {
@@ -203,7 +199,7 @@ func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetw
 	for i := range s.ReservedIpAddresses {
 		reserved = append(reserved, netIPToString(&s.ReservedIpAddresses[i]))
 	}
-	ownerUserName, projectName, ownerId, projectId := metadataProvenance(s.Metadata)
+	projectName, ownerId, projectId := metadataProvenance(s.Metadata)
 
 	res, err := CreateResource(runtime, "nutanix.network.subnet", map[string]*llx.RawData{
 		"__id":                 llx.StringDataPtr(s.ExtId),
@@ -222,7 +218,6 @@ func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetw
 		"numAssignedIps":       llx.IntData(numAssignedIps),
 		"numFreeIps":           llx.IntData(numFreeIps),
 		"reservedIpAddresses":  llx.ArrayData(reserved, types.String),
-		"ownerUserName":        llx.StringData(ownerUserName),
 		"projectId":            llx.StringData(projectId),
 		"projectName":          llx.StringData(projectName),
 	})
@@ -385,7 +380,7 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 			if f.AssociationStatus != nil {
 				associationStatus = f.AssociationStatus.GetName()
 			}
-			ownerUserName, projectName, ownerId, projectId := metadataProvenance(f.Metadata)
+			projectName, ownerId, projectId := metadataProvenance(f.Metadata)
 			mqlFip, err := CreateResource(a.MqlRuntime, "nutanix.network.floatingIp", map[string]*llx.RawData{
 				"__id":                         llx.StringDataPtr(f.ExtId),
 				"id":                           llx.StringDataPtr(f.ExtId),
@@ -397,7 +392,6 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 				"associationStatus":            llx.StringData(associationStatus),
 				"vmNicReference":               llx.StringDataPtr(f.VmNicReference),
 				"loadBalancerSessionReference": llx.StringDataPtr(f.LoadBalancerSessionReference),
-				"ownerUserName":                llx.StringData(ownerUserName),
 				"projectId":                    llx.StringData(projectId),
 				"projectName":                  llx.StringData(projectName),
 			})

@@ -209,6 +209,15 @@ nutanix.iam.user.status 13.0.0
 nutanix.iam.user.tenantId 13.1.4
 nutanix.iam.user.userType 13.0.0
 nutanix.iam.user.username 13.0.0
+nutanix.image 13.1.4
+nutanix.image.createTime 13.1.4
+nutanix.image.description 13.1.4
+nutanix.image.id 13.1.4
+nutanix.image.name 13.1.4
+nutanix.image.sizeBytes 13.1.4
+nutanix.image.tenantId 13.1.4
+nutanix.image.type 13.1.4
+nutanix.images 13.1.4
 nutanix.network.floatingIp 13.0.0
 nutanix.network.floatingIp.associationStatus 13.0.0
 nutanix.network.floatingIp.description 13.0.0
@@ -218,7 +227,6 @@ nutanix.network.floatingIp.id 13.0.0
 nutanix.network.floatingIp.loadBalancerSessionReference 13.0.0
 nutanix.network.floatingIp.name 13.0.0
 nutanix.network.floatingIp.owner 13.1.4
-nutanix.network.floatingIp.ownerUserName 13.1.4
 nutanix.network.floatingIp.privateIp 13.0.0
 nutanix.network.floatingIp.projectId 13.1.4
 nutanix.network.floatingIp.projectName 13.1.4
@@ -240,7 +248,6 @@ nutanix.network.subnet.networkId 13.0.0
 nutanix.network.subnet.numAssignedIps 13.0.0
 nutanix.network.subnet.numFreeIps 13.0.0
 nutanix.network.subnet.owner 13.1.4
-nutanix.network.subnet.ownerUserName 13.1.4
 nutanix.network.subnet.projectId 13.1.4
 nutanix.network.subnet.projectName 13.1.4
 nutanix.network.subnet.reservedIpAddresses 13.0.0
@@ -254,7 +261,6 @@ nutanix.network.vpc.externallyRoutablePrefixes 13.0.0
 nutanix.network.vpc.id 13.0.0
 nutanix.network.vpc.name 13.0.0
 nutanix.network.vpc.owner 13.1.4
-nutanix.network.vpc.ownerUserName 13.1.4
 nutanix.network.vpc.projectId 13.1.4
 nutanix.network.vpc.projectName 13.1.4
 nutanix.network.vpc.snatIps 13.0.0
@@ -336,7 +342,7 @@ nutanix.vm.disk.id 13.0.0
 nutanix.vm.disk.isMigrationInProgress 13.0.0
 nutanix.vm.disk.sizeBytes 13.0.0
 nutanix.vm.disk.sourceDiskId 13.1.4
-nutanix.vm.disk.sourceImageId 13.1.4
+nutanix.vm.disk.sourceImage 13.1.4
 nutanix.vm.disk.sourceVm 13.1.4
 nutanix.vm.disk.storageContainer 13.0.0
 nutanix.vm.disk.tenantId 13.1.4

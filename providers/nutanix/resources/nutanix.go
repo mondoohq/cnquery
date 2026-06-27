@@ -982,7 +982,6 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 			"busIndex":              llx.IntData(busIndex),
 			"sizeBytes":             llx.IntData(sizeBytes),
 			"diskExtId":             llx.StringData(diskExtId),
-			"sourceImageId":         llx.StringData(sourceImageId),
 			"sourceDiskId":          llx.StringData(sourceDiskId),
 			"isMigrationInProgress": llx.BoolData(isMigrating),
 		})
@@ -992,6 +991,7 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 		mqlVmDisk := mqlDisk.(*mqlNutanixVmDisk)
 		mqlVmDisk.cacheStorageContainerId = storageContainerId
 		mqlVmDisk.cacheSourceVmId = sourceVmId
+		mqlVmDisk.cacheSourceImageId = sourceImageId
 		res = append(res, mqlVmDisk)
 	}
 	return res, nil
@@ -1000,6 +1000,22 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 type mqlNutanixVmDiskInternal struct {
 	cacheStorageContainerId string
 	cacheSourceVmId         string
+	cacheSourceImageId      string
+}
+
+func (a *mqlNutanixVmDisk) sourceImage() (*mqlNutanixImage, error) {
+	if a.cacheSourceImageId == "" {
+		a.SourceImage.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := imageByID(a.MqlRuntime, a.cacheSourceImageId)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.SourceImage.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func (a *mqlNutanixVmDisk) sourceVm() (*mqlNutanixVm, error) {
