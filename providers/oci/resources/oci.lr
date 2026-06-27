@@ -3047,6 +3047,8 @@ private oci.vulnerabilityScanning.hostScanRecipe @defaults("name compartmentId p
   scheduleType string
   // Day of week for weekly schedules (MONDAY..SUNDAY)
   scheduleDayOfWeek string
+  // When the recipe was created
+  created time
   // Free-form tags on the recipe
   freeformTags map[string]string
 }
@@ -3081,6 +3083,8 @@ private oci.vulnerabilityScanning.hostScanTarget @defaults("name compartmentId s
   instances() []oci.compute.instance
   // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
+  // When the target was created
+  created time
   // Free-form tags on the target
   freeformTags map[string]string
 }
@@ -3105,6 +3109,8 @@ private oci.vulnerabilityScanning.containerScanRecipe @defaults("name compartmen
   scanLevel string
   // Number of images covered by recipes referencing this scan recipe
   imageCount int
+  // When the recipe was created
+  created time
   // Free-form tags on the recipe
   freeformTags map[string]string
 }
@@ -3138,6 +3144,8 @@ private oci.vulnerabilityScanning.containerScanTarget @defaults("name compartmen
   registryRepositories []string
   // Lifecycle state
   state string
+  // When the target was created
+  created time
   // Free-form tags on the target
   freeformTags map[string]string
 }

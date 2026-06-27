@@ -4118,6 +4118,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.vulnerabilityScanning.hostScanRecipe.scheduleDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetScheduleDayOfWeek()).ToDataRes(types.String)
 	},
+	"oci.vulnerabilityScanning.hostScanRecipe.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.vulnerabilityScanning.hostScanRecipe.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningHostScanRecipe).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4157,6 +4160,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.vulnerabilityScanning.hostScanTarget.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetState()).ToDataRes(types.String)
 	},
+	"oci.vulnerabilityScanning.hostScanTarget.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetCreated()).ToDataRes(types.Time)
+	},
 	"oci.vulnerabilityScanning.hostScanTarget.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningHostScanTarget).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4180,6 +4186,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.vulnerabilityScanning.containerScanRecipe.imageCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetImageCount()).ToDataRes(types.Int)
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetCreated()).ToDataRes(types.Time)
 	},
 	"oci.vulnerabilityScanning.containerScanRecipe.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningContainerScanRecipe).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
@@ -4216,6 +4225,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.vulnerabilityScanning.containerScanTarget.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetState()).ToDataRes(types.String)
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetCreated()).ToDataRes(types.Time)
 	},
 	"oci.vulnerabilityScanning.containerScanTarget.freeformTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciVulnerabilityScanningContainerScanTarget).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
@@ -10366,6 +10378,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciVulnerabilityScanningHostScanRecipe).ScheduleDayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.vulnerabilityScanning.hostScanRecipe.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanRecipe).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.vulnerabilityScanning.hostScanRecipe.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVulnerabilityScanningHostScanRecipe).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -10422,6 +10438,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciVulnerabilityScanningHostScanTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.vulnerabilityScanning.hostScanTarget.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningHostScanTarget).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"oci.vulnerabilityScanning.hostScanTarget.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVulnerabilityScanningHostScanTarget).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -10456,6 +10476,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.vulnerabilityScanning.containerScanRecipe.imageCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).ImageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanRecipe.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanRecipe).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.vulnerabilityScanning.containerScanRecipe.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10508,6 +10532,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.vulnerabilityScanning.containerScanTarget.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciVulnerabilityScanningContainerScanTarget).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.vulnerabilityScanning.containerScanTarget.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciVulnerabilityScanningContainerScanTarget).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.vulnerabilityScanning.containerScanTarget.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24935,6 +24963,7 @@ type mqlOciVulnerabilityScanningHostScanRecipe struct {
 	ApplicationFoldersToScan    plugin.TValue[[]any]
 	ScheduleType                plugin.TValue[string]
 	ScheduleDayOfWeek           plugin.TValue[string]
+	Created                     plugin.TValue[*time.Time]
 	FreeformTags                plugin.TValue[map[string]any]
 }
 
@@ -25043,6 +25072,10 @@ func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetScheduleDayOfWeek() *plug
 	return &c.ScheduleDayOfWeek
 }
 
+func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
 func (c *mqlOciVulnerabilityScanningHostScanRecipe) GetFreeformTags() *plugin.TValue[map[string]any] {
 	return &c.FreeformTags
 }
@@ -25064,6 +25097,7 @@ type mqlOciVulnerabilityScanningHostScanTarget struct {
 	InstanceIds         plugin.TValue[[]any]
 	Instances           plugin.TValue[[]any]
 	State               plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
 	FreeformTags        plugin.TValue[map[string]any]
 }
 
@@ -25200,6 +25234,10 @@ func (c *mqlOciVulnerabilityScanningHostScanTarget) GetState() *plugin.TValue[st
 	return &c.State
 }
 
+func (c *mqlOciVulnerabilityScanningHostScanTarget) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
 func (c *mqlOciVulnerabilityScanningHostScanTarget) GetFreeformTags() *plugin.TValue[map[string]any] {
 	return &c.FreeformTags
 }
@@ -25216,6 +25254,7 @@ type mqlOciVulnerabilityScanningContainerScanRecipe struct {
 	State         plugin.TValue[string]
 	ScanLevel     plugin.TValue[string]
 	ImageCount    plugin.TValue[int64]
+	Created       plugin.TValue[*time.Time]
 	FreeformTags  plugin.TValue[map[string]any]
 }
 
@@ -25296,6 +25335,10 @@ func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetImageCount() *plugin
 	return &c.ImageCount
 }
 
+func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
 func (c *mqlOciVulnerabilityScanningContainerScanRecipe) GetFreeformTags() *plugin.TValue[map[string]any] {
 	return &c.FreeformTags
 }
@@ -25316,6 +25359,7 @@ type mqlOciVulnerabilityScanningContainerScanTarget struct {
 	RegistryUrl           plugin.TValue[string]
 	RegistryRepositories  plugin.TValue[[]any]
 	State                 plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
 	FreeformTags          plugin.TValue[map[string]any]
 }
 
@@ -25422,6 +25466,10 @@ func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetRegistryRepositories
 
 func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 func (c *mqlOciVulnerabilityScanningContainerScanTarget) GetFreeformTags() *plugin.TValue[map[string]any] {

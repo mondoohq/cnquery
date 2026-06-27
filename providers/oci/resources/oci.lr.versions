@@ -1533,6 +1533,7 @@ oci.vulnerabilityScanning 13.7.1
 oci.vulnerabilityScanning.containerScanRecipe 13.7.1
 oci.vulnerabilityScanning.containerScanRecipe.compartment 13.7.1
 oci.vulnerabilityScanning.containerScanRecipe.compartmentId 13.7.1
+oci.vulnerabilityScanning.containerScanRecipe.created 13.12.2
 oci.vulnerabilityScanning.containerScanRecipe.freeformTags 13.7.1
 oci.vulnerabilityScanning.containerScanRecipe.id 13.7.1
 oci.vulnerabilityScanning.containerScanRecipe.imageCount 13.7.1
@@ -1566,6 +1567,7 @@ oci.vulnerabilityScanning.containerScanTarget 13.7.1
 oci.vulnerabilityScanning.containerScanTarget.compartment 13.7.1
 oci.vulnerabilityScanning.containerScanTarget.compartmentId 13.7.1
 oci.vulnerabilityScanning.containerScanTarget.containerScanRecipeId 13.7.1
+oci.vulnerabilityScanning.containerScanTarget.created 13.12.2
 oci.vulnerabilityScanning.containerScanTarget.description 13.7.1
 oci.vulnerabilityScanning.containerScanTarget.freeformTags 13.7.1
 oci.vulnerabilityScanning.containerScanTarget.id 13.7.1
@@ -1651,6 +1653,7 @@ oci.vulnerabilityScanning.hostScanRecipe.applicationScanRecurrence 13.7.1
 oci.vulnerabilityScanning.hostScanRecipe.cisBenchmarkScanLevel 13.7.1
 oci.vulnerabilityScanning.hostScanRecipe.compartment 13.7.1
 oci.vulnerabilityScanning.hostScanRecipe.compartmentId 13.7.1
+oci.vulnerabilityScanning.hostScanRecipe.created 13.12.2
 oci.vulnerabilityScanning.hostScanRecipe.endpointProtectionScanLevel 13.7.1
 oci.vulnerabilityScanning.hostScanRecipe.freeformTags 13.7.1
 oci.vulnerabilityScanning.hostScanRecipe.id 13.7.1
@@ -1663,6 +1666,7 @@ oci.vulnerabilityScanning.hostScanRecipes 13.7.1
 oci.vulnerabilityScanning.hostScanTarget 13.7.1
 oci.vulnerabilityScanning.hostScanTarget.compartment 13.7.1
 oci.vulnerabilityScanning.hostScanTarget.compartmentId 13.7.1
+oci.vulnerabilityScanning.hostScanTarget.created 13.12.2
 oci.vulnerabilityScanning.hostScanTarget.description 13.7.1
 oci.vulnerabilityScanning.hostScanTarget.freeformTags 13.7.1
 oci.vulnerabilityScanning.hostScanTarget.hostScanRecipeId 13.7.1
