@@ -1671,6 +1671,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetProperties()).ToDataRes(types.Dict)
 	},
+	"vsphere.vswitch.dvs.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvs).GetCreateDate()).ToDataRes(types.Time)
+	},
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
 	},
@@ -3910,6 +3913,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.dvs.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvs).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.dvs.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9466,6 +9473,7 @@ type mqlVsphereVswitchDvs struct {
 	Moid          plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Properties    plugin.TValue[any]
+	CreateDate    plugin.TValue[*time.Time]
 	Uplinks       plugin.TValue[[]any]
 	VspanSessions plugin.TValue[[]any]
 }
@@ -9517,6 +9525,10 @@ func (c *mqlVsphereVswitchDvs) GetName() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchDvs) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlVsphereVswitchDvs) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
 }
 
 func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]any] {

@@ -501,6 +501,7 @@ vsphere.vmnic.pauseParams 9.0.0
 vsphere.vmnic.properties 9.0.0
 vsphere.vmnic.wakeOnLanSupported 13.1.1
 vsphere.vswitch.dvs 9.0.0
+vsphere.vswitch.dvs.createDate 13.6.1
 vsphere.vswitch.dvs.moid 11.0.39
 vsphere.vswitch.dvs.name 9.0.0
 vsphere.vswitch.dvs.properties 9.0.0
