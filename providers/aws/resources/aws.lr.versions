@@ -4548,7 +4548,7 @@ aws.eventbridge.endpoint.stateReason 13.26.3
 aws.eventbridge.endpoints 13.26.3
 aws.eventbridge.eventBus 11.16.1
 aws.eventbridge.eventBus.arn 11.16.1
-aws.eventbridge.eventBus.creationTime 13.38.2
+aws.eventbridge.eventBus.createdAt 13.38.2
 aws.eventbridge.eventBus.name 11.16.1
 aws.eventbridge.eventBus.policy 13.23.2
 aws.eventbridge.eventBus.region 11.16.1

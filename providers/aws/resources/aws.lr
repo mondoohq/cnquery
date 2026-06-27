@@ -7923,7 +7923,7 @@ private aws.eventbridge.eventBus @defaults("arn name") {
   // Name of the event bus
   name string
   // When the event bus was created
-  creationTime time
+  createdAt time
   // Region of the event bus
   region string
   // Tags for the event bus

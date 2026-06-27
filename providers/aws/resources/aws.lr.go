@@ -13549,8 +13549,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eventbridge.eventBus.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetName()).ToDataRes(types.String)
 	},
-	"aws.eventbridge.eventBus.creationTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEventbridgeEventBus).GetCreationTime()).ToDataRes(types.Time)
+	"aws.eventbridge.eventBus.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.eventbridge.eventBus.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetRegion()).ToDataRes(types.String)
@@ -45926,8 +45926,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEventbridgeEventBus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.eventbridge.eventBus.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEventbridgeEventBus).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.eventbridge.eventBus.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.eventBus.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -108877,13 +108877,13 @@ type mqlAwsEventbridgeEventBus struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEventbridgeEventBusInternal it will be used here
-	Arn          plugin.TValue[string]
-	Name         plugin.TValue[string]
-	CreationTime plugin.TValue[*time.Time]
-	Region       plugin.TValue[string]
-	Tags         plugin.TValue[map[string]any]
-	Rules        plugin.TValue[[]any]
-	Policy       plugin.TValue[string]
+	Arn       plugin.TValue[string]
+	Name      plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Region    plugin.TValue[string]
+	Tags      plugin.TValue[map[string]any]
+	Rules     plugin.TValue[[]any]
+	Policy    plugin.TValue[string]
 }
 
 // createAwsEventbridgeEventBus creates a new instance of this resource
@@ -108926,8 +108926,8 @@ func (c *mqlAwsEventbridgeEventBus) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsEventbridgeEventBus) GetCreationTime() *plugin.TValue[*time.Time] {
-	return &c.CreationTime
+func (c *mqlAwsEventbridgeEventBus) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsEventbridgeEventBus) GetRegion() *plugin.TValue[string] {

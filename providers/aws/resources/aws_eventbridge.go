@@ -69,11 +69,11 @@ func (a *mqlAwsEventbridge) getEventBuses(conn *connection.AwsConnection) []*job
 				for _, bus := range resp.EventBuses {
 					mqlBus, err := CreateResource(a.MqlRuntime, "aws.eventbridge.eventBus",
 						map[string]*llx.RawData{
-							"__id":         llx.StringDataPtr(bus.Arn),
-							"arn":          llx.StringDataPtr(bus.Arn),
-							"name":         llx.StringDataPtr(bus.Name),
-							"creationTime": llx.TimeDataPtr(bus.CreationTime),
-							"region":       llx.StringData(region),
+							"__id":      llx.StringDataPtr(bus.Arn),
+							"arn":       llx.StringDataPtr(bus.Arn),
+							"name":      llx.StringDataPtr(bus.Name),
+							"createdAt": llx.TimeDataPtr(bus.CreationTime),
+							"region":    llx.StringData(region),
 						})
 					if err != nil {
 						return nil, err
