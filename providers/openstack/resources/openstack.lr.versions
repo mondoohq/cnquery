@@ -370,6 +370,7 @@ openstack.credentials 13.1.4
 openstack.databaseInstances 13.1.4
 openstack.db.instance 13.1.4
 openstack.db.instance.addresses 13.1.4
+openstack.db.instance.created 13.6.1
 openstack.db.instance.databases 13.1.4
 openstack.db.instance.datastoreType 13.1.4
 openstack.db.instance.datastoreVersion 13.1.4
@@ -663,6 +664,7 @@ openstack.objectstorage.account.quotaBytes 13.0.1
 openstack.objectstorage.account.tempUrlKeySet 13.0.1
 openstack.objectstorage.container 13.0.1
 openstack.objectstorage.container.bytes 13.0.1
+openstack.objectstorage.container.created 13.6.1
 openstack.objectstorage.container.historyLocation 13.0.1
 openstack.objectstorage.container.metadata 13.0.1
 openstack.objectstorage.container.name 13.0.1

@@ -2318,6 +2318,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.objectstorage.container.bytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackObjectstorageContainer).GetBytes()).ToDataRes(types.Int)
 	},
+	"openstack.objectstorage.container.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackObjectstorageContainer).GetCreated()).ToDataRes(types.Time)
+	},
 	"openstack.objectstorage.container.readACL": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackObjectstorageContainer).GetReadACL()).ToDataRes(types.Array(types.String))
 	},
@@ -3334,6 +3337,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.db.instance.volumeSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackDbInstance).GetVolumeSize()).ToDataRes(types.Int)
+	},
+	"openstack.db.instance.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackDbInstance).GetCreated()).ToDataRes(types.Time)
 	},
 	"openstack.db.instance.addresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackDbInstance).GetAddresses()).ToDataRes(types.Array(types.Dict))
@@ -6224,6 +6230,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackObjectstorageContainer).Bytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"openstack.objectstorage.container.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackObjectstorageContainer).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"openstack.objectstorage.container.readACL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackObjectstorageContainer).ReadACL, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -7690,6 +7700,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.db.instance.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackDbInstance).VolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.db.instance.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackDbInstance).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"openstack.db.instance.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15264,6 +15278,7 @@ type mqlOpenstackObjectstorageContainer struct {
 	Name             plugin.TValue[string]
 	ObjectCount      plugin.TValue[int64]
 	Bytes            plugin.TValue[int64]
+	Created          plugin.TValue[*time.Time]
 	ReadACL          plugin.TValue[[]any]
 	WriteACL         plugin.TValue[[]any]
 	StoragePolicy    plugin.TValue[string]
@@ -15321,6 +15336,12 @@ func (c *mqlOpenstackObjectstorageContainer) GetObjectCount() *plugin.TValue[int
 
 func (c *mqlOpenstackObjectstorageContainer) GetBytes() *plugin.TValue[int64] {
 	return &c.Bytes
+}
+
+func (c *mqlOpenstackObjectstorageContainer) GetCreated() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Created, func() (*time.Time, error) {
+		return c.created()
+	})
 }
 
 func (c *mqlOpenstackObjectstorageContainer) GetReadACL() *plugin.TValue[[]any] {
@@ -18877,6 +18898,7 @@ type mqlOpenstackDbInstance struct {
 	DatastoreType    plugin.TValue[string]
 	DatastoreVersion plugin.TValue[string]
 	VolumeSize       plugin.TValue[int64]
+	Created          plugin.TValue[*time.Time]
 	Addresses        plugin.TValue[[]any]
 	Flavor           plugin.TValue[*mqlOpenstackComputeFlavor]
 	Databases        plugin.TValue[[]any]
@@ -18946,6 +18968,10 @@ func (c *mqlOpenstackDbInstance) GetDatastoreVersion() *plugin.TValue[string] {
 
 func (c *mqlOpenstackDbInstance) GetVolumeSize() *plugin.TValue[int64] {
 	return &c.VolumeSize
+}
+
+func (c *mqlOpenstackDbInstance) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 func (c *mqlOpenstackDbInstance) GetAddresses() *plugin.TValue[[]any] {

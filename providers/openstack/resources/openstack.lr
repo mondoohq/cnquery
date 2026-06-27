@@ -1506,6 +1506,8 @@ private openstack.objectstorage.container @defaults("name objectCount bytes publ
   objectCount int
   // Total bytes stored in the container
   bytes int
+  // Creation timestamp (derived from the container's X-Timestamp header)
+  created() time
   // Read ACL entries (X-Container-Read; e.g. ".r:*" means publicly readable)
   readACL() []string
   // Write ACL entries (X-Container-Write)
@@ -2450,6 +2452,8 @@ private openstack.db.instance @defaults("id name status datastoreType datastoreV
   datastoreVersion string
   // Size of the attached data volume in gibibytes
   volumeSize int
+  // Creation timestamp
+  created time
   // Network addresses assigned to the instance ([{type, address}]); `type` is for example `public` or `private`
   addresses []dict
   // Flavor (compute size) the instance runs on

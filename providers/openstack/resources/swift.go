@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/objectstorage/v1/accounts"
@@ -180,6 +181,20 @@ func (r *mqlOpenstackObjectstorageContainer) fetchHeader() (*containers.GetHeade
 	r.header = header
 	r.headerMeta = meta
 	return header, meta, nil
+}
+
+func (r *mqlOpenstackObjectstorageContainer) created() (*time.Time, error) {
+	h, _, err := r.fetchHeader()
+	if err != nil || h == nil {
+		return nil, err
+	}
+	// X-Timestamp is a Unix epoch (seconds, with fractional part) recording when
+	// the container was created. Guard the zero/absent value so it surfaces as null.
+	if h.Timestamp == 0 {
+		return nil, nil
+	}
+	t := time.Unix(int64(h.Timestamp), 0).UTC()
+	return &t, nil
 }
 
 func (r *mqlOpenstackObjectstorageContainer) readACL() ([]any, error) {
