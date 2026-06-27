@@ -445,6 +445,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   patchMode string
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
+  // Managed identity configuration (type, system- and user-assigned identities)
+  identity dict
+  // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the VM
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Internet-exposure summary combining public IPs and NSG ingress rules
   //
   // Reports whether the VM is reachable from the public internet by checking for
@@ -912,6 +918,12 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   instances() []azure.subscription.computeService.vmScaleSet.instance
   // Extensions installed on the scale set (each dict describes one extension)
   extensions() []dict
+  // Managed identity configuration (type, system- and user-assigned identities)
+  identity dict
+  // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the scale set
+  userAssignedIdentities() []azure.subscription.managedIdentity
 }
 
 // Azure scale set VM instance
@@ -1091,6 +1103,8 @@ azure.subscription.computeService.image @defaults("name location hyperVGeneratio
   properties dict
   // Source VM ARM ID this image was captured from
   sourceVirtualMachineId string
+  // Virtual machine this image was generalized and captured from
+  sourceVirtualMachine() azure.subscription.computeService.vm
   // Storage profile (OS disk + data disks)
   storageProfile dict
   // Provisioning state
@@ -7627,6 +7641,14 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   controlPlaneMetricsEnabled bool
   // Workload identity bindings attached to the cluster
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
+  // Control-plane managed identity configuration (type, system- and user-assigned identities)
+  identity dict
+  // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
+  principalId string
+  // Managed identity used by the kubelet to pull images from Azure Container Registry
+  kubeletIdentity() azure.subscription.managedIdentity
+  // Client ID of the legacy service principal used by the cluster; empty when the cluster uses a managed identity
+  servicePrincipalClientId string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // Whether the AKS API server is reachable from the public internet

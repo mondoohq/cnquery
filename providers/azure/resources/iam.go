@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -18,6 +19,42 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// sortedUserAssignedIdentityIDs returns the keys of a UserAssignedIdentities
+// map (the ARM resource IDs of the assigned managed identities) in stable
+// sorted order. Returns nil when the map is empty.
+func sortedUserAssignedIdentityIDs[V any](m map[string]*V) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// resolveUserAssignedIdentities resolves a set of user-assigned managed
+// identity ARM resource IDs into typed managedIdentity resources. The IDs are
+// the keys of an SDK UserAssignedIdentities map. The runtime cache short-
+// circuits identities already listed by managedIdentities(); others are
+// fetched on demand by their init. Returns an empty slice when none are set.
+func resolveUserAssignedIdentities(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	res := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		mqlIdentity, err := NewResource(runtime, "azure.subscription.managedIdentity",
+			map[string]*llx.RawData{"__id": llx.StringData(id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIdentity)
+	}
+	return res, nil
+}
 
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{

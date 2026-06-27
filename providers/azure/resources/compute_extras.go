@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -432,6 +433,21 @@ func imageToMql(runtime *plugin.Runtime, img compute.Image) (*mqlAzureSubscripti
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionComputeServiceImage), nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceImage) sourceVirtualMachine() (*mqlAzureSubscriptionComputeServiceVm, error) {
+	id := a.SourceVirtualMachineId.Data
+	if id == "" {
+		a.SourceVirtualMachine.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(id)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
 // ----- Compute Galleries (Shared Image Gallery) -----

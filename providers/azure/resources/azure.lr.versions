@@ -77,6 +77,7 @@ azure.subscription.aksService.cluster.fqdn 9.0.1
 azure.subscription.aksService.cluster.fqdnSubdomain 13.1.8
 azure.subscription.aksService.cluster.httpProxyConfig 9.0.1
 azure.subscription.aksService.cluster.id 9.0.1
+azure.subscription.aksService.cluster.identity 13.22.1
 azure.subscription.aksService.cluster.identityBinding 13.15.2
 azure.subscription.aksService.cluster.identityBinding.id 13.15.2
 azure.subscription.aksService.cluster.identityBinding.managedIdentity 13.15.2
@@ -90,6 +91,7 @@ azure.subscription.aksService.cluster.identityBindings 13.15.2
 azure.subscription.aksService.cluster.imageCleanerEnabled 11.4.28
 azure.subscription.aksService.cluster.imageCleanerIntervalHours 11.4.28
 azure.subscription.aksService.cluster.internetReachable 13.20.1
+azure.subscription.aksService.cluster.kubeletIdentity 13.22.1
 azure.subscription.aksService.cluster.kubernetesVersion 9.0.1
 azure.subscription.aksService.cluster.location 9.0.1
 azure.subscription.aksService.cluster.name 9.0.1
@@ -147,6 +149,7 @@ azure.subscription.aksService.cluster.nodeResourceGroupRestrictionLevel 13.1.8
 azure.subscription.aksService.cluster.oidcIssuerEnabled 13.1.8
 azure.subscription.aksService.cluster.podIdentityProfile 9.0.1
 azure.subscription.aksService.cluster.powerState 9.0.1
+azure.subscription.aksService.cluster.principalId 13.22.1
 azure.subscription.aksService.cluster.privateDnsZone 11.4.28
 azure.subscription.aksService.cluster.privateFqdn 13.1.8
 azure.subscription.aksService.cluster.provisioningState 9.0.1
@@ -154,6 +157,7 @@ azure.subscription.aksService.cluster.publicNetworkAccess 11.4.28
 azure.subscription.aksService.cluster.rbacEnabled 9.0.1
 azure.subscription.aksService.cluster.securityProfile 9.0.1
 azure.subscription.aksService.cluster.serviceMeshMode 13.1.8
+azure.subscription.aksService.cluster.servicePrincipalClientId 13.22.1
 azure.subscription.aksService.cluster.skuTier 13.1.8
 azure.subscription.aksService.cluster.storageProfile 9.0.1
 azure.subscription.aksService.cluster.supportPlan 13.1.8
@@ -1048,6 +1052,7 @@ azure.subscription.computeService.image.location 13.7.1
 azure.subscription.computeService.image.name 13.7.1
 azure.subscription.computeService.image.properties 13.7.1
 azure.subscription.computeService.image.provisioningState 13.7.1
+azure.subscription.computeService.image.sourceVirtualMachine 13.22.1
 azure.subscription.computeService.image.sourceVirtualMachineId 13.7.1
 azure.subscription.computeService.image.storageProfile 13.7.1
 azure.subscription.computeService.image.tags 13.7.1
@@ -1115,6 +1120,7 @@ azure.subscription.computeService.vm.exposure 13.20.1
 azure.subscription.computeService.vm.extensions 9.0.1
 azure.subscription.computeService.vm.fipsEncryptionEnabled 13.8.2
 azure.subscription.computeService.vm.id 9.0.1
+azure.subscription.computeService.vm.identity 13.22.1
 azure.subscription.computeService.vm.imageReference 13.12.2
 azure.subscription.computeService.vm.imageReference.communityGalleryImageId 13.12.2
 azure.subscription.computeService.vm.imageReference.exactVersion 13.12.2
@@ -1135,6 +1141,7 @@ azure.subscription.computeService.vm.omsInstalled 13.12.2
 azure.subscription.computeService.vm.osDisk 9.0.1
 azure.subscription.computeService.vm.osType 13.18.1
 azure.subscription.computeService.vm.patchMode 13.5.1
+azure.subscription.computeService.vm.principalId 13.22.1
 azure.subscription.computeService.vm.properties 9.0.1
 azure.subscription.computeService.vm.provisionVMAgent 13.5.1
 azure.subscription.computeService.vm.provisioningState 11.6.2
@@ -1153,6 +1160,7 @@ azure.subscription.computeService.vm.systemMetadata 13.19.2
 azure.subscription.computeService.vm.tags 9.0.1
 azure.subscription.computeService.vm.timeCreated 11.6.2
 azure.subscription.computeService.vm.type 9.0.1
+azure.subscription.computeService.vm.userAssignedIdentities 13.22.1
 azure.subscription.computeService.vm.userData 13.12.2
 azure.subscription.computeService.vm.vmId 11.6.2
 azure.subscription.computeService.vm.vmScaleSet 13.7.1
@@ -1163,6 +1171,7 @@ azure.subscription.computeService.vmScaleSet.automaticRepairsPolicy 13.7.1
 azure.subscription.computeService.vmScaleSet.encryptionAtHost 13.16.2
 azure.subscription.computeService.vmScaleSet.extensions 13.7.1
 azure.subscription.computeService.vmScaleSet.id 13.7.1
+azure.subscription.computeService.vmScaleSet.identity 13.22.1
 azure.subscription.computeService.vmScaleSet.instance 13.7.1
 azure.subscription.computeService.vmScaleSet.instance.id 13.7.1
 azure.subscription.computeService.vmScaleSet.instance.instanceId 13.7.1
@@ -1184,6 +1193,7 @@ azure.subscription.computeService.vmScaleSet.name 13.7.1
 azure.subscription.computeService.vmScaleSet.orchestrationMode 13.7.1
 azure.subscription.computeService.vmScaleSet.overprovision 13.7.1
 azure.subscription.computeService.vmScaleSet.platformFaultDomainCount 13.7.1
+azure.subscription.computeService.vmScaleSet.principalId 13.22.1
 azure.subscription.computeService.vmScaleSet.priorityMixPolicy 13.8.2
 azure.subscription.computeService.vmScaleSet.properties 13.7.1
 azure.subscription.computeService.vmScaleSet.provisioningState 13.7.1
@@ -1203,6 +1213,7 @@ azure.subscription.computeService.vmScaleSet.timeCreated 13.7.1
 azure.subscription.computeService.vmScaleSet.type 13.7.1
 azure.subscription.computeService.vmScaleSet.uniqueId 13.7.1
 azure.subscription.computeService.vmScaleSet.upgradePolicy 13.7.1
+azure.subscription.computeService.vmScaleSet.userAssignedIdentities 13.22.1
 azure.subscription.computeService.vmScaleSet.vtpmEnabled 13.16.2
 azure.subscription.computeService.vmScaleSet.zonalPlatformFaultDomainAlignMode 13.8.2
 azure.subscription.computeService.vmScaleSet.zones 13.7.1

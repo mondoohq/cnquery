@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -20,9 +21,10 @@ import (
 )
 
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
-	cacheKmsKeyId   string
-	cacheProperties *clusters.ManagedClusterProperties
-	cacheSystemData any
+	cacheKmsKeyId          string
+	cacheKubeletIdentityId string
+	cacheProperties        *clusters.ManagedClusterProperties
+	cacheSystemData        any
 }
 
 type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
@@ -268,6 +270,31 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				controlPlaneMetricsEnabled = amp.Metrics.ControlPlane.Enabled
 			}
 
+			identityDict, err := convert.JsonToDict(entry.Identity)
+			if err != nil {
+				return nil, err
+			}
+			var principalId *string
+			if entry.Identity != nil {
+				principalId = entry.Identity.PrincipalID
+			}
+
+			servicePrincipalClientId := ""
+			kubeletIdentityId := ""
+			if entry.Properties != nil {
+				// Service-principal clusters report the SP client ID here;
+				// managed-identity clusters report the sentinel "msi" instead,
+				// which carries no provenance value.
+				if spp := entry.Properties.ServicePrincipalProfile; spp != nil && spp.ClientID != nil && !strings.EqualFold(*spp.ClientID, "msi") {
+					servicePrincipalClientId = *spp.ClientID
+				}
+				for k, v := range entry.Properties.IdentityProfile {
+					if strings.EqualFold(k, "kubeletidentity") && v != nil {
+						kubeletIdentityId = convert.ToValue(v.ResourceID)
+					}
+				}
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -315,12 +342,16 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolDataPtr(controlPlaneMetricsEnabled),
+					"identity":                          llx.DictData(identityDict),
+					"principalId":                       llx.StringDataPtr(principalId),
+					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
 			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
+			mqlCluster.cacheKubeletIdentityId = kubeletIdentityId
 			mqlCluster.cacheProperties = entry.Properties
 			sysData, err := convert.JsonToDict(entry.SystemData)
 			if err != nil {
@@ -599,6 +630,19 @@ func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) managedIdentity()
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
 		map[string]*llx.RawData{"__id": llx.StringData(a.cacheManagedIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) kubeletIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cacheKubeletIdentityId == "" {
+		a.KubeletIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cacheKubeletIdentityId)})
 	if err != nil {
 		return nil, err
 	}

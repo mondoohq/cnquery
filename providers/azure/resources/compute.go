@@ -231,6 +231,17 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		}
 	}
 
+	identityDict, err := convert.JsonToDict(vm.Identity)
+	if err != nil {
+		return nil, err
+	}
+	var principalId *string
+	var userAssignedIdentityIds []string
+	if vm.Identity != nil {
+		principalId = vm.Identity.PrincipalID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vm.Identity.UserAssignedIdentities)
+	}
+
 	vmIDStr := ""
 	if vm.ID != nil {
 		vmIDStr = *vm.ID
@@ -280,11 +291,19 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
 			"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
 			"userData":                      llx.StringData(userData),
+			"identity":                      llx.DictData(identityDict),
+			"principalId":                   llx.StringDataPtr(principalId),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
+	mqlVm := res.(*mqlAzureSubscriptionComputeServiceVm)
+	mqlVm.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	return mqlVm, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {
@@ -330,9 +349,10 @@ func (a *mqlAzureSubscriptionComputeServiceVm) isRunning() (bool, error) {
 }
 
 type mqlAzureSubscriptionComputeServiceVmInternal struct {
-	extensionsOnce  sync.Once
-	extensionsList  []*compute.VirtualMachineExtension
-	extensionsError error
+	extensionsOnce               sync.Once
+	extensionsList               []*compute.VirtualMachineExtension
+	extensionsError              error
+	cacheUserAssignedIdentityIds []string
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {

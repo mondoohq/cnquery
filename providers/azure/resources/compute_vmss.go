@@ -130,16 +130,29 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		return nil, err
 	}
 
+	identityDict, err := convert.JsonToDict(vmss.Identity)
+	if err != nil {
+		return nil, err
+	}
+	var principalId *string
+	var userAssignedIdentityIds []string
+	if vmss.Identity != nil {
+		principalId = vmss.Identity.PrincipalID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vmss.Identity.UserAssignedIdentities)
+	}
+
 	args := map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(vmss.ID),
-		"name":       llx.StringDataPtr(vmss.Name),
-		"location":   llx.StringDataPtr(vmss.Location),
-		"tags":       llx.MapData(convert.PtrMapStrToInterface(vmss.Tags), types.String),
-		"type":       llx.StringDataPtr(vmss.Type),
-		"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(vmss.Zones), types.String),
-		"sku":        llx.DictData(sku),
-		"properties": llx.DictData(properties),
-		"systemData": llx.DictData(systemData),
+		"id":          llx.StringDataPtr(vmss.ID),
+		"name":        llx.StringDataPtr(vmss.Name),
+		"location":    llx.StringDataPtr(vmss.Location),
+		"tags":        llx.MapData(convert.PtrMapStrToInterface(vmss.Tags), types.String),
+		"type":        llx.StringDataPtr(vmss.Type),
+		"zones":       llx.ArrayData(convert.SliceStrPtrToInterface(vmss.Zones), types.String),
+		"sku":         llx.DictData(sku),
+		"properties":  llx.DictData(properties),
+		"systemData":  llx.DictData(systemData),
+		"identity":    llx.DictData(identityDict),
+		"principalId": llx.StringDataPtr(principalId),
 	}
 
 	if vmss.Properties != nil {
@@ -215,7 +228,17 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionComputeServiceVmScaleSet), nil
+	mqlVmss := res.(*mqlAzureSubscriptionComputeServiceVmScaleSet)
+	mqlVmss.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	return mqlVmss, nil
+}
+
+type mqlAzureSubscriptionComputeServiceVmScaleSetInternal struct {
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) instances() ([]any, error) {
