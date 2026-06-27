@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks"
@@ -100,8 +101,10 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 	var customVnetId string
 	var managedDiskKeySource, managedDiskKeyVaultUri, managedDiskKeyName, managedDiskKeyVersion string
 	var managedServicesKeySource, managedServicesKeyVaultUri, managedServicesKeyName, managedServicesKeyVersion string
+	var creationTime *time.Time
 
 	if props := workspace.Properties; props != nil {
+		creationTime = props.CreatedDateTime
 		if props.PublicNetworkAccess != nil {
 			publicNetworkAccess = string(*props.PublicNetworkAccess)
 		}
@@ -210,6 +213,7 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"managedServicesKeyVaultUri":      llx.StringData(managedServicesKeyVaultUri),
 		"managedServicesKeyName":          llx.StringData(managedServicesKeyName),
 		"managedServicesKeyVersion":       llx.StringData(managedServicesKeyVersion),
+		"creationTime":                    llx.TimeDataPtr(creationTime),
 	})
 	if err != nil {
 		return nil, err

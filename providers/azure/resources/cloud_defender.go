@@ -1432,6 +1432,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 		}
 		for _, item := range page.Value {
 			var displayName, status, statusCause, statusDescription string
+			var firstEvaluationDate, statusChangeDate *time.Time
 			additionalData := map[string]any{}
 
 			var riskLevel string
@@ -1454,6 +1455,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					if props.Status.Description != nil {
 						statusDescription = *props.Status.Description
 					}
+					firstEvaluationDate = props.Status.FirstEvaluationDate
+					statusChangeDate = props.Status.StatusChangeDate
 				}
 				for k, v := range props.AdditionalData {
 					if v != nil {
@@ -1493,6 +1496,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 					"status":                   llx.StringData(status),
 					"statusCause":              llx.StringData(statusCause),
 					"statusDescription":        llx.StringData(statusDescription),
+					"firstEvaluationDate":      llx.TimeDataPtr(firstEvaluationDate),
+					"statusChangeDate":         llx.TimeDataPtr(statusChangeDate),
 					"severity":                 llx.StringData(meta.severity),
 					"resourceId":               llx.StringData(resourceId),
 					"additionalData":           llx.DictData(additionalData),

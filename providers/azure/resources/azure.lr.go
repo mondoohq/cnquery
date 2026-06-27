@@ -3604,6 +3604,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.batchService.account.pool.securityEncryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetSecurityEncryptionType()).ToDataRes(types.String)
 	},
+	"azure.subscription.batchService.account.pool.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.batchService.account.pool.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -3684,6 +3687,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.databricksService.workspace.managedServicesKeyVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetManagedServicesKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.databricksService.workspace.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -9454,6 +9460,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.applicationInsight.workspaceResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).GetWorkspaceResourceId()).ToDataRes(types.String)
 	},
+	"azure.subscription.monitorService.applicationInsight.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.monitorService.applicationInsight.workspace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).GetWorkspace()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace"))
 	},
@@ -9825,6 +9834,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.assessment.statusDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetStatusDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.firstEvaluationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetFirstEvaluationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusChangeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetStatusChangeDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.cloudDefenderService.assessment.severity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetSeverity()).ToDataRes(types.String)
@@ -12670,6 +12685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.topic")))
 	},
+	"azure.subscription.serviceBusService.namespace.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.serviceBusService.namespace.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12730,6 +12748,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.queue.enablePartitioning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetEnablePartitioning()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.serviceBusService.namespace.queue.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.serviceBusService.namespace.queue.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12759,6 +12780,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.defaultMessageTimeToLive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetDefaultMessageTimeToLive()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceBusService.namespace.topic.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).GetSubscriptions()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.topic.subscription")))
@@ -12792,6 +12816,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.requiresSession": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).GetRequiresSession()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceBusService.namespace.topic.subscription.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -12859,6 +12886,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetEventHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub")))
 	},
+	"azure.subscription.eventHubService.namespace.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.eventHubService.namespace.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12904,6 +12934,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetConsumerGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub.consumerGroup")))
 	},
+	"azure.subscription.eventHubService.namespace.eventHub.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.eventHubService.namespace.eventHub.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12915,6 +12948,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.userMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).GetUserMetadata()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -14698,6 +14734,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.appConfigurationService.configurationStore.defaultKeyValueRevisionRetentionPeriodInSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetDefaultKeyValueRevisionRetentionPeriodInSeconds()).ToDataRes(types.Int)
 	},
+	"azure.subscription.appConfigurationService.configurationStore.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetCreationTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.appConfigurationService.configurationStore.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -14766,6 +14805,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetStoredCompletionsDisabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetDefenderForAIEnabled()).ToDataRes(types.Bool)
@@ -15042,6 +15084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetCreationTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetLastModifiedAt()).ToDataRes(types.Time)
@@ -17803,6 +17848,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).SecurityEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.batchService.account.pool.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.batchService.account.pool.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -17917,6 +17966,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.databricksService.workspace.managedServicesKeyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).ManagedServicesKeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.databricksService.workspace.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26311,6 +26364,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).WorkspaceResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.monitorService.applicationInsight.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.monitorService.applicationInsight.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).Workspace, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspace](v.Value, v.Error)
 		return
@@ -26845,6 +26902,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.assessment.statusDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).StatusDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.firstEvaluationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).FirstEvaluationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusChangeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).StatusChangeDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.assessment.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31023,6 +31088,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -31115,6 +31184,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).EnablePartitioning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.queue.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.queue.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -31157,6 +31230,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.defaultMessageTimeToLive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).DefaultMessageTimeToLive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.topic.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopic).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31205,6 +31282,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.requiresSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).RequiresSession, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.topic.subscription.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.topic.subscription.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31303,6 +31384,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).EventHubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -31375,6 +31460,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).ConsumerGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.eventHub.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.eventHub.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -31393,6 +31482,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.userMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).UserMetadata, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33967,6 +34060,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).DefaultKeyValueRevisionRetentionPeriodInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.appConfigurationService.configurationStore.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.appConfigurationService.configurationStore.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -34065,6 +34162,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).StoredCompletionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34465,6 +34566,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40136,6 +40241,7 @@ type mqlAzureSubscriptionBatchServiceAccountPool struct {
 	HostEndpointProtectionMode    plugin.TValue[string]
 	ProxyAgentEnabled             plugin.TValue[bool]
 	SecurityEncryptionType        plugin.TValue[string]
+	CreationTime                  plugin.TValue[*time.Time]
 	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -40234,6 +40340,10 @@ func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProxyAgentEnabled() *pl
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetSecurityEncryptionType() *plugin.TValue[string] {
 	return &c.SecurityEncryptionType
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -40347,6 +40457,7 @@ type mqlAzureSubscriptionDatabricksServiceWorkspace struct {
 	ManagedServicesKeyVaultUri      plugin.TValue[string]
 	ManagedServicesKeyName          plugin.TValue[string]
 	ManagedServicesKeyVersion       plugin.TValue[string]
+	CreationTime                    plugin.TValue[*time.Time]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -40481,6 +40592,10 @@ func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetManagedServicesKeyNa
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetManagedServicesKeyVersion() *plugin.TValue[string] {
 	return &c.ManagedServicesKeyVersion
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -60660,6 +60775,7 @@ type mqlAzureSubscriptionMonitorServiceApplicationInsight struct {
 	PublicNetworkAccessForQuery     plugin.TValue[string]
 	RetentionInDays                 plugin.TValue[int64]
 	WorkspaceResourceId             plugin.TValue[string]
+	CreationTime                    plugin.TValue[*time.Time]
 	Workspace                       plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
 }
 
@@ -60746,6 +60862,10 @@ func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetRetentionInDay
 
 func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetWorkspaceResourceId() *plugin.TValue[string] {
 	return &c.WorkspaceResourceId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetWorkspace() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace] {
@@ -62090,6 +62210,8 @@ type mqlAzureSubscriptionCloudDefenderServiceAssessment struct {
 	Status                   plugin.TValue[string]
 	StatusCause              plugin.TValue[string]
 	StatusDescription        plugin.TValue[string]
+	FirstEvaluationDate      plugin.TValue[*time.Time]
+	StatusChangeDate         plugin.TValue[*time.Time]
 	Severity                 plugin.TValue[string]
 	ResourceId               plugin.TValue[string]
 	AdditionalData           plugin.TValue[any]
@@ -62169,6 +62291,14 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatusCause() *p
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatusDescription() *plugin.TValue[string] {
 	return &c.StatusDescription
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetFirstEvaluationDate() *plugin.TValue[*time.Time] {
+	return &c.FirstEvaluationDate
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatusChangeDate() *plugin.TValue[*time.Time] {
+	return &c.StatusChangeDate
 }
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetSeverity() *plugin.TValue[string] {
@@ -72100,6 +72230,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules]
 	Queues                          plugin.TValue[[]any]
 	Topics                          plugin.TValue[[]any]
+	CreationTime                    plugin.TValue[*time.Time]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -72244,6 +72375,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetTopics() *plugin.TVa
 
 		return c.topics()
 	})
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -72404,6 +72539,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceQueue struct {
 	RequiresDuplicateDetection plugin.TValue[bool]
 	RequiresSession            plugin.TValue[bool]
 	EnablePartitioning         plugin.TValue[bool]
+	CreationTime               plugin.TValue[*time.Time]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -72492,6 +72628,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetEnablePartition
 	return &c.EnablePartitioning
 }
 
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceQueue) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -72522,6 +72662,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceTopic struct {
 	SupportOrdering            plugin.TValue[bool]
 	RequiresDuplicateDetection plugin.TValue[bool]
 	DefaultMessageTimeToLive   plugin.TValue[string]
+	CreationTime               plugin.TValue[*time.Time]
 	Subscriptions              plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -72599,6 +72740,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) GetDefaultMessageT
 	return &c.DefaultMessageTimeToLive
 }
 
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) GetSubscriptions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Subscriptions, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -72645,6 +72790,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription struct {
 	LockDuration             plugin.TValue[string]
 	DefaultMessageTimeToLive plugin.TValue[string]
 	RequiresSession          plugin.TValue[bool]
+	CreationTime             plugin.TValue[*time.Time]
 	SystemMetadata           plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -72719,6 +72865,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) GetDef
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) GetRequiresSession() *plugin.TValue[bool] {
 	return &c.RequiresSession
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceTopicSubscription) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -72827,6 +72977,7 @@ type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	NetworkRuleSet                  plugin.TValue[any]
 	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules]
 	EventHubs                       plugin.TValue[[]any]
+	CreationTime                    plugin.TValue[*time.Time]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -72967,6 +73118,10 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetEventHubs() *plugin.TV
 
 		return c.eventHubs()
 	})
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -73122,6 +73277,7 @@ type mqlAzureSubscriptionEventHubServiceNamespaceEventHub struct {
 	Status                 plugin.TValue[string]
 	PartitionIds           plugin.TValue[[]any]
 	ConsumerGroups         plugin.TValue[[]any]
+	CreationTime           plugin.TValue[*time.Time]
 	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -73202,6 +73358,10 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) GetConsumerGroups
 	})
 }
 
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -73226,6 +73386,7 @@ type mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup struct {
 	Id             plugin.TValue[string]
 	Name           plugin.TValue[string]
 	UserMetadata   plugin.TValue[string]
+	CreationTime   plugin.TValue[*time.Time]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -73276,6 +73437,10 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetN
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetUserMetadata() *plugin.TValue[string] {
 	return &c.UserMetadata
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -79212,6 +79377,7 @@ type mqlAzureSubscriptionAppConfigurationServiceConfigurationStore struct {
 	ProvisioningState                               plugin.TValue[string]
 	CreateMode                                      plugin.TValue[string]
 	DefaultKeyValueRevisionRetentionPeriodInSeconds plugin.TValue[int64]
+	CreationTime                                    plugin.TValue[*time.Time]
 	SystemMetadata                                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -79314,6 +79480,10 @@ func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetCreat
 
 func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetDefaultKeyValueRevisionRetentionPeriodInSeconds() *plugin.TValue[int64] {
 	return &c.DefaultKeyValueRevisionRetentionPeriodInSeconds
+}
+
+func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -79423,6 +79593,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	Endpoint                      plugin.TValue[string]
 	ProvisioningState             plugin.TValue[string]
 	StoredCompletionsDisabled     plugin.TValue[bool]
+	CreationTime                  plugin.TValue[*time.Time]
 	DefenderForAIEnabled          plugin.TValue[bool]
 	RaiPolicies                   plugin.TValue[[]any]
 	RaiTopics                     plugin.TValue[[]any]
@@ -79547,6 +79718,10 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetProvisioningSta
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetStoredCompletionsDisabled() *plugin.TValue[bool] {
 	return &c.StoredCompletionsDisabled
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetDefenderForAIEnabled() *plugin.TValue[bool] {
@@ -80439,6 +80614,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic struct {
 	FailedReason   plugin.TValue[string]
 	SampleBlobUrl  plugin.TValue[string]
 	CreatedAt      plugin.TValue[*time.Time]
+	CreationTime   plugin.TValue[*time.Time]
 	LastModifiedAt plugin.TValue[*time.Time]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -80514,6 +80690,10 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetSampleB
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetLastModifiedAt() *plugin.TValue[*time.Time] {

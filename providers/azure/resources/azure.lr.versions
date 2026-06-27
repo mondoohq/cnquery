@@ -209,6 +209,7 @@ azure.subscription.appConfigurationService.configurationStore 13.11.3
 azure.subscription.appConfigurationService.configurationStore.cmkIdentityClientId 13.11.3
 azure.subscription.appConfigurationService.configurationStore.cmkKeyIdentifier 13.11.3
 azure.subscription.appConfigurationService.configurationStore.createMode 13.11.3
+azure.subscription.appConfigurationService.configurationStore.creationTime 13.22.1
 azure.subscription.appConfigurationService.configurationStore.defaultKeyValueRevisionRetentionPeriodInSeconds 13.12.2
 azure.subscription.appConfigurationService.configurationStore.disableLocalAuth 13.11.3
 azure.subscription.appConfigurationService.configurationStore.enablePurgeProtection 13.11.3
@@ -344,6 +345,7 @@ azure.subscription.batchService.account.name 11.4.0
 azure.subscription.batchService.account.networkProfile 11.4.0
 azure.subscription.batchService.account.nodeManagementEndpoint 11.4.0
 azure.subscription.batchService.account.pool 11.4.0
+azure.subscription.batchService.account.pool.creationTime 13.22.1
 azure.subscription.batchService.account.pool.deploymentConfiguration 11.4.0
 azure.subscription.batchService.account.pool.diskCustomerManagedKeyEnabled 13.1.8
 azure.subscription.batchService.account.pool.diskEncryptionTargets 13.1.8
@@ -449,6 +451,7 @@ azure.subscription.cloudDefenderService.assessment.assessmentType 13.14.1
 azure.subscription.cloudDefenderService.assessment.categories 13.14.1
 azure.subscription.cloudDefenderService.assessment.description 13.14.1
 azure.subscription.cloudDefenderService.assessment.displayName 13.11.3
+azure.subscription.cloudDefenderService.assessment.firstEvaluationDate 13.22.1
 azure.subscription.cloudDefenderService.assessment.id 13.11.3
 azure.subscription.cloudDefenderService.assessment.implementationEffort 13.14.1
 azure.subscription.cloudDefenderService.assessment.name 13.11.3
@@ -463,6 +466,7 @@ azure.subscription.cloudDefenderService.assessment.riskLevel 13.14.1
 azure.subscription.cloudDefenderService.assessment.severity 13.11.3
 azure.subscription.cloudDefenderService.assessment.status 13.11.3
 azure.subscription.cloudDefenderService.assessment.statusCause 13.11.3
+azure.subscription.cloudDefenderService.assessment.statusChangeDate 13.22.1
 azure.subscription.cloudDefenderService.assessment.statusDescription 13.11.3
 azure.subscription.cloudDefenderService.assessment.tactics 13.14.1
 azure.subscription.cloudDefenderService.assessment.techniques 13.14.1
@@ -733,6 +737,7 @@ azure.subscription.cognitiveServicesService.account.connection.systemMetadata 13
 azure.subscription.cognitiveServicesService.account.connection.target 13.15.2
 azure.subscription.cognitiveServicesService.account.connection.useWorkspaceManagedIdentity 13.15.2
 azure.subscription.cognitiveServicesService.account.connections 13.15.2
+azure.subscription.cognitiveServicesService.account.creationTime 13.22.1
 azure.subscription.cognitiveServicesService.account.customSubDomainName 13.11.3
 azure.subscription.cognitiveServicesService.account.defenderForAIEnabled 13.12.2
 azure.subscription.cognitiveServicesService.account.deployment 13.15.2
@@ -820,6 +825,7 @@ azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topic 13.
 azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topicName 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.createdAt 13.12.2
+azure.subscription.cognitiveServicesService.account.raiTopic.creationTime 13.22.1
 azure.subscription.cognitiveServicesService.account.raiTopic.description 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.failedReason 13.12.2
 azure.subscription.cognitiveServicesService.account.raiTopic.id 13.12.2
@@ -1775,6 +1781,7 @@ azure.subscription.databricks 11.4.28
 azure.subscription.databricksService 11.4.25
 azure.subscription.databricksService.subscriptionId 11.4.25
 azure.subscription.databricksService.workspace 11.4.25
+azure.subscription.databricksService.workspace.creationTime 13.22.1
 azure.subscription.databricksService.workspace.customVirtualNetworkId 13.5.1
 azure.subscription.databricksService.workspace.diskEncryptionSetId 13.5.1
 azure.subscription.databricksService.workspace.enableNoPublicIp 13.5.1
@@ -1940,14 +1947,17 @@ azure.subscription.eventHubService 13.3.3
 azure.subscription.eventHubService.namespace 13.3.3
 azure.subscription.eventHubService.namespace.cmkKeySource 13.5.1
 azure.subscription.eventHubService.namespace.cmkKeys 13.5.1
+azure.subscription.eventHubService.namespace.creationTime 13.22.1
 azure.subscription.eventHubService.namespace.disableLocalAuth 13.3.3
 azure.subscription.eventHubService.namespace.eventHub 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.consumerGroup 13.3.3
+azure.subscription.eventHubService.namespace.eventHub.consumerGroup.creationTime 13.22.1
 azure.subscription.eventHubService.namespace.eventHub.consumerGroup.id 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.consumerGroup.name 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.consumerGroup.systemMetadata 13.22.1
 azure.subscription.eventHubService.namespace.eventHub.consumerGroup.userMetadata 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.consumerGroups 13.3.3
+azure.subscription.eventHubService.namespace.eventHub.creationTime 13.22.1
 azure.subscription.eventHubService.namespace.eventHub.id 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.messageRetentionInDays 13.3.3
 azure.subscription.eventHubService.namespace.eventHub.name 13.3.3
@@ -2560,6 +2570,7 @@ azure.subscription.monitorService.activityLog.entry.status 13.19.2
 azure.subscription.monitorService.activityLog.entry.subStatus 13.19.2
 azure.subscription.monitorService.activityLog.subscriptionId 9.0.1
 azure.subscription.monitorService.applicationInsight 9.0.1
+azure.subscription.monitorService.applicationInsight.creationTime 13.22.1
 azure.subscription.monitorService.applicationInsight.disableIpMasking 11.6.1
 azure.subscription.monitorService.applicationInsight.id 9.0.1
 azure.subscription.monitorService.applicationInsight.kind 9.0.1
@@ -3898,6 +3909,7 @@ azure.subscription.serviceBusService 13.3.3
 azure.subscription.serviceBusService.namespace 13.3.3
 azure.subscription.serviceBusService.namespace.cmkKeySource 13.5.1
 azure.subscription.serviceBusService.namespace.cmkKeys 13.5.1
+azure.subscription.serviceBusService.namespace.creationTime 13.22.1
 azure.subscription.serviceBusService.namespace.disableLocalAuth 13.3.3
 azure.subscription.serviceBusService.namespace.id 13.3.3
 azure.subscription.serviceBusService.namespace.location 13.3.3
@@ -3914,6 +3926,7 @@ azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.s
 azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules 13.12.2
 azure.subscription.serviceBusService.namespace.provisioningState 13.5.1
 azure.subscription.serviceBusService.namespace.queue 13.3.3
+azure.subscription.serviceBusService.namespace.queue.creationTime 13.22.1
 azure.subscription.serviceBusService.namespace.queue.deadLetterMessageCount 13.3.3
 azure.subscription.serviceBusService.namespace.queue.defaultMessageTimeToLive 13.3.3
 azure.subscription.serviceBusService.namespace.queue.enablePartitioning 13.3.3
@@ -3935,6 +3948,7 @@ azure.subscription.serviceBusService.namespace.status 13.3.3
 azure.subscription.serviceBusService.namespace.systemMetadata 13.22.1
 azure.subscription.serviceBusService.namespace.tags 13.3.3
 azure.subscription.serviceBusService.namespace.topic 13.3.3
+azure.subscription.serviceBusService.namespace.topic.creationTime 13.22.1
 azure.subscription.serviceBusService.namespace.topic.defaultMessageTimeToLive 13.3.3
 azure.subscription.serviceBusService.namespace.topic.enablePartitioning 13.3.3
 azure.subscription.serviceBusService.namespace.topic.id 13.3.3
@@ -3943,6 +3957,7 @@ azure.subscription.serviceBusService.namespace.topic.name 13.3.3
 azure.subscription.serviceBusService.namespace.topic.requiresDuplicateDetection 13.3.3
 azure.subscription.serviceBusService.namespace.topic.status 13.3.3
 azure.subscription.serviceBusService.namespace.topic.subscription 13.3.3
+azure.subscription.serviceBusService.namespace.topic.subscription.creationTime 13.22.1
 azure.subscription.serviceBusService.namespace.topic.subscription.deadLetterMessageCount 13.3.3
 azure.subscription.serviceBusService.namespace.topic.subscription.defaultMessageTimeToLive 13.3.3
 azure.subscription.serviceBusService.namespace.topic.subscription.id 13.3.3

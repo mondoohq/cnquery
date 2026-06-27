@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub"
@@ -103,7 +104,9 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			var maximumThroughputUnits int64
 			var minimumTlsVersion, publicNetworkAccess string
 			var cmkKeys []any
+			var creationTime *time.Time
 			if ns.Properties != nil {
+				creationTime = ns.Properties.CreatedAt
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
 				}
@@ -161,6 +164,7 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
 				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
+				"creationTime":                    llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -213,7 +217,9 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 			var partitionCount, messageRetentionInDays int64
 			var status string
 			var partitionIds []any
+			var creationTime *time.Time
 			if eh.Properties != nil {
+				creationTime = eh.Properties.CreatedAt
 				if eh.Properties.PartitionCount != nil {
 					partitionCount = *eh.Properties.PartitionCount
 				}
@@ -239,6 +245,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 				"messageRetentionInDays": llx.IntData(messageRetentionInDays),
 				"status":                 llx.StringData(status),
 				"partitionIds":           llx.ArrayData(partitionIds, types.String),
+				"creationTime":           llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -294,14 +301,19 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 			}
 
 			var userMetadata string
-			if cg.Properties != nil && cg.Properties.UserMetadata != nil {
-				userMetadata = *cg.Properties.UserMetadata
+			var creationTime *time.Time
+			if cg.Properties != nil {
+				creationTime = cg.Properties.CreatedAt
+				if cg.Properties.UserMetadata != nil {
+					userMetadata = *cg.Properties.UserMetadata
+				}
 			}
 
 			mqlCg, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup", map[string]*llx.RawData{
 				"id":           llx.StringDataPtr(cg.ID),
 				"name":         llx.StringDataPtr(cg.Name),
 				"userMetadata": llx.StringData(userMetadata),
+				"creationTime": llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err

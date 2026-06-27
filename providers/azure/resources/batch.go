@@ -396,9 +396,13 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		hostEndpointProtectionMode      = llx.NilData
 		proxyAgentEnabled               = llx.NilData
 		securityEncryptionType          = llx.NilData
+		creationTimeData                = llx.NilData
 	)
 
 	if pool.Properties != nil {
+		if pool.Properties.CreationTime != nil {
+			creationTimeData = llx.TimeDataPtr(pool.Properties.CreationTime)
+		}
 		if dict, err := convert.JsonToDict(pool.Properties); err != nil {
 			return nil, err
 		} else if dict != nil {
@@ -487,6 +491,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 		"hostEndpointProtectionMode":    hostEndpointProtectionMode,
 		"proxyAgentEnabled":             proxyAgentEnabled,
 		"securityEncryptionType":        securityEncryptionType,
+		"creationTime":                  creationTimeData,
 	}, nil
 }
 

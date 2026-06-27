@@ -99,9 +99,12 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	var endpoint, provisioningState string
 	var disableLocalAuth, restrictOutboundNetworkAccess, storedCompletionsDisabled bool
 	var networkAclsDefaultAction, networkAclsBypass string
+	var creationTime *time.Time
 	networkAcls := llx.NilData
 
 	if p := account.Properties; p != nil {
+		// DateCreated arrives as an ISO 8601 string; parse it to a timestamp.
+		creationTime = parseAzureTimestamp(p.DateCreated)
 		if p.PublicNetworkAccess != nil {
 			publicNetworkAccess = string(*p.PublicNetworkAccess)
 		}
@@ -172,6 +175,7 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"endpoint":                      llx.StringData(endpoint),
 		"provisioningState":             llx.StringData(provisioningState),
 		"storedCompletionsDisabled":     llx.BoolData(storedCompletionsDisabled),
+		"creationTime":                  llx.TimeDataPtr(creationTime),
 	})
 	if err != nil {
 		return nil, err
@@ -776,6 +780,7 @@ func raiTopicToMql(runtime *plugin.Runtime, t *armcognitiveservices.RaiTopic) (*
 		"failedReason":   llx.StringData(failedReason),
 		"sampleBlobUrl":  llx.StringData(sampleBlobUrl),
 		"createdAt":      llx.TimeDataPtr(createdAt),
+		"creationTime":   llx.TimeDataPtr(createdAt),
 		"lastModifiedAt": llx.TimeDataPtr(lastModifiedAt),
 	})
 	if err != nil {

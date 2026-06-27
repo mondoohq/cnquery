@@ -184,7 +184,9 @@ func createApplicationInsightResource(runtime *plugin.Runtime, entry *appinsight
 	var publicNetworkAccessForIngestion, publicNetworkAccessForQuery string
 	var retentionInDays int64
 	var workspaceResourceId string
+	var creationTime *time.Time
 	if entry.Properties != nil {
+		creationTime = entry.Properties.CreationDate
 		if entry.Properties.DisableIPMasking != nil {
 			disableIpMasking = *entry.Properties.DisableIPMasking
 		}
@@ -216,6 +218,7 @@ func createApplicationInsightResource(runtime *plugin.Runtime, entry *appinsight
 			"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
 			"retentionInDays":                 llx.IntData(retentionInDays),
 			"workspaceResourceId":             llx.StringData(workspaceResourceId),
+			"creationTime":                    llx.TimeDataPtr(creationTime),
 		})
 	if err != nil {
 		return nil, err

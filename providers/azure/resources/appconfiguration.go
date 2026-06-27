@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -96,8 +97,10 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 	var endpoint, provisioningState, createMode string
 	var disableLocalAuth, enablePurgeProtection bool
 	var softDeleteRetentionInDays, defaultKeyValueRevisionRetentionPeriodInSeconds int64
+	var creationTime *time.Time
 
 	if p := store.Properties; p != nil {
+		creationTime = p.CreationDate
 		if p.PublicNetworkAccess != nil {
 			publicNetworkAccess = string(*p.PublicNetworkAccess)
 		}
@@ -149,6 +152,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"provisioningState":         llx.StringData(provisioningState),
 		"createMode":                llx.StringData(createMode),
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
+		"creationTime": llx.TimeDataPtr(creationTime),
 	})
 	if err != nil {
 		return nil, err

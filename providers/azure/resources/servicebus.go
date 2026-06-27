@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus"
@@ -121,7 +122,9 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			var disableLocalAuth, zoneRedundant bool
 			var requireInfraEnc *bool
 			var cmkKeys []any
+			var creationTime *time.Time
 			if ns.Properties != nil {
+				creationTime = ns.Properties.CreatedAt
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
 				}
@@ -167,6 +170,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
 				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
+				"creationTime":                    llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -221,7 +225,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) queues() ([]any, error)
 			var messageCount, deadLetterMessageCount int64
 			var lockDuration, defaultMessageTimeToLive string
 			var requiresDuplicateDetection, requiresSession, enablePartitioning bool
+			var creationTime *time.Time
 			if q.Properties != nil {
+				creationTime = q.Properties.CreatedAt
 				if q.Properties.Status != nil {
 					status = string(*q.Properties.Status)
 				}
@@ -267,6 +273,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) queues() ([]any, error)
 				"requiresDuplicateDetection": llx.BoolData(requiresDuplicateDetection),
 				"requiresSession":            llx.BoolData(requiresSession),
 				"enablePartitioning":         llx.BoolData(enablePartitioning),
+				"creationTime":               llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -321,7 +328,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) topics() ([]any, error)
 			var subscriptionCount int64
 			var enablePartitioning, supportOrdering, requiresDuplicateDetection bool
 			var defaultMessageTimeToLive string
+			var creationTime *time.Time
 			if t.Properties != nil {
+				creationTime = t.Properties.CreatedAt
 				if t.Properties.Status != nil {
 					status = string(*t.Properties.Status)
 				}
@@ -355,6 +364,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) topics() ([]any, error)
 				"supportOrdering":            llx.BoolData(supportOrdering),
 				"requiresDuplicateDetection": llx.BoolData(requiresDuplicateDetection),
 				"defaultMessageTimeToLive":   llx.StringData(defaultMessageTimeToLive),
+				"creationTime":               llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err
@@ -414,7 +424,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 			var maxDeliveryCount int64
 			var lockDuration, defaultMessageTimeToLive string
 			var requiresSession bool
+			var creationTime *time.Time
 			if sub.Properties != nil {
+				creationTime = sub.Properties.CreatedAt
 				if sub.Properties.Status != nil {
 					status = string(*sub.Properties.Status)
 				}
@@ -448,6 +460,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 				"lockDuration":             llx.StringData(lockDuration),
 				"defaultMessageTimeToLive": llx.StringData(defaultMessageTimeToLive),
 				"requiresSession":          llx.BoolData(requiresSession),
+				"creationTime":             llx.TimeDataPtr(creationTime),
 			})
 			if err != nil {
 				return nil, err

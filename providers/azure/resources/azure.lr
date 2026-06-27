@@ -1339,6 +1339,8 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   proxyAgentEnabled bool
   // Security encryption type for confidential computing (e.g., "DiskWithVMGuestState")
   securityEncryptionType string
+  // When the pool was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1409,6 +1411,8 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   managedServicesKeyName string
   // Managed-services CMK key version
   managedServicesKeyVersion string
+  // When the workspace was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -6534,6 +6538,8 @@ private azure.subscription.monitorService.applicationInsight @defaults("name loc
   retentionInDays int
   // Log Analytics workspace resource ID
   workspaceResourceId string
+  // When the Application Insights component was created
+  creationTime time
   // Log Analytics workspace where the diagnostic data is sent
   workspace() azure.subscription.monitorService.workspace
 }
@@ -6862,6 +6868,10 @@ private azure.subscription.cloudDefenderService.assessment @defaults("displayNam
   statusCause string
   // Human-readable description of the assessment result
   statusDescription string
+  // When the assessment was created and first evaluated
+  firstEvaluationDate time
+  // When the assessment status last changed
+  statusChangeDate time
   // Severity of the assessment (Low, Medium, High)
   severity string
   // ARM ID of the resource the assessment was run against
@@ -9343,6 +9353,8 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
   topics() []azure.subscription.serviceBusService.namespace.topic
+  // When the namespace was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9408,6 +9420,8 @@ private azure.subscription.serviceBusService.namespace.queue @defaults("id name"
   requiresSession bool
   // Whether partitioning is enabled
   enablePartitioning bool
+  // When the queue was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9432,6 +9446,8 @@ private azure.subscription.serviceBusService.namespace.topic @defaults("id name"
   requiresDuplicateDetection bool
   // Default time-to-live for messages (ISO 8601 duration)
   defaultMessageTimeToLive string
+  // When the topic was created
+  creationTime time
   // Subscriptions on this topic
   subscriptions() []azure.subscription.serviceBusService.namespace.topic.subscription
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -9458,6 +9474,8 @@ private azure.subscription.serviceBusService.namespace.topic.subscription @defau
   defaultMessageTimeToLive string
   // Whether sessions are required
   requiresSession bool
+  // When the subscription was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9523,6 +9541,8 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+  // When the namespace was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9578,6 +9598,8 @@ private azure.subscription.eventHubService.namespace.eventHub @defaults("id name
   partitionIds []string
   // Consumer groups for this Event Hub
   consumerGroups() []azure.subscription.eventHubService.namespace.eventHub.consumerGroup
+  // When the Event Hub was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9590,6 +9612,8 @@ private azure.subscription.eventHubService.namespace.eventHub.consumerGroup @def
   name string
   // User-defined metadata
   userMetadata string
+  // When the consumer group was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -11251,6 +11275,8 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   createMode string
   // Default retention period (seconds) for revisions of every key-value, controlling how far back point-in-time queries can read
   defaultKeyValueRevisionRetentionPeriodInSeconds int
+  // When the configuration store was created
+  creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -11326,6 +11352,8 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   provisioningState string
   // Whether stored completions (request/response logging used for fine-tuning and evaluation) are disabled
   storedCompletionsDisabled bool
+  // When the account was created
+  creationTime time
   // Whether Microsoft Defender for AI threat detection is enabled on the account
   defenderForAIEnabled() bool
   // Responsible AI content-filter policies configured on the account
@@ -11621,7 +11649,11 @@ private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("
   // URL of the sample blob used to train the topic
   sampleBlobUrl string
   // When the topic was created
-  createdAt time
+  //
+  // Deprecated in favor of creationTime.
+  createdAt @maturity("deprecated") time
+  // When the topic was created
+  creationTime time
   // When the topic was last modified
   lastModifiedAt time
   // Creation and last-modification provenance recorded by Azure Resource Manager
