@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -148,6 +150,16 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 				if err != nil {
 					return err
 				}
+				templateUrl := igm.InstanceTemplate
+				if templateUrl == "" {
+					for _, v := range igm.Versions {
+						if v.InstanceTemplate != "" {
+							templateUrl = v.InstanceTemplate
+							break
+						}
+					}
+				}
+				mqlIGM.(*mqlGcpProjectComputeServiceInstanceGroupManager).cacheInstanceTemplateUrl = templateUrl
 				res = append(res, mqlIGM)
 			}
 		}
@@ -162,8 +174,48 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectComputeServiceInstanceGroupManagerInternal struct {
+	cacheInstanceTemplateUrl string
+}
+
 func (g *mqlGcpProjectComputeServiceInstanceGroupManager) id() (string, error) {
 	return "gcloud.compute.instanceGroupManager/" + g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeServiceInstanceGroupManager) instanceTemplate() (*mqlGcpProjectComputeServiceInstanceTemplate, error) {
+	url := g.cacheInstanceTemplateUrl
+	if url == "" {
+		g.InstanceTemplate.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	name := url[strings.LastIndex(url, "/")+1:]
+
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	svc := obj.(*mqlGcpProjectComputeService)
+	tmpls := svc.GetInstanceTemplates()
+	if tmpls.Error != nil {
+		return nil, tmpls.Error
+	}
+	for _, t := range tmpls.Data {
+		tmpl := t.(*mqlGcpProjectComputeServiceInstanceTemplate)
+		n := tmpl.GetName()
+		if n.Error != nil {
+			return nil, n.Error
+		}
+		if n.Data == name {
+			return tmpl, nil
+		}
+	}
+	g.InstanceTemplate.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 // Network firewall policies

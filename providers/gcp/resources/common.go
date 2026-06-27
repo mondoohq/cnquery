@@ -101,6 +101,40 @@ func resolveServiceAccountRef(runtime *plugin.Runtime, raw, fallbackProjectId st
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
+// parentFolderFromId resolves the typed folder for a Cloud Resource Manager
+// parent reference. It returns nil when the parent is not a folder (for example
+// an organization or an empty reference), leaving the caller to mark the field
+// null.
+func parentFolderFromId(parentId string, runtime *plugin.Runtime) (*mqlGcpFolder, error) {
+	const prefix = "folders/"
+	if !strings.HasPrefix(parentId, prefix) {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.folder", map[string]*llx.RawData{
+		"id": llx.StringData(strings.TrimPrefix(parentId, prefix)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpFolder), nil
+}
+
+// parentOrganizationFromId resolves the typed organization for a Cloud Resource
+// Manager parent reference. It returns nil when the direct parent is not an
+// organization (for example a folder). The organization resource resolves the
+// organization of the active connection, which is the parent org of any project
+// or folder under that org.
+func parentOrganizationFromId(parentId string, runtime *plugin.Runtime) (*mqlGcpOrganization, error) {
+	if !strings.HasPrefix(parentId, "organizations/") {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpOrganization), nil
+}
+
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
 // Returns nil for nil input, including typed nil interface values.
 func protoToDict(msg proto.Message) (map[string]any, error) {

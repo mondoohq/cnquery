@@ -91,9 +91,12 @@ gcp.folder.loggingService.sink.name 13.16.3
 gcp.folder.loggingService.sink.updated 13.16.3
 gcp.folder.loggingService.sink.writerIdentity 13.16.3
 gcp.folder.loggingService.sinks 13.16.3
+gcp.folder.managementProject 13.25.2
 gcp.folder.name 9.0.0
 gcp.folder.orgPolicies 13.16.3
+gcp.folder.parentFolder 13.25.2
 gcp.folder.parentId 9.0.0
+gcp.folder.parentOrganization 13.25.2
 gcp.folder.projects 9.0.0
 gcp.folder.state 9.0.0
 gcp.folder.updated 9.0.0
@@ -686,6 +689,8 @@ gcp.project.bigqueryService.routine.modified 9.0.0
 gcp.project.bigqueryService.routine.projectId 9.0.0
 gcp.project.bigqueryService.routine.type 9.0.0
 gcp.project.bigqueryService.table 9.0.0
+gcp.project.bigqueryService.table.cloneBaseTable 13.25.2
+gcp.project.bigqueryService.table.cloneTime 13.25.2
 gcp.project.bigqueryService.table.clusteringFields 9.0.0
 gcp.project.bigqueryService.table.created 9.0.0
 gcp.project.bigqueryService.table.datasetId 9.0.0
@@ -710,6 +715,7 @@ gcp.project.bigqueryService.table.public 13.21.2
 gcp.project.bigqueryService.table.rangePartitioning 9.0.0
 gcp.project.bigqueryService.table.requirePartitionFilter 9.0.0
 gcp.project.bigqueryService.table.schema 9.0.0
+gcp.project.bigqueryService.table.snapshotBaseTable 13.25.2
 gcp.project.bigqueryService.table.snapshotTime 9.0.0
 gcp.project.bigqueryService.table.timePartitioning 9.0.0
 gcp.project.bigqueryService.table.type 9.0.0
@@ -1112,6 +1118,8 @@ gcp.project.cloudFunction.availableMemoryMb 9.0.0
 gcp.project.cloudFunction.buildEnvVars 9.0.0
 gcp.project.cloudFunction.buildId 9.0.0
 gcp.project.cloudFunction.buildName 9.0.0
+gcp.project.cloudFunction.buildServiceAccount 13.25.2
+gcp.project.cloudFunction.buildServiceAccountRef 13.25.2
 gcp.project.cloudFunction.buildWorkerPool 9.0.0
 gcp.project.cloudFunction.description 9.0.0
 gcp.project.cloudFunction.dockerRegistry 9.0.0
@@ -1149,15 +1157,18 @@ gcp.project.cloudFunction.vpcConnector 9.0.0
 gcp.project.cloudFunctionV2 13.7.2
 gcp.project.cloudFunctionV2.allowsUnauthenticated 13.19.2
 gcp.project.cloudFunctionV2.buildConfig 13.7.2
+gcp.project.cloudFunctionV2.buildConfig.build 13.25.2
 gcp.project.cloudFunctionV2.buildConfig.buildWorkerPool 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.dockerRepository 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.entryPoint 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.environmentVariables 13.7.2
+gcp.project.cloudFunctionV2.buildConfig.gitUri 13.25.2
 gcp.project.cloudFunctionV2.buildConfig.id 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.runtime 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.serviceAccount 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.serviceAccountRef 13.21.2
 gcp.project.cloudFunctionV2.buildConfig.source 13.7.2
+gcp.project.cloudFunctionV2.buildConfig.sourceProvenance 13.25.2
 gcp.project.cloudFunctionV2.createTime 13.7.2
 gcp.project.cloudFunctionV2.description 13.7.2
 gcp.project.cloudFunctionV2.environment 13.7.2
@@ -1291,6 +1302,8 @@ gcp.project.cloudRunService.service.annotations 9.0.0
 gcp.project.cloudRunService.service.binaryAuthorization 13.7.2
 gcp.project.cloudRunService.service.binaryAuthorizationBreakglassJustification 13.18.1
 gcp.project.cloudRunService.service.binaryAuthorizationUseDefault 13.18.1
+gcp.project.cloudRunService.service.client 13.25.2
+gcp.project.cloudRunService.service.clientVersion 13.25.2
 gcp.project.cloudRunService.service.conditions 9.0.0
 gcp.project.cloudRunService.service.created 9.0.0
 gcp.project.cloudRunService.service.creator 9.0.0
@@ -1551,10 +1564,13 @@ gcp.project.computeService.disk.satisfiesPzi 13.1.2
 gcp.project.computeService.disk.satisfiesPzs 13.1.2
 gcp.project.computeService.disk.sizeGb 9.0.0
 gcp.project.computeService.disk.sourceDisk 13.1.2
+gcp.project.computeService.disk.sourceDiskId 13.25.2
 gcp.project.computeService.disk.sourceImage 11.6.6
 gcp.project.computeService.disk.sourceImageEncryptionKey 13.16.3
+gcp.project.computeService.disk.sourceImageId 13.25.2
 gcp.project.computeService.disk.sourceSnapshot 11.6.6
 gcp.project.computeService.disk.sourceSnapshotEncryptionKey 13.16.3
+gcp.project.computeService.disk.sourceSnapshotId 13.25.2
 gcp.project.computeService.disk.status 9.0.0
 gcp.project.computeService.disk.storagePool 11.6.6
 gcp.project.computeService.disk.type 11.6.6
@@ -1711,8 +1727,11 @@ gcp.project.computeService.image.satisfiesPzi 11.6.6
 gcp.project.computeService.image.satisfiesPzs 11.6.6
 gcp.project.computeService.image.shieldedInstanceInitialState 13.19.2
 gcp.project.computeService.image.sourceDisk 13.1.2
+gcp.project.computeService.image.sourceDiskId 13.25.2
 gcp.project.computeService.image.sourceImage 13.1.2
+gcp.project.computeService.image.sourceImageId 13.25.2
 gcp.project.computeService.image.sourceSnapshot 13.1.2
+gcp.project.computeService.image.sourceSnapshotId 13.25.2
 gcp.project.computeService.image.status 9.0.0
 gcp.project.computeService.image.storageLocations 13.1.2
 gcp.project.computeService.images 9.0.0
@@ -1846,6 +1865,7 @@ gcp.project.computeService.instanceGroupManager.currentActions 11.6.6
 gcp.project.computeService.instanceGroupManager.description 11.6.6
 gcp.project.computeService.instanceGroupManager.id 11.6.6
 gcp.project.computeService.instanceGroupManager.instanceGroupUrl 11.6.6
+gcp.project.computeService.instanceGroupManager.instanceTemplate 13.25.2
 gcp.project.computeService.instanceGroupManager.instanceTemplateUrl 11.6.6
 gcp.project.computeService.instanceGroupManager.name 11.6.6
 gcp.project.computeService.instanceGroupManager.projectId 11.6.6
@@ -1867,6 +1887,7 @@ gcp.project.computeService.instanceTemplate.name 13.7.2
 gcp.project.computeService.instanceTemplate.properties 13.7.2
 gcp.project.computeService.instanceTemplate.selfLink 13.7.2
 gcp.project.computeService.instanceTemplate.sourceInstance 13.7.2
+gcp.project.computeService.instanceTemplate.sourceInstanceRef 13.25.2
 gcp.project.computeService.instanceTemplates 13.7.2
 gcp.project.computeService.instances 9.0.0
 gcp.project.computeService.interconnect 13.6.1
@@ -2173,6 +2194,7 @@ gcp.project.computeService.snapshot.satisfiesPzs 11.6.6
 gcp.project.computeService.snapshot.snapshotEncryptionKey 13.19.2
 gcp.project.computeService.snapshot.snapshotType 9.0.0
 gcp.project.computeService.snapshot.sourceDisk 11.6.6
+gcp.project.computeService.snapshot.sourceDiskId 13.25.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicy 13.1.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicyId 13.1.2
 gcp.project.computeService.snapshot.status 9.0.0
@@ -4002,7 +4024,9 @@ gcp.project.osConfigService.patchDeployment.state 13.15.1
 gcp.project.osConfigService.patchDeployment.updated 13.15.1
 gcp.project.osConfigService.patchDeployments 13.15.1
 gcp.project.osConfigService.projectId 13.15.1
+gcp.project.parentFolder 13.25.2
 gcp.project.parentId 9.0.0
+gcp.project.parentOrganization 13.25.2
 gcp.project.primitiveRoleBindings 13.12.2
 gcp.project.pubsub 9.0.0
 gcp.project.pubsubService 9.0.0
@@ -4463,6 +4487,7 @@ gcp.project.sqlService.instance.ipMapping.type 9.0.0
 gcp.project.sqlService.instance.kmsKey 13.12.2
 gcp.project.sqlService.instance.localRootEnabled 13.12.2
 gcp.project.sqlService.instance.maintenanceVersion 9.0.0
+gcp.project.sqlService.instance.master 13.25.2
 gcp.project.sqlService.instance.masterInstanceName 9.0.0
 gcp.project.sqlService.instance.maxDiskSize 9.0.0
 gcp.project.sqlService.instance.name 9.0.0
@@ -4474,6 +4499,7 @@ gcp.project.sqlService.instance.publicIpEnabled 13.12.2
 gcp.project.sqlService.instance.region 9.0.0
 gcp.project.sqlService.instance.replicaConfiguration 13.7.2
 gcp.project.sqlService.instance.replicaNames 9.0.0
+gcp.project.sqlService.instance.replicas 13.25.2
 gcp.project.sqlService.instance.replicationCluster 13.16.3
 gcp.project.sqlService.instance.satisfiesPzi 11.6.6
 gcp.project.sqlService.instance.satisfiesPzs 11.6.6

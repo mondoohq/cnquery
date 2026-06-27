@@ -97,7 +97,38 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	args["updated"] = llx.TimeDataPtr(parseTime(folder.UpdateTime))
 	args["parentId"] = llx.StringData(folder.Parent)
 	args["state"] = llx.StringData(folder.State)
+	args["managementProject"] = llx.StringData(folder.ManagementProject)
 	return args, nil, nil
+}
+
+func (g *mqlGcpFolder) parentFolder() (*mqlGcpFolder, error) {
+	parentId := g.GetParentId()
+	if parentId.Error != nil {
+		return nil, parentId.Error
+	}
+	f, err := parentFolderFromId(parentId.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		g.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return f, nil
+}
+
+func (g *mqlGcpFolder) parentOrganization() (*mqlGcpOrganization, error) {
+	parentId := g.GetParentId()
+	if parentId.Error != nil {
+		return nil, parentId.Error
+	}
+	o, err := parentOrganizationFromId(parentId.Data, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if o == nil {
+		g.ParentOrganization.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return o, nil
 }
 
 func (g *mqlGcpFolders) children() ([]any, error) {
@@ -215,13 +246,14 @@ func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
 
 func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, error) {
 	return CreateResource(runtime, "gcp.folder", map[string]*llx.RawData{
-		"id":         llx.StringData(f.Name),
-		"name":       llx.StringData(f.DisplayName),
-		"created":    llx.TimeDataPtr(parseTime(f.CreateTime)),
-		"updated":    llx.TimeDataPtr(parseTime(f.UpdateTime)),
-		"parentId":   llx.StringData(f.Parent),
-		"state":      llx.StringData(f.State),
-		"deleteTime": llx.TimeDataPtr(parseTime(f.DeleteTime)),
+		"id":                llx.StringData(f.Name),
+		"name":              llx.StringData(f.DisplayName),
+		"created":           llx.TimeDataPtr(parseTime(f.CreateTime)),
+		"updated":           llx.TimeDataPtr(parseTime(f.UpdateTime)),
+		"parentId":          llx.StringData(f.Parent),
+		"state":             llx.StringData(f.State),
+		"deleteTime":        llx.TimeDataPtr(parseTime(f.DeleteTime)),
+		"managementProject": llx.StringData(f.ManagementProject),
 	})
 }
 

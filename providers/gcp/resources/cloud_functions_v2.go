@@ -211,6 +211,16 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 		return nil, err
 	}
 
+	sourceProvenanceDict, err := protoToDict(cfg.GetSourceProvenance())
+	if err != nil {
+		return nil, err
+	}
+
+	var gitUri string
+	if cfg.GetSourceProvenance() != nil {
+		gitUri = cfg.GetSourceProvenance().GetGitUri()
+	}
+
 	var envVars map[string]any
 	if len(cfg.EnvironmentVariables) > 0 {
 		envVars = make(map[string]any, len(cfg.EnvironmentVariables))
@@ -228,6 +238,9 @@ func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionsp
 		"environmentVariables": llx.MapData(envVars, types.String),
 		"dockerRepository":     llx.StringData(cfg.DockerRepository),
 		"serviceAccount":       llx.StringData(cfg.ServiceAccount),
+		"build":                llx.StringData(cfg.Build),
+		"sourceProvenance":     llx.DictData(sourceProvenanceDict),
+		"gitUri":               llx.StringData(gitUri),
 	})
 	if err != nil {
 		return nil, err

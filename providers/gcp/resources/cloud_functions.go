@@ -174,6 +174,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			"timeout":             llx.TimeData(llx.DurationToTime(int64(f.Timeout.Seconds))),
 			"availableMemoryMb":   llx.IntData(int64(f.AvailableMemoryMb)),
 			"serviceAccountEmail": llx.StringData(f.ServiceAccountEmail),
+			"buildServiceAccount": llx.StringData(f.BuildServiceAccount),
 			"updated":             llx.TimeData(f.UpdateTime.AsTime()),
 			"versionId":           llx.IntData(f.VersionId),
 			"labels":              llx.MapData(convert.MapToInterfaceMap(f.Labels), types.String),
@@ -316,6 +317,24 @@ func (g *mqlGcpProjectCloudFunction) serviceAccount() (*mqlGcpProjectIamServiceS
 		return nil, err
 	}
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
+func (g *mqlGcpProjectCloudFunction) buildServiceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.BuildServiceAccount.Error != nil {
+		return nil, g.BuildServiceAccount.Error
+	}
+	projectId := ""
+	if g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.BuildServiceAccount.Data, projectId)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.BuildServiceAccountRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
 }
 
 func (g *mqlGcpProjectCloudFunction) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {

@@ -520,6 +520,8 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"satisfiesPzs":                  llx.BoolData(s.SatisfiesPzs),
 					"uid":                           llx.StringData(s.Uid),
 					"etag":                          llx.StringData(s.Etag),
+					"client":                        llx.StringData(s.Client),
+					"clientVersion":                 llx.StringData(s.ClientVersion),
 					"binaryAuthorization":           llx.DictData(baDict),
 					"binaryAuthorizationUseDefault": llx.BoolData(baUseDefault),
 					"binaryAuthorizationBreakglassJustification": llx.StringData(baBreakglass),

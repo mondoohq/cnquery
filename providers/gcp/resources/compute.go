@@ -1187,6 +1187,9 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					"users":                       llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
 					"accessMode":                  llx.StringData(disk.AccessMode),
 					"provisionedThroughput":       llx.IntData(disk.ProvisionedThroughput),
+					"sourceImageId":               llx.StringData(disk.SourceImageId),
+					"sourceSnapshotId":            llx.StringData(disk.SourceSnapshotId),
+					"sourceDiskId":                llx.StringData(disk.SourceDiskId),
 				})
 				if err != nil {
 					return err
@@ -1433,7 +1436,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"enableConfidentialCompute":      llx.BoolData(snapshot.EnableConfidentialCompute),
 				"satisfiesPzi":                   llx.BoolData(snapshot.SatisfiesPzi),
 				"satisfiesPzs":                   llx.BoolData(snapshot.SatisfiesPzs),
-				"sourceDisk":                     llx.StringData(snapshot.SourceDisk),
+				"sourceDiskId":                   llx.StringData(snapshot.SourceDiskId),
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
 				"snapshotEncryptionKey":          llx.DictData(customerEncryptionKeyToDict(snapshot.SnapshotEncryptionKey)),
@@ -1442,7 +1445,9 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				return err
 			}
 
-			mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot).cacheKmsKeyName = snapshotKmsKeyName
+			mqlSnap := mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot)
+			mqlSnap.cacheKmsKeyName = snapshotKmsKeyName
+			mqlSnap.cacheSourceDiskUrl = snapshot.SourceDisk
 			res = append(res, mqlSnapshpt)
 		}
 		return nil
@@ -1527,7 +1532,8 @@ func (g *mqlGcpProjectComputeServiceImage) kmsKey() (*mqlGcpProjectKmsServiceKey
 }
 
 type mqlGcpProjectComputeServiceSnapshotInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName    string
+	cacheSourceDiskUrl string
 }
 
 func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -1541,6 +1547,14 @@ func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsService
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
+	if g.cacheSourceDiskUrl == "" {
+		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
@@ -1656,6 +1670,9 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 				"storageLocations":             llx.ArrayData(convert.SliceAnyToInterface(image.StorageLocations), types.String),
 				"imageEncryptionKey":           llx.DictData(customerEncryptionKeyToDict(image.ImageEncryptionKey)),
 				"shieldedInstanceInitialState": llx.DictData(shieldedInitialState),
+				"sourceDiskId":                 llx.StringData(image.SourceDiskId),
+				"sourceImageId":                llx.StringData(image.SourceImageId),
+				"sourceSnapshotId":             llx.StringData(image.SourceSnapshotId),
 			})
 			if err != nil {
 				return err

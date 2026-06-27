@@ -642,6 +642,12 @@ private gcp.folder @defaults("name") {
   updated time
   // Parent ID
   parentId string
+  // Parent folder when this folder is nested under another folder
+  parentFolder() gcp.folder
+  // Parent organization when this folder sits directly under the organization
+  parentOrganization() gcp.organization
+  // Resource name of the management project associated with this folder
+  managementProject string
   // Folder state
   state string
   // Timestamp when deletion was requested
@@ -697,6 +703,10 @@ gcp.project @defaults("name number") {
   name() string
   // Parent ID
   parentId() string
+  // Parent folder when the project sits directly under a folder
+  parentFolder() gcp.folder
+  // Parent organization when the project sits directly under the organization
+  parentOrganization() gcp.organization
   // Project lifecycle state
   state() string
   // Creation time
@@ -1775,6 +1785,12 @@ private gcp.project.computeService.disk @defaults("name") {
   satisfiesPzs bool
   // Source disk used to create this disk
   sourceDisk() gcp.project.computeService.disk
+  // ID of the source image used to create the disk
+  sourceImageId string
+  // ID of the source snapshot used to create the disk
+  sourceSnapshotId string
+  // ID of the source disk used to create this disk
+  sourceDiskId string
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -1870,8 +1886,10 @@ private gcp.project.computeService.snapshot @defaults("name") {
   satisfiesPzi bool
   // Whether the snapshot satisfies Google's Protected Zone Separation requirements
   satisfiesPzs bool
-  // URL of the source disk used to create this snapshot
-  sourceDisk string
+  // ID of the source disk used to create this snapshot
+  sourceDiskId string
+  // Source disk used to create this snapshot
+  sourceDisk() gcp.project.computeService.disk
   // URL of the snapshot schedule policy that created this snapshot
   sourceSnapshotSchedulePolicy string
   // ID of the snapshot schedule policy
@@ -1934,10 +1952,16 @@ private gcp.project.computeService.image @defaults("id name") {
   storageLocations []string
   // Source disk used to create this image
   sourceDisk() gcp.project.computeService.disk
+  // ID of the source disk used to create this image
+  sourceDiskId string
   // Source image used to create this image
   sourceImage() gcp.project.computeService.image
+  // ID of the source image used to create this image
+  sourceImageId string
   // Source snapshot used to create this image
   sourceSnapshot() gcp.project.computeService.snapshot
+  // ID of the source snapshot used to create this image
+  sourceSnapshotId string
   // Customer-managed KMS key used for image encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Encryption key protecting the image
@@ -2681,6 +2705,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   maintenanceVersion string
   // Name of the instance that acts as primary in the replica
   masterInstanceName string
+  // Primary instance this read replica replicates from
+  master() gcp.project.sqlService.instance
   // Maximum disk size in bytes
   maxDiskSize int
   // Instance name
@@ -2689,6 +2715,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   region string
   // Names of read-replica instances of this primary
   replicaNames []string
+  // Read-replica instances of this primary
+  replicas() []gcp.project.sqlService.instance
   // Detailed Cloud SQL instance configuration (tier, flags, backups, network, IAM)
   settings gcp.project.sqlService.instance.settings
   // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
@@ -3292,6 +3320,12 @@ private gcp.project.bigqueryService.table @defaults("id") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Snapshot creation time
   snapshotTime time
+  // Table this snapshot was taken from
+  snapshotBaseTable() gcp.project.bigqueryService.table
+  // Table this table was cloned from
+  cloneBaseTable() gcp.project.bigqueryService.table
+  // Time the base table was cloned
+  cloneTime time
   // Query to use for a logical view
   viewQuery string
   // Data clustering configuration
@@ -5650,6 +5684,10 @@ private gcp.project.cloudFunction @defaults("name") {
   serviceAccountEmail string
   // IAM service account used by the function
   serviceAccount() gcp.project.iamService.serviceAccount
+  // Email of the service account used to build the function's container
+  buildServiceAccount string
+  // IAM service account used to build the function's container
+  buildServiceAccountRef() gcp.project.iamService.serviceAccount
   // Update timestamp
   updated time
   // Version identifier of the cloud function
@@ -5765,6 +5803,15 @@ private gcp.project.cloudFunctionV2.buildConfig @defaults("runtime entryPoint") 
   serviceAccount @maturity("deprecated") string
   // Service account identity used for the build (resolved from serviceAccount)
   serviceAccountRef() gcp.project.iamService.serviceAccount
+  // Cloud Build name of the latest successful deployment of this function
+  build string
+  // Permanent fixed identifier for the resolved source
+  //
+  // Carries the resolved storage source, resolved repo source, and the
+  // git_uri (with commits resolved) captured at build time.
+  sourceProvenance dict
+  // Resolved Git URI of the source, if the function was built from a Git repository
+  gitUri string
 }
 
 // Google Cloud (GCP) Cloud Function v2 service (Cloud Run) configuration
@@ -6517,6 +6564,10 @@ private gcp.project.cloudRunService.service @defaults("name") {
   uid string
   // ETag for optimistic locking
   etag string
+  // Arbitrary identifier for the API client that deployed the service
+  client string
+  // Version of the API client that deployed the service
+  clientVersion string
   // IAM policy bindings for this Cloud Run service
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the service is reachable from the public internet: ingress allows all traffic AND IAM grants invoke to allUsers or allAuthenticatedUsers
@@ -8937,6 +8988,8 @@ private gcp.project.computeService.instanceGroupManager @defaults("name targetSi
   region() gcp.project.computeService.region
   // Instance template URL
   instanceTemplateUrl string
+  // Instance template used to create instances in this managed group
+  instanceTemplate() gcp.project.computeService.instanceTemplate
   // Target number of running instances
   targetSize int
   // Current actions being performed on instances
@@ -10507,6 +10560,8 @@ private gcp.project.computeService.instanceTemplate @defaults("name description"
   selfLink string
   // Source instance URL (if created from an existing instance)
   sourceInstance string
+  // Existing instance this template was created from
+  sourceInstanceRef() gcp.project.computeService.instance
   // Instance properties (machine type, disks, network interfaces, etc.)
   properties dict
   // Creation timestamp
