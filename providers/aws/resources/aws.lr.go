@@ -12871,11 +12871,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.service.runningCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetRunningCount()).ToDataRes(types.Int)
 	},
-	"aws.ecs.service.taskDefinitionArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsService).GetTaskDefinitionArn()).ToDataRes(types.String)
-	},
 	"aws.ecs.service.taskDefinition": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsService).GetTaskDefinition()).ToDataRes(types.Resource("aws.ecs.taskDefinition"))
+		return (r.(*mqlAwsEcsService).GetTaskDefinition()).ToDataRes(types.String)
+	},
+	"aws.ecs.service.taskDefinitionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsService).GetTaskDefinitionRef()).ToDataRes(types.Resource("aws.ecs.taskDefinition"))
 	},
 	"aws.ecs.service.launchType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsService).GetLaunchType()).ToDataRes(types.String)
@@ -45042,12 +45042,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsService).RunningCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.service.taskDefinitionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsService).TaskDefinitionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.ecs.service.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).TaskDefinition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.service.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsService).TaskDefinition, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinition](v.Value, v.Error)
+	"aws.ecs.service.taskDefinitionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsService).TaskDefinitionRef, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinition](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.service.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -106246,8 +106246,8 @@ type mqlAwsEcsService struct {
 	Status                        plugin.TValue[string]
 	DesiredCount                  plugin.TValue[int64]
 	RunningCount                  plugin.TValue[int64]
-	TaskDefinitionArn             plugin.TValue[string]
-	TaskDefinition                plugin.TValue[*mqlAwsEcsTaskDefinition]
+	TaskDefinition                plugin.TValue[string]
+	TaskDefinitionRef             plugin.TValue[*mqlAwsEcsTaskDefinition]
 	LaunchType                    plugin.TValue[string]
 	DeploymentConfiguration       plugin.TValue[*mqlAwsEcsServiceDeploymentConfiguration]
 	NetworkConfiguration          plugin.TValue[*mqlAwsEcsServiceNetworkConfiguration]
@@ -106349,14 +106349,14 @@ func (c *mqlAwsEcsService) GetRunningCount() *plugin.TValue[int64] {
 	return &c.RunningCount
 }
 
-func (c *mqlAwsEcsService) GetTaskDefinitionArn() *plugin.TValue[string] {
-	return &c.TaskDefinitionArn
+func (c *mqlAwsEcsService) GetTaskDefinition() *plugin.TValue[string] {
+	return &c.TaskDefinition
 }
 
-func (c *mqlAwsEcsService) GetTaskDefinition() *plugin.TValue[*mqlAwsEcsTaskDefinition] {
-	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinition](&c.TaskDefinition, func() (*mqlAwsEcsTaskDefinition, error) {
+func (c *mqlAwsEcsService) GetTaskDefinitionRef() *plugin.TValue[*mqlAwsEcsTaskDefinition] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinition](&c.TaskDefinitionRef, func() (*mqlAwsEcsTaskDefinition, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service", c.__id, "taskDefinition")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.service", c.__id, "taskDefinitionRef")
 			if err != nil {
 				return nil, err
 			}
@@ -106365,7 +106365,7 @@ func (c *mqlAwsEcsService) GetTaskDefinition() *plugin.TValue[*mqlAwsEcsTaskDefi
 			}
 		}
 
-		return c.taskDefinition()
+		return c.taskDefinitionRef()
 	})
 }
 

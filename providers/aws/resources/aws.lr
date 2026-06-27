@@ -7307,11 +7307,9 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   // Number of running tasks for the service
   runningCount int
   // ARN of the task definition used by the service
-  //
-  // Deprecated in favor of `taskDefinition()`.
-  taskDefinitionArn @maturity("deprecated") string
+  taskDefinition string
   // Task definition the service runs
-  taskDefinition() aws.ecs.taskDefinition
+  taskDefinitionRef() aws.ecs.taskDefinition
   // Launch type for the service (EC2, FARGATE, EXTERNAL, MANAGED_INSTANCES)
   launchType string
   // Deployment configuration for the service

@@ -3680,7 +3680,7 @@ aws.ecs.service.serviceRegistries 13.29.1
 aws.ecs.service.status 11.15.2
 aws.ecs.service.tags 11.15.2
 aws.ecs.service.taskDefinition 11.15.2
-aws.ecs.service.taskDefinitionArn 13.38.2
+aws.ecs.service.taskDefinitionRef 13.38.2
 aws.ecs.service.taskSets 11.15.2
 aws.ecs.task 11.15.2
 aws.ecs.task.arn 11.15.2

@@ -2092,7 +2092,7 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	args["status"] = llx.StringDataPtr(s.Status)
 	args["desiredCount"] = llx.IntData(int64(s.DesiredCount))
 	args["runningCount"] = llx.IntData(int64(s.RunningCount))
-	args["taskDefinitionArn"] = llx.StringData(taskDefinition)
+	args["taskDefinition"] = llx.StringData(taskDefinition)
 	args["launchType"] = llx.StringData(launchType)
 	// Always set deploymentConfiguration - AWS services should always have this, but handle nil case
 	if deploymentConfigResource != nil {
@@ -2446,10 +2446,10 @@ func (a *mqlAwsEcsContainer) task() (*mqlAwsEcsTask, error) {
 	return res.(*mqlAwsEcsTask), nil
 }
 
-func (a *mqlAwsEcsService) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
-	arnVal := a.TaskDefinitionArn.Data
+func (a *mqlAwsEcsService) taskDefinitionRef() (*mqlAwsEcsTaskDefinition, error) {
+	arnVal := a.TaskDefinition.Data
 	if arnVal == "" {
-		a.TaskDefinition.State = plugin.StateIsNull | plugin.StateIsSet
+		a.TaskDefinitionRef.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	region, err := GetRegionFromArn(arnVal)
