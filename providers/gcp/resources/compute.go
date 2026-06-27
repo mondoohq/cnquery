@@ -1437,6 +1437,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"satisfiesPzi":                   llx.BoolData(snapshot.SatisfiesPzi),
 				"satisfiesPzs":                   llx.BoolData(snapshot.SatisfiesPzs),
 				"sourceDiskId":                   llx.StringData(snapshot.SourceDiskId),
+				"sourceDisk":                     llx.StringData(snapshot.SourceDisk),
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
 				"snapshotEncryptionKey":          llx.DictData(customerEncryptionKeyToDict(snapshot.SnapshotEncryptionKey)),
@@ -1549,9 +1550,9 @@ func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsService
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
-func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
+func (g *mqlGcpProjectComputeServiceSnapshot) sourceDiskRef() (*mqlGcpProjectComputeServiceDisk, error) {
 	if g.cacheSourceDiskUrl == "" {
-		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
+		g.SourceDiskRef.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)

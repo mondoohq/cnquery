@@ -2195,6 +2195,7 @@ gcp.project.computeService.snapshot.snapshotEncryptionKey 13.19.2
 gcp.project.computeService.snapshot.snapshotType 9.0.0
 gcp.project.computeService.snapshot.sourceDisk 11.6.6
 gcp.project.computeService.snapshot.sourceDiskId 13.25.2
+gcp.project.computeService.snapshot.sourceDiskRef 13.25.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicy 13.1.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicyId 13.1.2
 gcp.project.computeService.snapshot.status 9.0.0
