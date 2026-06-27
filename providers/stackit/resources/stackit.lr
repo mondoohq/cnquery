@@ -892,11 +892,11 @@ private stackit.dns.zone @defaults("id dnsName type state") {
   acl string
   // Primary nameservers (for secondary zones)
   primaries []string
-  // Whether DNSSEC is enabled for the zone
+  // Whether this is a reverse DNS zone
   isReverseZone bool
   // When zone creation started
   creationStartedAt time
-  // Creation timestamp
+  // When zone creation finished
   creationFinishedAt time
   // User-defined labels
   labels map[string]string
