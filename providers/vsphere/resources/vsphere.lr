@@ -1324,7 +1324,7 @@ private vsphere.vswitch.dvs @defaults("name") {
   properties dict
   // When the distributed virtual switch was created
   //
-  // Reported by vCenter for switches iterated from `vsphere.datacenter.distributedSwitches`; the zero time (0001-01-01) when the switch is observed directly from a host or vCenter does not report it.
+  // Reported by vCenter for switches iterated from `vsphere.datacenter.distributedSwitches`; null when the switch is observed directly from a host or vCenter does not report it.
   createDate time
   // Physical NICs the host (or all member hosts) contribute as uplinks to this DVS
   uplinks() []vsphere.vmnic

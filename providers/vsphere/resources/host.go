@@ -273,7 +273,8 @@ func (v *mqlVsphereHost) distributedSwitch() ([]any, error) {
 			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + name),
 			"name":       llx.StringData(name),
 			"properties": llx.DictData(s),
-			"createDate": llx.TimeData(time.Time{}),
+			// esxcli vswitch output carries no creation time; null marks it unknown.
+			"createDate": llx.TimeDataPtr(nil),
 		})
 		if err != nil {
 			return nil, err
