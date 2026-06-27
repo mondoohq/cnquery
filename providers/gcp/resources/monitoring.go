@@ -415,6 +415,7 @@ func (g *mqlGcpProjectMonitoringService) notificationChannels() ([]any, error) {
 			"labels":             llx.MapData(convert.MapToInterfaceMap(ch.Labels), types.String),
 			"userLabels":         llx.MapData(convert.MapToInterfaceMap(ch.UserLabels), types.String),
 			"verificationStatus": llx.StringData(ch.VerificationStatus.String()),
+			"created":            llx.TimeDataPtr(timestampAsTimePtr(ch.GetCreationRecord().GetMutateTime())),
 		})
 		if err != nil {
 			return nil, err

@@ -6913,6 +6913,8 @@ private gcp.project.monitoringService.notificationChannel @defaults("displayName
   userLabels map[string]string
   // Verification status (UNVERIFIED, VERIFIED)
   verificationStatus string
+  // Time the notification channel was created
+  created time
 }
 
 // Google Cloud (GCP) Cloud Monitoring resource group
@@ -12296,6 +12298,8 @@ private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
   parent string
   // ETag used for concurrency control on resource updates
   etag string
+  // Time the access policy was created
+  createTime time
   // Access levels within this policy
   accessLevels() []gcp.accesscontextmanager.accessLevel
   // Service perimeters within this policy
@@ -13015,6 +13019,8 @@ private gcp.project.dlpService.storedInfoType @defaults("name") {
   currentVersion dict
   // Pending versions (if being updated)
   pendingVersions []dict
+  // Time the current version was created
+  currentVersionCreateTime time
 }
 
 // ============================================================

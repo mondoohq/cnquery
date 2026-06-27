@@ -9250,6 +9250,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.monitoringService.notificationChannel.verificationStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceNotificationChannel).GetVerificationStatus()).ToDataRes(types.String)
 	},
+	"gcp.project.monitoringService.notificationChannel.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceNotificationChannel).GetCreated()).ToDataRes(types.Time)
+	},
 	"gcp.project.monitoringService.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceGroup).GetName()).ToDataRes(types.String)
 	},
@@ -14677,6 +14680,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.accesscontextmanager.accessPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetEtag()).ToDataRes(types.String)
 	},
+	"gcp.accesscontextmanager.accessPolicy.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetCreateTime()).ToDataRes(types.Time)
+	},
 	"gcp.accesscontextmanager.accessPolicy.accessLevels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpAccesscontextmanagerAccessPolicy).GetAccessLevels()).ToDataRes(types.Array(types.Resource("gcp.accesscontextmanager.accessLevel")))
 	},
@@ -15348,6 +15354,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dlpService.storedInfoType.pendingVersions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceStoredInfoType).GetPendingVersions()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.storedInfoType.currentVersionCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceStoredInfoType).GetCurrentVersionCreateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.batchService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBatchService).GetProjectId()).ToDataRes(types.String)
@@ -26916,6 +26925,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMonitoringServiceNotificationChannel).VerificationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.monitoringService.notificationChannel.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceNotificationChannel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.monitoringService.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceGroup).__id, ok = v.Value.(string)
 		return
@@ -34824,6 +34837,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpAccesscontextmanagerAccessPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.accesscontextmanager.accessPolicy.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpAccesscontextmanagerAccessPolicy).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.accesscontextmanager.accessPolicy.accessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpAccesscontextmanagerAccessPolicy).AccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -35818,6 +35835,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dlpService.storedInfoType.pendingVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceStoredInfoType).PendingVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.storedInfoType.currentVersionCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceStoredInfoType).CurrentVersionCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.batchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61820,6 +61841,7 @@ type mqlGcpProjectMonitoringServiceNotificationChannel struct {
 	Labels             plugin.TValue[map[string]any]
 	UserLabels         plugin.TValue[map[string]any]
 	VerificationStatus plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
 }
 
 // createGcpProjectMonitoringServiceNotificationChannel creates a new instance of this resource
@@ -61889,6 +61911,10 @@ func (c *mqlGcpProjectMonitoringServiceNotificationChannel) GetUserLabels() *plu
 
 func (c *mqlGcpProjectMonitoringServiceNotificationChannel) GetVerificationStatus() *plugin.TValue[string] {
 	return &c.VerificationStatus
+}
+
+func (c *mqlGcpProjectMonitoringServiceNotificationChannel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlGcpProjectMonitoringServiceGroup for the gcp.project.monitoringService.group resource
@@ -80571,6 +80597,7 @@ type mqlGcpAccesscontextmanagerAccessPolicy struct {
 	Title             plugin.TValue[string]
 	Parent            plugin.TValue[string]
 	Etag              plugin.TValue[string]
+	CreateTime        plugin.TValue[*time.Time]
 	AccessLevels      plugin.TValue[[]any]
 	ServicePerimeters plugin.TValue[[]any]
 }
@@ -80626,6 +80653,10 @@ func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetParent() *plugin.TValue[stri
 
 func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
+}
+
+func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
 }
 
 func (c *mqlGcpAccesscontextmanagerAccessPolicy) GetAccessLevels() *plugin.TValue[[]any] {
@@ -83116,9 +83147,10 @@ type mqlGcpProjectDlpServiceStoredInfoType struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDlpServiceStoredInfoTypeInternal it will be used here
-	Name            plugin.TValue[string]
-	CurrentVersion  plugin.TValue[any]
-	PendingVersions plugin.TValue[[]any]
+	Name                     plugin.TValue[string]
+	CurrentVersion           plugin.TValue[any]
+	PendingVersions          plugin.TValue[[]any]
+	CurrentVersionCreateTime plugin.TValue[*time.Time]
 }
 
 // createGcpProjectDlpServiceStoredInfoType creates a new instance of this resource
@@ -83168,6 +83200,10 @@ func (c *mqlGcpProjectDlpServiceStoredInfoType) GetCurrentVersion() *plugin.TVal
 
 func (c *mqlGcpProjectDlpServiceStoredInfoType) GetPendingVersions() *plugin.TValue[[]any] {
 	return &c.PendingVersions
+}
+
+func (c *mqlGcpProjectDlpServiceStoredInfoType) GetCurrentVersionCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CurrentVersionCreateTime
 }
 
 // mqlGcpProjectBatchService for the gcp.project.batchService resource

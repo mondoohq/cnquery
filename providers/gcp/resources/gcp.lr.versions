@@ -19,6 +19,7 @@ gcp.accesscontextmanager.accessLevel.title 13.3.4
 gcp.accesscontextmanager.accessLevel.updateTime 13.3.4
 gcp.accesscontextmanager.accessPolicy 13.3.4
 gcp.accesscontextmanager.accessPolicy.accessLevels 13.3.4
+gcp.accesscontextmanager.accessPolicy.createTime 13.25.2
 gcp.accesscontextmanager.accessPolicy.etag 13.3.4
 gcp.accesscontextmanager.accessPolicy.name 13.3.4
 gcp.accesscontextmanager.accessPolicy.parent 13.3.4
@@ -2851,6 +2852,7 @@ gcp.project.dlpService.projectDataProfiles 13.14.2
 gcp.project.dlpService.projectId 13.6.1
 gcp.project.dlpService.storedInfoType 13.6.1
 gcp.project.dlpService.storedInfoType.currentVersion 13.6.1
+gcp.project.dlpService.storedInfoType.currentVersionCreateTime 13.25.2
 gcp.project.dlpService.storedInfoType.name 13.6.1
 gcp.project.dlpService.storedInfoType.pendingVersions 13.6.1
 gcp.project.dlpService.storedInfoTypes 13.6.1
@@ -3841,6 +3843,7 @@ gcp.project.monitoringService.group.name 13.6.1
 gcp.project.monitoringService.group.parentName 13.6.1
 gcp.project.monitoringService.groups 13.6.1
 gcp.project.monitoringService.notificationChannel 13.6.1
+gcp.project.monitoringService.notificationChannel.created 13.25.2
 gcp.project.monitoringService.notificationChannel.description 13.6.1
 gcp.project.monitoringService.notificationChannel.displayName 13.6.1
 gcp.project.monitoringService.notificationChannel.enabled 13.6.1
