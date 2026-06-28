@@ -358,6 +358,7 @@ func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.M
 		"serverVersion":         llx.NilData,
 		"infrastructureVersion": llx.NilData,
 		"publicNetworkAccess":   llx.NilData,
+		"networkBypassMode":     llx.NilData,
 		"computeTier":           llx.NilData,
 		"storageSizeGb":         llx.NilData,
 		"storageType":           llx.NilData,
@@ -379,6 +380,7 @@ func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.M
 		args["serverVersion"] = llx.StringDataPtr(p.ServerVersion)
 		args["infrastructureVersion"] = llx.StringDataPtr(p.InfrastructureVersion)
 		args["publicNetworkAccess"] = llx.StringDataPtr(cosmosEnumStrPtr(p.PublicNetworkAccess))
+		args["networkBypassMode"] = llx.StringDataPtr(cosmosEnumStrPtr(p.NetworkBypassMode))
 		if p.Compute != nil {
 			args["computeTier"] = llx.StringDataPtr(p.Compute.Tier)
 		}

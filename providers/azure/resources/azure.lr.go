@@ -8788,6 +8788,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.mongoCluster.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetPublicNetworkAccess()).ToDataRes(types.String)
 	},
+	"azure.subscription.cosmosDbService.mongoCluster.networkBypassMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetNetworkBypassMode()).ToDataRes(types.String)
+	},
 	"azure.subscription.cosmosDbService.mongoCluster.computeTier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetComputeTier()).ToDataRes(types.String)
 	},
@@ -25411,6 +25414,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.mongoCluster.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.mongoCluster.networkBypassMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).NetworkBypassMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.mongoCluster.computeTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58376,6 +58383,7 @@ type mqlAzureSubscriptionCosmosDbServiceMongoCluster struct {
 	ServerVersion         plugin.TValue[string]
 	InfrastructureVersion plugin.TValue[string]
 	PublicNetworkAccess   plugin.TValue[string]
+	NetworkBypassMode     plugin.TValue[string]
 	ComputeTier           plugin.TValue[string]
 	StorageSizeGb         plugin.TValue[int64]
 	StorageType           plugin.TValue[string]
@@ -58458,6 +58466,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetInfrastructureVersi
 
 func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetPublicNetworkAccess() *plugin.TValue[string] {
 	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetNetworkBypassMode() *plugin.TValue[string] {
+	return &c.NetworkBypassMode
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetComputeTier() *plugin.TValue[string] {

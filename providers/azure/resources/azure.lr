@@ -5948,6 +5948,12 @@ private azure.subscription.cosmosDbService.mongoCluster @defaults("computeTier s
   infrastructureVersion string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // Network bypass mode for the cluster
+  //
+  // Controls whether the Azure Cosmos DB service may bypass the cluster's
+  // network restrictions. One of "AzureCosmosDB" (the service is permitted
+  // to bypass firewall rules) or "None" (no bypass is enabled).
+  networkBypassMode string
   // Compute tier assigned to the cluster (for example "M30" or "M40")
   computeTier string
   // Data-disk size in GB assigned to each server

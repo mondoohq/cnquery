@@ -1683,6 +1683,7 @@ azure.subscription.cosmosDbService.mongoCluster.id 13.12.1
 azure.subscription.cosmosDbService.mongoCluster.infrastructureVersion 13.12.1
 azure.subscription.cosmosDbService.mongoCluster.location 13.12.1
 azure.subscription.cosmosDbService.mongoCluster.name 13.12.1
+azure.subscription.cosmosDbService.mongoCluster.networkBypassMode 13.22.1
 azure.subscription.cosmosDbService.mongoCluster.provisioningState 13.12.1
 azure.subscription.cosmosDbService.mongoCluster.publicNetworkAccess 13.12.1
 azure.subscription.cosmosDbService.mongoCluster.replicationRole 13.12.1
