@@ -16,7 +16,9 @@ option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 // resource inventory (`resourceProviders`), Neutron
 // networking (`networks`, `subnets`, `routers`, `ports`, `floatingIps`,
 // `securityGroups`, `subnetPools`, `qosPolicies`, `trunks`), FWaaS v2
-// (`firewallGroups`, `firewallPolicies`, `firewallRules`), Cinder block storage
+// (`firewallGroups`, `firewallPolicies`, `firewallRules`), VPNaaS v2
+// (`vpnServices`, `vpnIkePolicies`, `vpnIpsecPolicies`, `vpnEndpointGroups`,
+// `vpnSiteConnections`), Cinder block storage
 // (`volumes`, `snapshots`, `backups`, `volumeTypes`, `blockStorageQuotaSet`),
 // Glance images (`images`), Barbican key management (`secrets`,
 // `secretContainers`, `secretOrders`), Octavia load balancing
@@ -140,6 +142,16 @@ openstack {
   firewallPolicies() []openstack.firewall.policy
   // Neutron FWaaS v2 firewall rules in the scoped project
   firewallRules() []openstack.firewall.rule
+  // Neutron VPNaaS v2 IPsec VPN services in the scoped project
+  vpnServices() []openstack.vpn.service
+  // Neutron VPNaaS v2 IKE policies in the scoped project
+  vpnIkePolicies() []openstack.vpn.ikePolicy
+  // Neutron VPNaaS v2 IPsec policies in the scoped project
+  vpnIpsecPolicies() []openstack.vpn.ipsecPolicy
+  // Neutron VPNaaS v2 endpoint groups in the scoped project
+  vpnEndpointGroups() []openstack.vpn.endpointGroup
+  // Neutron VPNaaS v2 IPsec site-to-site connections in the scoped project
+  vpnSiteConnections() []openstack.vpn.siteConnection
 
   // Swift object-storage account for the scoped project
   objectStorageAccount() openstack.objectstorage.account
@@ -669,6 +681,37 @@ private openstack.floatingIp @defaults("id floatingIpAddress status") {
   router() openstack.router
   // Project that owns this floating IP
   project() openstack.project
+  // DNAT port-forwarding rules on this floating IP; empty when none are configured
+  portForwardings() []openstack.floatingIp.portForwarding
+}
+
+// OpenStack Neutron floating IP port forwarding rule
+//
+// A public-to-private DNAT mapping on a floating IP. The rule forwards
+// traffic arriving on the floating IP's external port (or external port
+// range) to a private port (or port range) on a backing Neutron port,
+// publishing a specific private service to the internet even when the
+// backing instance has no floating IP of its own. A floating IP with port
+// forwarding cannot also be associated one-to-one to a port.
+private openstack.floatingIp.portForwarding @defaults("protocol externalPort internalIpAddress internalPort") {
+  // Port forwarding rule ID (UUID)
+  id string
+  // IP protocol forwarded (tcp, udp, ...)
+  protocol string
+  // Public port on the floating IP; 0 when a port range is used instead
+  externalPort int
+  // Public port range on the floating IP (for example "80:90"); empty when a single port is used
+  externalPortRange string
+  // Private port on the backing Neutron port; 0 when a port range is used instead
+  internalPort int
+  // Private port range on the backing Neutron port (for example "80:90"); empty when a single port is used
+  internalPortRange string
+  // Private IPv4 address traffic is forwarded to
+  internalIpAddress string
+  // Description
+  description string
+  // Backing Neutron port that receives the forwarded traffic
+  port() openstack.port
 }
 
 // OpenStack Neutron security group
@@ -1477,6 +1520,184 @@ private openstack.firewall.rule @defaults("id name action protocol enabled") {
   project() openstack.project
   // Policies that reference this rule
   policies() []openstack.firewall.policy
+}
+
+// OpenStack VPNaaS v2 IPsec VPN service
+//
+// An IPsec VPN service bound to a router, the anchor that site-to-site
+// connections attach to. Fields cover the administrative state, the
+// operational status, and the external IPv4 and IPv6 addresses the
+// service terminates tunnels on. Selected by service ID.
+private openstack.vpn.service @defaults("id name status adminStateUp") {
+  init(id? string)
+  // VPN service ID (UUID)
+  id string
+  // VPN service name
+  name string
+  // Description
+  description string
+  // Operational status (ACTIVE, DOWN, PENDING_CREATE, ERROR, ...)
+  status string
+  // Whether the service is administratively enabled
+  adminStateUp bool
+  // External IPv4 address the service terminates tunnels on; empty when none
+  externalV4Ip string
+  // External IPv6 address the service terminates tunnels on; empty when none
+  externalV6Ip string
+  // Flavor ID applied to the service; empty when none
+  flavorId string
+  // Subnet the service is bound to; null when the service uses endpoint groups instead
+  subnet() openstack.subnet
+  // Router the service runs on
+  router() openstack.router
+  // Project that owns this VPN service
+  project() openstack.project
+}
+
+// OpenStack VPNaaS v2 IKE policy
+//
+// Phase 1 (IKE) negotiation parameters referenced by site-to-site
+// connections. The authentication and encryption algorithms, the
+// perfect-forward-secrecy group, the IKE version, the negotiation mode,
+// and the security-association lifetime are the values to audit for weak
+// cryptography (for example a sha1 auth algorithm, 3des encryption, or a
+// disabled PFS group). Selected by policy ID.
+private openstack.vpn.ikePolicy @defaults("id name authAlgorithm encryptionAlgorithm pfs ikeVersion") {
+  init(id? string)
+  // IKE policy ID (UUID)
+  id string
+  // IKE policy name
+  name string
+  // Description
+  description string
+  // Authentication hash algorithm (for example "sha1", "sha256", "sha384", "sha512")
+  authAlgorithm string
+  // Encryption algorithm (for example "3des", "aes-128", "aes-256")
+  encryptionAlgorithm string
+  // Perfect forward secrecy group (for example "group2", "group5", "group14")
+  pfs string
+  // Phase 1 negotiation mode (for example "main")
+  phase1NegotiationMode string
+  // IKE protocol version ("v1" or "v2")
+  ikeVersion string
+  // Security-association lifetime units ("seconds" or "kilobytes")
+  lifetimeUnits string
+  // Security-association lifetime value in the lifetime units
+  lifetimeValue int
+  // Project that owns this IKE policy
+  project() openstack.project
+}
+
+// OpenStack VPNaaS v2 IPsec policy
+//
+// Phase 2 (IPsec) negotiation parameters referenced by site-to-site
+// connections. The authentication and encryption algorithms, the
+// perfect-forward-secrecy group, the encapsulation mode, the transform
+// protocol, and the security-association lifetime are the values to audit
+// for weak cryptography. Selected by policy ID.
+private openstack.vpn.ipsecPolicy @defaults("id name authAlgorithm encryptionAlgorithm pfs transformProtocol") {
+  init(id? string)
+  // IPsec policy ID (UUID)
+  id string
+  // IPsec policy name
+  name string
+  // Description
+  description string
+  // Authentication hash algorithm (for example "sha1", "sha256", "sha384", "sha512")
+  authAlgorithm string
+  // Encryption algorithm (for example "3des", "aes-128", "aes-256")
+  encryptionAlgorithm string
+  // Perfect forward secrecy group (for example "group2", "group5", "group14")
+  pfs string
+  // Encapsulation mode ("tunnel" or "transport")
+  encapsulationMode string
+  // Transform protocol ("esp", "ah", or "ah-esp")
+  transformProtocol string
+  // Security-association lifetime units ("seconds" or "kilobytes")
+  lifetimeUnits string
+  // Security-association lifetime value in the lifetime units
+  lifetimeValue int
+  // Project that owns this IPsec policy
+  project() openstack.project
+}
+
+// OpenStack VPNaaS v2 endpoint group
+//
+// A named set of local subnets or peer CIDRs that a site-to-site
+// connection references in place of a single bound subnet. The type
+// distinguishes subnet groups (local) from CIDR groups (peer), and
+// endpoints lists the members. Selected by endpoint-group ID.
+private openstack.vpn.endpointGroup @defaults("id name type") {
+  init(id? string)
+  // Endpoint group ID (UUID)
+  id string
+  // Endpoint group name
+  name string
+  // Description
+  description string
+  // Endpoint type ("subnet" for local subnet IDs or "cidr" for peer CIDRs)
+  type string
+  // Member subnet IDs or CIDRs, depending on the type
+  endpoints []string
+  // Project that owns this endpoint group
+  project() openstack.project
+}
+
+// OpenStack VPNaaS v2 IPsec site-to-site connection
+//
+// An IPsec tunnel from a local VPN service to a remote peer. Fields cover
+// the peer address and identity, the local and peer CIDRs reachable
+// through the tunnel, the dead-peer-detection settings, the negotiation
+// initiator, and the referenced IKE and IPsec policies, so the
+// cryptographic strength and exposure of a tunnel can be audited end to
+// end. The pre-shared key is intentionally not exposed. Selected by
+// connection ID.
+private openstack.vpn.siteConnection @defaults("id name status peerAddress adminStateUp") {
+  init(id? string)
+  // Site connection ID (UUID)
+  id string
+  // Site connection name
+  name string
+  // Description
+  description string
+  // Operational status (ACTIVE, DOWN, PENDING_CREATE, ERROR, ...)
+  status string
+  // Whether the connection is administratively enabled
+  adminStateUp bool
+  // Public address of the remote peer
+  peerAddress string
+  // Identity of the remote peer (IP, FQDN, or DN)
+  peerId string
+  // Local identity presented to the peer; empty when defaulted
+  localId string
+  // Remote CIDRs reachable through the tunnel
+  peerCidrs []string
+  // Route advertisement mode (for example "static")
+  routeMode string
+  // Who initiates the tunnel ("bi-directional" or "response-only")
+  initiator string
+  // IKE authentication mode (for example "psk")
+  authMode string
+  // Tunnel MTU
+  mtu int
+  // Dead peer detection action ("hold", "clear", "restart", "disabled", "restart-by-peer")
+  dpdAction string
+  // Dead peer detection timeout in seconds
+  dpdTimeout int
+  // Dead peer detection interval in seconds
+  dpdInterval int
+  // VPN service this connection runs on
+  service() openstack.vpn.service
+  // IKE policy used for phase 1 negotiation
+  ikePolicy() openstack.vpn.ikePolicy
+  // IPsec policy used for phase 2 negotiation
+  ipsecPolicy() openstack.vpn.ipsecPolicy
+  // Local endpoint group (local subnets); null when the connection binds a subnet directly
+  localEndpointGroup() openstack.vpn.endpointGroup
+  // Peer endpoint group (peer CIDRs); null when peer CIDRs are set directly
+  peerEndpointGroup() openstack.vpn.endpointGroup
+  // Project that owns this site connection
+  project() openstack.project
 }
 
 // OpenStack Swift object-storage account. Singular per scoped project; aggregates totals across all containers.
