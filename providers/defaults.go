@@ -753,6 +753,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"portainer": {
+		Provider: &plugin.Provider{
+			Name:            "portainer",
+			ID:              "go.mondoo.com/mql/providers/portainer",
+			ConnectionTypes: []string{"portainer"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "portainer",
+					Use:   "portainer",
+					Short: "a Portainer instance",
+				},
+			},
+		},
+	},
+
 	"proxmox": {
 		Provider: &plugin.Provider{
 			Name:            "proxmox",
