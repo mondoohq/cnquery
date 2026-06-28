@@ -1119,7 +1119,6 @@ gcp.project.cloudFunction.buildEnvVars 9.0.0
 gcp.project.cloudFunction.buildId 9.0.0
 gcp.project.cloudFunction.buildName 9.0.0
 gcp.project.cloudFunction.buildServiceAccount 13.25.2
-gcp.project.cloudFunction.buildServiceAccountRef 13.25.2
 gcp.project.cloudFunction.buildWorkerPool 9.0.0
 gcp.project.cloudFunction.description 9.0.0
 gcp.project.cloudFunction.dockerRegistry 9.0.0
@@ -1564,13 +1563,10 @@ gcp.project.computeService.disk.satisfiesPzi 13.1.2
 gcp.project.computeService.disk.satisfiesPzs 13.1.2
 gcp.project.computeService.disk.sizeGb 9.0.0
 gcp.project.computeService.disk.sourceDisk 13.1.2
-gcp.project.computeService.disk.sourceDiskId 13.25.2
 gcp.project.computeService.disk.sourceImage 11.6.6
 gcp.project.computeService.disk.sourceImageEncryptionKey 13.16.3
-gcp.project.computeService.disk.sourceImageId 13.25.2
 gcp.project.computeService.disk.sourceSnapshot 11.6.6
 gcp.project.computeService.disk.sourceSnapshotEncryptionKey 13.16.3
-gcp.project.computeService.disk.sourceSnapshotId 13.25.2
 gcp.project.computeService.disk.status 9.0.0
 gcp.project.computeService.disk.storagePool 11.6.6
 gcp.project.computeService.disk.type 11.6.6
@@ -1727,11 +1723,8 @@ gcp.project.computeService.image.satisfiesPzi 11.6.6
 gcp.project.computeService.image.satisfiesPzs 11.6.6
 gcp.project.computeService.image.shieldedInstanceInitialState 13.19.2
 gcp.project.computeService.image.sourceDisk 13.1.2
-gcp.project.computeService.image.sourceDiskId 13.25.2
 gcp.project.computeService.image.sourceImage 13.1.2
-gcp.project.computeService.image.sourceImageId 13.25.2
 gcp.project.computeService.image.sourceSnapshot 13.1.2
-gcp.project.computeService.image.sourceSnapshotId 13.25.2
 gcp.project.computeService.image.status 9.0.0
 gcp.project.computeService.image.storageLocations 13.1.2
 gcp.project.computeService.images 9.0.0
@@ -2194,7 +2187,6 @@ gcp.project.computeService.snapshot.satisfiesPzs 11.6.6
 gcp.project.computeService.snapshot.snapshotEncryptionKey 13.19.2
 gcp.project.computeService.snapshot.snapshotType 9.0.0
 gcp.project.computeService.snapshot.sourceDisk 11.6.6
-gcp.project.computeService.snapshot.sourceDiskId 13.25.2
 gcp.project.computeService.snapshot.sourceDiskRef 13.25.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicy 13.1.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicyId 13.1.2

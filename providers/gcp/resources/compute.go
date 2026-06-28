@@ -1187,9 +1187,6 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					"users":                       llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
 					"accessMode":                  llx.StringData(disk.AccessMode),
 					"provisionedThroughput":       llx.IntData(disk.ProvisionedThroughput),
-					"sourceImageId":               llx.StringData(disk.SourceImageId),
-					"sourceSnapshotId":            llx.StringData(disk.SourceSnapshotId),
-					"sourceDiskId":                llx.StringData(disk.SourceDiskId),
 				})
 				if err != nil {
 					return err
@@ -1436,7 +1433,6 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"enableConfidentialCompute":      llx.BoolData(snapshot.EnableConfidentialCompute),
 				"satisfiesPzi":                   llx.BoolData(snapshot.SatisfiesPzi),
 				"satisfiesPzs":                   llx.BoolData(snapshot.SatisfiesPzs),
-				"sourceDiskId":                   llx.StringData(snapshot.SourceDiskId),
 				"sourceDisk":                     llx.StringData(snapshot.SourceDisk),
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
@@ -1671,9 +1667,6 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 				"storageLocations":             llx.ArrayData(convert.SliceAnyToInterface(image.StorageLocations), types.String),
 				"imageEncryptionKey":           llx.DictData(customerEncryptionKeyToDict(image.ImageEncryptionKey)),
 				"shieldedInstanceInitialState": llx.DictData(shieldedInitialState),
-				"sourceDiskId":                 llx.StringData(image.SourceDiskId),
-				"sourceImageId":                llx.StringData(image.SourceImageId),
-				"sourceSnapshotId":             llx.StringData(image.SourceSnapshotId),
 			})
 			if err != nil {
 				return err

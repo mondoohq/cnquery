@@ -4186,15 +4186,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.disk.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceDisk()).ToDataRes(types.Resource("gcp.project.computeService.disk"))
 	},
-	"gcp.project.computeService.disk.sourceImageId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceImageId()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.disk.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceSnapshotId()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.disk.sourceDiskId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceDiskId()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.attachedDisk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetId()).ToDataRes(types.String)
 	},
@@ -4306,9 +4297,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.snapshot.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
-	"gcp.project.computeService.snapshot.sourceDiskId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceDiskId()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.snapshot.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceDisk()).ToDataRes(types.String)
 	},
@@ -4384,20 +4372,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.image.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceDisk()).ToDataRes(types.Resource("gcp.project.computeService.disk"))
 	},
-	"gcp.project.computeService.image.sourceDiskId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceDiskId()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.image.sourceImage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceImage()).ToDataRes(types.Resource("gcp.project.computeService.image"))
 	},
-	"gcp.project.computeService.image.sourceImageId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceImageId()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.image.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceSnapshot()).ToDataRes(types.Resource("gcp.project.computeService.snapshot"))
-	},
-	"gcp.project.computeService.image.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceSnapshotId()).ToDataRes(types.String)
 	},
 	"gcp.project.computeService.image.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
@@ -7961,10 +7940,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectCloudFunction).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.cloudFunction.buildServiceAccount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCloudFunction).GetBuildServiceAccount()).ToDataRes(types.String)
-	},
-	"gcp.project.cloudFunction.buildServiceAccountRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCloudFunction).GetBuildServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+		return (r.(*mqlGcpProjectCloudFunction).GetBuildServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.cloudFunction.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetUpdated()).ToDataRes(types.Time)
@@ -19650,18 +19626,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceDisk).SourceDisk, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceDisk](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.disk.sourceImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceDisk).SourceImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.disk.sourceSnapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceDisk).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.disk.sourceDiskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceDisk).SourceDiskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.computeService.attachedDisk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceAttachedDisk).__id, ok = v.Value.(string)
 		return
@@ -19818,10 +19782,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSnapshot).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.snapshot.sourceDiskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSnapshot).SourceDiskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.computeService.snapshot.sourceDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSnapshot).SourceDisk, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -19926,24 +19886,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceImage).SourceDisk, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceDisk](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.image.sourceDiskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceImage).SourceDiskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.computeService.image.sourceImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).SourceImage, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceImage](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.image.sourceImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceImage).SourceImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.computeService.image.sourceSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).SourceSnapshot, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSnapshot](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.image.sourceSnapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceImage).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.image.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25127,11 +25075,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.cloudFunction.buildServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCloudFunction).BuildServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.cloudFunction.buildServiceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCloudFunction).BuildServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		r.(*mqlGcpProjectCloudFunction).BuildServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunction.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45185,9 +45129,6 @@ type mqlGcpProjectComputeServiceDisk struct {
 	SatisfiesPzi                plugin.TValue[bool]
 	SatisfiesPzs                plugin.TValue[bool]
 	SourceDisk                  plugin.TValue[*mqlGcpProjectComputeServiceDisk]
-	SourceImageId               plugin.TValue[string]
-	SourceSnapshotId            plugin.TValue[string]
-	SourceDiskId                plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceDisk creates a new instance of this resource
@@ -45431,18 +45372,6 @@ func (c *mqlGcpProjectComputeServiceDisk) GetSourceDisk() *plugin.TValue[*mqlGcp
 	})
 }
 
-func (c *mqlGcpProjectComputeServiceDisk) GetSourceImageId() *plugin.TValue[string] {
-	return &c.SourceImageId
-}
-
-func (c *mqlGcpProjectComputeServiceDisk) GetSourceSnapshotId() *plugin.TValue[string] {
-	return &c.SourceSnapshotId
-}
-
-func (c *mqlGcpProjectComputeServiceDisk) GetSourceDiskId() *plugin.TValue[string] {
-	return &c.SourceDiskId
-}
-
 // mqlGcpProjectComputeServiceAttachedDisk for the gcp.project.computeService.attachedDisk resource
 type mqlGcpProjectComputeServiceAttachedDisk struct {
 	MqlRuntime *plugin.Runtime
@@ -45605,7 +45534,6 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	EnableConfidentialCompute      plugin.TValue[bool]
 	SatisfiesPzi                   plugin.TValue[bool]
 	SatisfiesPzs                   plugin.TValue[bool]
-	SourceDiskId                   plugin.TValue[string]
 	SourceDisk                     plugin.TValue[string]
 	SourceDiskRef                  plugin.TValue[*mqlGcpProjectComputeServiceDisk]
 	SourceSnapshotSchedulePolicy   plugin.TValue[string]
@@ -45737,10 +45665,6 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetSatisfiesPzs() *plugin.TValue[b
 	return &c.SatisfiesPzs
 }
 
-func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceDiskId() *plugin.TValue[string] {
-	return &c.SourceDiskId
-}
-
 func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceDisk() *plugin.TValue[string] {
 	return &c.SourceDisk
 }
@@ -45833,11 +45757,8 @@ type mqlGcpProjectComputeServiceImage struct {
 	SatisfiesPzs                 plugin.TValue[bool]
 	StorageLocations             plugin.TValue[[]any]
 	SourceDisk                   plugin.TValue[*mqlGcpProjectComputeServiceDisk]
-	SourceDiskId                 plugin.TValue[string]
 	SourceImage                  plugin.TValue[*mqlGcpProjectComputeServiceImage]
-	SourceImageId                plugin.TValue[string]
 	SourceSnapshot               plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
-	SourceSnapshotId             plugin.TValue[string]
 	KmsKey                       plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	ImageEncryptionKey           plugin.TValue[any]
 	ShieldedInstanceInitialState plugin.TValue[any]
@@ -45962,10 +45883,6 @@ func (c *mqlGcpProjectComputeServiceImage) GetSourceDisk() *plugin.TValue[*mqlGc
 	})
 }
 
-func (c *mqlGcpProjectComputeServiceImage) GetSourceDiskId() *plugin.TValue[string] {
-	return &c.SourceDiskId
-}
-
 func (c *mqlGcpProjectComputeServiceImage) GetSourceImage() *plugin.TValue[*mqlGcpProjectComputeServiceImage] {
 	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceImage](&c.SourceImage, func() (*mqlGcpProjectComputeServiceImage, error) {
 		if c.MqlRuntime.HasRecording {
@@ -45982,10 +45899,6 @@ func (c *mqlGcpProjectComputeServiceImage) GetSourceImage() *plugin.TValue[*mqlG
 	})
 }
 
-func (c *mqlGcpProjectComputeServiceImage) GetSourceImageId() *plugin.TValue[string] {
-	return &c.SourceImageId
-}
-
 func (c *mqlGcpProjectComputeServiceImage) GetSourceSnapshot() *plugin.TValue[*mqlGcpProjectComputeServiceSnapshot] {
 	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSnapshot](&c.SourceSnapshot, func() (*mqlGcpProjectComputeServiceSnapshot, error) {
 		if c.MqlRuntime.HasRecording {
@@ -46000,10 +45913,6 @@ func (c *mqlGcpProjectComputeServiceImage) GetSourceSnapshot() *plugin.TValue[*m
 
 		return c.sourceSnapshot()
 	})
-}
-
-func (c *mqlGcpProjectComputeServiceImage) GetSourceSnapshotId() *plugin.TValue[string] {
-	return &c.SourceSnapshotId
 }
 
 func (c *mqlGcpProjectComputeServiceImage) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
@@ -57739,47 +57648,46 @@ type mqlGcpProjectCloudFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectCloudFunctionInternal
-	ProjectId              plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Description            plugin.TValue[string]
-	SourceArchiveUrl       plugin.TValue[string]
-	SourceRepository       plugin.TValue[any]
-	SourceUploadUrl        plugin.TValue[string]
-	HttpsTrigger           plugin.TValue[any]
-	EventTrigger           plugin.TValue[any]
-	Status                 plugin.TValue[string]
-	EntryPoint             plugin.TValue[string]
-	Runtime                plugin.TValue[string]
-	Timeout                plugin.TValue[*time.Time]
-	AvailableMemoryMb      plugin.TValue[int64]
-	ServiceAccountEmail    plugin.TValue[string]
-	ServiceAccount         plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	BuildServiceAccount    plugin.TValue[string]
-	BuildServiceAccountRef plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
-	Updated                plugin.TValue[*time.Time]
-	VersionId              plugin.TValue[int64]
-	Labels                 plugin.TValue[map[string]any]
-	EnvVars                plugin.TValue[map[string]any]
-	BuildEnvVars           plugin.TValue[map[string]any]
-	Network                plugin.TValue[string]
-	NetworkRef             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	MaxInstances           plugin.TValue[int64]
-	MinInstances           plugin.TValue[int64]
-	VpcConnector           plugin.TValue[string]
-	EgressSettings         plugin.TValue[string]
-	IngressSettings        plugin.TValue[string]
-	KmsKeyName             plugin.TValue[string]
-	KmsKey                 plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	BuildWorkerPool        plugin.TValue[string]
-	BuildId                plugin.TValue[string]
-	BuildName              plugin.TValue[string]
-	SecretEnvVars          plugin.TValue[map[string]any]
-	SecretVolumes          plugin.TValue[[]any]
-	DockerRepository       plugin.TValue[string]
-	DockerRegistry         plugin.TValue[string]
-	IamPolicy              plugin.TValue[[]any]
-	AllowsUnauthenticated  plugin.TValue[bool]
+	ProjectId             plugin.TValue[string]
+	Location              plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	SourceArchiveUrl      plugin.TValue[string]
+	SourceRepository      plugin.TValue[any]
+	SourceUploadUrl       plugin.TValue[string]
+	HttpsTrigger          plugin.TValue[any]
+	EventTrigger          plugin.TValue[any]
+	Status                plugin.TValue[string]
+	EntryPoint            plugin.TValue[string]
+	Runtime               plugin.TValue[string]
+	Timeout               plugin.TValue[*time.Time]
+	AvailableMemoryMb     plugin.TValue[int64]
+	ServiceAccountEmail   plugin.TValue[string]
+	ServiceAccount        plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	BuildServiceAccount   plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Updated               plugin.TValue[*time.Time]
+	VersionId             plugin.TValue[int64]
+	Labels                plugin.TValue[map[string]any]
+	EnvVars               plugin.TValue[map[string]any]
+	BuildEnvVars          plugin.TValue[map[string]any]
+	Network               plugin.TValue[string]
+	NetworkRef            plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	MaxInstances          plugin.TValue[int64]
+	MinInstances          plugin.TValue[int64]
+	VpcConnector          plugin.TValue[string]
+	EgressSettings        plugin.TValue[string]
+	IngressSettings       plugin.TValue[string]
+	KmsKeyName            plugin.TValue[string]
+	KmsKey                plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	BuildWorkerPool       plugin.TValue[string]
+	BuildId               plugin.TValue[string]
+	BuildName             plugin.TValue[string]
+	SecretEnvVars         plugin.TValue[map[string]any]
+	SecretVolumes         plugin.TValue[[]any]
+	DockerRepository      plugin.TValue[string]
+	DockerRegistry        plugin.TValue[string]
+	IamPolicy             plugin.TValue[[]any]
+	AllowsUnauthenticated plugin.TValue[bool]
 }
 
 // createGcpProjectCloudFunction creates a new instance of this resource
@@ -57895,14 +57803,10 @@ func (c *mqlGcpProjectCloudFunction) GetServiceAccount() *plugin.TValue[*mqlGcpP
 	})
 }
 
-func (c *mqlGcpProjectCloudFunction) GetBuildServiceAccount() *plugin.TValue[string] {
-	return &c.BuildServiceAccount
-}
-
-func (c *mqlGcpProjectCloudFunction) GetBuildServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
-	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.BuildServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+func (c *mqlGcpProjectCloudFunction) GetBuildServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.BuildServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction", c.__id, "buildServiceAccountRef")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction", c.__id, "buildServiceAccount")
 			if err != nil {
 				return nil, err
 			}
@@ -57911,7 +57815,7 @@ func (c *mqlGcpProjectCloudFunction) GetBuildServiceAccountRef() *plugin.TValue[
 			}
 		}
 
-		return c.buildServiceAccountRef()
+		return c.buildServiceAccount()
 	})
 }
 

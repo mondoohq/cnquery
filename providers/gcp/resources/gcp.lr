@@ -1785,12 +1785,6 @@ private gcp.project.computeService.disk @defaults("name") {
   satisfiesPzs bool
   // Source disk used to create this disk
   sourceDisk() gcp.project.computeService.disk
-  // ID of the source image used to create the disk
-  sourceImageId string
-  // ID of the source snapshot used to create the disk
-  sourceSnapshotId string
-  // ID of the source disk used to create this disk
-  sourceDiskId string
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -1886,8 +1880,6 @@ private gcp.project.computeService.snapshot @defaults("name") {
   satisfiesPzi bool
   // Whether the snapshot satisfies Google's Protected Zone Separation requirements
   satisfiesPzs bool
-  // ID of the source disk used to create this snapshot
-  sourceDiskId string
   // URL of the source disk used to create this snapshot
   sourceDisk string
   // Source disk used to create this snapshot
@@ -1954,16 +1946,10 @@ private gcp.project.computeService.image @defaults("id name") {
   storageLocations []string
   // Source disk used to create this image
   sourceDisk() gcp.project.computeService.disk
-  // ID of the source disk used to create this image
-  sourceDiskId string
   // Source image used to create this image
   sourceImage() gcp.project.computeService.image
-  // ID of the source image used to create this image
-  sourceImageId string
   // Source snapshot used to create this image
   sourceSnapshot() gcp.project.computeService.snapshot
-  // ID of the source snapshot used to create this image
-  sourceSnapshotId string
   // Customer-managed KMS key used for image encryption (null when Google-managed or customer-supplied)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Encryption key protecting the image
@@ -5686,10 +5672,8 @@ private gcp.project.cloudFunction @defaults("name") {
   serviceAccountEmail string
   // IAM service account used by the function
   serviceAccount() gcp.project.iamService.serviceAccount
-  // Email of the service account used to build the function's container
-  buildServiceAccount string
   // IAM service account used to build the function's container
-  buildServiceAccountRef() gcp.project.iamService.serviceAccount
+  buildServiceAccount() gcp.project.iamService.serviceAccount
   // Update timestamp
   updated time
   // Version identifier of the cloud function
