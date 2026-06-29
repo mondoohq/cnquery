@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "huggingface",
 	ID:              "go.mondoo.com/mql/providers/huggingface",
-	Version:         "13.1.5",
+	Version:         "13.1.6",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
