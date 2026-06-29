@@ -30,7 +30,7 @@ run_query() {
   local query="$2"
   local result
   local exit_code=0
-  result=$(cnspec run digitalocean --token "$DIGITALOCEAN_TOKEN" -c "$query" 2>&1) || exit_code=$?
+  result=$(mql run digitalocean --token "$DIGITALOCEAN_TOKEN" -c "$query" 2>&1) || exit_code=$?
 
   # Filter out normal config loading message, check for real errors
   local filtered

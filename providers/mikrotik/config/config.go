@@ -26,9 +26,9 @@ var Config = plugin.Provider{
 RouterOS API.
 
 Examples:
-  cnspec shell mikrotik admin@192.168.88.1 --password 'secret'
-  cnspec shell mikrotik admin@192.168.88.1 --tls --ask-pass
-  cnspec shell mikrotik admin@router.example.com --port 8728 --password 'secret'
+  mql shell mikrotik admin@192.168.88.1 --password 'secret'
+  mql shell mikrotik admin@192.168.88.1 --tls --ask-pass
+  mql shell mikrotik admin@router.example.com --port 8728 --password 'secret'
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{

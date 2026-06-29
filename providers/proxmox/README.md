@@ -17,11 +17,11 @@ Query and scan Proxmox VE clusters with cnspec/cnquery.
 
 ```bash
 # Scan a Proxmox VE cluster
-mql scan proxmox --host https://192.168.1.10:8006 \
+cnspec scan proxmox --host https://192.168.1.10:8006 \
   --token 'PVEAPIToken=user@realm!tokenid=secret'
 
 # Skip TLS verification (self-signed certificates)
-mql scan proxmox --host https://pve.example.com:8006 \
+cnspec scan proxmox --host https://pve.example.com:8006 \
   --token 'PVEAPIToken=user@realm!tokenid=secret' --insecure
 
 # Interactive shell
