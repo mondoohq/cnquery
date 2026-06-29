@@ -94,6 +94,9 @@ func checkStatus(ctx context.Context) (Status, error) {
 		return s, cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
 	}
 
+	// record which config file the credentials were loaded from
+	s.Client.ConfigFile = viper.ConfigFileUsed()
+
 	httpClient, err := opts.GetHttpClient()
 	if err != nil {
 		return s, cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
@@ -199,6 +202,7 @@ type ClientStatus struct {
 	PingPongError  error               `json:"pingPongError,omitempty"`
 	UpdatesURL     string              `json:"updatesUrl,omitempty"`
 	ProvidersURL   string              `json:"providersUrl,omitempty"`
+	ConfigFile     string              `json:"configFile,omitempty"`
 }
 
 func (s Status) RenderCliStatus(ctx context.Context) {
@@ -247,6 +251,10 @@ func (s Status) RenderCliStatus(ctx context.Context) {
 
 	if len(s.Upstream.Features) > 0 {
 		log.Info().Msg("Features:\t\t" + strings.Join(s.Upstream.Features, ","))
+	}
+
+	if s.Client.ConfigFile != "" {
+		log.Info().Msg("Config File:\t\t" + s.Client.ConfigFile)
 	}
 
 	if s.Client.ParentMrn != "" {
