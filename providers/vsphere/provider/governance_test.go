@@ -170,4 +170,26 @@ func TestTagCrossRefs(t *testing.T) {
 	catResID := string(catRef.Data.Value)
 	catName := field(t, srv, connRes.Id, "vsphere.category", catResID, "name")
 	require.Equal(t, "environment", string(catName.Data.Value))
+
+	// category.tags() returns the tag back (reverse accessor).
+	catTags := field(t, srv, connRes.Id, "vsphere.category", catResID, "tags")
+	require.Len(t, catTags.Data.Array, 1, "category.tags should list the one tag")
+	require.Equal(t, tagResID, string(catTags.Data.Array[0].Value))
+
+	// The deprecated `tags []string` still resolves (back-compat), formatted as
+	// "category:tag".
+	for _, d := range dcs.Data.Array {
+		dcID := string(d.Value)
+		vmList := field(t, srv, connRes.Id, "vsphere.datacenter", dcID, "vms")
+		for _, v := range vmList.Data.Array {
+			vmID := string(v.Value)
+			moid := field(t, srv, connRes.Id, "vsphere.vm", vmID, "moid")
+			if string(moid.Data.Value) != vmRef.Encode() {
+				continue
+			}
+			depTags := field(t, srv, connRes.Id, "vsphere.vm", vmID, "tags")
+			require.Len(t, depTags.Data.Array, 1)
+			require.Equal(t, "environment:production", string(depTags.Data.Array[0].Value))
+		}
+	}
 }
