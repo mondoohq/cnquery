@@ -265,7 +265,7 @@ func (s Status) RenderCliStatus(ctx context.Context) {
 		log.Info().Msg(theme.DefaultTheme.Success("client authenticated successfully"))
 	} else if s.Client.PingPongError != nil {
 		log.Error().Err(s.Client.PingPongError).
-			Msgf("The Mondoo Platform credentials provided at %s didn't successfully authenticate with Mondoo Platform. Please re-authenticate with Mondoo Platform. To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/.",
+			Msgf("The Mondoo Platform credentials provided at %s didn't successfully authenticate with Mondoo Platform. Please re-authenticate with Mondoo Platform. To learn how, read https://mondoo.com/docs/cnspec/install/registration.",
 				viper.ConfigFileUsed())
 	}
 

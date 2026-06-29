@@ -35,7 +35,7 @@ Examples:
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack/)",
+					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack)",
 				},
 				{
 					Long:    "team-id",

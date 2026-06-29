@@ -40,7 +40,7 @@ Examples:
   cnspec shell gitlab --group <GROUP_NAME> --project <PROJECT_NAME> --token <YOUR_TOKEN>
 
 Notes:
-  Mondoo needs a personal access token to scan a GitLab group or project. The token's level of access determines how much information Mondoo can retrieve. Instead of providing a token with every command, you can supply your personal access token to Mondoo by setting the GITLAB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/gitlab/.
+  Mondoo needs a personal access token to scan a GitLab group or project. The token's level of access determines how much information Mondoo can retrieve. Instead of providing a token with every command, you can supply your personal access token to Mondoo by setting the GITLAB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/gitlab.
 `,
 			Discovery: []string{
 				provider.DiscoveryGroup,

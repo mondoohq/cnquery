@@ -20,7 +20,7 @@ mql shell aws
 > aws.ec2.instances{*}
 ```
 
-[:books: To learn more, read the MQL docs.](https://mondoo.com/docs/mql/home/)
+[:books: To learn more, read the MQL docs.](https://mondoo.com/docs/mql)
 
 ## Installation
 
@@ -91,7 +91,7 @@ To more easily explore your infrastructure, sign up for a Mondoo Platform accoun
 
 To get started, [contact us](https://mondoo.com/contact).
 
-To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://mondoo.com).
+To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs) or visit [mondoo.com](https://mondoo.com).
 
 ## Supported targets
 
@@ -181,9 +181,9 @@ There are so many things MQL can do! Gather information about your infrastructur
 
 Explore:
 
-- [MQL docs](https://mondoo.com/docs/mql/home/)
+- [MQL docs](https://mondoo.com/docs/mql)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
-- [MQL language reference](https://mondoo.com/docs/mql/resources/)
+- [MQL language reference](https://mondoo.com/docs/mql/resources)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
 ## Join the community!

@@ -29,7 +29,7 @@ Examples:
   cnspec scan ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
 
 Notes:
-  If you give cnspec access through the Microsoft 365 API, you can omit the certificate-path, tenant-id, and client-id flags. To learn how, read https://mondoo.com/docs/cnspec/saas/ms365/#give-cnspec-access-through-the-microsoft-365-api.
+  If you give cnspec access through the Microsoft 365 API, you can omit the certificate-path, tenant-id, and client-id flags. To learn how, read https://mondoo.com/docs/cnspec/saas/m365#give-cnspec-access.
 `,
 			MinArgs:   0,
 			MaxArgs:   5,

@@ -51,7 +51,7 @@ Examples:
 
 Notes:
   If you set the AWS_PROFILE environment variable, you can omit the profile flag.
-	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws/.
+	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws.
 `,
 			MinArgs: 0,
 			MaxArgs: 4,

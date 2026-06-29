@@ -23,7 +23,7 @@ var Config = plugin.Provider{
 			Short: "an Okta organization",
 			Long: `Use the okta provider to query resources in an Okta organization.
 
-To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnspec/saas/okta/.
+To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnspec/identity/okta.
 
 Examples:
   cnspec shell okta -organization <okta-domain> -token <api-token>

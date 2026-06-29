@@ -33,9 +33,9 @@ Examples:
   cnspec shell github org <YOUR-GITHUB-ORG> --app-id <YOUR-GITHUB-APP-ID> --app-installation-id <YOUR-GITHUB-APP-INSTALL-ID> --app-private-key <PATH-TO-PEM-FILE>
 
 Notes:
-  Mondoo needs a personal access token to scan a GitHub organization, public repo, or private repo. The token's level of access determines how much information Mondoo can retrieve. Supply your personal access token to Mondoo by setting the GITHUB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/github/.
+  Mondoo needs a personal access token to scan a GitHub organization, public repo, or private repo. The token's level of access determines how much information Mondoo can retrieve. Supply your personal access token to Mondoo by setting the GITHUB_TOKEN environment variable. To learn how, read https://mondoo.com/docs/cnspec/saas/github.
 
-	If you have very large GitHub organizations, consider giving Mondoo access using custom GitHub app credentials. To learn how, read https://mondoo.com/docs/cnspec/saas/gh-app/. Provide the app's private key as a file path with --app-private-key, as inline PEM content with --app-private-key-content, or by setting the GITHUB_APP_PRIVATE_KEY environment variable.
+	If you have very large GitHub organizations, consider giving Mondoo access using custom GitHub app credentials. To learn how, read https://mondoo.com/docs/cnspec/saas/gh-app. Provide the app's private key as a file path with --app-private-key, as inline PEM content with --app-private-key-content, or by setting the GITHUB_APP_PRIVATE_KEY environment variable.
 
 	If you have a GitHub Enterprise Server account, you must provide the URL for the account using the --enterprise-url flag.
 `,

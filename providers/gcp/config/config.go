@@ -32,7 +32,7 @@ Examples without logging into and configuring GCP:
   cnspec scan gcp project <PROJECT-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
 
 Note:
-  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp/.
+  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp.
 
 Examples with the GCP project configured:
   cnspec scan gcp folder <FOLDER-ID>
