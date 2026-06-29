@@ -14,11 +14,12 @@ against an inventory; the analysis is entirely static.
 ```shell
 ±> mql shell ansible providers/ansible/play/testdata/play_cert_validation.yaml
 → connected to Ansible Playbook
-  ___ _ __   __ _ _   _  ___ _ __ _   _ 
- / __| '_ \ / _` | | | |/ _ \ '__| | | |
-| (__| | | | (_| | |_| |  __/ |  | |_| |
- \___|_| |_|\__, |\__,_|\___|_|   \__, |
-  mondoo™      |_|                |___/  interactive shell
+ _ __ ___   __ _| |
+| '_ ` _ \ / _` | |
+| | | | | | (_| | |
+|_| |_| |_|\__, |_|
+  mondoo™     |_|
+ interactive shell
 
 mql> ansible.plays
 ansible.plays: [
