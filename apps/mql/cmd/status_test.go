@@ -49,3 +49,43 @@ func TestClientStatus_ConfigFileSerialization(t *testing.T) {
 		})
 	}
 }
+
+func TestReportedConfigFile(t *testing.T) {
+	const path = "/home/user/.config/mondoo/mondoo.yml"
+
+	tests := []struct {
+		name           string
+		loaded         bool
+		configFileUsed string
+		expected       string
+	}{
+		{
+			name:           "config file loaded",
+			loaded:         true,
+			configFileUsed: path,
+			expected:       path,
+		},
+		{
+			// regression: viper.ConfigFileUsed() returns the autodetected
+			// default path even when no file exists, so a path with loaded=false
+			// must not be reported — otherwise the "Config File" line contradicts
+			// the "no configuration file provided" message.
+			name:           "default path present but nothing loaded",
+			loaded:         false,
+			configFileUsed: path,
+			expected:       "",
+		},
+		{
+			name:           "loaded without a file path (e.g. base64 config)",
+			loaded:         true,
+			configFileUsed: "",
+			expected:       "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, reportedConfigFile(tt.loaded, tt.configFileUsed))
+		})
+	}
+}

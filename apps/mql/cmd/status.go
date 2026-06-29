@@ -80,6 +80,19 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 	},
 }
 
+// reportedConfigFile returns the config file path to surface in `status`
+// output. viper.ConfigFileUsed() returns the autodetected default path even
+// when no file exists on disk, so a config file must have actually been loaded
+// for the path to be meaningful. When nothing was loaded we report an empty
+// string, keeping the output consistent with the "no configuration file
+// provided" message emitted by config.DisplayUsedConfig.
+func reportedConfigFile(loaded bool, configFileUsed string) string {
+	if !loaded {
+		return ""
+	}
+	return configFileUsed
+}
+
 func checkStatus(ctx context.Context) (Status, error) {
 	s := Status{
 		Client: ClientStatus{
@@ -94,8 +107,8 @@ func checkStatus(ctx context.Context) (Status, error) {
 		return s, cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
 	}
 
-	// record which config file the credentials were loaded from
-	s.Client.ConfigFile = viper.ConfigFileUsed()
+	// record which config file the credentials were loaded from, if any
+	s.Client.ConfigFile = reportedConfigFile(config.LoadedConfig, viper.ConfigFileUsed())
 
 	httpClient, err := opts.GetHttpClient()
 	if err != nil {
