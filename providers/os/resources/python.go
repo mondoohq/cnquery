@@ -36,6 +36,9 @@ var defaultPythonPaths = []string{
 	"/usr/lib64/python*",
 	// Windows
 	"C:\\Python*\\Lib",
+	"C:\\Program Files\\Python*\\Lib",
+	// per-user installs across all profiles
+	"C:\\Users\\*\\AppData\\Local\\Programs\\Python\\Python*\\Lib",
 	// macOS
 	"/opt/homebrew/lib/python*",
 	"/System/Library/Frameworks/Python.framework/Versions/*/lib/python*",
