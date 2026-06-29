@@ -4,7 +4,6 @@
 package cpe
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -40,11 +39,13 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) ([]string, erro
 		}
 	}
 
-	if name == "" {
-		return cpes, errors.New("name is empty")
-	}
-	if version == "" {
-		return cpes, errors.New("version is empty")
+	// A CPE needs both a product name and a version. When either is missing we
+	// simply cannot build one — that is not an error worth surfacing, since CPEs
+	// are optional vulnerability-matching enrichment. Return no CPEs and no error
+	// so callers don't log spurious warnings for nameless/versionless packages
+	// (common in JS lockfiles).
+	if name == "" || version == "" {
+		return cpes, nil
 	}
 
 	attr := wfn.Attributes{}
