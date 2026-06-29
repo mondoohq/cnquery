@@ -780,9 +780,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.settings.enforceTwoFactor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccountSettings).GetEnforceTwoFactor()).ToDataRes(types.Bool)
 	},
-	"cloudflare.streams.liveInput.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareStreamsLiveInput).GetId()).ToDataRes(types.String)
-	},
 	"cloudflare.streams.liveInput.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareStreamsLiveInput).GetUid()).ToDataRes(types.String)
 	},
@@ -791,9 +788,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.streams.liveInput.deleteRecordingAfterDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareStreamsLiveInput).GetDeleteRecordingAfterDays()).ToDataRes(types.Int)
-	},
-	"cloudflare.streams.video.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareStreamsVideo).GetId()).ToDataRes(types.String)
 	},
 	"cloudflare.streams.video.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareStreamsVideo).GetUid()).ToDataRes(types.String)
@@ -2595,10 +2589,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareStreamsLiveInput).__id, ok = v.Value.(string)
 		return
 	},
-	"cloudflare.streams.liveInput.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareStreamsLiveInput).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"cloudflare.streams.liveInput.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareStreamsLiveInput).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2613,10 +2603,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.streams.video.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareStreamsVideo).__id, ok = v.Value.(string)
-		return
-	},
-	"cloudflare.streams.video.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareStreamsVideo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.streams.video.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6101,7 +6087,6 @@ type mqlCloudflareStreamsLiveInput struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareStreamsLiveInputInternal it will be used here
-	Id                       plugin.TValue[string]
 	Uid                      plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	DeleteRecordingAfterDays plugin.TValue[int64]
@@ -6144,10 +6129,6 @@ func (c *mqlCloudflareStreamsLiveInput) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlCloudflareStreamsLiveInput) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlCloudflareStreamsLiveInput) GetUid() *plugin.TValue[string] {
 	return &c.Uid
 }
@@ -6165,7 +6146,6 @@ type mqlCloudflareStreamsVideo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareStreamsVideoInternal it will be used here
-	Id                    plugin.TValue[string]
 	Uid                   plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	Creator               plugin.TValue[string]
@@ -6220,10 +6200,6 @@ func (c *mqlCloudflareStreamsVideo) MqlName() string {
 
 func (c *mqlCloudflareStreamsVideo) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlCloudflareStreamsVideo) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlCloudflareStreamsVideo) GetUid() *plugin.TValue[string] {

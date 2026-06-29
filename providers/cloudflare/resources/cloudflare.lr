@@ -387,9 +387,6 @@ private cloudflare.streams {}
 
 // Cloudflare live input (stream)
 private cloudflare.streams.liveInput @defaults("uid name") {
-	// mql resource ID
-	id string
-
 	// Unique identifier
 	uid string
 
@@ -401,10 +398,7 @@ private cloudflare.streams.liveInput @defaults("uid name") {
 }
 
 // Cloudflare videos and recordings
-private cloudflare.streams.video @defaults("name id") {
-	// mql resource ID
-	id string
-
+private cloudflare.streams.video @defaults("name uid") {
 	// Unique identifier
 	uid string
 
