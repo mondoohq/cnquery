@@ -40,11 +40,19 @@ type streamVideo struct {
 }
 
 func (c *mqlCloudflareStreamsLiveInput) id() (string, error) {
-	return c.GetUid().Data, nil
+	v := c.GetUid()
+	if v.Error != nil {
+		return "", v.Error
+	}
+	return v.Data, nil
 }
 
 func (c *mqlCloudflareStreamsVideo) id() (string, error) {
-	return c.GetUid().Data, nil
+	v := c.GetUid()
+	if v.Error != nil {
+		return "", v.Error
+	}
+	return v.Data, nil
 }
 
 func (c *mqlCloudflareZone) liveInputs() ([]any, error) {
