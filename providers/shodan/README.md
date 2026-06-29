@@ -1,7 +1,7 @@
 # Shodan Provider
 
 ```shell
-cnquery shell shodan
+mql shell shodan
 ```
 
 For authentication, you can use the `SHODAN_TOKEN` environment variable.
@@ -17,7 +17,7 @@ export SHODAN_TOKEN="<token>"
 Query the base information for a host by IP address.
 
 ```shell
-cnquery> shodan.host("8.8.8.8") { * }
+mql> shodan.host("8.8.8.8") { * }
 shodan.host: {
   tags: []
   hostnames: [
@@ -41,7 +41,7 @@ shodan.host: {
 Query the hostname for a host.
 
 ```shell
-cnquery> shodan.host("8.8.8.8").hostnames
+mql> shodan.host("8.8.8.8").hostnames
 shodan.host.hostnames: [
   0: "dns.google"
 ]
@@ -52,7 +52,7 @@ shodan.host.hostnames: [
 Display all open ports for a host.
 
 ```shell
-cnquery> shodan.host("8.8.8.8").ports
+mql> shodan.host("8.8.8.8").ports
 shodan.host.ports: [
   0: 443
   1: 53
@@ -64,7 +64,7 @@ shodan.host.ports: [
 Query the DNS information for a domain.
 
 ```shell
-cnquery> shodan.domain("example.com") { * }
+mql> shodan.domain("example.com") { * }
 shodan.domain: {
   name: "example.com"
   nsrecords: [
@@ -96,7 +96,7 @@ shodan.domain: {
 Query the DNS NS records for a domain.
 
 ```shell
-cnquery> shodan.domain("example.com").nsrecords.where(type == "NS") { subdomain  type value }
+mql> shodan.domain("example.com").nsrecords.where(type == "NS") { subdomain  type value }
 shodan.domain.nsrecords.where: [
   0: {
     type: "NS"
@@ -116,7 +116,7 @@ shodan.domain.nsrecords.where: [
 Query the DNS AAAA records for  the "www" subdomain.
 
 ```shell
-cnquery> shodan.domain("example.com").nsrecords.where(type == "AAAA").where(subdomain == "www") { subdomain  type value }
+mql> shodan.domain("example.com").nsrecords.where(type == "AAAA").where(subdomain == "www") { subdomain  type value }
 shodan.domain.nsrecords.where.where: [
   0: {
     subdomain: "www"
@@ -131,17 +131,17 @@ shodan.domain.nsrecords.where.where: [
 Discover all exposed hosts on a network.
 
 ```shell
-cnquery shell shodan --networks "192.168.0.0/20" --discover hosts
+mql shell shodan --networks "192.168.0.0/20" --discover hosts
 ```
 
 Connect to a specific IP address and display all open ports.
 
 ```shell
-cnquery shell shodan host 8.8.8.8
+mql shell shodan host 8.8.8.8
 ```
 
 Connect to a domain and display subdomains.
 
 ```shell
-cnquery shell shodan domain example.com
+mql shell shodan domain example.com
 ```

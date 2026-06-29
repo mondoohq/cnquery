@@ -12,7 +12,7 @@ against an inventory; the analysis is entirely static.
 ## Get started
 
 ```shell
-±> cnquery shell ansible providers/ansible/play/testdata/play_cert_validation.yaml
+±> mql shell ansible providers/ansible/play/testdata/play_cert_validation.yaml
 → connected to Ansible Playbook
   ___ _ __   __ _ _   _  ___ _ __ _   _ 
  / __| '_ \ / _` | | | |/ _ \ '__| | | |
@@ -20,7 +20,7 @@ against an inventory; the analysis is entirely static.
  \___|_| |_|\__, |\__,_|\___|_|   \__, |
   mondoo™      |_|                |___/  interactive shell
 
-cnquery> ansible.plays
+mql> ansible.plays
 ansible.plays: [
   0: ansible.play name="Install packages"
 ]
@@ -46,7 +46,7 @@ Connect to a project directory to analyze the whole codebase through the
 `ansible.project` resource:
 
 ```shell
-cnquery shell ansible ./my-ansible-project
+mql shell ansible ./my-ansible-project
 ```
 
 ```javascript
@@ -103,7 +103,7 @@ with [yum](https://docs.ansible.com/projects/ansible/latest/collections/ansible/
 You can easily query all tasks for all plays in the playbook:
 
 ```shell
-cnquery> ansible.plays.map(tasks)
+mql> ansible.plays.map(tasks)
 ansible.plays.map: [
   0: [
     0: {
@@ -116,7 +116,7 @@ ansible.plays.map: [
 You can also query for all tasks that use `ansible.builtin.yum`:
 
 ```shell
-cnquery> ansible.plays { tasks.where (action["ansible.builtin.yum"] != empty) }
+mql> ansible.plays { tasks.where (action["ansible.builtin.yum"] != empty) }
 ansible.plays: [
   0: {
     tasks.where: [

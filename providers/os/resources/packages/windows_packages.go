@@ -547,7 +547,7 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 
 	// TODO: We need to figure out why we have empty displayNames.
 	// this is common in windows but we need to verify it is a windows
-	// issue and not a cnquery issue.
+	// issue and not an mql issue.
 	if displayName == "" {
 		log.Debug().Msg("ignored package since display name is missing")
 		return nil
@@ -680,7 +680,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 
 		// TODO: We need to figure out why we have empty displayNames.
 		// this is common in windows but we need to verify it is a windows
-		// issue and not a cnquery issue.
+		// issue and not an mql issue.
 		if entry.DisplayName == "" {
 			continue
 		}

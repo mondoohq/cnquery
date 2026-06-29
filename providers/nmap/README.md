@@ -11,7 +11,7 @@ This provider requires the Nmap tool to be installed on your system. You can dow
 ## Get Started
 
 ```shell
-cnquery shell nmap
+mql shell nmap
 ```
 
 ## Example
@@ -89,13 +89,13 @@ nmap.network.hosts: [
 Discover all exposed hosts on a network.
 
 ```shell
-cnquery shell nmap --networks "192.168.0.0/20" --discover hosts
+mql shell nmap --networks "192.168.0.0/20" --discover hosts
 ```
 
 Connect to a specific IP address and display all open ports.
 
 ```shell
-cnquery shell nmap host 8.8.8.8
+mql shell nmap host 8.8.8.8
 ```
 
 ## Verifying the Installation of nmap
@@ -103,7 +103,7 @@ cnquery shell nmap host 8.8.8.8
 To verify the installation of nmap, run the following command:
 
 ```shell
-cnquery run nmap -c "nmap.version { * }"
+mql run nmap -c "nmap.version { * }"
 nmap.version: {
   compiledWithout: []
   nsockEngines: [

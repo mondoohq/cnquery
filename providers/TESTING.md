@@ -35,7 +35,7 @@ Copy completed successfully.
 ### Enjoy your device
 
 ```text
-cnquery shell arista DEVICE_PUBLIC_IP --ask-pass
+mql shell arista DEVICE_PUBLIC_IP --ask-pass
 Enter password:
 → loaded configuration from /Users/tsmith/.config/mondoo/mondoo.yml using source default
 → connected to Arista EOS
@@ -45,7 +45,7 @@ Enter password:
  \___|_| |_|\__, |\__,_|\___|_|   \__, |
   mondoo™      |_|                |___/  interactive shell
 
-cnquery> arista.eos.hostname
+mql> arista.eos.hostname
 arista.eos.hostname: "localhost"
 ```
 
