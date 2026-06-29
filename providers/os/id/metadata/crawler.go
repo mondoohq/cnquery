@@ -62,12 +62,17 @@ func getMetadataRecursively(r recursive, path string, depth int) (any, error) {
 	// If the data contains sub-paths, fetch them recursively
 	if len(lines) > 1 || strings.HasSuffix(data, "/") {
 		result := make(map[string]any)
+		values := make([]string, 0, len(lines))
+		resolvedChild := false
 
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" {
 				continue
 			}
+
+			key := strings.TrimSuffix(line, "/")
+			values = append(values, key)
 
 			subPath := path + line
 
@@ -80,7 +85,18 @@ func getMetadataRecursively(r recursive, path string, depth int) (any, error) {
 				continue
 			}
 
-			result[strings.TrimSuffix(line, "/")] = subData
+			resolvedChild = true
+			result[key] = subData
+		}
+
+		// Some IMDS keys return a newline-separated *list of values* rather than
+		// a directory of navigable sub-paths (e.g. "security-group-ids",
+		// "vpc-ipv4-cidr-blocks", or a multi-valued "local-ipv4s"). For those,
+		// the sub-path lookups above all fail, which previously produced an
+		// empty map and silently dropped the data. Treat that case as a value
+		// list and preserve the values instead.
+		if !resolvedChild {
+			return values, nil
 		}
 
 		return result, nil
