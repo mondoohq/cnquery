@@ -6,9 +6,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vapi/tags"
+	vmwaretypes "github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -111,6 +114,140 @@ func (t *mqlVsphereTag) category() (*mqlVsphereCategory, error) {
 
 	t.Category.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
+}
+
+func (c *mqlVsphereCategory) tags() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+
+	rc, err := conn.RestClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to vAPI: %w", err)
+	}
+
+	tagIDs, err := tags.NewManager(rc).ListTagsForCategory(ctx, c.Id.Data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tags for category: %w", err)
+	}
+	return resolveTagRefs(c.MqlRuntime, tagIDs)
+}
+
+// loadTagIndex builds (once per scan) a map of vAPI tag ID to the shared
+// vsphere.tag resource, so per-object tag accessors hand back the same
+// instances as the root vsphere.tags list (and their resolved categories).
+func loadTagIndex(runtime *plugin.Runtime) (map[string]*mqlVsphereTag, error) {
+	res, err := CreateResource(runtime, "vsphere", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	v := res.(*mqlVsphere)
+
+	v.tagIndexMu.Lock()
+	defer v.tagIndexMu.Unlock()
+	if v.tagIndex != nil {
+		return v.tagIndex, nil
+	}
+
+	tagsRes := v.GetTags()
+	if tagsRes.Error != nil {
+		return nil, tagsRes.Error
+	}
+	idx := make(map[string]*mqlVsphereTag, len(tagsRes.Data))
+	for _, t := range tagsRes.Data {
+		mqlTag := t.(*mqlVsphereTag)
+		idx[mqlTag.Id.Data] = mqlTag
+	}
+	v.tagIndex = idx
+	return idx, nil
+}
+
+// resolveTagRefs maps a list of vAPI tag IDs to their shared vsphere.tag
+// resources, skipping any ID not present in the index.
+func resolveTagRefs(runtime *plugin.Runtime, tagIDs []string) ([]any, error) {
+	if len(tagIDs) == 0 {
+		return []any{}, nil
+	}
+	idx, err := loadTagIndex(runtime)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(tagIDs))
+	for _, id := range tagIDs {
+		if t, ok := idx[id]; ok {
+			res = append(res, t)
+		}
+	}
+	return res, nil
+}
+
+// decodeMoRef reverses ManagedObjectReference.Encode (which joins type and a
+// URL-escaped value with "-"). FromString is not the inverse of Encode (it
+// splits on ":"), so we parse the encoded form here: managed-object type names
+// never contain "-", so the first "-" separates type from value.
+func decodeMoRef(encoded string) (vmwaretypes.ManagedObjectReference, bool) {
+	i := strings.Index(encoded, "-")
+	if i < 0 {
+		return vmwaretypes.ManagedObjectReference{}, false
+	}
+	value, err := url.QueryUnescape(encoded[i+1:])
+	if err != nil {
+		return vmwaretypes.ManagedObjectReference{}, false
+	}
+	return vmwaretypes.ManagedObjectReference{Type: encoded[:i], Value: value}, true
+}
+
+// attachedTagRefs resolves the vAPI tags attached to the inventory object
+// identified by the encoded managed-object reference moid.
+func attachedTagRefs(runtime *plugin.Runtime, moid string) ([]any, error) {
+	ref, ok := decodeMoRef(moid)
+	if !ok {
+		return []any{}, nil
+	}
+
+	conn := runtime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+	rc, err := conn.RestClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to vAPI: %w", err)
+	}
+
+	tagIDs, err := tags.NewManager(rc).ListAttachedTags(ctx, ref)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list attached tags: %w", err)
+	}
+	return resolveTagRefs(runtime, tagIDs)
+}
+
+func (x *mqlVsphereVm) tagRefs() ([]any, error) { return attachedTagRefs(x.MqlRuntime, x.Moid.Data) }
+
+func (x *mqlVsphereHost) tagRefs() ([]any, error) { return attachedTagRefs(x.MqlRuntime, x.Moid.Data) }
+
+func (x *mqlVsphereDatacenter) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereCluster) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereDatastore) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereResourcepool) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereFolder) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereVswitchDvs) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
+}
+
+func (x *mqlVsphereVswitchPortgroup) tagRefs() ([]any, error) {
+	return attachedTagRefs(x.MqlRuntime, x.Moid.Data)
 }
 
 func (v *mqlVsphere) customFields() ([]any, error) {

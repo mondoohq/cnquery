@@ -115,6 +115,7 @@ vsphere.category.cardinality 13.6.1
 vsphere.category.description 13.6.1
 vsphere.category.id 13.6.1
 vsphere.category.name 13.6.1
+vsphere.category.tags 13.6.1
 vsphere.certificate 13.6.1
 vsphere.certificate.id 13.6.1
 vsphere.certificate.issuer 13.6.1
@@ -135,6 +136,7 @@ vsphere.cluster.inventoryPath 9.0.0
 vsphere.cluster.moid 9.0.0
 vsphere.cluster.name 9.0.0
 vsphere.cluster.properties 9.0.0
+vsphere.cluster.tagRefs 13.6.1
 vsphere.cluster.vsan 13.3.1
 vsphere.cluster.vsan.checksumEnabled 13.3.1
 vsphere.cluster.vsan.compressionEnabled 13.3.1
@@ -154,6 +156,7 @@ vsphere.cluster.vsanEnabled 13.0.12
 vsphere.contentLibraries 13.6.1
 vsphere.contentLibrary 13.6.1
 vsphere.contentLibrary.creationTime 13.6.1
+vsphere.contentLibrary.datastores 13.6.1
 vsphere.contentLibrary.description 13.6.1
 vsphere.contentLibrary.id 13.6.1
 vsphere.contentLibrary.item 13.6.1
@@ -201,6 +204,7 @@ vsphere.datacenter.inventoryPath 9.0.0
 vsphere.datacenter.moid 9.0.0
 vsphere.datacenter.name 9.0.0
 vsphere.datacenter.resourcePools 13.0.12
+vsphere.datacenter.tagRefs 13.6.1
 vsphere.datacenter.vms 9.0.0
 vsphere.datacenters 9.0.0
 vsphere.datastore 13.0.12
@@ -214,6 +218,7 @@ vsphere.datastore.moid 13.0.12
 vsphere.datastore.multipleHostAccess 13.0.12
 vsphere.datastore.name 13.0.12
 vsphere.datastore.ssd 13.0.12
+vsphere.datastore.tagRefs 13.6.1
 vsphere.datastore.type 13.0.12
 vsphere.datastore.uncommitted 13.0.12
 vsphere.datastore.url 13.0.12
@@ -239,6 +244,7 @@ vsphere.folder.childTypes 13.0.12
 vsphere.folder.inventoryPath 13.0.12
 vsphere.folder.moid 13.0.12
 vsphere.folder.name 13.0.12
+vsphere.folder.tagRefs 13.6.1
 vsphere.folders 13.0.12
 vsphere.host 9.0.0
 vsphere.host.acceptanceLevel 9.0.0
@@ -378,6 +384,7 @@ vsphere.host.systemInfo.serialNumber 13.1.1
 vsphere.host.systemInfo.serviceTag 13.1.1
 vsphere.host.systemInfo.uuid 13.1.1
 vsphere.host.systemInfo.vendor 13.1.1
+vsphere.host.tagRefs 13.6.1
 vsphere.host.tags 11.0.101
 vsphere.host.timezone 9.0.0
 vsphere.host.timezone.description 13.1.1
@@ -459,6 +466,7 @@ vsphere.resourcepool.memoryShareLevel 13.0.12
 vsphere.resourcepool.memoryShares 13.0.12
 vsphere.resourcepool.moid 13.0.12
 vsphere.resourcepool.name 13.0.12
+vsphere.resourcepool.tagRefs 13.6.1
 vsphere.role 13.0.12
 vsphere.role.label 13.0.12
 vsphere.role.name 13.0.12
@@ -599,6 +607,7 @@ vsphere.vm.snapshot.parentMoid 13.1.1
 vsphere.vm.snapshot.powerState 13.1.1
 vsphere.vm.snapshot.quiesced 13.1.1
 vsphere.vm.snapshots 13.1.1
+vsphere.vm.tagRefs 13.6.1
 vsphere.vm.tags 11.0.101
 vsphere.vm.template 13.1.1
 vsphere.vm.vbsEnabled 13.0.12
@@ -633,6 +642,7 @@ vsphere.vswitch.dvs.createDate 13.6.1
 vsphere.vswitch.dvs.moid 11.0.39
 vsphere.vswitch.dvs.name 9.0.0
 vsphere.vswitch.dvs.properties 9.0.0
+vsphere.vswitch.dvs.tagRefs 13.6.1
 vsphere.vswitch.dvs.uplinks 9.0.0
 vsphere.vswitch.dvs.vspanSession 13.5.2
 vsphere.vswitch.dvs.vspanSession.description 13.5.2
@@ -671,6 +681,7 @@ vsphere.vswitch.portgroup.portConfigResetAtDisconnect 13.5.2
 vsphere.vswitch.portgroup.properties 11.0.39
 vsphere.vswitch.portgroup.securityPolicySettings 13.1.1
 vsphere.vswitch.portgroup.shapingPolicySettings 13.1.1
+vsphere.vswitch.portgroup.tagRefs 13.6.1
 vsphere.vswitch.portgroup.vlanId 13.0.12
 vsphere.vswitch.securityPolicy 13.1.1
 vsphere.vswitch.securityPolicy.allowForgedTransmits 13.1.1

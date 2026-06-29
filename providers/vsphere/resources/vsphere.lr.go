@@ -688,6 +688,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.folder.childCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereFolder).GetChildCount()).ToDataRes(types.Int)
 	},
+	"vsphere.folder.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereFolder).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.identitysource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereIdentitysource).GetName()).ToDataRes(types.String)
 	},
@@ -787,6 +790,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datacenter.resourcePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetResourcePools()).ToDataRes(types.Array(types.Resource("vsphere.resourcepool")))
 	},
+	"vsphere.datacenter.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatacenter).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.resourcepool.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereResourcepool).GetMoid()).ToDataRes(types.String)
 	},
@@ -825,6 +831,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.resourcepool.memoryShares": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereResourcepool).GetMemoryShares()).ToDataRes(types.Int)
+	},
+	"vsphere.resourcepool.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereResourcepool).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.datastore.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetMoid()).ToDataRes(types.String)
@@ -871,6 +880,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datastore.vms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetVms()).ToDataRes(types.Array(types.Resource("vsphere.vm")))
 	},
+	"vsphere.datastore.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -900,6 +912,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.cluster.evcMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetEvcMode()).ToDataRes(types.String)
+	},
+	"vsphere.cluster.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.host.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetMoid()).ToDataRes(types.String)
@@ -951,6 +966,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.host.lockdownMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetLockdownMode()).ToDataRes(types.String)
@@ -1426,6 +1444,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetTags()).ToDataRes(types.Array(types.String))
 	},
+	"vsphere.vm.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.vm.bootFirmware": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetBootFirmware()).ToDataRes(types.String)
 	},
@@ -1753,6 +1774,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.dvs.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetName()).ToDataRes(types.String)
 	},
+	"vsphere.vswitch.dvs.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvs).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -1800,6 +1824,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.portgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.portgroup.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetProperties()).ToDataRes(types.Dict)
@@ -2167,6 +2194,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.category.associableTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCategory).GetAssociableTypes()).ToDataRes(types.Array(types.String))
 	},
+	"vsphere.category.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetTags()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.tag.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereTag).GetId()).ToDataRes(types.String)
 	},
@@ -2223,6 +2253,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.contentLibrary.storageBackings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereContentLibrary).GetStorageBackings()).ToDataRes(types.Array(types.Dict))
+	},
+	"vsphere.contentLibrary.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
 	},
 	"vsphere.contentLibrary.securityPolicyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereContentLibrary).GetSecurityPolicyId()).ToDataRes(types.String)
@@ -2789,6 +2822,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereFolder).ChildCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"vsphere.folder.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereFolder).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.identitysource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereIdentitysource).__id, ok = v.Value.(string)
 		return
@@ -2941,6 +2978,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatacenter).ResourcePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.datacenter.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatacenter).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.resourcepool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereResourcepool).__id, ok = v.Value.(string)
 		return
@@ -2995,6 +3036,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.resourcepool.memoryShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereResourcepool).MemoryShares, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.resourcepool.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereResourcepool).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datastore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3061,6 +3106,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatastore).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.datastore.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 		return
@@ -3103,6 +3152,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.cluster.evcMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).EvcMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3175,6 +3228,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.lockdownMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3881,6 +3938,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.vm.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.vm.bootFirmware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).BootFirmware, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4357,6 +4418,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVswitchDvs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vsphere.vswitch.dvs.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvs).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -4427,6 +4492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.portgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4997,6 +5066,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereCategory).AssociableTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.category.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereTag).__id, ok = v.Value.(string)
 		return
@@ -5079,6 +5152,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.contentLibrary.storageBackings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereContentLibrary).StorageBackings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.contentLibrary.securityPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6490,6 +6567,7 @@ type mqlVsphereFolder struct {
 	InventoryPath plugin.TValue[string]
 	ChildTypes    plugin.TValue[[]any]
 	ChildCount    plugin.TValue[int64]
+	TagRefs       plugin.TValue[[]any]
 }
 
 // createVsphereFolder creates a new instance of this resource
@@ -6547,6 +6625,22 @@ func (c *mqlVsphereFolder) GetChildTypes() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereFolder) GetChildCount() *plugin.TValue[int64] {
 	return &c.ChildCount
+}
+
+func (c *mqlVsphereFolder) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.folder", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 // mqlVsphereIdentitysource for the vsphere.identitysource resource
@@ -6850,6 +6944,7 @@ type mqlVsphereDatacenter struct {
 	DistributedPortGroups plugin.TValue[[]any]
 	Datastores            plugin.TValue[[]any]
 	ResourcePools         plugin.TValue[[]any]
+	TagRefs               plugin.TValue[[]any]
 }
 
 // createVsphereDatacenter creates a new instance of this resource
@@ -7013,6 +7108,22 @@ func (c *mqlVsphereDatacenter) GetResourcePools() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphereDatacenter) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereResourcepool for the vsphere.resourcepool resource
 type mqlVsphereResourcepool struct {
 	MqlRuntime *plugin.Runtime
@@ -7031,6 +7142,7 @@ type mqlVsphereResourcepool struct {
 	MemoryExpandableReservation plugin.TValue[bool]
 	MemoryShareLevel            plugin.TValue[string]
 	MemoryShares                plugin.TValue[int64]
+	TagRefs                     plugin.TValue[[]any]
 }
 
 // createVsphereResourcepool creates a new instance of this resource
@@ -7122,6 +7234,22 @@ func (c *mqlVsphereResourcepool) GetMemoryShares() *plugin.TValue[int64] {
 	return &c.MemoryShares
 }
 
+func (c *mqlVsphereResourcepool) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.resourcepool", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereDatastore for the vsphere.datastore resource
 type mqlVsphereDatastore struct {
 	MqlRuntime *plugin.Runtime
@@ -7142,6 +7270,7 @@ type mqlVsphereDatastore struct {
 	Ssd                plugin.TValue[bool]
 	Hosts              plugin.TValue[[]any]
 	Vms                plugin.TValue[[]any]
+	TagRefs            plugin.TValue[[]any]
 }
 
 // createVsphereDatastore creates a new instance of this resource
@@ -7265,6 +7394,22 @@ func (c *mqlVsphereDatastore) GetVms() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphereDatastore) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datastore", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -7280,6 +7425,7 @@ type mqlVsphereCluster struct {
 	HaEnabled     plugin.TValue[bool]
 	DrsEnabled    plugin.TValue[bool]
 	EvcMode       plugin.TValue[string]
+	TagRefs       plugin.TValue[[]any]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -7383,6 +7529,22 @@ func (c *mqlVsphereCluster) GetEvcMode() *plugin.TValue[string] {
 	return &c.EvcMode
 }
 
+func (c *mqlVsphereCluster) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.cluster", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereHost for the vsphere.host resource
 type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
@@ -7405,6 +7567,7 @@ type mqlVsphereHost struct {
 	Ntp                         plugin.TValue[*mqlVsphereHostNtpConfig]
 	Snmp                        plugin.TValue[map[string]any]
 	Tags                        plugin.TValue[[]any]
+	TagRefs                     plugin.TValue[[]any]
 	LockdownMode                plugin.TValue[string]
 	LockdownExceptions          plugin.TValue[[]any]
 	FirewallIncomingBlocked     plugin.TValue[bool]
@@ -7659,6 +7822,22 @@ func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereHost) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereHost) GetLockdownMode() *plugin.TValue[string] {
@@ -9322,6 +9501,7 @@ type mqlVsphereVm struct {
 	Properties          plugin.TValue[any]
 	AdvancedSettings    plugin.TValue[map[string]any]
 	Tags                plugin.TValue[[]any]
+	TagRefs             plugin.TValue[[]any]
 	BootFirmware        plugin.TValue[string]
 	SecureBootEnabled   plugin.TValue[bool]
 	VbsEnabled          plugin.TValue[bool]
@@ -9415,6 +9595,22 @@ func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereVm) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVm) GetBootFirmware() *plugin.TValue[string] {
@@ -10560,6 +10756,7 @@ type mqlVsphereVswitchDvs struct {
 	mqlVsphereVswitchDvsInternal
 	Moid          plugin.TValue[string]
 	Name          plugin.TValue[string]
+	TagRefs       plugin.TValue[[]any]
 	Properties    plugin.TValue[any]
 	CreateDate    plugin.TValue[*time.Time]
 	Uplinks       plugin.TValue[[]any]
@@ -10609,6 +10806,22 @@ func (c *mqlVsphereVswitchDvs) GetMoid() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchDvs) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlVsphereVswitchDvs) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.dvs", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVswitchDvs) GetProperties() *plugin.TValue[any] {
@@ -10747,6 +10960,7 @@ type mqlVsphereVswitchPortgroup struct {
 	mqlVsphereVswitchPortgroupInternal
 	Moid                        plugin.TValue[string]
 	Name                        plugin.TValue[string]
+	TagRefs                     plugin.TValue[[]any]
 	Properties                  plugin.TValue[any]
 	VlanId                      plugin.TValue[int64]
 	SecurityPolicySettings      plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
@@ -10799,6 +11013,22 @@ func (c *mqlVsphereVswitchPortgroup) GetMoid() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchPortgroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
@@ -12274,6 +12504,7 @@ type mqlVsphereCategory struct {
 	Description     plugin.TValue[string]
 	Cardinality     plugin.TValue[string]
 	AssociableTypes plugin.TValue[[]any]
+	Tags            plugin.TValue[[]any]
 }
 
 // createVsphereCategory creates a new instance of this resource
@@ -12326,6 +12557,22 @@ func (c *mqlVsphereCategory) GetCardinality() *plugin.TValue[string] {
 
 func (c *mqlVsphereCategory) GetAssociableTypes() *plugin.TValue[[]any] {
 	return &c.AssociableTypes
+}
+
+func (c *mqlVsphereCategory) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.category", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
 }
 
 // mqlVsphereTag for the vsphere.tag resource
@@ -12419,6 +12666,7 @@ type mqlVsphereContentLibrary struct {
 	SubscriptionOnDemand      plugin.TValue[bool]
 	SubscriptionAuthMethod    plugin.TValue[string]
 	StorageBackings           plugin.TValue[[]any]
+	Datastores                plugin.TValue[[]any]
 	SecurityPolicyId          plugin.TValue[string]
 	Items                     plugin.TValue[[]any]
 }
@@ -12513,6 +12761,22 @@ func (c *mqlVsphereContentLibrary) GetSubscriptionAuthMethod() *plugin.TValue[st
 
 func (c *mqlVsphereContentLibrary) GetStorageBackings() *plugin.TValue[[]any] {
 	return &c.StorageBackings
+}
+
+func (c *mqlVsphereContentLibrary) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.contentLibrary", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
+	})
 }
 
 func (c *mqlVsphereContentLibrary) GetSecurityPolicyId() *plugin.TValue[string] {

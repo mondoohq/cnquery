@@ -32,6 +32,12 @@ type vsphereInventory struct {
 type mqlVsphereInternal struct {
 	inventoryMu sync.Mutex
 	inventory   *vsphereInventory
+
+	// tagIndex maps a vAPI tag ID to its shared vsphere.tag resource so the
+	// per-object tagRefs accessors resolve against the same instances as the
+	// root vsphere.tags list (built once, guarded by tagIndexMu).
+	tagIndexMu sync.Mutex
+	tagIndex   map[string]*mqlVsphereTag
 }
 
 func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {

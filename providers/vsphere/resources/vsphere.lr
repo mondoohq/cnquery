@@ -236,6 +236,8 @@ private vsphere.folder @defaults("name inventoryPath") {
   childTypes []string
   // Number of immediate child entities under this folder
   childCount int
+  // Tags attached to this folder
+  tagRefs() []vsphere.tag
 }
 
 // vSphere SSO Identity Source
@@ -354,6 +356,8 @@ private vsphere.datacenter @defaults("moid name") {
   datastores() []vsphere.datastore
   // Resource pools in the datacenter (CPU/memory partitions on clusters or standalone hosts)
   resourcePools() []vsphere.resourcepool
+  // Tags attached to this datacenter
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Resource Pool
@@ -391,6 +395,8 @@ private vsphere.resourcepool @defaults("name") {
   memoryShareLevel string
   // Memory shares (only meaningful when memoryShareLevel == custom)
   memoryShares int
+  // Tags attached to this resource pool
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Datastore
@@ -432,6 +438,8 @@ private vsphere.datastore @defaults("name type") {
   hosts() []vsphere.host
   // Virtual machines whose files are stored on this datastore, resolved against vsphere.datacenters[].vms
   vms() []vsphere.vm
+  // Tags attached to this datastore
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Cluster
@@ -462,6 +470,8 @@ private vsphere.cluster @defaults("moid name") {
   drsEnabled bool
   // Currently-applied EVC (Enhanced vMotion Compatibility) baseline key, e.g. "intel-broadwell"; empty if EVC is disabled
   evcMode string
+  // Tags attached to this cluster
+  tagRefs() []vsphere.tag
 }
 
 // vSphere ESXi Host
@@ -508,8 +518,13 @@ private vsphere.host @defaults("moid name") {
   ntp() vsphere.host.ntpConfig
   // Host SNMP configuration
   snmp() map[string]string
-  //Host tags
-  tags []string
+  // Host tags
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this host
+  tagRefs() []vsphere.tag
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
   lockdownMode string
   // User and service accounts exempt from lockdown mode; these accounts retain direct host access even while lockdown mode is enabled
@@ -980,7 +995,12 @@ private vsphere.vm @defaults("moid name") {
   // Virtual machine advanced properties
   advancedSettings() map[string]string
   // VM tags
-  tags []string
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this virtual machine
+  tagRefs() []vsphere.tag
   // Boot firmware (bios or efi)
   bootFirmware string
   // Whether UEFI Secure Boot is enabled (only meaningful when bootFirmware is efi)
@@ -1340,6 +1360,8 @@ private vsphere.vswitch.dvs @defaults("name") {
   moid string
   // DVS name
   name string
+  // Tags attached to this distributed virtual switch
+  tagRefs() []vsphere.tag
   // Raw output of `esxcli network vswitch dvs vmware list` for this DVS, as a dict
   properties dict
   // When the distributed virtual switch was created
@@ -1402,6 +1424,8 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   moid string
   // Port group name
   name string
+  // Tags attached to this distributed port group
+  tagRefs() []vsphere.tag
   // Generated dict view of the port-group config
   //
   // Covers DefaultPortConfig, policy overrides, etc. Use the typed `*PolicySettings` methods for audit-friendly access.
@@ -1841,6 +1865,8 @@ private vsphere.category @defaults("name cardinality") {
   cardinality string
   // Managed-object types tags in this category can attach to; empty means any object type
   associableTypes []string
+  // Tags defined in this category
+  tags() []vsphere.tag
 }
 
 // vSphere Tag
@@ -1901,6 +1927,8 @@ private vsphere.contentLibrary @defaults("name type") {
   subscriptionAuthMethod string
   // Storage backings for the library. Each entry is a dict with `type` (DATASTORE or OTHER) and `datastoreId`.
   storageBackings []dict
+  // Datastores backing the library, resolved against vsphere.datacenters[].datastores
+  datastores() []vsphere.datastore
   // Security policy identifier applied to the library; empty when none is assigned
   securityPolicyId string
   // Items stored in this library

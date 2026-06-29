@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/vmware/govmomi/vapi/library"
+	vmwaretypes "github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -84,6 +85,42 @@ func (v *mqlVsphere) contentLibraries() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlLib)
+	}
+	return res, nil
+}
+
+func (l *mqlVsphereContentLibrary) datastores() ([]any, error) {
+	backings := l.GetStorageBackings()
+	if backings.Error != nil {
+		return nil, backings.Error
+	}
+
+	inv, err := loadVsphereInventory(l.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	seen := map[string]struct{}{}
+	for _, b := range backings.Data {
+		m, ok := b.(map[string]any)
+		if !ok {
+			continue
+		}
+		dsID, _ := m["datastoreId"].(string)
+		if dsID == "" {
+			continue
+		}
+		key := vmwaretypes.ManagedObjectReference{Type: "Datastore", Value: dsID}.Encode()
+		ds, ok := inv.datastores[key]
+		if !ok {
+			continue
+		}
+		if _, dup := seen[key]; dup {
+			continue
+		}
+		seen[key] = struct{}{}
+		res = append(res, ds)
 	}
 	return res, nil
 }

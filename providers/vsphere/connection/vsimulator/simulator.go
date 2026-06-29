@@ -8,6 +8,10 @@ import (
 	"net/url"
 
 	"github.com/vmware/govmomi/simulator"
+	// Registers the vAPI/REST simulator endpoints (tags, content library,
+	// certificate management) so connections exercising the REST client work
+	// against the simulator, not just the SOAP/vim25 API.
+	_ "github.com/vmware/govmomi/vapi/simulator"
 )
 
 const (
@@ -34,6 +38,8 @@ func New() (*VsphereSimulator, error) {
 	tls := tlsSrv.TLS
 
 	model.Service.TLS = tls
+	// Wire up the registered vAPI/REST endpoints (see the blank import above).
+	model.Service.RegisterEndpoints = true
 	s := model.Service.NewServer()
 
 	return &VsphereSimulator{
