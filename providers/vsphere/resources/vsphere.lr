@@ -2120,6 +2120,10 @@ private vsphere.task @defaults("operation state user") {
   // When the task finished; zero when still running or queued
   completeTime time
   // Completion percentage while running (0 to 100)
+  //
+  // vCenter reports this only for in-flight tasks; a task that has not reported
+  // progress (queued, or already finished) reads as 0, so 0 means "none
+  // reported" rather than necessarily "0% complete".
   progress int
   // Whether the task can be cancelled
   cancelable bool

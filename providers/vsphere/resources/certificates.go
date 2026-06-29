@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"net/http"
@@ -75,20 +76,25 @@ func (v *mqlVsphere) certificates() ([]any, error) {
 
 	// Trusted root certificates (the VMCA root signs solution and host certs;
 	// the root whose subject signed the machine SSL cert is the VMCA root).
-	var rootList []struct {
-		Chain string `json:"chain"`
-	}
+	// The list endpoint returns chain identifiers; across vCenter versions
+	// these come back either as plain strings (["id1","id2"]) or as summary
+	// objects ([{"chain":"id1"}]), so decode each element tolerantly.
+	var rootList []json.RawMessage
 	if err := restGet(ctx, rc, certPathTrustRoots, &rootList); err != nil {
 		log.Debug().Err(err).Msg("vsphere> failed to list trusted root chains")
 	} else {
-		for _, entry := range rootList {
+		for _, raw := range rootList {
+			chainID := decodeChainID(raw)
+			if chainID == "" {
+				continue
+			}
 			var detail struct {
 				CertChain struct {
 					CertChain []string `json:"cert_chain"`
 				} `json:"cert_chain"`
 			}
-			if err := restGet(ctx, rc, certPathTrustRoots+"/"+entry.Chain, &detail); err != nil {
-				log.Debug().Err(err).Str("chain", entry.Chain).Msg("vsphere> failed to read trusted root chain")
+			if err := restGet(ctx, rc, certPathTrustRoots+"/"+chainID, &detail); err != nil {
+				log.Debug().Err(err).Str("chain", chainID).Msg("vsphere> failed to read trusted root chain")
 				continue
 			}
 			for _, p := range detail.CertChain.CertChain {
@@ -104,6 +110,23 @@ func (v *mqlVsphere) certificates() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// decodeChainID extracts a trusted-root-chain identifier from one list
+// element, accepting either a plain string ("id") or a summary object
+// ({"chain":"id"}) depending on the vCenter version's serialization.
+func decodeChainID(raw json.RawMessage) string {
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+	var obj struct {
+		Chain string `json:"chain"`
+	}
+	if err := json.Unmarshal(raw, &obj); err == nil {
+		return obj.Chain
+	}
+	return ""
 }
 
 // restGet performs an authenticated GET against a vAPI path and decodes the

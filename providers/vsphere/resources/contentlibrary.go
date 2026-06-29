@@ -158,11 +158,10 @@ func (l *mqlVsphereContentLibrary) items() ([]any, error) {
 			"lastModifiedTime": llx.TimeDataPtr(item.LastModifiedTime),
 			"lastSyncTime":     llx.TimeDataPtr(item.LastSyncTime),
 			"sourceId":         llx.StringData(item.SourceID),
-		}
-		if item.SecurityCompliance != nil {
-			args["securityCompliant"] = llx.BoolData(*item.SecurityCompliance)
-		} else {
-			args["securityCompliant"] = llx.NilData
+			// *bool: nil (item not evaluated for a security policy) surfaces as
+			// MQL null, distinct from an evaluated false. See the field's null
+			// semantics in the .lr doc comment.
+			"securityCompliant": llx.BoolDataPtr(item.SecurityCompliance),
 		}
 
 		mqlItem, err := CreateResource(l.MqlRuntime, "vsphere.contentLibrary.item", args)
