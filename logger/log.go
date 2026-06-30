@@ -93,11 +93,11 @@ func GetEnvLogLevel() (string, bool) {
 		return v, true
 	}
 
-	if os.Getenv("TRACE") == "true" || os.Getenv("TRACE") == "1" {
+	if v := os.Getenv("TRACE"); v == "true" || v == "1" {
 		return "trace", true
 	}
 
-	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
+	if v := os.Getenv("DEBUG"); v == "true" || v == "1" {
 		return "debug", true
 	}
 
