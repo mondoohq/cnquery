@@ -133,11 +133,11 @@ func MembershipRole(r int64) string {
 
 func InstancePlatform() *inventory.Platform {
 	return &inventory.Platform{
-		Name:                  "portainer",
+		Name:                  "portainer-server",
 		Family:                []string{"portainer"},
 		Kind:                  "api",
 		Runtime:               "portainer",
-		Title:                 "Portainer",
+		Title:                 "Portainer Server",
 		TechnologyUrlSegments: []string{"virtualization", "portainer", "instance"},
 	}
 }

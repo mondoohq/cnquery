@@ -147,12 +147,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.PortainerConne
 		return nil
 	}
 
-	// keep a user-provided asset name; otherwise label it "Portainer <hostname>"
-	// (falling back to plain "Portainer" when the hostname is unknown)
+	// keep a user-provided asset name; otherwise label it "Portainer Server <hostname>"
+	// (falling back to plain "Portainer Server" when the hostname is unknown)
 	if asset.Name == "" {
-		asset.Name = "Portainer"
+		asset.Name = "Portainer Server"
 		if h := conn.Hostname(); h != "" {
-			asset.Name = "Portainer " + h
+			asset.Name = "Portainer Server " + h
 		}
 	}
 	asset.Platform = connection.InstancePlatform()
