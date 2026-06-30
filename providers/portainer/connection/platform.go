@@ -138,7 +138,7 @@ func InstancePlatform() *inventory.Platform {
 		Kind:                  "api",
 		Runtime:               "portainer",
 		Title:                 "Portainer",
-		TechnologyUrlSegments: []string{"saas", "portainer", "instance"},
+		TechnologyUrlSegments: []string{"virtualization", "portainer", "instance"},
 	}
 }
 
@@ -149,7 +149,7 @@ func EnvironmentPlatform(envType int64) *inventory.Platform {
 		Kind:                  "api",
 		Runtime:               "portainer",
 		Title:                 "Portainer Environment (" + EnvironmentType(envType) + ")",
-		TechnologyUrlSegments: []string{"saas", "portainer", "environment"},
+		TechnologyUrlSegments: []string{"virtualization", "portainer", "environment"},
 	}
 }
 

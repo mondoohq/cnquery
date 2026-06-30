@@ -73,7 +73,7 @@ The address and access token can also be supplied through environment variables:
 	},
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
-			PathSegments: []string{"technology=saas", "provider=portainer"},
+			PathSegments: []string{"technology=virtualization", "provider=portainer"},
 			Key:          "kind",
 			Title:        "Kind",
 			Values: map[string]*inventory.AssetUrlBranch{
