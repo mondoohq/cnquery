@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,6 +38,64 @@ func init() {
 // calls so it cannot hang indefinitely when the API is unreachable.
 const statusTimeout = 30 * time.Second
 
+// spinnerFrames and spinnerFPS are the braille frames and cadence used by the
+// status loading indicator, matching the "Dot" spinner shown while scanning.
+var (
+	spinnerFrames = []string{"⣾ ", "⣽ ", "⣻ ", "⢿ ", "⡿ ", "⣟ ", "⣯ ", "⣷ "}
+	spinnerFPS    = time.Second / 10
+)
+
+// statusSpinner animates a loading indicator on stderr while the status command
+// performs its network calls. It writes to stderr (never stdout, which carries
+// the rendered status) and is a no-op when stderr is not a terminal, keeping
+// piped and redirected output clean.
+type statusSpinner struct {
+	stop chan struct{}
+	done chan struct{}
+}
+
+// startStatusSpinner begins animating message on stderr. It returns nil when
+// stderr is not a TTY; Stop tolerates a nil receiver so callers needn't check.
+func startStatusSpinner(message string) *statusSpinner {
+	if !isatty.IsTerminal(os.Stderr.Fd()) {
+		return nil
+	}
+
+	s := &statusSpinner{stop: make(chan struct{}), done: make(chan struct{})}
+	go func() {
+		defer close(s.done)
+		ticker := time.NewTicker(spinnerFPS)
+		defer ticker.Stop()
+
+		frame := 0
+		for {
+			select {
+			case <-s.stop:
+				// erase the spinner line so the rendered status starts clean
+				fmt.Fprint(os.Stderr, "\r\033[K")
+				return
+			case <-ticker.C:
+				// Trail each frame with \r so the cursor returns to column 0.
+				// Logs are left running: a log line printing over the spinner
+				// overwrites it and its trailing newline moves output along,
+				// while the next tick simply redraws the fixed-width frame.
+				fmt.Fprintf(os.Stderr, "%s%s\r", spinnerFrames[frame%len(spinnerFrames)], message)
+				frame++
+			}
+		}
+	}()
+	return s
+}
+
+// Stop halts the spinner and clears its line. Safe to call on a nil spinner.
+func (s *statusSpinner) Stop() {
+	if s == nil {
+		return
+	}
+	close(s.stop)
+	<-s.done
+}
+
 // StatusCmd represents the version command
 var StatusCmd = &cobra.Command{
 	Use:   "status",
@@ -57,7 +116,15 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		ctx, cancel := context.WithTimeout(cmd.Context(), statusTimeout)
 		defer cancel()
 
+		// Show a loading indicator while the (potentially slow) network calls
+		// run. Skipped for json/yaml output so machine-readable streams stay
+		// clean, and silent when stderr is not a terminal.
+		var spin *statusSpinner
+		if viper.GetString("output") == "" {
+			spin = startStatusSpinner("Checking status…")
+		}
 		s, err := checkStatus(ctx)
+		spin.Stop()
 		if err != nil {
 			return err
 		}
