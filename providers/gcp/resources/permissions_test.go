@@ -300,6 +300,7 @@ var validatedGCPPermissions = []string{
 	"storage.buckets.get",
 	"storage.buckets.getIamPolicy",
 	"storage.buckets.list",
+	"storage.buckets.listEffectiveTags",
 	"workflows.workflows.list",
 }
 

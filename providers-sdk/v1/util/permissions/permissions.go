@@ -1316,6 +1316,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// Tag bindings are listed via the resourceTagBindings permission, not a
 		// "resourcemanager.tagBindings.list" form (which is not a real permission).
 		"TagBindings.List": "resourcemanager.resourceTagBindings.list",
+		// Reading effective tag binding collections on a resource is governed by
+		// that resource's listEffectiveTags permission (we only call it for
+		// storage buckets in storage.go), not the auto-derived
+		// "resourcemanager.effectiveTagBindingCollections.get" (not a real
+		// permission).
+		"EffectiveTagBindingCollections.Get": "storage.buckets.listEffectiveTags",
 	},
 }
 

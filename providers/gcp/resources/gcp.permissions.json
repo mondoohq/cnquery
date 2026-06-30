@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.26.0",
-  "generated_at": "2026-06-29T23:43:33-07:00",
+  "version": "13.27.0",
+  "generated_at": "2026-06-30T09:47:52-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -234,7 +234,6 @@
     "redis.backups.list",
     "redis.clusters.list",
     "redis.instances.list",
-    "resourcemanager.effectiveTagBindingCollections.get",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
     "resourcemanager.resourceTagBindings.list",
@@ -262,6 +261,7 @@
     "storage.buckets.get",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list",
+    "storage.buckets.listEffectiveTags",
     "workflows.workflows.list"
   ],
   "details": [
@@ -1707,12 +1707,6 @@
       "source_file": "redis.go"
     },
     {
-      "permission": "resourcemanager.effectiveTagBindingCollections.get",
-      "service": "resourcemanager",
-      "action": "EffectiveTagBindingCollections.Get",
-      "source_file": "storage.go"
-    },
-    {
       "permission": "resourcemanager.folders.get",
       "service": "resourcemanager",
       "action": "Folders.Get",
@@ -1934,6 +1928,12 @@
       "permission": "storage.buckets.list",
       "service": "storage",
       "action": "Buckets.List",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "storage.buckets.listEffectiveTags",
+      "service": "resourcemanager",
+      "action": "EffectiveTagBindingCollections.Get",
       "source_file": "storage.go"
     },
     {
