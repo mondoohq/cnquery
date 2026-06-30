@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stackitcloud/stackit-sdk-go/core/config"
+	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
@@ -181,6 +182,69 @@ func TestNewStackitConnection_DefaultRegion(t *testing.T) {
 	}
 	if conn.Region() != DefaultRegion {
 		t.Fatalf("expected default region %q, got %q", DefaultRegion, conn.Region())
+	}
+}
+
+func TestPlatformInfo_TechnologyUrlSegments(t *testing.T) {
+	conn := &StackitConnection{projectID: "11111111-2222-3333-4444-555555555555"}
+
+	p := conn.PlatformInfo()
+	if p.Name != "stackit-project" {
+		t.Fatalf("expected platform name stackit-project, got %q", p.Name)
+	}
+	// Must match the provider's AssetUrlTrees (technology=stackit -> project).
+	want := []string{"stackit", conn.projectID}
+	if len(p.TechnologyUrlSegments) != len(want) {
+		t.Fatalf("expected segments %v, got %v", want, p.TechnologyUrlSegments)
+	}
+	for i := range want {
+		if p.TechnologyUrlSegments[i] != want[i] {
+			t.Fatalf("expected segments %v, got %v", want, p.TechnologyUrlSegments)
+		}
+	}
+}
+
+func TestPlatformInfo_TitleUsesProjectName(t *testing.T) {
+	conn := &StackitConnection{projectID: "p-1", projectName: "production"}
+	if got := conn.PlatformInfo().Title; got != "STACKIT Project production" {
+		t.Fatalf("expected title to include project name, got %q", got)
+	}
+
+	// With no resolved name, the static catalog title is used.
+	bare := &StackitConnection{projectID: "p-1"}
+	if got := bare.PlatformInfo().Title; got != "STACKIT Project" {
+		t.Fatalf("expected catalog title, got %q", got)
+	}
+}
+
+func TestCaptureProjectMetadata(t *testing.T) {
+	resp := resourcemanager.NewGetProjectResponseWithDefaults()
+	resp.SetName("my-project")
+	resp.SetLabels(map[string]string{"team": "platform", "env": "prod"})
+	parent := resourcemanager.NewParentWithDefaults()
+	parent.SetContainerId("org-abc")
+	resp.SetParent(*parent)
+
+	conn := &StackitConnection{}
+	conn.captureProjectMetadata(resp)
+
+	if conn.ProjectName() != "my-project" {
+		t.Fatalf("expected project name my-project, got %q", conn.ProjectName())
+	}
+	if conn.ProjectParent() != "org-abc" {
+		t.Fatalf("expected parent org-abc, got %q", conn.ProjectParent())
+	}
+	labels := conn.ProjectLabels()
+	if labels["team"] != "platform" || labels["env"] != "prod" {
+		t.Fatalf("unexpected labels: %v", labels)
+	}
+}
+
+func TestCaptureProjectMetadata_NilSafe(t *testing.T) {
+	conn := &StackitConnection{}
+	conn.captureProjectMetadata(nil)
+	if conn.ProjectName() != "" || conn.ProjectParent() != "" || conn.ProjectLabels() != nil {
+		t.Fatalf("nil response should leave metadata empty")
 	}
 }
 

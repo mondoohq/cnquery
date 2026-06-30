@@ -146,9 +146,31 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.StackitConnect
 	asset.Id = conn.Identifier()
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{conn.Identifier()}
+
+	// Prefer the human-readable project name resolved from the resource-manager
+	// API (captured during Verify), the way gcp uses project.Name and aws uses
+	// the account/host. Fall back to the project ID when it is unavailable.
 	if asset.Name == "" || asset.Name == "STACKIT" {
-		asset.Name = "STACKIT project " + conn.ProjectID()
+		if name := conn.ProjectName(); name != "" {
+			asset.Name = name
+		} else {
+			asset.Name = "STACKIT project " + conn.ProjectID()
+		}
 	}
+
+	// Attach the project's labels plus stackit-specific metadata so discovered
+	// and directly-connected assets carry the same context as gcp/aws assets.
+	if asset.Labels == nil {
+		asset.Labels = map[string]string{}
+	}
+	for k, v := range conn.ProjectLabels() {
+		asset.Labels[k] = v
+	}
+	asset.Labels["mondoo.com/region"] = conn.Region()
+	if parent := conn.ProjectParent(); parent != "" {
+		asset.Labels["mondoo.com/parent-id"] = parent
+	}
+
 	return nil
 }
 

@@ -54,6 +54,13 @@ type StackitConnection struct {
 	projectID string
 	region    string
 
+	// project metadata captured during Verify so the provider can enrich the
+	// detected asset (real name + labels + parent) the way the gcp and aws
+	// providers do, without issuing a second resource-manager call.
+	projectName   string
+	projectParent string
+	projectLabels map[string]string
+
 	// configOpts includes WithRegion(region) — use for region-scoped services
 	// (iaas, ske, objectstorage, loadbalancer, postgres-flex, mongodb-flex).
 	configOpts []config.ConfigurationOption
@@ -221,19 +228,46 @@ func getOptionValueFrom(options map[string]string, envVar, option string) (strin
 	return value, value != ""
 }
 
-func (c *StackitConnection) ProjectID() string { return c.projectID }
-func (c *StackitConnection) Region() string    { return c.region }
+func (c *StackitConnection) ProjectID() string     { return c.projectID }
+func (c *StackitConnection) Region() string        { return c.region }
+func (c *StackitConnection) ProjectName() string   { return c.projectName }
+func (c *StackitConnection) ProjectParent() string { return c.projectParent }
+
+// ProjectLabels returns the labels attached to the STACKIT project, captured
+// during Verify. The returned map must not be mutated by callers.
+func (c *StackitConnection) ProjectLabels() map[string]string { return c.projectLabels }
 
 func (c *StackitConnection) Verify(ctx context.Context) error {
 	client, err := c.ResourceManager()
 	if err != nil {
 		return err
 	}
-	if _, err := client.GetProjectExecute(ctx, c.projectID); err != nil {
+	resp, err := client.GetProjectExecute(ctx, c.projectID)
+	if err != nil {
 		log.Warn().Err(err).Msg("stackit> verify project lookup failed")
 		return fmt.Errorf("failed to verify STACKIT connection for project %s: %w", c.projectID, err)
 	}
+	c.captureProjectMetadata(resp)
 	return nil
+}
+
+// captureProjectMetadata records the human-readable project name, parent
+// container, and labels from the resource-manager response so detect() can
+// enrich the asset without a second API call.
+func (c *StackitConnection) captureProjectMetadata(resp *resourcemanager.GetProjectResponse) {
+	if resp == nil {
+		return
+	}
+	c.projectName = resp.GetName()
+	if labels, ok := resp.GetLabelsOk(); ok && labels != nil {
+		c.projectLabels = labels
+	}
+	if parent, ok := resp.GetParentOk(); ok {
+		c.projectParent = parent.GetContainerId()
+		if c.projectParent == "" {
+			c.projectParent = parent.GetId()
+		}
+	}
 }
 
 func (c *StackitConnection) IaaS() (*iaas.APIClient, error) {
@@ -425,9 +459,15 @@ func (c *StackitConnection) Name() string            { return "stackit" }
 
 func (c *StackitConnection) PlatformInfo() *inventory.Platform {
 	p := &inventory.Platform{
-		TechnologyUrlSegments: []string{"cloud", "stackit", "project"},
+		// Matches the provider's AssetUrlTrees (technology=stackit -> project),
+		// mirroring how gcp emits {"gcp", projectID, ...} and aws emits
+		// {"aws", accountID, ...}.
+		TechnologyUrlSegments: []string{"stackit", c.projectID},
 	}
 	PlatformByName("stackit-project").Apply(p)
+	if c.projectName != "" {
+		p.Title = "STACKIT Project " + c.projectName
+	}
 	return p
 }
 
