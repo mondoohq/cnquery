@@ -27,7 +27,7 @@ func SetWriter(w io.Writer) {
 
 // UseJSONLogging for global logger
 func UseJSONLogging(out io.Writer) {
-	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+	log.Logger = zerolog.New(out).With().Caller().Timestamp().Logger()
 }
 
 // UseGCPJSONLogging for global logger. This is a JSON logger
@@ -37,7 +37,7 @@ func UseGCPJSONLogging(out io.Writer) {
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+	log.Logger = zerolog.New(out).With().Caller().Timestamp().Logger()
 }
 
 // CliLogger sets the global logger to the console logger with color
