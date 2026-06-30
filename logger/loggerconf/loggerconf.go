@@ -1,10 +1,9 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-// Package loggerconf provides a single entry point that decides how logging
-// happens based on a small, declarative set of options. It is the shared
-// implementation used by cnspec (via the --logging-config flag) and the
-// cnspec-runner so that logging is configured identically everywhere.
+// Package loggerconf configures the global logger from a small, declarative set
+// of options (writer, level, and writer-specific settings), so logging can be
+// set up identically from a single place.
 //
 // It lives in its own package, separate from the base logger package, so that
 // importing it (and therefore the GCP/stackdriver dependency) stays opt-in.
