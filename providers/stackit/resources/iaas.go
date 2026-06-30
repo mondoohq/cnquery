@@ -92,6 +92,9 @@ func (r *mqlStackitServer) id() (string, error) {
 func initStackitServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("compute")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)

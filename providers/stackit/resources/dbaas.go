@@ -660,6 +660,9 @@ func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
 func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("postgres-flex")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -693,6 +696,9 @@ func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*l
 func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("mongodb-flex")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -725,6 +731,9 @@ func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*ll
 
 func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("opensearch")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -760,6 +769,9 @@ func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx
 func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("mariadb")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -793,6 +805,9 @@ func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("redis")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -828,6 +843,9 @@ func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("rabbitmq")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -861,6 +879,9 @@ func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.R
 
 func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("secrets-manager")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -971,6 +992,9 @@ func (r *mqlStackitLogMeInstance) id() (string, error) {
 
 func initStackitLogMeInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("logme")
+	}
 	if !ok {
 		return args, nil, nil
 	}
@@ -1141,6 +1165,9 @@ func (r *mqlStackitSqlServerFlexInstance) options() (map[string]any, error) {
 
 func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
+	if !ok {
+		id, ok = conn(runtime).AssetObjectID("sqlserver-flex")
+	}
 	if !ok {
 		return args, nil, nil
 	}

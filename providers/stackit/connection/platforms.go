@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -54,6 +56,31 @@ func MondooObjectID(projectID, service, region, id string) string {
 		region = "global"
 	}
 	return objectPlatformIDPrefix + service + "/" + projectID + "/" + region + "/" + id
+}
+
+// AssetObjectID returns the object id of the discovered sub-asset this
+// connection is scanning, when that sub-asset's platform id matches the given
+// service (e.g. "postgres-flex"). It lets a singular resource (e.g.
+// stackit.postgresFlex.instance) scope itself to the connected asset when a
+// query supplies no explicit id, mirroring aws's getAssetIdentifier. Returns
+// false for the project root and for sub-assets of a different service, so the
+// list-based project scan is never affected.
+func (c *StackitConnection) AssetObjectID(service string) (string, bool) {
+	if c.asset == nil {
+		return "", false
+	}
+	prefix := objectPlatformIDPrefix + service + "/"
+	for _, pid := range c.asset.PlatformIds {
+		if !strings.HasPrefix(pid, prefix) {
+			continue
+		}
+		parts := strings.Split(strings.TrimPrefix(pid, prefix), "/")
+		// Remainder is <project>/<region>/<id>; the trailing segment is the id.
+		if len(parts) >= 3 && parts[len(parts)-1] != "" {
+			return parts[len(parts)-1], true
+		}
+	}
+	return "", false
 }
 
 // GetPlatformForObject returns the inventory platform for a discovered sub-asset,

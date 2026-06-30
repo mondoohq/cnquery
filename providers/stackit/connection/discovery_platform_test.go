@@ -3,7 +3,41 @@
 
 package connection
 
-import "testing"
+import (
+	"testing"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+)
+
+func TestAssetObjectID(t *testing.T) {
+	conn := &StackitConnection{
+		asset: &inventory.Asset{
+			PlatformIds: []string{MondooObjectID("proj-1", "postgres-flex", "eu01", "db-9")},
+		},
+	}
+
+	// Matching service returns the trailing object id.
+	if id, ok := conn.AssetObjectID("postgres-flex"); !ok || id != "db-9" {
+		t.Fatalf("postgres-flex: got (%q,%v), want (db-9,true)", id, ok)
+	}
+	// A different service must not match (no cross-type leakage).
+	if id, ok := conn.AssetObjectID("mongodb-flex"); ok {
+		t.Fatalf("mongodb-flex should not match, got %q", id)
+	}
+
+	// The project root must never be treated as an object.
+	proj := &StackitConnection{
+		asset: &inventory.Asset{PlatformIds: []string{PlatformIdStackitProject + "proj-1"}},
+	}
+	if id, ok := proj.AssetObjectID("postgres-flex"); ok {
+		t.Fatalf("project root should not match, got %q", id)
+	}
+
+	// No asset -> no id.
+	if _, ok := (&StackitConnection{}).AssetObjectID("postgres-flex"); ok {
+		t.Fatal("nil asset should not match")
+	}
+}
 
 func TestMondooObjectID(t *testing.T) {
 	got := MondooObjectID("proj-1", "postgres-flex", "eu01", "db-9")

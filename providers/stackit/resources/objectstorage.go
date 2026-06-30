@@ -61,12 +61,15 @@ func (r *mqlStackitObjectStorageBucket) id() (string, error) {
 }
 
 func initStackitObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	v, ok := args["name"]
-	if !ok || v == nil {
-		return args, nil, nil
+	name := ""
+	if v, ok := args["name"]; ok && v != nil {
+		name, _ = v.Value.(string)
 	}
-	name, ok := v.Value.(string)
-	if !ok || name == "" {
+	if name == "" {
+		// Scope to the connected discovered bucket asset when no name is given.
+		name, _ = conn(runtime).AssetObjectID("object-storage")
+	}
+	if name == "" {
 		return args, nil, nil
 	}
 	c := conn(runtime)
