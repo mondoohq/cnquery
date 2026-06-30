@@ -13,9 +13,10 @@ import (
 
 func clearEnvLevel(t *testing.T) {
 	t.Helper()
-	// ensure DEBUG/TRACE don't override the configured level during the test
+	// ensure env vars don't override the configured level during the test
 	t.Setenv("DEBUG", "")
 	t.Setenv("TRACE", "")
+	t.Setenv("MONDOO_LOG_LEVEL", "")
 }
 
 func TestConfigure_Level(t *testing.T) {
@@ -56,6 +57,32 @@ func TestConfigure_EnvOverridesLevel(t *testing.T) {
 	}
 	if got := logger.GetLevel(); got != "debug" {
 		t.Errorf("expected env to force debug, got %q", got)
+	}
+}
+
+func TestConfigure_MondooLogLevelOverridesConfig(t *testing.T) {
+	// the cnspec-runner relies on MONDOO_LOG_LEVEL (set per job) overriding the
+	// configured level; make sure that keeps working through Configure.
+	t.Setenv("DEBUG", "")
+	t.Setenv("TRACE", "")
+	t.Setenv("MONDOO_LOG_LEVEL", "trace")
+	if err := Configure(&LoggingConfig{Writer: "cli", Level: "error"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := logger.GetLevel(); got != "trace" {
+		t.Errorf("expected MONDOO_LOG_LEVEL to force trace, got %q", got)
+	}
+}
+
+func TestConfigure_MondooLogLevelOverridesNilConfig(t *testing.T) {
+	t.Setenv("DEBUG", "")
+	t.Setenv("TRACE", "")
+	t.Setenv("MONDOO_LOG_LEVEL", "warn")
+	if err := Configure(nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := logger.GetLevel(); got != "warn" {
+		t.Errorf("expected MONDOO_LOG_LEVEL to force warn, got %q", got)
 	}
 }
 

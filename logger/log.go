@@ -84,7 +84,9 @@ func InitTestEnv() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
 }
 
-// GetEnvLogLevel determines the loglevel from env vars DEBUG or TRACE are set
+// GetEnvLogLevel determines the loglevel from env vars. MONDOO_LOG_LEVEL takes
+// precedence and accepts any zerolog level (e.g. "info", "debug", "trace");
+// the legacy DEBUG=true and TRACE=true vars still work.
 func GetEnvLogLevel() (string, bool) {
 	level := ""
 	ok := false
@@ -96,6 +98,11 @@ func GetEnvLogLevel() (string, bool) {
 
 	if os.Getenv("TRACE") == "true" || os.Getenv("TRACE") == "1" {
 		level = "trace"
+		ok = true
+	}
+
+	if v := os.Getenv("MONDOO_LOG_LEVEL"); v != "" {
+		level = v
 		ok = true
 	}
 
