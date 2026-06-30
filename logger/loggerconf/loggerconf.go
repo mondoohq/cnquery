@@ -54,46 +54,52 @@ func Configure(opts *LoggingConfig) error {
 	if opts == nil {
 		logger.CliLogger()
 		logger.Set("info")
-	} else {
-		switch opts.Writer {
-		case "", "cli":
-			switch opts.Options["format"] {
-			case "gcp-json":
-				logger.UseGCPJSONLogging(logger.LogOutputWriter)
-			case "json":
-				logger.UseJSONLogging(logger.LogOutputWriter)
-			default:
-				// matches the nil-opts default: colorized console on the
-				// same buffered writer used by the json formats above.
-				logger.CliLogger()
-			}
-		case "stackdriver":
-			if opts.Options == nil {
-				return fmt.Errorf("stackdriver logging requires `project-id` and `log-id` in the options block")
-			}
-			projectID := opts.Options["project-id"]
-			if projectID == "" {
-				return fmt.Errorf("stackdriver logging requires a `project-id` option")
-			}
-			logID := opts.Options["log-id"]
-			if logID == "" {
-				return fmt.Errorf("stackdriver logging requires a `log-id` option")
-			}
-
-			w, err := stackdriver.NewStackdriverWriter(projectID, logID)
-			if err != nil {
-				return fmt.Errorf("could not initialize stackdriver logger: %w", err)
-			}
-			logger.SetWriter(w)
-		default:
-			return fmt.Errorf("unknown log writer %q", opts.Writer)
-		}
-		logger.Set(opts.Level)
+		applyEnvLevel()
+		return nil
 	}
 
-	// Environment variables always over-write custom configuration.
+	switch opts.Writer {
+	case "", "cli":
+		switch opts.Options["format"] {
+		case "gcp-json":
+			logger.UseGCPJSONLogging(logger.LogOutputWriter)
+		case "json":
+			logger.UseJSONLogging(logger.LogOutputWriter)
+		default:
+			// matches the nil-opts default: colorized console on the
+			// same buffered writer used by the json formats above.
+			logger.CliLogger()
+		}
+	case "stackdriver":
+		if opts.Options == nil {
+			return fmt.Errorf("stackdriver logging requires `project-id` and `log-id` in the options block")
+		}
+		projectID := opts.Options["project-id"]
+		if projectID == "" {
+			return fmt.Errorf("stackdriver logging requires a `project-id` option")
+		}
+		logID := opts.Options["log-id"]
+		if logID == "" {
+			return fmt.Errorf("stackdriver logging requires a `log-id` option")
+		}
+
+		w, err := stackdriver.NewStackdriverWriter(projectID, logID)
+		if err != nil {
+			return fmt.Errorf("could not initialize stackdriver logger: %w", err)
+		}
+		logger.SetWriter(w)
+	default:
+		return fmt.Errorf("unknown log writer %q", opts.Writer)
+	}
+	logger.Set(opts.Level)
+	applyEnvLevel()
+	return nil
+}
+
+// applyEnvLevel lets the DEBUG/TRACE/MONDOO_LOG_LEVEL environment variables
+// override the configured level, so environment variables always win.
+func applyEnvLevel() {
 	if envLevel, ok := logger.GetEnvLogLevel(); ok {
 		logger.Set(envLevel)
 	}
-	return nil
 }
