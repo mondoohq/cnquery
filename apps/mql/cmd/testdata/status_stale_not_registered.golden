@@ -1,0 +1,38 @@
+
+  mql status    13.22.0 · macos/arm64 · 2026-06-29T14:37:00-07:00
+
+  ● Client     not registered   ✗ action needed
+  ● Platform   reachable · SERVING   ✓ healthy
+  ● Updates    mql 13.22.0 → 13.25.0 · 2 providers outdated
+
+  ── System ──────────────────────────────────────────────
+  │  Host       workstation.localdomain · 192.0.2.10
+  │  Platform   macos 26.5.1 · arm64
+
+  ── mql ──────────────────────────────────────────────
+  │  Version    13.22.0  →  13.25.0   ⚠ update recommended
+  │  API        v13
+  │  Config     defaults — no config file loaded
+  │  Updates    https://releases.mondoo.com
+
+  ── Mondoo Platform ──────────────────────────────────────────────
+  │  Endpoint   https://us.api.mondoo.com
+  │  Status     SERVING   API v13 ✓ in sync
+  │  Time       2026-06-29T21:37:00Z
+  │  Client     ✗ not registered — run mql login
+
+  ── Providers ──────────────────────────────────────────────
+  │  3 installed · 2 outdated · 1 current
+  │
+  │  PROVIDER          INSTALLED  LATEST
+  │  aws               13.18.0  →  13.30.0
+  │  os                13.22.0  →  13.25.2
+  │
+  │  ✓ current  core
+  │  providers refresh automatically on next run · mql providers install <name> to update one now
+
+  ✗ not registered · exit 1 · next steps:
+    → mql login                       register this client with Mondoo Platform
+    → visit https://releases.mondoo.com    upgrade 13.22.0 → 13.25.0
+    → mql providers install <name>    update 2 outdated providers
+

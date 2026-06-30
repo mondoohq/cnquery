@@ -39,3 +39,11 @@ func (t Theme) Error(s ...any) string {
 func (t Theme) Success(s ...any) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Success).String()
 }
+
+func (t Theme) Warn(s ...any) string {
+	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Warn).String()
+}
+
+func (t Theme) Command(s ...any) string {
+	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Command).String()
+}

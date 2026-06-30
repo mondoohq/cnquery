@@ -19,6 +19,8 @@ var DefaultColorTheme = Theme{
 	Disabled:  Profile.Color("248"),
 	Error:     Profile.Color("210"),
 	Success:   Profile.Color("78"),
+	Warn:      Profile.Color("214"),
+	Command:   Profile.Color("44"),
 
 	// severity
 	Critical: Profile.Color("204"),
