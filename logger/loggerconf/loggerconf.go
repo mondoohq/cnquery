@@ -1,0 +1,95 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+// Package loggerconf provides a single entry point that decides how logging
+// happens based on a small, declarative set of options. It is the shared
+// implementation used by cnspec (via the --logging-config flag) and the
+// cnspec-runner so that logging is configured identically everywhere.
+//
+// It lives in its own package, separate from the base logger package, so that
+// importing it (and therefore the GCP/stackdriver dependency) stays opt-in.
+package loggerconf
+
+import (
+	"fmt"
+	"os"
+
+	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/v13/logger/stackdriver"
+	"sigs.k8s.io/yaml"
+)
+
+// Options declares how the global logger should be configured.
+type Options struct {
+	// Writer selects the log sink: "cli" (default) or "stackdriver".
+	Writer string `json:"writer,omitempty" mapstructure:"writer"`
+	// Level sets the log level: error, warn, info, debug, trace.
+	Level string `json:"level,omitempty" mapstructure:"level"`
+	// Options carries writer-specific settings. For the "cli" writer this is
+	// "format" (json|gcp-json); for "stackdriver" it is "project-id" and
+	// "log-id".
+	Options map[string]string `json:"options,omitempty" mapstructure:"options"`
+}
+
+// Load reads logging Options from a YAML or JSON file at the given path.
+func Load(path string) (*Options, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read logging config %q: %w", path, err)
+	}
+
+	var opts Options
+	if err := yaml.Unmarshal(raw, &opts); err != nil {
+		return nil, fmt.Errorf("could not parse logging config %q: %w", path, err)
+	}
+	return &opts, nil
+}
+
+// Configure is the single function that decides how logging happens. It applies
+// the given options to the global logger and then lets the DEBUG/TRACE
+// environment variables override the configured level, so that environment
+// variables always win over explicit configuration.
+//
+// A nil opts falls back to the colorized CLI logger at info level.
+func Configure(opts *Options) error {
+	if opts == nil {
+		logger.CliLogger()
+		logger.Set("info")
+	} else {
+		switch opts.Writer {
+		case "", "cli":
+			switch opts.Options["format"] {
+			case "gcp-json":
+				logger.UseGCPJSONLogging(logger.LogOutputWriter)
+			case "json":
+				logger.UseJSONLogging(logger.LogOutputWriter)
+			default:
+				logger.StandardZerologLogger()
+			}
+		case "stackdriver":
+			projectID := opts.Options["project-id"]
+			if projectID == "" {
+				return fmt.Errorf("stackdriver logging requires a `project-id` option")
+			}
+			logID := opts.Options["log-id"]
+			if logID == "" {
+				return fmt.Errorf("stackdriver logging requires a `log-id` option")
+			}
+
+			w, err := stackdriver.NewStackdriverWriter(projectID, logID)
+			if err != nil {
+				return fmt.Errorf("could not initialize stackdriver logger: %w", err)
+			}
+			logger.SetWriter(w)
+		default:
+			return fmt.Errorf("unknown log writer %q", opts.Writer)
+		}
+		logger.Set(opts.Level)
+	}
+
+	// Environment variables always over-write custom configuration.
+	if envLevel, ok := logger.GetEnvLogLevel(); ok {
+		logger.Set(envLevel)
+	}
+	return nil
+}
