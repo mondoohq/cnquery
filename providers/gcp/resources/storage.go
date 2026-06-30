@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/storage/v1"
@@ -352,6 +353,9 @@ func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, erro
 
 	resp, err := svc.Locations.EffectiveTagBindingCollections.Get(name).Context(ctx).Do()
 	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
+			return map[string]interface{}{}, nil
+		}
 		return nil, err
 	}
 
@@ -360,7 +364,7 @@ func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, erro
 
 // effectiveTagsToInterface converts the EffectiveTags map from the
 // cloudresourcemanager API (map[string]string) to map[string]interface{}
-// as required by MQL. Exported for unit testing.
+// as required by MQL. Unexported; tested directly in storage_test.go.
 func effectiveTagsToInterface(in map[string]string) map[string]interface{} {
 	out := make(map[string]interface{}, len(in))
 	for k, v := range in {
