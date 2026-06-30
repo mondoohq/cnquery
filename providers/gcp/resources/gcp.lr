@@ -2398,7 +2398,8 @@ private gcp.project.storageService {
 //
 // Examine a Cloud Storage bucket's configuration, access controls, and
 // data-protection settings. Surfaces the `storageClass`, `location` and
-// `locationType`, `labels`, IAM policy (including `public()` which flags
+// `locationType`, `labels`, `tags` (Resource Manager Tags bound to the bucket),
+// IAM policy (including `public()` which flags
 // any `allUsers` / `allAuthenticatedUsers` grant), `iamConfiguration`
 // (uniform bucket-level access, public access prevention), `retentionPolicy`
 // and `retentionPolicyLocked`, object `versioningEnabled`, default CMEK
@@ -2415,6 +2416,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   name string
   // User-defined labels
   labels map[string]string
+  // Resource Manager tags bound to this bucket
+  tags() map[string]string
   // Bucket location
   location string
   // Bucket location type

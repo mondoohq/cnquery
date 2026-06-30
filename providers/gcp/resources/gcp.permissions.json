@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.25.1",
-  "generated_at": "2026-06-26T23:07:07-07:00",
+  "version": "13.26.0",
+  "generated_at": "2026-06-29T10:27:18+02:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -234,6 +234,7 @@
     "redis.backups.list",
     "redis.clusters.list",
     "redis.instances.list",
+    "resourcemanager.effectiveTagBindingCollections.get",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
     "resourcemanager.resourceTagBindings.list",
@@ -1704,6 +1705,12 @@
       "service": "redis",
       "action": "ListInstances",
       "source_file": "redis.go"
+    },
+    {
+      "permission": "resourcemanager.effectiveTagBindingCollections.get",
+      "service": "resourcemanager",
+      "action": "EffectiveTagBindingCollections.Get",
+      "source_file": "storage.go"
     },
     {
       "permission": "resourcemanager.folders.get",

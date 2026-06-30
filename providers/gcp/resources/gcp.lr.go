@@ -4888,6 +4888,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"gcp.project.storageService.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.storageService.bucket.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetLocation()).ToDataRes(types.String)
 	},
@@ -20612,6 +20615,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47305,6 +47312,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	ProjectId                       plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Labels                          plugin.TValue[map[string]any]
+	Tags                            plugin.TValue[map[string]any]
 	Location                        plugin.TValue[string]
 	LocationType                    plugin.TValue[string]
 	ProjectNumber                   plugin.TValue[string]
@@ -47401,6 +47409,12 @@ func (c *mqlGcpProjectStorageServiceBucket) GetName() *plugin.TValue[string] {
 
 func (c *mqlGcpProjectStorageServiceBucket) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetLocation() *plugin.TValue[string] {

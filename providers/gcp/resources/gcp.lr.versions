@@ -4683,6 +4683,7 @@ gcp.project.storageService.bucket.softDeletePolicyEnabled 13.12.2
 gcp.project.storageService.bucket.softDeleteRetentionDuration 13.22.2
 gcp.project.storageService.bucket.softDeleteTime 13.16.3
 gcp.project.storageService.bucket.storageClass 9.0.0
+gcp.project.storageService.bucket.tags 13.26.1
 gcp.project.storageService.bucket.uniformBucketLevelAccess 13.7.2
 gcp.project.storageService.bucket.uniformBucketLevelAccessEnabled 13.12.2
 gcp.project.storageService.bucket.updated 9.0.0
