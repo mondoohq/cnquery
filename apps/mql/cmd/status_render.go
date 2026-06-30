@@ -165,6 +165,7 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 
 	if s.Client.Registered {
 		st.row(b, "Client", st.value(s.Client.Mrn))
+		st.row(b, "Account", st.value(s.Client.ServiceAccount))
 	} else {
 		st.row(b, "Client", st.bad("✗ not registered")+" "+st.dim("—")+" run "+st.cmd("mql login"))
 	}

@@ -20,6 +20,7 @@
   │  Status     SERVING   API v13 ✓ in sync
   │  Time       2026-06-29T21:37:00Z
   │  Client     //agents.api.mondoo.app/spaces/test/agents/123
+  │  Account    //agents.api.mondoo.app/spaces/test/serviceaccounts/abc
 
   ── Providers ──────────────────────────────────────────────
   │  3 installed · 2 outdated · 1 current
