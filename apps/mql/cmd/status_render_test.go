@@ -290,6 +290,12 @@ func TestRenderCli_Golden(t *testing.T) {
 	}
 }
 
+func TestPadRight_CountsRunesNotBytes(t *testing.T) {
+	// "café" is 5 bytes but 4 runes; padding to width 6 must add 2 spaces
+	// (rune-based), not 1 (byte-based).
+	assert.Equal(t, "café  ", padRight("café", 6))
+}
+
 func TestRenderCli_PlatformSection_WarningsAndFeatures(t *testing.T) {
 	s := healthyRegisteredStatus()
 	s.Upstream.Features = []string{"alpha", "beta"}

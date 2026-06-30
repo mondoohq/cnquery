@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/muesli/termenv"
 	"go.mondoo.com/mql/v13/cli/theme"
@@ -376,9 +377,12 @@ func (st styler) footerStep(b *strings.Builder, command, desc string) {
 	fmt.Fprintf(b, "    %s %s    %s\n", st.cmd("→"), st.cmd(padRight(command, 28)), st.dim(desc))
 }
 
+// padRight pads s with spaces to a width of n display columns. It counts runes
+// rather than bytes so multi-byte content still aligns.
 func padRight(s string, n int) string {
-	if len(s) >= n {
+	width := utf8.RuneCountInString(s)
+	if width >= n {
 		return s
 	}
-	return s + strings.Repeat(" ", n-len(s))
+	return s + strings.Repeat(" ", n-width)
 }
