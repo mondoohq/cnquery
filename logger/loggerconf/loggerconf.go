@@ -28,6 +28,11 @@ type LoggingConfig struct {
 	// "format" (json|gcp-json); for "stackdriver" it is "project-id" and
 	// "log-id".
 	Options map[string]string `json:"options,omitempty" mapstructure:"options"`
+	// Labels are static key/value labels attached to every log entry, surfaced
+	// as Cloud Logging LogEntry.labels (filterable as `labels.<key>`). Applied
+	// by the GCP-aware sinks: the "gcp-json" cli format and the "stackdriver"
+	// writer; ignored by the plain "json" and console formats.
+	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
 }
 
 // Load reads a LoggingConfig from a YAML or JSON file at the given path.
@@ -62,7 +67,11 @@ func Configure(opts *LoggingConfig) error {
 	case "", "cli":
 		switch opts.Options["format"] {
 		case "gcp-json":
-			logger.UseGCPJSONLogging(logger.LogOutputWriter)
+			var gcpOpts []logger.GCPLogOption
+			if len(opts.Labels) > 0 {
+				gcpOpts = append(gcpOpts, logger.WithGCPLabels(opts.Labels))
+			}
+			logger.UseGCPJSONLogging(logger.LogOutputWriter, gcpOpts...)
 		case "json":
 			logger.UseJSONLogging(logger.LogOutputWriter)
 		default:
@@ -83,7 +92,11 @@ func Configure(opts *LoggingConfig) error {
 			return fmt.Errorf("stackdriver logging requires a `log-id` option")
 		}
 
-		w, err := stackdriver.NewStackdriverWriter(projectID, logID)
+		var sdOpts []stackdriver.Option
+		if len(opts.Labels) > 0 {
+			sdOpts = append(sdOpts, stackdriver.WithLabels(opts.Labels))
+		}
+		w, err := stackdriver.NewStackdriverWriter(projectID, logID, sdOpts...)
 		if err != nil {
 			return fmt.Errorf("could not initialize stackdriver logger: %w", err)
 		}

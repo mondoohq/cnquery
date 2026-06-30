@@ -134,3 +134,36 @@ func TestLoad(t *testing.T) {
 		t.Fatal("expected an error for a missing file")
 	}
 }
+
+func TestLoad_Labels(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "logging.yaml")
+	yaml := "writer: cli\noptions:\n  format: gcp-json\nlabels:\n  project_id: scanned-proj\n  scan_type: gcp\n"
+	if err := os.WriteFile(path, []byte(yaml), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	opts, err := Load(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if opts.Labels["project_id"] != "scanned-proj" || opts.Labels["scan_type"] != "gcp" {
+		t.Errorf("unexpected labels parsed from yaml: %+v", opts.Labels)
+	}
+}
+
+func TestConfigure_GcpJSONWithLabels(t *testing.T) {
+	clearEnvLevel(t)
+	err := Configure(&LoggingConfig{
+		Writer:  "cli",
+		Level:   "info",
+		Options: map[string]string{"format": "gcp-json"},
+		Labels:  map[string]string{"project_id": "scanned-proj"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := logger.GetLevel(); got != "info" {
+		t.Errorf("expected level info, got %q", got)
+	}
+}
