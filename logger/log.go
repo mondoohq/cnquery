@@ -88,23 +88,18 @@ func InitTestEnv() {
 // precedence and accepts any zerolog level (e.g. "info", "debug", "trace");
 // the legacy DEBUG=true and TRACE=true vars still work.
 func GetEnvLogLevel() (string, bool) {
-	level := ""
-	ok := false
-
-	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
-		level = "debug"
-		ok = true
+	// MONDOO_LOG_LEVEL takes precedence, so it is checked first.
+	if v := os.Getenv("MONDOO_LOG_LEVEL"); v != "" {
+		return v, true
 	}
 
 	if os.Getenv("TRACE") == "true" || os.Getenv("TRACE") == "1" {
-		level = "trace"
-		ok = true
+		return "trace", true
 	}
 
-	if v := os.Getenv("MONDOO_LOG_LEVEL"); v != "" {
-		level = v
-		ok = true
+	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
+		return "debug", true
 	}
 
-	return level, ok
+	return "", false
 }
