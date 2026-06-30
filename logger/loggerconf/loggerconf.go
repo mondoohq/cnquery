@@ -64,9 +64,14 @@ func Configure(opts *Options) error {
 			case "json":
 				logger.UseJSONLogging(logger.LogOutputWriter)
 			default:
-				logger.StandardZerologLogger()
+				// matches the nil-opts default: colorized console on the
+				// same buffered writer used by the json formats above.
+				logger.CliLogger()
 			}
 		case "stackdriver":
+			if opts.Options == nil {
+				return fmt.Errorf("stackdriver logging requires `project-id` and `log-id` in the options block")
+			}
 			projectID := opts.Options["project-id"]
 			if projectID == "" {
 				return fmt.Errorf("stackdriver logging requires a `project-id` option")
