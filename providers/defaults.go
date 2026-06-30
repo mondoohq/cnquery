@@ -762,7 +762,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "portainer",
 					Use:   "portainer",
-					Short: "a Portainer instance",
+					Short: "a Portainer server",
 				},
 			},
 		},

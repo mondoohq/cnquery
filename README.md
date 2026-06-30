@@ -153,7 +153,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | OpenAI account                | `openai`                   | `mql shell openai --token TOKEN`                                                                                                                |
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
 | OpenStack project             | `openstack`                | `mql shell openstack --cloud CLOUD_NAME` or<br></br>`mql shell openstack --auth-url AUTH_URL --username USER --password PASSWORD --project-name PROJECT` |
-| Portainer instance            | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
+| Portainer server              | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
 | Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |
