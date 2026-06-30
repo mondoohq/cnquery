@@ -18,8 +18,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Options declares how the global logger should be configured.
-type Options struct {
+// LoggingConfig declares how the global logger should be configured.
+type LoggingConfig struct {
 	// Writer selects the log sink: "cli" (default) or "stackdriver".
 	Writer string `json:"writer,omitempty" mapstructure:"writer"`
 	// Level sets the log level: error, warn, info, debug, trace.
@@ -30,14 +30,14 @@ type Options struct {
 	Options map[string]string `json:"options,omitempty" mapstructure:"options"`
 }
 
-// Load reads logging Options from a YAML or JSON file at the given path.
-func Load(path string) (*Options, error) {
+// Load reads a LoggingConfig from a YAML or JSON file at the given path.
+func Load(path string) (*LoggingConfig, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not read logging config %q: %w", path, err)
 	}
 
-	var opts Options
+	var opts LoggingConfig
 	if err := yaml.Unmarshal(raw, &opts); err != nil {
 		return nil, fmt.Errorf("could not parse logging config %q: %w", path, err)
 	}
@@ -50,7 +50,7 @@ func Load(path string) (*Options, error) {
 // variables always win over explicit configuration.
 //
 // A nil opts falls back to the colorized CLI logger at info level.
-func Configure(opts *Options) error {
+func Configure(opts *LoggingConfig) error {
 	if opts == nil {
 		logger.CliLogger()
 		logger.Set("info")

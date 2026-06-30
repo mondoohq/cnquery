@@ -20,7 +20,7 @@ func clearEnvLevel(t *testing.T) {
 
 func TestConfigure_Level(t *testing.T) {
 	clearEnvLevel(t)
-	if err := Configure(&Options{Writer: "cli", Level: "warn"}); err != nil {
+	if err := Configure(&LoggingConfig{Writer: "cli", Level: "warn"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got := logger.GetLevel(); got != "warn" {
@@ -30,7 +30,7 @@ func TestConfigure_Level(t *testing.T) {
 
 func TestConfigure_EmptyWriterDefaultsToCli(t *testing.T) {
 	clearEnvLevel(t)
-	if err := Configure(&Options{Level: "error"}); err != nil {
+	if err := Configure(&LoggingConfig{Level: "error"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got := logger.GetLevel(); got != "error" {
@@ -51,7 +51,7 @@ func TestConfigure_Nil(t *testing.T) {
 func TestConfigure_EnvOverridesLevel(t *testing.T) {
 	t.Setenv("DEBUG", "true")
 	t.Setenv("TRACE", "")
-	if err := Configure(&Options{Writer: "cli", Level: "error"}); err != nil {
+	if err := Configure(&LoggingConfig{Writer: "cli", Level: "error"}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got := logger.GetLevel(); got != "debug" {
@@ -61,17 +61,17 @@ func TestConfigure_EnvOverridesLevel(t *testing.T) {
 
 func TestConfigure_UnknownWriter(t *testing.T) {
 	clearEnvLevel(t)
-	if err := Configure(&Options{Writer: "bogus"}); err == nil {
+	if err := Configure(&LoggingConfig{Writer: "bogus"}); err == nil {
 		t.Fatal("expected an error for an unknown writer")
 	}
 }
 
 func TestConfigure_StackdriverRequiresOptions(t *testing.T) {
 	clearEnvLevel(t)
-	if err := Configure(&Options{Writer: "stackdriver"}); err == nil {
+	if err := Configure(&LoggingConfig{Writer: "stackdriver"}); err == nil {
 		t.Fatal("expected an error when project-id is missing")
 	}
-	if err := Configure(&Options{Writer: "stackdriver", Options: map[string]string{"project-id": "p"}}); err == nil {
+	if err := Configure(&LoggingConfig{Writer: "stackdriver", Options: map[string]string{"project-id": "p"}}); err == nil {
 		t.Fatal("expected an error when log-id is missing")
 	}
 }
