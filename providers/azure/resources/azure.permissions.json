@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.22.0",
-  "generated_at": "2026-06-26T21:25:53-07:00",
+  "version": "13.23.0",
+  "generated_at": "2026-06-29T23:43:33-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1315,6 +1315,12 @@
       "service": "Microsoft.Resources",
       "action": "NewListPager",
       "source_file": "resources.go"
+    },
+    {
+      "permission": "Microsoft.Resources/subscriptions/read",
+      "service": "Microsoft.Resources",
+      "action": "NewListPager",
+      "source_file": "client_subscriptions.go"
     },
     {
       "permission": "Microsoft.Resources/subscriptions/read",

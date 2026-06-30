@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.25.1",
-  "generated_at": "2026-06-26T23:07:07-07:00",
+  "version": "13.26.0",
+  "generated_at": "2026-06-29T23:43:33-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -1730,6 +1730,13 @@
       "permission": "resourcemanager.organizations.get",
       "service": "resourcemanager",
       "action": "Organizations.Get",
+      "source_file": "gcp_organization.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.organizations.get",
+      "service": "resourcemanager",
+      "action": "Organizations.Get",
       "source_file": "organization.go",
       "scope": "org"
     },
@@ -1739,6 +1746,12 @@
       "action": "Organizations.GetIamPolicy",
       "source_file": "organization.go",
       "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.projects.get",
+      "service": "resourcemanager",
+      "action": "Projects.Get",
+      "source_file": "gcp_organization.go"
     },
     {
       "permission": "resourcemanager.projects.get",
