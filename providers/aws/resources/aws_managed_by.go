@@ -81,7 +81,11 @@ func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {
 	// Terraform injects no provenance tag, but when creation_token is left
 	// unset the Terraform AWS provider auto-generates one with a "terraform-"
 	// prefix. Fall back to that heuristic only when no tag-based owner matched.
-	if strings.HasPrefix(a.GetCreationToken().Data, "terraform-") {
+	ct := a.GetCreationToken()
+	if ct.Error != nil {
+		return "", ct.Error
+	}
+	if strings.HasPrefix(ct.Data, "terraform-") {
 		return "terraform", nil
 	}
 	return "", nil
