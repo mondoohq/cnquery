@@ -5372,6 +5372,10 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   createdAt time
   // Availability zone where the load balancer runs
   availabilityZones []string
+  // Subnets the load balancer is attached to
+  subnets() []aws.vpc.subnet
+  // Provisioning state of the load balancer (active, provisioning, active_impaired, or failed; null for classic load balancers)
+  state string
   // VPC security groups for the load balancer
   securityGroups []aws.ec2.securitygroup
   // Internet-exposure breakdown (internet-facing scheme combined with security group ingress)

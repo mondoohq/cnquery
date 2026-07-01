@@ -142,6 +142,7 @@ func buildElbClassicLoadBalancerResource(runtime *plugin.Runtime, region, accoun
 		"region":               llx.StringData(region),
 		"scheme":               llx.StringDataPtr(lb.Scheme),
 		"securityGroups":       llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
+		"state":                llx.NilData, // classic load balancers have no provisioning state
 		"vpc":                  llx.NilData,
 	}
 
@@ -162,14 +163,42 @@ func buildElbClassicLoadBalancerResource(runtime *plugin.Runtime, region, accoun
 	if err != nil {
 		return nil, err
 	}
-	return mqlLb.(*mqlAwsElbLoadbalancer), nil
+	res := mqlLb.(*mqlAwsElbLoadbalancer)
+	res.cacheSubnetIds = lb.Subnets
+	return res, nil
 }
 
 func (a *mqlAwsElbLoadbalancer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsElbLoadbalancer) subnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		mqlSubnet, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), subnetId)),
+			})
+		if err != nil {
+			// When tag filters are active, the subnet may not be in the filtered
+			// list. Log and continue rather than failing the entire LB.
+			log.Debug().Str("subnet", subnetId).Err(err).Msg("could not resolve subnet for ELB")
+			continue
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
 type mqlAwsElbLoadbalancerInternal struct {
+	// Subnet IDs the load balancer is attached to, resolved lazily by subnets().
+	cacheSubnetIds []string
+
 	// Cached v2 DescribeLoadBalancerAttributes response, shared between attributes() and attribute().
 	cachedV2Attrs  []elbtypes.LoadBalancerAttribute
 	v2AttrsFetched bool
@@ -285,8 +314,17 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 
 func buildElbV2LoadBalancerResource(runtime *plugin.Runtime, region, accountID string, lb elbtypes.LoadBalancer) (*mqlAwsElbLoadbalancer, error) {
 	availabilityZones := []any{}
+	subnetIds := []string{}
 	for _, zone := range lb.AvailabilityZones {
 		availabilityZones = append(availabilityZones, convert.ToValue(zone.ZoneName))
+		if zone.SubnetId != nil {
+			subnetIds = append(subnetIds, *zone.SubnetId)
+		}
+	}
+
+	state := ""
+	if lb.State != nil {
+		state = string(lb.State.Code)
 	}
 
 	sgs := []any{}
@@ -313,6 +351,7 @@ func buildElbV2LoadBalancerResource(runtime *plugin.Runtime, region, accountID s
 		"name":              llx.StringDataPtr(lb.LoadBalancerName),
 		"scheme":            llx.StringData(string(lb.Scheme)),
 		"securityGroups":    llx.ArrayData(sgs, types.Resource(ResourceAwsEc2Securitygroup)),
+		"state":             llx.StringData(state),
 		"elbType":           llx.StringData(string(lb.Type)),
 		"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
 		"region":            llx.StringData(region),
@@ -338,7 +377,9 @@ func buildElbV2LoadBalancerResource(runtime *plugin.Runtime, region, accountID s
 	if err != nil {
 		return nil, err
 	}
-	return mqlLb.(*mqlAwsElbLoadbalancer), nil
+	res := mqlLb.(*mqlAwsElbLoadbalancer)
+	res.cacheSubnetIds = subnetIds
+	return res, nil
 }
 
 func initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

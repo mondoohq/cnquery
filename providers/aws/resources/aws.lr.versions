@@ -4335,6 +4335,8 @@ aws.elb.loadbalancer.name 11.15.2
 aws.elb.loadbalancer.region 11.15.2
 aws.elb.loadbalancer.scheme 11.15.2
 aws.elb.loadbalancer.securityGroups 11.15.2
+aws.elb.loadbalancer.state 13.39.2
+aws.elb.loadbalancer.subnets 13.39.2
 aws.elb.loadbalancer.tags 11.15.2
 aws.elb.loadbalancer.targetGroups 11.15.2
 aws.elb.loadbalancer.vpc 11.15.2
