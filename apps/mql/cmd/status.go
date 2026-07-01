@@ -6,19 +6,20 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/cli/config"
 	cli_errors "go.mondoo.com/mql/v13/cli/errors"
-	"go.mondoo.com/mql/v13/cli/theme"
 	"go.mondoo.com/mql/v13/providers"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/sysinfo"
@@ -36,6 +37,64 @@ func init() {
 // statusTimeout bounds the total time the status command spends on network
 // calls so it cannot hang indefinitely when the API is unreachable.
 const statusTimeout = 30 * time.Second
+
+// spinnerFrames and spinnerFPS are the braille frames and cadence used by the
+// status loading indicator, matching the "Dot" spinner shown while scanning.
+var (
+	spinnerFrames = []string{"⣾ ", "⣽ ", "⣻ ", "⢿ ", "⡿ ", "⣟ ", "⣯ ", "⣷ "}
+	spinnerFPS    = time.Second / 10
+)
+
+// statusSpinner animates a loading indicator on stderr while the status command
+// performs its network calls. It writes to stderr (never stdout, which carries
+// the rendered status) and is a no-op when stderr is not a terminal, keeping
+// piped and redirected output clean.
+type statusSpinner struct {
+	stop chan struct{}
+	done chan struct{}
+}
+
+// startStatusSpinner begins animating message on stderr. It returns nil when
+// stderr is not a TTY; Stop tolerates a nil receiver so callers needn't check.
+func startStatusSpinner(message string) *statusSpinner {
+	if !isatty.IsTerminal(os.Stderr.Fd()) {
+		return nil
+	}
+
+	s := &statusSpinner{stop: make(chan struct{}), done: make(chan struct{})}
+	go func() {
+		defer close(s.done)
+		ticker := time.NewTicker(spinnerFPS)
+		defer ticker.Stop()
+
+		frame := 0
+		for {
+			select {
+			case <-s.stop:
+				// erase the spinner line so the rendered status starts clean
+				fmt.Fprint(os.Stderr, "\r\033[K")
+				return
+			case <-ticker.C:
+				// Trail each frame with \r so the cursor returns to column 0.
+				// Logs are left running: a log line printing over the spinner
+				// overwrites it and its trailing newline moves output along,
+				// while the next tick simply redraws the fixed-width frame.
+				fmt.Fprintf(os.Stderr, "%s%s\r", spinnerFrames[frame%len(spinnerFrames)], message)
+				frame++
+			}
+		}
+	}()
+	return s
+}
+
+// Stop halts the spinner and clears its line. Safe to call on a nil spinner.
+func (s *statusSpinner) Stop() {
+	if s == nil {
+		return
+	}
+	close(s.stop)
+	<-s.done
+}
 
 // StatusCmd represents the version command
 var StatusCmd = &cobra.Command{
@@ -57,7 +116,15 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		ctx, cancel := context.WithTimeout(cmd.Context(), statusTimeout)
 		defer cancel()
 
+		// Show a loading indicator while the (potentially slow) network calls
+		// run. Skipped for json/yaml output so machine-readable streams stay
+		// clean, and silent when stderr is not a terminal.
+		var spin *statusSpinner
+		if viper.GetString("output") == "" {
+			spin = startStatusSpinner("Checking status…")
+		}
 		s, err := checkStatus(ctx)
+		spin.Stop()
 		if err != nil {
 			return err
 		}
@@ -68,7 +135,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		case "json":
 			s.RenderJson()
 		default:
-			s.RenderCliStatus(ctx)
+			fmt.Fprint(os.Stdout, s.RenderCli(RenderOptions{Color: defaultRenderColor()}))
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {
@@ -80,12 +147,26 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 	},
 }
 
+// reportedConfigFile returns the config file path to surface in `status`
+// output. viper.ConfigFileUsed() returns the autodetected default path even
+// when no file exists on disk, so a config file must have actually been loaded
+// for the path to be meaningful. When nothing was loaded we report an empty
+// string, keeping the output consistent with the "no configuration file
+// provided" message emitted by config.DisplayUsedConfig.
+func reportedConfigFile(loaded bool, configFileUsed string) string {
+	if !loaded {
+		return ""
+	}
+	return configFileUsed
+}
+
 func checkStatus(ctx context.Context) (Status, error) {
 	s := Status{
 		Client: ClientStatus{
-			Timestamp: time.Now().Format(time.RFC3339),
-			Version:   mql.GetVersion(),
-			Build:     mql.GetBuild(),
+			Timestamp:  time.Now().Format(time.RFC3339),
+			Version:    mql.GetVersion(),
+			APIVersion: mql.APIVersion(),
+			Build:      mql.GetBuild(),
 		},
 	}
 
@@ -93,6 +174,9 @@ func checkStatus(ctx context.Context) (Status, error) {
 	if optsErr != nil {
 		return s, cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
 	}
+
+	// record which config file the credentials were loaded from, if any
+	s.Client.ConfigFile = reportedConfigFile(config.LoadedConfig, viper.ConfigFileUsed())
 
 	httpClient, err := opts.GetHttpClient()
 	if err != nil {
@@ -175,6 +259,14 @@ func checkStatus(ctx context.Context) (Status, error) {
 		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
 	}
 
+	// gather installed providers and their version drift up front, so rendering
+	// stays a pure, side-effect-free transformation of the Status value
+	providersList, err := getProviders(ctx)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get provider info")
+	}
+	s.Client.Providers = providersList
+
 	return s, nil
 }
 
@@ -189,6 +281,7 @@ type ClientStatus struct {
 	ServiceAccount string              `json:"service_account,omitempty"`
 	ParentMrn      string              `json:"parentMrn,omitempty"`
 	Version        string              `json:"version,omitempty"`
+	APIVersion     string              `json:"-"`
 	LatestVersion  string              `json:"latest_version,omitempty"`
 	Build          string              `json:"build,omitempty"`
 	Labels         map[string]string   `json:"labels,omitempty"`
@@ -199,79 +292,18 @@ type ClientStatus struct {
 	PingPongError  error               `json:"pingPongError,omitempty"`
 	UpdatesURL     string              `json:"updatesUrl,omitempty"`
 	ProvidersURL   string              `json:"providersUrl,omitempty"`
+	ConfigFile     string              `json:"configFile,omitempty"`
+	Providers      []ProviderStatus    `json:"-"`
 }
 
-func (s Status) RenderCliStatus(ctx context.Context) {
-	if s.Client.Platform != nil {
-		agent := s.Client
-		log.Info().Msg("Platform:\t\t" + agent.Platform.Name)
-		log.Info().Msg("Version:\t\t" + agent.Platform.Version)
-		log.Info().Msg("Hostname:\t\t" + agent.Hostname)
-		log.Info().Msg("IP:\t\t\t" + agent.IP)
-	} else {
-		log.Warn().Msg("could not determine client platform information")
-	}
-
-	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
-	log.Info().Msg("Version:\t\t" + mql.GetVersion() + " (API Version: " + mql.APIVersion() + ")")
-
-	if s.Client.LatestVersion != "" {
-		log.Info().Msg("Latest Version:\t" + s.Client.LatestVersion)
-
-		if mql.GetVersion() != s.Client.LatestVersion && mql.GetVersion() != "unstable" {
-			log.Warn().Msg("A newer version is available")
-		}
-	}
-
-	log.Info().Msg("Updates URL:\t\t" + s.Client.UpdatesURL)
-	log.Info().Msg("Providers URL:\t" + s.Client.ProvidersURL)
-
-	installed, outdated, err := getProviders(ctx)
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to get provider info")
-	}
-	log.Info().Msg("Installed Providers:\t" + strings.Join(installed, " | "))
-
-	if len(outdated) > 0 {
-		log.Info().Msg("Outdated Providers:\t" + strings.Join(outdated, " | "))
-	}
-
-	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)
-	log.Info().Msg("API Status:\t\t" + s.Upstream.API.Status)
-	log.Info().Msg("API Time:\t\t" + s.Upstream.API.Timestamp)
-	log.Info().Msg("API Version:\t\t" + s.Upstream.API.Version)
-
-	if s.Upstream.API.Version != mql.APIVersion() {
-		log.Warn().Msg("API versions do not match, please update the client")
-	}
-
-	if len(s.Upstream.Features) > 0 {
-		log.Info().Msg("Features:\t\t" + strings.Join(s.Upstream.Features, ","))
-	}
-
-	if s.Client.ParentMrn != "" {
-		log.Info().Msg("Owner:\t\t" + s.Client.ParentMrn)
-	}
-
-	if s.Client.Registered {
-		log.Info().Msg("Client:\t\t" + s.Client.Mrn)
-		log.Info().Msg("Service Account:\t\t" + s.Client.ServiceAccount)
-		log.Info().Msg(theme.DefaultTheme.Success("client is registered"))
-	} else {
-		log.Error().Msg("client is not registered")
-	}
-
-	if s.Client.Registered && s.Client.PingPongError == nil {
-		log.Info().Msg(theme.DefaultTheme.Success("client authenticated successfully"))
-	} else if s.Client.PingPongError != nil {
-		log.Error().Err(s.Client.PingPongError).
-			Msgf("The Mondoo Platform credentials provided at %s didn't successfully authenticate with Mondoo Platform. Please re-authenticate with Mondoo Platform. To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/.",
-				viper.ConfigFileUsed())
-	}
-
-	for i := range s.Upstream.Warnings {
-		log.Warn().Msg(s.Upstream.Warnings[i])
-	}
+// ProviderStatus captures the installed and latest available version of a
+// single provider, so the status renderer can show version drift without
+// re-querying the registry. Latest is empty when the registry was unreachable.
+type ProviderStatus struct {
+	Name      string
+	Installed string
+	Latest    string
+	Outdated  bool
 }
 
 func (s Status) RenderJson() {
@@ -290,17 +322,16 @@ func (s Status) RenderYaml() {
 	os.Stdout.Write(output)
 }
 
-func getProviders(ctx context.Context) ([]string, []string, error) {
-	var installed []string
-	var outdated []string
-
+func getProviders(ctx context.Context) ([]ProviderStatus, error) {
 	allProviders, err := providers.ListActive()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+
+	result := make([]ProviderStatus, 0, len(allProviders))
 	var errCircuitBreaker error
 	for _, provider := range allProviders {
-		installed = append(installed, provider.Name)
+		ps := ProviderStatus{Name: provider.Name, Installed: provider.Version}
 		if errCircuitBreaker == nil {
 			latestVersion, err := providers.LatestVersion(ctx, provider.Name)
 			if err != nil {
@@ -311,13 +342,15 @@ func getProviders(ctx context.Context) ([]string, []string, error) {
 					errors.Is(err, context.Canceled) {
 					errCircuitBreaker = err
 				}
-				continue
-			}
-			if latestVersion != provider.Version && provider.Name != "core" {
-				outdated = append(outdated, provider.Name)
+			} else {
+				ps.Latest = latestVersion
+				if latestVersion != provider.Version && provider.Name != "core" {
+					ps.Outdated = true
+				}
 			}
 		}
+		result = append(result, ps)
 	}
 
-	return installed, outdated, errCircuitBreaker
+	return result, errCircuitBreaker
 }

@@ -32,8 +32,11 @@ type auditLogEntry struct {
 	Owner struct {
 		ID string `json:"id"`
 	} `json:"owner"`
-	OldValue map[string]any `json:"oldValue"`
-	NewValue map[string]any `json:"newValue"`
+	// oldValue/newValue are polymorphic: Cloudflare returns an object for most
+	// changes but a bare string (or other scalar) for simple settings, so decode
+	// them as any and let the dict field carry whatever shape the API sends.
+	OldValue any `json:"oldValue"`
+	NewValue any `json:"newValue"`
 }
 
 func (c *mqlCloudflareAccountAuditLog) id() (string, error) {
@@ -70,8 +73,8 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 			"resourceId":   llx.StringData(entry.Resource.ID),
 			"resourceType": llx.StringData(entry.Resource.Type),
 			"ownerId":      llx.StringData(entry.Owner.ID),
-			"oldValue":     llx.DictData(anyMap(entry.OldValue)),
-			"newValue":     llx.DictData(anyMap(entry.NewValue)),
+			"oldValue":     llx.DictData(dictValue(entry.OldValue)),
+			"newValue":     llx.DictData(dictValue(entry.NewValue)),
 		})
 		if err != nil {
 			return nil, err
@@ -81,10 +84,11 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 	return results, nil
 }
 
-// anyMap returns an empty map[string]any when v is nil so DictData stays
-// non-nil; the .lr `dict` field type tolerates nil but a stable empty map
-// reads more cleanly in MQL queries.
-func anyMap(v map[string]any) map[string]any {
+// dictValue prepares a value for a `dict` .lr field: nil becomes an empty
+// map[string]any so DictData stays non-nil (the field tolerates nil but a
+// stable empty map reads more cleanly in MQL), while non-nil values (objects,
+// strings, or other scalars the API may send) pass through unchanged.
+func dictValue(v any) any {
 	if v == nil {
 		return map[string]any{}
 	}

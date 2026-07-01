@@ -85,6 +85,17 @@ const (
 	ResourceEsxiService                       string = "esxi.service"
 	ResourceEsxiTimezone                      string = "esxi.timezone"
 	ResourceEsxiNtpconfig                     string = "esxi.ntpconfig"
+	ResourceVsphereCategory                   string = "vsphere.category"
+	ResourceVsphereTag                        string = "vsphere.tag"
+	ResourceVsphereContentLibrary             string = "vsphere.contentLibrary"
+	ResourceVsphereContentLibraryItem         string = "vsphere.contentLibrary.item"
+	ResourceVsphereCustomField                string = "vsphere.customField"
+	ResourceVsphereAlarm                      string = "vsphere.alarm"
+	ResourceVsphereAlarmState                 string = "vsphere.alarm.state"
+	ResourceVsphereScheduledTask              string = "vsphere.scheduledTask"
+	ResourceVsphereTask                       string = "vsphere.task"
+	ResourceVsphereEvent                      string = "vsphere.event"
+	ResourceVsphereCertificate                string = "vsphere.certificate"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -367,6 +378,50 @@ func init() {
 			// to override args, implement: initEsxiNtpconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createEsxiNtpconfig,
 		},
+		"vsphere.category": {
+			// to override args, implement: initVsphereCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereCategory,
+		},
+		"vsphere.tag": {
+			// to override args, implement: initVsphereTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereTag,
+		},
+		"vsphere.contentLibrary": {
+			// to override args, implement: initVsphereContentLibrary(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereContentLibrary,
+		},
+		"vsphere.contentLibrary.item": {
+			// to override args, implement: initVsphereContentLibraryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereContentLibraryItem,
+		},
+		"vsphere.customField": {
+			// to override args, implement: initVsphereCustomField(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereCustomField,
+		},
+		"vsphere.alarm": {
+			// to override args, implement: initVsphereAlarm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereAlarm,
+		},
+		"vsphere.alarm.state": {
+			// to override args, implement: initVsphereAlarmState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereAlarmState,
+		},
+		"vsphere.scheduledTask": {
+			// to override args, implement: initVsphereScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereScheduledTask,
+		},
+		"vsphere.task": {
+			// to override args, implement: initVsphereTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereTask,
+		},
+		"vsphere.event": {
+			// to override args, implement: initVsphereEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereEvent,
+		},
+		"vsphere.certificate": {
+			// to override args, implement: initVsphereCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereCertificate,
+		},
 	}
 }
 
@@ -546,6 +601,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.loggingForwarding": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetLoggingForwarding()).ToDataRes(types.Array(types.Resource("vsphere.logging.forwarding")))
 	},
+	"vsphere.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetCategories()).ToDataRes(types.Array(types.Resource("vsphere.category")))
+	},
+	"vsphere.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetTags()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
+	"vsphere.contentLibraries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetContentLibraries()).ToDataRes(types.Array(types.Resource("vsphere.contentLibrary")))
+	},
+	"vsphere.customFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetCustomFields()).ToDataRes(types.Array(types.Resource("vsphere.customField")))
+	},
+	"vsphere.alarms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetAlarms()).ToDataRes(types.Array(types.Resource("vsphere.alarm")))
+	},
+	"vsphere.triggeredAlarms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetTriggeredAlarms()).ToDataRes(types.Array(types.Resource("vsphere.alarm.state")))
+	},
+	"vsphere.scheduledTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetScheduledTasks()).ToDataRes(types.Array(types.Resource("vsphere.scheduledTask")))
+	},
+	"vsphere.recentTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetRecentTasks()).ToDataRes(types.Array(types.Resource("vsphere.task")))
+	},
+	"vsphere.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetEvents()).ToDataRes(types.Array(types.Resource("vsphere.event")))
+	},
+	"vsphere.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetCertificates()).ToDataRes(types.Array(types.Resource("vsphere.certificate")))
+	},
 	"vsphere.sso.lockoutPolicy.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereSsoLockoutPolicy).GetDescription()).ToDataRes(types.String)
 	},
@@ -602,6 +687,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.folder.childCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereFolder).GetChildCount()).ToDataRes(types.Int)
+	},
+	"vsphere.folder.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereFolder).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.identitysource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereIdentitysource).GetName()).ToDataRes(types.String)
@@ -702,6 +790,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datacenter.resourcePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetResourcePools()).ToDataRes(types.Array(types.Resource("vsphere.resourcepool")))
 	},
+	"vsphere.datacenter.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatacenter).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.resourcepool.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereResourcepool).GetMoid()).ToDataRes(types.String)
 	},
@@ -740,6 +831,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.resourcepool.memoryShares": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereResourcepool).GetMemoryShares()).ToDataRes(types.Int)
+	},
+	"vsphere.resourcepool.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereResourcepool).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.datastore.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetMoid()).ToDataRes(types.String)
@@ -786,6 +880,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datastore.vms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetVms()).ToDataRes(types.Array(types.Resource("vsphere.vm")))
 	},
+	"vsphere.datastore.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -815,6 +912,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.cluster.evcMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetEvcMode()).ToDataRes(types.String)
+	},
+	"vsphere.cluster.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.host.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetMoid()).ToDataRes(types.String)
@@ -866,6 +966,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.host.lockdownMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetLockdownMode()).ToDataRes(types.String)
@@ -1341,6 +1444,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetTags()).ToDataRes(types.Array(types.String))
 	},
+	"vsphere.vm.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.vm.bootFirmware": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetBootFirmware()).ToDataRes(types.String)
 	},
@@ -1668,6 +1774,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.dvs.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetName()).ToDataRes(types.String)
 	},
+	"vsphere.vswitch.dvs.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchDvs).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchDvs).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -1715,6 +1824,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.portgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.portgroup.tagRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetTagRefs()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetProperties()).ToDataRes(types.Dict)
@@ -2067,6 +2179,333 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"esxi.ntpconfig.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiNtpconfig).GetConfig()).ToDataRes(types.Array(types.String))
 	},
+	"vsphere.category.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.category.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.category.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.category.cardinality": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetCardinality()).ToDataRes(types.String)
+	},
+	"vsphere.category.associableTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetAssociableTypes()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.category.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCategory).GetTags()).ToDataRes(types.Array(types.Resource("vsphere.tag")))
+	},
+	"vsphere.tag.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTag).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.tag.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTag).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.tag.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTag).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.tag.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTag).GetCategory()).ToDataRes(types.Resource("vsphere.category"))
+	},
+	"vsphere.contentLibrary.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.lastSyncTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetLastSyncTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetVersion()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.published": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetPublished()).ToDataRes(types.Bool)
+	},
+	"vsphere.contentLibrary.publishUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetPublishUrl()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.subscriptionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetSubscriptionUrl()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.subscriptionAutomaticSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetSubscriptionAutomaticSync()).ToDataRes(types.Bool)
+	},
+	"vsphere.contentLibrary.subscriptionOnDemand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetSubscriptionOnDemand()).ToDataRes(types.Bool)
+	},
+	"vsphere.contentLibrary.subscriptionAuthMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetSubscriptionAuthMethod()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.storageBackings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetStorageBackings()).ToDataRes(types.Array(types.Dict))
+	},
+	"vsphere.contentLibrary.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
+	},
+	"vsphere.contentLibrary.securityPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetSecurityPolicyId()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibrary).GetItems()).ToDataRes(types.Array(types.Resource("vsphere.contentLibrary.item")))
+	},
+	"vsphere.contentLibrary.item.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetVersion()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.contentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetContentVersion()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.metadataVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetMetadataVersion()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetSize()).ToDataRes(types.Int)
+	},
+	"vsphere.contentLibrary.item.cached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetCached()).ToDataRes(types.Bool)
+	},
+	"vsphere.contentLibrary.item.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.item.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.item.lastSyncTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetLastSyncTime()).ToDataRes(types.Time)
+	},
+	"vsphere.contentLibrary.item.sourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetSourceId()).ToDataRes(types.String)
+	},
+	"vsphere.contentLibrary.item.securityCompliant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereContentLibraryItem).GetSecurityCompliant()).ToDataRes(types.Bool)
+	},
+	"vsphere.customField.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCustomField).GetKey()).ToDataRes(types.Int)
+	},
+	"vsphere.customField.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCustomField).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.customField.managedObjectType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCustomField).GetManagedObjectType()).ToDataRes(types.String)
+	},
+	"vsphere.customField.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCustomField).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetMoid()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.systemName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetSystemName()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.alarm.entityMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetEntityMoid()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetEntityType()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.alarm.lastModifiedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarm).GetLastModifiedUser()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.alarm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetAlarm()).ToDataRes(types.Resource("vsphere.alarm"))
+	},
+	"vsphere.alarm.state.entityMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetEntityMoid()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetEntityType()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.overallStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetOverallStatus()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetTime()).ToDataRes(types.Time)
+	},
+	"vsphere.alarm.state.acknowledged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetAcknowledged()).ToDataRes(types.Bool)
+	},
+	"vsphere.alarm.state.acknowledgedByUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetAcknowledgedByUser()).ToDataRes(types.String)
+	},
+	"vsphere.alarm.state.acknowledgedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereAlarmState).GetAcknowledgedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.scheduledTask.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetMoid()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.scheduledTask.schedulerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetSchedulerType()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetAction()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.entityMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetEntityMoid()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetEntityType()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetState()).ToDataRes(types.String)
+	},
+	"vsphere.scheduledTask.nextRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetNextRunTime()).ToDataRes(types.Time)
+	},
+	"vsphere.scheduledTask.prevRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetPrevRunTime()).ToDataRes(types.Time)
+	},
+	"vsphere.scheduledTask.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.scheduledTask.lastModifiedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereScheduledTask).GetLastModifiedUser()).ToDataRes(types.String)
+	},
+	"vsphere.task.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.task.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetOperation()).ToDataRes(types.String)
+	},
+	"vsphere.task.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetState()).ToDataRes(types.String)
+	},
+	"vsphere.task.entityMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetEntityMoid()).ToDataRes(types.String)
+	},
+	"vsphere.task.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetEntityType()).ToDataRes(types.String)
+	},
+	"vsphere.task.entityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetEntityName()).ToDataRes(types.String)
+	},
+	"vsphere.task.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetUser()).ToDataRes(types.String)
+	},
+	"vsphere.task.queueTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetQueueTime()).ToDataRes(types.Time)
+	},
+	"vsphere.task.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetStartTime()).ToDataRes(types.Time)
+	},
+	"vsphere.task.completeTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetCompleteTime()).ToDataRes(types.Time)
+	},
+	"vsphere.task.progress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetProgress()).ToDataRes(types.Int)
+	},
+	"vsphere.task.cancelable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetCancelable()).ToDataRes(types.Bool)
+	},
+	"vsphere.task.cancelled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetCancelled()).ToDataRes(types.Bool)
+	},
+	"vsphere.task.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereTask).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"vsphere.event.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetKey()).ToDataRes(types.Int)
+	},
+	"vsphere.event.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.event.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetCategory()).ToDataRes(types.String)
+	},
+	"vsphere.event.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"vsphere.event.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetUserName()).ToDataRes(types.String)
+	},
+	"vsphere.event.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetMessage()).ToDataRes(types.String)
+	},
+	"vsphere.event.entityMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetEntityMoid()).ToDataRes(types.String)
+	},
+	"vsphere.event.entityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEvent).GetEntityName()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"vsphere.certificate.notAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetNotAfter()).ToDataRes(types.Time)
+	},
+	"vsphere.certificate.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.thumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetThumbprint()).ToDataRes(types.String)
+	},
+	"vsphere.certificate.signatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCertificate).GetSignatureAlgorithm()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2251,6 +2690,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphere).LoggingForwarding, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibraries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).ContentLibraries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.customFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).CustomFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Alarms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.triggeredAlarms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).TriggeredAlarms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).ScheduledTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.recentTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).RecentTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.sso.lockoutPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereSsoLockoutPolicy).__id, ok = v.Value.(string)
 		return
@@ -2341,6 +2820,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.folder.childCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereFolder).ChildCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.folder.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereFolder).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.identitysource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2495,6 +2978,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatacenter).ResourcePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.datacenter.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatacenter).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.resourcepool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereResourcepool).__id, ok = v.Value.(string)
 		return
@@ -2549,6 +3036,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.resourcepool.memoryShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereResourcepool).MemoryShares, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.resourcepool.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereResourcepool).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.datastore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2615,6 +3106,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatastore).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.datastore.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 		return
@@ -2657,6 +3152,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.cluster.evcMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).EvcMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2729,6 +3228,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.lockdownMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3435,6 +3938,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.vm.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.vm.bootFirmware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).BootFirmware, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3911,6 +4418,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVswitchDvs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vsphere.vswitch.dvs.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchDvs).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.vswitch.dvs.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchDvs).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -3981,6 +4492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.portgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.tagRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).TagRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4527,6 +5042,486 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlEsxiNtpconfig).Config, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.category.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.category.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.category.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.category.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.category.cardinality": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Cardinality, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.category.associableTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).AssociableTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.category.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCategory).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTag).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.tag.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTag).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.tag.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTag).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.tag.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTag).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.tag.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTag).Category, ok = plugin.RawToTValue[*mqlVsphereCategory](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.contentLibrary.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.lastSyncTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).LastSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.published": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Published, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.publishUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).PublishUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.subscriptionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).SubscriptionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.subscriptionAutomaticSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).SubscriptionAutomaticSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.subscriptionOnDemand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).SubscriptionOnDemand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.subscriptionAuthMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).SubscriptionAuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.storageBackings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).StorageBackings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.securityPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).SecurityPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibrary).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.contentLibrary.item.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.contentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).ContentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.metadataVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).MetadataVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.cached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).Cached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.lastSyncTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).LastSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.sourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).SourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.contentLibrary.item.securityCompliant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereContentLibraryItem).SecurityCompliant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.customField.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCustomField).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.customField.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCustomField).Key, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.customField.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCustomField).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.customField.managedObjectType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCustomField).ManagedObjectType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.customField.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCustomField).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.alarm.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.systemName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).SystemName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.entityMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).EntityMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.lastModifiedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarm).LastModifiedUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.alarm.state.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.alarm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).Alarm, ok = plugin.RawToTValue[*mqlVsphereAlarm](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.entityMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).EntityMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.overallStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).OverallStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).Time, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.acknowledged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).Acknowledged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.acknowledgedByUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).AcknowledgedByUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.alarm.state.acknowledgedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereAlarmState).AcknowledgedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.scheduledTask.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.schedulerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).SchedulerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.entityMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).EntityMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.nextRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).NextRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.prevRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).PrevRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.scheduledTask.lastModifiedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereScheduledTask).LastModifiedUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.task.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.entityMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).EntityMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.entityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).EntityName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.queueTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).QueueTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.completeTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).CompleteTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.progress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).Progress, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.cancelable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).Cancelable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.cancelled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).Cancelled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.task.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereTask).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.event.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).Key, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.entityMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).EntityMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.event.entityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEvent).EntityName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.certificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.notAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).NotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.thumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).Thumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.certificate.signatureAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCertificate).SignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4998,6 +5993,16 @@ type mqlVsphere struct {
 	AdvancedSettings  plugin.TValue[map[string]any]
 	SsoLockoutPolicy  plugin.TValue[*mqlVsphereSsoLockoutPolicy]
 	LoggingForwarding plugin.TValue[[]any]
+	Categories        plugin.TValue[[]any]
+	Tags              plugin.TValue[[]any]
+	ContentLibraries  plugin.TValue[[]any]
+	CustomFields      plugin.TValue[[]any]
+	Alarms            plugin.TValue[[]any]
+	TriggeredAlarms   plugin.TValue[[]any]
+	ScheduledTasks    plugin.TValue[[]any]
+	RecentTasks       plugin.TValue[[]any]
+	Events            plugin.TValue[[]any]
+	Certificates      plugin.TValue[[]any]
 }
 
 // createVsphere creates a new instance of this resource
@@ -5190,6 +6195,166 @@ func (c *mqlVsphere) GetLoggingForwarding() *plugin.TValue[[]any] {
 		}
 
 		return c.loggingForwarding()
+	})
+}
+
+func (c *mqlVsphere) GetCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Categories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "categories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.categories()
+	})
+}
+
+func (c *mqlVsphere) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
+}
+
+func (c *mqlVsphere) GetContentLibraries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ContentLibraries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "contentLibraries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.contentLibraries()
+	})
+}
+
+func (c *mqlVsphere) GetCustomFields() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomFields, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "customFields")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customFields()
+	})
+}
+
+func (c *mqlVsphere) GetAlarms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alarms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "alarms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alarms()
+	})
+}
+
+func (c *mqlVsphere) GetTriggeredAlarms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TriggeredAlarms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "triggeredAlarms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.triggeredAlarms()
+	})
+}
+
+func (c *mqlVsphere) GetScheduledTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScheduledTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "scheduledTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scheduledTasks()
+	})
+}
+
+func (c *mqlVsphere) GetRecentTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RecentTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "recentTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.recentTasks()
+	})
+}
+
+func (c *mqlVsphere) GetEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Events, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "events")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.events()
+	})
+}
+
+func (c *mqlVsphere) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
 	})
 }
 
@@ -5402,6 +6567,7 @@ type mqlVsphereFolder struct {
 	InventoryPath plugin.TValue[string]
 	ChildTypes    plugin.TValue[[]any]
 	ChildCount    plugin.TValue[int64]
+	TagRefs       plugin.TValue[[]any]
 }
 
 // createVsphereFolder creates a new instance of this resource
@@ -5459,6 +6625,22 @@ func (c *mqlVsphereFolder) GetChildTypes() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereFolder) GetChildCount() *plugin.TValue[int64] {
 	return &c.ChildCount
+}
+
+func (c *mqlVsphereFolder) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.folder", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 // mqlVsphereIdentitysource for the vsphere.identitysource resource
@@ -5762,6 +6944,7 @@ type mqlVsphereDatacenter struct {
 	DistributedPortGroups plugin.TValue[[]any]
 	Datastores            plugin.TValue[[]any]
 	ResourcePools         plugin.TValue[[]any]
+	TagRefs               plugin.TValue[[]any]
 }
 
 // createVsphereDatacenter creates a new instance of this resource
@@ -5925,6 +7108,22 @@ func (c *mqlVsphereDatacenter) GetResourcePools() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphereDatacenter) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereResourcepool for the vsphere.resourcepool resource
 type mqlVsphereResourcepool struct {
 	MqlRuntime *plugin.Runtime
@@ -5943,6 +7142,7 @@ type mqlVsphereResourcepool struct {
 	MemoryExpandableReservation plugin.TValue[bool]
 	MemoryShareLevel            plugin.TValue[string]
 	MemoryShares                plugin.TValue[int64]
+	TagRefs                     plugin.TValue[[]any]
 }
 
 // createVsphereResourcepool creates a new instance of this resource
@@ -6034,6 +7234,22 @@ func (c *mqlVsphereResourcepool) GetMemoryShares() *plugin.TValue[int64] {
 	return &c.MemoryShares
 }
 
+func (c *mqlVsphereResourcepool) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.resourcepool", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereDatastore for the vsphere.datastore resource
 type mqlVsphereDatastore struct {
 	MqlRuntime *plugin.Runtime
@@ -6054,6 +7270,7 @@ type mqlVsphereDatastore struct {
 	Ssd                plugin.TValue[bool]
 	Hosts              plugin.TValue[[]any]
 	Vms                plugin.TValue[[]any]
+	TagRefs            plugin.TValue[[]any]
 }
 
 // createVsphereDatastore creates a new instance of this resource
@@ -6177,6 +7394,22 @@ func (c *mqlVsphereDatastore) GetVms() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphereDatastore) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datastore", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -6192,6 +7425,7 @@ type mqlVsphereCluster struct {
 	HaEnabled     plugin.TValue[bool]
 	DrsEnabled    plugin.TValue[bool]
 	EvcMode       plugin.TValue[string]
+	TagRefs       plugin.TValue[[]any]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -6295,6 +7529,22 @@ func (c *mqlVsphereCluster) GetEvcMode() *plugin.TValue[string] {
 	return &c.EvcMode
 }
 
+func (c *mqlVsphereCluster) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.cluster", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
+}
+
 // mqlVsphereHost for the vsphere.host resource
 type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
@@ -6317,6 +7567,7 @@ type mqlVsphereHost struct {
 	Ntp                         plugin.TValue[*mqlVsphereHostNtpConfig]
 	Snmp                        plugin.TValue[map[string]any]
 	Tags                        plugin.TValue[[]any]
+	TagRefs                     plugin.TValue[[]any]
 	LockdownMode                plugin.TValue[string]
 	LockdownExceptions          plugin.TValue[[]any]
 	FirewallIncomingBlocked     plugin.TValue[bool]
@@ -6571,6 +7822,22 @@ func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereHost) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereHost) GetLockdownMode() *plugin.TValue[string] {
@@ -8234,6 +9501,7 @@ type mqlVsphereVm struct {
 	Properties          plugin.TValue[any]
 	AdvancedSettings    plugin.TValue[map[string]any]
 	Tags                plugin.TValue[[]any]
+	TagRefs             plugin.TValue[[]any]
 	BootFirmware        plugin.TValue[string]
 	SecureBootEnabled   plugin.TValue[bool]
 	VbsEnabled          plugin.TValue[bool]
@@ -8327,6 +9595,22 @@ func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereVm) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVm) GetBootFirmware() *plugin.TValue[string] {
@@ -9472,6 +10756,7 @@ type mqlVsphereVswitchDvs struct {
 	mqlVsphereVswitchDvsInternal
 	Moid          plugin.TValue[string]
 	Name          plugin.TValue[string]
+	TagRefs       plugin.TValue[[]any]
 	Properties    plugin.TValue[any]
 	CreateDate    plugin.TValue[*time.Time]
 	Uplinks       plugin.TValue[[]any]
@@ -9521,6 +10806,22 @@ func (c *mqlVsphereVswitchDvs) GetMoid() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchDvs) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlVsphereVswitchDvs) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.dvs", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVswitchDvs) GetProperties() *plugin.TValue[any] {
@@ -9659,6 +10960,7 @@ type mqlVsphereVswitchPortgroup struct {
 	mqlVsphereVswitchPortgroupInternal
 	Moid                        plugin.TValue[string]
 	Name                        plugin.TValue[string]
+	TagRefs                     plugin.TValue[[]any]
 	Properties                  plugin.TValue[any]
 	VlanId                      plugin.TValue[int64]
 	SecurityPolicySettings      plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
@@ -9711,6 +11013,22 @@ func (c *mqlVsphereVswitchPortgroup) GetMoid() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchPortgroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetTagRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TagRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "tagRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tagRefs()
+	})
 }
 
 func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
@@ -11174,4 +12492,1038 @@ func (c *mqlEsxiNtpconfig) GetServer() *plugin.TValue[[]any] {
 
 func (c *mqlEsxiNtpconfig) GetConfig() *plugin.TValue[[]any] {
 	return &c.Config
+}
+
+// mqlVsphereCategory for the vsphere.category resource
+type mqlVsphereCategory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereCategoryInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Cardinality     plugin.TValue[string]
+	AssociableTypes plugin.TValue[[]any]
+	Tags            plugin.TValue[[]any]
+}
+
+// createVsphereCategory creates a new instance of this resource
+func createVsphereCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereCategory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.category", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereCategory) MqlName() string {
+	return "vsphere.category"
+}
+
+func (c *mqlVsphereCategory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereCategory) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereCategory) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereCategory) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereCategory) GetCardinality() *plugin.TValue[string] {
+	return &c.Cardinality
+}
+
+func (c *mqlVsphereCategory) GetAssociableTypes() *plugin.TValue[[]any] {
+	return &c.AssociableTypes
+}
+
+func (c *mqlVsphereCategory) GetTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.category", c.__id, "tags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tags()
+	})
+}
+
+// mqlVsphereTag for the vsphere.tag resource
+type mqlVsphereTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereTagInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Category    plugin.TValue[*mqlVsphereCategory]
+}
+
+// createVsphereTag creates a new instance of this resource
+func createVsphereTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.tag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereTag) MqlName() string {
+	return "vsphere.tag"
+}
+
+func (c *mqlVsphereTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereTag) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereTag) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereTag) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereTag) GetCategory() *plugin.TValue[*mqlVsphereCategory] {
+	return plugin.GetOrCompute[*mqlVsphereCategory](&c.Category, func() (*mqlVsphereCategory, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.tag", c.__id, "category")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereCategory), nil
+			}
+		}
+
+		return c.category()
+	})
+}
+
+// mqlVsphereContentLibrary for the vsphere.contentLibrary resource
+type mqlVsphereContentLibrary struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereContentLibraryInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Description               plugin.TValue[string]
+	CreationTime              plugin.TValue[*time.Time]
+	LastModifiedTime          plugin.TValue[*time.Time]
+	LastSyncTime              plugin.TValue[*time.Time]
+	Version                   plugin.TValue[string]
+	Published                 plugin.TValue[bool]
+	PublishUrl                plugin.TValue[string]
+	SubscriptionUrl           plugin.TValue[string]
+	SubscriptionAutomaticSync plugin.TValue[bool]
+	SubscriptionOnDemand      plugin.TValue[bool]
+	SubscriptionAuthMethod    plugin.TValue[string]
+	StorageBackings           plugin.TValue[[]any]
+	Datastores                plugin.TValue[[]any]
+	SecurityPolicyId          plugin.TValue[string]
+	Items                     plugin.TValue[[]any]
+}
+
+// createVsphereContentLibrary creates a new instance of this resource
+func createVsphereContentLibrary(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereContentLibrary{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.contentLibrary", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereContentLibrary) MqlName() string {
+	return "vsphere.contentLibrary"
+}
+
+func (c *mqlVsphereContentLibrary) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereContentLibrary) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereContentLibrary) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereContentLibrary) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlVsphereContentLibrary) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereContentLibrary) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlVsphereContentLibrary) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlVsphereContentLibrary) GetLastSyncTime() *plugin.TValue[*time.Time] {
+	return &c.LastSyncTime
+}
+
+func (c *mqlVsphereContentLibrary) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVsphereContentLibrary) GetPublished() *plugin.TValue[bool] {
+	return &c.Published
+}
+
+func (c *mqlVsphereContentLibrary) GetPublishUrl() *plugin.TValue[string] {
+	return &c.PublishUrl
+}
+
+func (c *mqlVsphereContentLibrary) GetSubscriptionUrl() *plugin.TValue[string] {
+	return &c.SubscriptionUrl
+}
+
+func (c *mqlVsphereContentLibrary) GetSubscriptionAutomaticSync() *plugin.TValue[bool] {
+	return &c.SubscriptionAutomaticSync
+}
+
+func (c *mqlVsphereContentLibrary) GetSubscriptionOnDemand() *plugin.TValue[bool] {
+	return &c.SubscriptionOnDemand
+}
+
+func (c *mqlVsphereContentLibrary) GetSubscriptionAuthMethod() *plugin.TValue[string] {
+	return &c.SubscriptionAuthMethod
+}
+
+func (c *mqlVsphereContentLibrary) GetStorageBackings() *plugin.TValue[[]any] {
+	return &c.StorageBackings
+}
+
+func (c *mqlVsphereContentLibrary) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.contentLibrary", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
+	})
+}
+
+func (c *mqlVsphereContentLibrary) GetSecurityPolicyId() *plugin.TValue[string] {
+	return &c.SecurityPolicyId
+}
+
+func (c *mqlVsphereContentLibrary) GetItems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Items, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.contentLibrary", c.__id, "items")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.items()
+	})
+}
+
+// mqlVsphereContentLibraryItem for the vsphere.contentLibrary.item resource
+type mqlVsphereContentLibraryItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereContentLibraryItemInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Version           plugin.TValue[string]
+	ContentVersion    plugin.TValue[string]
+	MetadataVersion   plugin.TValue[string]
+	Size              plugin.TValue[int64]
+	Cached            plugin.TValue[bool]
+	CreationTime      plugin.TValue[*time.Time]
+	LastModifiedTime  plugin.TValue[*time.Time]
+	LastSyncTime      plugin.TValue[*time.Time]
+	SourceId          plugin.TValue[string]
+	SecurityCompliant plugin.TValue[bool]
+}
+
+// createVsphereContentLibraryItem creates a new instance of this resource
+func createVsphereContentLibraryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereContentLibraryItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.contentLibrary.item", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereContentLibraryItem) MqlName() string {
+	return "vsphere.contentLibrary.item"
+}
+
+func (c *mqlVsphereContentLibraryItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereContentLibraryItem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereContentLibraryItem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereContentLibraryItem) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlVsphereContentLibraryItem) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereContentLibraryItem) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVsphereContentLibraryItem) GetContentVersion() *plugin.TValue[string] {
+	return &c.ContentVersion
+}
+
+func (c *mqlVsphereContentLibraryItem) GetMetadataVersion() *plugin.TValue[string] {
+	return &c.MetadataVersion
+}
+
+func (c *mqlVsphereContentLibraryItem) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlVsphereContentLibraryItem) GetCached() *plugin.TValue[bool] {
+	return &c.Cached
+}
+
+func (c *mqlVsphereContentLibraryItem) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlVsphereContentLibraryItem) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlVsphereContentLibraryItem) GetLastSyncTime() *plugin.TValue[*time.Time] {
+	return &c.LastSyncTime
+}
+
+func (c *mqlVsphereContentLibraryItem) GetSourceId() *plugin.TValue[string] {
+	return &c.SourceId
+}
+
+func (c *mqlVsphereContentLibraryItem) GetSecurityCompliant() *plugin.TValue[bool] {
+	return &c.SecurityCompliant
+}
+
+// mqlVsphereCustomField for the vsphere.customField resource
+type mqlVsphereCustomField struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereCustomFieldInternal it will be used here
+	Key               plugin.TValue[int64]
+	Name              plugin.TValue[string]
+	ManagedObjectType plugin.TValue[string]
+	Type              plugin.TValue[string]
+}
+
+// createVsphereCustomField creates a new instance of this resource
+func createVsphereCustomField(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereCustomField{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.customField", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereCustomField) MqlName() string {
+	return "vsphere.customField"
+}
+
+func (c *mqlVsphereCustomField) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereCustomField) GetKey() *plugin.TValue[int64] {
+	return &c.Key
+}
+
+func (c *mqlVsphereCustomField) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereCustomField) GetManagedObjectType() *plugin.TValue[string] {
+	return &c.ManagedObjectType
+}
+
+func (c *mqlVsphereCustomField) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlVsphereAlarm for the vsphere.alarm resource
+type mqlVsphereAlarm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereAlarmInternal it will be used here
+	Moid             plugin.TValue[string]
+	Key              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	SystemName       plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	EntityMoid       plugin.TValue[string]
+	EntityType       plugin.TValue[string]
+	LastModifiedTime plugin.TValue[*time.Time]
+	LastModifiedUser plugin.TValue[string]
+}
+
+// createVsphereAlarm creates a new instance of this resource
+func createVsphereAlarm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereAlarm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.alarm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereAlarm) MqlName() string {
+	return "vsphere.alarm"
+}
+
+func (c *mqlVsphereAlarm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereAlarm) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
+func (c *mqlVsphereAlarm) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereAlarm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereAlarm) GetSystemName() *plugin.TValue[string] {
+	return &c.SystemName
+}
+
+func (c *mqlVsphereAlarm) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereAlarm) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereAlarm) GetEntityMoid() *plugin.TValue[string] {
+	return &c.EntityMoid
+}
+
+func (c *mqlVsphereAlarm) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlVsphereAlarm) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlVsphereAlarm) GetLastModifiedUser() *plugin.TValue[string] {
+	return &c.LastModifiedUser
+}
+
+// mqlVsphereAlarmState for the vsphere.alarm.state resource
+type mqlVsphereAlarmState struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereAlarmStateInternal
+	Id                 plugin.TValue[string]
+	Alarm              plugin.TValue[*mqlVsphereAlarm]
+	EntityMoid         plugin.TValue[string]
+	EntityType         plugin.TValue[string]
+	OverallStatus      plugin.TValue[string]
+	Time               plugin.TValue[*time.Time]
+	Acknowledged       plugin.TValue[bool]
+	AcknowledgedByUser plugin.TValue[string]
+	AcknowledgedTime   plugin.TValue[*time.Time]
+}
+
+// createVsphereAlarmState creates a new instance of this resource
+func createVsphereAlarmState(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereAlarmState{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.alarm.state", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereAlarmState) MqlName() string {
+	return "vsphere.alarm.state"
+}
+
+func (c *mqlVsphereAlarmState) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereAlarmState) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereAlarmState) GetAlarm() *plugin.TValue[*mqlVsphereAlarm] {
+	return plugin.GetOrCompute[*mqlVsphereAlarm](&c.Alarm, func() (*mqlVsphereAlarm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.alarm.state", c.__id, "alarm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereAlarm), nil
+			}
+		}
+
+		return c.alarm()
+	})
+}
+
+func (c *mqlVsphereAlarmState) GetEntityMoid() *plugin.TValue[string] {
+	return &c.EntityMoid
+}
+
+func (c *mqlVsphereAlarmState) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlVsphereAlarmState) GetOverallStatus() *plugin.TValue[string] {
+	return &c.OverallStatus
+}
+
+func (c *mqlVsphereAlarmState) GetTime() *plugin.TValue[*time.Time] {
+	return &c.Time
+}
+
+func (c *mqlVsphereAlarmState) GetAcknowledged() *plugin.TValue[bool] {
+	return &c.Acknowledged
+}
+
+func (c *mqlVsphereAlarmState) GetAcknowledgedByUser() *plugin.TValue[string] {
+	return &c.AcknowledgedByUser
+}
+
+func (c *mqlVsphereAlarmState) GetAcknowledgedTime() *plugin.TValue[*time.Time] {
+	return &c.AcknowledgedTime
+}
+
+// mqlVsphereScheduledTask for the vsphere.scheduledTask resource
+type mqlVsphereScheduledTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereScheduledTaskInternal it will be used here
+	Moid             plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	SchedulerType    plugin.TValue[string]
+	Action           plugin.TValue[string]
+	EntityMoid       plugin.TValue[string]
+	EntityType       plugin.TValue[string]
+	State            plugin.TValue[string]
+	NextRunTime      plugin.TValue[*time.Time]
+	PrevRunTime      plugin.TValue[*time.Time]
+	LastModifiedTime plugin.TValue[*time.Time]
+	LastModifiedUser plugin.TValue[string]
+}
+
+// createVsphereScheduledTask creates a new instance of this resource
+func createVsphereScheduledTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereScheduledTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.scheduledTask", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereScheduledTask) MqlName() string {
+	return "vsphere.scheduledTask"
+}
+
+func (c *mqlVsphereScheduledTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereScheduledTask) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
+func (c *mqlVsphereScheduledTask) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereScheduledTask) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereScheduledTask) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereScheduledTask) GetSchedulerType() *plugin.TValue[string] {
+	return &c.SchedulerType
+}
+
+func (c *mqlVsphereScheduledTask) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlVsphereScheduledTask) GetEntityMoid() *plugin.TValue[string] {
+	return &c.EntityMoid
+}
+
+func (c *mqlVsphereScheduledTask) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlVsphereScheduledTask) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlVsphereScheduledTask) GetNextRunTime() *plugin.TValue[*time.Time] {
+	return &c.NextRunTime
+}
+
+func (c *mqlVsphereScheduledTask) GetPrevRunTime() *plugin.TValue[*time.Time] {
+	return &c.PrevRunTime
+}
+
+func (c *mqlVsphereScheduledTask) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlVsphereScheduledTask) GetLastModifiedUser() *plugin.TValue[string] {
+	return &c.LastModifiedUser
+}
+
+// mqlVsphereTask for the vsphere.task resource
+type mqlVsphereTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereTaskInternal it will be used here
+	Key          plugin.TValue[string]
+	Operation    plugin.TValue[string]
+	State        plugin.TValue[string]
+	EntityMoid   plugin.TValue[string]
+	EntityType   plugin.TValue[string]
+	EntityName   plugin.TValue[string]
+	User         plugin.TValue[string]
+	QueueTime    plugin.TValue[*time.Time]
+	StartTime    plugin.TValue[*time.Time]
+	CompleteTime plugin.TValue[*time.Time]
+	Progress     plugin.TValue[int64]
+	Cancelable   plugin.TValue[bool]
+	Cancelled    plugin.TValue[bool]
+	ErrorMessage plugin.TValue[string]
+}
+
+// createVsphereTask creates a new instance of this resource
+func createVsphereTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.task", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereTask) MqlName() string {
+	return "vsphere.task"
+}
+
+func (c *mqlVsphereTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereTask) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereTask) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlVsphereTask) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlVsphereTask) GetEntityMoid() *plugin.TValue[string] {
+	return &c.EntityMoid
+}
+
+func (c *mqlVsphereTask) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlVsphereTask) GetEntityName() *plugin.TValue[string] {
+	return &c.EntityName
+}
+
+func (c *mqlVsphereTask) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlVsphereTask) GetQueueTime() *plugin.TValue[*time.Time] {
+	return &c.QueueTime
+}
+
+func (c *mqlVsphereTask) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlVsphereTask) GetCompleteTime() *plugin.TValue[*time.Time] {
+	return &c.CompleteTime
+}
+
+func (c *mqlVsphereTask) GetProgress() *plugin.TValue[int64] {
+	return &c.Progress
+}
+
+func (c *mqlVsphereTask) GetCancelable() *plugin.TValue[bool] {
+	return &c.Cancelable
+}
+
+func (c *mqlVsphereTask) GetCancelled() *plugin.TValue[bool] {
+	return &c.Cancelled
+}
+
+func (c *mqlVsphereTask) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+// mqlVsphereEvent for the vsphere.event resource
+type mqlVsphereEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereEventInternal it will be used here
+	Key         plugin.TValue[int64]
+	Type        plugin.TValue[string]
+	Category    plugin.TValue[string]
+	CreatedTime plugin.TValue[*time.Time]
+	UserName    plugin.TValue[string]
+	Message     plugin.TValue[string]
+	EntityMoid  plugin.TValue[string]
+	EntityName  plugin.TValue[string]
+}
+
+// createVsphereEvent creates a new instance of this resource
+func createVsphereEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.event", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereEvent) MqlName() string {
+	return "vsphere.event"
+}
+
+func (c *mqlVsphereEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereEvent) GetKey() *plugin.TValue[int64] {
+	return &c.Key
+}
+
+func (c *mqlVsphereEvent) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlVsphereEvent) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlVsphereEvent) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlVsphereEvent) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlVsphereEvent) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+func (c *mqlVsphereEvent) GetEntityMoid() *plugin.TValue[string] {
+	return &c.EntityMoid
+}
+
+func (c *mqlVsphereEvent) GetEntityName() *plugin.TValue[string] {
+	return &c.EntityName
+}
+
+// mqlVsphereCertificate for the vsphere.certificate resource
+type mqlVsphereCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereCertificateInternal it will be used here
+	Id                 plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Subject            plugin.TValue[string]
+	Issuer             plugin.TValue[string]
+	NotBefore          plugin.TValue[*time.Time]
+	NotAfter           plugin.TValue[*time.Time]
+	SerialNumber       plugin.TValue[string]
+	Thumbprint         plugin.TValue[string]
+	SignatureAlgorithm plugin.TValue[string]
+}
+
+// createVsphereCertificate creates a new instance of this resource
+func createVsphereCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereCertificate) MqlName() string {
+	return "vsphere.certificate"
+}
+
+func (c *mqlVsphereCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereCertificate) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlVsphereCertificate) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlVsphereCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlVsphereCertificate) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlVsphereCertificate) GetNotAfter() *plugin.TValue[*time.Time] {
+	return &c.NotAfter
+}
+
+func (c *mqlVsphereCertificate) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlVsphereCertificate) GetThumbprint() *plugin.TValue[string] {
+	return &c.Thumbprint
+}
+
+func (c *mqlVsphereCertificate) GetSignatureAlgorithm() *plugin.TValue[string] {
+	return &c.SignatureAlgorithm
 }

@@ -10,12 +10,13 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/stackit/connection"
 	"go.mondoo.com/mql/v13/providers/stackit/provider"
+	"go.mondoo.com/mql/v13/providers/stackit/resources"
 )
 
 var Config = plugin.Provider{
 	Name:            "stackit",
 	ID:              "go.mondoo.com/mql/providers/stackit",
-	Version:         "13.2.1",
+	Version:         "13.4.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
@@ -40,9 +41,24 @@ You can also pass credentials via STACKIT environment variables
 				connection.ServiceAccountKeyEnvVar,
 				connection.TokenEnvVar,
 			),
-			MinArgs:   0,
-			MaxArgs:   0,
-			Discovery: []string{},
+			MinArgs: 0,
+			MaxArgs: 0,
+			Discovery: []string{
+				resources.DiscoveryAuto,
+				resources.DiscoveryAll,
+				resources.DiscoveryServers,
+				resources.DiscoverySkeClusters,
+				resources.DiscoveryObjectStorageBuckets,
+				resources.DiscoveryPostgresFlex,
+				resources.DiscoveryMongoDbFlex,
+				resources.DiscoverySqlServerFlex,
+				resources.DiscoveryOpenSearch,
+				resources.DiscoveryMariaDb,
+				resources.DiscoveryRedis,
+				resources.DiscoveryRabbitMq,
+				resources.DiscoveryLogMe,
+				resources.DiscoverySecretsManager,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    connection.OptionProjectID,
@@ -101,7 +117,24 @@ You can also pass credentials via STACKIT environment variables
 			Key:          "project",
 			Title:        "Project",
 			Values: map[string]*inventory.AssetUrlBranch{
-				"*": nil,
+				"*": {
+					Key:   "service",
+					Title: "Service",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"compute":         nil,
+						"ske":             nil,
+						"object-storage":  nil,
+						"postgres-flex":   nil,
+						"mongodb-flex":    nil,
+						"sqlserver-flex":  nil,
+						"opensearch":      nil,
+						"mariadb":         nil,
+						"redis":           nil,
+						"rabbitmq":        nil,
+						"logme":           nil,
+						"secrets-manager": nil,
+					},
+				},
 			},
 		},
 	},

@@ -177,6 +177,45 @@ func (g *mqlGcpProjectSqlServiceInstance) replicas() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectSqlServiceInstance) failoverReplicaRef() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	replica, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, g.cacheFailoverReplicaName)
+	if err != nil {
+		return nil, err
+	}
+	if replica == nil {
+		g.FailoverReplicaRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return replica, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) drReplica() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	replica, err := getSqlInstanceByName(g.MqlRuntime, g.ProjectId.Data, g.cacheDrReplicaName)
+	if err != nil {
+		return nil, err
+	}
+	if replica == nil {
+		g.DrReplica.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return replica, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) managedBy() (string, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return "", settings.Error
+	}
+	if settings.Data == nil {
+		return "", nil
+	}
+	return managedByFromLabels(settings.Data.GetUserLabels())
+}
+
 // sqlIPMappingID returns a cache-stable identifier for a Cloud SQL instance
 // IP address. A single instance can expose more than one IP of the same
 // Type (e.g., two PRIVATE IPs across distinct VPCs), so the address itself
@@ -747,6 +786,12 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			if instance.DiskEncryptionConfiguration != nil {
 				mqlSqlInstance.cacheKmsKeyName = instance.DiskEncryptionConfiguration.KmsKeyName
 			}
+			if instance.FailoverReplica != nil {
+				mqlSqlInstance.cacheFailoverReplicaName = instance.FailoverReplica.Name
+			}
+			if instance.ReplicationCluster != nil {
+				mqlSqlInstance.cacheDrReplicaName = instance.ReplicationCluster.FailoverDrReplicaName
+			}
 			res = append(res, mqlInstance)
 		}
 		return nil
@@ -821,8 +866,10 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 }
 
 type mqlGcpProjectSqlServiceInstanceInternal struct {
-	cacheSecondaryGceZone string
-	cacheKmsKeyName       string
+	cacheSecondaryGceZone    string
+	cacheKmsKeyName          string
+	cacheFailoverReplicaName string
+	cacheDrReplicaName       string
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {

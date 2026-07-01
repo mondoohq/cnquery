@@ -51,7 +51,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			target = "scheme://" + target
 		}
 
-		// eg. used to parse users from `cnquery shell vsphere chris@vsphere.local@hostname`
+		// eg. used to parse users from `mql shell vsphere chris@vsphere.local@hostname`
 		x, err := url.Parse(target)
 		if err != nil {
 			return nil, errors.New("incorrect format of target, please use user@host:port")

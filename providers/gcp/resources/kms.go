@@ -141,6 +141,24 @@ func (g *mqlGcpProjectKmsServiceKeyring) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectKmsServiceKeyring) project() (*mqlGcpProject, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	proj, err := projectRefById(g.MqlRuntime, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if proj == nil {
+		g.Project.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return proj, nil
+}
+
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil

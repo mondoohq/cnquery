@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -18,6 +19,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionSynapseServiceWorkspaceInternal struct {
+	cacheDefaultStorageId        string
+	cacheCmkKeyURI               string
+	cacheUserAssignedIdentityIds []string
+}
 
 func (a *mqlAzureSubscriptionSynapseService) id() (string, error) {
 	return "azure.subscription.synapse/" + a.SubscriptionId.Data, nil
@@ -83,6 +90,9 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 			var provisioningState string
 			var trustedServiceBypassEnabled *bool
 			var azureADOnlyAuthentication *bool
+			var defaultStorageFilesystem string
+			var defaultStorageId string
+			var cmkKeyURI string
 
 			if ws.Properties != nil {
 				if ws.Properties.ManagedVirtualNetwork != nil {
@@ -96,6 +106,17 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					if err != nil {
 						return nil, err
 					}
+					if ws.Properties.Encryption.Cmk != nil && ws.Properties.Encryption.Cmk.Key != nil {
+						cmkKeyURI = synapseKeyURI(ws.Properties.Encryption.Cmk.Key)
+					}
+				}
+				if ws.Properties.DefaultDataLakeStorage != nil {
+					if ws.Properties.DefaultDataLakeStorage.Filesystem != nil {
+						defaultStorageFilesystem = *ws.Properties.DefaultDataLakeStorage.Filesystem
+					}
+					if ws.Properties.DefaultDataLakeStorage.ResourceID != nil {
+						defaultStorageId = *ws.Properties.DefaultDataLakeStorage.ResourceID
+					}
 				}
 				if ws.Properties.ManagedResourceGroupName != nil {
 					managedResourceGroupName = *ws.Properties.ManagedResourceGroupName
@@ -108,6 +129,11 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 				}
 				trustedServiceBypassEnabled = ws.Properties.TrustedServiceBypassEnabled
 				azureADOnlyAuthentication = ws.Properties.AzureADOnlyAuthentication
+			}
+
+			var userAssignedIdentityIds []string
+			if ws.Identity != nil {
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(ws.Identity.UserAssignedIdentities)
 			}
 
 			mqlWorkspace, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionSynapseServiceWorkspace,
@@ -128,11 +154,16 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					"provisioningState":           llx.StringData(provisioningState),
 					"trustedServiceBypassEnabled": llx.BoolDataPtr(trustedServiceBypassEnabled),
 					"azureADOnlyAuthentication":   llx.BoolDataPtr(azureADOnlyAuthentication),
+					"defaultStorageFilesystem":    llx.StringData(defaultStorageFilesystem),
 				})
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlWorkspace)
+			workspaceRes := mqlWorkspace.(*mqlAzureSubscriptionSynapseServiceWorkspace)
+			workspaceRes.cacheDefaultStorageId = defaultStorageId
+			workspaceRes.cacheCmkKeyURI = cmkKeyURI
+			workspaceRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			res = append(res, workspaceRes)
 		}
 	}
 	return res, nil
@@ -140,6 +171,55 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 
 func (a *mqlAzureSubscriptionSynapseServiceWorkspace) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// synapseKeyURI normalizes the workspace CMK reference into a full Key Vault key
+// identifier. The SDK's KeyVaultURL is documented as the full key identifier
+// (https://{vault}.vault.azure.net/keys/{name}); if only a vault base URL is
+// returned it is combined with the key name.
+func synapseKeyURI(key *armsynapse.WorkspaceKeyDetails) string {
+	if key == nil || key.KeyVaultURL == nil {
+		return ""
+	}
+	url := strings.TrimSuffix(*key.KeyVaultURL, "/")
+	if url == "" {
+		return ""
+	}
+	if strings.Contains(url, "/keys/") {
+		return url
+	}
+	if key.Name == nil || *key.Name == "" {
+		return ""
+	}
+	return url + "/keys/" + *key.Name
+}
+
+// defaultStorage returns a typed reference to the workspace's default Data Lake Storage account.
+func (a *mqlAzureSubscriptionSynapseServiceWorkspace) defaultStorage() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+	if a.cacheDefaultStorageId == "" {
+		a.DefaultStorage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.storageService.account",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheDefaultStorageId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionStorageServiceAccount), nil
+}
+
+// cmkKey returns a typed reference to the Key Vault key used for customer-managed encryption.
+func (a *mqlAzureSubscriptionSynapseServiceWorkspace) cmkKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheCmkKeyURI == "" {
+		a.CmkKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheCmkKeyURI)
+}
+
+// userAssignedIdentities returns the typed user-assigned managed identities of the workspace.
+func (a *mqlAzureSubscriptionSynapseServiceWorkspace) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func initAzureSubscriptionSynapseServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "mikrotik",
 	ID:              "go.mondoo.com/mql/providers/mikrotik",
-	Version:         "13.0.1",
+	Version:         "13.0.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
@@ -26,9 +26,9 @@ var Config = plugin.Provider{
 RouterOS API.
 
 Examples:
-  cnquery shell mikrotik admin@192.168.88.1 --password 'secret'
-  cnquery shell mikrotik admin@192.168.88.1 --tls --ask-pass
-  cnquery shell mikrotik admin@router.example.com --port 8728 --password 'secret'
+  cnspec scan mikrotik admin@192.168.88.1 --password 'secret'
+  cnspec scan mikrotik admin@192.168.88.1 --tls --ask-pass
+  cnspec shell mikrotik admin@router.example.com --port 8728 --password 'secret'
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{

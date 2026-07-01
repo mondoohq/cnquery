@@ -273,14 +273,15 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				}
 				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 					map[string]*llx.RawData{
-						"digest":     llx.StringDataPtr(image.ImageDigest),
-						"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
-						"tags":       llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
-						"registryId": llx.StringDataPtr(image.RegistryId),
-						"repoName":   llx.StringData(name),
-						"region":     llx.StringData(region),
-						"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
-						"uri":        llx.StringData(uri),
+						"digest":            llx.StringDataPtr(image.ImageDigest),
+						"mediaType":         llx.StringDataPtr(image.ImageManifestMediaType),
+						"artifactMediaType": llx.StringDataPtr(image.ArtifactMediaType),
+						"tags":              llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
+						"registryId":        llx.StringDataPtr(image.RegistryId),
+						"repoName":          llx.StringData(name),
+						"region":            llx.StringData(region),
+						"arn":               llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+						"uri":               llx.StringData(uri),
 					})
 				if err != nil {
 					return nil, err
@@ -315,6 +316,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 					"digest":               llx.StringDataPtr(image.ImageDigest),
 					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
 					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),
+					"artifactMediaType":    llx.StringDataPtr(image.ArtifactMediaType),
 					"pushedAt":             llx.TimeDataPtr(image.ImagePushedAt),
 					"region":               llx.StringData(region),
 					"registryId":           llx.StringDataPtr(image.RegistryId),
@@ -482,6 +484,24 @@ func EcrImageName(i ImageInfo) string {
 	return i.RepoName + "@" + i.Digest
 }
 
+func (a *mqlAwsEcrImage) repository() (*mqlAwsEcrRepository, error) {
+	repoName := a.RepoName.Data
+	if repoName == "" {
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := fmt.Sprintf("arn:aws:ecr:%s:%s:repository/%s", a.Region.Data, a.RegistryId.Data, repoName)
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.repository",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		// Public-gallery images and cross-account repositories won't resolve to a
+		// repository in this account; leave the reference null rather than failing.
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrRepository), nil
+}
+
 func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -572,8 +592,10 @@ func buildEcrPrivateRepositoryResource(runtime *plugin.Runtime, region string, r
 		imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
 	}
 	var encryptionType string
+	var kmsKeyArn *string
 	if r.EncryptionConfiguration != nil {
 		encryptionType = string(r.EncryptionConfiguration.EncryptionType)
+		kmsKeyArn = r.EncryptionConfiguration.KmsKey
 	}
 	mqlRepoResource, err := CreateResource(runtime, ResourceAwsEcrRepository,
 		map[string]*llx.RawData{
@@ -591,7 +613,9 @@ func buildEcrPrivateRepositoryResource(runtime *plugin.Runtime, region string, r
 	if err != nil {
 		return nil, err
 	}
-	return mqlRepoResource.(*mqlAwsEcrRepository), nil
+	res := mqlRepoResource.(*mqlAwsEcrRepository)
+	res.cacheKmsKeyArn = kmsKeyArn
+	return res, nil
 }
 
 func buildEcrPublicRepositoryResource(runtime *plugin.Runtime, r ecrpublic_types.Repository) (*mqlAwsEcrRepository, error) {
@@ -621,6 +645,20 @@ type mqlAwsEcrRepositoryInternal struct {
 	catalogFetched bool
 	catalogData    *ecrpublic_types.RepositoryCatalogData
 	catalogLock    sync.Mutex
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsEcrRepository) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcrRepository) fetchCatalogData() (*ecrpublic_types.RepositoryCatalogData, error) {

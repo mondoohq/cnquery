@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.38.1",
-  "generated_at": "2026-06-26T19:15:04-07:00",
+  "version": "13.40.0",
+  "generated_at": "2026-06-30T21:58:44-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -4891,6 +4891,12 @@
       "service": "rds",
       "action": "ListTagsForResource",
       "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:ListTagsForResource",
+      "service": "rds",
+      "action": "ListTagsForResource",
+      "source_file": "aws_neptune.go"
     },
     {
       "permission": "rds:ListTagsForResource",

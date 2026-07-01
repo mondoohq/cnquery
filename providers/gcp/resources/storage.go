@@ -7,8 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -18,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/storage/v1"
@@ -277,11 +280,15 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 	if bucket.Encryption != nil {
 		mqlBucket.cacheDefaultKmsKeyName = bucket.Encryption.DefaultKmsKeyName
 	}
+	if bucket.Logging != nil {
+		mqlBucket.cacheLogBucket = bucket.Logging.LogBucket
+	}
 	return mqlBucket, nil
 }
 
 type mqlGcpProjectStorageServiceBucketInternal struct {
 	cacheDefaultKmsKeyName string
+	cacheLogBucket         string
 
 	aclLock            sync.Mutex
 	aclFetched         bool
@@ -304,6 +311,87 @@ func (g *mqlGcpProjectStorageServiceBucket) defaultKmsKey() (*mqlGcpProjectKmsSe
 
 func (g *mqlGcpProjectStorageServiceBucket) defaultEncryptionEnabled() (bool, error) {
 	return g.cacheDefaultKmsKeyName != "", nil
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) logBucket() (*mqlGcpProjectStorageServiceBucket, error) {
+	if g.cacheLogBucket == "" {
+		g.LogBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.storageService.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(g.cacheLogBucket)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectStorageServiceBucket), nil
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	bucketName := g.Name.Data
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+
+	// The bucket location is required to route to the correct regional endpoint.
+	if g.Location.Error != nil {
+		return nil, g.Location.Error
+	}
+	location := strings.ToLower(g.Location.Data)
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	// GCS bucket tag bindings require the regional cloudresourcemanager endpoint.
+	// The global endpoint rejects the request with "not a valid One Platform resource name".
+	regionalEndpoint := fmt.Sprintf("https://%s-cloudresourcemanager.googleapis.com/", location)
+	svc, err := cloudresourcemanager.NewService(ctx,
+		option.WithHTTPClient(client),
+		option.WithEndpoint(regionalEndpoint),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use EffectiveTagBindingCollections to get both directly-attached tags AND
+	// tags inherited from parent resources (project, folder, organization).
+	// Use projects/_ wildcard — the documented format for GCS bucket resource names.
+	fullResource := fmt.Sprintf("//storage.googleapis.com/projects/_/buckets/%s", bucketName)
+	encodedResource := url.PathEscape(fullResource)
+	name := fmt.Sprintf("locations/%s/effectiveTagBindingCollections/%s", location, encodedResource)
+
+	resp, err := svc.Locations.EffectiveTagBindingCollections.Get(name).Context(ctx).Do()
+	if err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
+			return map[string]interface{}{}, nil
+		}
+		return nil, err
+	}
+
+	return effectiveTagsToInterface(resp.EffectiveTags), nil
+}
+
+// effectiveTagsToInterface converts the EffectiveTags map from the
+// cloudresourcemanager API (map[string]string) to map[string]interface{}
+// as required by MQL. Unexported; tested directly in storage_test.go.
+func effectiveTagsToInterface(in map[string]string) map[string]interface{} {
+	out := make(map[string]interface{}, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
 
 func storageLifecycleRulesToArrayInterface(runtime *plugin.Runtime, bucketId string, lifecycle *storage.BucketLifecycle) (list []any) {

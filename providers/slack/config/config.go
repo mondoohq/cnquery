@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "slack",
 	ID:              "go.mondoo.com/cnquery/v9/providers/slack",
-	Version:         "13.1.13",
+	Version:         "13.1.14",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
@@ -35,7 +35,7 @@ Examples:
 					Long:    "token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack/)",
+					Desc:    "Slack API token (To learn more, read https://mondoo.com/docs/cnspec/saas/slack)",
 				},
 				{
 					Long:    "team-id",

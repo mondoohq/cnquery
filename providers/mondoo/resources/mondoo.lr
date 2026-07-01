@@ -9,7 +9,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/mondoo/resources"
 
 // Mondoo Client
 //
-// Examine the Mondoo Resource Name (MRN) of the client (cnspec / cnquery /
+// Examine the Mondoo Resource Name (MRN) of the client (cnspec / mql /
 // the platform agent) executing the current scan — the identifier audits
 // can use to attribute findings back to a specific Mondoo client.
 mondoo.client @defaults("mrn") {

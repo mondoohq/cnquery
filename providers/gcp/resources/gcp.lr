@@ -330,6 +330,8 @@ private gcp.project.redisService.instance @defaults("name") {
   network() gcp.project.computeService.network
   // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
   persistenceIamIdentity string
+  // Service account used by import and export operations to transfer data to and from Cloud Storage
+  persistenceServiceAccount() gcp.project.iamService.serviceAccount
   // The network connect mode of the Redis instance
   connectMode string
   // Redis AUTH is enabled or not for the instance. If set to "true" AUTH is enabled on the instance
@@ -370,6 +372,12 @@ private gcp.project.redisService.instance @defaults("name") {
   maintenanceSchedule dict
   // List of server CA certificates for the instance
   serverCaCerts []gcp.project.redisService.instance.serverCaCert
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Redis instance node information
@@ -490,6 +498,8 @@ private gcp.project.redisService.cluster.pscConfig {
   clusterName string
   // The network where the IP address of the discovery endpoint will be reserved
   network string
+  // VPC network where the discovery endpoint IP address is reserved
+  networkRef() gcp.project.computeService.network
 }
 
 // Google Cloud (GCP) Redis Cluster discovery endpoint
@@ -522,6 +532,8 @@ private gcp.project.redisService.cluster.pscConnection @defaults("pscConnectionI
   connectionProjectId string
   // The consumer network the PSC connection was created in
   network string
+  // VPC network the PSC connection was created in
+  networkRef() gcp.project.computeService.network
   // The service attachment which is the target of the PSC connection
   serviceAttachment string
   // The status of the PSC connection
@@ -613,6 +625,8 @@ private gcp.project.redisService.cluster.connectionDetail @defaults("pscConnecti
   connectionProjectId string
   // The consumer network the PSC connection was created in
   network string
+  // VPC network the PSC connection was created in
+  networkRef() gcp.project.computeService.network
   // The service attachment which is the target of the PSC connection
   serviceAttachment string
   // The status of the PSC connection
@@ -648,6 +662,12 @@ private gcp.folder @defaults("name") {
   parentOrganization() gcp.organization
   // Resource name of the management project associated with this folder
   managementProject string
+  // Management project associated with this folder
+  //
+  // Resolves the managementProject resource name to the project that holds
+  // the folder's management resources. Null when the folder has no
+  // management project.
+  managementProjectRef() gcp.project
   // Folder state
   state string
   // Timestamp when deletion was requested
@@ -867,6 +887,12 @@ gcp.project @defaults("name number") {
   liens() []gcp.project.lien
   // Resource Manager tag bindings attached to the project
   tagBindings() []gcp.project.tagBinding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Resource Manager lien
@@ -1492,6 +1518,30 @@ gcp.project.computeService.instance @defaults("name id") {
   inventory() gcp.project.computeService.instance.osInventory
   // VM Manager vulnerability report for the instance
   vulnerabilityReport() gcp.project.computeService.instance.vulnerabilityReport
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
+  // VPC networks the instance is attached to
+  //
+  // Networks resolved from every network interface, letting audits traverse the
+  // network configuration directly instead of reading self-link URLs out of the
+  // network interface list.
+  networks() []gcp.project.computeService.network
+  // VPC subnetworks the instance is attached to
+  //
+  // Subnetworks resolved from every network interface, letting audits traverse
+  // the subnetwork configuration directly instead of reading self-link URLs out
+  // of the network interface list.
+  subnetworks() []gcp.project.computeService.subnetwork
+  // IAM service accounts the instance runs as
+  //
+  // Service accounts resolved from the instance service account bindings,
+  // letting audits traverse the role bindings and keys of each identity the VM
+  // authenticates with.
+  serviceAccountRefs() []gcp.project.iamService.serviceAccount
 }
 
 // Compute instance internet-exposure breakdown
@@ -1785,6 +1835,12 @@ private gcp.project.computeService.disk @defaults("name") {
   satisfiesPzs bool
   // Source disk used to create this disk
   sourceDisk() gcp.project.computeService.disk
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -1899,6 +1955,12 @@ private gcp.project.computeService.snapshot @defaults("name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Compute Engine custom or public machine image
@@ -1963,6 +2025,12 @@ private gcp.project.computeService.image @defaults("id name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the image's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Compute Engine VPC firewall rule
@@ -2000,12 +2068,24 @@ private gcp.project.computeService.firewall @defaults("name") {
   allowsRdpFromInternet() bool
   // Source service accounts
   sourceServiceAccounts []string
+  // IAM service accounts whose instances this rule matches as traffic source
+  //
+  // Service accounts resolved from the source service account emails, letting
+  // audits traverse the role bindings and keys of each identity this ingress
+  // rule applies to.
+  sourceServiceAccountRefs() []gcp.project.iamService.serviceAccount
   // Source tags
   sourceTags []string
   // Range of destination IP addresses for which the rule applies to traffic
   destinationRanges []string
   // List of service accounts
   targetServiceAccounts []string
+  // IAM service accounts whose instances this rule applies to as traffic target
+  //
+  // Service accounts resolved from the target service account emails, letting
+  // audits traverse the role bindings and keys of each identity this rule
+  // governs.
+  targetServiceAccountRefs() []gcp.project.iamService.serviceAccount
   // Creation timestamp
   created time
   // List of ALLOW rules specified by this firewall
@@ -2073,6 +2153,11 @@ gcp.project.computeService.network @defaults("name") {
   internalIpv6Range string
   // URL of the firewall policy applied to this network
   firewallPolicy string
+  // Firewall policy applied to this network
+  //
+  // Network firewall policy resolved from the associated policy reference,
+  // letting audits traverse the policy rules directly.
+  firewallPolicyRef() gcp.project.computeService.firewallPolicy
   // URL of the network profile applied to this network
   networkProfile string
   // Legacy single-region IPv4 range for non-subnetted networks
@@ -2398,7 +2483,8 @@ private gcp.project.storageService {
 //
 // Examine a Cloud Storage bucket's configuration, access controls, and
 // data-protection settings. Surfaces the `storageClass`, `location` and
-// `locationType`, `labels`, IAM policy (including `public()` which flags
+// `locationType`, `labels`, `tags` (Resource Manager Tags bound to the bucket),
+// IAM policy (including `public()` which flags
 // any `allUsers` / `allAuthenticatedUsers` grant), `iamConfiguration`
 // (uniform bucket-level access, public access prevention), `retentionPolicy`
 // and `retentionPolicyLocked`, object `versioningEnabled`, default CMEK
@@ -2415,6 +2501,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   name string
   // User-defined labels
   labels map[string]string
+  // Resource Manager tags bound to this bucket
+  tags() map[string]string
   // Bucket location
   location string
   // Bucket location type
@@ -2523,6 +2611,17 @@ private gcp.project.storageService.bucket @defaults("id") {
   // optional prefix applied to log object names. Use this to find where logs
   // go; the `loggingEnabled` predicate is the simple is-it-on check.
   logging dict
+  // Access-log destination bucket
+  //
+  // Bucket that receives this bucket's access logs. Null when access logging
+  // is disabled. The `loggingEnabled` predicate is the simple is-it-on check.
+  logBucket() gcp.project.storageService.bucket
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Cross-Origin Resource Sharing (CORS) rules
   //
   // Each rule is shaped `{origin, method, responseHeader, maxAgeSeconds}`.
@@ -2679,6 +2778,12 @@ private gcp.project.sqlService.instance @defaults("name") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name and status of the failover replica
   failoverReplica dict
+  // Standby instance designated as the high-availability failover target
+  //
+  // Resolves the instance named by the failover replica configuration, the
+  // standby the primary fails over to for high availability. Null when the
+  // instance has no failover replica.
+  failoverReplicaRef() gcp.project.sqlService.instance
   // Raw GCE zone name
   //
   // Deprecated in favor of `zone`.
@@ -2781,8 +2886,21 @@ private gcp.project.sqlService.instance @defaults("name") {
   // `failoverDrReplicaName` is set on the primary to designate the DR
   // replica.
   replicationCluster dict
+  // Cross-region disaster-recovery replica designated by this primary
+  //
+  // Resolves the instance named as the cross-region disaster-recovery
+  // replica of the replication cluster, the target an Enterprise Plus
+  // primary fails over to in another region. Null when no such replica is
+  // designated.
+  drReplica() gcp.project.sqlService.instance
   // Expiration time of the instance's server CA certificate used for TLS
   serverCaCertExpiration time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) SQL instance database
@@ -3224,6 +3342,12 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   defaultCollation string
   // Default partition expiration time in milliseconds
   defaultPartitionExpirationMs int
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Whether field names are treated as case insensitive
   isCaseInsensitive bool
   // External source backing this dataset
@@ -3622,6 +3746,11 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecDefaultKeyAlgorithms []string
   // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
   privateVisibilityConfig dict
+  // Authorized VPC networks for a private zone
+  //
+  // VPC networks permitted to query this private zone. Empty for public zones
+  // and for private zones without network authorization.
+  authorizedNetworks() []gcp.project.computeService.network
   // IPv4 addresses of the name servers this private zone forwards outbound queries to (empty when forwarding is not configured)
   forwardingTargets []string
   // Fully qualified URL of the VPC network this private zone peers with for DNS resolution (empty when peering is not configured)
@@ -3634,6 +3763,12 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   recordSets() []gcp.project.dnsService.recordset
   // IAM policy bindings for this managed zone
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud DNS record set
@@ -4006,6 +4141,12 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   databaseEncryptionState string
   // Cloud KMS key used for etcd encryption
   databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Configuration for Shielded Nodes feature
   shieldedNodesConfig dict
   // Whether Shielded Nodes is enabled cluster-wide
@@ -4402,6 +4543,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   kubeletConfig gcp.project.gkeService.cluster.nodepool.config.kubeletConfig
   // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
   bootDiskKmsKey string
+  // Customer-managed Cloud KMS key used to encrypt each node's boot disk
+  bootDiskKmsKeyRef() gcp.project.kmsService.keyring.cryptokey
   // Encryption mode for node Local SSDs (STANDARD_ENCRYPTION uses Google-managed keys; EPHEMERAL_KEY_ENCRYPTION uses per-boot ephemeral keys)
   localSsdEncryptionMode string
   // Google Container File System (image streaming) configuration
@@ -4653,6 +4796,12 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   // Ordered list of transforms applied to messages published to the topic,
   // each typically backed by a JavaScript user-defined function (UDF).
   messageTransforms []dict
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub topic schema settings
@@ -4745,6 +4894,8 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   topicMessageRetentionDuration time
   // Dead-letter queue configuration (deadLetterTopic, maxDeliveryAttempts)
   deadLetterPolicy dict
+  // Dead-letter topic that receives messages this subscription fails to deliver
+  deadLetterTopic() gcp.project.pubsubService.topic
   // Message retry backoff configuration (minimumBackoff, maximumBackoff)
   retryPolicy dict
   // BigQuery delivery sink
@@ -4774,6 +4925,20 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   // to Bigtable. A populated value is an egress path that moves topic data into
   // a queryable store, so it widens the data's exposure surface.
   bigtableConfig dict
+  // Service account used to generate the OIDC token for authenticated push delivery
+  oidcTokenServiceAccount() gcp.project.iamService.serviceAccount
+  // BigQuery table this subscription writes messages to
+  bigqueryTable() gcp.project.bigqueryService.table
+  // Cloud Storage bucket this subscription writes messages to
+  cloudStorageBucket() gcp.project.storageService.bucket
+  // Service account the Bigtable export runs as
+  bigtableServiceAccount() gcp.project.iamService.serviceAccount
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub configuration for subscriptions that operate in push mode
@@ -4814,6 +4979,12 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   expiration time
   // Labels associated with this snapshot
   labels map[string]string
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub schema
@@ -4866,6 +5037,10 @@ private gcp.project.kmsService {
 private gcp.project.kmsService.keyring @defaults("name") {
   // Project ID
   projectId string
+  // Project that owns the key ring
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
   // Full resource path
   resourcePath string
   // Keyring name
@@ -4930,6 +5105,12 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the key's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) KMS crypto key version
@@ -5144,6 +5325,18 @@ private gcp.project.apiKey @defaults("name") {
   id string
   // Project ID
   projectId string
+  // Project that owns the API key
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
+  // Email of the service account the key acts as
+  serviceAccountEmail string
+  // Service account the key acts as
+  //
+  // Resolves serviceAccountEmail to the service account whose identity the
+  // key assumes when calling APIs. Null when the key is not bound to a
+  // service account.
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Human-readable display name of this key
   name string
   // Full resource path
@@ -5160,6 +5353,12 @@ private gcp.project.apiKey @defaults("name") {
   restrictions gcp.project.apiKey.restrictions
   // Update timestamp
   updated time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) project API key restrictions
@@ -5236,6 +5435,18 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   cmekSettings @maturity("deprecated") dict
   // Customer-managed KMS key used to encrypt log entries in this bucket (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // CMEK service-agent identity
+  //
+  // Email of the Google-managed service agent that encrypts and decrypts log
+  // entries in this bucket with the customer-managed key. Empty when the
+  // bucket uses Google-managed encryption.
+  cmekServiceAccountId string
+  // Service account that encrypts log entries with the customer-managed key
+  //
+  // Resolved from the CMEK service-agent identity. Null when the bucket uses
+  // Google-managed encryption or the identity does not map to a service
+  // account resource.
+  cmekServiceAccount() gcp.project.iamService.serviceAccount
   // Creation timestamp
   created time
   // Description of the bucket
@@ -5443,6 +5654,10 @@ private gcp.project.iamService.role @defaults("title name") {
 private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // Project ID
   projectId string
+  // Project that owns the service account
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
   // Service account name
   name string
   // Unique, stable, numeric ID for the service account
@@ -5658,6 +5873,11 @@ private gcp.project.cloudFunction @defaults("name") {
   httpsTrigger dict
   // Source that fires events in response to a condition in another service
   eventTrigger dict
+  // Pub/Sub topic that fires this function's event trigger
+  //
+  // Resolves the Pub/Sub topic when the event trigger's resource is a Pub/Sub
+  // topic. Empty for triggers backed by other event sources.
+  eventTriggerTopic() gcp.project.pubsubService.topic
   // Status of the function deployment
   status string
   // Name of the function (as defined in source code) that is executed
@@ -5715,13 +5935,24 @@ private gcp.project.cloudFunction @defaults("name") {
   // Secret volumes
   secretVolumes []dict
   // User-managed repository created in Artifact Registry
-  dockerRepository string
+  //
+  // Deprecated in favor of `dockerRepositoryRef`, which resolves the Artifact
+  // Registry repository resource.
+  dockerRepository @maturity("deprecated") string
+  // Artifact Registry repository that stores the function's built image
+  dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Docker registry to use for this deployment
   dockerRegistry string
   // IAM policy bindings controlling who can invoke and manage the function
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the IAM policy grants an invoker role to allUsers or allAuthenticatedUsers, making the function callable without authentication
   allowsUnauthenticated() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Cloud Function (v2 / 2nd gen)
@@ -5765,6 +5996,12 @@ private gcp.project.cloudFunctionV2 @defaults("name state environment") {
   createTime time
   // Last update time
   updateTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Cloud Function v2 build configuration
@@ -5782,7 +6019,12 @@ private gcp.project.cloudFunctionV2.buildConfig @defaults("runtime entryPoint") 
   // Build environment variables
   environmentVariables map[string]string
   // User-managed repository in Artifact Registry for storing built images
-  dockerRepository string
+  //
+  // Deprecated in favor of `dockerRepositoryRef`, which resolves the Artifact
+  // Registry repository resource.
+  dockerRepository @maturity("deprecated") string
+  // Artifact Registry repository that stores the function's built images
+  dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Service account to use for the build
   //
   // Deprecated in favor of `serviceAccountRef`, which resolves the service account resource.
@@ -5806,6 +6048,8 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   id string
   // Cloud Run service resource name
   service string
+  // Cloud Run service that backs the function
+  serviceRef() gcp.project.cloudRunService.service
   // Function execution timeout in seconds
   timeoutSeconds int
   // Amount of memory available (e.g. "256M", "1Gi")
@@ -6177,6 +6421,12 @@ private gcp.project.dataprocService.cluster @defaults("name") {
   virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
   // IAM policy bindings on the cluster (who can submit jobs to or manage the cluster)
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Dataproc cluster config
@@ -6185,8 +6435,12 @@ private gcp.project.dataprocService.cluster.config {
   parentResourcePath string
   // Autoscaling configuration for the policy associated with the cluster
   autoscaling dict
+  // Autoscaling policy governing cluster scaling
+  autoscalingPolicyRef() gcp.project.dataprocService.autoscalingPolicy
   // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
   configBucket string
+  // Cloud Storage staging bucket for job dependencies, config files, and job driver console output
+  configBucketRef() gcp.project.storageService.bucket
   // Dataproc metrics configuration
   metrics dict
   // Encryption configuration
@@ -6219,6 +6473,8 @@ private gcp.project.dataprocService.cluster.config {
   software dict
   // Cloud Storage bucket used to store ephemeral cluster and jobs data
   tempBucket string
+  // Cloud Storage bucket for ephemeral cluster and jobs data
+  tempBucketRef() gcp.project.storageService.bucket
   // Compute Engine configuration for the cluster's worker instances
   worker gcp.project.dataprocService.cluster.config.instance
 }
@@ -6404,12 +6660,29 @@ private gcp.project.dataprocService.job @defaults("name status") {
   jobType string
   // Cluster the job is submitted to
   clusterName string
+  // Dataproc cluster the job is submitted to
+  cluster() gcp.project.dataprocService.cluster
+  // UUID of the cluster instance the job ran on
+  clusterUuid string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Whether the job is complete
   done bool
   // Driver output resource URI
   driverOutputResourceUri string
+  // Time the job entered its current status
+  stateStartTime time
+  // History of previous job statuses
+  //
+  // Each entry records a prior state, detail message, substate, and the time
+  // the job entered that state, forming the job's lifecycle timeline.
+  statusHistory []dict
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Dataproc autoscaling policy
@@ -6558,6 +6831,14 @@ private gcp.project.cloudRunService.service @defaults("name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the service is reachable from the public internet: ingress allows all traffic AND IAM grants invoke to allUsers or allAuthenticatedUsers
   publicInvocable() bool
+  // Customer-managed Cloud KMS key used to encrypt the service's container image
+  encryptionKeyRef() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Run service revision template
@@ -6607,6 +6888,12 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   name string
   // URL of the container image in Google Container Registry or Google Artifact Registry
   image string
+  // Artifact Registry repository that stores the container image
+  //
+  // Resolves the repository when the image is hosted in Artifact Registry
+  // (a `*-docker.pkg.dev` image URL). Empty for images stored elsewhere,
+  // such as Container Registry or an external registry.
+  imageRepository() gcp.project.artifactRegistryService.repository
   // Entrypoint array
   command []string
   // Arguments to the entrypoint
@@ -6746,6 +7033,14 @@ private gcp.project.cloudRunService.job {
   etag string
   // IAM policy bindings for this Cloud Run job
   iamPolicy() []gcp.resourcemanager.binding
+  // Customer-managed Cloud KMS key used to encrypt the job's container image
+  encryptionKeyRef() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Run job execution template
@@ -7189,6 +7484,11 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   replicationType string
   // Pub/Sub topics for event notifications
   topics []string
+  // Pub/Sub topics that receive event notifications for this secret
+  //
+  // Resolves the topics resource names to the notification topics that
+  // receive secret lifecycle events.
+  topicRefs() []gcp.project.pubsubService.topic
   // Expiration time (if set)
   expireTime time
   // Input-only time-to-live duration after which the secret is scheduled to expire (empty when an absolute expireTime is set instead)
@@ -7225,6 +7525,12 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the secret's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Secret Manager secret version
@@ -7299,6 +7605,11 @@ private gcp.project.firestoreService.database @defaults("name") {
   tags map[string]string
   // Customer-managed encryption key configuration
   cmekConfig dict
+  // Customer-managed KMS key used for encryption (null when Google-managed)
+  //
+  // Resolves the key named in the customer-managed encryption configuration.
+  // Null when the database uses Google-managed encryption.
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Version retention period
   versionRetentionPeriod string
   // Earliest timestamp to which the database can be restored
@@ -7415,6 +7726,12 @@ private gcp.project.spannerService.instance @defaults("name") {
   backupSchedules() []gcp.project.spannerService.instance.backupSchedule
   // List of instance partitions
   instancePartitions() []gcp.project.spannerService.instance.instancePartition
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Spanner database
@@ -7456,6 +7773,12 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   createdAt time
   // Restore source information if the database was restored from a backup
   restoreInfo dict
+  // Backup this database was restored from
+  //
+  // Resolves the backup named in the restore information when the database
+  // was created by restoring a backup. Null for databases created empty or
+  // when the source backup no longer exists.
+  sourceBackup() gcp.project.spannerService.instance.backup
   // Database DDL statements (schema definition)
   ddl() []string
   // IAM policy bindings for the database
@@ -7482,6 +7805,11 @@ private gcp.project.spannerService.instance.backup @defaults("name") {
   name string
   // Source database of the backup
   database string
+  // Database this backup was taken from
+  //
+  // Resolves the source database named in the backup. Null when the source
+  // database no longer exists.
+  sourceDatabase() gcp.project.spannerService.instance.database
   // Current state of the backup
   state string
   // Expiration time
@@ -7675,6 +8003,12 @@ private gcp.project.bigtableService.instance @defaults("name") {
   backups() []gcp.project.bigtableService.backup
   // IAM policy bindings for the Bigtable instance
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Bigtable cluster
@@ -7774,6 +8108,16 @@ private gcp.project.bigtableService.backup @defaults("name") {
   name string
   // Source table of the backup
   sourceTable string
+  // Table this backup was taken from
+  //
+  // Resolves the source table named in the backup. Null when the source
+  // table no longer exists.
+  sourceTableRef() gcp.project.bigtableService.table
+  // Backup this backup was copied from
+  //
+  // Set on a backup created by copying another backup, resolving the source
+  // backup in the copy chain. Null for backups taken directly from a table.
+  sourceBackup() gcp.project.bigtableService.backup
   // Expiration time
   expireTime time
   // Start time
@@ -7872,6 +8216,27 @@ private gcp.project.alloydbService.cluster @defaults("name") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Database users defined on the cluster (built-in or AlloyDB IAM users)
   users() []gcp.project.alloydbService.cluster.user
+  // VPC network the cluster is attached to for private connectivity
+  //
+  // Resolves the network named in the cluster network configuration. Null
+  // when the cluster uses Private Service Connect instead of a peered VPC.
+  network() gcp.project.computeService.network
+  // Primary cluster this secondary cluster replicates from
+  //
+  // Set on a SECONDARY cluster, resolving the cross-region primary named in
+  // its secondary configuration. Null on primary clusters.
+  primaryCluster() gcp.project.alloydbService.cluster
+  // Secondary clusters replicating from this primary cluster
+  //
+  // Set on a PRIMARY cluster, resolving each cross-region secondary named in
+  // its primary configuration. Empty on secondary clusters.
+  secondaryClusters() []gcp.project.alloydbService.cluster
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) AlloyDB cluster user
@@ -7987,6 +8352,11 @@ private gcp.project.alloydbService.backup @defaults("name") {
   description string
   // Source cluster name
   clusterName string
+  // Cluster this backup was taken from
+  //
+  // Resolves the source cluster named in the backup. Null when the source
+  // cluster no longer exists.
+  sourceCluster() gcp.project.alloydbService.cluster
   // Database version
   databaseVersion string
   // Encryption configuration
@@ -8009,6 +8379,8 @@ private gcp.project.alloydbService.backup @defaults("name") {
   createdAt time
   // Last update time
   updatedAt time
+  // Customer-managed KMS key used for backup encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy
@@ -10793,6 +11165,12 @@ private gcp.project.artifactRegistryService.repository @defaults("name format lo
   public() bool
   // Packages stored in the repository
   packages() []gcp.project.artifactRegistryService.repository.package
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Artifact Registry package
@@ -11364,6 +11742,12 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   startTime time
   // End time
   endTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI dataset
@@ -11508,6 +11892,12 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   startTime time
   // End time
   endTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI vector search index
@@ -11713,8 +12103,19 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   jobState string
   // Kernel the notebook runs under
   kernelName string
+  // End-user identity the notebook execution runs on behalf of
+  executionUser string
+  // Service account identity the notebook execution runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
+  // Runtime template that defines the execution environment
+  notebookRuntimeTemplateRef() gcp.project.vertexaiService.notebookRuntimeTemplate
   // Resource name of the schedule that triggered this job, if scheduled
-  scheduleResourceName string
+  //
+  // Deprecated in favor of scheduleRef, which resolves the schedule resource
+  // (its name is available as the resource's own name).
+  scheduleResourceName @maturity("deprecated") string
+  // Schedule that triggered this job, if scheduled
+  scheduleRef() gcp.project.vertexaiService.schedule
   // Configured execution timeout, in seconds
   executionTimeoutSeconds int
   // User-defined key/value labels for organizing the resource
@@ -11727,6 +12128,12 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   createdAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI Agent Engine agent
@@ -11995,6 +12402,12 @@ private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName st
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI tuning job
@@ -12021,6 +12434,8 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   experiment string
   // Produced tuned model and its serving endpoint
   tunedModel dict
+  // Model produced by this tuning job
+  tunedModelRef() gcp.project.vertexaiService.model
   // Statistics about the tuning dataset
   tuningDataStats dict
   // Service account the job runs as
@@ -12039,6 +12454,12 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI training pipeline
@@ -12107,6 +12528,10 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   studySpec dict
   // Per-trial training job specification
   trialJobSpec dict
+  // Service account identity each trial runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
+  // VPC network the trials peer with
+  networkRef() gcp.project.computeService.network
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec (CMEK)
@@ -12121,6 +12546,12 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI model deployment monitoring job
@@ -12158,6 +12589,12 @@ private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("disp
   updatedAt time
   // Time the next monitoring analysis run is scheduled
   nextScheduleTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud Security Command Center organization settings
@@ -14273,6 +14710,12 @@ private gcp.project.memcacheService.instance @defaults("name state") {
   updateTime time
   // Memcached nodes in the instance
   nodes []gcp.project.memcacheService.instance.node
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Memcached node
@@ -14614,6 +15057,12 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   createTime time
   // Last update time
   updateTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Memorystore instance PSC attachment detail

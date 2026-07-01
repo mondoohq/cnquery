@@ -15,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "13.38.1",
+	Version:         "13.40.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
@@ -51,7 +51,7 @@ Examples:
 
 Notes:
   If you set the AWS_PROFILE environment variable, you can omit the profile flag.
-	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws/.
+	To learn about setting up your AWS credentials, read https://mondoo.com/docs/cnspec/cloud/aws.
 `,
 			MinArgs: 0,
 			MaxArgs: 4,

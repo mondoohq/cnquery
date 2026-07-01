@@ -139,13 +139,18 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) id() (string, erro
 }
 
 type mqlAzureSubscriptionPostgreSqlServiceFlexibleServerInternal struct {
-	cachePrimaryKeyURI   string
-	cacheGeoBackupKeyURI string
-	cacheSystemData      any
+	cachePrimaryKeyURI           string
+	cacheGeoBackupKeyURI         string
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error) {
@@ -214,6 +219,15 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				}
 			}
 
+			var identityType, identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if dbServer.Identity != nil {
+				identityType = cosmosEnumStrPtr(dbServer.Identity.Type)
+				identityPrincipalId = dbServer.Identity.PrincipalID
+				identityTenantId = dbServer.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(dbServer.Identity.UserAssignedIdentities)
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                           llx.StringDataPtr(dbServer.ID),
@@ -231,11 +245,15 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"publicNetworkAccess":          llx.StringDataPtr(publicNetworkAccess),
 					"backupRetentionDays":          llx.IntData(backupRetentionDays),
 					"geoRedundantBackup":           llx.StringData(geoRedundantBackup),
+					"identityType":                 llx.StringDataPtr(identityType),
+					"principalId":                  llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                     llx.StringDataPtr(identityTenantId),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlServer := mqlAzurePostgresServer.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
+			mqlServer.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
 				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
 					mqlServer.cachePrimaryKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI

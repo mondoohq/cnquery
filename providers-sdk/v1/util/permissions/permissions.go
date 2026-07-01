@@ -61,7 +61,6 @@ func main() {
 	}
 
 	providerName := filepath.Base(providerPath)
-	resourcesDir := filepath.Join(providerPath, "resources")
 
 	// Read provider version from config/config.go
 	version := readProviderVersion(filepath.Join(providerPath, "config", "config.go"))
@@ -72,9 +71,9 @@ func main() {
 	case "aws":
 		details = extractAWSPermissions(providerPath)
 	case "gcp":
-		details = extractGCPPermissions(resourcesDir)
+		details = extractGCPPermissions(providerPath)
 	case "azure":
-		details = extractAzurePermissions(resourcesDir)
+		details = extractAzurePermissions(providerPath)
 	default:
 		fmt.Fprintf(os.Stderr, "skipping %s: not a supported cloud provider (aws, gcp, azure)\n", providerName)
 		os.Exit(0)
@@ -370,6 +369,7 @@ var awsPermissionOverrides = map[string]string{
 	"apigateway:GetApiKeys":           "apigateway:GET",
 	"apigateway:GetApis":              "apigateway:GET",
 	"apigateway:GetAuthorizers":       "apigateway:GET",
+	"apigateway:GetDeployments":       "apigateway:GET",
 	"apigateway:GetDomainNames":       "apigateway:GET",
 	"apigateway:GetRequestValidators": "apigateway:GET",
 	"apigateway:GetRestApis":          "apigateway:GET",
@@ -742,9 +742,9 @@ func isAWSAPIMethod(name string) bool {
 // GCP Permission Extraction
 // =============================================================================
 
-func extractGCPPermissions(resourcesDir string) []PermissionDetail {
+func extractGCPPermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)
@@ -1309,9 +1309,20 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// Projects.Get call in initGcpProject — so skip the generic form here
 		// rather than overwriting that entry's action.
 		"Liens.List": "",
+		// GetAncestry (used by the connection layer to resolve a project's
+		// org/folder ancestry) is governed by resourcemanager.projects.get, not
+		// the auto-derived "resourcemanager.projects.getancestry" (not a real
+		// permission).
+		"Projects.GetAncestry": "resourcemanager.projects.get",
 		// Tag bindings are listed via the resourceTagBindings permission, not a
 		// "resourcemanager.tagBindings.list" form (which is not a real permission).
 		"TagBindings.List": "resourcemanager.resourceTagBindings.list",
+		// Reading effective tag binding collections on a resource is governed by
+		// that resource's listEffectiveTags permission (we only call it for
+		// storage buckets in storage.go), not the auto-derived
+		// "resourcemanager.effectiveTagBindingCollections.get" (not a real
+		// permission).
+		"EffectiveTagBindingCollections.Get": "storage.buckets.listEffectiveTags",
 	},
 }
 
@@ -1465,9 +1476,9 @@ func gcpRESTToPermission(service, resource, method string) (string, bool) {
 // Azure Permission Extraction
 // =============================================================================
 
-func extractAzurePermissions(resourcesDir string) []PermissionDetail {
+func extractAzurePermissions(root string) []PermissionDetail {
 	var details []PermissionDetail
-	files := listGoFiles(resourcesDir)
+	files := listGoFiles(root)
 
 	for _, filePath := range files {
 		fileName := filepath.Base(filePath)

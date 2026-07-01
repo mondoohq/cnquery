@@ -8,6 +8,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/portforwarding"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
@@ -799,6 +800,71 @@ func (r *mqlOpenstackFloatingIp) router() (*mqlOpenstackRouter, error) {
 
 func (r *mqlOpenstackFloatingIp) project() (*mqlOpenstackProject, error) {
 	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
+}
+
+// ---- openstack.floatingIp.portForwarding ----
+
+type mqlOpenstackFloatingIpPortForwardingInternal struct {
+	cacheInternalPortID string
+}
+
+func (r *mqlOpenstackFloatingIpPortForwarding) id() (string, error) {
+	return "openstack.floatingIp.portForwarding/" + r.Id.Data, nil
+}
+
+func (r *mqlOpenstackFloatingIp) portForwardings() ([]any, error) {
+	client, err := conn(r.MqlRuntime).NetworkClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := portforwarding.List(client, portforwarding.ListOpts{}, r.Id.Data).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := portforwarding.ExtractPortForwardings(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for i := range items {
+		pf := &items[i]
+		res, err := CreateResource(r.MqlRuntime, "openstack.floatingIp.portForwarding", map[string]*llx.RawData{
+			"__id":              llx.StringData("openstack.floatingIp.portForwarding/" + pf.ID),
+			"id":                llx.StringData(pf.ID),
+			"protocol":          llx.StringData(pf.Protocol),
+			"externalPort":      llx.IntData(int64(pf.ExternalPort)),
+			"externalPortRange": llx.StringData(pf.ExternalPortRange),
+			"internalPort":      llx.IntData(int64(pf.InternalPort)),
+			"internalPortRange": llx.StringData(pf.InternalPortRange),
+			"internalIpAddress": llx.StringData(pf.InternalIPAddress),
+			"description":       llx.StringData(pf.Description),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPf := res.(*mqlOpenstackFloatingIpPortForwarding)
+		mqlPf.cacheInternalPortID = pf.InternalPortID
+		out = append(out, mqlPf)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackFloatingIpPortForwarding) port() (*mqlOpenstackPort, error) {
+	if r.cacheInternalPortID == "" {
+		r.Port.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.port", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheInternalPortID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackPort), nil
 }
 
 // ---- openstack.securityGroup ----

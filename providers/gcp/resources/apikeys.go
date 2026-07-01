@@ -160,16 +160,17 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 		}
 
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.apiKey", map[string]*llx.RawData{
-			"projectId":    llx.StringData(projectId),
-			"id":           llx.StringData(parseResourceName(k.Name)),
-			"name":         llx.StringData(k.DisplayName),
-			"resourcePath": llx.StringData(k.Name),
-			"annotations":  llx.MapData(convert.MapToInterfaceMap(k.Annotations), types.String),
-			"created":      llx.TimeDataPtr(parseTime(k.CreateTime)),
-			"deleted":      llx.TimeDataPtr(parseTime(k.DeleteTime)),
-			"keyString":    llx.StringData(k.KeyString),
-			"restrictions": llx.ResourceData(mqlRestrictions, "gcp.project.apiKey.restrictions"),
-			"updated":      llx.TimeDataPtr(parseTime(k.UpdateTime)),
+			"projectId":           llx.StringData(projectId),
+			"id":                  llx.StringData(parseResourceName(k.Name)),
+			"name":                llx.StringData(k.DisplayName),
+			"resourcePath":        llx.StringData(k.Name),
+			"annotations":         llx.MapData(convert.MapToInterfaceMap(k.Annotations), types.String),
+			"created":             llx.TimeDataPtr(parseTime(k.CreateTime)),
+			"deleted":             llx.TimeDataPtr(parseTime(k.DeleteTime)),
+			"keyString":           llx.StringData(k.KeyString),
+			"restrictions":        llx.ResourceData(mqlRestrictions, "gcp.project.apiKey.restrictions"),
+			"updated":             llx.TimeDataPtr(parseTime(k.UpdateTime)),
+			"serviceAccountEmail": llx.StringData(k.ServiceAccountEmail),
 		})
 		if err != nil {
 			return nil, err
@@ -181,6 +182,41 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 
 func (g *mqlGcpProjectApiKey) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectApiKey) project() (*mqlGcpProject, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	proj, err := projectRefById(g.MqlRuntime, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if proj == nil {
+		g.Project.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return proj, nil
+}
+
+func (g *mqlGcpProjectApiKey) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.ServiceAccountEmail.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
+}
+
+func (g *mqlGcpProjectApiKey) managedBy() (string, error) {
+	return managedByFromLabels(g.GetAnnotations())
 }
 
 func initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

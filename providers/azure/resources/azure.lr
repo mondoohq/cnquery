@@ -1268,8 +1268,14 @@ azure.subscription.batchService.account @defaults("id name location") {
   tags map[string]string
   // Batch account type
   type string
-  // Batch account identity
-  identity dict
+  // Raw identity block for the Batch account
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Principal ID of the account's system-assigned managed identity; empty when only user-assigned identities are used
+  principalId string
+  // User-assigned managed identities attached to the Batch account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Batch account properties
   properties dict
   // Batch account endpoint
@@ -1297,11 +1303,23 @@ azure.subscription.batchService.account @defaults("id name location") {
   // Batch account allowed authentication modes
   allowedAuthenticationModes []string
   // Batch account auto storage settings
-  autoStorage dict
+  //
+  // Deprecated in favor of autoStorageAccount.
+  autoStorage @maturity("deprecated") dict
   // Batch account encryption settings
-  encryption dict
+  //
+  // Deprecated in favor of encryptionKey.
+  encryption @maturity("deprecated") dict
   // Batch account key vault reference
-  keyVaultReference dict
+  //
+  // Deprecated in favor of keyVault.
+  keyVaultReference @maturity("deprecated") dict
+  // Storage account used for auto-storage by the Batch account
+  autoStorageAccount() azure.subscription.storageService.account
+  // Key Vault associated with the Batch account for user-subscription pool allocation
+  keyVault() azure.subscription.keyVaultService.vault
+  // Key Vault key used to encrypt Batch account data with a customer-managed key
+  encryptionKey() azure.subscription.keyVaultService.key
   // Batch account network profile
   networkProfile dict
   // Batch account private endpoint connections
@@ -2172,6 +2190,10 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   flowTimeoutInMinutes int
   // List of virtual network peerings
   peerings() []azure.subscription.networkService.virtualNetwork.peering
+  // Default public NAT gateway providing outbound SNAT for subnets that do not have their own NAT gateway
+  defaultNatGateway() azure.subscription.networkService.natGateway
+  // Flow logs that target this virtual network
+  flowLogs() []azure.subscription.networkService.watcher.flowlog
 }
 
 // Azure VNet peering
@@ -2203,7 +2225,11 @@ azure.subscription.networkService.virtualNetwork.peering @defaults("id name peer
   // The provisioning state: Succeeded, Updating, Deleting, Failed, Creating, Canceled
   provisioningState string
   // The remote virtual network reference ID
-  remoteVirtualNetworkId string
+  //
+  // Deprecated in favor of remoteVirtualNetwork.
+  remoteVirtualNetworkId @maturity("deprecated") string
+  // The peered remote virtual network
+  remoteVirtualNetwork() azure.subscription.networkService.virtualNetwork
   // Whether traffic between the two VNets is encrypted (Azure global VNet peering encryption)
   remoteVirtualNetworkEncryptionEnabled bool
   // Encryption enforcement for the remote VNet ("AllowUnencrypted" or "DropUnencrypted")
@@ -2800,6 +2826,32 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   sslCertificates []azure.subscription.networkService.applicationGateway.sslCertificate
   // Frontend IP configurations on the application gateway (a config with a subnet is internal/private; one with a public IP is internet-facing)
   frontendIpConfigs []azure.subscription.networkService.applicationGateway.frontendIpConfig
+  // Object ID (principal ID) of the system-assigned managed identity, when one is configured
+  principalId string
+  // Tenant ID of the system-assigned managed identity, when one is configured
+  tenantId string
+  // Managed identity type: None, SystemAssigned, UserAssigned, or "SystemAssigned, UserAssigned"
+  identityType string
+  // User-assigned managed identities associated with the application gateway
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Gateway IP configurations that bind the application gateway into a subnet
+  gatewayIpConfigs() []azure.subscription.networkService.applicationGateway.gatewayIpConfig
+}
+
+// Azure Application Gateway IP configuration
+//
+// Gateway IP configuration on an Application Gateway. Each entry binds the
+// gateway into a subnet, from which the gateway draws its private addresses.
+// The `subnet` reference traces the network the gateway is deployed into.
+private azure.subscription.networkService.applicationGateway.gatewayIpConfig @defaults("name subnetId") {
+  // ARM resource ID
+  id string
+  // Gateway IP configuration name
+  name string
+  // ARM resource ID of the bound subnet
+  subnetId string
+  // Subnet the application gateway is deployed into
+  subnet() azure.subscription.networkService.subnet
 }
 
 // Azure Application Gateway frontend IP configuration
@@ -2813,7 +2865,7 @@ private azure.subscription.networkService.applicationGateway.frontendIpConfig @d
   id string
   // Frontend IP configuration name
   name string
-  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends (cached for the typed `subnet` accessor)
+  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends
   subnetId string
   // Bound subnet; null for internet-facing frontends that have no subnet
   subnet() azure.subscription.networkService.subnet
@@ -3606,7 +3658,19 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // Storage account properties
   properties dict
   // Storage account identity
-  identity dict
+  //
+  // Deprecated in favor of principalId, tenantId, userAssignedIdentities,
+  // and encryptionIdentity, which expose the managed identity configuration
+  // as typed accessors.
+  identity @maturity("deprecated") dict
+  // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the account's managed identity; empty when no managed identity is configured
+  tenantId string
+  // User-assigned managed identities attached to the storage account
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // User-assigned managed identity used to access the customer-managed encryption key; null when account-level encryption identity is not configured
+  encryptionIdentity() azure.subscription.managedIdentity
   // Storage account SKU
   sku dict
   // Storage account kind
@@ -4309,9 +4373,15 @@ azure.subscription.webService.appsite @defaults("id name location") {
   // App site properties
   properties dict
   // App site identity
-  identity dict
+  //
+  // Deprecated in favor of principalId, userAssignedIdentities, and identityType.
+  identity @maturity("deprecated") dict
   // Managed identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned")
   identityType string
+  // Principal ID of the app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the app requires HTTPS only
   httpsOnly bool
   // Whether client certificate authentication is enabled
@@ -4356,6 +4426,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   sshEnabled bool
   // ARM resource ID of the user-assigned identity used to fetch Key Vault references in app settings (empty when system-assigned identity is used)
   keyVaultReferenceIdentity string
+  // User-assigned managed identity used to fetch Key Vault references in app settings; null when the system-assigned identity is used
+  keyVaultReferenceIdentityRef() azure.subscription.managedIdentity
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
   // IP address mode for the app ("IPv4", "IPv4AndIPv6", "IPv6")
@@ -4892,6 +4964,16 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the server's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the server's system-assigned managed identity
+  tenantId string
+  // Default user-assigned managed identity used by the server (null when none is set)
+  primaryUserAssignedIdentity() azure.subscription.managedIdentity
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -5485,6 +5567,16 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the server's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the server's managed identity
+  tenantId string
+  // User-assigned managed identities attached to the server
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -5814,6 +5906,14 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server (for example "UserAssigned")
+  identityType string
+  // Principal ID of the server's managed identity
+  principalId string
+  // Tenant ID of the server's managed identity
+  tenantId string
+  // User-assigned managed identities attached to the server
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -5905,6 +6005,16 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // SQL API databases hosted on the account (Core SQL API)
   sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
+  // Type of managed identity configured on the account
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the account's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the Cosmos DB account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -5948,6 +6058,12 @@ private azure.subscription.cosmosDbService.mongoCluster @defaults("computeTier s
   infrastructureVersion string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // Network bypass mode for the cluster
+  //
+  // Controls whether the Azure Cosmos DB service may bypass the cluster's
+  // network restrictions. One of "AzureCosmosDB" (the service is permitted
+  // to bypass firewall rules) or "None" (no bypass is enabled).
+  networkBypassMode string
   // Compute tier assigned to the cluster (for example "M30" or "M40")
   computeTier string
   // Data-disk size in GB assigned to each server
@@ -7645,6 +7761,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   identity dict
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
+  // User-assigned managed identities attached to the cluster control plane
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Disk encryption set used to encrypt cluster OS and data disks with a customer-managed key
+  diskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
   // Managed identity used by the kubelet to pull images from Azure Container Registry
   kubeletIdentity() azure.subscription.managedIdentity
   // Client ID of the legacy service principal used by the cluster; empty when the cluster uses a managed identity
@@ -8146,10 +8266,16 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   staticIp string
   // Subnet ID for VNet-injected caches
   subnetId string
+  // Subnet the cache is injected into; null when the cache is not VNet-injected
+  subnet() azure.subscription.networkService.subnet
   // Availability zones for the cache
   zones []string
   // Managed identity information
   identity dict
+  // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the cache
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
@@ -8253,14 +8379,28 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   // Deprecated in favor of cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, and
   // cmkUserAssignedIdentity.
   encryption @maturity("deprecated") dict
-  // Customer-managed key name in Key Vault used to encrypt the factory (empty for platform-managed encryption)
-  cmkKeyName string
+  // Customer-managed key name in Key Vault used to encrypt the factory
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyName @maturity("deprecated") string
   // Key Vault base URL backing the customer-managed encryption key
-  cmkKeyVaultUri string
-  // Version of the customer-managed encryption key (empty means the latest key version is used)
-  cmkKeyVersion string
-  // User-assigned identity resource ID used to access the customer-managed key; empty when the factory's system-assigned identity is used
-  cmkUserAssignedIdentity string
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyVaultUri @maturity("deprecated") string
+  // Version of the customer-managed encryption key
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyVersion @maturity("deprecated") string
+  // User-assigned identity resource ID used to access the customer-managed key
+  //
+  // Deprecated in favor of cmkIdentity.
+  cmkUserAssignedIdentity @maturity("deprecated") string
+  // Customer-managed key in Key Vault used to encrypt the factory (null for platform-managed encryption)
+  cmkKey() azure.subscription.keyVaultService.key
+  // User-assigned managed identity used to access the customer-managed encryption key (null when the factory's system-assigned identity is used)
+  cmkIdentity() azure.subscription.managedIdentity
+  // User-assigned managed identities associated with the factory
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Time the factory was created
   created time
   // Linked services configured on the factory (connection info for external systems)
@@ -8429,6 +8569,14 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   trustedServiceBypassEnabled bool
   // Whether Azure AD-only authentication is enabled
   azureADOnlyAuthentication bool
+  // Name of the filesystem in the default Data Lake Storage account
+  defaultStorageFilesystem string
+  // Default Data Lake Storage account for the workspace (null when none is configured)
+  defaultStorage() azure.subscription.storageService.account
+  // Customer-managed key in Key Vault used to encrypt the workspace (null for platform-managed encryption)
+  cmkKey() azure.subscription.keyVaultService.key
+  // User-assigned managed identities associated with the workspace
+  userAssignedIdentities() []azure.subscription.managedIdentity
 }
 
 // Azure Container Registry service
@@ -8463,7 +8611,16 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   // SKU name ("Basic", "Standard", or "Premium")
   skuName string
   // Identity configuration
-  identity dict
+  //
+  // Deprecated in favor of principalId, tenantId, and userAssignedIdentities,
+  // which expose the managed identity configuration as typed accessors.
+  identity @maturity("deprecated") dict
+  // Principal ID of the registry's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the registry's managed identity; empty when no managed identity is configured
+  tenantId string
+  // User-assigned managed identities attached to the registry
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether admin user is enabled
   adminUserEnabled bool
   // Whether registry-wide pull from unauthenticated clients is enabled
@@ -9077,6 +9234,8 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   tags map[string]string
   // Identity configuration
   identity dict
+  // User-assigned managed identities associated with the vault
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // SKU name ("Standard" or "RS0")
   skuName string
   // Provisioning state
@@ -9250,11 +9409,21 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   // Client certificate mode (Required, Optional, OptionalInteractiveUser)
   clientCertMode string
   // Managed service identity ID
-  managedServiceIdentityId string
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  managedServiceIdentityId @maturity("deprecated") string
+  // Principal ID of the function app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the function app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Identity used to resolve Key Vault references in app settings and connection strings (resource ID of a user-assigned identity, or "SystemAssigned")
   keyVaultReferenceIdentity string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // ARM resource ID of the subnet the function app is regionally VNet-integrated with; empty when no regional VNet integration is configured
+  virtualNetworkSubnetId string
+  // Subnet the function app is regionally VNet-integrated with; null when no regional VNet integration is configured
+  virtualNetworkSubnet() azure.subscription.networkService.subnet
   // Function App properties
   properties dict
   // Site configuration: minimum TLS version, FTPS state, HTTP/2, always-on, remote debugging, and IP restrictions
@@ -10284,6 +10453,8 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   outboundIpAddresses []string
   // ARM resource ID of the parent managed environment
   managedEnvironmentId string
+  // Parent managed environment that hosts the container app
+  managedEnvironment() azure.subscription.containerAppService.managedEnvironment
   // Active revision mode ("Single" or "Multiple")
   revisionMode string
   // Latest revision name
@@ -10327,7 +10498,13 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   //   custom:     {type, metadata, identity}
   scaleRules []dict
   // Identity block (system + user-assigned principal IDs)
-  identity dict
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Principal ID of the container app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the container app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Container registry references (server, identity, passwordSecretRef)
   registries []dict
   // Whether any registry credential uses managed identity

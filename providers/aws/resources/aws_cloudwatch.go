@@ -985,6 +985,58 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) iamRole() (*mqlAwsIamRole, 
 	return res.(*mqlAwsIamRole), nil
 }
 
+// destinationResource resolves the subscription filter's destination ARN to a
+// typed resource, but only when the ARN belongs to wantService. A filter has
+// exactly one destination, so the accessors for the other services resolve to
+// null.
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) destinationResource(wantService, resourceName string) (plugin.Resource, bool, error) {
+	arnVal := a.DestinationArn.Data
+	if arnVal == "" {
+		return nil, false, nil
+	}
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		log.Warn().Str("arn", arnVal).Err(err).Msg("could not parse subscription filter destination ARN")
+		return nil, false, nil
+	}
+	if parsed.Service != wantService {
+		return nil, false, nil
+	}
+	res, err := NewResource(a.MqlRuntime, resourceName,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, false, err
+	}
+	return res, true, nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) lambdaFunction() (*mqlAwsLambdaFunction, error) {
+	res, ok, err := a.destinationResource("lambda", "aws.lambda.function")
+	if err != nil || !ok {
+		a.LambdaFunction.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunction), nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) kinesisStream() (*mqlAwsKinesisStream, error) {
+	res, ok, err := a.destinationResource("kinesis", "aws.kinesis.stream")
+	if err != nil || !ok {
+		a.KinesisStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisStream), nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) firehoseDeliveryStream() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+	res, ok, err := a.destinationResource("firehose", "aws.kinesis.firehoseDeliveryStream")
+	if err != nil || !ok {
+		a.FirehoseDeliveryStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+}
+
 func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {
 	arnValue := a.Arn.Data
 

@@ -94,8 +94,8 @@ func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Invent
 	if _, ok := invConfig.Options[plugin.OptionStagedDiscovery]; ok {
 		// If a namespace is already set, we're in stage 2 (workload discovery
 		// for that namespace). Otherwise it's stage 1 (cluster + namespaces).
-		if invConfig.Options[shared.OPTION_NAMESPACE] != "" {
-			return discoverNamespaceStage(runtime, conn, invConfig, features)
+		if nsName, ok := namespaceStageName(invConfig); ok {
+			return discoverNamespaceStage(runtime, conn, invConfig, features, nsName)
 		}
 		return discoverClusterStage(runtime, conn, invConfig, features)
 	}
@@ -265,7 +265,7 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 //
 // Only workloads are returned here — the namespace asset itself was already
 // emitted by stage 1 with platform IDs and is already known to the client.
-func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
+func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features, nsName string) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
@@ -273,8 +273,6 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	if invConfig.Discover == nil || len(invConfig.Discover.Targets) == 0 {
 		return in, nil
 	}
-
-	nsName := invConfig.Options[shared.OPTION_NAMESPACE]
 
 	res, err := runtime.CreateResource(runtime, "k8s", nil)
 	if err != nil {
@@ -1402,13 +1400,36 @@ func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
 func setNamespaceFilters(cfg *inventory.Config) NamespaceFilterOpts {
 	nsFilter := NamespaceFilterOpts{}
 	if include, ok := cfg.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
-		nsFilter.include = strings.Split(include, ",")
+		nsFilter.include = namespaceFilterValues(include)
 	}
 
 	if exclude, ok := cfg.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
-		nsFilter.exclude = strings.Split(exclude, ",")
+		nsFilter.exclude = namespaceFilterValues(exclude)
 	}
 	return nsFilter
+}
+
+// namespaceStageName returns a namespace only when the config targets exactly
+// one namespace, which indicates staged discovery should run the namespace stage.
+// Empty or multi-namespace filters fall through to cluster-stage discovery.
+func namespaceStageName(cfg *inventory.Config) (string, bool) {
+	namespaces := namespaceFilterValues(cfg.Options[shared.OPTION_NAMESPACE])
+	if len(namespaces) != 1 {
+		return "", false
+	}
+	return namespaces[0], true
+}
+
+func namespaceFilterValues(value string) []string {
+	values := strings.Split(value, ",")
+	res := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			res = append(res, value)
+		}
+	}
+	return res
 }
 
 func assetName(ns, name string) string {

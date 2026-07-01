@@ -24,18 +24,18 @@ func TestActionsSecretID(t *testing.T) {
 		},
 		{
 			name: "repository scope", scope: scopeRepository,
-			owner: "mondoohq", repo: "cnquery", secr: "TOKEN",
-			want: "github.actionsSecret/repo/mondoohq/cnquery/TOKEN",
+			owner: "mondoohq", repo: "mql", secr: "TOKEN",
+			want: "github.actionsSecret/repo/mondoohq/mql/TOKEN",
 		},
 		{
 			name: "environment scope", scope: scopeEnvironment,
-			owner: "mondoohq", repo: "cnquery", env: "prod", secr: "TOKEN",
-			want: "github.actionsSecret/repo/mondoohq/cnquery/env/prod/TOKEN",
+			owner: "mondoohq", repo: "mql", env: "prod", secr: "TOKEN",
+			want: "github.actionsSecret/repo/mondoohq/mql/env/prod/TOKEN",
 		},
 		{
 			name: "unknown scope falls back to repo", scope: "weird",
-			owner: "mondoohq", repo: "cnquery", secr: "TOKEN",
-			want: "github.actionsSecret/repo/mondoohq/cnquery/TOKEN",
+			owner: "mondoohq", repo: "mql", secr: "TOKEN",
+			want: "github.actionsSecret/repo/mondoohq/mql/TOKEN",
 		},
 	}
 	for _, tc := range tests {
@@ -58,18 +58,18 @@ func TestActionsVariableID(t *testing.T) {
 		},
 		{
 			name: "repository scope", scope: scopeRepository,
-			owner: "mondoohq", repo: "cnquery", vari: "REGION",
-			want: "github.actionsVariable/repo/mondoohq/cnquery/REGION",
+			owner: "mondoohq", repo: "mql", vari: "REGION",
+			want: "github.actionsVariable/repo/mondoohq/mql/REGION",
 		},
 		{
 			name: "environment scope", scope: scopeEnvironment,
-			owner: "mondoohq", repo: "cnquery", env: "prod", vari: "REGION",
-			want: "github.actionsVariable/repo/mondoohq/cnquery/env/prod/REGION",
+			owner: "mondoohq", repo: "mql", env: "prod", vari: "REGION",
+			want: "github.actionsVariable/repo/mondoohq/mql/env/prod/REGION",
 		},
 		{
 			name: "unknown scope falls back to repo", scope: "weird",
-			owner: "mondoohq", repo: "cnquery", vari: "REGION",
-			want: "github.actionsVariable/repo/mondoohq/cnquery/REGION",
+			owner: "mondoohq", repo: "mql", vari: "REGION",
+			want: "github.actionsVariable/repo/mondoohq/mql/REGION",
 		},
 	}
 	for _, tc := range tests {

@@ -152,6 +152,30 @@ func (g *mqlGcpProjectRedisServiceInstance) network() (*mqlGcpProjectComputeServ
 	return n, nil
 }
 
+func (g *mqlGcpProjectRedisServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
+func (g *mqlGcpProjectRedisServiceInstance) persistenceServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.PersistenceIamIdentity.Error != nil {
+		return nil, g.PersistenceIamIdentity.Error
+	}
+	// The persistence IAM identity is carried as "serviceAccount:{email}".
+	raw := strings.TrimPrefix(g.PersistenceIamIdentity.Data, "serviceAccount:")
+	projectId := ""
+	if g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, raw, projectId)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.PersistenceServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return sa, nil
+}
+
 func (g *mqlGcpProjectRedisServiceInstance) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -688,6 +712,20 @@ func (c *mqlGcpProjectRedisServiceClusterPscConfig) id() (string, error) {
 	), nil
 }
 
+func (c *mqlGcpProjectRedisServiceClusterPscConfig) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if c.Network.Error != nil {
+		return nil, c.Network.Error
+	}
+	n, err := getNetworkByUrl(c.Network.Data, c.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		c.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return n, nil
+}
+
 func (c *mqlGcpProjectRedisServiceClusterDiscoveryEndpoint) id() (string, error) {
 	return fmt.Sprintf(
 		"gcp.project.redisService.cluster.discoveryEndpoint/%s/%s/%s", c.ProjectId.Data, c.ClusterName.Data, c.Address.Data,
@@ -698,6 +736,20 @@ func (c *mqlGcpProjectRedisServiceClusterPscConnection) id() (string, error) {
 	return fmt.Sprintf(
 		"gcp.project.redisService.cluster.pscConnection/%s/%s/%s", c.ProjectId.Data, c.ClusterName.Data, c.PscConnectionId.Data,
 	), nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterPscConnection) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if c.Network.Error != nil {
+		return nil, c.Network.Error
+	}
+	n, err := getNetworkByUrl(c.Network.Data, c.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		c.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return n, nil
 }
 
 func (c *mqlGcpProjectRedisServiceClusterBackup) id() (string, error) {
@@ -716,6 +768,20 @@ func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) id() (string, error) 
 	return fmt.Sprintf(
 		"gcp.project.redisService.cluster.connectionDetail/%s/%s/%s", c.ProjectId.Data, c.ClusterName.Data, c.PscConnectionId.Data,
 	), nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if c.Network.Error != nil {
+		return nil, c.Network.Error
+	}
+	n, err := getNetworkByUrl(c.Network.Data, c.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		c.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return n, nil
 }
 
 // ===== Cluster sub-resource converters =====

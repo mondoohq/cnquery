@@ -25,7 +25,7 @@ cnspec scan proxmox --host https://pve.example.com:8006 \
   --token 'PVEAPIToken=user@realm!tokenid=secret' --insecure
 
 # Interactive shell
-cnquery shell proxmox --host https://192.168.1.10:8006 \
+mql shell proxmox --host https://192.168.1.10:8006 \
   --token 'PVEAPIToken=user@realm!tokenid=secret'
 ```
 

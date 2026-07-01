@@ -241,6 +241,7 @@ PROVIDERS := \
 	openai \
 	openstack \
 	os \
+	portainer \
 	proxmox \
 	shodan \
 	slack \

@@ -27,17 +27,47 @@ func SetWriter(w io.Writer) {
 
 // UseJSONLogging for global logger
 func UseJSONLogging(out io.Writer) {
-	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+	log.Logger = zerolog.New(out).With().Caller().Timestamp().Logger()
+}
+
+// GCPLogOption configures UseGCPJSONLogging.
+type GCPLogOption func(*gcpLogOptions)
+
+type gcpLogOptions struct {
+	labels map[string]string
+}
+
+// WithGCPLabels attaches static key/value labels to every log entry under the
+// special "logging.googleapis.com/labels" field. Cloud Logging lifts that field
+// into LogEntry.labels, so the labels can be filtered as `labels.<key>` in the
+// Logs Explorer. Mirrors stackdriver.WithLabels for the stdout JSON path.
+func WithGCPLabels(labels map[string]string) GCPLogOption {
+	return func(o *gcpLogOptions) { o.labels = labels }
 }
 
 // UseGCPJSONLogging for global logger. This is a JSON logger
 // with field names GCP will recognize
-func UseGCPJSONLogging(out io.Writer) {
+func UseGCPJSONLogging(out io.Writer, opts ...GCPLogOption) {
+	o := &gcpLogOptions{}
+	for _, fn := range opts {
+		if fn != nil {
+			fn(o)
+		}
+	}
+
 	zerolog.LevelFieldName = "severity"
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+	logCtx := zerolog.New(out).With().Caller().Timestamp()
+	if len(o.labels) > 0 {
+		labels := zerolog.Dict()
+		for k, v := range o.labels {
+			labels = labels.Str(k, v)
+		}
+		logCtx = logCtx.Dict("logging.googleapis.com/labels", labels)
+	}
+	log.Logger = logCtx.Logger()
 }
 
 // CliLogger sets the global logger to the console logger with color
@@ -84,20 +114,22 @@ func InitTestEnv() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
 }
 
-// GetEnvLogLevel determines the loglevel from env vars DEBUG or TRACE are set
+// GetEnvLogLevel determines the loglevel from env vars. MONDOO_LOG_LEVEL takes
+// precedence and accepts any zerolog level (e.g. "info", "debug", "trace");
+// the legacy DEBUG=true and TRACE=true vars still work.
 func GetEnvLogLevel() (string, bool) {
-	level := ""
-	ok := false
-
-	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
-		level = "debug"
-		ok = true
+	// MONDOO_LOG_LEVEL takes precedence, so it is checked first.
+	if v := os.Getenv("MONDOO_LOG_LEVEL"); v != "" {
+		return v, true
 	}
 
-	if os.Getenv("TRACE") == "true" || os.Getenv("TRACE") == "1" {
-		level = "trace"
-		ok = true
+	if v := os.Getenv("TRACE"); v == "true" || v == "1" {
+		return "trace", true
 	}
 
-	return level, ok
+	if v := os.Getenv("DEBUG"); v == "true" || v == "1" {
+		return "debug", true
+	}
+
+	return "", false
 }

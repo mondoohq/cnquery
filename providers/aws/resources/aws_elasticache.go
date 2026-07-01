@@ -166,6 +166,18 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 		notificationConfiguration = convert.ToValue(cluster.NotificationConfiguration.TopicArn)
 	}
 
+	cacheParameterGroupName := ""
+	if cluster.CacheParameterGroup != nil {
+		cacheParameterGroupName = convert.ToValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+	}
+
+	configurationEndpointAddress := ""
+	configurationEndpointPort := int64(0)
+	if cluster.ConfigurationEndpoint != nil {
+		configurationEndpointAddress = convert.ToValue(cluster.ConfigurationEndpoint.Address)
+		configurationEndpointPort = int64(convert.ToValue(cluster.ConfigurationEndpoint.Port))
+	}
+
 	sgs := []string{}
 	for _, sg := range cluster.SecurityGroups {
 		if sg.SecurityGroupId == nil {
@@ -208,6 +220,9 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 			"preferredMaintenanceWindow":         llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 			"replicationGroupLogDeliveryEnabled": llx.BoolDataPtr(cluster.ReplicationGroupLogDeliveryEnabled),
 			"replicationGroupId":                 llx.StringDataPtr(cluster.ReplicationGroupId),
+			"cacheParameterGroupName":            llx.StringData(cacheParameterGroupName),
+			"configurationEndpointAddress":       llx.StringData(configurationEndpointAddress),
+			"configurationEndpointPort":          llx.IntData(configurationEndpointPort),
 		})
 	if err != nil {
 		return nil, err
@@ -274,6 +289,68 @@ func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
 		return nil, err
 	}
 	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsElasticacheCluster) notificationTopic() (*mqlAwsSnsTopic, error) {
+	arnVal := a.NotificationConfiguration.Data
+	if arnVal == "" {
+		a.NotificationTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSnsTopic), nil
+}
+
+func (a *mqlAwsElasticacheCluster) subnetGroup() (*mqlAwsElasticacheSubnetGroup, error) {
+	name := a.CacheSubnetGroupName.Data
+	if name == "" {
+		a.SubnetGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	parent, err := CreateResource(a.MqlRuntime, "aws.elasticache", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	groups := parent.(*mqlAwsElasticache).GetSubnetGroups()
+	if groups.Error != nil {
+		return nil, groups.Error
+	}
+	for _, g := range groups.Data {
+		sg := g.(*mqlAwsElasticacheSubnetGroup)
+		if sg.Name.Data == name && sg.Region.Data == a.region {
+			return sg, nil
+		}
+	}
+	a.SubnetGroup.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsElasticacheCluster) parameterGroup() (*mqlAwsElasticacheParameterGroup, error) {
+	name := a.CacheParameterGroupName.Data
+	if name == "" {
+		a.ParameterGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	parent, err := CreateResource(a.MqlRuntime, "aws.elasticache", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	groups := parent.(*mqlAwsElasticache).GetParameterGroups()
+	if groups.Error != nil {
+		return nil, groups.Error
+	}
+	for _, g := range groups.Data {
+		pg := g.(*mqlAwsElasticacheParameterGroup)
+		if pg.Name.Data == name && pg.Region.Data == a.region {
+			return pg, nil
+		}
+	}
+	a.ParameterGroup.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlAwsElasticache) serverlessCaches() ([]any, error) {

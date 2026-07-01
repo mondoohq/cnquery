@@ -1144,7 +1144,68 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 	if err != nil {
 		return nil, err
 	}
-	return mqlVn.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+	res := mqlVn.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork)
+	if vn.Properties != nil {
+		if ng := vn.Properties.DefaultPublicNatGateway; ng != nil {
+			res.cacheDefaultNatGatewayId = ng.ID
+		}
+		res.cacheFlowLogs = vn.Properties.FlowLogs
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceVirtualNetworkInternal struct {
+	cacheDefaultNatGatewayId *string
+	cacheFlowLogs            []*network.FlowLog
+}
+
+// defaultNatGateway resolves the typed default public NAT gateway that provides
+// outbound SNAT for subnets in the virtual network that do not have their own
+// NAT gateway. Returns null when no default NAT gateway is configured.
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) defaultNatGateway() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
+	if a.cacheDefaultNatGatewayId == nil || *a.cacheDefaultNatGatewayId == "" {
+		a.DefaultNatGateway.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	resourceID, err := ParseResourceID(*a.cacheDefaultNatGatewayId)
+	if err != nil {
+		return nil, err
+	}
+	natGatewayName, err := resourceID.Component("natGateways")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewNatGatewaysClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	natGatewayRes, err := client.Get(ctx, resourceID.ResourceGroup, natGatewayName, &network.NatGatewaysClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return azureNatGatewayToMql(a.MqlRuntime, natGatewayRes.NatGateway)
+}
+
+// flowLogs resolves the flow logs that target this virtual network. Returns an
+// empty list when none are configured.
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) flowLogs() ([]any, error) {
+	res := []any{}
+	for _, flowLog := range a.cacheFlowLogs {
+		if flowLog == nil {
+			continue
+		}
+		mqlFlowLog, err := flowLogToMql(a.MqlRuntime, *flowLog)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFlowLog)
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]any, error) {
@@ -1300,6 +1361,40 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) peerings() ([]any, er
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// remoteVirtualNetwork resolves the typed remote virtual network on the far end
+// of the peering from the cached remoteVirtualNetworkId. The remote network is
+// fetched directly by its ARM resource ID so cross-subscription peerings resolve
+// correctly. Returns null when the peering has no remote virtual network
+// reference.
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) remoteVirtualNetwork() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+	if a.RemoteVirtualNetworkId.Data == "" {
+		a.RemoteVirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	resourceID, err := ParseResourceID(a.RemoteVirtualNetworkId.Data)
+	if err != nil {
+		return nil, err
+	}
+	vnetName, err := resourceID.Component("virtualNetworks")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewVirtualNetworksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	vnetRes, err := client.Get(ctx, resourceID.ResourceGroup, vnetName, &network.VirtualNetworksClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return azureVirtualNetworkToMql(a.MqlRuntime, vnetRes.VirtualNetwork)
 }
 
 func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]any, error) {
@@ -3165,6 +3260,17 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		}
 	}
 
+	// The gateway's managed identity lives on the top-level ag.Identity, not in
+	// ag.Properties, so it is captured separately here.
+	var principalId, tenantId, identityType *string
+	var userAssignedIdentityIds []string
+	if ag.Identity != nil {
+		principalId = ag.Identity.PrincipalID
+		tenantId = ag.Identity.TenantID
+		identityType = (*string)(ag.Identity.Type)
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(ag.Identity.UserAssignedIdentities)
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                    llx.StringDataPtr(ag.ID),
 		"name":                  llx.StringDataPtr(ag.Name),
@@ -3179,6 +3285,9 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		"listeners":             llx.ArrayData(listeners, types.Resource("azure.subscription.networkService.applicationGateway.listener")),
 		"sslCertificates":       llx.ArrayData(sslCertificates, types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")),
 		"frontendIpConfigs":     llx.ArrayData(frontendIpConfigs, types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")),
+		"principalId":           llx.StringDataPtr(principalId),
+		"tenantId":              llx.StringDataPtr(tenantId),
+		"identityType":          llx.StringDataPtr(identityType),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -3186,7 +3295,85 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		return nil, err
 	}
 
-	return mqlAg.(*mqlAzureSubscriptionNetworkServiceApplicationGateway), nil
+	res := mqlAg.(*mqlAzureSubscriptionNetworkServiceApplicationGateway)
+	res.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	if ag.Properties != nil {
+		res.cacheGatewayIPConfigs = ag.Properties.GatewayIPConfigurations
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayInternal struct {
+	cacheUserAssignedIdentityIds []string
+	cacheGatewayIPConfigs        []*network.ApplicationGatewayIPConfiguration
+}
+
+// userAssignedIdentities resolves the typed user-assigned managed identities
+// associated with the application gateway. Returns an empty list when none are
+// assigned.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+// gatewayIpConfigs resolves the gateway IP configurations that bind the
+// application gateway into a subnet. Returns an empty list when none are set.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) gatewayIpConfigs() ([]any, error) {
+	res := []any{}
+	for _, gc := range a.cacheGatewayIPConfigs {
+		if gc == nil {
+			continue
+		}
+		mqlGc, err := azureAppGatewayIpConfigToMql(a.MqlRuntime, gc)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGc)
+	}
+	return res, nil
+}
+
+func azureAppGatewayIpConfigToMql(runtime *plugin.Runtime, gc *network.ApplicationGatewayIPConfiguration) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig, error) {
+	id := ""
+	if gc.ID != nil {
+		id = *gc.ID
+	}
+	name := ""
+	if gc.Name != nil {
+		name = *gc.Name
+	}
+	subnetId := ""
+	if gc.Properties != nil && gc.Properties.Subnet != nil && gc.Properties.Subnet.ID != nil {
+		subnetId = *gc.Properties.Subnet.ID
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.gatewayIpConfig", map[string]*llx.RawData{
+		"id":       llx.StringData(id),
+		"name":     llx.StringData(name),
+		"subnetId": llx.StringData(subnetId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// subnet resolves the typed subnet the application gateway is deployed into from
+// the cached subnetId. Returns null when the configuration is not bound to a
+// subnet.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.SubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.SubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.ApplicationGatewayHTTPListener, frontendPorts map[string]int64, sslCertNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener, error) {

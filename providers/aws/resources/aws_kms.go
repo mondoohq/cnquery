@@ -679,6 +679,33 @@ func (a *mqlAwsKmsKey) origin() (string, error) {
 	return string(md.Origin), nil
 }
 
+func (a *mqlAwsKmsKey) currentKeyMaterialId() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(md.CurrentKeyMaterialId), nil
+}
+
+func (a *mqlAwsKmsKey) cloudHsmCluster() (*mqlAwsCloudhsmCluster, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if md.CloudHsmClusterId == nil || *md.CloudHsmClusterId == "" {
+		a.CloudHsmCluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	cluster, err := NewResource(a.MqlRuntime, "aws.cloudhsm.cluster",
+		map[string]*llx.RawData{
+			"clusterId": llx.StringDataPtr(md.CloudHsmClusterId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return cluster.(*mqlAwsCloudhsmCluster), nil
+}
+
 func (a *mqlAwsKmsKey) customKeyStore() (*mqlAwsKmsCustomKeyStore, error) {
 	md, err := a.getKeyMetadata()
 	if err != nil {
@@ -733,6 +760,18 @@ func (a *mqlAwsKmsKey) signingAlgorithms() ([]any, error) {
 	}
 	res := make([]any, len(md.SigningAlgorithms))
 	for i, alg := range md.SigningAlgorithms {
+		res[i] = string(alg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsKey) macAlgorithms() ([]any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(md.MacAlgorithms))
+	for i, alg := range md.MacAlgorithms {
 		res[i] = string(alg)
 	}
 	return res, nil

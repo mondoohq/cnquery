@@ -139,6 +139,26 @@ vsphere {
   ssoLockoutPolicy() vsphere.sso.lockoutPolicy
   // Remote syslog forwarding targets configured on the vCenter Server Appliance
   loggingForwarding() []vsphere.logging.forwarding
+  // Tag categories defined in vCenter (the namespaces that group tags)
+  categories() []vsphere.category
+  // Tags defined in vCenter across all categories
+  tags() []vsphere.tag
+  // Content libraries hosting VM templates, OVF/OVA, and ISO images
+  contentLibraries() []vsphere.contentLibrary
+  // Custom attribute (custom field) definitions registered in vCenter
+  customFields() []vsphere.customField
+  // Alarm definitions configured in vCenter
+  alarms() []vsphere.alarm
+  // Alarms currently in a triggered (non-green) state across the inventory
+  triggeredAlarms() []vsphere.alarm.state
+  // Scheduled tasks registered in vCenter (timer-driven automation jobs)
+  scheduledTasks() []vsphere.scheduledTask
+  // Most recent tasks tracked by vCenter (the bounded recent-task ring buffer)
+  recentTasks() []vsphere.task
+  // Most recent events recorded by vCenter (bounded to the latest page)
+  events() []vsphere.event
+  // vCenter Server certificates (machine SSL, SSO/STS signing, VMCA root, trusted roots)
+  certificates() []vsphere.certificate
 }
 
 // vCenter SSO Lockout Policy
@@ -216,6 +236,8 @@ private vsphere.folder @defaults("name inventoryPath") {
   childTypes []string
   // Number of immediate child entities under this folder
   childCount int
+  // Tags attached to this folder
+  tagRefs() []vsphere.tag
 }
 
 // vSphere SSO Identity Source
@@ -334,6 +356,8 @@ private vsphere.datacenter @defaults("moid name") {
   datastores() []vsphere.datastore
   // Resource pools in the datacenter (CPU/memory partitions on clusters or standalone hosts)
   resourcePools() []vsphere.resourcepool
+  // Tags attached to this datacenter
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Resource Pool
@@ -371,6 +395,8 @@ private vsphere.resourcepool @defaults("name") {
   memoryShareLevel string
   // Memory shares (only meaningful when memoryShareLevel == custom)
   memoryShares int
+  // Tags attached to this resource pool
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Datastore
@@ -412,6 +438,8 @@ private vsphere.datastore @defaults("name type") {
   hosts() []vsphere.host
   // Virtual machines whose files are stored on this datastore, resolved against vsphere.datacenters[].vms
   vms() []vsphere.vm
+  // Tags attached to this datastore
+  tagRefs() []vsphere.tag
 }
 
 // vSphere Cluster
@@ -442,6 +470,8 @@ private vsphere.cluster @defaults("moid name") {
   drsEnabled bool
   // Currently-applied EVC (Enhanced vMotion Compatibility) baseline key, e.g. "intel-broadwell"; empty if EVC is disabled
   evcMode string
+  // Tags attached to this cluster
+  tagRefs() []vsphere.tag
 }
 
 // vSphere ESXi Host
@@ -488,8 +518,13 @@ private vsphere.host @defaults("moid name") {
   ntp() vsphere.host.ntpConfig
   // Host SNMP configuration
   snmp() map[string]string
-  //Host tags
-  tags []string
+  // Host tags
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this host
+  tagRefs() []vsphere.tag
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
   lockdownMode string
   // User and service accounts exempt from lockdown mode; these accounts retain direct host access even while lockdown mode is enabled
@@ -960,7 +995,12 @@ private vsphere.vm @defaults("moid name") {
   // Virtual machine advanced properties
   advancedSettings() map[string]string
   // VM tags
-  tags []string
+  //
+  // Deprecated in favor of `tagRefs`, which resolves each tag to a typed
+  // vsphere.tag (with its category) rather than a "category:tag" string.
+  tags @maturity("deprecated") []string
+  // Tags attached to this virtual machine
+  tagRefs() []vsphere.tag
   // Boot firmware (bios or efi)
   bootFirmware string
   // Whether UEFI Secure Boot is enabled (only meaningful when bootFirmware is efi)
@@ -1320,6 +1360,8 @@ private vsphere.vswitch.dvs @defaults("name") {
   moid string
   // DVS name
   name string
+  // Tags attached to this distributed virtual switch
+  tagRefs() []vsphere.tag
   // Raw output of `esxcli network vswitch dvs vmware list` for this DVS, as a dict
   properties dict
   // When the distributed virtual switch was created
@@ -1382,6 +1424,8 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   moid string
   // Port group name
   name string
+  // Tags attached to this distributed port group
+  tagRefs() []vsphere.tag
   // Generated dict view of the port-group config
   //
   // Covers DefaultPortConfig, policy overrides, etc. Use the typed `*PolicySettings` methods for audit-friendly access.
@@ -1800,4 +1844,347 @@ private esxi.ntpconfig @defaults("id") @maturity("deprecated") {
   id string
   server []string
   config []string
+}
+
+// vSphere Tag Category
+//
+// Tag category in vCenter: the namespace that groups related tags and
+// constrains how they can be used. `cardinality` is SINGLE (at most one tag
+// from this category per object) or MULTIPLE, and `associableTypes` limits
+// which managed-object types tags in the category can attach to (empty means
+// any object type). The `id` is the Inventory Service category URN. Iterate
+// from `vsphere.categories`.
+private vsphere.category @defaults("name cardinality") {
+  // Inventory Service category identifier (URN)
+  id string
+  // Category name
+  name string
+  // Category description
+  description string
+  // How many tags from this category may attach to one object: SINGLE or MULTIPLE
+  cardinality string
+  // Managed-object types tags in this category can attach to; empty means any object type
+  associableTypes []string
+  // Tags defined in this category
+  tags() []vsphere.tag
+}
+
+// vSphere Tag
+//
+// Tag in vCenter that can be attached to inventory objects for organization,
+// search, and policy targeting. Each tag belongs to a category that governs
+// its cardinality and which object types it can attach to. Navigate to
+// `category` for those constraints. The `id` is the Inventory Service tag URN.
+// Iterate from `vsphere.tags`.
+private vsphere.tag @defaults("name") {
+  // Inventory Service tag identifier (URN)
+  id string
+  // Tag name
+  name string
+  // Tag description
+  description string
+  // Category this tag belongs to
+  category() vsphere.category
+}
+
+// vSphere Content Library
+//
+// Content library hosting VM templates, OVF/OVA packages, and ISO images for
+// deployment across the inventory. `type` is LOCAL (content created here) or
+// SUBSCRIBED (mirrored from a published library); for subscribed libraries
+// `subscriptionUrl`, `subscriptionAutomaticSync`, and `subscriptionOnDemand`
+// describe the sync source and behavior, and for libraries published to others
+// `published` and `publishUrl` apply. Navigate to `items` for the stored
+// content. Iterate from `vsphere.contentLibraries`.
+private vsphere.contentLibrary @defaults("name type") {
+  // Content library identifier
+  id string
+  // Content library name
+  name string
+  // Library kind: LOCAL or SUBSCRIBED
+  type string
+  // Library description
+  description string
+  // When the library was created
+  creationTime time
+  // When the library was last modified
+  lastModifiedTime time
+  // When a subscribed library last synced from its source; zero for local libraries
+  lastSyncTime time
+  // Library content version
+  version string
+  // Whether this library is published for other vCenters to subscribe to
+  published bool
+  // URL other vCenters subscribe to when this library is published; empty when not published
+  publishUrl string
+  // Source URL a subscribed library mirrors content from; empty for local libraries
+  subscriptionUrl string
+  // Whether a subscribed library syncs automatically on a schedule
+  subscriptionAutomaticSync bool
+  // Whether a subscribed library downloads item content only on demand rather than eagerly
+  subscriptionOnDemand bool
+  // Authentication method used to reach the subscription source (NONE or BASIC); empty for local libraries
+  subscriptionAuthMethod string
+  // Storage backings for the library. Each entry is a dict with `type` (DATASTORE or OTHER) and `datastoreId`.
+  storageBackings []dict
+  // Datastores backing the library, resolved against vsphere.datacenters[].datastores
+  datastores() []vsphere.datastore
+  // Security policy identifier applied to the library; empty when none is assigned
+  securityPolicyId string
+  // Items stored in this library
+  items() []vsphere.contentLibrary.item
+}
+
+// vSphere Content Library Item
+//
+// Item stored in a content library: a VM template, OVF/OVA package, ISO image,
+// or other content. `type` identifies the content kind (ovf, iso, vm-template,
+// and others), `cached` reports whether the item's content is downloaded
+// locally, and `size` is the on-disk size in bytes. For subscribed libraries,
+// `securityCompliant` reflects certificate verification of the item content.
+// Iterate from `vsphere.contentLibrary.items`.
+private vsphere.contentLibrary.item @defaults("name type size") {
+  // Content library item identifier
+  id string
+  // Item name
+  name string
+  // Content kind (ovf, iso, vm-template, and others)
+  type string
+  // Item description
+  description string
+  // Item version
+  version string
+  // Content version, incremented each time the item's files change
+  contentVersion string
+  // Metadata version, incremented each time the item's metadata changes
+  metadataVersion string
+  // On-disk size of the item content in bytes
+  size int
+  // Whether the item's content is currently downloaded and cached locally
+  cached bool
+  // When the item was created
+  creationTime time
+  // When the item was last modified
+  lastModifiedTime time
+  // When the item last synced from a subscription source; zero when not applicable
+  lastSyncTime time
+  // Identifier of the source item this was synced from; empty when not synced from a source
+  sourceId string
+  // Whether the item content passed certificate verification (subscribed libraries with a security policy); null when not evaluated
+  securityCompliant bool
+}
+
+// vSphere Custom Attribute Definition
+//
+// Custom attribute (custom field) definition registered in vCenter. Custom
+// attributes are the pre-tag annotation mechanism: each definition has a `name`
+// and an optional `managedObjectType` limiting which inventory object type it
+// applies to (empty means any object type). The `key` is the numeric field
+// identifier referenced by per-object values. Iterate from
+// `vsphere.customFields`.
+private vsphere.customField @defaults("name managedObjectType") {
+  // Numeric field identifier
+  key int
+  // Custom attribute name
+  name string
+  // Managed-object type the attribute applies to (e.g. VirtualMachine, HostSystem); empty means any object type
+  managedObjectType string
+  // Value type of the attribute (typically string)
+  type string
+}
+
+// vSphere Alarm Definition
+//
+// Alarm definition configured in vCenter: the condition-or-event rule that,
+// when met on a monitored entity, raises an alarm and runs its configured
+// actions. `enabled` reflects whether the alarm is active, `systemName` is set
+// only for predefined alarms shipped by the server or extensions (user-created
+// alarms have none), and `entityMoid` is the inventory object the alarm is
+// registered on (commonly the root folder for global alarms). Iterate from
+// `vsphere.alarms`.
+private vsphere.alarm @defaults("name enabled") {
+  // Managed object ID of the alarm
+  moid string
+  // Stable alarm key
+  key string
+  // Alarm name
+  name string
+  // System name for predefined alarms; empty for user-created alarms
+  systemName string
+  // Alarm description
+  description string
+  // Whether the alarm is enabled
+  enabled bool
+  // Managed object ID of the entity the alarm is registered on
+  entityMoid string
+  // Type of the entity the alarm is registered on (e.g. Folder, Datacenter, ClusterComputeResource)
+  entityType string
+  // When the alarm was created or last modified
+  lastModifiedTime time
+  // User who last modified the alarm
+  lastModifiedUser string
+}
+
+// vSphere Triggered Alarm
+//
+// Alarm currently in a non-green state on an inventory object. Each entry ties
+// a triggered `alarm` definition to the `entityMoid` it fired on, with
+// `overallStatus` giving the severity (red or yellow), the `time` it fired,
+// and whether it has been `acknowledged` (and by whom and when). Iterate from
+// `vsphere.triggeredAlarms`.
+private vsphere.alarm.state @defaults("overallStatus acknowledged") {
+  // Identifier (alarm moid + entity moid)
+  id string
+  // Alarm definition that triggered
+  alarm() vsphere.alarm
+  // Managed object ID of the entity the alarm fired on
+  entityMoid string
+  // Type of the entity the alarm fired on
+  entityType string
+  // Severity of the triggered state: red, yellow, green, or gray
+  overallStatus string
+  // When the alarm entered its current triggered state
+  time time
+  // Whether an operator has acknowledged the triggered alarm
+  acknowledged bool
+  // User who acknowledged the alarm; empty when not acknowledged
+  acknowledgedByUser string
+  // When the alarm was acknowledged; zero when not acknowledged
+  acknowledgedTime time
+}
+
+// vSphere Scheduled Task
+//
+// Timer-driven automation job registered in vCenter. Each scheduled task runs
+// an `action` (a power operation, reconfigure, snapshot, and others) against a
+// target entity on a recurrence described by `schedulerType`. `enabled`
+// reflects whether it will run, `nextRunTime` and `prevRunTime` bracket its
+// schedule, and `lastModifiedUser` records who last changed it. Iterate from
+// `vsphere.scheduledTasks`.
+private vsphere.scheduledTask @defaults("name enabled nextRunTime") {
+  // Managed object ID of the scheduled task
+  moid string
+  // Scheduled task name
+  name string
+  // Scheduled task description
+  description string
+  // Whether the scheduled task is enabled
+  enabled bool
+  // Recurrence kind: Once, AfterStartup, Hourly, Daily, Weekly, or Monthly
+  schedulerType string
+  // Action performed when the task runs (the action type, e.g. a method name)
+  action string
+  // Managed object ID of the entity the task acts on
+  entityMoid string
+  // Type of the entity the task acts on
+  entityType string
+  // Most recent run state: success, error, running, or queued
+  state string
+  // Next time the task is scheduled to run; zero when not scheduled to run again
+  nextRunTime time
+  // Previous time the task ran; zero when it has never run
+  prevRunTime time
+  // When the task was created or last modified
+  lastModifiedTime time
+  // User who last modified the task
+  lastModifiedUser string
+}
+
+// vSphere Recent Task
+//
+// Recently executed or in-flight task tracked by vCenter, drawn from the
+// bounded recent-task ring buffer (vCenter retains only the latest tasks).
+// `operation` is the API operation performed (e.g. VirtualMachine.powerOn),
+// `state` is its outcome (success, error, running, queued), and `user` is the
+// principal that initiated it. For failed tasks, `errorMessage` carries the
+// fault. Iterate from `vsphere.recentTasks`.
+private vsphere.task @defaults("operation state user") {
+  // Task key (unique within vCenter)
+  key string
+  // API operation performed (e.g. VirtualMachine.powerOn)
+  operation string
+  // Outcome: success, error, running, or queued
+  state string
+  // Managed object ID of the entity the task ran against
+  entityMoid string
+  // Type of the entity the task ran against
+  entityType string
+  // Name of the entity the task ran against
+  entityName string
+  // Principal that initiated the task
+  user string
+  // When the task was queued
+  queueTime time
+  // When the task started running; zero when it never started
+  startTime time
+  // When the task finished; zero when still running or queued
+  completeTime time
+  // Completion percentage while running (0 to 100)
+  //
+  // vCenter reports this only for in-flight tasks; a task that has not reported
+  // progress (queued, or already finished) reads as 0, so 0 means "none
+  // reported" rather than necessarily "0% complete".
+  progress int
+  // Whether the task can be cancelled
+  cancelable bool
+  // Whether the task was cancelled
+  cancelled bool
+  // Fault message when the task failed; empty otherwise
+  errorMessage string
+}
+
+// vSphere Event
+//
+// Event recorded by vCenter, drawn from the latest page of the event stream
+// (bounded to keep scans fast). Events form the vCenter audit trail: logins,
+// permission and role changes, configuration edits, power operations, and
+// more. `type` is the event class (e.g. UserLoginSessionEvent), `category`
+// is its severity (info, warning, error, or user), and `userName` is the
+// acting principal when one is recorded. Iterate from `vsphere.events`.
+private vsphere.event @defaults("type category createdTime") {
+  // Event key (unique within vCenter)
+  key int
+  // Event class name (e.g. UserLoginSessionEvent, PermissionAddedEvent)
+  type string
+  // Severity: info, warning, error, or user
+  category string
+  // When the event was created
+  createdTime time
+  // Acting principal recorded on the event; empty for system events
+  userName string
+  // Fully formatted human-readable event message
+  message string
+  // Managed object ID of the entity the event concerns; empty when none
+  entityMoid string
+  // Name of the entity the event concerns; empty when none
+  entityName string
+}
+
+// vCenter Server Certificate
+//
+// Certificate in the vCenter Server trust chain. `type` distinguishes the
+// machine SSL certificate that serves the reverse proxy (MACHINE_SSL_CERT),
+// the SSO/STS token-signing certificate whose silent expiry breaks
+// authentication (SIGNING_CERT), the VMCA root that signs solution and host
+// certificates (VMCA_ROOT), and other trusted roots (TRUSTED_ROOT). `notAfter`
+// is the expiry to monitor. Iterate from `vsphere.certificates`.
+private vsphere.certificate @defaults("type subject notAfter") {
+  // Identifier (certificate type and thumbprint)
+  id string
+  // Certificate role: MACHINE_SSL_CERT, SIGNING_CERT, VMCA_ROOT, or TRUSTED_ROOT
+  type string
+  // Distinguished name of the certificate subject
+  subject string
+  // Distinguished name of the issuer
+  issuer string
+  // Start of the validity window
+  notBefore time
+  // End of the validity window (the expiry to monitor)
+  notAfter time
+  // Certificate serial number
+  serialNumber string
+  // SHA-256 fingerprint of the certificate
+  thumbprint string
+  // Signature algorithm used to sign the certificate
+  signatureAlgorithm string
 }

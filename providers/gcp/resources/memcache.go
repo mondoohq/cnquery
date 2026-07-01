@@ -168,6 +168,10 @@ func (g *mqlGcpProjectMemcacheServiceInstance) network() (*mqlGcpProjectComputeS
 	return getNetworkByUrl(g.cacheAuthorizedNetwork, g.MqlRuntime)
 }
 
+func (g *mqlGcpProjectMemcacheServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
 func (g *mqlGcpProjectMemcacheService) instances() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

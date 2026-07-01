@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "ms365",
 	ID:              "go.mondoo.com/cnquery/v9/providers/ms365",
-	Version:         "13.8.2",
+	Version:         "13.8.3",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
@@ -29,7 +29,7 @@ Examples:
   cnspec scan ms365 --certificate-path <PATH-TO-YOUR-PEM> --tenant-id <YOUR-TENANT-ID> --client-id <YOUR-CLIENT-ID>
 
 Notes:
-  If you give cnspec access through the Microsoft 365 API, you can omit the certificate-path, tenant-id, and client-id flags. To learn how, read https://mondoo.com/docs/cnspec/saas/ms365/#give-cnspec-access-through-the-microsoft-365-api.
+  If you give cnspec access through the Microsoft 365 API, you can omit the certificate-path, tenant-id, and client-id flags. To learn how, read https://mondoo.com/docs/cnspec/saas/m365#give-cnspec-access.
 `,
 			MinArgs:   0,
 			MaxArgs:   5,

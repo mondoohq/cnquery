@@ -18,7 +18,9 @@ func (r *mqlStackit) servers() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListServersExecute(bgctx(), c.ProjectID(), c.Region())
+	// Details(true) so the response includes nics, security groups, and volumes;
+	// without it the API returns servers with those fields empty.
+	resp, err := client.ListServers(bgctx(), c.ProjectID(), c.Region()).Details(true).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -41,6 +43,12 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 	nics := []any{}
 	if v, ok := s.GetNicsOk(); ok {
 		for _, n := range v {
+			allowed := []any{}
+			for _, a := range n.GetAllowedAddresses() {
+				if a.String != nil {
+					allowed = append(allowed, *a.String)
+				}
+			}
 			nics = append(nics, map[string]any{
 				"nicId":            n.GetNicId(),
 				"networkId":        n.GetNetworkId(),
@@ -49,7 +57,7 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 				"ipv6":             n.GetIpv6(),
 				"mac":              n.GetMac(),
 				"securityGroups":   strSlice(n.GetSecurityGroups()),
-				"allowedAddresses": dictAny(n.GetAllowedAddresses()),
+				"allowedAddresses": allowed,
 				"publicIp":         n.GetPublicIp(),
 				"nicSecurity":      n.GetNicSecurity(),
 			})
@@ -92,6 +100,9 @@ func (r *mqlStackitServer) id() (string, error) {
 func initStackitServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
+		id, ok = conn(runtime).AssetObjectID("compute")
+	}
+	if !ok {
 		return args, nil, nil
 	}
 	c := conn(runtime)
@@ -99,7 +110,7 @@ func initStackitServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	s, err := client.GetServerExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	s, err := client.GetServer(bgctx(), c.ProjectID(), c.Region(), id).Details(true).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -155,12 +166,47 @@ func (r *mqlStackitServer) volumes() ([]any, error) {
 }
 
 func (r *mqlStackitServer) securityGroups() ([]any, error) {
-	out := make([]any, 0, len(r.SecurityGroupIds.Data))
-	for _, raw := range r.SecurityGroupIds.Data {
-		id, ok := raw.(string)
-		if !ok || id == "" {
-			continue
+	// Collect security-group ids from the server-level list and, since STACKIT
+	// attaches security groups per network interface (the server-level list is
+	// usually empty), from each NIC as well. Deduplicate while preserving order.
+	seen := map[string]struct{}{}
+	ids := []string{}
+	add := func(id string) {
+		if id == "" {
+			return
 		}
+		if _, dup := seen[id]; dup {
+			return
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	for _, raw := range r.SecurityGroupIds.Data {
+		if id, ok := raw.(string); ok {
+			add(id)
+		}
+	}
+	nics := r.GetNics()
+	if nics.Error == nil {
+		for _, raw := range nics.Data {
+			nic, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			sgs, ok := nic["securityGroups"].([]any)
+			if !ok {
+				continue
+			}
+			for _, s := range sgs {
+				if id, ok := s.(string); ok {
+					add(id)
+				}
+			}
+		}
+	}
+
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
 		sg, err := NewResource(r.MqlRuntime, "stackit.securityGroup", map[string]*llx.RawData{
 			"id": llx.StringData(id),
 		})

@@ -21,10 +21,12 @@ import (
 )
 
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
-	cacheKmsKeyId          string
-	cacheKubeletIdentityId string
-	cacheProperties        *clusters.ManagedClusterProperties
-	cacheSystemData        any
+	cacheKmsKeyId                string
+	cacheKubeletIdentityId       string
+	cacheDiskEncryptionSetId     string
+	cacheUserAssignedIdentityIds []string
+	cacheProperties              *clusters.ManagedClusterProperties
+	cacheSystemData              any
 }
 
 type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
@@ -275,8 +277,15 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				return nil, err
 			}
 			var principalId *string
+			var userAssignedIdentityIds []string
 			if entry.Identity != nil {
 				principalId = entry.Identity.PrincipalID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
+			}
+
+			diskEncryptionSetId := ""
+			if entry.Properties != nil && entry.Properties.DiskEncryptionSetID != nil {
+				diskEncryptionSetId = *entry.Properties.DiskEncryptionSetID
 			}
 
 			servicePrincipalClientId := ""
@@ -352,6 +361,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
 			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
 			mqlCluster.cacheKubeletIdentityId = kubeletIdentityId
+			mqlCluster.cacheDiskEncryptionSetId = diskEncryptionSetId
+			mqlCluster.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			mqlCluster.cacheProperties = entry.Properties
 			sysData, err := convert.JsonToDict(entry.SystemData)
 			if err != nil {
@@ -647,6 +658,23 @@ func (a *mqlAzureSubscriptionAksServiceCluster) kubeletIdentity() (*mqlAzureSubs
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) diskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	if a.cacheDiskEncryptionSetId == "" {
+		a.DiskEncryptionSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet",
+		map[string]*llx.RawData{"id": llx.StringData(strings.ToLower(a.cacheDiskEncryptionSetId))})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
 }
 
 func (a *mqlAzureSubscriptionAksServiceClusterNodePool) recentlyUsedVersions() ([]any, error) {

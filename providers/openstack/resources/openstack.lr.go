@@ -34,6 +34,7 @@ const (
 	ResourceOpenstackRouter                          string = "openstack.router"
 	ResourceOpenstackPort                            string = "openstack.port"
 	ResourceOpenstackFloatingIp                      string = "openstack.floatingIp"
+	ResourceOpenstackFloatingIpPortForwarding        string = "openstack.floatingIp.portForwarding"
 	ResourceOpenstackSecurityGroup                   string = "openstack.securityGroup"
 	ResourceOpenstackSecurityGroupRule               string = "openstack.securityGroup.rule"
 	ResourceOpenstackBlockstorageVolume              string = "openstack.blockstorage.volume"
@@ -56,6 +57,11 @@ const (
 	ResourceOpenstackFirewallGroup                   string = "openstack.firewall.group"
 	ResourceOpenstackFirewallPolicy                  string = "openstack.firewall.policy"
 	ResourceOpenstackFirewallRule                    string = "openstack.firewall.rule"
+	ResourceOpenstackVpnService                      string = "openstack.vpn.service"
+	ResourceOpenstackVpnIkePolicy                    string = "openstack.vpn.ikePolicy"
+	ResourceOpenstackVpnIpsecPolicy                  string = "openstack.vpn.ipsecPolicy"
+	ResourceOpenstackVpnEndpointGroup                string = "openstack.vpn.endpointGroup"
+	ResourceOpenstackVpnSiteConnection               string = "openstack.vpn.siteConnection"
 	ResourceOpenstackObjectstorageAccount            string = "openstack.objectstorage.account"
 	ResourceOpenstackObjectstorageContainer          string = "openstack.objectstorage.container"
 	ResourceOpenstackObjectstorageObject             string = "openstack.objectstorage.object"
@@ -170,6 +176,10 @@ func init() {
 			Init:   initOpenstackFloatingIp,
 			Create: createOpenstackFloatingIp,
 		},
+		"openstack.floatingIp.portForwarding": {
+			// to override args, implement: initOpenstackFloatingIpPortForwarding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackFloatingIpPortForwarding,
+		},
 		"openstack.securityGroup": {
 			Init:   initOpenstackSecurityGroup,
 			Create: createOpenstackSecurityGroup,
@@ -257,6 +267,26 @@ func init() {
 		"openstack.firewall.rule": {
 			Init:   initOpenstackFirewallRule,
 			Create: createOpenstackFirewallRule,
+		},
+		"openstack.vpn.service": {
+			Init:   initOpenstackVpnService,
+			Create: createOpenstackVpnService,
+		},
+		"openstack.vpn.ikePolicy": {
+			Init:   initOpenstackVpnIkePolicy,
+			Create: createOpenstackVpnIkePolicy,
+		},
+		"openstack.vpn.ipsecPolicy": {
+			Init:   initOpenstackVpnIpsecPolicy,
+			Create: createOpenstackVpnIpsecPolicy,
+		},
+		"openstack.vpn.endpointGroup": {
+			Init:   initOpenstackVpnEndpointGroup,
+			Create: createOpenstackVpnEndpointGroup,
+		},
+		"openstack.vpn.siteConnection": {
+			Init:   initOpenstackVpnSiteConnection,
+			Create: createOpenstackVpnSiteConnection,
 		},
 		"openstack.objectstorage.account": {
 			// to override args, implement: initOpenstackObjectstorageAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -634,6 +664,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetFirewallRules()).ToDataRes(types.Array(types.Resource("openstack.firewall.rule")))
+	},
+	"openstack.vpnServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVpnServices()).ToDataRes(types.Array(types.Resource("openstack.vpn.service")))
+	},
+	"openstack.vpnIkePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVpnIkePolicies()).ToDataRes(types.Array(types.Resource("openstack.vpn.ikePolicy")))
+	},
+	"openstack.vpnIpsecPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVpnIpsecPolicies()).ToDataRes(types.Array(types.Resource("openstack.vpn.ipsecPolicy")))
+	},
+	"openstack.vpnEndpointGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVpnEndpointGroups()).ToDataRes(types.Array(types.Resource("openstack.vpn.endpointGroup")))
+	},
+	"openstack.vpnSiteConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVpnSiteConnections()).ToDataRes(types.Array(types.Resource("openstack.vpn.siteConnection")))
 	},
 	"openstack.objectStorageAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetObjectStorageAccount()).ToDataRes(types.Resource("openstack.objectstorage.account"))
@@ -1258,6 +1303,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.floatingIp.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackFloatingIp).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.floatingIp.portForwardings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIp).GetPortForwardings()).ToDataRes(types.Array(types.Resource("openstack.floatingIp.portForwarding")))
+	},
+	"openstack.floatingIp.portForwarding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetId()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetProtocol()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.externalPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetExternalPort()).ToDataRes(types.Int)
+	},
+	"openstack.floatingIp.portForwarding.externalPortRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetExternalPortRange()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.internalPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetInternalPort()).ToDataRes(types.Int)
+	},
+	"openstack.floatingIp.portForwarding.internalPortRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetInternalPortRange()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.internalIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetInternalIpAddress()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.floatingIp.portForwarding.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackFloatingIpPortForwarding).GetPort()).ToDataRes(types.Resource("openstack.port"))
 	},
 	"openstack.securityGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackSecurityGroup).GetId()).ToDataRes(types.String)
@@ -2287,6 +2362,189 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.firewall.rule.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackFirewallRule).GetPolicies()).ToDataRes(types.Array(types.Resource("openstack.firewall.policy")))
+	},
+	"openstack.vpn.service.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetName()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.adminStateUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetAdminStateUp()).ToDataRes(types.Bool)
+	},
+	"openstack.vpn.service.externalV4Ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetExternalV4Ip()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.externalV6Ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetExternalV6Ip()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.flavorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetFlavorId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.service.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetSubnet()).ToDataRes(types.Resource("openstack.subnet"))
+	},
+	"openstack.vpn.service.router": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetRouter()).ToDataRes(types.Resource("openstack.router"))
+	},
+	"openstack.vpn.service.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnService).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.vpn.ikePolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetName()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.authAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetAuthAlgorithm()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.encryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetEncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.pfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetPfs()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.phase1NegotiationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetPhase1NegotiationMode()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.ikeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetIkeVersion()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.lifetimeUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetLifetimeUnits()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ikePolicy.lifetimeValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetLifetimeValue()).ToDataRes(types.Int)
+	},
+	"openstack.vpn.ikePolicy.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIkePolicy).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.vpn.ipsecPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetName()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.authAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetAuthAlgorithm()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.encryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetEncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.pfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetPfs()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.encapsulationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetEncapsulationMode()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.transformProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetTransformProtocol()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.lifetimeUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetLifetimeUnits()).ToDataRes(types.String)
+	},
+	"openstack.vpn.ipsecPolicy.lifetimeValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetLifetimeValue()).ToDataRes(types.Int)
+	},
+	"openstack.vpn.ipsecPolicy.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnIpsecPolicy).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.vpn.endpointGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.endpointGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetName()).ToDataRes(types.String)
+	},
+	"openstack.vpn.endpointGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.vpn.endpointGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetType()).ToDataRes(types.String)
+	},
+	"openstack.vpn.endpointGroup.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetEndpoints()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.vpn.endpointGroup.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnEndpointGroup).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.vpn.siteConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetName()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.adminStateUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetAdminStateUp()).ToDataRes(types.Bool)
+	},
+	"openstack.vpn.siteConnection.peerAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetPeerAddress()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.peerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetPeerId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.localId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetLocalId()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.peerCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetPeerCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.vpn.siteConnection.routeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetRouteMode()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.initiator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetInitiator()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.authMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetAuthMode()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetMtu()).ToDataRes(types.Int)
+	},
+	"openstack.vpn.siteConnection.dpdAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetDpdAction()).ToDataRes(types.String)
+	},
+	"openstack.vpn.siteConnection.dpdTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetDpdTimeout()).ToDataRes(types.Int)
+	},
+	"openstack.vpn.siteConnection.dpdInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetDpdInterval()).ToDataRes(types.Int)
+	},
+	"openstack.vpn.siteConnection.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetService()).ToDataRes(types.Resource("openstack.vpn.service"))
+	},
+	"openstack.vpn.siteConnection.ikePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetIkePolicy()).ToDataRes(types.Resource("openstack.vpn.ikePolicy"))
+	},
+	"openstack.vpn.siteConnection.ipsecPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetIpsecPolicy()).ToDataRes(types.Resource("openstack.vpn.ipsecPolicy"))
+	},
+	"openstack.vpn.siteConnection.localEndpointGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetLocalEndpointGroup()).ToDataRes(types.Resource("openstack.vpn.endpointGroup"))
+	},
+	"openstack.vpn.siteConnection.peerEndpointGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetPeerEndpointGroup()).ToDataRes(types.Resource("openstack.vpn.endpointGroup"))
+	},
+	"openstack.vpn.siteConnection.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackVpnSiteConnection).GetProject()).ToDataRes(types.Resource("openstack.project"))
 	},
 	"openstack.objectstorage.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackObjectstorageAccount).GetId()).ToDataRes(types.String)
@@ -3822,6 +4080,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstack).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"openstack.vpnServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VpnServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpnIkePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VpnIkePolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpnIpsecPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VpnIpsecPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpnEndpointGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VpnEndpointGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpnSiteConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VpnSiteConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"openstack.objectStorageAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).ObjectStorageAccount, ok = plugin.RawToTValue[*mqlOpenstackObjectstorageAccount](v.Value, v.Error)
 		return
@@ -4720,6 +4998,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.floatingIp.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackFloatingIp).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwardings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIp).PortForwardings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.floatingIp.portForwarding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.externalPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).ExternalPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.externalPortRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).ExternalPortRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.internalPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).InternalPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.internalPortRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).InternalPortRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.internalIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).InternalIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.floatingIp.portForwarding.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackFloatingIpPortForwarding).Port, ok = plugin.RawToTValue[*mqlOpenstackPort](v.Value, v.Error)
 		return
 	},
 	"openstack.securityGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6180,6 +6502,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.firewall.rule.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackFirewallRule).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.vpn.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.adminStateUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).AdminStateUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.externalV4Ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).ExternalV4Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.externalV6Ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).ExternalV6Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.flavorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).FlavorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Subnet, ok = plugin.RawToTValue[*mqlOpenstackSubnet](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.router": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Router, ok = plugin.RawToTValue[*mqlOpenstackRouter](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.service.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnService).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.vpn.ikePolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.authAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).AuthAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.encryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).EncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.pfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Pfs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.phase1NegotiationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Phase1NegotiationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.ikeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).IkeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.lifetimeUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).LifetimeUnits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.lifetimeValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).LifetimeValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ikePolicy.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIkePolicy).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.authAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).AuthAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.encryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).EncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.pfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).Pfs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.encapsulationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).EncapsulationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.transformProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).TransformProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.lifetimeUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).LifetimeUnits, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.lifetimeValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).LifetimeValue, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.ipsecPolicy.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnIpsecPolicy).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.vpn.endpointGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.endpointGroup.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnEndpointGroup).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.vpn.siteConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.adminStateUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).AdminStateUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.peerAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).PeerAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.peerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).PeerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.localId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).LocalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.peerCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).PeerCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.routeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).RouteMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.initiator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Initiator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.dpdAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).DpdAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.dpdTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).DpdTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.dpdInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).DpdInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Service, ok = plugin.RawToTValue[*mqlOpenstackVpnService](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.ikePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).IkePolicy, ok = plugin.RawToTValue[*mqlOpenstackVpnIkePolicy](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.ipsecPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).IpsecPolicy, ok = plugin.RawToTValue[*mqlOpenstackVpnIpsecPolicy](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.localEndpointGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).LocalEndpointGroup, ok = plugin.RawToTValue[*mqlOpenstackVpnEndpointGroup](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.peerEndpointGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).PeerEndpointGroup, ok = plugin.RawToTValue[*mqlOpenstackVpnEndpointGroup](v.Value, v.Error)
+		return
+	},
+	"openstack.vpn.siteConnection.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackVpnSiteConnection).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
 	"openstack.objectstorage.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8145,6 +8731,11 @@ type mqlOpenstack struct {
 	FirewallGroups          plugin.TValue[[]any]
 	FirewallPolicies        plugin.TValue[[]any]
 	FirewallRules           plugin.TValue[[]any]
+	VpnServices             plugin.TValue[[]any]
+	VpnIkePolicies          plugin.TValue[[]any]
+	VpnIpsecPolicies        plugin.TValue[[]any]
+	VpnEndpointGroups       plugin.TValue[[]any]
+	VpnSiteConnections      plugin.TValue[[]any]
 	ObjectStorageAccount    plugin.TValue[*mqlOpenstackObjectstorageAccount]
 	ObjectStorageContainers plugin.TValue[[]any]
 	DnsZones                plugin.TValue[[]any]
@@ -9032,6 +9623,86 @@ func (c *mqlOpenstack) GetFirewallRules() *plugin.TValue[[]any] {
 		}
 
 		return c.firewallRules()
+	})
+}
+
+func (c *mqlOpenstack) GetVpnServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "vpnServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnServices()
+	})
+}
+
+func (c *mqlOpenstack) GetVpnIkePolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnIkePolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "vpnIkePolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnIkePolicies()
+	})
+}
+
+func (c *mqlOpenstack) GetVpnIpsecPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnIpsecPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "vpnIpsecPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnIpsecPolicies()
+	})
+}
+
+func (c *mqlOpenstack) GetVpnEndpointGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnEndpointGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "vpnEndpointGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnEndpointGroups()
+	})
+}
+
+func (c *mqlOpenstack) GetVpnSiteConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnSiteConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "vpnSiteConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnSiteConnections()
 	})
 }
 
@@ -11432,6 +12103,7 @@ type mqlOpenstackFloatingIp struct {
 	Port              plugin.TValue[*mqlOpenstackPort]
 	Router            plugin.TValue[*mqlOpenstackRouter]
 	Project           plugin.TValue[*mqlOpenstackProject]
+	PortForwardings   plugin.TValue[[]any]
 }
 
 // createOpenstackFloatingIp creates a new instance of this resource
@@ -11564,6 +12236,123 @@ func (c *mqlOpenstackFloatingIp) GetProject() *plugin.TValue[*mqlOpenstackProjec
 		}
 
 		return c.project()
+	})
+}
+
+func (c *mqlOpenstackFloatingIp) GetPortForwardings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PortForwardings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.floatingIp", c.__id, "portForwardings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.portForwardings()
+	})
+}
+
+// mqlOpenstackFloatingIpPortForwarding for the openstack.floatingIp.portForwarding resource
+type mqlOpenstackFloatingIpPortForwarding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackFloatingIpPortForwardingInternal
+	Id                plugin.TValue[string]
+	Protocol          plugin.TValue[string]
+	ExternalPort      plugin.TValue[int64]
+	ExternalPortRange plugin.TValue[string]
+	InternalPort      plugin.TValue[int64]
+	InternalPortRange plugin.TValue[string]
+	InternalIpAddress plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Port              plugin.TValue[*mqlOpenstackPort]
+}
+
+// createOpenstackFloatingIpPortForwarding creates a new instance of this resource
+func createOpenstackFloatingIpPortForwarding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackFloatingIpPortForwarding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.floatingIp.portForwarding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) MqlName() string {
+	return "openstack.floatingIp.portForwarding"
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetExternalPort() *plugin.TValue[int64] {
+	return &c.ExternalPort
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetExternalPortRange() *plugin.TValue[string] {
+	return &c.ExternalPortRange
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetInternalPort() *plugin.TValue[int64] {
+	return &c.InternalPort
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetInternalPortRange() *plugin.TValue[string] {
+	return &c.InternalPortRange
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetInternalIpAddress() *plugin.TValue[string] {
+	return &c.InternalIpAddress
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackFloatingIpPortForwarding) GetPort() *plugin.TValue[*mqlOpenstackPort] {
+	return plugin.GetOrCompute[*mqlOpenstackPort](&c.Port, func() (*mqlOpenstackPort, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.floatingIp.portForwarding", c.__id, "port")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackPort), nil
+			}
+		}
+
+		return c.port()
 	})
 }
 
@@ -15188,6 +15977,675 @@ func (c *mqlOpenstackFirewallRule) GetPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.policies()
+	})
+}
+
+// mqlOpenstackVpnService for the openstack.vpn.service resource
+type mqlOpenstackVpnService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackVpnServiceInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Status       plugin.TValue[string]
+	AdminStateUp plugin.TValue[bool]
+	ExternalV4Ip plugin.TValue[string]
+	ExternalV6Ip plugin.TValue[string]
+	FlavorId     plugin.TValue[string]
+	Subnet       plugin.TValue[*mqlOpenstackSubnet]
+	Router       plugin.TValue[*mqlOpenstackRouter]
+	Project      plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackVpnService creates a new instance of this resource
+func createOpenstackVpnService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackVpnService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.vpn.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackVpnService) MqlName() string {
+	return "openstack.vpn.service"
+}
+
+func (c *mqlOpenstackVpnService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackVpnService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackVpnService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackVpnService) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackVpnService) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackVpnService) GetAdminStateUp() *plugin.TValue[bool] {
+	return &c.AdminStateUp
+}
+
+func (c *mqlOpenstackVpnService) GetExternalV4Ip() *plugin.TValue[string] {
+	return &c.ExternalV4Ip
+}
+
+func (c *mqlOpenstackVpnService) GetExternalV6Ip() *plugin.TValue[string] {
+	return &c.ExternalV6Ip
+}
+
+func (c *mqlOpenstackVpnService) GetFlavorId() *plugin.TValue[string] {
+	return &c.FlavorId
+}
+
+func (c *mqlOpenstackVpnService) GetSubnet() *plugin.TValue[*mqlOpenstackSubnet] {
+	return plugin.GetOrCompute[*mqlOpenstackSubnet](&c.Subnet, func() (*mqlOpenstackSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.service", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlOpenstackVpnService) GetRouter() *plugin.TValue[*mqlOpenstackRouter] {
+	return plugin.GetOrCompute[*mqlOpenstackRouter](&c.Router, func() (*mqlOpenstackRouter, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.service", c.__id, "router")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackRouter), nil
+			}
+		}
+
+		return c.router()
+	})
+}
+
+func (c *mqlOpenstackVpnService) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.service", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackVpnIkePolicy for the openstack.vpn.ikePolicy resource
+type mqlOpenstackVpnIkePolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackVpnIkePolicyInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	AuthAlgorithm         plugin.TValue[string]
+	EncryptionAlgorithm   plugin.TValue[string]
+	Pfs                   plugin.TValue[string]
+	Phase1NegotiationMode plugin.TValue[string]
+	IkeVersion            plugin.TValue[string]
+	LifetimeUnits         plugin.TValue[string]
+	LifetimeValue         plugin.TValue[int64]
+	Project               plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackVpnIkePolicy creates a new instance of this resource
+func createOpenstackVpnIkePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackVpnIkePolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.vpn.ikePolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackVpnIkePolicy) MqlName() string {
+	return "openstack.vpn.ikePolicy"
+}
+
+func (c *mqlOpenstackVpnIkePolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetAuthAlgorithm() *plugin.TValue[string] {
+	return &c.AuthAlgorithm
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetEncryptionAlgorithm() *plugin.TValue[string] {
+	return &c.EncryptionAlgorithm
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetPfs() *plugin.TValue[string] {
+	return &c.Pfs
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetPhase1NegotiationMode() *plugin.TValue[string] {
+	return &c.Phase1NegotiationMode
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetIkeVersion() *plugin.TValue[string] {
+	return &c.IkeVersion
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetLifetimeUnits() *plugin.TValue[string] {
+	return &c.LifetimeUnits
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetLifetimeValue() *plugin.TValue[int64] {
+	return &c.LifetimeValue
+}
+
+func (c *mqlOpenstackVpnIkePolicy) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.ikePolicy", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackVpnIpsecPolicy for the openstack.vpn.ipsecPolicy resource
+type mqlOpenstackVpnIpsecPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackVpnIpsecPolicyInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	AuthAlgorithm       plugin.TValue[string]
+	EncryptionAlgorithm plugin.TValue[string]
+	Pfs                 plugin.TValue[string]
+	EncapsulationMode   plugin.TValue[string]
+	TransformProtocol   plugin.TValue[string]
+	LifetimeUnits       plugin.TValue[string]
+	LifetimeValue       plugin.TValue[int64]
+	Project             plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackVpnIpsecPolicy creates a new instance of this resource
+func createOpenstackVpnIpsecPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackVpnIpsecPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.vpn.ipsecPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) MqlName() string {
+	return "openstack.vpn.ipsecPolicy"
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetAuthAlgorithm() *plugin.TValue[string] {
+	return &c.AuthAlgorithm
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetEncryptionAlgorithm() *plugin.TValue[string] {
+	return &c.EncryptionAlgorithm
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetPfs() *plugin.TValue[string] {
+	return &c.Pfs
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetEncapsulationMode() *plugin.TValue[string] {
+	return &c.EncapsulationMode
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetTransformProtocol() *plugin.TValue[string] {
+	return &c.TransformProtocol
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetLifetimeUnits() *plugin.TValue[string] {
+	return &c.LifetimeUnits
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetLifetimeValue() *plugin.TValue[int64] {
+	return &c.LifetimeValue
+}
+
+func (c *mqlOpenstackVpnIpsecPolicy) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.ipsecPolicy", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackVpnEndpointGroup for the openstack.vpn.endpointGroup resource
+type mqlOpenstackVpnEndpointGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackVpnEndpointGroupInternal
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Endpoints   plugin.TValue[[]any]
+	Project     plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackVpnEndpointGroup creates a new instance of this resource
+func createOpenstackVpnEndpointGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackVpnEndpointGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.vpn.endpointGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) MqlName() string {
+	return "openstack.vpn.endpointGroup"
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlOpenstackVpnEndpointGroup) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.endpointGroup", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackVpnSiteConnection for the openstack.vpn.siteConnection resource
+type mqlOpenstackVpnSiteConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackVpnSiteConnectionInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Status             plugin.TValue[string]
+	AdminStateUp       plugin.TValue[bool]
+	PeerAddress        plugin.TValue[string]
+	PeerId             plugin.TValue[string]
+	LocalId            plugin.TValue[string]
+	PeerCidrs          plugin.TValue[[]any]
+	RouteMode          plugin.TValue[string]
+	Initiator          plugin.TValue[string]
+	AuthMode           plugin.TValue[string]
+	Mtu                plugin.TValue[int64]
+	DpdAction          plugin.TValue[string]
+	DpdTimeout         plugin.TValue[int64]
+	DpdInterval        plugin.TValue[int64]
+	Service            plugin.TValue[*mqlOpenstackVpnService]
+	IkePolicy          plugin.TValue[*mqlOpenstackVpnIkePolicy]
+	IpsecPolicy        plugin.TValue[*mqlOpenstackVpnIpsecPolicy]
+	LocalEndpointGroup plugin.TValue[*mqlOpenstackVpnEndpointGroup]
+	PeerEndpointGroup  plugin.TValue[*mqlOpenstackVpnEndpointGroup]
+	Project            plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackVpnSiteConnection creates a new instance of this resource
+func createOpenstackVpnSiteConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackVpnSiteConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.vpn.siteConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackVpnSiteConnection) MqlName() string {
+	return "openstack.vpn.siteConnection"
+}
+
+func (c *mqlOpenstackVpnSiteConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetAdminStateUp() *plugin.TValue[bool] {
+	return &c.AdminStateUp
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetPeerAddress() *plugin.TValue[string] {
+	return &c.PeerAddress
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetPeerId() *plugin.TValue[string] {
+	return &c.PeerId
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetLocalId() *plugin.TValue[string] {
+	return &c.LocalId
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetPeerCidrs() *plugin.TValue[[]any] {
+	return &c.PeerCidrs
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetRouteMode() *plugin.TValue[string] {
+	return &c.RouteMode
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetInitiator() *plugin.TValue[string] {
+	return &c.Initiator
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetAuthMode() *plugin.TValue[string] {
+	return &c.AuthMode
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetDpdAction() *plugin.TValue[string] {
+	return &c.DpdAction
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetDpdTimeout() *plugin.TValue[int64] {
+	return &c.DpdTimeout
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetDpdInterval() *plugin.TValue[int64] {
+	return &c.DpdInterval
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetService() *plugin.TValue[*mqlOpenstackVpnService] {
+	return plugin.GetOrCompute[*mqlOpenstackVpnService](&c.Service, func() (*mqlOpenstackVpnService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackVpnService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetIkePolicy() *plugin.TValue[*mqlOpenstackVpnIkePolicy] {
+	return plugin.GetOrCompute[*mqlOpenstackVpnIkePolicy](&c.IkePolicy, func() (*mqlOpenstackVpnIkePolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "ikePolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackVpnIkePolicy), nil
+			}
+		}
+
+		return c.ikePolicy()
+	})
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetIpsecPolicy() *plugin.TValue[*mqlOpenstackVpnIpsecPolicy] {
+	return plugin.GetOrCompute[*mqlOpenstackVpnIpsecPolicy](&c.IpsecPolicy, func() (*mqlOpenstackVpnIpsecPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "ipsecPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackVpnIpsecPolicy), nil
+			}
+		}
+
+		return c.ipsecPolicy()
+	})
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetLocalEndpointGroup() *plugin.TValue[*mqlOpenstackVpnEndpointGroup] {
+	return plugin.GetOrCompute[*mqlOpenstackVpnEndpointGroup](&c.LocalEndpointGroup, func() (*mqlOpenstackVpnEndpointGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "localEndpointGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackVpnEndpointGroup), nil
+			}
+		}
+
+		return c.localEndpointGroup()
+	})
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetPeerEndpointGroup() *plugin.TValue[*mqlOpenstackVpnEndpointGroup] {
+	return plugin.GetOrCompute[*mqlOpenstackVpnEndpointGroup](&c.PeerEndpointGroup, func() (*mqlOpenstackVpnEndpointGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "peerEndpointGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackVpnEndpointGroup), nil
+			}
+		}
+
+		return c.peerEndpointGroup()
+	})
+}
+
+func (c *mqlOpenstackVpnSiteConnection) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.vpn.siteConnection", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
 	})
 }
 

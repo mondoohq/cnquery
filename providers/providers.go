@@ -251,15 +251,18 @@ func ListAll() ([]*Provider, error) {
 	CachedProviders = all
 
 	// This really shouldn't happen, but just in case it does...
+	// Logged at debug, not warn: embedders that ship their own builtin providers
+	// (e.g. xgrep) intentionally configure no external provider paths, so this is
+	// an expected condition rather than a misconfiguration to warn about.
 	if SystemPath == "" && HomePath == "" && CustomProviderPath == "" {
-		log.Warn().Msg("can't find any paths for providers, none are configured")
+		log.Debug().Msg("can't find any paths for providers, none are configured")
 		return nil, nil
 	}
 
 	sysOk := config.ProbeDir(SystemPath)
 	homeOk := config.ProbeDir(HomePath)
 	if !sysOk && !homeOk {
-		msg := log.Warn()
+		msg := log.Debug()
 		if SystemPath != "" {
 			msg = msg.Str("system-path", SystemPath)
 		}

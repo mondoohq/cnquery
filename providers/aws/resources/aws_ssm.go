@@ -205,6 +205,8 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 						"sourceId":        llx.StringDataPtr(instance.SourceId),
 						"activationId":    llx.StringDataPtr(instance.ActivationId),
 						"resourceType":    llx.StringData(string(instance.ResourceType)),
+						"registeredAt":    llx.TimeDataPtr(instance.RegistrationDate),
+						"isLatestVersion": llx.BoolDataPtr(instance.IsLatestVersion),
 					})
 				if err != nil {
 					return nil, err
@@ -229,6 +231,24 @@ func (a *mqlAwsSsmParameter) id() (string, error) {
 
 func (a *mqlAwsSsmInstance) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsSsmInstance) ec2Instance() (*mqlAwsEc2Instance, error) {
+	// Only EC2-registered managed nodes map to an EC2 instance; hybrid and
+	// on-premises nodes (ManagedInstance) have no EC2 instance.
+	if a.ResourceType.Data != "EC2Instance" || a.InstanceId.Data == "" {
+		a.Ec2Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf(ec2InstanceArnPattern, a.Region.Data, conn.AccountId(), a.InstanceId.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.Ec2Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEc2Instance), nil
 }
 
 type mqlAwsSsmInstanceInternal struct {

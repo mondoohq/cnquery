@@ -1,7 +1,7 @@
 # IPinfo Provider
 
 ```shell
-cnquery shell ipinfo
+mql shell ipinfo
 ```
 
 For authentication, you can use the `IPINFO_TOKEN` environment variable.
@@ -17,7 +17,7 @@ export IPINFO_TOKEN="<token>"
 Query information for a specific IP address.
 
 ```shell
-cnquery> ipinfo(ip("8.8.8.8")) { * }
+mql> ipinfo(ip("8.8.8.8")) { * }
 ipinfo: {
   requested_ip: "8.8.8.8"
   returned_ip: "8.8.8.8"
@@ -31,7 +31,7 @@ ipinfo: {
 Query information for your machine's public IP address.
 
 ```shell
-cnquery> ipinfo() { * }
+mql> ipinfo() { * }
 ipinfo: {
   requested_ip: null
   returned_ip: "<your-public-ip>"
@@ -45,7 +45,7 @@ ipinfo: {
 Query IP information for all IPs from network interfaces.
 
 ```shell
-cnquery run -c "network.interfaces.map(ips.map(_.ip)).flat.map(ipinfo(_){*})"
+mql run -c "network.interfaces.map(ips.map(_.ip)).flat.map(ipinfo(_){*})"
 network.interfaces.map.flat.map: [
   0: {
     returned_ip: 127.0.0.1

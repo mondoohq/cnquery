@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -18,6 +19,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionDataFactoryServiceFactoryInternal struct {
+	cacheUserAssignedIdentityIds []string
+}
 
 func (a *mqlAzureSubscriptionDataFactoryService) id() (string, error) {
 	return "azure.subscription.dataFactory/" + a.SubscriptionId.Data, nil
@@ -73,6 +78,11 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			identity, err := convert.JsonToDict(factory.Identity)
 			if err != nil {
 				return nil, err
+			}
+
+			var userAssignedIdentityIds []string
+			if factory.Identity != nil {
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(factory.Identity.UserAssignedIdentities)
 			}
 
 			var publicNetworkAccess string
@@ -147,7 +157,9 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlFactory)
+			factoryRes := mqlFactory.(*mqlAzureSubscriptionDataFactoryServiceFactory)
+			factoryRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			res = append(res, factoryRes)
 		}
 	}
 	return res, nil
@@ -155,6 +167,41 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 
 func (a *mqlAzureSubscriptionDataFactoryServiceFactory) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// cmkKey returns a typed reference to the Key Vault key used for customer-managed encryption.
+func (a *mqlAzureSubscriptionDataFactoryServiceFactory) cmkKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	vaultURI := strings.TrimSuffix(a.CmkKeyVaultUri.Data, "/")
+	keyName := a.CmkKeyName.Data
+	if vaultURI == "" || keyName == "" {
+		a.CmkKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	keyURI := vaultURI + "/keys/" + keyName
+	if version := a.CmkKeyVersion.Data; version != "" {
+		keyURI += "/" + version
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, keyURI)
+}
+
+// cmkIdentity returns the user-assigned managed identity used to access the CMK.
+func (a *mqlAzureSubscriptionDataFactoryServiceFactory) cmkIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	id := a.CmkUserAssignedIdentity.Data
+	if id == "" {
+		a.CmkIdentity.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(id)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
+}
+
+// userAssignedIdentities returns the typed user-assigned managed identities of the factory.
+func (a *mqlAzureSubscriptionDataFactoryServiceFactory) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func initAzureSubscriptionDataFactoryServiceFactory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

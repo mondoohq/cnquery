@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.25.1",
-  "generated_at": "2026-06-26T23:07:07-07:00",
+  "version": "13.27.1",
+  "generated_at": "2026-06-30T22:31:53-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -261,6 +261,7 @@
     "storage.buckets.get",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list",
+    "storage.buckets.listEffectiveTags",
     "workflows.workflows.list"
   ],
   "details": [
@@ -1730,6 +1731,13 @@
       "permission": "resourcemanager.organizations.get",
       "service": "resourcemanager",
       "action": "Organizations.Get",
+      "source_file": "gcp_organization.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.organizations.get",
+      "service": "resourcemanager",
+      "action": "Organizations.Get",
       "source_file": "organization.go",
       "scope": "org"
     },
@@ -1739,6 +1747,12 @@
       "action": "Organizations.GetIamPolicy",
       "source_file": "organization.go",
       "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.projects.get",
+      "service": "resourcemanager",
+      "action": "Projects.Get",
+      "source_file": "gcp_organization.go"
     },
     {
       "permission": "resourcemanager.projects.get",
@@ -1914,6 +1928,12 @@
       "permission": "storage.buckets.list",
       "service": "storage",
       "action": "Buckets.List",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "storage.buckets.listEffectiveTags",
+      "service": "resourcemanager",
+      "action": "EffectiveTagBindingCollections.Get",
       "source_file": "storage.go"
     },
     {

@@ -1381,8 +1381,22 @@ private aws.efs.filesystem @defaults("name id region") {
   region string
   // Availability zone where the file system exists if a specific AZ is defined
   availabilityZone string
+  // ID of the availability zone where the file system exists if a specific AZ is defined
+  availabilityZoneId string
+  // Opaque idempotency token supplied when the file system was created
+  //
+  // Infrastructure-as-code tools often set this to a meaningful value. When left unset, the Terraform AWS provider auto-generates a token with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  creationToken string
+  // Provisioned throughput in MiBps, set only when throughputMode is provisioned
+  provisionedThroughputInMibps float
   // Tags for the file system
   tags map[string]string
+  // CloudFormation stack that manages this file system, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this file system
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the creationToken carries Terraform's "terraform-" prefix. Empty when the file system is unmanaged or managed by a tool that leaves no recognizable signal.
+  managedBy() string
   // Creation timestamp
   createdAt time
   // Mount targets for the file system
@@ -1711,6 +1725,12 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   metadata() dict
   // Tags for the KMS key
   tags() map[string]string
+  // CloudFormation stack that manages this key, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this key
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the key is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Aliases for the KMS key
   aliases() []string
   // Current state of the key: Creating, Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
@@ -1747,6 +1767,10 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   multiRegionConfiguration() aws.kms.key.multiRegionConfiguration
   // Origin of the key material: AWS_KMS, EXTERNAL, AWS_CLOUDHSM, EXTERNAL_KEY_STORE
   origin() string
+  // Identifier of the current key material version backing the key
+  currentKeyMaterialId() string
+  // CloudHSM cluster hosting the key's material (null unless the key origin is AWS_CLOUDHSM)
+  cloudHsmCluster() aws.cloudhsm.cluster
   // Custom key store that hosts the key's material (null when AWS-managed)
   customKeyStore() aws.kms.customKeyStore
   // External key associated with this key when the key store is an External Key Store (xks)
@@ -1765,6 +1789,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   signingAlgorithms() []string
   // Key agreement algorithms the key supports (e.g., ECDH)
   keyAgreementAlgorithms() []string
+  // MAC algorithms the key supports (e.g., HMAC_SHA_256), for HMAC keys
+  macAlgorithms() []string
   // Whether imported key material expires: KEY_MATERIAL_EXPIRES or KEY_MATERIAL_DOES_NOT_EXPIRE
   expirationModel() string
   // Expiration date for imported key material (null if key material does not expire)
@@ -2042,6 +2068,10 @@ private aws.iam.user @defaults("arn name createdAt") {
   passwordLastUsed time
   // Tags for the IAM user
   tags map[string]string
+  // Infrastructure-management system that owns this user
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the user is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // List of inline policies attached to the user
   policies() []string
   // List of managed policies attached to the user
@@ -2507,6 +2537,12 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   region string
   // Tags for the notebook instance
   tags() map[string]string
+  // CloudFormation stack that manages this notebook instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this notebook instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the notebook instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Time when the notebook instance was created
   createdAt time
   // Time when the notebook instance was last modified
@@ -2701,6 +2737,12 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   trainingEndTime time
   // Tags for the training job
   tags() map[string]string
+  // CloudFormation stack that manages this training job, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this training job
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the training job is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // IAM role for the training job
   iamRole() aws.iam.role
   // Algorithm specification
@@ -2721,8 +2763,20 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   vpcConfig() @maturity("deprecated") dict
   // VPC associated with this training job
   vpc() aws.vpc
+  // Input data channels the training job consumed
+  inputDataConfig() []aws.sagemaker.trainingjob.channel
   // Output data configuration
   outputDataConfig() dict
+  // S3 URI of the model artifact the training job produced
+  modelArtifactsUrl() string
+  // ARN of the hyperparameter tuning job that created this training job, if any
+  tuningJobArn() string
+  // ARN of the AutoML job that created this training job, if any
+  autoMLJobArn() string
+  // ARN of the labeling job that created this training job, if any
+  labelingJobArn() string
+  // Time when model training started
+  trainingStartTime() time
   // Resource configuration (instanceType, instanceCount, volumeSizeInGB)
   resourceConfig() dict
   // Stopping condition
@@ -2735,6 +2789,33 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   checkpointConfig() dict
   // Wall clock time in seconds
   wallClockTimeInSeconds() int
+}
+
+// Input data channel for a SageMaker training job
+//
+// Examine one named training-data channel: its source location (s3Uri or
+// fileSystemId), format, and input mode. Together the channels record exactly
+// what data a training job consumed, which is the core lineage fact for the
+// model it produced.
+private aws.sagemaker.trainingjob.channel @defaults("channelName s3Uri") {
+  // Name of the channel
+  channelName string
+  // S3 URI of the channel's input data, when the source is S3
+  s3Uri string
+  // S3 data type: S3Prefix, ManifestFile, or AugmentedManifestFile
+  s3DataType string
+  // How the data is distributed to training instances: FullyReplicated or ShardedByS3Key
+  s3DataDistributionType string
+  // File system ID of the channel's input data, when the source is a file system
+  fileSystemId string
+  // MIME content type of the channel data
+  contentType string
+  // Compression type of the channel data: None or Gzip
+  compressionType string
+  // Record wrapper format: None or RecordIO
+  recordWrapperType string
+  // Input mode for the channel: Pipe, File, or FastFile
+  inputMode string
 }
 
 // AWS SageMaker training job status transition
@@ -2781,6 +2862,12 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   exitMessage string
   // Tags for the processing job
   tags() map[string]string
+  // CloudFormation stack that manages this processing job, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this processing job
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the processing job is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // IAM role for the processing job
   iamRole() aws.iam.role
   // Whether network isolation is enabled
@@ -2797,6 +2884,18 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   processingResources() dict
   // Environment variables
   environment() map[string]string
+  // Input datasets the processing job consumed
+  processingInputs() []dict
+  // Container image URI the processing job ran
+  imageUri() string
+  // Training job that created this processing job, if any
+  trainingJob() aws.sagemaker.trainingjob
+  // ARN of the AutoML job that created this processing job, if any
+  autoMLJobArn() string
+  // ARN of the monitoring schedule that created this processing job, if any
+  monitoringScheduleArn() string
+  // Time when processing started
+  processingStartTime() time
 }
 
 // AWS SageMaker pipeline
@@ -4771,6 +4870,12 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
+  // CloudFormation stack that manages this domain, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this domain
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the domain is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Version of Elasticsearch running
   elasticsearchVersion string
   // Elasticsearch domain ID
@@ -4885,6 +4990,16 @@ private aws.es.domain @defaults("arn name") {
   serviceSoftwareCancellable bool
   // Date until which a service software update can be manually requested before it auto-updates
   serviceSoftwareAutomatedUpdateDate time
+  // ID of the most recent configuration change to the domain
+  lastConfigChangeId string
+  // Who initiated the most recent configuration change (CUSTOMER or SERVICE)
+  lastConfigChangeInitiatedBy string
+  // Status of the most recent configuration change (for example PENDING, APPLYING_CHANGES, or COMPLETED)
+  lastConfigChangeStatus string
+  // Time the most recent configuration change was initiated
+  lastConfigChangeStartedAt time
+  // Time the most recent configuration change was last updated
+  lastConfigChangeUpdatedAt time
   // Whether audit logging is enabled for the domain
   auditLogEnabled bool
   // CloudWatch log group receiving audit logs
@@ -5018,6 +5133,26 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   ipAddressType string
   // New service software version available for the domain (empty string if up to date)
   serviceSoftwareNewVersion string
+  // Current service software version present on the domain
+  serviceSoftwareCurrentVersion string
+  // Whether a service software update is available
+  serviceSoftwareUpdateAvailable bool
+  // Status of the service software update (ELIGIBLE, PENDING_UPDATE, IN_PROGRESS, COMPLETED, NOT_ELIGIBLE)
+  serviceSoftwareUpdateStatus string
+  // Whether an in-progress service software update can be cancelled
+  serviceSoftwareCancellable bool
+  // Date until which a service software update can be manually requested before it auto-updates
+  serviceSoftwareAutomatedUpdateDate time
+  // ID of the most recent configuration change to the domain
+  lastConfigChangeId string
+  // Who initiated the most recent configuration change (CUSTOMER or SERVICE)
+  lastConfigChangeInitiatedBy string
+  // Status of the most recent configuration change (for example PENDING, APPLYING_CHANGES, or COMPLETED)
+  lastConfigChangeStatus string
+  // Time the most recent configuration change was initiated
+  lastConfigChangeStartedAt time
+  // Time the most recent configuration change was last updated
+  lastConfigChangeUpdatedAt time
   // Whether automatic software updates are enabled
   autoSoftwareUpdateEnabled bool
   // Whether the off-peak maintenance window is enabled
@@ -5032,6 +5167,12 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   automatedSnapshotPauseEndTime time
   // Tags for the domain
   tags() map[string]string
+  // CloudFormation stack that manages this domain, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this domain
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the domain is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Security groups associated with the VPC domain
   securityGroups() []aws.ec2.securitygroup
   // Subnets for the VPC domain
@@ -5324,6 +5465,10 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   createdAt time
   // Availability zone where the load balancer runs
   availabilityZones []string
+  // Subnets the load balancer is attached to
+  subnets() []aws.vpc.subnet
+  // Provisioning state of the load balancer (active, provisioning, active_impaired, or failed; null for classic load balancers)
+  state string
   // VPC security groups for the load balancer
   securityGroups []aws.ec2.securitygroup
   // Internet-exposure breakdown (internet-facing scheme combined with security group ingress)
@@ -5340,6 +5485,12 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   vpc aws.vpc
   // Tags on the load balancer
   tags() map[string]string
+  // CloudFormation stack that manages this load balancer, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this load balancer
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the load balancer is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // List of target groups for the load balancer
   targetGroups() []aws.elb.targetgroup
   // List of EC2 instances registered with the load balancer (classic ELB only)
@@ -6875,6 +7026,12 @@ aws.secretsmanager.secret @defaults("arn name") {
   rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
+  // CloudFormation stack that manages this secret, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this secret
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the secret is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Resource-based policy attached to the secret (JSON string, empty if none)
   resourcePolicy() string
   // Parsed statements from the resource-based policy
@@ -7110,6 +7267,16 @@ private aws.ecs.instance {
   versionInfo dict
   // Custom and built-in attributes attached to the container instance
   attributes []dict
+  // Tags for the container instance
+  tags map[string]string
+  // CloudFormation stack that manages this container instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this container instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the container instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
+  // Version counter, incremented on every change to the container instance state
+  version int
 }
 
 // Amazon ECS task
@@ -7186,6 +7353,12 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   image string
   // Resolved digest of the image actually running in the container
   imageDigest string
+  // ECR image the container is running, when the image is hosted in Elastic Container Registry in this account
+  //
+  // Resolved from the image URI and imageDigest. Null for images pulled from Docker Hub, public registries, or ECR repositories in another account.
+  ecrImage() aws.ecr.image
+  // Secrets Manager secret holding the private registry credentials used to pull the image, when configured on the task definition
+  repositoryCredentialsSecret() aws.secretsmanager.secret
   // Cluster associated with the ECS container
   clusterName string
   // Task definition associated with the ECS container
@@ -7681,6 +7854,12 @@ private aws.emr.cluster @defaults("arn") {
   id string
   // Tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Name of the security configuration applied to the cluster
   securityConfiguration() string
   // Security configuration applied to the cluster
@@ -7735,6 +7914,14 @@ private aws.emr.cluster @defaults("arn") {
   autoScalingRole() aws.iam.role
   // IAM service role assumed by EMR to access AWS resources
   serviceRole() aws.iam.role
+  // Subnets the cluster EC2 instances are launched into
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the cluster EC2 instances (EMR-managed and additional)
+  securityGroups() []aws.ec2.securitygroup
+  // Name of the EC2 key pair used for SSH access to the cluster instances
+  ec2KeyName() string
+  // EC2 instance profile the cluster nodes run as
+  ec2InstanceProfile() aws.iam.instanceProfile
   // Whether Spark Connect sessions are enabled on the cluster
   sessionEnabled() bool
 }
@@ -7984,8 +8171,49 @@ private aws.eventbridge.rule @defaults("arn name state") {
   iamRole() aws.iam.role
   // Tags for the rule
   tags() map[string]string
-  // Targets for this rule
-  targets() []dict
+  // Raw target records for this rule
+  //
+  // Deprecated in favor of eventTargets, which exposes each target as a
+  // structured resource with typed references to its destination role and
+  // dead-letter queue.
+  targets() @maturity("deprecated") []dict
+  // Targets that matched events are delivered to
+  eventTargets() []aws.eventbridge.rule.target
+}
+
+// Amazon EventBridge rule target
+//
+// Destination that a rule delivers matched events to, tracing the source
+// rule through to the resource that receives the event. Select by `id`, the
+// target identifier unique within the rule. `arn` is the destination
+// resource (a Lambda function, SNS topic, SQS queue, Kinesis stream, ECS
+// task, Step Functions state machine, and so on); `iamRole` is the role
+// EventBridge assumes to invoke it. `deadLetterQueue` and the retry settings
+// describe delivery reliability, while `input`, `inputPath`, and
+// `inputTransformer` describe how the event payload is shaped before
+// delivery.
+private aws.eventbridge.rule.target @defaults("id arn") {
+  // Target identifier, unique within the rule
+  id string
+  // ARN of the destination resource events are delivered to
+  arn string
+  // IAM role EventBridge assumes to invoke the target
+  iamRole() aws.iam.role
+  // Constant JSON text passed to the target instead of the matched event
+  input string
+  // JSONPath used to extract part of the matched event to pass to the target
+  inputPath string
+  // Input transformer that reshapes the event before it reaches the target
+  //
+  // Holds `inputTemplate` and the `inputPathsMap` of named JSONPath extractions
+  // the template references.
+  inputTransformer dict
+  // Dead-letter queue that receives events that fail delivery to the target
+  deadLetterQueue() aws.sqs.queue
+  // Maximum number of times to retry delivery to the target
+  retryMaxAttempts int
+  // Maximum age of an event, in seconds, that will still be delivered
+  retryMaxEventAgeSeconds int
 }
 
 // Amazon EventBridge connection
@@ -9031,6 +9259,12 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   retentionInDays int
   // Tags for the log group
   tags() map[string]string
+  // CloudFormation stack that manages this log group, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this log group
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the log group is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Data protection policy status
   //
   // One of ACTIVATED, DELETED, or ARCHIVED. ACTIVATED indicates that the log
@@ -9121,6 +9355,12 @@ private aws.cloudwatch.loggroup.subscriptionfilter @defaults("filterName destina
   filterPattern string
   // ARN of the destination (Kinesis, Lambda, or Firehose)
   destinationArn string
+  // Lambda function this filter streams matching log events to, when the destination is a function
+  lambdaFunction() aws.lambda.function
+  // Kinesis data stream this filter streams matching log events to, when the destination is a stream
+  kinesisStream() aws.kinesis.stream
+  // Firehose delivery stream this filter streams matching log events to, when the destination is a delivery stream
+  firehoseDeliveryStream() aws.kinesis.firehoseDeliveryStream
   // IAM role used to write to the destination
   iamRole() aws.iam.role
   // ARN of the IAM role used to write to the destination
@@ -9391,6 +9631,20 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   viewerMtlsMode string
   // ID of the trust store associated with the viewer mTLS configuration (empty string when none)
   viewerMtlsTrustStoreId string
+  // ID of the distribution
+  id string
+  // Whether this is a staging distribution used for continuous deployment
+  staging bool
+  // Idempotency token supplied when the distribution was created
+  //
+  // Infrastructure-as-code tools set this to a meaningful value; the Terraform AWS provider auto-generates one with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  callerReference() string
+  // Tags for the distribution
+  tags() map[string]string
+  // Infrastructure-management system that owns this distribution
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the callerReference carries Terraform's "terraform-" prefix. Empty when the distribution is unmanaged or managed by a tool that leaves no recognizable signal.
+  managedBy() string
 }
 
 // Amazon CloudFront distribution logging configuration
@@ -9930,8 +10184,21 @@ private aws.cloudtrail.trail @defaults("name region") {
   hasCustomEventSelectors bool
   // Whether logging is currently enabled for the trail
   isLogging() bool
+  // Time logging was most recently started for the trail
+  startLoggingAt() time
+  // Time logging was most recently stopped for the trail
+  //
+  // A non-null value on a trail that is currently logging indicates capture was
+  // interrupted at some point, leaving a gap in the recorded event history.
+  stoppedLoggingAt() time
   // Tags associated with the trail
   tags() map[string]string
+  // CloudFormation stack that manages this trail, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this trail
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the trail is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Time of the most recent delivery of log files to the trail's S3 bucket
   latestDeliveredAt() time
   // Time of the most recent delivery of log files to the trail's S3 bucket
@@ -11238,8 +11505,35 @@ private aws.dynamodb.table @defaults("name region") {
   provisionedThroughput() dict
   // Continuous backups and point-in-time recovery settings for the table
   continuousBackups() dict
+  // Whether point-in-time recovery (PITR) is enabled
+  pointInTimeRecoveryEnabled() bool
+  // Whether continuous backups are enabled
+  continuousBackupsEnabled() bool
+  // Earliest point in time the table can be restored to
+  earliestRestorableDateTime() time
+  // Latest point in time the table can be restored to, typically about 5 minutes before the current time
+  latestRestorableDateTime() time
+  // Number of preceding days for which continuous backups are retained
+  //
+  // The configurable point-in-time recovery window, between 1 and 35 days. 0
+  // when PITR is disabled or no recovery period is configured.
+  pitrRecoveryPeriodInDays() int
+  // Whether the table was created by restoring from a backup or point-in-time recovery
+  restoredFromBackup() bool
+  // Whether a restore operation is currently in progress
+  restoreInProgress() bool
+  // Point in time the table was restored to its source state
+  restoreDateTime() time
+  // Source table this table was restored from, if any
+  sourceTable() aws.dynamodb.table
   // Tags for the table
   tags() map[string]string
+  // CloudFormation stack that manages this table, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this table
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the table is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Date and time the table was created
   createdAt() time
   // Whether deletion protection is enabled
@@ -11504,6 +11798,12 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   snapshots() []aws.rds.snapshot
   // Tags for the database cluster
   tags map[string]string
+  // CloudFormation stack that manages this database cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this database cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the database cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Whether the cluster is encrypted
   storageEncrypted bool
   // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
@@ -11610,6 +11910,17 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   replicationSourceIdentifier string
   // Status of write forwarding for a secondary cluster in an Aurora global cluster
   globalWriteForwardingStatus string
+  // Identifiers of read replicas that replicate from this cluster
+  readReplicaClusterIds []string
+  // Read replica clusters that replicate from this cluster, when present in this account
+  readReplicas() []aws.rds.dbcluster
+  // Target backtrack window, in seconds, for the cluster
+  //
+  // 0 when backtracking is disabled. Applies to Aurora MySQL clusters, which can
+  // be rewound to any point within this window.
+  backtrackWindow int
+  // Earliest point in time the cluster can be backtracked to
+  earliestBacktrackTime time
   // Order in which engine version updates are rolled out across the cluster
   upgradeRolloutOrder string
   // IAM role used by Enhanced Monitoring to send metrics to CloudWatch Logs
@@ -11723,6 +12034,12 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   enhancedMonitoringResourceArn string
   // Tags for the database instance
   tags map[string]string
+  // CloudFormation stack that manages this database instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this database instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the database instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Name of the compute and memory capacity class of the database instance
   dbInstanceClass string
   // User-supplied unique key that identifies a database instance
@@ -11807,6 +12124,16 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   readReplicaSourceInstance() aws.rds.dbinstance
   // Source DB cluster this instance replicates from, when it is present in this account
   readReplicaSourceCluster() aws.rds.dbcluster
+  // Identifiers of read replica instances that replicate from this instance
+  readReplicaInstanceIds []string
+  // Read replica instances that replicate from this instance, when present in this account
+  readReplicaInstances() []aws.rds.dbinstance
+  // Identifiers of read replica clusters that replicate from this instance
+  readReplicaClusterIds []string
+  // Read replica clusters that replicate from this instance, when present in this account
+  readReplicaClusters() []aws.rds.dbcluster
+  // ARNs of the replicated automated backups for this instance
+  automatedBackupReplicationArns []string
   // Storage throughput in MiBps for gp3 volumes
   storageThroughput int
   // KMS key used to encrypt the activity stream
@@ -11995,6 +12322,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   cacheSecurityGroups []string
   // Name of the cache subnet group associated with the cluster
   cacheSubnetGroupName string
+  // Cache subnet group the cluster is deployed in
+  subnetGroup() aws.elasticache.subnetGroup
   // URL of the web page where you can download the latest ElastiCache client library
   clientDownloadLandingPage string
   // Node type for the nodes in the cluster
@@ -12011,6 +12340,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   networkType string
   // Describes a notification topic and its status
   notificationConfiguration string
+  // SNS topic that receives cluster event notifications
+  notificationTopic() aws.sns.topic
   // Number of cache nodes in the cluster
   numCacheNodes int
   // Name of the availability zone in which the cluster is located or "Multiple" if the cache nodes are located in different availability zones
@@ -12035,8 +12366,22 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   replicationGroupLogDeliveryEnabled bool
   // Identifier of the replication group the cluster belongs to, when part of one
   replicationGroupId string
+  // Name of the cache parameter group applied to the cluster
+  cacheParameterGroupName string
+  // Cache parameter group applied to the cluster
+  parameterGroup() aws.elasticache.parameterGroup
+  // Address of the cluster configuration endpoint (Memcached clusters)
+  configurationEndpointAddress string
+  // Port of the cluster configuration endpoint (Memcached clusters)
+  configurationEndpointPort int
   // Resource tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon ElastiCache serverless cache
@@ -12313,6 +12658,52 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   snapshotScheduleIdentifier string
   // Snapshots for this cluster
   snapshots() []aws.redshift.snapshot
+  // Whether the cluster was created by restoring from a snapshot
+  restoredFromSnapshot bool
+  // Status of the restore-from-snapshot operation: starting, restoring, completed, or failed
+  restoreStatus string
+  // Percentage of the restore completed, when a restore is in progress
+  restoreProgressPercent float
+  // IAM roles the cluster can assume to access other AWS services, such as S3 and Glue
+  iamRoles() []aws.iam.role
+  // Default IAM role used for operations that don't name a role
+  defaultIamRole() aws.iam.role
+  // Master user password secret managed by Secrets Manager
+  masterPasswordSecret() aws.secretsmanager.secret
+  // Infrastructure-management system that owns the cluster, inferred from provenance tags
+  managedBy() string
+  // CloudFormation stack that provisioned the cluster, when tagged
+  cloudformationStack() aws.cloudformation.stack
+  // Namespace ARN, a stable identity that persists across cluster rename and restore
+  clusterNamespaceArn string
+  // Whether cross-region snapshot copy is enabled for the cluster
+  crossRegionSnapshotCopyEnabled bool
+  // Destination region automated snapshots are copied to
+  snapshotCopyDestinationRegion string
+  // Retention period, in days, for automated snapshots copied to the destination region
+  snapshotCopyRetentionPeriod int
+  // Retention period, in days, for manual snapshots copied to the destination region
+  snapshotCopyManualRetentionPeriod int
+  // Snapshot copy grant used to encrypt copied snapshots in the destination region
+  snapshotCopyGrantName string
+  // Time the next automatic snapshot is expected to be taken
+  expectedNextSnapshotScheduleAt time
+  // State of the next expected scheduled snapshot: OnTrack or Pending
+  expectedNextSnapshotScheduleStatus string
+  // State of the snapshot schedule attached to the cluster: ACTIVE, MODIFYING, or FAILED
+  snapshotScheduleState string
+  // VPC security groups attached to the cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Custom domain name configured for the cluster endpoint
+  customDomainName string
+  // ACM certificate backing the custom domain
+  customDomainCertificate() aws.acm.certificate
+  // Expiration date of the custom domain certificate
+  customDomainCertificateExpiresAt time
+  // Status of Availability Zone relocation for the cluster
+  availabilityZoneRelocationStatus string
+  // Elastic IP address of the cluster, when one is configured
+  elasticIp string
 }
 
 // Amazon Redshift cluster snapshot
@@ -12544,6 +12935,14 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   isPrivate bool
   // Comment associated with the hosted zone
   comment string
+  // Idempotency token supplied when the hosted zone was created
+  //
+  // Infrastructure-as-code tools set this to a meaningful value; the Terraform AWS provider auto-generates one with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  callerReference string
+  // Infrastructure-management system that owns this hosted zone
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the callerReference carries Terraform's "terraform-" prefix. Empty when the hosted zone is unmanaged or managed by a tool that leaves no recognizable signal.
+  managedBy() string
   // List of VPCs associated with a private hosted zone
   vpcs() []dict
   // ARN of the hosted zone
@@ -13344,6 +13743,8 @@ private aws.ecr.repository @defaults("uri region") {
   imageTagMutability string
   // Encryption type for images at rest (AES256, KMS, or KMS_DSSE)
   encryptionType string
+  // KMS key protecting images at rest, when encryptionType is KMS or KMS_DSSE
+  kmsKey() aws.kms.key
   // When the repository was created
   createdAt time
   // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
@@ -13368,6 +13769,12 @@ private aws.ecr.repository @defaults("uri region") {
   architectures() []string
   // AWS resource tags for the repository (private repositories only)
   tags() map[string]string
+  // CloudFormation stack that manages this repository, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this repository
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the repository is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // AWS ECR repository lifecycle policy
@@ -13410,12 +13817,16 @@ private aws.ecr.image @defaults("uri region") {
   digest string
   // Type of image manifest
   mediaType string
+  // Media type of the artifact, when the image is an attached artifact rather than a container image (for example an SBOM or signature)
+  artifactMediaType string
   // List of tags associated with image
   tags []string
   // AWS account ID associated with public registry for this image
   registryId string
   // Name of the repository for the image
   repoName string
+  // ECR repository that contains the image
+  repository() aws.ecr.repository
   // Region where the ECR image is located
   region string
   // ARN for the image
@@ -13680,10 +14091,18 @@ private aws.apigateway.restapi @defaults("name id") {
   authorizers() []aws.apigateway.authorizer
   // Request validators for the REST API
   requestValidators() []aws.apigateway.requestValidator
+  // Deployments of the REST API
+  deployments() []aws.apigateway.deployment
   // Region where the REST API exists
   region string
   // Tags for the REST API
   tags map[string]string
+  // CloudFormation stack that manages this API, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this API
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the API is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Source of the API key for metering requests (HEADER or AUTHORIZER)
   apiKeySource string
   // Whether the default execute-api endpoint is disabled
@@ -13797,6 +14216,28 @@ private aws.apigateway.requestValidator @defaults("name restApiId") {
   // Whether request parameters are validated
   validateRequestParameters bool
   // Region where the request validator exists
+  region string
+}
+
+// Deployment of an API Gateway REST API
+//
+// Examine a single deployment of a REST API: when it was created, its
+// description, and a snapshot of the API methods it captured. The deployment
+// history records when each version of the API was pushed live, which is the
+// change provenance for the API. Select by the deployment `id` within a REST
+// API.
+private aws.apigateway.deployment @defaults("id createdDate") {
+  // Identifier of the deployment
+  id string
+  // Identifier of the REST API the deployment belongs to
+  restApiId string
+  // Time when the deployment was created
+  createdDate time
+  // Description of the deployment
+  description string
+  // Snapshot of the API methods captured at deployment time, keyed by resource path then HTTP method
+  apiSummary dict
+  // Region where the deployment exists
   region string
 }
 
@@ -14278,6 +14719,12 @@ private aws.lambda.function @defaults("arn") {
   region string
   // Tags for the function
   tags() map[string]string
+  // CloudFormation stack that manages this function, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this function
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the function is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Instruction set architectures supported by the function (x86_64, arm64)
   architectures []string
   // Size of the /tmp directory in MB (512-10240)
@@ -14296,6 +14743,12 @@ private aws.lambda.function @defaults("arn") {
   packageType string
   // SHA-256 hash of the function deployment package
   codeSha256 string
+  // Latest revision of the function's configuration and code, updated on every change
+  revisionId string
+  // ARN of the resolved managed runtime version the function runs on
+  //
+  // Identifies the exact patched build of the managed runtime, distinct from runtimeManagementConfig, which only reports the update mode. Empty for OS-only runtimes and container-image functions.
+  runtimeVersionArn string
   // Human-readable description of the function
   description string
   // When the function was last updated
@@ -14680,6 +15133,12 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   arn string
   // Tags for the SSM instance
   tags() map[string]string
+  // CloudFormation stack that manages this instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Version of the SSM Agent running on the instance
   agentVersion string
   // Last time the agent pinged the SSM service
@@ -14696,6 +15155,12 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   activationId string
   // Type of the managed resource: EC2Instance or ManagedInstance
   resourceType string
+  // EC2 instance backing this managed node, when it is an EC2 instance rather than a hybrid/on-premises node
+  ec2Instance() aws.ec2.instance
+  // Time the managed node was registered with Systems Manager
+  registeredAt time
+  // Whether the instance is running the latest version of the SSM Agent
+  isLatestVersion bool
 }
 
 // Amazon Elastic Compute Cloud (EC2)
@@ -15545,6 +16010,12 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   completionTime time
   // Tags for the snapshot
   tags map[string]string
+  // CloudFormation stack that manages this snapshot, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this snapshot
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the snapshot is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
   state string
   // Size of the volume, in GiB
@@ -15555,6 +16026,14 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   encrypted bool
   // The storage tier in which the snapshot is stored
   storageTier string
+  // How a snapshot copy was created
+  //
+  // One of standard or time-based, and only set for snapshot copies. Time-based copies complete within a requested duration; standard copies complete on a best-effort basis.
+  transferType string
+  // Time an archived snapshot that was temporarily restored will be automatically re-archived
+  //
+  // Only set for archived snapshots that are currently in a temporary restore.
+  restoreExpiryTime time
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
   // Volume the snapshot was created from, when it is still present in this account
@@ -15589,6 +16068,12 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   state string
   // A map of tags associated with the EBS volume
   tags map[string]string
+  // CloudFormation stack that manages this volume, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this volume
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the volume is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Availability Zone in which the volume was created
   availabilityZone string
   // EBS volume type: gp2, gp3, io1, io2, st1, sc1, or standard
@@ -15617,6 +16102,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   snapshot() aws.ec2.snapshot
   // Whether the volume was created from a snapshot using fast snapshot restore
   fastRestored bool
+  // Source volume this volume was copied from, when it is still present in this account
+  sourceVolume() aws.ec2.volume
 }
 
 // AWS Signer
@@ -16690,6 +17177,12 @@ aws.eks.cluster @defaults("arn version status") {
   region string
   // A map of tags associated with the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Endpoint of Kubernetes API server
   endpoint() string
   // Kubernetes server version
@@ -17025,6 +17518,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   enabledCloudwatchLogsExports []string
   // Connection endpoint for the primary instance
   endpoint string
+  // Reader endpoint for the cluster, balancing read connections across replicas
+  readerEndpoint string
   // Whether mapping of Amazon Identity and Access Management (IAM) accounts to database accounts is enabled
   iamDatabaseAuthenticationEnabled bool
   // Latest time to which a database can be restored
@@ -17049,6 +17544,16 @@ private aws.neptune.cluster @defaults("arn name status") {
   networkType string
   // List of VPC security groups associated with the DB cluster
   securityGroups() []aws.ec2.securitygroup
+  // IAM roles associated with the cluster
+  iamRoles() []aws.iam.role
+  // Tags for the cluster
+  tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon Neptune instance
@@ -17531,6 +18036,12 @@ private aws.documentdb.cluster @defaults("arn name status") {
   storageType string
   // Tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Snapshots for this cluster
   snapshots() []aws.documentdb.snapshot
   // List of VPC security groups associated with the DB cluster
@@ -20982,6 +21493,12 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   createdAt time
   // Tags for the cluster
   tags map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Encryption configuration for an MSK cluster
@@ -21535,6 +22052,12 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   createdAt time
   // Tags for the broker
   tags() map[string]string
+  // CloudFormation stack that manages this broker, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this broker
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the broker is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon MQ broker configuration
@@ -23879,6 +24402,20 @@ private aws.identitycenter.instance @defaults("arn name status") {
   createdAt time
   // Owner account ID
   ownerAccountId string
+  // Status reason
+  //
+  // Additional context about the current status, populated when the
+  // instance is in a non-ACTIVE state such as CREATE_FAILED.
+  statusReason string
+  // Primary Region where the instance was originally enabled and which cannot be removed
+  primaryRegion string
+  // Regions enabled in the instance
+  //
+  // Each entry describes one enabled Region, including Regions still being
+  // added or removed. The keys are `regionName` (the Region name), `status`
+  // (ACTIVE, ADDING, or REMOVING), and `isPrimaryRegion` (whether it is the
+  // primary Region).
+  regions []dict
   // Permission sets in this instance
   permissionSets() []aws.identitycenter.permissionSet
   // Account assignments in this instance

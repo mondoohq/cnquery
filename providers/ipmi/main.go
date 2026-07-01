@@ -16,7 +16,7 @@ import (
 // docker run -d -p 623:623/udp vaporio/ipmi-simulator
 //
 // Once the simulator is running, you can query it:
-// cnquery shell ipmi ADMIN@0.0.0.0 --password 'ADMIN'
+// mql shell ipmi ADMIN@0.0.0.0 --password 'ADMIN'
 func main() {
 	plugin.Start(os.Args, provider.Init())
 }

@@ -2,7 +2,7 @@
 # Verify the mql DigitalOcean provider against live infrastructure.
 # Prerequisites:
 #   - DIGITALOCEAN_TOKEN set
-#   - cnquery installed with digitalocean provider
+#   - cnspec/mql installed with digitalocean provider
 #   - Terraform resources applied (see main.tf)
 #
 # Usage:
@@ -30,7 +30,7 @@ run_query() {
   local query="$2"
   local result
   local exit_code=0
-  result=$(cnquery run digitalocean --token "$DIGITALOCEAN_TOKEN" -c "$query" 2>&1) || exit_code=$?
+  result=$(mql run digitalocean --token "$DIGITALOCEAN_TOKEN" -c "$query" 2>&1) || exit_code=$?
 
   # Filter out normal config loading message, check for real errors
   local filtered

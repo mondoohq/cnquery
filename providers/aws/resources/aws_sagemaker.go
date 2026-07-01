@@ -1105,6 +1105,12 @@ type mqlAwsSagemakerTrainingjobInternal struct {
 	cacheFinalMetrics                []sagemakerTypes.MetricData
 	cacheCheckpointConfig            any
 	cacheWallClockTime               int64
+	cacheInputDataConfig             []sagemakerTypes.Channel
+	cacheModelArtifactsUrl           string
+	cacheTuningJobArn                string
+	cacheAutoMLJobArn                string
+	cacheLabelingJobArn              string
+	cacheTrainingStartTime           *time.Time
 }
 
 func (a *mqlAwsSagemakerTrainingjob) id() (string, error) {
@@ -1161,8 +1167,89 @@ func (a *mqlAwsSagemakerTrainingjob) fetchDetails() error {
 	if resp.TrainingTimeInSeconds != nil {
 		a.cacheWallClockTime = int64(*resp.TrainingTimeInSeconds)
 	}
+	a.cacheInputDataConfig = resp.InputDataConfig
+	if resp.ModelArtifacts != nil {
+		a.cacheModelArtifactsUrl = convert.ToValue(resp.ModelArtifacts.S3ModelArtifacts)
+	}
+	a.cacheTuningJobArn = convert.ToValue(resp.TuningJobArn)
+	a.cacheAutoMLJobArn = convert.ToValue(resp.AutoMLJobArn)
+	a.cacheLabelingJobArn = convert.ToValue(resp.LabelingJobArn)
+	a.cacheTrainingStartTime = resp.TrainingStartTime
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) inputDataConfig() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheInputDataConfig))
+	for _, ch := range a.cacheInputDataConfig {
+		var s3Uri, s3DataType, s3Dist, fsId string
+		if ch.DataSource != nil {
+			if ch.DataSource.S3DataSource != nil {
+				s3Uri = convert.ToValue(ch.DataSource.S3DataSource.S3Uri)
+				s3DataType = string(ch.DataSource.S3DataSource.S3DataType)
+				s3Dist = string(ch.DataSource.S3DataSource.S3DataDistributionType)
+			}
+			if ch.DataSource.FileSystemDataSource != nil {
+				fsId = convert.ToValue(ch.DataSource.FileSystemDataSource.FileSystemId)
+			}
+		}
+		mqlCh, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.channel",
+			map[string]*llx.RawData{
+				"__id":                   llx.StringData(a.Arn.Data + "/channel/" + convert.ToValue(ch.ChannelName)),
+				"channelName":            llx.StringDataPtr(ch.ChannelName),
+				"s3Uri":                  llx.StringData(s3Uri),
+				"s3DataType":             llx.StringData(s3DataType),
+				"s3DataDistributionType": llx.StringData(s3Dist),
+				"fileSystemId":           llx.StringData(fsId),
+				"contentType":            llx.StringDataPtr(ch.ContentType),
+				"compressionType":        llx.StringData(string(ch.CompressionType)),
+				"recordWrapperType":      llx.StringData(string(ch.RecordWrapperType)),
+				"inputMode":              llx.StringData(string(ch.InputMode)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCh)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) modelArtifactsUrl() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheModelArtifactsUrl, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) tuningJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheTuningJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) autoMLJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAutoMLJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) labelingJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheLabelingJobArn, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) trainingStartTime() (*time.Time, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheTrainingStartTime, nil
 }
 
 func (a *mqlAwsSagemakerTrainingjob) secondaryStatusTransitions() ([]any, error) {
@@ -1460,6 +1547,12 @@ type mqlAwsSagemakerProcessingjobInternal struct {
 	cacheVpcSubnetIds                []string
 	cacheProcessingResources         any
 	cacheEnvironment                 map[string]string
+	cacheProcessingInputs            []any
+	cacheImageUri                    string
+	cacheTrainingJobArn              string
+	cacheAutoMLJobArn                string
+	cacheMonitoringScheduleArn       string
+	cacheProcessingStartTime         *time.Time
 }
 
 func (a *mqlAwsSagemakerProcessingjob) id() (string, error) {
@@ -1505,8 +1598,77 @@ func (a *mqlAwsSagemakerProcessingjob) fetchDetails() error {
 	}
 	a.cacheProcessingResources, _ = convert.JsonToDict(resp.ProcessingResources)
 	a.cacheEnvironment = resp.Environment
+	a.cacheProcessingInputs, _ = convert.JsonToDictSlice(resp.ProcessingInputs)
+	if resp.AppSpecification != nil {
+		a.cacheImageUri = convert.ToValue(resp.AppSpecification.ImageUri)
+	}
+	a.cacheTrainingJobArn = convert.ToValue(resp.TrainingJobArn)
+	a.cacheAutoMLJobArn = convert.ToValue(resp.AutoMLJobArn)
+	a.cacheMonitoringScheduleArn = convert.ToValue(resp.MonitoringScheduleArn)
+	a.cacheProcessingStartTime = resp.ProcessingStartTime
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) processingInputs() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheProcessingInputs, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) imageUri() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheImageUri, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) trainingJob() (*mqlAwsSagemakerTrainingjob, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheTrainingJobArn == "" {
+		a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.trainingjob",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheTrainingJobArn)})
+	if err != nil {
+		// The source training job is commonly deleted while the processing job
+		// remains (not-found), or unreadable due to permissions. Treat only
+		// those as a null reference; propagate anything else (transient network
+		// errors, throttling) so genuine failures aren't hidden.
+		var notFound *sagemakerTypes.ResourceNotFound
+		if errors.As(err, &notFound) || Is400AccessDeniedError(err) {
+			log.Warn().Err(err).Str("trainingJobArn", a.cacheTrainingJobArn).Msg("could not resolve source training job for processing job")
+			a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerTrainingjob), nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) autoMLJobArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAutoMLJobArn, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) monitoringScheduleArn() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheMonitoringScheduleArn, nil
+}
+
+func (a *mqlAwsSagemakerProcessingjob) processingStartTime() (*time.Time, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheProcessingStartTime, nil
 }
 
 func (a *mqlAwsSagemakerProcessingjob) iamRole() (*mqlAwsIamRole, error) {

@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -509,7 +511,14 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 							if c.Config.EncryptionConfig != nil {
 								kmsKeyName = c.Config.EncryptionConfig.GcePdKmsKeyName
 							}
-							mqlConfig.(*mqlGcpProjectDataprocServiceClusterConfig).cacheKmsKeyName = kmsKeyName
+							autoscalingPolicyUri := ""
+							if c.Config.AutoscalingConfig != nil {
+								autoscalingPolicyUri = c.Config.AutoscalingConfig.PolicyUri
+							}
+							cfg := mqlConfig.(*mqlGcpProjectDataprocServiceClusterConfig)
+							cfg.cacheKmsKeyName = kmsKeyName
+							cfg.cacheProjectId = projectId
+							cfg.cacheAutoscalingPolicyUri = autoscalingPolicyUri
 						}
 					}
 
@@ -732,6 +741,10 @@ func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
 	return fmt.Sprintf("%s/dataproc/%s", projectId, name), nil
 }
 
+func (g *mqlGcpProjectDataprocServiceCluster) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProjectDataprocServiceCluster) iamPolicy() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -855,7 +868,9 @@ func initGcpProjectDataprocServiceCluster(runtime *plugin.Runtime, args map[stri
 }
 
 type mqlGcpProjectDataprocServiceClusterConfigInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName           string
+	cacheProjectId            string
+	cacheAutoscalingPolicyUri string
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {
@@ -868,6 +883,58 @@ func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {
 
 func (a *mqlGcpProjectDataprocServiceClusterConfig) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+// dataprocResourceNameFromUri normalizes a GCP resource URI to its bare
+// resource name (projects/.../...), stripping any API host prefix so it
+// matches the name used as a resource's cache key.
+func dataprocResourceNameFromUri(uri string) string {
+	if i := strings.Index(uri, "projects/"); i >= 0 {
+		return uri[i:]
+	}
+	return uri
+}
+
+func (a *mqlGcpProjectDataprocServiceClusterConfig) autoscalingPolicyRef() (*mqlGcpProjectDataprocServiceAutoscalingPolicy, error) {
+	name := dataprocResourceNameFromUri(a.cacheAutoscalingPolicyUri)
+	if name == "" || a.cacheProjectId == "" {
+		a.AutoscalingPolicyRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.dataprocService.autoscalingPolicy", map[string]*llx.RawData{
+		"projectId": llx.StringData(a.cacheProjectId),
+		"name":      llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectDataprocServiceAutoscalingPolicy), nil
+}
+
+func dataprocBucketRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectStorageServiceBucket], nameField plugin.TValue[string]) (*mqlGcpProjectStorageServiceBucket, error) {
+	if nameField.Error != nil {
+		return nil, nameField.Error
+	}
+	name := nameField.Data
+	if name == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectStorageServiceBucket), nil
+}
+
+func (a *mqlGcpProjectDataprocServiceClusterConfig) configBucketRef() (*mqlGcpProjectStorageServiceBucket, error) {
+	return dataprocBucketRef(a.MqlRuntime, &a.ConfigBucketRef, a.ConfigBucket)
+}
+
+func (a *mqlGcpProjectDataprocServiceClusterConfig) tempBucketRef() (*mqlGcpProjectStorageServiceBucket, error) {
+	return dataprocBucketRef(a.MqlRuntime, &a.TempBucketRef, a.TempBucket)
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterStatus) id() (string, error) {
@@ -1085,8 +1152,35 @@ func (g *mqlGcpProjectDataprocService) jobs() ([]any, error) {
 					}
 
 					clusterName := ""
+					clusterUuid := ""
 					if job.Placement != nil {
 						clusterName = job.Placement.ClusterName
+						clusterUuid = job.Placement.ClusterUuid
+					}
+
+					var stateStartTime *time.Time
+					if job.Status != nil {
+						stateStartTime = parseTime(job.Status.StateStartTime)
+					}
+
+					statusHistory := make([]any, 0, len(job.StatusHistory))
+					for _, s := range job.StatusHistory {
+						entry, err := convert.JsonToDict(struct {
+							State          string `json:"state"`
+							Details        string `json:"details"`
+							Substate       string `json:"substate"`
+							StateStartTime string `json:"stateStartTime"`
+						}{
+							State:          s.State,
+							Details:        s.Details,
+							Substate:       s.Substate,
+							StateStartTime: s.StateStartTime,
+						})
+						if err != nil {
+							log.Error().Err(err).Send()
+							continue
+						}
+						statusHistory = append(statusHistory, entry)
 					}
 
 					jobType := determineDataprocJobType(job)
@@ -1099,9 +1193,12 @@ func (g *mqlGcpProjectDataprocService) jobs() ([]any, error) {
 						"statusDetail":            llx.StringData(statusDetail),
 						"jobType":                 llx.StringData(jobType),
 						"clusterName":             llx.StringData(clusterName),
+						"clusterUuid":             llx.StringData(clusterUuid),
 						"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
 						"done":                    llx.BoolData(job.Done),
 						"driverOutputResourceUri": llx.StringData(job.DriverOutputResourceUri),
+						"stateStartTime":          llx.TimeDataPtr(stateStartTime),
+						"statusHistory":           llx.ArrayData(statusHistory, types.Dict),
 					})
 					if err != nil {
 						log.Error().Err(err).Send()
@@ -1130,6 +1227,32 @@ func (g *mqlGcpProjectDataprocServiceJob) id() (string, error) {
 		return "", g.JobUuid.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/dataprocService.job/%s", g.ProjectId.Data, g.JobUuid.Data), nil
+}
+
+func (g *mqlGcpProjectDataprocServiceJob) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
+func (g *mqlGcpProjectDataprocServiceJob) cluster() (*mqlGcpProjectDataprocServiceCluster, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.ClusterName.Error != nil {
+		return nil, g.ClusterName.Error
+	}
+	name := g.ClusterName.Data
+	if name == "" {
+		g.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.dataprocService.cluster", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.ProjectId.Data),
+		"name":      llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectDataprocServiceCluster), nil
 }
 
 func determineDataprocJobType(job *dataproc.Job) string {

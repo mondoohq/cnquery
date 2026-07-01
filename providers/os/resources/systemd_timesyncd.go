@@ -17,6 +17,29 @@ func (t *mqlSystemdTimesyncd) active() (bool, error) {
 	return isSystemdUnitActive(t.MqlRuntime, "systemd-timesyncd")
 }
 
+// parseTimedatectlStatusSynchronized extracts the synchronization state from
+// the human-readable `timedatectl status` output, used as a fallback on
+// systemd versions that lack the `timedatectl show` verb (< 239). The
+// relevant line looks like:
+//
+//	System clock synchronized: yes
+//
+// and is backed by the same org.freedesktop.timedate1 NTPSynchronized
+// property that `timedatectl show` exposes on newer systemd.
+func parseTimedatectlStatusSynchronized(stdout string) bool {
+	for _, line := range strings.Split(stdout, "\n") {
+		key, value, found := strings.Cut(line, ":")
+		if !found {
+			continue
+		}
+		if strings.TrimSpace(key) != "System clock synchronized" {
+			continue
+		}
+		return strings.EqualFold(strings.TrimSpace(value), "yes")
+	}
+	return false
+}
+
 type timesyncdState struct {
 	synchronized     bool
 	servers          []string
@@ -44,13 +67,22 @@ func (t *mqlSystemdTimesyncd) resolveState() (*timesyncdState, error) {
 		fallbackServers: []string{},
 	}
 
-	// Synchronized state lives in `timedatectl show` (the dbus-exposed
-	// org.freedesktop.timedate1 properties), not in show-timesync.
+	// Synchronized state lives in the `NTPSynchronized` property of the
+	// org.freedesktop.timedate1 dbus interface. On systemd >= 239 this is
+	// exposed via `timedatectl show`; that verb does not exist on older
+	// systemd (e.g. v237 on Ubuntu 18.04), where `timedatectl show` exits
+	// non-zero and returns nothing. In that case fall back to parsing the
+	// human-readable `timedatectl status` output, whose "System clock
+	// synchronized: yes/no" line is backed by the same property.
 	if stdout, ok, err := runSystemctl(t.MqlRuntime, "timedatectl show --no-pager"); err != nil {
 		return nil, err
 	} else if ok {
 		props := parseSystemdShowOutput(stdout)
 		state.synchronized = props["NTPSynchronized"] == "yes"
+	} else if stdout, ok, err := runSystemctl(t.MqlRuntime, "timedatectl status --no-pager"); err != nil {
+		return nil, err
+	} else if ok {
+		state.synchronized = parseTimedatectlStatusSynchronized(stdout)
 	}
 
 	// Per-server state comes from show-timesync (org.freedesktop.timesync1).

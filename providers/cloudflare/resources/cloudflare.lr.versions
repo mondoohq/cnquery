@@ -284,7 +284,6 @@ cloudflare.r2.buckets 11.0.0
 cloudflare.streams 11.0.0
 cloudflare.streams.liveInput 11.0.0
 cloudflare.streams.liveInput.deleteRecordingAfterDays 11.0.0
-cloudflare.streams.liveInput.id 11.0.0
 cloudflare.streams.liveInput.name 11.0.0
 cloudflare.streams.liveInput.uid 11.0.0
 cloudflare.streams.video 11.0.0
@@ -293,7 +292,6 @@ cloudflare.streams.video.dash 11.0.0
 cloudflare.streams.video.duration 11.0.0
 cloudflare.streams.video.height 11.0.0
 cloudflare.streams.video.hls 11.0.0
-cloudflare.streams.video.id 11.0.0
 cloudflare.streams.video.liveInput 11.0.0
 cloudflare.streams.video.name 11.0.0
 cloudflare.streams.video.preview 11.0.0

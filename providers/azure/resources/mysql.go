@@ -194,6 +194,15 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				}
 			}
 
+			var identityType, identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if dbServer.Identity != nil {
+				identityType = dbServer.Identity.Type
+				identityPrincipalId = dbServer.Identity.PrincipalID
+				identityTenantId = dbServer.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityKeys(dbServer.Identity.UserAssignedIdentities)
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                    llx.StringDataPtr(dbServer.ID),
@@ -209,11 +218,15 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"geoRedundantBackup":    llx.StringData(geoRedundantBackup),
 					"highAvailabilityMode":  llx.StringData(haMode),
 					"highAvailabilityState": llx.StringData(haState),
+					"identityType":          llx.StringDataPtr(identityType),
+					"principalId":           llx.StringDataPtr(identityPrincipalId),
+					"tenantId":              llx.StringDataPtr(identityTenantId),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlServer := mqlAzureDbServer.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+			mqlServer.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
 				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
 					mqlServer.cacheDataEncryptionKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI
@@ -556,13 +569,18 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 }
 
 type mqlAzureSubscriptionMySqlServiceFlexibleServerInternal struct {
-	cacheDataEncryptionKeyURI string
-	cacheGeoBackupKeyURI      string
-	cacheSystemData           any
+	cacheDataEncryptionKeyURI    string
+	cacheGeoBackupKeyURI         string
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) dataEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {

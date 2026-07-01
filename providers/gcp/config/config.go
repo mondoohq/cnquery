@@ -15,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "gcp",
 	ID:      "go.mondoo.com/cnquery/v9/providers/gcp",
-	Version: "13.25.1",
+	Version: "13.27.1",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
@@ -32,7 +32,7 @@ Examples without logging into and configuring GCP:
   cnspec scan gcp project <PROJECT-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
 
 Note:
-  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp/.
+  If you log into GCP and configure the project you want to query or scan, you can omit credentials. To learn how, read https://mondoo.com/docs/cnspec/cloud/gcp.
 
 Examples with the GCP project configured:
   cnspec scan gcp folder <FOLDER-ID>

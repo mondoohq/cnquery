@@ -51,7 +51,7 @@ var vaultListCmd = &cobra.Command{
 		_ = viper.BindPFlag("show-options", cmd.Flags().Lookup("show-options"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/platform/infra/opsys/automation/vault/ for how to use vault environments")
+		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/infra/opsys/automation/vault for how to use vault environments")
 	},
 }
 
@@ -127,7 +127,7 @@ var vaultRemoveCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/platform/infra/opsys/automation/vault/ for how to use vault environments")
+		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/infra/opsys/automation/vault for how to use vault environments")
 	},
 }
 
@@ -138,7 +138,7 @@ var vaultResetCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(0),
 	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/platform/infra/opsys/automation/vault/ for how to use vault environments")
+		log.Fatal().Msg("sub-command is not supported anymore, see https://mondoo.com/docs/infra/opsys/automation/vault for how to use vault environments")
 	},
 }
 

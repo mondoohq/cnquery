@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -174,6 +175,10 @@ type mqlAwsEmrClusterInternal struct {
 	autoTerminationFetched          bool
 	autoTerminationLock             sync.Mutex
 	cacheAutoTerminationIdleTimeout int64
+	cacheEc2SubnetIds               []string
+	cacheEc2SecurityGroupIds        []string
+	cacheEc2KeyName                 string
+	cacheEc2InstanceProfile         string
 }
 
 func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
@@ -269,8 +274,116 @@ func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
 		a.cacheSessionEnabled = *resp.Cluster.SessionEnabled
 	}
 
+	if attr := resp.Cluster.Ec2InstanceAttributes; attr != nil {
+		// RequestedEc2SubnetIds covers all configured subnets; fall back to the
+		// single launched subnet when the requested list is empty.
+		if len(attr.RequestedEc2SubnetIds) > 0 {
+			a.cacheEc2SubnetIds = attr.RequestedEc2SubnetIds
+		} else if attr.Ec2SubnetId != nil && *attr.Ec2SubnetId != "" {
+			a.cacheEc2SubnetIds = []string{*attr.Ec2SubnetId}
+		}
+		sgIds := []string{}
+		seen := map[string]struct{}{}
+		addSG := func(id string) {
+			if id == "" {
+				return
+			}
+			if _, ok := seen[id]; ok {
+				return
+			}
+			seen[id] = struct{}{}
+			sgIds = append(sgIds, id)
+		}
+		addSG(convert.ToValue(attr.EmrManagedMasterSecurityGroup))
+		addSG(convert.ToValue(attr.EmrManagedSlaveSecurityGroup))
+		addSG(convert.ToValue(attr.ServiceAccessSecurityGroup))
+		for _, id := range attr.AdditionalMasterSecurityGroups {
+			addSG(id)
+		}
+		for _, id := range attr.AdditionalSlaveSecurityGroups {
+			addSG(id)
+		}
+		a.cacheEc2SecurityGroupIds = sgIds
+		a.cacheEc2KeyName = convert.ToValue(attr.Ec2KeyName)
+		a.cacheEc2InstanceProfile = convert.ToValue(attr.IamInstanceProfile)
+	}
+
 	a.clusterDetailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsEmrCluster) subnets() ([]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for _, id := range a.cacheEc2SubnetIds {
+		ref, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet,
+			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), id))})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ref)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrCluster) securityGroups() ([]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for _, id := range a.cacheEc2SecurityGroupIds {
+		ref, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
+			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), id))})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ref)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrCluster) ec2KeyName() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheEc2KeyName, nil
+}
+
+func (a *mqlAwsEmrCluster) ec2InstanceProfile() (*mqlAwsIamInstanceProfile, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	profile := a.cacheEc2InstanceProfile
+	if profile == "" {
+		a.Ec2InstanceProfile.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// EMR returns the instance profile as a name or an ARN; build the ARN when
+	// only a name is present (IAM is global, so no region in the ARN).
+	arnVal := profile
+	if !strings.HasPrefix(arnVal, "arn:") {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		arnVal = fmt.Sprintf("arn:aws:iam::%s:instance-profile/%s", conn.AccountId(), profile)
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.instanceProfile",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		a.Ec2InstanceProfile.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsIamInstanceProfile), nil
 }
 
 // redactedKerberosAttributes returns a sanitized view of KerberosAttributes

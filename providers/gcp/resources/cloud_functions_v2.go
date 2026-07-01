@@ -160,6 +160,10 @@ func (g *mqlGcpProjectCloudFunctionV2) kmsKey() (*mqlGcpProjectKmsServiceKeyring
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectCloudFunctionV2) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProjectCloudFunctionV2) iamPolicy() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -268,6 +272,21 @@ func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectCloudFunctionV2BuildConfig) dockerRepositoryRef() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if g.DockerRepository.Error != nil {
+		return nil, g.DockerRepository.Error
+	}
+	project, location, repo := artifactRegistryRepoFromPath(g.DockerRepository.Data)
+	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
+	if err != nil {
+		return nil, err
+	}
+	if ref == nil {
+		g.DockerRepositoryRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
+}
+
 func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
 	if cfg == nil {
 		return nil, nil
@@ -330,6 +349,30 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId str
 
 func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) serviceRef() (*mqlGcpProjectCloudRunServiceService, error) {
+	if g.Service.Error != nil {
+		return nil, g.Service.Error
+	}
+	service := g.Service.Data
+	if service == "" {
+		g.ServiceRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	projectId := parseProjectFromPath(service)
+	if projectId == "" {
+		projectId = g.cacheProjectId
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
+		"name":      llx.StringData(parseResourceName(service)),
+		"region":    llx.StringData(parseLocationFromPath(service)),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudRunServiceService), nil
 }
 
 type mqlGcpProjectCloudFunctionV2ServiceConfigInternal struct {

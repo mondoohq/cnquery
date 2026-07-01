@@ -315,7 +315,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 		nextToken = containerInstances.NextToken
 	}
 	if len(allContainerInstanceArns) > 0 {
-		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns})
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns, Include: []ecstypes.ContainerInstanceField{ecstypes.ContainerInstanceFieldTags}})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				versionInfo, err := convert.JsonToDict(ci.VersionInfo)
@@ -345,6 +345,8 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 					"registeredAt":      llx.TimeDataPtr(ci.RegisteredAt),
 					"versionInfo":       llx.DictData(versionInfo),
 					"attributes":        llx.ArrayData(attributes, types.Dict),
+					"tags":              llx.MapData(ecsTagsToMap(ci.Tags), types.String),
+					"version":           llx.IntData(ci.Version),
 				}
 				if strings.HasPrefix(convert.ToValue(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
@@ -568,6 +570,7 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	containerCommandMap := make(map[string][]string)
 	containerUserMap := make(map[string]string)
 	containerInitProcessMap := make(map[string]bool)
+	containerRepoCredsMap := make(map[string]string)
 
 	for i := range definition.TaskDefinition.ContainerDefinitions {
 		cd := definition.TaskDefinition.ContainerDefinitions[i]
@@ -581,6 +584,9 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 			containerUserMap[*cd.Name] = convert.ToValue(cd.User)
 			if cd.LinuxParameters != nil {
 				containerInitProcessMap[*cd.Name] = convert.ToValue(cd.LinuxParameters.InitProcessEnabled)
+			}
+			if cd.RepositoryCredentials != nil {
+				containerRepoCredsMap[*cd.Name] = convert.ToValue(cd.RepositoryCredentials.CredentialsParameter)
 			}
 		}
 	}
@@ -633,9 +639,73 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlContainer.(*mqlAwsEcsContainer).cacheRepositoryCredentialsArn = containerRepoCredsMap[convert.ToValue(c.Name)]
 		containers = append(containers, mqlContainer)
 	}
 	return containers, nil
+}
+
+type mqlAwsEcsContainerInternal struct {
+	cacheRepositoryCredentialsArn string
+}
+
+// ecrImage resolves the ECR image the container is running, when the image is
+// hosted in Elastic Container Registry in this account. The image is frequently
+// pulled from Docker Hub, a public registry, or a cross-account ECR repository,
+// in which case there is no matching aws.ecr.image and the reference is null.
+func (a *mqlAwsEcsContainer) ecrImage() (*mqlAwsEcrImage, error) {
+	image := a.Image.Data
+	digest := a.ImageDigest.Data
+	if digest == "" || !strings.Contains(image, ".dkr.ecr.") {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// <registryId>.dkr.ecr.<region>.amazonaws.com/<repoName>[:tag][@digest]
+	host, path, ok := strings.Cut(image, "/")
+	if !ok {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	hostParts := strings.Split(host, ".")
+	if len(hostParts) < 4 {
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	repoName := path
+	if i := strings.IndexByte(repoName, '@'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	if i := strings.IndexByte(repoName, ':'); i >= 0 {
+		repoName = repoName[:i]
+	}
+	arnVal := ecrImageArn(ImageInfo{Region: hostParts[3], RegistryId: hostParts[0], RepoName: repoName, Digest: digest})
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.image",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		// The image is commonly absent (deleted, or in another account), which
+		// surfaces here as an error; log it so genuine API/permission failures
+		// are still visible, but leave the reference null rather than failing.
+		log.Warn().Err(err).Str("arn", arnVal).Msg("could not resolve ECR image for ECS container")
+		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrImage), nil
+}
+
+// repositoryCredentialsSecret resolves the Secrets Manager secret holding the
+// private registry credentials used to pull the image. Only set when the task
+// definition configures repositoryCredentials.
+func (a *mqlAwsEcsContainer) repositoryCredentialsSecret() (*mqlAwsSecretsmanagerSecret, error) {
+	if a.cacheRepositoryCredentialsArn == "" {
+		a.RepositoryCredentialsSecret.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.secretsmanager.secret",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheRepositoryCredentialsArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSecretsmanagerSecret), nil
 }
 
 func getContainerIP(eniPublicIPs map[string]string, attachments []ecstypes.Attachment, c ecstypes.Container) string {

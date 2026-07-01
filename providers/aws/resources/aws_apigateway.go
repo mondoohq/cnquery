@@ -288,6 +288,53 @@ func (a *mqlAwsApigatewayRestapi) authorizers() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsApigatewayRestapi) deployments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	restApiId := a.Id.Data
+	svc := conn.Apigateway(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var position *string
+	for {
+		resp, err := svc.GetDeployments(ctx, &apigateway.GetDeploymentsInput{RestApiId: &restApiId, Position: position})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Str("restApiId", restApiId).Msg("error accessing API gateway deployments")
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not gather AWS API Gateway deployments")
+		}
+		for _, d := range resp.Items {
+			depId := convert.ToValue(d.Id)
+			apiSummary, err := convert.JsonToDict(d.ApiSummary)
+			if err != nil {
+				return nil, err
+			}
+			mqlDep, err := CreateResource(a.MqlRuntime, "aws.apigateway.deployment",
+				map[string]*llx.RawData{
+					"__id":        llx.StringData(restApiId + "/" + depId),
+					"id":          llx.StringData(depId),
+					"restApiId":   llx.StringData(restApiId),
+					"createdDate": llx.TimeDataPtr(d.CreatedDate),
+					"description": llx.StringData(convert.ToValue(d.Description)),
+					"apiSummary":  llx.DictData(apiSummary),
+					"region":      llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDep)
+		}
+		if resp.Position == nil {
+			break
+		}
+		position = resp.Position
+	}
+	return res, nil
+}
+
 func (a *mqlAwsApigatewayAuthorizer) id() (string, error) {
 	return a.Arn.Data, nil
 }

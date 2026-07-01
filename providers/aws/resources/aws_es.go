@@ -299,6 +299,19 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		serviceSoftwareAutomatedUpdateDate = llx.NilData
 	}
 
+	// Last configuration change progress (change provenance: who initiated the
+	// most recent change and when).
+	var lastConfigChangeId, lastConfigChangeInitiatedBy, lastConfigChangeStatus string
+	lastConfigChangeStartedAt := llx.NilData
+	lastConfigChangeUpdatedAt := llx.NilData
+	if cpd := status.ChangeProgressDetails; cpd != nil {
+		lastConfigChangeId = convert.ToValue(cpd.ChangeId)
+		lastConfigChangeInitiatedBy = string(cpd.InitiatedBy)
+		lastConfigChangeStatus = string(cpd.ConfigChangeStatus)
+		lastConfigChangeStartedAt = llx.TimeDataPtr(cpd.StartTime)
+		lastConfigChangeUpdatedAt = llx.TimeDataPtr(cpd.LastUpdatedTime)
+	}
+
 	// endpoints map
 	endpointsMap := make(map[string]any)
 	for k, v := range status.Endpoints {
@@ -364,6 +377,11 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"serviceSoftwareCancellable":         llx.BoolData(serviceSoftwareCancellable),
 		"serviceSoftwareUpdateStatus":        llx.StringData(serviceSoftwareUpdateStatus),
 		"serviceSoftwareAutomatedUpdateDate": serviceSoftwareAutomatedUpdateDate,
+		"lastConfigChangeId":                 llx.StringData(lastConfigChangeId),
+		"lastConfigChangeInitiatedBy":        llx.StringData(lastConfigChangeInitiatedBy),
+		"lastConfigChangeStatus":             llx.StringData(lastConfigChangeStatus),
+		"lastConfigChangeStartedAt":          lastConfigChangeStartedAt,
+		"lastConfigChangeUpdatedAt":          lastConfigChangeUpdatedAt,
 		"auditLogEnabled":                    llx.BoolData(auditLogEnabled),
 		"indexSlowLogEnabled":                llx.BoolData(indexSlowLogEnabled),
 		"searchSlowLogEnabled":               llx.BoolData(searchSlowLogEnabled),

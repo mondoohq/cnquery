@@ -180,6 +180,10 @@ func (g *mqlGcpProjectArtifactRegistryServiceRepository) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectArtifactRegistryServiceRepository) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProjectArtifactRegistryServiceRepository) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	keyName := g.GetKmsKeyName()
 	if keyName.Error != nil {

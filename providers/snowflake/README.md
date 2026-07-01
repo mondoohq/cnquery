@@ -1,7 +1,7 @@
 # Snowflake Provider
 
 ```shell
-cnquery shell snowflake
+mql shell snowflake
 ```
 
 Required arguments:
@@ -43,7 +43,7 @@ shell snowflake --account zi12345 --region us-central1.gcp --user CHRIS  --role 
 **Retrieve all users**
 
 ```shell
-cnquery> snowflake.account.users
+mql> snowflake.account.users
 snowflake.account.users: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -54,7 +54,7 @@ snowflake.account.users: [
 **Retrieve all users that have no MFA**
 
 ```shell
-cnquery> snowflake.account.users.where(extAuthnDuo == false)
+mql> snowflake.account.users.where(extAuthnDuo == false)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -65,7 +65,7 @@ snowflake.account.users.where: [
 **Retrieve all users that have password authentication**
 
 ```shell
-cnquery> snowflake.account.users.where(hasPassword)
+mql> snowflake.account.users.where(hasPassword)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
   1: snowflake.user name="DATAUSER"
@@ -77,7 +77,7 @@ snowflake.account.users.where: [
 **Retrieve all users that have certificate authentication**
 
 ```shell
-cnquery> snowflake.account.users.where(hasRsaPublicKey)
+mql> snowflake.account.users.where(hasRsaPublicKey)
 snowflake.account.users.where: [
   0: snowflake.user name="CHRIS"
 ]
@@ -86,7 +86,7 @@ snowflake.account.users.where: [
 **Retrieve users that have not logged in for 30 days**
 
 ```shell
-cnquery> snowflake.account.users.where(time.now - lastSuccessLogin > time.day * 30) { lastSuccessLogin }
+mql> snowflake.account.users.where(time.now - lastSuccessLogin > time.day * 30) { lastSuccessLogin }
 snowflake.account.users.where: [
   0: {
     lastSuccessLogin: 366 days 
@@ -97,7 +97,7 @@ snowflake.account.users.where: [
 **Check that SCIM is enabled**
 
 ```shell
-cnquery> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enabled == true)
+mql> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enabled == true)
 [failed] [].any()
   actual:   []
 ```
@@ -105,13 +105,13 @@ cnquery> snowflake.account.securityIntegrations.where(type == /SCIM/).any(enable
 **Check the retention time is greater 90 days**
 
 ```shell
-cnquery> snowflake.account.parameters.one(key == "DATA_RETENTION_TIME_IN_DAYS" && value >= 90)
+mql> snowflake.account.parameters.one(key == "DATA_RETENTION_TIME_IN_DAYS" && value >= 90)
 ```
 
 **Retrieve all databases**
 
 ```shell
-cnquery> snowflake.account.databases
+mql> snowflake.account.databases
 snowflake.account.databases: [
   0: snowflake.database name="CNQUERY"
   1: snowflake.database name="SNOWFLAKE"

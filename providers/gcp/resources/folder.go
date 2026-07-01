@@ -131,6 +131,21 @@ func (g *mqlGcpFolder) parentOrganization() (*mqlGcpOrganization, error) {
 	return o, nil
 }
 
+func (g *mqlGcpFolder) managementProjectRef() (*mqlGcpProject, error) {
+	mp := g.GetManagementProject()
+	if mp.Error != nil {
+		return nil, mp.Error
+	}
+	proj, err := projectRefById(g.MqlRuntime, projectFromResourceName(mp.Data))
+	if err != nil {
+		return nil, err
+	}
+	if proj == nil {
+		g.ManagementProjectRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return proj, nil
+}
+
 func (g *mqlGcpFolders) children() ([]any, error) {
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error

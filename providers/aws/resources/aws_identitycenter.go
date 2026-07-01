@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsIdentitycenter) id() (string, error) {
@@ -68,6 +69,15 @@ func (a *mqlAwsIdentitycenter) getInstances(conn *connection.AwsConnection) []*j
 			}
 
 			for _, instance := range page.Instances {
+				regions := make([]any, 0, len(instance.Regions))
+				for _, r := range instance.Regions {
+					regions = append(regions, map[string]any{
+						"regionName":      convert.ToValue(r.RegionName),
+						"status":          string(r.Status),
+						"isPrimaryRegion": r.IsPrimaryRegion,
+					})
+				}
+
 				mqlInstance, err := CreateResource(a.MqlRuntime, "aws.identitycenter.instance",
 					map[string]*llx.RawData{
 						"__id":            llx.StringDataPtr(instance.InstanceArn),
@@ -75,8 +85,11 @@ func (a *mqlAwsIdentitycenter) getInstances(conn *connection.AwsConnection) []*j
 						"name":            llx.StringDataPtr(instance.Name),
 						"identityStoreId": llx.StringDataPtr(instance.IdentityStoreId),
 						"status":          llx.StringData(string(instance.Status)),
+						"statusReason":    llx.StringDataPtr(instance.StatusReason),
 						"createdAt":       llx.TimeDataPtr(instance.CreatedDate),
 						"ownerAccountId":  llx.StringDataPtr(instance.OwnerAccountId),
+						"primaryRegion":   llx.StringDataPtr(instance.PrimaryRegion),
+						"regions":         llx.ArrayData(regions, types.Dict),
 					})
 				if err != nil {
 					return nil, err
