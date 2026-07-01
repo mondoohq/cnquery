@@ -4395,6 +4395,8 @@ aws.emr.cluster.createdAt 13.38.2
 aws.emr.cluster.ebsRootVolumeIops 13.21.4
 aws.emr.cluster.ebsRootVolumeSize 13.21.4
 aws.emr.cluster.ebsRootVolumeThroughput 13.21.4
+aws.emr.cluster.ec2InstanceProfile 13.39.2
+aws.emr.cluster.ec2KeyName 13.39.2
 aws.emr.cluster.encryptionConfiguration 13.3.0
 aws.emr.cluster.encryptionConfiguration.atRestConfiguration 13.3.0
 aws.emr.cluster.encryptionConfiguration.atRestEnabled 13.3.0
@@ -4433,6 +4435,7 @@ aws.emr.cluster.repoUpgradeOnBoot 13.21.4
 aws.emr.cluster.scaleDownBehavior 13.21.4
 aws.emr.cluster.securityConfig 13.21.4
 aws.emr.cluster.securityConfiguration 13.3.0
+aws.emr.cluster.securityGroups 13.39.2
 aws.emr.cluster.serviceRole 13.21.4
 aws.emr.cluster.sessionEnabled 13.32.2
 aws.emr.cluster.status 11.15.2
@@ -4454,6 +4457,7 @@ aws.emr.cluster.step.stateChangeReason 13.21.4
 aws.emr.cluster.step.status 13.12.1
 aws.emr.cluster.stepConcurrencyLevel 13.21.4
 aws.emr.cluster.steps 13.12.1
+aws.emr.cluster.subnets 13.39.2
 aws.emr.cluster.tags 11.15.2
 aws.emr.cluster.terminationProtected 13.3.1
 aws.emr.cluster.visibleToAllUsers 13.21.4

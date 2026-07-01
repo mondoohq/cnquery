@@ -7857,6 +7857,14 @@ private aws.emr.cluster @defaults("arn") {
   autoScalingRole() aws.iam.role
   // IAM service role assumed by EMR to access AWS resources
   serviceRole() aws.iam.role
+  // Subnets the cluster EC2 instances are launched into
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the cluster EC2 instances (EMR-managed and additional)
+  securityGroups() []aws.ec2.securitygroup
+  // Name of the EC2 key pair used for SSH access to the cluster instances
+  ec2KeyName() string
+  // EC2 instance profile the cluster nodes run as
+  ec2InstanceProfile() string
   // Whether Spark Connect sessions are enabled on the cluster
   sessionEnabled() bool
 }
