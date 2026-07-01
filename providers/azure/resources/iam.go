@@ -23,7 +23,7 @@ import (
 // sortedUserAssignedIdentityIDs returns the keys of a UserAssignedIdentities
 // map (the ARM resource IDs of the assigned managed identities) in stable
 // sorted order. Returns nil when the map is empty.
-func sortedUserAssignedIdentityIDs[V any](m map[string]*V) []string {
+func sortedUserAssignedIdentityIDs[V any](m map[string]V) []string {
 	if len(m) == 0 {
 		return nil
 	}

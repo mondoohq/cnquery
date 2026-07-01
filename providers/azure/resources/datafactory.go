@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sort"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -82,11 +81,8 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			}
 
 			var userAssignedIdentityIds []string
-			if factory.Identity != nil && len(factory.Identity.UserAssignedIdentities) > 0 {
-				for k := range factory.Identity.UserAssignedIdentities {
-					userAssignedIdentityIds = append(userAssignedIdentityIds, k)
-				}
-				sort.Strings(userAssignedIdentityIds)
+			if factory.Identity != nil {
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(factory.Identity.UserAssignedIdentities)
 			}
 
 			var publicNetworkAccess string
