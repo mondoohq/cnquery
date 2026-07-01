@@ -7120,6 +7120,7 @@ aws.rds.dbcluster.activityStreamStatus 11.15.2
 aws.rds.dbcluster.arn 11.15.2
 aws.rds.dbcluster.autoMinorVersionUpgrade 11.15.2
 aws.rds.dbcluster.availabilityZones 11.15.2
+aws.rds.dbcluster.backtrackWindow 13.39.2
 aws.rds.dbcluster.backupRetentionPeriod 11.15.2
 aws.rds.dbcluster.backupSettings 11.15.2
 aws.rds.dbcluster.certificateAuthority 11.15.2
@@ -7133,6 +7134,7 @@ aws.rds.dbcluster.databaseInsightsMode 11.15.2
 aws.rds.dbcluster.databaseName 13.14.2
 aws.rds.dbcluster.dbClusterParameterGroup 13.14.2
 aws.rds.dbcluster.deletionProtection 11.15.2
+aws.rds.dbcluster.earliestBacktrackTime 13.39.2
 aws.rds.dbcluster.earliestRestorableTime 11.15.2
 aws.rds.dbcluster.endpoint 11.15.2
 aws.rds.dbcluster.engine 11.15.2
@@ -7162,6 +7164,8 @@ aws.rds.dbcluster.port 11.15.2
 aws.rds.dbcluster.preferredBackupWindow 11.15.2
 aws.rds.dbcluster.preferredMaintenanceWindow 11.15.2
 aws.rds.dbcluster.publiclyAccessible 11.15.2
+aws.rds.dbcluster.readReplicaClusterIds 13.39.2
+aws.rds.dbcluster.readReplicas 13.39.2
 aws.rds.dbcluster.region 11.15.2
 aws.rds.dbcluster.replicationSourceIdentifier 13.14.2
 aws.rds.dbcluster.securityGroups 11.15.2
@@ -7186,6 +7190,7 @@ aws.rds.dbinstance.associatedRole.roleArn 13.14.2
 aws.rds.dbinstance.associatedRole.status 13.14.2
 aws.rds.dbinstance.associatedRoles 13.14.2
 aws.rds.dbinstance.autoMinorVersionUpgrade 11.15.2
+aws.rds.dbinstance.automatedBackupReplicationArns 13.39.2
 aws.rds.dbinstance.availabilityZone 11.15.2
 aws.rds.dbinstance.backupRetentionPeriod 11.15.2
 aws.rds.dbinstance.backupSettings 11.15.2
@@ -7233,6 +7238,10 @@ aws.rds.dbinstance.port 11.15.2
 aws.rds.dbinstance.preferredBackupWindow 11.15.2
 aws.rds.dbinstance.preferredMaintenanceWindow 11.15.2
 aws.rds.dbinstance.publiclyAccessible 11.15.2
+aws.rds.dbinstance.readReplicaClusterIds 13.39.2
+aws.rds.dbinstance.readReplicaClusters 13.39.2
+aws.rds.dbinstance.readReplicaInstanceIds 13.39.2
+aws.rds.dbinstance.readReplicaInstances 13.39.2
 aws.rds.dbinstance.readReplicaSourceCluster 13.35.2
 aws.rds.dbinstance.readReplicaSourceClusterId 13.35.2
 aws.rds.dbinstance.readReplicaSourceInstance 13.35.2

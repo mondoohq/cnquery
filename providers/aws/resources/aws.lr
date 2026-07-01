@@ -11610,6 +11610,17 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   replicationSourceIdentifier string
   // Status of write forwarding for a secondary cluster in an Aurora global cluster
   globalWriteForwardingStatus string
+  // Identifiers of read replicas that replicate from this cluster
+  readReplicaClusterIds []string
+  // Read replica clusters that replicate from this cluster, when present in this account
+  readReplicas() []aws.rds.dbcluster
+  // Target backtrack window, in seconds, for the cluster
+  //
+  // 0 when backtracking is disabled. Applies to Aurora MySQL clusters, which can
+  // be rewound to any point within this window.
+  backtrackWindow int
+  // Earliest point in time the cluster can be backtracked to
+  earliestBacktrackTime time
   // Order in which engine version updates are rolled out across the cluster
   upgradeRolloutOrder string
   // IAM role used by Enhanced Monitoring to send metrics to CloudWatch Logs
@@ -11807,6 +11818,16 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   readReplicaSourceInstance() aws.rds.dbinstance
   // Source DB cluster this instance replicates from, when it is present in this account
   readReplicaSourceCluster() aws.rds.dbcluster
+  // Identifiers of read replica instances that replicate from this instance
+  readReplicaInstanceIds []string
+  // Read replica instances that replicate from this instance, when present in this account
+  readReplicaInstances() []aws.rds.dbinstance
+  // Identifiers of read replica clusters that replicate from this instance
+  readReplicaClusterIds []string
+  // Read replica clusters that replicate from this instance, when present in this account
+  readReplicaClusters() []aws.rds.dbcluster
+  // ARNs of the replicated automated backups for this instance
+  automatedBackupReplicationArns []string
   // Storage throughput in MiBps for gp3 volumes
   storageThroughput int
   // KMS key used to encrypt the activity stream

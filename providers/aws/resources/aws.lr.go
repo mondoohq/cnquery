@@ -17365,6 +17365,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.globalWriteForwardingStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetGlobalWriteForwardingStatus()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.readReplicaClusterIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetReadReplicaClusterIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.dbcluster.readReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetReadReplicas()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
+	},
+	"aws.rds.dbcluster.backtrackWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetBacktrackWindow()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.earliestBacktrackTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetEarliestBacktrackTime()).ToDataRes(types.Time)
+	},
 	"aws.rds.dbcluster.upgradeRolloutOrder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetUpgradeRolloutOrder()).ToDataRes(types.String)
 	},
@@ -17628,6 +17640,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.readReplicaSourceCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetReadReplicaSourceCluster()).ToDataRes(types.Resource("aws.rds.dbcluster"))
+	},
+	"aws.rds.dbinstance.readReplicaInstanceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetReadReplicaInstanceIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.dbinstance.readReplicaInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetReadReplicaInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
+	},
+	"aws.rds.dbinstance.readReplicaClusterIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetReadReplicaClusterIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.dbinstance.readReplicaClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetReadReplicaClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
+	},
+	"aws.rds.dbinstance.automatedBackupReplicationArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetAutomatedBackupReplicationArns()).ToDataRes(types.Array(types.String))
 	},
 	"aws.rds.dbinstance.storageThroughput": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStorageThroughput()).ToDataRes(types.Int)
@@ -51710,6 +51737,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).GlobalWriteForwardingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.readReplicaClusterIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ReadReplicaClusterIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.readReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ReadReplicas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.backtrackWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).BacktrackWindow, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.earliestBacktrackTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).EarliestBacktrackTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.upgradeRolloutOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).UpgradeRolloutOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -52068,6 +52111,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.readReplicaSourceCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).ReadReplicaSourceCluster, ok = plugin.RawToTValue[*mqlAwsRdsDbcluster](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.readReplicaInstanceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ReadReplicaInstanceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.readReplicaInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ReadReplicaInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.readReplicaClusterIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ReadReplicaClusterIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.readReplicaClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ReadReplicaClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.automatedBackupReplicationArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).AutomatedBackupReplicationArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.storageThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -124157,6 +124220,10 @@ type mqlAwsRdsDbcluster struct {
 	CloneGroupId                       plugin.TValue[string]
 	ReplicationSourceIdentifier        plugin.TValue[string]
 	GlobalWriteForwardingStatus        plugin.TValue[string]
+	ReadReplicaClusterIds              plugin.TValue[[]any]
+	ReadReplicas                       plugin.TValue[[]any]
+	BacktrackWindow                    plugin.TValue[int64]
+	EarliestBacktrackTime              plugin.TValue[*time.Time]
 	UpgradeRolloutOrder                plugin.TValue[string]
 	MonitoringRole                     plugin.TValue[*mqlAwsIamRole]
 }
@@ -124514,6 +124581,34 @@ func (c *mqlAwsRdsDbcluster) GetGlobalWriteForwardingStatus() *plugin.TValue[str
 	return &c.GlobalWriteForwardingStatus
 }
 
+func (c *mqlAwsRdsDbcluster) GetReadReplicaClusterIds() *plugin.TValue[[]any] {
+	return &c.ReadReplicaClusterIds
+}
+
+func (c *mqlAwsRdsDbcluster) GetReadReplicas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReadReplicas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "readReplicas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.readReplicas()
+	})
+}
+
+func (c *mqlAwsRdsDbcluster) GetBacktrackWindow() *plugin.TValue[int64] {
+	return &c.BacktrackWindow
+}
+
+func (c *mqlAwsRdsDbcluster) GetEarliestBacktrackTime() *plugin.TValue[*time.Time] {
+	return &c.EarliestBacktrackTime
+}
+
 func (c *mqlAwsRdsDbcluster) GetUpgradeRolloutOrder() *plugin.TValue[string] {
 	return &c.UpgradeRolloutOrder
 }
@@ -124813,6 +124908,11 @@ type mqlAwsRdsDbinstance struct {
 	ReadReplicaSourceClusterId         plugin.TValue[string]
 	ReadReplicaSourceInstance          plugin.TValue[*mqlAwsRdsDbinstance]
 	ReadReplicaSourceCluster           plugin.TValue[*mqlAwsRdsDbcluster]
+	ReadReplicaInstanceIds             plugin.TValue[[]any]
+	ReadReplicaInstances               plugin.TValue[[]any]
+	ReadReplicaClusterIds              plugin.TValue[[]any]
+	ReadReplicaClusters                plugin.TValue[[]any]
+	AutomatedBackupReplicationArns     plugin.TValue[[]any]
 	StorageThroughput                  plugin.TValue[int64]
 	ActivityStreamKmsKey               plugin.TValue[*mqlAwsKmsKey]
 	MasterUserSecret                   plugin.TValue[any]
@@ -125232,6 +125332,50 @@ func (c *mqlAwsRdsDbinstance) GetReadReplicaSourceCluster() *plugin.TValue[*mqlA
 
 		return c.readReplicaSourceCluster()
 	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetReadReplicaInstanceIds() *plugin.TValue[[]any] {
+	return &c.ReadReplicaInstanceIds
+}
+
+func (c *mqlAwsRdsDbinstance) GetReadReplicaInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReadReplicaInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "readReplicaInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.readReplicaInstances()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetReadReplicaClusterIds() *plugin.TValue[[]any] {
+	return &c.ReadReplicaClusterIds
+}
+
+func (c *mqlAwsRdsDbinstance) GetReadReplicaClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReadReplicaClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "readReplicaClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.readReplicaClusters()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetAutomatedBackupReplicationArns() *plugin.TValue[[]any] {
+	return &c.AutomatedBackupReplicationArns
 }
 
 func (c *mqlAwsRdsDbinstance) GetStorageThroughput() *plugin.TValue[int64] {
