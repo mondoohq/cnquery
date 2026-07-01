@@ -318,6 +318,7 @@ const (
 	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
 	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
 	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
+	ResourceAwsEventbridgeRuleTarget                                            string = "aws.eventbridge.rule.target"
 	ResourceAwsEventbridgeConnection                                            string = "aws.eventbridge.connection"
 	ResourceAwsEventbridgeApiDestination                                        string = "aws.eventbridge.apiDestination"
 	ResourceAwsEventbridgeArchive                                               string = "aws.eventbridge.archive"
@@ -2131,6 +2132,10 @@ func init() {
 		"aws.eventbridge.rule": {
 			// to override args, implement: initAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridgeRule,
+		},
+		"aws.eventbridge.rule.target": {
+			// to override args, implement: initAwsEventbridgeRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeRuleTarget,
 		},
 		"aws.eventbridge.connection": {
 			Init:   initAwsEventbridgeConnection,
@@ -13635,6 +13640,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.rule.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeRule).GetTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.rule.eventTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetEventTargets()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule.target")))
+	},
+	"aws.eventbridge.rule.target.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.target.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.target.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.eventbridge.rule.target.input": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetInput()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.target.inputPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetInputPath()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.target.inputTransformer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetInputTransformer()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.rule.target.deadLetterQueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetDeadLetterQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.eventbridge.rule.target.retryMaxAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetRetryMaxAttempts()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.rule.target.retryMaxEventAgeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRuleTarget).GetRetryMaxEventAgeSeconds()).ToDataRes(types.Int)
 	},
 	"aws.eventbridge.connection.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeConnection).GetArn()).ToDataRes(types.String)
@@ -46176,6 +46211,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.rule.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeRule).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.eventTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).EventTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.rule.target.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).Input, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.inputPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).InputPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.inputTransformer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).InputTransformer, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.deadLetterQueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).DeadLetterQueue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.retryMaxAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).RetryMaxAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.target.retryMaxEventAgeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRuleTarget).RetryMaxEventAgeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109399,6 +109478,7 @@ type mqlAwsEventbridgeRule struct {
 	IamRole            plugin.TValue[*mqlAwsIamRole]
 	Tags               plugin.TValue[map[string]any]
 	Targets            plugin.TValue[[]any]
+	EventTargets       plugin.TValue[[]any]
 }
 
 // createAwsEventbridgeRule creates a new instance of this resource
@@ -109495,6 +109575,130 @@ func (c *mqlAwsEventbridgeRule) GetTargets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
 		return c.targets()
 	})
+}
+
+func (c *mqlAwsEventbridgeRule) GetEventTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventTargets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.rule", c.__id, "eventTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventTargets()
+	})
+}
+
+// mqlAwsEventbridgeRuleTarget for the aws.eventbridge.rule.target resource
+type mqlAwsEventbridgeRuleTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeRuleTargetInternal
+	Id                      plugin.TValue[string]
+	Arn                     plugin.TValue[string]
+	IamRole                 plugin.TValue[*mqlAwsIamRole]
+	Input                   plugin.TValue[string]
+	InputPath               plugin.TValue[string]
+	InputTransformer        plugin.TValue[any]
+	DeadLetterQueue         plugin.TValue[*mqlAwsSqsQueue]
+	RetryMaxAttempts        plugin.TValue[int64]
+	RetryMaxEventAgeSeconds plugin.TValue[int64]
+}
+
+// createAwsEventbridgeRuleTarget creates a new instance of this resource
+func createAwsEventbridgeRuleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeRuleTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.rule.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) MqlName() string {
+	return "aws.eventbridge.rule.target"
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.rule.target", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetInput() *plugin.TValue[string] {
+	return &c.Input
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetInputPath() *plugin.TValue[string] {
+	return &c.InputPath
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetInputTransformer() *plugin.TValue[any] {
+	return &c.InputTransformer
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetDeadLetterQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.DeadLetterQueue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.rule.target", c.__id, "deadLetterQueue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.deadLetterQueue()
+	})
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetRetryMaxAttempts() *plugin.TValue[int64] {
+	return &c.RetryMaxAttempts
+}
+
+func (c *mqlAwsEventbridgeRuleTarget) GetRetryMaxEventAgeSeconds() *plugin.TValue[int64] {
+	return &c.RetryMaxEventAgeSeconds
 }
 
 // mqlAwsEventbridgeConnection for the aws.eventbridge.connection resource

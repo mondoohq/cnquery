@@ -5,7 +5,9 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	eventbridge_types "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/rs/zerolog/log"
@@ -252,7 +254,9 @@ func (a *mqlAwsEventbridgeRule) tags() (map[string]any, error) {
 	return tags, nil
 }
 
-func (a *mqlAwsEventbridgeRule) targets() ([]any, error) {
+// listTargets fetches every target for the rule, paginating as needed. It
+// backs both the deprecated targets() dict view and the typed eventTargets().
+func (a *mqlAwsEventbridgeRule) listTargets() ([]eventbridge_types.Target, error) {
 	ruleName := a.Name.Data
 	busName := a.EventBusName.Data
 	region := a.Region.Data
@@ -278,10 +282,117 @@ func (a *mqlAwsEventbridgeRule) targets() ([]any, error) {
 		}
 		nextToken = resp.NextToken
 	}
+	return allTargets, nil
+}
 
-	targets, err := convert.JsonToDictSlice(allTargets)
+// Deprecated: use eventTargets(). Retained for backwards compatibility.
+func (a *mqlAwsEventbridgeRule) targets() ([]any, error) {
+	allTargets, err := a.listTargets()
 	if err != nil {
 		return nil, err
 	}
-	return targets, nil
+	return convert.JsonToDictSlice(allTargets)
+}
+
+func (a *mqlAwsEventbridgeRule) eventTargets() ([]any, error) {
+	region := a.Region.Data
+	ruleArn := a.Arn.Data
+
+	allTargets, err := a.listTargets()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(allTargets))
+	for _, t := range allTargets {
+		var inputTransformer any
+		if t.InputTransformer != nil {
+			d, err := convert.JsonToDict(t.InputTransformer)
+			if err != nil {
+				return nil, err
+			}
+			inputTransformer = d
+		}
+
+		var retryMaxAttempts, retryMaxEventAgeSeconds *int64
+		if t.RetryPolicy != nil {
+			retryMaxAttempts = int32PtrToInt64Ptr(t.RetryPolicy.MaximumRetryAttempts)
+			retryMaxEventAgeSeconds = int32PtrToInt64Ptr(t.RetryPolicy.MaximumEventAgeInSeconds)
+		}
+
+		mqlTarget, err := CreateResource(a.MqlRuntime, "aws.eventbridge.rule.target",
+			map[string]*llx.RawData{
+				// Target.Id is only unique within the rule, so qualify the cache
+				// key with the rule ARN while exposing the plain id as a field.
+				"__id":                    llx.StringData(ruleArn + "/" + convert.ToValue(t.Id)),
+				"id":                      llx.StringDataPtr(t.Id),
+				"arn":                     llx.StringDataPtr(t.Arn),
+				"input":                   llx.StringDataPtr(t.Input),
+				"inputPath":               llx.StringDataPtr(t.InputPath),
+				"inputTransformer":        llx.DictData(inputTransformer),
+				"retryMaxAttempts":        llx.IntDataPtr(retryMaxAttempts),
+				"retryMaxEventAgeSeconds": llx.IntDataPtr(retryMaxEventAgeSeconds),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlTargetRes := mqlTarget.(*mqlAwsEventbridgeRuleTarget)
+		mqlTargetRes.region = region
+		mqlTargetRes.cacheRoleArn = t.RoleArn
+		if t.DeadLetterConfig != nil {
+			mqlTargetRes.cacheDeadLetterArn = t.DeadLetterConfig.Arn
+		}
+		res = append(res, mqlTargetRes)
+	}
+	return res, nil
+}
+
+func int32PtrToInt64Ptr(v *int32) *int64 {
+	if v == nil {
+		return nil
+	}
+	i := int64(*v)
+	return &i
+}
+
+type mqlAwsEventbridgeRuleTargetInternal struct {
+	region             string
+	cacheRoleArn       *string
+	cacheDeadLetterArn *string
+}
+
+func (a *mqlAwsEventbridgeRuleTarget) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEventbridgeRuleTarget) deadLetterQueue() (*mqlAwsSqsQueue, error) {
+	if a.cacheDeadLetterArn == nil || *a.cacheDeadLetterArn == "" {
+		a.DeadLetterQueue.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	parsedArn, err := arn.Parse(*a.cacheDeadLetterArn)
+	if err != nil {
+		return nil, err
+	}
+	// "https://sqs.us-east-1.amazonaws.com/921877552404/my-queue"
+	url := fmt.Sprintf("https://sqs.%s.amazonaws.com/%s/%s", parsedArn.Region, parsedArn.AccountID, parsedArn.Resource)
+	q, err := NewResource(a.MqlRuntime, "aws.sqs.queue",
+		map[string]*llx.RawData{
+			"arn":    llx.StringDataPtr(a.cacheDeadLetterArn),
+			"url":    llx.StringData(url),
+			"region": llx.StringData(parsedArn.Region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return q.(*mqlAwsSqsQueue), nil
 }

@@ -7984,8 +7984,49 @@ private aws.eventbridge.rule @defaults("arn name state") {
   iamRole() aws.iam.role
   // Tags for the rule
   tags() map[string]string
-  // Targets for this rule
-  targets() []dict
+  // Raw target records for this rule
+  //
+  // Deprecated in favor of eventTargets, which exposes each target as a
+  // structured resource with typed references to its destination role and
+  // dead-letter queue.
+  targets() @maturity("deprecated") []dict
+  // Targets that matched events are delivered to
+  eventTargets() []aws.eventbridge.rule.target
+}
+
+// Amazon EventBridge rule target
+//
+// Destination that a rule delivers matched events to, tracing the source
+// rule through to the resource that receives the event. Select by `id`, the
+// target identifier unique within the rule. `arn` is the destination
+// resource (a Lambda function, SNS topic, SQS queue, Kinesis stream, ECS
+// task, Step Functions state machine, and so on); `iamRole` is the role
+// EventBridge assumes to invoke it. `deadLetterQueue` and the retry settings
+// describe delivery reliability, while `input`, `inputPath`, and
+// `inputTransformer` describe how the event payload is shaped before
+// delivery.
+private aws.eventbridge.rule.target @defaults("id arn") {
+  // Target identifier, unique within the rule
+  id string
+  // ARN of the destination resource events are delivered to
+  arn string
+  // IAM role EventBridge assumes to invoke the target
+  iamRole() aws.iam.role
+  // Constant JSON text passed to the target instead of the matched event
+  input string
+  // JSONPath used to extract part of the matched event to pass to the target
+  inputPath string
+  // Input transformer that reshapes the event before it reaches the target
+  //
+  // Holds `inputTemplate` and the `inputPathsMap` of named JSONPath extractions
+  // the template references.
+  inputTransformer dict
+  // Dead-letter queue that receives events that fail delivery to the target
+  deadLetterQueue() aws.sqs.queue
+  // Maximum number of times to retry delivery to the target
+  retryMaxAttempts int
+  // Maximum age of an event, in seconds, that will still be delivered
+  retryMaxEventAgeSeconds int
 }
 
 // Amazon EventBridge connection

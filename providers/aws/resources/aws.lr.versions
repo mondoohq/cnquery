@@ -4771,6 +4771,7 @@ aws.eventbridge.rule.arn 11.16.1
 aws.eventbridge.rule.description 11.16.1
 aws.eventbridge.rule.eventBusName 11.16.1
 aws.eventbridge.rule.eventPattern 11.16.1
+aws.eventbridge.rule.eventTargets 13.39.2
 aws.eventbridge.rule.iamRole 13.0.2
 aws.eventbridge.rule.name 11.16.1
 aws.eventbridge.rule.region 11.16.1
@@ -4778,6 +4779,16 @@ aws.eventbridge.rule.roleArn 11.16.1
 aws.eventbridge.rule.scheduleExpression 11.16.1
 aws.eventbridge.rule.state 11.16.1
 aws.eventbridge.rule.tags 11.16.1
+aws.eventbridge.rule.target 13.39.2
+aws.eventbridge.rule.target.arn 13.39.2
+aws.eventbridge.rule.target.deadLetterQueue 13.39.2
+aws.eventbridge.rule.target.iamRole 13.39.2
+aws.eventbridge.rule.target.id 13.39.2
+aws.eventbridge.rule.target.input 13.39.2
+aws.eventbridge.rule.target.inputPath 13.39.2
+aws.eventbridge.rule.target.inputTransformer 13.39.2
+aws.eventbridge.rule.target.retryMaxAttempts 13.39.2
+aws.eventbridge.rule.target.retryMaxEventAgeSeconds 13.39.2
 aws.eventbridge.rule.targets 11.16.1
 aws.eventbridge.rules 11.16.1
 aws.eventbridge.schedule 13.1.1
