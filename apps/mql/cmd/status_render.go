@@ -158,7 +158,15 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 	}
 	sync := st.ok("✓ in sync")
 	if s.Upstream.API.Version != s.Client.APIVersion {
-		sync = st.warn("⚠ version mismatch")
+		// A client running a newer API version than the server is expected
+		// during a staged rollout (the CLI updates ahead of the platform) and
+		// is not a problem, so only flag a mismatch when the client trails the
+		// server (or the versions can't be compared numerically).
+		if clientAPINewer(s.Client.APIVersion, s.Upstream.API.Version) {
+			sync = st.ok("✓ client ahead")
+		} else {
+			sync = st.warn("⚠ version mismatch")
+		}
 	}
 	st.row(b, "Status", statusStr+"   "+st.dim("API v"+s.Upstream.API.Version)+" "+sync)
 	st.row(b, "Time", s.Upstream.API.Timestamp)
@@ -243,6 +251,22 @@ func (st styler) summaryRow(b *strings.Builder, dot, label, body, trailing strin
 }
 
 func (s Status) platformHealthy() bool { return s.Upstream.API.Status == "SERVING" }
+
+// clientAPINewer reports whether the client's API version is strictly newer
+// than the server's. Both are major-version strings (e.g. "13"); if either
+// isn't a plain integer (a development "unstable" build, say), we can't prove
+// the client is ahead and return false so the caller falls back to warning.
+func clientAPINewer(clientVersion, serverVersion string) bool {
+	client, err := strconv.Atoi(clientVersion)
+	if err != nil {
+		return false
+	}
+	server, err := strconv.Atoi(serverVersion)
+	if err != nil {
+		return false
+	}
+	return client > server
+}
 
 // updateAvailable reports whether a newer mql release exists. Development
 // builds ("unstable") never count as outdated.

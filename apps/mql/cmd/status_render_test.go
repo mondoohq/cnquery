@@ -220,6 +220,37 @@ func TestRenderCli_PlatformSection(t *testing.T) {
 	assert.Contains(t, out, "2026-06-29T21:37:00Z")
 }
 
+func TestRenderCli_PlatformSection_ClientAheadIsNotAWarning(t *testing.T) {
+	s := healthyRegisteredStatus()
+	s.Client.APIVersion = "14" // client updated ahead of the platform
+	s.Upstream.API.Version = "13"
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	assert.NotContains(t, out, "version mismatch")
+	assert.Contains(t, out, "client ahead")
+}
+
+func TestRenderCli_PlatformSection_ClientBehindWarns(t *testing.T) {
+	s := healthyRegisteredStatus()
+	s.Client.APIVersion = "12" // client trails the platform
+	s.Upstream.API.Version = "13"
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	assert.Contains(t, out, "version mismatch")
+}
+
+func TestRenderCli_PlatformSection_UnstableClientWarns(t *testing.T) {
+	s := healthyRegisteredStatus()
+	s.Client.APIVersion = "unstable" // dev build can't be compared numerically
+	s.Upstream.API.Version = "13"
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	assert.Contains(t, out, "version mismatch")
+}
+
 func TestRenderCli_PlatformSection_NotRegisteredShowsLoginHint(t *testing.T) {
 	s := healthyRegisteredStatus()
 	s.Client.Registered = false
