@@ -260,10 +260,27 @@ RUN echo hello | cat
 
 			require.Equal(t, kase.expectedLabels, actualMqlDockerFileStage.Labels.Data)
 			if kase.expectedEnv != nil {
-				require.EqualExportedValues(t, kase.expectedEnv(r), actualMqlDockerFileStage.Env.Data)
+				expectedEnv := kase.expectedEnv(r)
+				require.Equal(t, len(expectedEnv), len(actualMqlDockerFileStage.Env.Data))
+				for i, raw := range actualMqlDockerFileStage.Env.Data {
+					actualEnv := raw.(*mqlDockerFileEnv)
+					expected := expectedEnv[i].(*mqlDockerFileEnv)
+					require.Equal(t, expected.Name.Data, actualEnv.Name.Data)
+					require.Equal(t, expected.Value.Data, actualEnv.Value.Data)
+					// context is populated at creation with the instruction's source range
+					require.Equal(t, plugin.StateIsSet, actualEnv.Context.State&plugin.StateIsSet)
+				}
 			}
 			if kase.expectedArg != nil {
-				require.EqualExportedValues(t, kase.expectedArg(r), actualMqlDockerFileStage.Arg.Data)
+				expectedArg := kase.expectedArg(r)
+				require.Equal(t, len(expectedArg), len(actualMqlDockerFileStage.Arg.Data))
+				for i, raw := range actualMqlDockerFileStage.Arg.Data {
+					actualArg := raw.(*mqlDockerFileArg)
+					expected := expectedArg[i].(*mqlDockerFileArg)
+					require.Equal(t, expected.Name.Data, actualArg.Name.Data)
+					require.Equal(t, expected.Default.Data, actualArg.Default.Data)
+					require.Equal(t, plugin.StateIsSet, actualArg.Context.State&plugin.StateIsSet)
+				}
 			}
 			require.Equal(t, kase.expectedFromImage, actualMqlDockerFileStage.From.Data.Image.Data)
 			require.Equal(t, kase.expectedFromTag, actualMqlDockerFileStage.From.Data.Tag.Data)

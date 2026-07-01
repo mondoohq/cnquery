@@ -2967,7 +2967,7 @@ private docker.file.oci @defaults("source version revision") {
 }
 
 // Dockerfile ARG instructions
-private docker.file.arg @defaults("name default") {
+private docker.file.arg @defaults("name default") @context("file.context") {
   // Name of the variable
   name string
   // (optional) Default value of the variable
@@ -2977,7 +2977,7 @@ private docker.file.arg @defaults("name default") {
 }
 
 // Dockerfile ENV instructions
-private docker.file.env @defaults("name value") {
+private docker.file.env @defaults("name value") @context("file.context") {
   // Name of the variable
   name string
   // Value of the variable
@@ -2987,7 +2987,7 @@ private docker.file.env @defaults("name value") {
 }
 
 // Dockerfile USER instructions
-private docker.file.user @defaults("user") {
+private docker.file.user @defaults("user") @context("file.context") {
   // Set the user name or UID
   user string
   // Set the user group or GID (optional)
@@ -2999,7 +2999,7 @@ private docker.file.user @defaults("user") {
 }
 
 // Dockerfile EXPOSE instruction
-private docker.file.expose @defaults("port protocol") {
+private docker.file.expose @defaults("port protocol") @context("file.context") {
   // Port that is exposed
   port int
   // Protocol that is exposed (evaluates to `tcp` if not specified)
@@ -3007,7 +3007,7 @@ private docker.file.expose @defaults("port protocol") {
 }
 
 // Dockerfile FROM instructions
-private docker.file.from @defaults("name image tag") {
+private docker.file.from @defaults("name image tag") @context("file.context") {
   platform string
   image string
   tag string
@@ -3016,7 +3016,7 @@ private docker.file.from @defaults("name image tag") {
 }
 
 // Dockerfile RUN instructions
-private docker.file.run @defaults("script") {
+private docker.file.run @defaults("script") @context("file.context") {
   script string
   // `--mount=...` flags applied to this RUN
   //
@@ -3127,7 +3127,7 @@ private docker.file.run.mount @defaults("type target") {
 }
 
 // Dockerfile ADD instructions
-private docker.file.add @defaults("src dst") {
+private docker.file.add @defaults("src dst") @context("file.context") {
   src []string
   dst string
   chown string
@@ -3144,7 +3144,7 @@ private docker.file.add @defaults("src dst") {
 }
 
 // Dockerfile COPY instructions
-private docker.file.copy @defaults("src dst") {
+private docker.file.copy @defaults("src dst") @context("file.context") {
   // Optional source to copy file(s) from when not using the default build context
   src []string
   // The destination in the image for the file(s)
@@ -3167,7 +3167,7 @@ private docker.file.copy @defaults("src dst") {
 }
 
 // Dockerfile HEALTHCHECK instruction
-private docker.file.healthcheck @defaults("test") {
+private docker.file.healthcheck @defaults("test") @context("file.context") {
   // The health check test command (e.g., ["CMD-SHELL", "curl -f http://localhost/ || exit 1"])
   test []string
   // Time between running the check in nanoseconds
@@ -3185,31 +3185,31 @@ private docker.file.healthcheck @defaults("test") {
 }
 
 // Dockerfile VOLUME instruction
-private docker.file.volume @defaults("path") {
+private docker.file.volume @defaults("path") @context("file.context") {
   // Volume mount path
   path string
 }
 
 // Dockerfile SHELL instruction
-private docker.file.shell @defaults("command") {
+private docker.file.shell @defaults("command") @context("file.context") {
   // Shell executable and flags (e.g., ["/bin/bash", "-o", "pipefail", "-c"])
   command []string
 }
 
 // Dockerfile WORKDIR instruction
-private docker.file.workdir @defaults("path") {
+private docker.file.workdir @defaults("path") @context("file.context") {
   // Working directory path
   path string
 }
 
 // Dockerfile STOPSIGNAL instruction
-private docker.file.stopsignal @defaults("signal") {
+private docker.file.stopsignal @defaults("signal") @context("file.context") {
   // Signal name or number sent to the container on stop (e.g., `SIGTERM`, `9`)
   signal string
 }
 
 // Dockerfile ONBUILD instruction
-private docker.file.onbuild @defaults("expression") {
+private docker.file.onbuild @defaults("expression") @context("file.context") {
   // The triggered instruction, exactly as written after `ONBUILD`
   //
   // For example `ONBUILD COPY . /app/src` yields `COPY . /app/src`.
