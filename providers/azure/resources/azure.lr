@@ -2172,7 +2172,7 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   flowTimeoutInMinutes int
   // List of virtual network peerings
   peerings() []azure.subscription.networkService.virtualNetwork.peering
-  // Default public NAT gateway providing outbound SNAT for subnets that do not have their own
+  // Default public NAT gateway providing outbound SNAT for subnets that do not have their own NAT gateway
   defaultNatGateway() azure.subscription.networkService.natGateway
   // Flow logs that target this virtual network
   flowLogs() []azure.subscription.networkService.watcher.flowlog
@@ -2830,7 +2830,7 @@ private azure.subscription.networkService.applicationGateway.gatewayIpConfig @de
   id string
   // Gateway IP configuration name
   name string
-  // ARM resource ID of the bound subnet (cached for the typed `subnet` accessor)
+  // ARM resource ID of the bound subnet
   subnetId string
   // Subnet the application gateway is deployed into
   subnet() azure.subscription.networkService.subnet
@@ -2847,7 +2847,7 @@ private azure.subscription.networkService.applicationGateway.frontendIpConfig @d
   id string
   // Frontend IP configuration name
   name string
-  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends (cached for the typed `subnet` accessor)
+  // ARM resource ID of the bound subnet; non-empty for internal (private) frontends
   subnetId string
   // Bound subnet; null for internet-facing frontends that have no subnet
   subnet() azure.subscription.networkService.subnet
