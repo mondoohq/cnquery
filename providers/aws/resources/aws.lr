@@ -4933,6 +4933,16 @@ private aws.es.domain @defaults("arn name") {
   serviceSoftwareCancellable bool
   // Date until which a service software update can be manually requested before it auto-updates
   serviceSoftwareAutomatedUpdateDate time
+  // ID of the most recent configuration change to the domain
+  lastConfigChangeId string
+  // Who initiated the most recent configuration change (CUSTOMER or SERVICE)
+  lastConfigChangeInitiatedBy string
+  // Status of the most recent configuration change (for example PENDING, APPLYING_CHANGES, or COMPLETED)
+  lastConfigChangeStatus string
+  // Time the most recent configuration change was initiated
+  lastConfigChangeStartedAt time
+  // Time the most recent configuration change was last updated
+  lastConfigChangeUpdatedAt time
   // Whether audit logging is enabled for the domain
   auditLogEnabled bool
   // CloudWatch log group receiving audit logs
@@ -5066,6 +5076,26 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   ipAddressType string
   // New service software version available for the domain (empty string if up to date)
   serviceSoftwareNewVersion string
+  // Current service software version present on the domain
+  serviceSoftwareCurrentVersion string
+  // Whether a service software update is available
+  serviceSoftwareUpdateAvailable bool
+  // Status of the service software update (ELIGIBLE, PENDING_UPDATE, IN_PROGRESS, COMPLETED, NOT_ELIGIBLE)
+  serviceSoftwareUpdateStatus string
+  // Whether an in-progress service software update can be cancelled
+  serviceSoftwareCancellable bool
+  // Date until which a service software update can be manually requested before it auto-updates
+  serviceSoftwareAutomatedUpdateDate time
+  // ID of the most recent configuration change to the domain
+  lastConfigChangeId string
+  // Who initiated the most recent configuration change (CUSTOMER or SERVICE)
+  lastConfigChangeInitiatedBy string
+  // Status of the most recent configuration change (for example PENDING, APPLYING_CHANGES, or COMPLETED)
+  lastConfigChangeStatus string
+  // Time the most recent configuration change was initiated
+  lastConfigChangeStartedAt time
+  // Time the most recent configuration change was last updated
+  lastConfigChangeUpdatedAt time
   // Whether automatic software updates are enabled
   autoSoftwareUpdateEnabled bool
   // Whether the off-peak maintenance window is enabled

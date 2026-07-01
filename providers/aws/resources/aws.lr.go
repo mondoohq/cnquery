@@ -10236,6 +10236,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.serviceSoftwareAutomatedUpdateDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetServiceSoftwareAutomatedUpdateDate()).ToDataRes(types.Time)
 	},
+	"aws.es.domain.lastConfigChangeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetLastConfigChangeId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.lastConfigChangeInitiatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetLastConfigChangeInitiatedBy()).ToDataRes(types.String)
+	},
+	"aws.es.domain.lastConfigChangeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetLastConfigChangeStatus()).ToDataRes(types.String)
+	},
+	"aws.es.domain.lastConfigChangeStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetLastConfigChangeStartedAt()).ToDataRes(types.Time)
+	},
+	"aws.es.domain.lastConfigChangeUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetLastConfigChangeUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.es.domain.auditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetAuditLogEnabled()).ToDataRes(types.Bool)
 	},
@@ -10403,6 +10418,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.serviceSoftwareNewVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareNewVersion()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.serviceSoftwareCurrentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareCurrentVersion()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.serviceSoftwareUpdateAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareUpdateAvailable()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.serviceSoftwareUpdateStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareUpdateStatus()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.serviceSoftwareCancellable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareCancellable()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.serviceSoftwareAutomatedUpdateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareAutomatedUpdateDate()).ToDataRes(types.Time)
+	},
+	"aws.opensearch.domain.lastConfigChangeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetLastConfigChangeId()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.lastConfigChangeInitiatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetLastConfigChangeInitiatedBy()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.lastConfigChangeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetLastConfigChangeStatus()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.lastConfigChangeStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetLastConfigChangeStartedAt()).ToDataRes(types.Time)
+	},
+	"aws.opensearch.domain.lastConfigChangeUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetLastConfigChangeUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetAutoSoftwareUpdateEnabled()).ToDataRes(types.Bool)
@@ -41566,6 +41611,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).ServiceSoftwareAutomatedUpdateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.lastConfigChangeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).LastConfigChangeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.lastConfigChangeInitiatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).LastConfigChangeInitiatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.lastConfigChangeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).LastConfigChangeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.lastConfigChangeStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).LastConfigChangeStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.lastConfigChangeUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).LastConfigChangeUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.auditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).AuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -41796,6 +41861,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.serviceSoftwareNewVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).ServiceSoftwareNewVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.serviceSoftwareCurrentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ServiceSoftwareCurrentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.serviceSoftwareUpdateAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ServiceSoftwareUpdateAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.serviceSoftwareUpdateStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ServiceSoftwareUpdateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.serviceSoftwareCancellable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ServiceSoftwareCancellable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.serviceSoftwareAutomatedUpdateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ServiceSoftwareAutomatedUpdateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.lastConfigChangeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).LastConfigChangeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.lastConfigChangeInitiatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).LastConfigChangeInitiatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.lastConfigChangeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).LastConfigChangeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.lastConfigChangeStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).LastConfigChangeStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.lastConfigChangeUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).LastConfigChangeUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97288,6 +97393,11 @@ type mqlAwsEsDomain struct {
 	ServiceSoftwareUpdateStatus        plugin.TValue[string]
 	ServiceSoftwareCancellable         plugin.TValue[bool]
 	ServiceSoftwareAutomatedUpdateDate plugin.TValue[*time.Time]
+	LastConfigChangeId                 plugin.TValue[string]
+	LastConfigChangeInitiatedBy        plugin.TValue[string]
+	LastConfigChangeStatus             plugin.TValue[string]
+	LastConfigChangeStartedAt          plugin.TValue[*time.Time]
+	LastConfigChangeUpdatedAt          plugin.TValue[*time.Time]
 	AuditLogEnabled                    plugin.TValue[bool]
 	AuditLogGroup                      plugin.TValue[*mqlAwsCloudwatchLoggroup]
 	IndexSlowLogEnabled                plugin.TValue[bool]
@@ -97675,6 +97785,26 @@ func (c *mqlAwsEsDomain) GetServiceSoftwareAutomatedUpdateDate() *plugin.TValue[
 	return &c.ServiceSoftwareAutomatedUpdateDate
 }
 
+func (c *mqlAwsEsDomain) GetLastConfigChangeId() *plugin.TValue[string] {
+	return &c.LastConfigChangeId
+}
+
+func (c *mqlAwsEsDomain) GetLastConfigChangeInitiatedBy() *plugin.TValue[string] {
+	return &c.LastConfigChangeInitiatedBy
+}
+
+func (c *mqlAwsEsDomain) GetLastConfigChangeStatus() *plugin.TValue[string] {
+	return &c.LastConfigChangeStatus
+}
+
+func (c *mqlAwsEsDomain) GetLastConfigChangeStartedAt() *plugin.TValue[*time.Time] {
+	return &c.LastConfigChangeStartedAt
+}
+
+func (c *mqlAwsEsDomain) GetLastConfigChangeUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastConfigChangeUpdatedAt
+}
+
 func (c *mqlAwsEsDomain) GetAuditLogEnabled() *plugin.TValue[bool] {
 	return &c.AuditLogEnabled
 }
@@ -97821,62 +97951,72 @@ type mqlAwsOpensearchDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsOpensearchDomainInternal
-	Arn                             plugin.TValue[string]
-	Name                            plugin.TValue[string]
-	DomainId                        plugin.TValue[string]
-	Region                          plugin.TValue[string]
-	EngineVersion                   plugin.TValue[string]
-	Endpoint                        plugin.TValue[string]
-	EncryptionAtRestEnabled         plugin.TValue[bool]
-	EncryptionAtRestKmsKeyId        plugin.TValue[string]
-	EncryptionAtRestKmsKey          plugin.TValue[*mqlAwsKmsKey]
-	NodeToNodeEncryptionEnabled     plugin.TValue[bool]
-	DedicatedMasterEnabled          plugin.TValue[bool]
-	DedicatedMasterType             plugin.TValue[string]
-	DedicatedMasterCount            plugin.TValue[int64]
-	InstanceType                    plugin.TValue[string]
-	InstanceCount                   plugin.TValue[int64]
-	ZoneAwarenessEnabled            plugin.TValue[bool]
-	AvailabilityZoneCount           plugin.TValue[int64]
-	WarmEnabled                     plugin.TValue[bool]
-	WarmType                        plugin.TValue[string]
-	WarmCount                       plugin.TValue[int64]
-	ColdStorageEnabled              plugin.TValue[bool]
-	EbsEnabled                      plugin.TValue[bool]
-	EbsVolumeType                   plugin.TValue[string]
-	EbsVolumeSize                   plugin.TValue[int64]
-	EbsIops                         plugin.TValue[int64]
-	EbsThroughput                   plugin.TValue[int64]
-	VpcId                           plugin.TValue[string]
-	Vpc                             plugin.TValue[*mqlAwsVpc]
-	VpcEgressEnabled                plugin.TValue[bool]
-	EnforceHTTPS                    plugin.TValue[bool]
-	TlsSecurityPolicy               plugin.TValue[string]
-	CustomEndpointEnabled           plugin.TValue[bool]
-	CustomEndpoint                  plugin.TValue[string]
-	CustomEndpointCertificate       plugin.TValue[*mqlAwsAcmCertificate]
-	SamlEnabled                     plugin.TValue[bool]
-	JwtEnabled                      plugin.TValue[bool]
-	JwksUrl                         plugin.TValue[string]
-	AnonymousAuthEnabled            plugin.TValue[bool]
-	InternalUserDatabaseEnabled     plugin.TValue[bool]
-	AdvancedSecurityEnabled         plugin.TValue[bool]
-	Processing                      plugin.TValue[bool]
-	UpgradeProcessing               plugin.TValue[bool]
-	CreatedAt                       plugin.TValue[*time.Time]
-	AutoTuneState                   plugin.TValue[string]
-	AuditLogEnabled                 plugin.TValue[bool]
-	IpAddressType                   plugin.TValue[string]
-	ServiceSoftwareNewVersion       plugin.TValue[string]
-	AutoSoftwareUpdateEnabled       plugin.TValue[bool]
-	OffPeakWindowEnabled            plugin.TValue[bool]
-	AutomatedSnapshotPauseEnabled   plugin.TValue[bool]
-	AutomatedSnapshotPauseState     plugin.TValue[string]
-	AutomatedSnapshotPauseStartTime plugin.TValue[*time.Time]
-	AutomatedSnapshotPauseEndTime   plugin.TValue[*time.Time]
-	Tags                            plugin.TValue[map[string]any]
-	SecurityGroups                  plugin.TValue[[]any]
-	Subnets                         plugin.TValue[[]any]
+	Arn                                plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	DomainId                           plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	EngineVersion                      plugin.TValue[string]
+	Endpoint                           plugin.TValue[string]
+	EncryptionAtRestEnabled            plugin.TValue[bool]
+	EncryptionAtRestKmsKeyId           plugin.TValue[string]
+	EncryptionAtRestKmsKey             plugin.TValue[*mqlAwsKmsKey]
+	NodeToNodeEncryptionEnabled        plugin.TValue[bool]
+	DedicatedMasterEnabled             plugin.TValue[bool]
+	DedicatedMasterType                plugin.TValue[string]
+	DedicatedMasterCount               plugin.TValue[int64]
+	InstanceType                       plugin.TValue[string]
+	InstanceCount                      plugin.TValue[int64]
+	ZoneAwarenessEnabled               plugin.TValue[bool]
+	AvailabilityZoneCount              plugin.TValue[int64]
+	WarmEnabled                        plugin.TValue[bool]
+	WarmType                           plugin.TValue[string]
+	WarmCount                          plugin.TValue[int64]
+	ColdStorageEnabled                 plugin.TValue[bool]
+	EbsEnabled                         plugin.TValue[bool]
+	EbsVolumeType                      plugin.TValue[string]
+	EbsVolumeSize                      plugin.TValue[int64]
+	EbsIops                            plugin.TValue[int64]
+	EbsThroughput                      plugin.TValue[int64]
+	VpcId                              plugin.TValue[string]
+	Vpc                                plugin.TValue[*mqlAwsVpc]
+	VpcEgressEnabled                   plugin.TValue[bool]
+	EnforceHTTPS                       plugin.TValue[bool]
+	TlsSecurityPolicy                  plugin.TValue[string]
+	CustomEndpointEnabled              plugin.TValue[bool]
+	CustomEndpoint                     plugin.TValue[string]
+	CustomEndpointCertificate          plugin.TValue[*mqlAwsAcmCertificate]
+	SamlEnabled                        plugin.TValue[bool]
+	JwtEnabled                         plugin.TValue[bool]
+	JwksUrl                            plugin.TValue[string]
+	AnonymousAuthEnabled               plugin.TValue[bool]
+	InternalUserDatabaseEnabled        plugin.TValue[bool]
+	AdvancedSecurityEnabled            plugin.TValue[bool]
+	Processing                         plugin.TValue[bool]
+	UpgradeProcessing                  plugin.TValue[bool]
+	CreatedAt                          plugin.TValue[*time.Time]
+	AutoTuneState                      plugin.TValue[string]
+	AuditLogEnabled                    plugin.TValue[bool]
+	IpAddressType                      plugin.TValue[string]
+	ServiceSoftwareNewVersion          plugin.TValue[string]
+	ServiceSoftwareCurrentVersion      plugin.TValue[string]
+	ServiceSoftwareUpdateAvailable     plugin.TValue[bool]
+	ServiceSoftwareUpdateStatus        plugin.TValue[string]
+	ServiceSoftwareCancellable         plugin.TValue[bool]
+	ServiceSoftwareAutomatedUpdateDate plugin.TValue[*time.Time]
+	LastConfigChangeId                 plugin.TValue[string]
+	LastConfigChangeInitiatedBy        plugin.TValue[string]
+	LastConfigChangeStatus             plugin.TValue[string]
+	LastConfigChangeStartedAt          plugin.TValue[*time.Time]
+	LastConfigChangeUpdatedAt          plugin.TValue[*time.Time]
+	AutoSoftwareUpdateEnabled          plugin.TValue[bool]
+	OffPeakWindowEnabled               plugin.TValue[bool]
+	AutomatedSnapshotPauseEnabled      plugin.TValue[bool]
+	AutomatedSnapshotPauseState        plugin.TValue[string]
+	AutomatedSnapshotPauseStartTime    plugin.TValue[*time.Time]
+	AutomatedSnapshotPauseEndTime      plugin.TValue[*time.Time]
+	Tags                               plugin.TValue[map[string]any]
+	SecurityGroups                     plugin.TValue[[]any]
+	Subnets                            plugin.TValue[[]any]
 }
 
 // createAwsOpensearchDomain creates a new instance of this resource
@@ -98138,6 +98278,46 @@ func (c *mqlAwsOpensearchDomain) GetIpAddressType() *plugin.TValue[string] {
 
 func (c *mqlAwsOpensearchDomain) GetServiceSoftwareNewVersion() *plugin.TValue[string] {
 	return &c.ServiceSoftwareNewVersion
+}
+
+func (c *mqlAwsOpensearchDomain) GetServiceSoftwareCurrentVersion() *plugin.TValue[string] {
+	return &c.ServiceSoftwareCurrentVersion
+}
+
+func (c *mqlAwsOpensearchDomain) GetServiceSoftwareUpdateAvailable() *plugin.TValue[bool] {
+	return &c.ServiceSoftwareUpdateAvailable
+}
+
+func (c *mqlAwsOpensearchDomain) GetServiceSoftwareUpdateStatus() *plugin.TValue[string] {
+	return &c.ServiceSoftwareUpdateStatus
+}
+
+func (c *mqlAwsOpensearchDomain) GetServiceSoftwareCancellable() *plugin.TValue[bool] {
+	return &c.ServiceSoftwareCancellable
+}
+
+func (c *mqlAwsOpensearchDomain) GetServiceSoftwareAutomatedUpdateDate() *plugin.TValue[*time.Time] {
+	return &c.ServiceSoftwareAutomatedUpdateDate
+}
+
+func (c *mqlAwsOpensearchDomain) GetLastConfigChangeId() *plugin.TValue[string] {
+	return &c.LastConfigChangeId
+}
+
+func (c *mqlAwsOpensearchDomain) GetLastConfigChangeInitiatedBy() *plugin.TValue[string] {
+	return &c.LastConfigChangeInitiatedBy
+}
+
+func (c *mqlAwsOpensearchDomain) GetLastConfigChangeStatus() *plugin.TValue[string] {
+	return &c.LastConfigChangeStatus
+}
+
+func (c *mqlAwsOpensearchDomain) GetLastConfigChangeStartedAt() *plugin.TValue[*time.Time] {
+	return &c.LastConfigChangeStartedAt
+}
+
+func (c *mqlAwsOpensearchDomain) GetLastConfigChangeUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastConfigChangeUpdatedAt
 }
 
 func (c *mqlAwsOpensearchDomain) GetAutoSoftwareUpdateEnabled() *plugin.TValue[bool] {

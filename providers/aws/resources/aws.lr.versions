@@ -4534,6 +4534,11 @@ aws.es.domain.instanceType 13.21.4
 aws.es.domain.internalUserDatabaseEnabled 13.21.4
 aws.es.domain.isPublic 13.37.1
 aws.es.domain.kmsKey 13.21.4
+aws.es.domain.lastConfigChangeId 13.39.2
+aws.es.domain.lastConfigChangeInitiatedBy 13.39.2
+aws.es.domain.lastConfigChangeStartedAt 13.39.2
+aws.es.domain.lastConfigChangeStatus 13.39.2
+aws.es.domain.lastConfigChangeUpdatedAt 13.39.2
 aws.es.domain.managedBy 13.39.2
 aws.es.domain.name 11.15.2
 aws.es.domain.nodeToNodeEncryptionEnabled 11.15.2
@@ -7002,6 +7007,11 @@ aws.opensearch.domain.internalUserDatabaseEnabled 11.15.2
 aws.opensearch.domain.ipAddressType 11.15.2
 aws.opensearch.domain.jwksUrl 13.18.1
 aws.opensearch.domain.jwtEnabled 13.18.1
+aws.opensearch.domain.lastConfigChangeId 13.39.2
+aws.opensearch.domain.lastConfigChangeInitiatedBy 13.39.2
+aws.opensearch.domain.lastConfigChangeStartedAt 13.39.2
+aws.opensearch.domain.lastConfigChangeStatus 13.39.2
+aws.opensearch.domain.lastConfigChangeUpdatedAt 13.39.2
 aws.opensearch.domain.name 11.15.2
 aws.opensearch.domain.nodeToNodeEncryptionEnabled 11.15.2
 aws.opensearch.domain.offPeakWindowEnabled 11.16.1
@@ -7009,7 +7019,12 @@ aws.opensearch.domain.processing 11.15.2
 aws.opensearch.domain.region 11.15.2
 aws.opensearch.domain.samlEnabled 11.15.2
 aws.opensearch.domain.securityGroups 11.15.2
+aws.opensearch.domain.serviceSoftwareAutomatedUpdateDate 13.39.2
+aws.opensearch.domain.serviceSoftwareCancellable 13.39.2
+aws.opensearch.domain.serviceSoftwareCurrentVersion 13.39.2
 aws.opensearch.domain.serviceSoftwareNewVersion 11.15.2
+aws.opensearch.domain.serviceSoftwareUpdateAvailable 13.39.2
+aws.opensearch.domain.serviceSoftwareUpdateStatus 13.39.2
 aws.opensearch.domain.subnets 11.15.2
 aws.opensearch.domain.tags 11.15.2
 aws.opensearch.domain.tlsSecurityPolicy 11.15.2
