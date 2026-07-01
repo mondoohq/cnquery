@@ -4116,10 +4116,13 @@ aws.elasticache.cluster.cacheClusterId 11.15.2
 aws.elasticache.cluster.cacheClusterStatus 11.15.2
 aws.elasticache.cluster.cacheNodeType 11.15.2
 aws.elasticache.cluster.cacheNodes 11.15.2
+aws.elasticache.cluster.cacheParameterGroupName 13.39.2
 aws.elasticache.cluster.cacheSecurityGroups 11.15.2
 aws.elasticache.cluster.cacheSubnetGroupName 11.15.2
 aws.elasticache.cluster.clientDownloadLandingPage 11.15.2
 aws.elasticache.cluster.cloudformationStack 13.39.2
+aws.elasticache.cluster.configurationEndpointAddress 13.39.2
+aws.elasticache.cluster.configurationEndpointPort 13.39.2
 aws.elasticache.cluster.engine 11.15.2
 aws.elasticache.cluster.engineVersion 11.15.2
 aws.elasticache.cluster.ipDiscovery 11.15.2
@@ -4129,7 +4132,9 @@ aws.elasticache.cluster.managedBy 13.39.2
 aws.elasticache.cluster.networkType 11.15.2
 aws.elasticache.cluster.nodeType 11.15.2
 aws.elasticache.cluster.notificationConfiguration 11.15.2
+aws.elasticache.cluster.notificationTopic 13.39.2
 aws.elasticache.cluster.numCacheNodes 11.15.2
+aws.elasticache.cluster.parameterGroup 13.39.2
 aws.elasticache.cluster.preferredAvailabilityZone 11.15.2
 aws.elasticache.cluster.preferredMaintenanceWindow 11.15.2
 aws.elasticache.cluster.region 11.15.2
@@ -4138,6 +4143,7 @@ aws.elasticache.cluster.replicationGroupLogDeliveryEnabled 11.15.2
 aws.elasticache.cluster.securityGroups 11.15.2
 aws.elasticache.cluster.snapshotRetentionLimit 11.15.2
 aws.elasticache.cluster.snapshotWindow 11.15.2
+aws.elasticache.cluster.subnetGroup 13.39.2
 aws.elasticache.cluster.tags 13.12.1
 aws.elasticache.cluster.transitEncryptionEnabled 11.15.2
 aws.elasticache.cluster.transitEncryptionMode 11.15.2

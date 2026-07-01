@@ -18096,6 +18096,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cluster.cacheSubnetGroupName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetCacheSubnetGroupName()).ToDataRes(types.String)
 	},
+	"aws.elasticache.cluster.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetSubnetGroup()).ToDataRes(types.Resource("aws.elasticache.subnetGroup"))
+	},
 	"aws.elasticache.cluster.clientDownloadLandingPage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetClientDownloadLandingPage()).ToDataRes(types.String)
 	},
@@ -18119,6 +18122,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.cluster.notificationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetNotificationConfiguration()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.notificationTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetNotificationTopic()).ToDataRes(types.Resource("aws.sns.topic"))
 	},
 	"aws.elasticache.cluster.numCacheNodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetNumCacheNodes()).ToDataRes(types.Int)
@@ -18155,6 +18161,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.cluster.replicationGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetReplicationGroupId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.cacheParameterGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheParameterGroupName()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.parameterGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetParameterGroup()).ToDataRes(types.Resource("aws.elasticache.parameterGroup"))
+	},
+	"aws.elasticache.cluster.configurationEndpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetConfigurationEndpointAddress()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.configurationEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetConfigurationEndpointPort()).ToDataRes(types.Int)
 	},
 	"aws.elasticache.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -53146,6 +53164,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheCluster).CacheSubnetGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.cluster.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).SubnetGroup, ok = plugin.RawToTValue[*mqlAwsElasticacheSubnetGroup](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.cluster.clientDownloadLandingPage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).ClientDownloadLandingPage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -53176,6 +53198,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.cluster.notificationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).NotificationConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.notificationTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).NotificationTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.numCacheNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53224,6 +53250,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.cluster.replicationGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).ReplicationGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheParameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheParameterGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.parameterGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).ParameterGroup, ok = plugin.RawToTValue[*mqlAwsElasticacheParameterGroup](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.configurationEndpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).ConfigurationEndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.configurationEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).ConfigurationEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -127785,6 +127827,7 @@ type mqlAwsElasticacheCluster struct {
 	CacheNodes                         plugin.TValue[[]any]
 	CacheSecurityGroups                plugin.TValue[[]any]
 	CacheSubnetGroupName               plugin.TValue[string]
+	SubnetGroup                        plugin.TValue[*mqlAwsElasticacheSubnetGroup]
 	ClientDownloadLandingPage          plugin.TValue[string]
 	NodeType                           plugin.TValue[string]
 	Engine                             plugin.TValue[string]
@@ -127793,6 +127836,7 @@ type mqlAwsElasticacheCluster struct {
 	LogDeliveryConfigurations          plugin.TValue[[]any]
 	NetworkType                        plugin.TValue[string]
 	NotificationConfiguration          plugin.TValue[string]
+	NotificationTopic                  plugin.TValue[*mqlAwsSnsTopic]
 	NumCacheNodes                      plugin.TValue[int64]
 	PreferredAvailabilityZone          plugin.TValue[string]
 	Region                             plugin.TValue[string]
@@ -127805,6 +127849,10 @@ type mqlAwsElasticacheCluster struct {
 	PreferredMaintenanceWindow         plugin.TValue[string]
 	ReplicationGroupLogDeliveryEnabled plugin.TValue[bool]
 	ReplicationGroupId                 plugin.TValue[string]
+	CacheParameterGroupName            plugin.TValue[string]
+	ParameterGroup                     plugin.TValue[*mqlAwsElasticacheParameterGroup]
+	ConfigurationEndpointAddress       plugin.TValue[string]
+	ConfigurationEndpointPort          plugin.TValue[int64]
 	Tags                               plugin.TValue[map[string]any]
 	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                          plugin.TValue[string]
@@ -127890,6 +127938,22 @@ func (c *mqlAwsElasticacheCluster) GetCacheSubnetGroupName() *plugin.TValue[stri
 	return &c.CacheSubnetGroupName
 }
 
+func (c *mqlAwsElasticacheCluster) GetSubnetGroup() *plugin.TValue[*mqlAwsElasticacheSubnetGroup] {
+	return plugin.GetOrCompute[*mqlAwsElasticacheSubnetGroup](&c.SubnetGroup, func() (*mqlAwsElasticacheSubnetGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "subnetGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElasticacheSubnetGroup), nil
+			}
+		}
+
+		return c.subnetGroup()
+	})
+}
+
 func (c *mqlAwsElasticacheCluster) GetClientDownloadLandingPage() *plugin.TValue[string] {
 	return &c.ClientDownloadLandingPage
 }
@@ -127920,6 +127984,22 @@ func (c *mqlAwsElasticacheCluster) GetNetworkType() *plugin.TValue[string] {
 
 func (c *mqlAwsElasticacheCluster) GetNotificationConfiguration() *plugin.TValue[string] {
 	return &c.NotificationConfiguration
+}
+
+func (c *mqlAwsElasticacheCluster) GetNotificationTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.NotificationTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "notificationTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.notificationTopic()
+	})
 }
 
 func (c *mqlAwsElasticacheCluster) GetNumCacheNodes() *plugin.TValue[int64] {
@@ -127992,6 +128072,34 @@ func (c *mqlAwsElasticacheCluster) GetReplicationGroupLogDeliveryEnabled() *plug
 
 func (c *mqlAwsElasticacheCluster) GetReplicationGroupId() *plugin.TValue[string] {
 	return &c.ReplicationGroupId
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheParameterGroupName() *plugin.TValue[string] {
+	return &c.CacheParameterGroupName
+}
+
+func (c *mqlAwsElasticacheCluster) GetParameterGroup() *plugin.TValue[*mqlAwsElasticacheParameterGroup] {
+	return plugin.GetOrCompute[*mqlAwsElasticacheParameterGroup](&c.ParameterGroup, func() (*mqlAwsElasticacheParameterGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "parameterGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElasticacheParameterGroup), nil
+			}
+		}
+
+		return c.parameterGroup()
+	})
+}
+
+func (c *mqlAwsElasticacheCluster) GetConfigurationEndpointAddress() *plugin.TValue[string] {
+	return &c.ConfigurationEndpointAddress
+}
+
+func (c *mqlAwsElasticacheCluster) GetConfigurationEndpointPort() *plugin.TValue[int64] {
+	return &c.ConfigurationEndpointPort
 }
 
 func (c *mqlAwsElasticacheCluster) GetTags() *plugin.TValue[map[string]any] {

@@ -12243,6 +12243,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   cacheSecurityGroups []string
   // Name of the cache subnet group associated with the cluster
   cacheSubnetGroupName string
+  // Cache subnet group the cluster is deployed in
+  subnetGroup() aws.elasticache.subnetGroup
   // URL of the web page where you can download the latest ElastiCache client library
   clientDownloadLandingPage string
   // Node type for the nodes in the cluster
@@ -12259,6 +12261,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   networkType string
   // Describes a notification topic and its status
   notificationConfiguration string
+  // SNS topic that receives cluster event notifications
+  notificationTopic() aws.sns.topic
   // Number of cache nodes in the cluster
   numCacheNodes int
   // Name of the availability zone in which the cluster is located or "Multiple" if the cache nodes are located in different availability zones
@@ -12283,6 +12287,14 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   replicationGroupLogDeliveryEnabled bool
   // Identifier of the replication group the cluster belongs to, when part of one
   replicationGroupId string
+  // Name of the cache parameter group applied to the cluster
+  cacheParameterGroupName string
+  // Cache parameter group applied to the cluster
+  parameterGroup() aws.elasticache.parameterGroup
+  // Address of the cluster configuration endpoint (Memcached clusters)
+  configurationEndpointAddress string
+  // Port of the cluster configuration endpoint (Memcached clusters)
+  configurationEndpointPort int
   // Resource tags for the cluster
   tags() map[string]string
   // CloudFormation stack that manages this cluster, if any
