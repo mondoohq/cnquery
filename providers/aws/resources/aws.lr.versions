@@ -1453,6 +1453,7 @@ aws.cloudfront.continuousDeploymentPolicy.trafficConfig 13.26.3
 aws.cloudfront.distribution 11.15.2
 aws.cloudfront.distribution.arn 11.15.2
 aws.cloudfront.distribution.cacheBehaviors 11.15.2
+aws.cloudfront.distribution.callerReference 13.39.2
 aws.cloudfront.distribution.cnames 11.15.2
 aws.cloudfront.distribution.comment 11.15.2
 aws.cloudfront.distribution.continuousDeploymentPolicyId 13.29.1
@@ -1462,6 +1463,7 @@ aws.cloudfront.distribution.enabled 11.15.2
 aws.cloudfront.distribution.enforcesHttps 13.37.1
 aws.cloudfront.distribution.geoRestrictionType 11.15.2
 aws.cloudfront.distribution.httpVersion 11.15.2
+aws.cloudfront.distribution.id 13.39.2
 aws.cloudfront.distribution.isIPV6Enabled 11.15.2
 aws.cloudfront.distribution.lastModifiedAt 11.15.2
 aws.cloudfront.distribution.logging 13.6.0
@@ -1470,6 +1472,7 @@ aws.cloudfront.distribution.loggingConfig.bucket 13.6.0
 aws.cloudfront.distribution.loggingConfig.enabled 13.6.0
 aws.cloudfront.distribution.loggingConfig.includeCookies 13.6.0
 aws.cloudfront.distribution.loggingConfig.prefix 13.6.0
+aws.cloudfront.distribution.managedBy 13.39.2
 aws.cloudfront.distribution.minimumProtocolVersion 11.15.2
 aws.cloudfront.distribution.origin 11.15.2
 aws.cloudfront.distribution.origin.account 11.15.2
@@ -1485,7 +1488,9 @@ aws.cloudfront.distribution.origins 11.15.2
 aws.cloudfront.distribution.priceClass 11.15.2
 aws.cloudfront.distribution.protectedByWaf 13.37.1
 aws.cloudfront.distribution.sslSupportMethod 13.3.1
+aws.cloudfront.distribution.staging 13.39.2
 aws.cloudfront.distribution.status 11.15.2
+aws.cloudfront.distribution.tags 13.39.2
 aws.cloudfront.distribution.viewerMtlsMode 13.25.1
 aws.cloudfront.distribution.viewerMtlsTrustStoreId 13.25.1
 aws.cloudfront.distribution.viewerProtocolPolicy 11.15.2

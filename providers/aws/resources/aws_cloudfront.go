@@ -126,6 +126,8 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 
 			args := map[string]*llx.RawData{
 				"arn":                    llx.StringDataPtr(distribution.ARN),
+				"id":                     llx.StringDataPtr(distribution.Id),
+				"staging":                llx.BoolDataPtr(distribution.Staging),
 				"cacheBehaviors":         llx.ArrayData(cacheBehaviors, types.Any),
 				"cnames":                 llx.ArrayData(cnames, types.String),
 				"defaultCacheBehavior":   llx.MapData(defaultCacheBehavior, types.Any),
@@ -238,6 +240,57 @@ func (a *mqlAwsCloudfrontDistribution) continuousDeploymentPolicyId() (string, e
 		return "", nil
 	}
 	return convert.ToValue(resp.Distribution.DistributionConfig.ContinuousDeploymentPolicyId), nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) callerReference() (string, error) {
+	resp, err := a.fetchDistributionDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.Distribution == nil || resp.Distribution.DistributionConfig == nil {
+		return "", nil
+	}
+	return convert.ToValue(resp.Distribution.DistributionConfig.CallerReference), nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("")
+	ctx := context.Background()
+
+	resp, err := svc.ListTagsForResource(ctx, &cloudfront.ListTagsForResourceInput{
+		Resource: &a.Arn.Data,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+	tags := make(map[string]any)
+	if resp.Tags != nil {
+		for _, t := range resp.Tags.Items {
+			tags[convert.ToValue(t.Key)] = convert.ToValue(t.Value)
+		}
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) managedBy() (string, error) {
+	owner, err := managedByFromResourceTags(a.GetTags())
+	if err != nil {
+		return "", err
+	}
+	if owner != "" {
+		return owner, nil
+	}
+	// CloudFront injects no provenance tag, but Terraform sets the distribution
+	// caller reference to a "terraform-" prefixed value; fall back to that.
+	cr := a.GetCallerReference()
+	if cr.Error != nil {
+		return "", cr.Error
+	}
+	return managedByWithCreationToken("", cr.Data), nil
 }
 
 func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {

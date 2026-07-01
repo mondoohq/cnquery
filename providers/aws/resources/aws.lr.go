@@ -15249,6 +15249,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.distribution.viewerMtlsTrustStoreId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetViewerMtlsTrustStoreId()).ToDataRes(types.String)
 	},
+	"aws.cloudfront.distribution.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.staging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetStaging()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.callerReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetCallerReference()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cloudfront.distribution.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.cloudfront.distribution.loggingConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -49004,6 +49019,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.viewerMtlsTrustStoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).ViewerMtlsTrustStoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.staging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Staging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.callerReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).CallerReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.loggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -117229,6 +117264,11 @@ type mqlAwsCloudfrontDistribution struct {
 	Logging                      plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig]
 	ViewerMtlsMode               plugin.TValue[string]
 	ViewerMtlsTrustStoreId       plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	Staging                      plugin.TValue[bool]
+	CallerReference              plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+	ManagedBy                    plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -117396,6 +117436,32 @@ func (c *mqlAwsCloudfrontDistribution) GetViewerMtlsMode() *plugin.TValue[string
 
 func (c *mqlAwsCloudfrontDistribution) GetViewerMtlsTrustStoreId() *plugin.TValue[string] {
 	return &c.ViewerMtlsTrustStoreId
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetStaging() *plugin.TValue[bool] {
+	return &c.Staging
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetCallerReference() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CallerReference, func() (string, error) {
+		return c.callerReference()
+	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlAwsCloudfrontDistributionLoggingConfig for the aws.cloudfront.distribution.loggingConfig resource

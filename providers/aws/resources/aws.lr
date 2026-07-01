@@ -9566,6 +9566,20 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   viewerMtlsMode string
   // ID of the trust store associated with the viewer mTLS configuration (empty string when none)
   viewerMtlsTrustStoreId string
+  // ID of the distribution
+  id string
+  // Whether this is a staging distribution used for continuous deployment
+  staging bool
+  // Idempotency token supplied when the distribution was created
+  //
+  // Infrastructure-as-code tools set this to a meaningful value; the Terraform AWS provider auto-generates one with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  callerReference() string
+  // Tags for the distribution
+  tags() map[string]string
+  // Infrastructure-management system that owns this distribution
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the callerReference carries Terraform's "terraform-" prefix. Empty when the distribution is unmanaged or managed by a tool that leaves no recognizable signal.
+  managedBy() string
 }
 
 // Amazon CloudFront distribution logging configuration
