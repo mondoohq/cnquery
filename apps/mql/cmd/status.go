@@ -135,7 +135,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		case "json":
 			s.RenderJson()
 		default:
-			fmt.Fprint(os.Stdout, s.RenderCli(RenderOptions{Color: defaultRenderColor()}))
+			fmt.Fprint(os.Stdout, s.RenderCli(RenderOptions{Color: defaultRenderColor(), Binary: cmd.Root().Name()}))
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {

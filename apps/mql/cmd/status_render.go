@@ -20,6 +20,11 @@ import (
 type RenderOptions struct {
 	Color bool
 	Width int
+	// Binary is the name of the invoking CLI ("mql" or "cnspec"), used in the
+	// command hints so the same renderer tells cnspec users to run
+	// "cnspec providers update" rather than "mql ...". Callers derive it from
+	// cmd.Root().Name(); an empty value falls back to "mql".
+	Binary string
 }
 
 // styler applies (or, when disabled, passes through) terminal styling. When
@@ -30,6 +35,7 @@ type styler struct {
 	on      bool
 	profile termenv.Profile
 	palette colors.Theme
+	binary  string
 }
 
 // defaultRenderColor reports whether the status screen should be rendered with
@@ -39,12 +45,15 @@ func defaultRenderColor() bool {
 	return colors.Profile != termenv.Ascii
 }
 
-func newStyler(color bool) styler {
+func newStyler(color bool, binary string) styler {
 	p := colors.Profile
 	if !color {
 		p = termenv.Ascii
 	}
-	return styler{on: color, profile: p, palette: theme.DefaultTheme.Colors}
+	if binary == "" {
+		binary = "mql"
+	}
+	return styler{on: color, profile: p, palette: theme.DefaultTheme.Colors, binary: binary}
 }
 
 func (st styler) fg(c termenv.Color, s string) string {
@@ -74,7 +83,7 @@ func (st styler) accent(s string) string { return st.fg(st.palette.Secondary, s)
 // I/O and reads no globals: everything it needs is on the Status value, which
 // makes it directly unit-testable.
 func (s Status) RenderCli(opts RenderOptions) string {
-	st := newStyler(opts.Color)
+	st := newStyler(opts.Color, opts.Binary)
 	var b strings.Builder
 
 	s.renderHeader(&b, st)
@@ -175,7 +184,7 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 		st.row(b, "Client", st.value(s.Client.Mrn))
 		st.row(b, "Account", st.value(s.Client.ServiceAccount))
 	} else {
-		st.row(b, "Client", st.bad("✗ not registered")+" "+st.dim("—")+" run "+st.cmd("mql login"))
+		st.row(b, "Client", st.bad("✗ not registered")+" "+st.dim("—")+" run "+st.cmd(st.binary+" login"))
 	}
 
 	if len(s.Upstream.Features) > 0 {
@@ -191,7 +200,7 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 
 func (s Status) renderHeader(b *strings.Builder, st styler) {
 	meta := fmt.Sprintf("%s · %s · %s", s.Client.Version, s.osArch(), s.Client.Timestamp)
-	fmt.Fprintf(b, "\n  %s    %s\n", st.bold("mql status"), st.dim(meta))
+	fmt.Fprintf(b, "\n  %s    %s\n", st.bold(st.binary+" status"), st.dim(meta))
 }
 
 // osArch returns "<os>/<arch>" for the header, or "unknown" when platform info
@@ -230,7 +239,7 @@ func (s Status) renderHealth(b *strings.Builder, st styler) {
 
 	var parts []string
 	if s.updateAvailable() {
-		parts = append(parts, "mql "+st.dim(s.Client.Version)+" "+st.accent("→")+" "+st.warn(s.Client.LatestVersion))
+		parts = append(parts, st.binary+" "+st.dim(s.Client.Version)+" "+st.accent("→")+" "+st.warn(s.Client.LatestVersion))
 	}
 	if n := s.outdatedCount(); n > 0 {
 		parts = append(parts, st.warn(fmt.Sprintf("%d providers outdated", n)))
@@ -340,7 +349,7 @@ func (s Status) renderProviders(b *strings.Builder, st styler) {
 		}
 		if outdated > providerTableLimit {
 			st.rowRaw(b, st.dim(fmt.Sprintf("+ %d more outdated", outdated-providerTableLimit))+" "+
-				st.dim("·")+" "+st.cmd("mql providers list")+st.dim(" to see all"))
+				st.dim("·")+" "+st.cmd(st.binary+" providers list")+st.dim(" to see all"))
 		}
 	}
 
@@ -367,7 +376,7 @@ func (s Status) renderProviders(b *strings.Builder, st styler) {
 
 	if outdated > 0 {
 		st.rowRaw(b, st.dim("providers refresh automatically on next run")+" "+st.dim("·")+" "+
-			st.cmd("mql providers install <name>")+st.dim(" to update one now"))
+			st.cmd(st.binary+" providers install <name>")+st.dim(" to update one now"))
 	}
 }
 
@@ -393,16 +402,21 @@ func (s Status) renderFooter(b *strings.Builder, st styler) {
 	}
 
 	if !s.Client.Registered {
-		st.footerStep(b, "mql login", "register this client with Mondoo Platform")
+		st.footerStep(b, st.binary+" login", "register this client with Mondoo Platform")
 	}
 	if authFailed {
-		st.footerStep(b, "mql login --token <token>", "re-register with a fresh token from Mondoo Platform")
+		st.footerStep(b, st.binary+" login --token <token>", "re-register with a fresh token from Mondoo Platform")
 	}
 	if s.updateAvailable() {
 		st.footerStep(b, "visit "+s.Client.UpdatesURL, "upgrade "+s.Client.Version+" → "+s.Client.LatestVersion)
 	}
-	if s.outdatedCount() > 0 {
-		st.footerStep(b, "mql providers install <name>", fmt.Sprintf("update %d outdated providers", s.outdatedCount()))
+	// With a single outdated provider, point at the targeted install; with
+	// several, recommend the bulk `providers update` (no args updates them all)
+	// so the user doesn't have to name each one.
+	if n := s.outdatedCount(); n == 1 {
+		st.footerStep(b, st.binary+" providers install <name>", fmt.Sprintf("update %d outdated providers", n))
+	} else if n > 1 {
+		st.footerStep(b, st.binary+" providers update", fmt.Sprintf("update %d outdated providers", n))
 	}
 	b.WriteString("\n")
 }

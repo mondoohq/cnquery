@@ -34,5 +34,5 @@
   ✗ not registered · exit 1 · next steps:
     → mql login                       register this client with Mondoo Platform
     → visit https://releases.mondoo.com    upgrade 13.22.0 → 13.25.0
-    → mql providers install <name>    update 2 outdated providers
+    → mql providers update            update 2 outdated providers
 

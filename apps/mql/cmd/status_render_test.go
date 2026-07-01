@@ -309,6 +309,65 @@ func TestRenderCli_Footer_NotRegistered(t *testing.T) {
 	assert.Contains(t, out, "mql login")
 }
 
+func TestRenderCli_Footer_MultipleOutdatedRecommendsBulkUpdate(t *testing.T) {
+	s := healthyRegisteredStatus() // fixture has 2 outdated providers
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	// with 2+ outdated, the footer's next step recommends the bulk update
+	// (the per-provider install hint still appears in the Providers section)
+	assert.Contains(t, out, "next steps")
+	assert.Contains(t, out, "mql providers update")
+	assert.Contains(t, out, "update 2 outdated providers")
+}
+
+func TestRenderCli_Footer_SingleOutdatedKeepsInstallHint(t *testing.T) {
+	s := healthyRegisteredStatus()
+	// leave exactly one provider outdated
+	firstOutdated := false
+	for i := range s.Client.Providers {
+		if s.Client.Providers[i].Outdated && !firstOutdated {
+			firstOutdated = true
+			continue
+		}
+		s.Client.Providers[i].Outdated = false
+		s.Client.Providers[i].Latest = s.Client.Providers[i].Installed
+	}
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	// a single outdated provider keeps the targeted install hint
+	assert.Contains(t, out, "mql providers install <name>")
+	assert.NotContains(t, out, "mql providers update")
+}
+
+func TestRenderCli_BinaryNameDrivesCommandHints(t *testing.T) {
+	// stale + unregistered surfaces the header plus login/update hints, so a
+	// single render exercises several command strings at once.
+	s := staleNotRegisteredStatus()
+
+	out := s.RenderCli(RenderOptions{Color: false, Binary: "cnspec"})
+
+	assert.Contains(t, out, "cnspec status")
+	assert.Contains(t, out, "cnspec login")
+	assert.Contains(t, out, "cnspec providers update")
+	// no command hint should leak the other binary's name
+	assert.NotContains(t, out, "mql login")
+	assert.NotContains(t, out, "mql providers")
+	assert.NotContains(t, out, "mql status")
+}
+
+func TestRenderCli_BinaryNameDefaultsToMql(t *testing.T) {
+	s := staleNotRegisteredStatus()
+
+	// empty Binary (as the existing tests and goldens use) falls back to "mql"
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	assert.Contains(t, out, "mql status")
+	assert.Contains(t, out, "mql login")
+	assert.NotContains(t, out, "cnspec")
+}
+
 func TestRenderCli_Footer_AllHealthyHasNoExitBanner(t *testing.T) {
 	s := healthyRegisteredStatus()
 	for i := range s.Client.Providers {
