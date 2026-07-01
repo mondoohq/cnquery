@@ -6492,6 +6492,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetOrigin()).ToDataRes(types.String)
 	},
+	"aws.kms.key.currentKeyMaterialId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetCurrentKeyMaterialId()).ToDataRes(types.String)
+	},
+	"aws.kms.key.cloudHsmCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetCloudHsmCluster()).ToDataRes(types.Resource("aws.cloudhsm.cluster"))
+	},
 	"aws.kms.key.customKeyStore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetCustomKeyStore()).ToDataRes(types.Resource("aws.kms.customKeyStore"))
 	},
@@ -6515,6 +6521,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kms.key.keyAgreementAlgorithms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetKeyAgreementAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.key.macAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetMacAlgorithms()).ToDataRes(types.Array(types.String))
 	},
 	"aws.kms.key.expirationModel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetExpirationModel()).ToDataRes(types.String)
@@ -36098,6 +36107,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.currentKeyMaterialId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).CurrentKeyMaterialId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.cloudHsmCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).CloudHsmCluster, ok = plugin.RawToTValue[*mqlAwsCloudhsmCluster](v.Value, v.Error)
+		return
+	},
 	"aws.kms.key.customKeyStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).CustomKeyStore, ok = plugin.RawToTValue[*mqlAwsKmsCustomKeyStore](v.Value, v.Error)
 		return
@@ -36128,6 +36145,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kms.key.keyAgreementAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).KeyAgreementAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.macAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).MacAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.kms.key.expirationModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -82523,6 +82544,8 @@ type mqlAwsKmsKey struct {
 	MultiRegion               plugin.TValue[bool]
 	MultiRegionConfiguration  plugin.TValue[*mqlAwsKmsKeyMultiRegionConfiguration]
 	Origin                    plugin.TValue[string]
+	CurrentKeyMaterialId      plugin.TValue[string]
+	CloudHsmCluster           plugin.TValue[*mqlAwsCloudhsmCluster]
 	CustomKeyStore            plugin.TValue[*mqlAwsKmsCustomKeyStore]
 	XksKeyConfiguration       plugin.TValue[any]
 	RotationPeriodInDays      plugin.TValue[int64]
@@ -82531,6 +82554,7 @@ type mqlAwsKmsKey struct {
 	EncryptionAlgorithms      plugin.TValue[[]any]
 	SigningAlgorithms         plugin.TValue[[]any]
 	KeyAgreementAlgorithms    plugin.TValue[[]any]
+	MacAlgorithms             plugin.TValue[[]any]
 	ExpirationModel           plugin.TValue[string]
 	ValidTo                   plugin.TValue[*time.Time]
 	LastUsageOperation        plugin.TValue[string]
@@ -82769,6 +82793,28 @@ func (c *mqlAwsKmsKey) GetOrigin() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsKmsKey) GetCurrentKeyMaterialId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CurrentKeyMaterialId, func() (string, error) {
+		return c.currentKeyMaterialId()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetCloudHsmCluster() *plugin.TValue[*mqlAwsCloudhsmCluster] {
+	return plugin.GetOrCompute[*mqlAwsCloudhsmCluster](&c.CloudHsmCluster, func() (*mqlAwsCloudhsmCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "cloudHsmCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudhsmCluster), nil
+			}
+		}
+
+		return c.cloudHsmCluster()
+	})
+}
+
 func (c *mqlAwsKmsKey) GetCustomKeyStore() *plugin.TValue[*mqlAwsKmsCustomKeyStore] {
 	return plugin.GetOrCompute[*mqlAwsKmsCustomKeyStore](&c.CustomKeyStore, func() (*mqlAwsKmsCustomKeyStore, error) {
 		if c.MqlRuntime.HasRecording {
@@ -82824,6 +82870,12 @@ func (c *mqlAwsKmsKey) GetSigningAlgorithms() *plugin.TValue[[]any] {
 func (c *mqlAwsKmsKey) GetKeyAgreementAlgorithms() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.KeyAgreementAlgorithms, func() ([]any, error) {
 		return c.keyAgreementAlgorithms()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetMacAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MacAlgorithms, func() ([]any, error) {
+		return c.macAlgorithms()
 	})
 }
 

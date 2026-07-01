@@ -1767,6 +1767,10 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   multiRegionConfiguration() aws.kms.key.multiRegionConfiguration
   // Origin of the key material: AWS_KMS, EXTERNAL, AWS_CLOUDHSM, EXTERNAL_KEY_STORE
   origin() string
+  // Identifier of the current key material version backing the key
+  currentKeyMaterialId() string
+  // CloudHSM cluster hosting the key's material (null unless the key origin is AWS_CLOUDHSM)
+  cloudHsmCluster() aws.cloudhsm.cluster
   // Custom key store that hosts the key's material (null when AWS-managed)
   customKeyStore() aws.kms.customKeyStore
   // External key associated with this key when the key store is an External Key Store (xks)
@@ -1785,6 +1789,8 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   signingAlgorithms() []string
   // Key agreement algorithms the key supports (e.g., ECDH)
   keyAgreementAlgorithms() []string
+  // MAC algorithms the key supports (e.g., HMAC_SHA_256), for HMAC keys
+  macAlgorithms() []string
   // Whether imported key material expires: KEY_MATERIAL_EXPIRES or KEY_MATERIAL_DOES_NOT_EXPIRE
   expirationModel() string
   // Expiration date for imported key material (null if key material does not expire)
