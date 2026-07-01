@@ -32,8 +32,11 @@ type auditLogEntry struct {
 	Owner struct {
 		ID string `json:"id"`
 	} `json:"owner"`
-	OldValue map[string]any `json:"oldValue"`
-	NewValue map[string]any `json:"newValue"`
+	// oldValue/newValue are polymorphic: Cloudflare returns an object for most
+	// changes but a bare string (or other scalar) for simple settings, so decode
+	// them as any and let the dict field carry whatever shape the API sends.
+	OldValue any `json:"oldValue"`
+	NewValue any `json:"newValue"`
 }
 
 func (c *mqlCloudflareAccountAuditLog) id() (string, error) {
@@ -83,8 +86,9 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 
 // anyMap returns an empty map[string]any when v is nil so DictData stays
 // non-nil; the .lr `dict` field type tolerates nil but a stable empty map
-// reads more cleanly in MQL queries.
-func anyMap(v map[string]any) map[string]any {
+// reads more cleanly in MQL queries. Non-nil values (objects, strings, or
+// other scalars the API may send) pass through unchanged.
+func anyMap(v any) any {
 	if v == nil {
 		return map[string]any{}
 	}
