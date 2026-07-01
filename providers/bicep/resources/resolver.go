@@ -139,7 +139,11 @@ func (r *symbolResolver) resource(runtime *plugin.Runtime, target string) (*mqlB
 	if !ok {
 		return nil, nil
 	}
-	return newMqlBicepResource(runtime, "bicep.resource:"+r.filePath+":"+res.symbolicName, res, r)
+	ctx, err := newBicepContext(runtime, r.filePath, res.startLine, res.endLine)
+	if err != nil {
+		return nil, err
+	}
+	return newMqlBicepResource(runtime, "bicep.resource:"+r.filePath+":"+res.symbolicName, res, r, ctx)
 }
 
 // module builds (or returns the cached) bicep.module the target names, or nil

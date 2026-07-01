@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 bicep 13.0.0
+bicep.context 13.3.6
+bicep.context.content 13.3.6
+bicep.context.path 13.3.6
+bicep.context.range 13.3.6
 bicep.expression 13.1.2
 bicep.expression.args 13.1.2
 bicep.expression.functionName 13.1.2
@@ -48,6 +52,7 @@ bicep.import.wildcard 13.1.2
 bicep.module 13.0.0
 bicep.module.condition 13.0.0
 bicep.module.conditionTree 13.1.2
+bicep.module.context 13.3.6
 bicep.module.decorators 13.0.1
 bicep.module.description 13.0.1
 bicep.module.isLoop 13.1.2
@@ -64,6 +69,7 @@ bicep.module.scopeTree 13.1.2
 bicep.module.source 13.0.0
 bicep.module.target 13.1.2
 bicep.output 13.0.0
+bicep.output.context 13.3.6
 bicep.output.description 13.0.0
 bicep.output.expression 13.0.0
 bicep.output.expressionTree 13.1.2
@@ -82,6 +88,7 @@ bicep.paramFile.using 13.1.2
 bicep.paramFiles 13.1.2
 bicep.parameter 13.0.0
 bicep.parameter.allowed 13.0.0
+bicep.parameter.context 13.3.6
 bicep.parameter.decorators 13.0.0
 bicep.parameter.defaultValue 13.0.0
 bicep.parameter.description 13.0.0
@@ -101,6 +108,7 @@ bicep.resource.apiVersion 13.0.0
 bicep.resource.body 13.2.2
 bicep.resource.condition 13.0.0
 bicep.resource.conditionTree 13.1.2
+bicep.resource.context 13.3.6
 bicep.resource.decorators 13.0.0
 bicep.resource.dependsOn 13.0.0
 bicep.resource.existing 13.0.0
@@ -170,6 +178,7 @@ bicep.type.property.name 13.1.2
 bicep.type.property.type 13.1.2
 bicep.type.unionMembers 13.1.2
 bicep.variable 13.0.0
+bicep.variable.context 13.3.6
 bicep.variable.description 13.0.0
 bicep.variable.expression 13.0.0
 bicep.variable.expressionTree 13.1.2

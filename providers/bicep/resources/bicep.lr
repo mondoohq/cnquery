@@ -106,7 +106,7 @@ bicep.paramFile @defaults("path") {
 // @allowed values, and the full raw decorator list — used to flag
 // missing @secure on credential-shaped parameters or unbounded @allowed
 // sets.
-bicep.parameter @defaults("name type") {
+bicep.parameter @defaults("name type") @context("bicep.context") {
   // Parameter name
   name string
   // Type (string, int, bool, object, array, or user-defined)
@@ -157,7 +157,7 @@ bicep.parameter @defaults("name type") {
 // Examine the variable name, the raw value expression, and any
 // @description decorator — useful for tracking how derived values flow
 // into resource bodies.
-bicep.variable @defaults("name") {
+bicep.variable @defaults("name") @context("bicep.context") {
   // Variable name
   name string
   // Value expression (raw Bicep expression)
@@ -189,7 +189,7 @@ bicep.variable @defaults("name") {
 // existing-resource flag, conditional-deployment expression, parent /
 // dependsOn relationships, and decorators — the surface IaC policies
 // match against to enforce Azure resource-shape rules.
-bicep.resource @defaults("type symbolicName") {
+bicep.resource @defaults("type symbolicName") @context("bicep.context") {
   // Symbolic name in the Bicep file
   symbolicName string
   // Azure resource type (e.g., "Microsoft.Storage/storageAccounts")
@@ -290,7 +290,7 @@ bicep.resource @defaults("type symbolicName") {
 // reference (br: / ts: flags break the source out by kind), scope, the
 // parameter values passed in, conditional-deployment expression,
 // description and decorators — the unit of cross-file Bicep composition.
-bicep.module @defaults("name source") {
+bicep.module @defaults("name source") @context("bicep.context") {
   // Symbolic name
   name string
   // Module source path or registry reference
@@ -363,7 +363,7 @@ bicep.module @defaults("name source") {
 // Examine an `output` statement: name, type, value expression, and
 // @description — useful for spotting outputs that leak secrets or
 // expose resource IDs unintentionally.
-bicep.output @defaults("name type") {
+bicep.output @defaults("name type") @context("bicep.context") {
   // Output name
   name string
   // Output type
@@ -753,4 +753,19 @@ bicep.template.resource @defaults("type name") {
   linkedTemplate() bicep.template
   // Full manifest
   manifest dict
+}
+
+// Bicep declaration source context
+//
+// Source location and raw text of a declaration in a Bicep file: the file
+// path, the line range it spans, and the Bicep text within that range. Points
+// a reviewer at the exact source of a flagged resource, module, parameter,
+// variable, or output.
+private bicep.context @defaults("path range content") {
+  // Path of the Bicep file this declaration is in
+  path string
+  // Line range the declaration spans in the file
+  range range
+  // Bicep text within the range, shown as an excerpt
+  content(path, range) string
 }

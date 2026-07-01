@@ -35,6 +35,8 @@ type parsedParameter struct {
 	minValue     *int64
 	maxValue     *int64
 	decorators   []string
+	startLine    int
+	endLine      int
 }
 
 type parsedVariable struct {
@@ -42,6 +44,8 @@ type parsedVariable struct {
 	expression  string
 	description string
 	loop        loopInfo
+	startLine   int
+	endLine     int
 }
 
 type parsedResource struct {
@@ -60,6 +64,8 @@ type parsedResource struct {
 	decorators   []string
 	loop         loopInfo
 	nested       []parsedResource
+	startLine    int
+	endLine      int
 }
 
 type parsedModule struct {
@@ -73,6 +79,8 @@ type parsedModule struct {
 	isTemplateSpec bool
 	decorators     []string
 	loop           loopInfo
+	startLine      int
+	endLine        int
 }
 
 type parsedOutput struct {
@@ -81,6 +89,8 @@ type parsedOutput struct {
 	expression  string
 	description string
 	loop        loopInfo
+	startLine   int
+	endLine     int
 }
 
 // loopInfo captures a Bicep `for`-loop on a declaration. Bicep iterates
@@ -249,18 +259,29 @@ func parseBicep(content string) *parsedBicepFile {
 		stmtLines := strings.Split(stmt.text, "\n")
 		firstLine := strings.TrimSpace(stmtLines[0])
 
+		// startLine/endLine bound the statement's source span (1-based); the
+		// tokenizer records the start and stmt.text carries every line, so the
+		// end is the start plus the additional lines.
+		startLine := stmt.startLine
+		endLine := stmt.startLine + len(stmtLines) - 1
+
 		switch stmt.keyword {
 		case "param":
-			result.parameters = append(result.parameters, parseParameter(firstLine, stmt.decorators))
+			p := parseParameter(firstLine, stmt.decorators)
+			p.startLine, p.endLine = startLine, endLine
+			result.parameters = append(result.parameters, p)
 		case "var":
 			v, _ := parseVariableDecl(stmtLines, 0, stmt.decorators)
+			v.startLine, v.endLine = startLine, endLine
 			result.variables = append(result.variables, v)
 		case "resource":
 			if res, _ := parseResourceDecl(stmtLines, 0, stmt.decorators); res != nil {
+				res.startLine, res.endLine = startLine, endLine
 				result.resources = append(result.resources, *res)
 			}
 		case "module":
 			if mod, _ := parseModuleDecl(stmtLines, 0, stmt.decorators); mod != nil {
+				mod.startLine, mod.endLine = startLine, endLine
 				result.modules = append(result.modules, *mod)
 			}
 		case "output":
@@ -271,7 +292,9 @@ func parseBicep(content string) *parsedBicepFile {
 			if len(stmtLines) > 1 {
 				outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
 			}
-			result.outputs = append(result.outputs, parseOutput(outLine, stmt.decorators))
+			o := parseOutput(outLine, stmt.decorators)
+			o.startLine, o.endLine = startLine, endLine
+			result.outputs = append(result.outputs, o)
 		case "type":
 			if t, ok := parseTypeDecl(stmt.text, stmt.decorators); ok {
 				result.types = append(result.types, t)
