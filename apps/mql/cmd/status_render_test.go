@@ -479,6 +479,21 @@ func TestUpdateAvailable_ClientAheadIsNotOutdated(t *testing.T) {
 	assert.NotContains(t, out, "update recommended")
 }
 
+func TestUpdateAvailable_UnstableDevBuildDoesNotNag(t *testing.T) {
+	// A binary built locally from source stamps a "v"-prefixed git-describe
+	// version that surfaces as an "unstable" API version; it must not suggest an
+	// update even when a newer release exists.
+	s := healthyRegisteredStatus()
+	s.Client.APIVersion = "unstable"
+	s.Client.Version = "v13.27.0+1234"
+	s.Client.LatestVersion = "13.30.0"
+
+	assert.False(t, s.updateAvailable())
+
+	out := s.RenderCli(RenderOptions{Color: false})
+	assert.NotContains(t, out, "update recommended")
+}
+
 func TestUpdateAvailable_NewerReleaseIsFlagged(t *testing.T) {
 	s := healthyRegisteredStatus()
 	s.Client.Version = "v13.22.0"

@@ -30,7 +30,6 @@
   │  os                13.22.0  →  13.25.2
   │
   │  ✓ current  core
-  │  providers refresh automatically on next run · mql providers install <name> to update one now
 
   next steps:
     → mql providers update            update 2 outdated providers

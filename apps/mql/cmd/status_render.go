@@ -278,11 +278,16 @@ func clientAPINewer(clientVersion, serverVersion string) bool {
 	return client > server
 }
 
-// updateAvailable reports whether a newer mql release exists. Development
-// builds ("unstable") never count as outdated.
+// updateAvailable reports whether a newer mql release exists. Builds made
+// locally from source stamp a "v"-prefixed git-describe version that surfaces
+// as an "unstable" API version; they update by rebuilding, so they never nag
+// about released versions. Official release binaries carry a bare semver and a
+// real API version, so they still get update checks.
 func (s Status) updateAvailable() bool {
+	if s.Client.APIVersion == "unstable" {
+		return false
+	}
 	return s.Client.LatestVersion != "" &&
-		s.Client.Version != "unstable" &&
 		newerAvailable(s.Client.Version, s.Client.LatestVersion)
 }
 
@@ -389,11 +394,6 @@ func (s Status) renderProviders(b *strings.Builder, st styler) {
 			line += st.dim(fmt.Sprintf(", +%d", extra))
 		}
 		st.rowRaw(b, line)
-	}
-
-	if outdated > 0 {
-		st.rowRaw(b, st.dim("providers refresh automatically on next run")+" "+st.dim("·")+" "+
-			st.cmd(st.binary+" providers install <name>")+st.dim(" to update one now"))
 	}
 }
 
