@@ -12771,6 +12771,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.container.imageDigest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetImageDigest()).ToDataRes(types.String)
 	},
+	"aws.ecs.container.ecrImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetEcrImage()).ToDataRes(types.Resource("aws.ecr.image"))
+	},
+	"aws.ecs.container.repositoryCredentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetRepositoryCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
 	"aws.ecs.container.clusterName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetClusterName()).ToDataRes(types.String)
 	},
@@ -45209,6 +45215,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.container.imageDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsContainer).ImageDigest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.ecrImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).EcrImage, ok = plugin.RawToTValue[*mqlAwsEcrImage](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.repositoryCredentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).RepositoryCredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.container.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -106714,31 +106728,33 @@ func (c *mqlAwsEcsTask) GetFargateEphemeralStorageKmsKey() *plugin.TValue[*mqlAw
 type mqlAwsEcsContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcsContainerInternal it will be used here
-	Name               plugin.TValue[string]
-	Arn                plugin.TValue[string]
-	PublicIp           plugin.TValue[string]
-	Image              plugin.TValue[string]
-	ImageDigest        plugin.TValue[string]
-	ClusterName        plugin.TValue[string]
-	TaskDefinition     plugin.TValue[*mqlAwsEcsTaskDefinition]
-	TaskDefinitionArn  plugin.TValue[string]
-	LogDriver          plugin.TValue[string]
-	PlatformFamily     plugin.TValue[string]
-	PlatformVersion    plugin.TValue[string]
-	Status             plugin.TValue[string]
-	Region             plugin.TValue[string]
-	Command            plugin.TValue[[]any]
-	Task               plugin.TValue[*mqlAwsEcsTask]
-	TaskArn            plugin.TValue[string]
-	RuntimeId          plugin.TValue[string]
-	ContainerName      plugin.TValue[string]
-	CpuUnits           plugin.TValue[string]
-	MemorySoftLimit    plugin.TValue[string]
-	MemoryHardLimit    plugin.TValue[string]
-	Reason             plugin.TValue[string]
-	User               plugin.TValue[string]
-	InitProcessEnabled plugin.TValue[bool]
+	mqlAwsEcsContainerInternal
+	Name                        plugin.TValue[string]
+	Arn                         plugin.TValue[string]
+	PublicIp                    plugin.TValue[string]
+	Image                       plugin.TValue[string]
+	ImageDigest                 plugin.TValue[string]
+	EcrImage                    plugin.TValue[*mqlAwsEcrImage]
+	RepositoryCredentialsSecret plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	ClusterName                 plugin.TValue[string]
+	TaskDefinition              plugin.TValue[*mqlAwsEcsTaskDefinition]
+	TaskDefinitionArn           plugin.TValue[string]
+	LogDriver                   plugin.TValue[string]
+	PlatformFamily              plugin.TValue[string]
+	PlatformVersion             plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Command                     plugin.TValue[[]any]
+	Task                        plugin.TValue[*mqlAwsEcsTask]
+	TaskArn                     plugin.TValue[string]
+	RuntimeId                   plugin.TValue[string]
+	ContainerName               plugin.TValue[string]
+	CpuUnits                    plugin.TValue[string]
+	MemorySoftLimit             plugin.TValue[string]
+	MemoryHardLimit             plugin.TValue[string]
+	Reason                      plugin.TValue[string]
+	User                        plugin.TValue[string]
+	InitProcessEnabled          plugin.TValue[bool]
 }
 
 // createAwsEcsContainer creates a new instance of this resource
@@ -106796,6 +106812,38 @@ func (c *mqlAwsEcsContainer) GetImage() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsContainer) GetImageDigest() *plugin.TValue[string] {
 	return &c.ImageDigest
+}
+
+func (c *mqlAwsEcsContainer) GetEcrImage() *plugin.TValue[*mqlAwsEcrImage] {
+	return plugin.GetOrCompute[*mqlAwsEcrImage](&c.EcrImage, func() (*mqlAwsEcrImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.container", c.__id, "ecrImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrImage), nil
+			}
+		}
+
+		return c.ecrImage()
+	})
+}
+
+func (c *mqlAwsEcsContainer) GetRepositoryCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.RepositoryCredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.container", c.__id, "repositoryCredentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.repositoryCredentialsSecret()
+	})
 }
 
 func (c *mqlAwsEcsContainer) GetClusterName() *plugin.TValue[string] {

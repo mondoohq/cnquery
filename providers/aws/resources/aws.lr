@@ -7238,6 +7238,12 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   image string
   // Resolved digest of the image actually running in the container
   imageDigest string
+  // ECR image the container is running, when the image is hosted in Elastic Container Registry in this account
+  //
+  // Resolved from the image URI and imageDigest. Null for images pulled from Docker Hub, public registries, or ECR repositories in another account.
+  ecrImage() aws.ecr.image
+  // Secrets Manager secret holding the private registry credentials used to pull the image, when configured on the task definition
+  repositoryCredentialsSecret() aws.secretsmanager.secret
   // Cluster associated with the ECS container
   clusterName string
   // Task definition associated with the ECS container

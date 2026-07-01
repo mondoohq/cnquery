@@ -3626,6 +3626,7 @@ aws.ecs.container.clusterName 11.15.2
 aws.ecs.container.command 11.15.2
 aws.ecs.container.containerName 11.15.2
 aws.ecs.container.cpuUnits 11.15.2
+aws.ecs.container.ecrImage 13.39.2
 aws.ecs.container.image 11.15.2
 aws.ecs.container.imageDigest 13.35.2
 aws.ecs.container.initProcessEnabled 13.2.7
@@ -3638,6 +3639,7 @@ aws.ecs.container.platformVersion 11.15.2
 aws.ecs.container.publicIp 11.15.2
 aws.ecs.container.reason 11.15.2
 aws.ecs.container.region 11.15.2
+aws.ecs.container.repositoryCredentialsSecret 13.39.2
 aws.ecs.container.runtimeId 11.15.2
 aws.ecs.container.status 11.15.2
 aws.ecs.container.task 13.12.1
