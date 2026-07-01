@@ -330,6 +330,8 @@ private gcp.project.redisService.instance @defaults("name") {
   network() gcp.project.computeService.network
   // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
   persistenceIamIdentity string
+  // Service account used by import and export operations to transfer data to and from Cloud Storage
+  persistenceServiceAccount() gcp.project.iamService.serviceAccount
   // The network connect mode of the Redis instance
   connectMode string
   // Redis AUTH is enabled or not for the instance. If set to "true" AUTH is enabled on the instance
@@ -370,6 +372,12 @@ private gcp.project.redisService.instance @defaults("name") {
   maintenanceSchedule dict
   // List of server CA certificates for the instance
   serverCaCerts []gcp.project.redisService.instance.serverCaCert
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Redis instance node information
@@ -490,6 +498,8 @@ private gcp.project.redisService.cluster.pscConfig {
   clusterName string
   // The network where the IP address of the discovery endpoint will be reserved
   network string
+  // VPC network where the discovery endpoint IP address is reserved
+  networkRef() gcp.project.computeService.network
 }
 
 // Google Cloud (GCP) Redis Cluster discovery endpoint
@@ -522,6 +532,8 @@ private gcp.project.redisService.cluster.pscConnection @defaults("pscConnectionI
   connectionProjectId string
   // The consumer network the PSC connection was created in
   network string
+  // VPC network the PSC connection was created in
+  networkRef() gcp.project.computeService.network
   // The service attachment which is the target of the PSC connection
   serviceAttachment string
   // The status of the PSC connection
@@ -613,6 +625,8 @@ private gcp.project.redisService.cluster.connectionDetail @defaults("pscConnecti
   connectionProjectId string
   // The consumer network the PSC connection was created in
   network string
+  // VPC network the PSC connection was created in
+  networkRef() gcp.project.computeService.network
   // The service attachment which is the target of the PSC connection
   serviceAttachment string
   // The status of the PSC connection
@@ -4656,6 +4670,12 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   // Ordered list of transforms applied to messages published to the topic,
   // each typically backed by a JavaScript user-defined function (UDF).
   messageTransforms []dict
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub topic schema settings
@@ -4748,6 +4768,8 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   topicMessageRetentionDuration time
   // Dead-letter queue configuration (deadLetterTopic, maxDeliveryAttempts)
   deadLetterPolicy dict
+  // Dead-letter topic that receives messages this subscription fails to deliver
+  deadLetterTopic() gcp.project.pubsubService.topic
   // Message retry backoff configuration (minimumBackoff, maximumBackoff)
   retryPolicy dict
   // BigQuery delivery sink
@@ -4777,6 +4799,20 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   // to Bigtable. A populated value is an egress path that moves topic data into
   // a queryable store, so it widens the data's exposure surface.
   bigtableConfig dict
+  // Service account used to generate the OIDC token for authenticated push delivery
+  oidcTokenServiceAccount() gcp.project.iamService.serviceAccount
+  // BigQuery table this subscription writes messages to
+  bigqueryTable() gcp.project.bigqueryService.table
+  // Cloud Storage bucket this subscription writes messages to
+  cloudStorageBucket() gcp.project.storageService.bucket
+  // Service account the Bigtable export runs as
+  bigtableServiceAccount() gcp.project.iamService.serviceAccount
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub configuration for subscriptions that operate in push mode
@@ -4817,6 +4853,12 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   expiration time
   // Labels associated with this snapshot
   labels map[string]string
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Pub/Sub schema
@@ -14276,6 +14318,12 @@ private gcp.project.memcacheService.instance @defaults("name state") {
   updateTime time
   // Memcached nodes in the instance
   nodes []gcp.project.memcacheService.instance.node
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Memcached node
@@ -14617,6 +14665,12 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   createTime time
   // Last update time
   updateTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Memorystore instance PSC attachment detail

@@ -3688,6 +3688,7 @@ gcp.project.memcacheService.instance.instanceMessages 13.11.2
 gcp.project.memcacheService.instance.labels 13.11.2
 gcp.project.memcacheService.instance.maintenancePolicy 13.11.2
 gcp.project.memcacheService.instance.maintenanceSchedule 13.11.2
+gcp.project.memcacheService.instance.managedBy 13.27.2
 gcp.project.memcacheService.instance.memcacheFullVersion 13.11.2
 gcp.project.memcacheService.instance.memcacheVersion 13.11.2
 gcp.project.memcacheService.instance.name 13.11.2
@@ -3777,6 +3778,7 @@ gcp.project.memorystoreService.instance.labels 13.11.2
 gcp.project.memorystoreService.instance.maintenancePolicy 13.11.2
 gcp.project.memorystoreService.instance.maintenanceSchedule 13.11.2
 gcp.project.memorystoreService.instance.maintenanceVersion 13.11.2
+gcp.project.memorystoreService.instance.managedBy 13.27.2
 gcp.project.memorystoreService.instance.mode 13.11.2
 gcp.project.memorystoreService.instance.name 13.11.2
 gcp.project.memorystoreService.instance.nodeSizeGb 13.11.2
@@ -4035,6 +4037,7 @@ gcp.project.pubsubService.schemas 13.7.2
 gcp.project.pubsubService.snapshot 9.0.0
 gcp.project.pubsubService.snapshot.expiration 9.0.0
 gcp.project.pubsubService.snapshot.labels 13.23.2
+gcp.project.pubsubService.snapshot.managedBy 13.27.2
 gcp.project.pubsubService.snapshot.name 9.0.0
 gcp.project.pubsubService.snapshot.projectId 9.0.0
 gcp.project.pubsubService.snapshot.topic 9.0.0
@@ -4043,15 +4046,21 @@ gcp.project.pubsubService.subscription 9.0.0
 gcp.project.pubsubService.subscription.config 9.0.0
 gcp.project.pubsubService.subscription.config.ackDeadline 9.0.0
 gcp.project.pubsubService.subscription.config.bigqueryConfig 13.21.2
+gcp.project.pubsubService.subscription.config.bigqueryTable 13.27.2
 gcp.project.pubsubService.subscription.config.bigtableConfig 13.23.2
+gcp.project.pubsubService.subscription.config.bigtableServiceAccount 13.27.2
+gcp.project.pubsubService.subscription.config.cloudStorageBucket 13.27.2
 gcp.project.pubsubService.subscription.config.cloudStorageConfig 13.21.2
 gcp.project.pubsubService.subscription.config.deadLetterPolicy 13.7.2
+gcp.project.pubsubService.subscription.config.deadLetterTopic 13.27.2
 gcp.project.pubsubService.subscription.config.detached 11.0.146
 gcp.project.pubsubService.subscription.config.enableExactlyOnceDelivery 11.0.146
 gcp.project.pubsubService.subscription.config.enableMessageOrdering 11.0.146
 gcp.project.pubsubService.subscription.config.expirationPolicy 9.0.0
 gcp.project.pubsubService.subscription.config.filter 11.0.146
 gcp.project.pubsubService.subscription.config.labels 9.0.0
+gcp.project.pubsubService.subscription.config.managedBy 13.27.2
+gcp.project.pubsubService.subscription.config.oidcTokenServiceAccount 13.27.2
 gcp.project.pubsubService.subscription.config.projectId 9.0.0
 gcp.project.pubsubService.subscription.config.pushConfig 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig 9.0.0
@@ -4079,6 +4088,7 @@ gcp.project.pubsubService.topic.config.ingestionDataSourceSettings 13.16.3
 gcp.project.pubsubService.topic.config.kmsKey 13.12.2
 gcp.project.pubsubService.topic.config.kmsKeyName 9.0.0
 gcp.project.pubsubService.topic.config.labels 9.0.0
+gcp.project.pubsubService.topic.config.managedBy 13.27.2
 gcp.project.pubsubService.topic.config.messageStoragePolicy 9.0.0
 gcp.project.pubsubService.topic.config.messageTransforms 13.16.3
 gcp.project.pubsubService.topic.config.messagestoragepolicy 9.0.0
@@ -4146,6 +4156,7 @@ gcp.project.redisService.cluster.connectionDetail.connectionProjectId 11.1.0
 gcp.project.redisService.cluster.connectionDetail.connectionType 11.1.0
 gcp.project.redisService.cluster.connectionDetail.forwardingRule 11.1.0
 gcp.project.redisService.cluster.connectionDetail.network 11.1.0
+gcp.project.redisService.cluster.connectionDetail.networkRef 13.27.2
 gcp.project.redisService.cluster.connectionDetail.projectId 11.1.0
 gcp.project.redisService.cluster.connectionDetail.pscConnectionId 11.1.0
 gcp.project.redisService.cluster.connectionDetail.pscConnectionStatus 11.1.0
@@ -4173,6 +4184,7 @@ gcp.project.redisService.cluster.projectId 11.1.0
 gcp.project.redisService.cluster.pscConfig 11.1.0
 gcp.project.redisService.cluster.pscConfig.clusterName 11.1.0
 gcp.project.redisService.cluster.pscConfig.network 11.1.0
+gcp.project.redisService.cluster.pscConfig.networkRef 13.27.2
 gcp.project.redisService.cluster.pscConfig.projectId 11.1.0
 gcp.project.redisService.cluster.pscConfigs 11.1.0
 gcp.project.redisService.cluster.pscConnection 11.1.0
@@ -4182,6 +4194,7 @@ gcp.project.redisService.cluster.pscConnection.connectionProjectId 11.1.0
 gcp.project.redisService.cluster.pscConnection.connectionType 11.1.0
 gcp.project.redisService.cluster.pscConnection.forwardingRule 11.1.0
 gcp.project.redisService.cluster.pscConnection.network 11.1.0
+gcp.project.redisService.cluster.pscConnection.networkRef 13.27.2
 gcp.project.redisService.cluster.pscConnection.projectId 11.1.0
 gcp.project.redisService.cluster.pscConnection.pscConnectionId 11.1.0
 gcp.project.redisService.cluster.pscConnection.pscConnectionStatus 11.1.0
@@ -4217,6 +4230,7 @@ gcp.project.redisService.instance.locationId 11.0.79
 gcp.project.redisService.instance.maintenancePolicy 11.0.79
 gcp.project.redisService.instance.maintenanceSchedule 11.0.79
 gcp.project.redisService.instance.maintenanceVersion 11.0.79
+gcp.project.redisService.instance.managedBy 13.27.2
 gcp.project.redisService.instance.memorySizeGb 11.0.79
 gcp.project.redisService.instance.name 11.0.79
 gcp.project.redisService.instance.network 13.21.2
@@ -4227,6 +4241,7 @@ gcp.project.redisService.instance.nodeInfo.zone 11.0.79
 gcp.project.redisService.instance.nodes 11.0.79
 gcp.project.redisService.instance.persistenceConfig 11.0.79
 gcp.project.redisService.instance.persistenceIamIdentity 11.0.79
+gcp.project.redisService.instance.persistenceServiceAccount 13.27.2
 gcp.project.redisService.instance.port 11.0.79
 gcp.project.redisService.instance.projectId 11.0.79
 gcp.project.redisService.instance.readEndpoint 11.0.79
