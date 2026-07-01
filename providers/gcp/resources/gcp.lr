@@ -4122,6 +4122,12 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   databaseEncryptionState string
   // Cloud KMS key used for etcd encryption
   databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Configuration for Shielded Nodes feature
   shieldedNodesConfig dict
   // Whether Shielded Nodes is enabled cluster-wide
@@ -4518,6 +4524,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   kubeletConfig gcp.project.gkeService.cluster.nodepool.config.kubeletConfig
   // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
   bootDiskKmsKey string
+  // Customer-managed Cloud KMS key used to encrypt each node's boot disk
+  bootDiskKmsKeyRef() gcp.project.kmsService.keyring.cryptokey
   // Encryption mode for node Local SSDs (STANDARD_ENCRYPTION uses Google-managed keys; EPHEMERAL_KEY_ENCRYPTION uses per-boot ephemeral keys)
   localSsdEncryptionMode string
   // Google Container File System (image streaming) configuration
@@ -5846,6 +5854,11 @@ private gcp.project.cloudFunction @defaults("name") {
   httpsTrigger dict
   // Source that fires events in response to a condition in another service
   eventTrigger dict
+  // Pub/Sub topic that fires this function's event trigger
+  //
+  // Resolves the Pub/Sub topic when the event trigger's resource is a Pub/Sub
+  // topic. Empty for triggers backed by other event sources.
+  eventTriggerTopic() gcp.project.pubsubService.topic
   // Status of the function deployment
   status string
   // Name of the function (as defined in source code) that is executed
@@ -5903,13 +5916,24 @@ private gcp.project.cloudFunction @defaults("name") {
   // Secret volumes
   secretVolumes []dict
   // User-managed repository created in Artifact Registry
-  dockerRepository string
+  //
+  // Deprecated in favor of `dockerRepositoryRef`, which resolves the Artifact
+  // Registry repository resource.
+  dockerRepository @maturity("deprecated") string
+  // Artifact Registry repository that stores the function's built image
+  dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Docker registry to use for this deployment
   dockerRegistry string
   // IAM policy bindings controlling who can invoke and manage the function
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the IAM policy grants an invoker role to allUsers or allAuthenticatedUsers, making the function callable without authentication
   allowsUnauthenticated() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Cloud Function (v2 / 2nd gen)
@@ -5953,6 +5977,12 @@ private gcp.project.cloudFunctionV2 @defaults("name state environment") {
   createTime time
   // Last update time
   updateTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Cloud Function v2 build configuration
@@ -5970,7 +6000,12 @@ private gcp.project.cloudFunctionV2.buildConfig @defaults("runtime entryPoint") 
   // Build environment variables
   environmentVariables map[string]string
   // User-managed repository in Artifact Registry for storing built images
-  dockerRepository string
+  //
+  // Deprecated in favor of `dockerRepositoryRef`, which resolves the Artifact
+  // Registry repository resource.
+  dockerRepository @maturity("deprecated") string
+  // Artifact Registry repository that stores the function's built images
+  dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Service account to use for the build
   //
   // Deprecated in favor of `serviceAccountRef`, which resolves the service account resource.
@@ -5994,6 +6029,8 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   id string
   // Cloud Run service resource name
   service string
+  // Cloud Run service that backs the function
+  serviceRef() gcp.project.cloudRunService.service
   // Function execution timeout in seconds
   timeoutSeconds int
   // Amount of memory available (e.g. "256M", "1Gi")
@@ -6746,6 +6783,14 @@ private gcp.project.cloudRunService.service @defaults("name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the service is reachable from the public internet: ingress allows all traffic AND IAM grants invoke to allUsers or allAuthenticatedUsers
   publicInvocable() bool
+  // Customer-managed Cloud KMS key used to encrypt the service's container image
+  encryptionKeyRef() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Run service revision template
@@ -6795,6 +6840,12 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   name string
   // URL of the container image in Google Container Registry or Google Artifact Registry
   image string
+  // Artifact Registry repository that stores the container image
+  //
+  // Resolves the repository when the image is hosted in Artifact Registry
+  // (a `*-docker.pkg.dev` image URL). Empty for images stored elsewhere,
+  // such as Container Registry or an external registry.
+  imageRepository() gcp.project.artifactRegistryService.repository
   // Entrypoint array
   command []string
   // Arguments to the entrypoint
@@ -6934,6 +6985,14 @@ private gcp.project.cloudRunService.job {
   etag string
   // IAM policy bindings for this Cloud Run job
   iamPolicy() []gcp.resourcemanager.binding
+  // Customer-managed Cloud KMS key used to encrypt the job's container image
+  encryptionKeyRef() gcp.project.kmsService.keyring.cryptokey
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Run job execution template
@@ -10992,6 +11051,12 @@ private gcp.project.artifactRegistryService.repository @defaults("name format lo
   public() bool
   // Packages stored in the repository
   packages() []gcp.project.artifactRegistryService.repository.package
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Artifact Registry package

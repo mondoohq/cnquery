@@ -446,6 +446,7 @@ gcp.project.artifactRegistryService.repository.kmsKey 13.19.2
 gcp.project.artifactRegistryService.repository.kmsKeyName 11.6.1
 gcp.project.artifactRegistryService.repository.labels 11.6.1
 gcp.project.artifactRegistryService.repository.location 11.6.1
+gcp.project.artifactRegistryService.repository.managedBy 13.27.2
 gcp.project.artifactRegistryService.repository.mode 11.6.1
 gcp.project.artifactRegistryService.repository.modeConfig 11.6.1
 gcp.project.artifactRegistryService.repository.modeConfig.disableUpstreamValidation 11.6.1
@@ -1129,10 +1130,12 @@ gcp.project.cloudFunction.buildWorkerPool 9.0.0
 gcp.project.cloudFunction.description 9.0.0
 gcp.project.cloudFunction.dockerRegistry 9.0.0
 gcp.project.cloudFunction.dockerRepository 9.0.0
+gcp.project.cloudFunction.dockerRepositoryRef 13.27.2
 gcp.project.cloudFunction.egressSettings 9.0.0
 gcp.project.cloudFunction.entryPoint 9.0.0
 gcp.project.cloudFunction.envVars 9.0.0
 gcp.project.cloudFunction.eventTrigger 9.0.0
+gcp.project.cloudFunction.eventTriggerTopic 13.27.2
 gcp.project.cloudFunction.httpsTrigger 9.0.0
 gcp.project.cloudFunction.iamPolicy 13.19.2
 gcp.project.cloudFunction.ingressSettings 9.0.0
@@ -1140,6 +1143,7 @@ gcp.project.cloudFunction.kmsKey 13.2.3
 gcp.project.cloudFunction.kmsKeyName 9.0.0
 gcp.project.cloudFunction.labels 9.0.0
 gcp.project.cloudFunction.location 11.2.1
+gcp.project.cloudFunction.managedBy 13.27.2
 gcp.project.cloudFunction.maxInstances 9.0.0
 gcp.project.cloudFunction.minInstances 9.0.0
 gcp.project.cloudFunction.name 9.0.0
@@ -1165,6 +1169,7 @@ gcp.project.cloudFunctionV2.buildConfig 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.build 13.25.2
 gcp.project.cloudFunctionV2.buildConfig.buildWorkerPool 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.dockerRepository 13.7.2
+gcp.project.cloudFunctionV2.buildConfig.dockerRepositoryRef 13.27.2
 gcp.project.cloudFunctionV2.buildConfig.entryPoint 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.environmentVariables 13.7.2
 gcp.project.cloudFunctionV2.buildConfig.gitUri 13.25.2
@@ -1193,6 +1198,7 @@ gcp.project.cloudFunctionV2.iamPolicy 13.19.2
 gcp.project.cloudFunctionV2.kmsKey 13.7.2
 gcp.project.cloudFunctionV2.kmsKeyName 13.7.2
 gcp.project.cloudFunctionV2.labels 13.7.2
+gcp.project.cloudFunctionV2.managedBy 13.27.2
 gcp.project.cloudFunctionV2.name 13.7.2
 gcp.project.cloudFunctionV2.projectId 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig 13.7.2
@@ -1209,6 +1215,7 @@ gcp.project.cloudFunctionV2.serviceConfig.secretEnvironmentVariables 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.secretVolumes 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.service 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail 13.7.2
+gcp.project.cloudFunctionV2.serviceConfig.serviceRef 13.27.2
 gcp.project.cloudFunctionV2.serviceConfig.timeoutSeconds 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.vpcConnector 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.vpcConnectorEgressSettings 13.7.2
@@ -1232,6 +1239,7 @@ gcp.project.cloudRunService.container.command 9.0.0
 gcp.project.cloudRunService.container.env 9.0.0
 gcp.project.cloudRunService.container.id 9.0.0
 gcp.project.cloudRunService.container.image 9.0.0
+gcp.project.cloudRunService.container.imageRepository 13.27.2
 gcp.project.cloudRunService.container.livenessProbe 9.0.0
 gcp.project.cloudRunService.container.name 9.0.0
 gcp.project.cloudRunService.container.ports 9.0.0
@@ -1255,6 +1263,7 @@ gcp.project.cloudRunService.job.conditions 9.0.0
 gcp.project.cloudRunService.job.created 9.0.0
 gcp.project.cloudRunService.job.creator 9.0.0
 gcp.project.cloudRunService.job.deleted 9.0.0
+gcp.project.cloudRunService.job.encryptionKeyRef 13.27.2
 gcp.project.cloudRunService.job.etag 13.1.2
 gcp.project.cloudRunService.job.executionCount 9.0.0
 gcp.project.cloudRunService.job.executionTemplate 9.0.0
@@ -1284,6 +1293,7 @@ gcp.project.cloudRunService.job.id 9.0.0
 gcp.project.cloudRunService.job.labels 9.0.0
 gcp.project.cloudRunService.job.lastModifier 9.0.0
 gcp.project.cloudRunService.job.launchStage 9.0.0
+gcp.project.cloudRunService.job.managedBy 13.27.2
 gcp.project.cloudRunService.job.name 9.0.0
 gcp.project.cloudRunService.job.observedGeneration 9.0.0
 gcp.project.cloudRunService.job.projectId 9.0.0
@@ -1316,6 +1326,7 @@ gcp.project.cloudRunService.service.customAudiences 13.1.2
 gcp.project.cloudRunService.service.defaultUriDisabled 13.1.2
 gcp.project.cloudRunService.service.deleted 9.0.0
 gcp.project.cloudRunService.service.description 9.0.0
+gcp.project.cloudRunService.service.encryptionKeyRef 13.27.2
 gcp.project.cloudRunService.service.etag 13.1.2
 gcp.project.cloudRunService.service.expired 9.0.0
 gcp.project.cloudRunService.service.generation 9.0.0
@@ -1327,6 +1338,7 @@ gcp.project.cloudRunService.service.lastModifier 9.0.0
 gcp.project.cloudRunService.service.latestCreatedRevision 9.0.0
 gcp.project.cloudRunService.service.latestReadyRevision 9.0.0
 gcp.project.cloudRunService.service.launchStage 9.0.0
+gcp.project.cloudRunService.service.managedBy 13.27.2
 gcp.project.cloudRunService.service.name 9.0.0
 gcp.project.cloudRunService.service.observedGeneration 9.0.0
 gcp.project.cloudRunService.service.projectId 9.0.0
@@ -3191,6 +3203,7 @@ gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowEndTime 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowRecurrence 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowStartTime 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.resourceVersion 11.6.6
+gcp.project.gkeService.cluster.managedBy 13.27.2
 gcp.project.gkeService.cluster.masterAuth 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksAllowed 13.18.1
 gcp.project.gkeService.cluster.masterAuthorizedNetworksCidrs 13.18.1
@@ -3251,6 +3264,7 @@ gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures.threadsPerCore 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.bootDiskKmsKey 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.bootDiskKmsKeyRef 13.27.2
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.confidentialNodes.id 9.0.0

@@ -146,6 +146,18 @@ func initGcpProjectCloudRunServiceService(runtime *plugin.Runtime, args map[stri
 	return nil, nil, fmt.Errorf("cloud run service %q not found", nameVal)
 }
 
+type mqlGcpProjectCloudRunServiceServiceInternal struct {
+	cacheEncryptionKey string
+}
+
+func (g *mqlGcpProjectCloudRunServiceService) encryptionKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.EncryptionKeyRef, g.cacheEncryptionKey)
+}
+
+func (g *mqlGcpProjectCloudRunServiceService) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
+}
+
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -199,12 +211,39 @@ func initGcpProjectCloudRunServiceJob(runtime *plugin.Runtime, args map[string]*
 	return nil, nil, fmt.Errorf("cloud run job %q not found", nameVal)
 }
 
+type mqlGcpProjectCloudRunServiceJobInternal struct {
+	cacheEncryptionKey string
+}
+
+func (g *mqlGcpProjectCloudRunServiceJob) encryptionKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.EncryptionKeyRef, g.cacheEncryptionKey)
+}
+
+func (g *mqlGcpProjectCloudRunServiceJob) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
+}
+
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainer) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectCloudRunServiceContainer) imageRepository() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if g.Image.Error != nil {
+		return nil, g.Image.Error
+	}
+	project, location, repo := artifactRegistryRepoFromImage(g.Image.Data)
+	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
+	if err != nil {
+		return nil, err
+	}
+	if ref == nil {
+		g.ImageRepository.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainerProbe) id() (string, error) {
@@ -529,6 +568,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
+				mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
 				mux.Lock()
 				services = append(services, mqlS)
 				mux.Unlock()
@@ -834,6 +874,7 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 					log.Error().Err(err).Send()
 					return
 				}
+				mqlJob.(*mqlGcpProjectCloudRunServiceJob).cacheEncryptionKey = j.GetTemplate().GetTemplate().GetEncryptionKey()
 				mux.Lock()
 				jobs = append(jobs, mqlJob)
 				mux.Unlock()

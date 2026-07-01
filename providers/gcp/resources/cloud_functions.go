@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -138,6 +139,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 		}
 
 		var httpsTrigger, eventTrigger map[string]any
+		var eventTriggerResource string
 		switch f.Trigger.(type) {
 		case *functionspb.CloudFunction_HttpsTrigger:
 			pbHttpsTrigger := f.GetHttpsTrigger()
@@ -147,6 +149,7 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			}
 		case *functionspb.CloudFunction_EventTrigger:
 			pbEventTrigger := f.GetEventTrigger()
+			eventTriggerResource = pbEventTrigger.Resource
 			eventTrigger, err = convert.JsonToDict(mqlEventTrigger{
 				EventType:     pbEventTrigger.EventType,
 				Resource:      pbEventTrigger.Resource,
@@ -200,14 +203,55 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 		mqlFunc := mqlCloudFuncs.(*mqlGcpProjectCloudFunction)
 		mqlFunc.cacheKmsKeyName = f.KmsKeyName
 		mqlFunc.cacheBuildServiceAccount = f.BuildServiceAccount
+		mqlFunc.cacheEventTriggerResource = eventTriggerResource
 		cloudFunctions = append(cloudFunctions, mqlCloudFuncs)
 	}
 	return cloudFunctions, nil
 }
 
 type mqlGcpProjectCloudFunctionInternal struct {
-	cacheKmsKeyName          string
-	cacheBuildServiceAccount string
+	cacheKmsKeyName           string
+	cacheBuildServiceAccount  string
+	cacheEventTriggerResource string
+}
+
+func (g *mqlGcpProjectCloudFunction) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
+func (g *mqlGcpProjectCloudFunction) dockerRepositoryRef() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if g.DockerRepository.Error != nil {
+		return nil, g.DockerRepository.Error
+	}
+	project, location, repo := artifactRegistryRepoFromPath(g.DockerRepository.Data)
+	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
+	if err != nil {
+		return nil, err
+	}
+	if ref == nil {
+		g.DockerRepositoryRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ref, nil
+}
+
+func (g *mqlGcpProjectCloudFunction) eventTriggerTopic() (*mqlGcpProjectPubsubServiceTopic, error) {
+	resource := g.cacheEventTriggerResource
+	if !strings.Contains(resource, "/topics/") {
+		g.EventTriggerTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	projectId := projectFromResourceName(resource)
+	if projectId == "" && g.ProjectId.Error == nil {
+		projectId = g.ProjectId.Data
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name":      llx.StringData(parseResourceName(resource)),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
 }
 
 func (g *mqlGcpProjectCloudFunction) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {

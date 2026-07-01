@@ -246,6 +246,18 @@ func (g *mqlGcpProjectGkeServiceCluster) databaseEncryptionKey() (*mqlGcpProject
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectGkeServiceCluster) managedBy() (string, error) {
+	return managedByFromLabels(g.GetResourceLabels())
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) bootDiskKmsKeyRef() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.GetBootDiskKmsKey()
+	if keyName.Error != nil {
+		return nil, keyName.Error
+	}
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.BootDiskKmsKeyRef, keyName.Data)
+}
+
 func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServiceClusterNetworkPolicy, error) {
 	if g.NetworkPolicyConfig.Error != nil {
 		return nil, g.NetworkPolicyConfig.Error

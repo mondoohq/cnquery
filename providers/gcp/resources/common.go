@@ -116,6 +116,62 @@ func projectRefById(runtime *plugin.Runtime, projectId string) (*mqlGcpProject, 
 	return res.(*mqlGcpProject), nil
 }
 
+// artifactRegistryRepoFromPath parses an Artifact Registry repository resource
+// name of the form "projects/{project}/locations/{location}/repositories/{repo}"
+// and returns its project, location, and repository components. Any component
+// not present in the path is returned empty.
+func artifactRegistryRepoFromPath(path string) (project, location, repo string) {
+	parts := strings.Split(path, "/")
+	for i := 0; i+1 < len(parts); i++ {
+		switch parts[i] {
+		case "projects":
+			project = parts[i+1]
+		case "locations":
+			location = parts[i+1]
+		case "repositories":
+			repo = parts[i+1]
+		}
+	}
+	return project, location, repo
+}
+
+// artifactRegistryRepoFromImage parses an Artifact Registry container image URL
+// of the form "{location}-docker.pkg.dev/{project}/{repo}/{image}[:tag|@digest]"
+// and returns its project, location, and repository components. It returns empty
+// strings for images that are not hosted in Artifact Registry (for example
+// Container Registry "gcr.io" images or external registries).
+func artifactRegistryRepoFromImage(image string) (project, location, repo string) {
+	s := strings.TrimPrefix(image, "https://")
+	parts := strings.Split(s, "/")
+	if len(parts) < 3 {
+		return "", "", ""
+	}
+	host := parts[0]
+	const suffix = "-docker.pkg.dev"
+	if !strings.HasSuffix(host, suffix) {
+		return "", "", ""
+	}
+	return parts[1], strings.TrimSuffix(host, suffix), parts[2]
+}
+
+// resolveArtifactRegistryRepoRef resolves the typed Artifact Registry repository
+// resource for a given project, location, and repository name. It returns nil
+// when any component is empty so callers can mark the field null.
+func resolveArtifactRegistryRepoRef(runtime *plugin.Runtime, project, location, repo string) (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
+	if project == "" || location == "" || repo == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.artifactRegistryService.repository", map[string]*llx.RawData{
+		"name":      llx.StringData(repo),
+		"location":  llx.StringData(location),
+		"projectId": llx.StringData(project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectArtifactRegistryServiceRepository), nil
+}
+
 // parentFolderFromId resolves the typed folder for a Cloud Resource Manager
 // parent reference. It returns nil when the parent is not a folder (for example
 // an organization or an empty reference), leaving the caller to mark the field
