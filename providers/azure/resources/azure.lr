@@ -8259,14 +8259,28 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   // Deprecated in favor of cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, and
   // cmkUserAssignedIdentity.
   encryption @maturity("deprecated") dict
-  // Customer-managed key name in Key Vault used to encrypt the factory (empty for platform-managed encryption)
-  cmkKeyName string
+  // Customer-managed key name in Key Vault used to encrypt the factory
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyName @maturity("deprecated") string
   // Key Vault base URL backing the customer-managed encryption key
-  cmkKeyVaultUri string
-  // Version of the customer-managed encryption key (empty means the latest key version is used)
-  cmkKeyVersion string
-  // User-assigned identity resource ID used to access the customer-managed key; empty when the factory's system-assigned identity is used
-  cmkUserAssignedIdentity string
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyVaultUri @maturity("deprecated") string
+  // Version of the customer-managed encryption key
+  //
+  // Deprecated in favor of cmkKey.
+  cmkKeyVersion @maturity("deprecated") string
+  // User-assigned identity resource ID used to access the customer-managed key
+  //
+  // Deprecated in favor of cmkIdentity.
+  cmkUserAssignedIdentity @maturity("deprecated") string
+  // Customer-managed key in Key Vault used to encrypt the factory (null for platform-managed encryption)
+  cmkKey() azure.subscription.keyVaultService.key
+  // User-assigned managed identity used to access the customer-managed encryption key (null when the factory's system-assigned identity is used)
+  cmkIdentity() azure.subscription.managedIdentity
+  // User-assigned managed identities associated with the factory
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Time the factory was created
   created time
   // Linked services configured on the factory (connection info for external systems)
@@ -8435,6 +8449,14 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   trustedServiceBypassEnabled bool
   // Whether Azure AD-only authentication is enabled
   azureADOnlyAuthentication bool
+  // Name of the filesystem in the default Data Lake Storage account
+  defaultStorageFilesystem string
+  // Default Data Lake Storage account for the workspace (null when none is configured)
+  defaultStorage() azure.subscription.storageService.account
+  // Customer-managed key in Key Vault used to encrypt the workspace (null for platform-managed encryption)
+  cmkKey() azure.subscription.keyVaultService.key
+  // User-assigned managed identities associated with the workspace
+  userAssignedIdentities() []azure.subscription.managedIdentity
 }
 
 // Azure Container Registry service
@@ -9083,6 +9105,8 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   tags map[string]string
   // Identity configuration
   identity dict
+  // User-assigned managed identities associated with the vault
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // SKU name ("Standard" or "RS0")
   skuName string
   // Provisioning state

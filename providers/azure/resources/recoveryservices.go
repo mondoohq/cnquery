@@ -21,12 +21,13 @@ import (
 )
 
 type mqlAzureSubscriptionRecoveryServicesServiceVaultInternal struct {
-	cacheSecuritySettings    *armrecoveryservices.SecuritySettings
-	cacheEncryption          *armrecoveryservices.VaultPropertiesEncryption
-	cacheMonitoringSettings  *armrecoveryservices.MonitoringSettings
-	cacheRedundancySettings  *armrecoveryservices.VaultPropertiesRedundancySettings
-	cachePrivateEndpointConn []*armrecoveryservices.PrivateEndpointConnectionVaultProperties
-	cacheSystemData          any
+	cacheSecuritySettings        *armrecoveryservices.SecuritySettings
+	cacheEncryption              *armrecoveryservices.VaultPropertiesEncryption
+	cacheMonitoringSettings      *armrecoveryservices.MonitoringSettings
+	cacheRedundancySettings      *armrecoveryservices.VaultPropertiesRedundancySettings
+	cachePrivateEndpointConn     []*armrecoveryservices.PrivateEndpointConnectionVaultProperties
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 func (a *mqlAzureSubscriptionRecoveryServicesService) id() (string, error) {
@@ -149,6 +150,11 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		return nil, err
 	}
 
+	var userAssignedIdentityIds []string
+	if vault.Identity != nil {
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vault.Identity.UserAssignedIdentities)
+	}
+
 	var skuName string
 	if vault.SKU != nil && vault.SKU.Name != nil {
 		skuName = string(*vault.SKU.Name)
@@ -210,6 +216,7 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 	mqlVault.cacheMonitoringSettings = props.MonitoringSettings
 	mqlVault.cacheRedundancySettings = props.RedundancySettings
 	mqlVault.cachePrivateEndpointConn = props.PrivateEndpointConnections
+	mqlVault.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	sysData, err := convert.JsonToDict(vault.SystemData)
 	if err != nil {
@@ -222,6 +229,11 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 
 func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// userAssignedIdentities returns the typed user-assigned managed identities of the vault.
+func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 // securitySettings builds the security settings sub-resource from cached data.

@@ -1731,6 +1731,8 @@ azure.subscription.dataFactory 13.3.0
 azure.subscription.dataFactoryService 13.3.0
 azure.subscription.dataFactoryService.factories 13.3.0
 azure.subscription.dataFactoryService.factory 13.3.0
+azure.subscription.dataFactoryService.factory.cmkIdentity 13.23.1
+azure.subscription.dataFactoryService.factory.cmkKey 13.23.1
 azure.subscription.dataFactoryService.factory.cmkKeyName 13.16.2
 azure.subscription.dataFactoryService.factory.cmkKeyVaultUri 13.16.2
 azure.subscription.dataFactoryService.factory.cmkKeyVersion 13.16.2
@@ -1787,6 +1789,7 @@ azure.subscription.dataFactoryService.factory.publicNetworkAccess 13.3.0
 azure.subscription.dataFactoryService.factory.repoConfiguration 13.3.0
 azure.subscription.dataFactoryService.factory.tags 13.3.0
 azure.subscription.dataFactoryService.factory.type 13.3.0
+azure.subscription.dataFactoryService.factory.userAssignedIdentities 13.23.1
 azure.subscription.dataFactoryService.factory.version 13.3.0
 azure.subscription.dataFactoryService.subscriptionId 13.3.0
 azure.subscription.databricks 11.4.28
@@ -3843,6 +3846,7 @@ azure.subscription.recoveryServicesService.vault.skuName 13.3.3
 azure.subscription.recoveryServicesService.vault.systemMetadata 13.22.1
 azure.subscription.recoveryServicesService.vault.tags 13.3.3
 azure.subscription.recoveryServicesService.vault.type 13.3.3
+azure.subscription.recoveryServicesService.vault.userAssignedIdentities 13.23.1
 azure.subscription.recoveryServicesService.vaults 13.3.3
 azure.subscription.resource 9.0.0
 azure.subscription.resource.changedTime 9.0.0
@@ -4622,6 +4626,9 @@ azure.subscription.synapseService 13.3.0
 azure.subscription.synapseService.subscriptionId 13.3.0
 azure.subscription.synapseService.workspace 13.3.0
 azure.subscription.synapseService.workspace.azureADOnlyAuthentication 13.3.0
+azure.subscription.synapseService.workspace.cmkKey 13.23.1
+azure.subscription.synapseService.workspace.defaultStorage 13.23.1
+azure.subscription.synapseService.workspace.defaultStorageFilesystem 13.23.1
 azure.subscription.synapseService.workspace.encryption 13.3.0
 azure.subscription.synapseService.workspace.id 13.3.0
 azure.subscription.synapseService.workspace.identity 13.3.0
@@ -4636,6 +4643,7 @@ azure.subscription.synapseService.workspace.sqlAdministratorLogin 13.3.0
 azure.subscription.synapseService.workspace.tags 13.3.0
 azure.subscription.synapseService.workspace.trustedServiceBypassEnabled 13.3.0
 azure.subscription.synapseService.workspace.type 13.3.0
+azure.subscription.synapseService.workspace.userAssignedIdentities 13.23.1
 azure.subscription.synapseService.workspaces 13.3.0
 azure.subscription.systemData 13.19.2
 azure.subscription.systemData.createdAt 13.19.2
