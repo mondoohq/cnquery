@@ -4892,6 +4892,16 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the server's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the server's system-assigned managed identity
+  tenantId string
+  // Default user-assigned managed identity used by the server (null when none is set)
+  primaryUserAssignedIdentity() azure.subscription.managedIdentity
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -5485,6 +5495,16 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the server's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the server's managed identity
+  tenantId string
+  // User-assigned managed identities attached to the server
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -5814,6 +5834,14 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
   // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
   internetReachable() bool
+  // Type of managed identity configured on the server (for example "UserAssigned")
+  identityType string
+  // Principal ID of the server's managed identity
+  principalId string
+  // Tenant ID of the server's managed identity
+  tenantId string
+  // User-assigned managed identities attached to the server
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -5905,6 +5933,16 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // SQL API databases hosted on the account (Core SQL API)
   sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
+  // Type of managed identity configured on the account
+  //
+  // One of "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned", or "None".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the account's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the Cosmos DB account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

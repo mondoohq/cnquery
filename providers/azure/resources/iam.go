@@ -35,6 +35,21 @@ func sortedUserAssignedIdentityIDs[V any](m map[string]*V) []string {
 	return keys
 }
 
+// sortedUserAssignedIdentityKeys returns the keys of a UserAssignedIdentities
+// map whose values are non-pointer (e.g. the MySQL flexible server SDK uses
+// map[string]any) in stable sorted order. Returns nil when the map is empty.
+func sortedUserAssignedIdentityKeys[V any](m map[string]V) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // resolveUserAssignedIdentities resolves a set of user-assigned managed
 // identity ARM resource IDs into typed managedIdentity resources. The IDs are
 // the keys of an SDK UserAssignedIdentities map. The runtime cache short-

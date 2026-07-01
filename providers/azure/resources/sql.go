@@ -30,6 +30,21 @@ type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	connectionPolicyOnce sync.Once
 	connectionPolicyResp *sql.ServerConnectionPoliciesClientGetResponse
 	connectionPolicyErr  error
+
+	cachePrimaryUserAssignedIdentityId string
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) primaryUserAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cachePrimaryUserAssignedIdentityId == "" {
+		a.PrimaryUserAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cachePrimaryUserAssignedIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 // fetchConnectionPolicy retrieves the server-scoped ConnectionPolicy. Cached
@@ -179,6 +194,7 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 			var state *string
 			var fullyQualifiedDomainName *string
 			var administratorLogin *string
+			var primaryUserAssignedIdentityId *string
 			if dbServer.Properties != nil {
 				minimalTlsVersion = dbServer.Properties.MinimalTLSVersion
 				publicNetworkAccess = (*string)(dbServer.Properties.PublicNetworkAccess)
@@ -187,6 +203,14 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 				state = dbServer.Properties.State
 				fullyQualifiedDomainName = dbServer.Properties.FullyQualifiedDomainName
 				administratorLogin = dbServer.Properties.AdministratorLogin
+				primaryUserAssignedIdentityId = dbServer.Properties.PrimaryUserAssignedIdentityID
+			}
+
+			var identityType, identityPrincipalId, identityTenantId *string
+			if dbServer.Identity != nil {
+				identityType = (*string)(dbServer.Identity.Type)
+				identityPrincipalId = dbServer.Identity.PrincipalID
+				identityTenantId = dbServer.Identity.TenantID
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
@@ -204,9 +228,16 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]any, error) {
 					"state":                         llx.StringDataPtr(state),
 					"fullyQualifiedDomainName":      llx.StringDataPtr(fullyQualifiedDomainName),
 					"administratorLogin":            llx.StringDataPtr(administratorLogin),
+					"identityType":                  llx.StringDataPtr(identityType),
+					"principalId":                   llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                      llx.StringDataPtr(identityTenantId),
 				})
 			if err != nil {
 				return nil, err
+			}
+			mqlServer := mqlAzureDbServer.(*mqlAzureSubscriptionSqlServiceServer)
+			if primaryUserAssignedIdentityId != nil {
+				mqlServer.cachePrimaryUserAssignedIdentityId = *primaryUserAssignedIdentityId
 			}
 			res = append(res, mqlAzureDbServer)
 		}

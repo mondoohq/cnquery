@@ -110,12 +110,13 @@ func (a *mqlAzureSubscriptionCosmosDbService) postgresqlClusters() ([]any, error
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountInternal struct {
-	cacheKeyVaultKeyUri        string
-	cacheBackupType            string
-	cacheBackupIntervalMinutes int64
-	cacheBackupRetentionHours  int64
-	cacheBackupRedundancy      string
-	cacheSystemData            any
+	cacheKeyVaultKeyUri          string
+	cacheBackupType              string
+	cacheBackupIntervalMinutes   int64
+	cacheBackupRetentionHours    int64
+	cacheBackupRedundancy        string
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
@@ -202,6 +203,15 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 		}
 	}
 
+	var identityType, identityPrincipalId, identityTenantId *string
+	var userAssignedIdentityIds []string
+	if account.Identity != nil {
+		identityType = cosmosEnumStrPtr(account.Identity.Type)
+		identityPrincipalId = account.Identity.PrincipalID
+		identityTenantId = account.Identity.TenantID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(account.Identity.UserAssignedIdentities)
+	}
+
 	defaultConsistencyLevel, networkAclBypass, corsAllowedOrigins, locations := cosmosNetworkConsistency(account.Properties)
 
 	virtualNetworkRules := []any{}
@@ -260,11 +270,15 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			"corsAllowedOrigins":                 llx.ArrayData(corsAllowedOrigins, types.String),
 			"locations":                          llx.ArrayData(locations, types.String),
 			"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
+			"identityType":                       llx.StringDataPtr(identityType),
+			"principalId":                        llx.StringDataPtr(identityPrincipalId),
+			"tenantId":                           llx.StringDataPtr(identityTenantId),
 		})
 	if err != nil {
 		return nil, err
 	}
 	mqlAccount := mqlCosmosDbAccount.(*mqlAzureSubscriptionCosmosDbServiceAccount)
+	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	if account.Properties != nil && account.Properties.KeyVaultKeyURI != nil {
 		mqlAccount.cacheKeyVaultKeyUri = *account.Properties.KeyVaultKeyURI
 	}
@@ -586,6 +600,10 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureS
 		return nil, nil
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKeyVaultKeyUri)
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceMongoClusterInternal struct {

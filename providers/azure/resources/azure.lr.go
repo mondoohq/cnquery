@@ -7537,6 +7537,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.sqlService.server.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.primaryUserAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetPrimaryUserAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.sqlService.server.vulnerabilityassessmentsettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings).GetId()).ToDataRes(types.String)
 	},
@@ -8251,6 +8263,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.postgreSqlService.flexibleServer.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
 	"azure.subscription.postgreSqlService.flexibleServer.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -8641,6 +8665,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.flexibleServer.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.mySqlService.flexibleServer.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
 	"azure.subscription.mySqlService.flexibleServer.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -8748,6 +8784,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase")))
+	},
+	"azure.subscription.cosmosDbService.account.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
 	"azure.subscription.cosmosDbService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -23584,6 +23632,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.server.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.primaryUserAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).PrimaryUserAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.vulnerabilityassessmentsettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings).__id, ok = v.Value.(string)
 		return
@@ -24640,6 +24704,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.postgreSqlService.flexibleServer.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -25204,6 +25284,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.mySqlService.flexibleServer.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.mySqlService.flexibleServer.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -25354,6 +25450,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53562,6 +53674,10 @@ type mqlAzureSubscriptionSqlServiceServer struct {
 	FailoverGroups                   plugin.TValue[[]any]
 	ReplicationLinks                 plugin.TValue[[]any]
 	InternetReachable                plugin.TValue[bool]
+	IdentityType                     plugin.TValue[string]
+	PrincipalId                      plugin.TValue[string]
+	TenantId                         plugin.TValue[string]
+	PrimaryUserAssignedIdentity      plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 }
 
 // createAzureSubscriptionSqlServiceServer creates a new instance of this resource
@@ -53960,6 +54076,34 @@ func (c *mqlAzureSubscriptionSqlServiceServer) GetReplicationLinks() *plugin.TVa
 func (c *mqlAzureSubscriptionSqlServiceServer) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetPrimaryUserAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.PrimaryUserAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.server", c.__id, "primaryUserAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.primaryUserAssignedIdentity()
 	})
 }
 
@@ -56355,6 +56499,10 @@ type mqlAzureSubscriptionPostgreSqlServiceFlexibleServer struct {
 	ThreatProtectionState        plugin.TValue[string]
 	PrivateEndpointConnections   plugin.TValue[[]any]
 	InternetReachable            plugin.TValue[bool]
+	IdentityType                 plugin.TValue[string]
+	PrincipalId                  plugin.TValue[string]
+	TenantId                     plugin.TValue[string]
+	UserAssignedIdentities       plugin.TValue[[]any]
 	SystemMetadata               plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -56560,6 +56708,34 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetPrivateEndpoint
 func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetInternetReachable() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.InternetReachable, func() (bool, error) {
 		return c.internetReachable()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
 	})
 }
 
@@ -57732,6 +57908,10 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServer struct {
 	HighAvailabilityMode   plugin.TValue[string]
 	HighAvailabilityState  plugin.TValue[string]
 	InternetReachable      plugin.TValue[bool]
+	IdentityType           plugin.TValue[string]
+	PrincipalId            plugin.TValue[string]
+	TenantId               plugin.TValue[string]
+	UserAssignedIdentities plugin.TValue[[]any]
 	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -57916,6 +58096,34 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetInternetReachable() 
 	})
 }
 
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mySqlService.flexibleServer", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -58068,6 +58276,10 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	SqlRoleAssignments                 plugin.TValue[[]any]
 	DiagnosticSettings                 plugin.TValue[[]any]
 	SqlDatabases                       plugin.TValue[[]any]
+	IdentityType                       plugin.TValue[string]
+	PrincipalId                        plugin.TValue[string]
+	TenantId                           plugin.TValue[string]
+	UserAssignedIdentities             plugin.TValue[[]any]
 	SystemMetadata                     plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -58296,6 +58508,34 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlDatabases() *plugin.T
 		}
 
 		return c.sqlDatabases()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
 	})
 }
 
