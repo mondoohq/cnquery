@@ -73,8 +73,8 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 			"resourceId":   llx.StringData(entry.Resource.ID),
 			"resourceType": llx.StringData(entry.Resource.Type),
 			"ownerId":      llx.StringData(entry.Owner.ID),
-			"oldValue":     llx.DictData(anyMap(entry.OldValue)),
-			"newValue":     llx.DictData(anyMap(entry.NewValue)),
+			"oldValue":     llx.DictData(dictValue(entry.OldValue)),
+			"newValue":     llx.DictData(dictValue(entry.NewValue)),
 		})
 		if err != nil {
 			return nil, err
@@ -84,11 +84,11 @@ func (c *mqlCloudflareAccount) auditLogs() ([]any, error) {
 	return results, nil
 }
 
-// anyMap returns an empty map[string]any when v is nil so DictData stays
-// non-nil; the .lr `dict` field type tolerates nil but a stable empty map
-// reads more cleanly in MQL queries. Non-nil values (objects, strings, or
-// other scalars the API may send) pass through unchanged.
-func anyMap(v any) any {
+// dictValue prepares a value for a `dict` .lr field: nil becomes an empty
+// map[string]any so DictData stays non-nil (the field tolerates nil but a
+// stable empty map reads more cleanly in MQL), while non-nil values (objects,
+// strings, or other scalars the API may send) pass through unchanged.
+func dictValue(v any) any {
 	if v == nil {
 		return map[string]any{}
 	}
