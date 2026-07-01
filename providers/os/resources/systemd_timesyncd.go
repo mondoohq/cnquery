@@ -22,7 +22,7 @@ func (t *mqlSystemdTimesyncd) active() (bool, error) {
 // systemd versions that lack the `timedatectl show` verb (< 239). The
 // relevant line looks like:
 //
-//	       System clock synchronized: yes
+//	System clock synchronized: yes
 //
 // and is backed by the same org.freedesktop.timedate1 NTPSynchronized
 // property that `timedatectl show` exposes on newer systemd.
