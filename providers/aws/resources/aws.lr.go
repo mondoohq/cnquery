@@ -20619,6 +20619,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.revisionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetRevisionId()).ToDataRes(types.String)
 	},
+	"aws.lambda.function.runtimeVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetRuntimeVersionArn()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetDescription()).ToDataRes(types.String)
 	},
@@ -56711,6 +56714,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.runtimeVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).RuntimeVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -136252,6 +136259,7 @@ type mqlAwsLambdaFunction struct {
 	PackageType                   plugin.TValue[string]
 	CodeSha256                    plugin.TValue[string]
 	RevisionId                    plugin.TValue[string]
+	RuntimeVersionArn             plugin.TValue[string]
 	Description                   plugin.TValue[string]
 	LastModifiedAt                plugin.TValue[*time.Time]
 	UrlConfig                     plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
@@ -136519,6 +136527,10 @@ func (c *mqlAwsLambdaFunction) GetCodeSha256() *plugin.TValue[string] {
 
 func (c *mqlAwsLambdaFunction) GetRevisionId() *plugin.TValue[string] {
 	return &c.RevisionId
+}
+
+func (c *mqlAwsLambdaFunction) GetRuntimeVersionArn() *plugin.TValue[string] {
+	return &c.RuntimeVersionArn
 }
 
 func (c *mqlAwsLambdaFunction) GetDescription() *plugin.TValue[string] {

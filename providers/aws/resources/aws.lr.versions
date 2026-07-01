@@ -6033,6 +6033,7 @@ aws.lambda.function.revisionId 13.39.2
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
 aws.lambda.function.runtimeManagementConfig 13.6.3
+aws.lambda.function.runtimeVersionArn 13.39.2
 aws.lambda.function.securityGroups 13.2.7
 aws.lambda.function.signingJobArn 11.15.2
 aws.lambda.function.signingProfileVersionArn 11.15.2

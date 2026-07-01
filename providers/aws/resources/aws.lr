@@ -14570,6 +14570,10 @@ private aws.lambda.function @defaults("arn") {
   codeSha256 string
   // Latest revision of the function's configuration and code, updated on every change
   revisionId string
+  // ARN of the resolved managed runtime version the function runs on
+  //
+  // Identifies the exact patched build of the managed runtime, distinct from runtimeManagementConfig, which only reports the update mode. Empty for OS-only runtimes and container-image functions.
+  runtimeVersionArn string
   // Human-readable description of the function
   description string
   // When the function was last updated

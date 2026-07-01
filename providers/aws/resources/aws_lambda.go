@@ -254,6 +254,11 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		layers = append(layers, mqlLayer)
 	}
 
+	var runtimeVersionArn string
+	if function.RuntimeVersionConfig != nil {
+		runtimeVersionArn = convert.ToValue(function.RuntimeVersionConfig.RuntimeVersionArn)
+	}
+
 	args := map[string]*llx.RawData{
 		"arn":                         llx.StringDataPtr(function.FunctionArn),
 		"name":                        llx.StringDataPtr(function.FunctionName),
@@ -270,6 +275,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"packageType":                 llx.StringData(string(function.PackageType)),
 		"codeSha256":                  llx.StringDataPtr(function.CodeSha256),
 		"revisionId":                  llx.StringDataPtr(function.RevisionId),
+		"runtimeVersionArn":           llx.StringData(runtimeVersionArn),
 		"description":                 llx.StringDataPtr(function.Description),
 		"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
 		"state":                       llx.StringData(string(function.State)),
