@@ -1712,7 +1712,9 @@ aws.cloudtrail.trail.region 11.15.2
 aws.cloudtrail.trail.s3bucket 11.15.2
 aws.cloudtrail.trail.snsTopic 13.12.1
 aws.cloudtrail.trail.snsTopicARN 11.15.2
+aws.cloudtrail.trail.startLoggingAt 13.39.2
 aws.cloudtrail.trail.status 11.15.2
+aws.cloudtrail.trail.stoppedLoggingAt 13.39.2
 aws.cloudtrail.trail.tags 13.12.1
 aws.cloudtrail.trails 11.15.2
 aws.cloudwatch 11.15.2

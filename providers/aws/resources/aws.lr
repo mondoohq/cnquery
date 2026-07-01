@@ -9930,6 +9930,13 @@ private aws.cloudtrail.trail @defaults("name region") {
   hasCustomEventSelectors bool
   // Whether logging is currently enabled for the trail
   isLogging() bool
+  // Time logging was most recently started for the trail
+  startLoggingAt() time
+  // Time logging was most recently stopped for the trail
+  //
+  // A non-null value on a trail that is currently logging indicates capture was
+  // interrupted at some point, leaving a gap in the recorded event history.
+  stoppedLoggingAt() time
   // Tags associated with the trail
   tags() map[string]string
   // Time of the most recent delivery of log files to the trail's S3 bucket

@@ -644,6 +644,22 @@ func (a *mqlAwsCloudtrailTrail) latestNotifiedAt() (*time.Time, error) {
 	return trailstatus.LatestNotificationTime, nil
 }
 
+func (a *mqlAwsCloudtrailTrail) startLoggingAt() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.StartLoggingTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) stoppedLoggingAt() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.StopLoggingTime, nil
+}
+
 func (a *mqlAwsCloudtrailTrail) latestCloudWatchLogsDeliveredAt() (*time.Time, error) {
 	trailstatus, err := a.getTrailStatus()
 	if err != nil {

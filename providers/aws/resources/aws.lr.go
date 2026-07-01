@@ -15526,6 +15526,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.isLogging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetIsLogging()).ToDataRes(types.Bool)
 	},
+	"aws.cloudtrail.trail.startLoggingAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetStartLoggingAt()).ToDataRes(types.Time)
+	},
+	"aws.cloudtrail.trail.stoppedLoggingAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetStoppedLoggingAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudtrail.trail.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -49024,6 +49030,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudtrail.trail.isLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).IsLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.startLoggingAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).StartLoggingAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.stoppedLoggingAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).StoppedLoggingAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -117381,6 +117395,8 @@ type mqlAwsCloudtrailTrail struct {
 	InsightSelectorEntries               plugin.TValue[[]any]
 	HasCustomEventSelectors              plugin.TValue[bool]
 	IsLogging                            plugin.TValue[bool]
+	StartLoggingAt                       plugin.TValue[*time.Time]
+	StoppedLoggingAt                     plugin.TValue[*time.Time]
 	Tags                                 plugin.TValue[map[string]any]
 	LatestDeliveredAt                    plugin.TValue[*time.Time]
 	LatestDeliveryTime                   plugin.TValue[*time.Time]
@@ -117637,6 +117653,18 @@ func (c *mqlAwsCloudtrailTrail) GetHasCustomEventSelectors() *plugin.TValue[bool
 func (c *mqlAwsCloudtrailTrail) GetIsLogging() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsLogging, func() (bool, error) {
 		return c.isLogging()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetStartLoggingAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.StartLoggingAt, func() (*time.Time, error) {
+		return c.startLoggingAt()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetStoppedLoggingAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.StoppedLoggingAt, func() (*time.Time, error) {
+		return c.stoppedLoggingAt()
 	})
 }
 
