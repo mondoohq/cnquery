@@ -995,13 +995,17 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) destinationResource(wantSer
 		return nil, false, nil
 	}
 	parsed, err := arn.Parse(arnVal)
-	if err != nil || parsed.Service != wantService {
+	if err != nil {
+		log.Warn().Str("arn", arnVal).Err(err).Msg("could not parse subscription filter destination ARN")
+		return nil, false, nil
+	}
+	if parsed.Service != wantService {
 		return nil, false, nil
 	}
 	res, err := NewResource(a.MqlRuntime, resourceName,
 		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
 	if err != nil {
-		return nil, false, nil
+		return nil, false, err
 	}
 	return res, true, nil
 }
