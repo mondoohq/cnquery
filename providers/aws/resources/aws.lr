@@ -7864,7 +7864,7 @@ private aws.emr.cluster @defaults("arn") {
   // Name of the EC2 key pair used for SSH access to the cluster instances
   ec2KeyName() string
   // EC2 instance profile the cluster nodes run as
-  ec2InstanceProfile() string
+  ec2InstanceProfile() aws.iam.instanceProfile
   // Whether Spark Connect sessions are enabled on the cluster
   sessionEnabled() bool
 }

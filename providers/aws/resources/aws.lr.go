@@ -13528,7 +13528,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEmrCluster).GetEc2KeyName()).ToDataRes(types.String)
 	},
 	"aws.emr.cluster.ec2InstanceProfile": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEmrCluster).GetEc2InstanceProfile()).ToDataRes(types.String)
+		return (r.(*mqlAwsEmrCluster).GetEc2InstanceProfile()).ToDataRes(types.Resource("aws.iam.instanceProfile"))
 	},
 	"aws.emr.cluster.sessionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetSessionEnabled()).ToDataRes(types.Bool)
@@ -46431,7 +46431,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.emr.cluster.ec2InstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmrCluster).Ec2InstanceProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEmrCluster).Ec2InstanceProfile, ok = plugin.RawToTValue[*mqlAwsIamInstanceProfile](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.sessionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109537,7 +109537,7 @@ type mqlAwsEmrCluster struct {
 	Subnets                    plugin.TValue[[]any]
 	SecurityGroups             plugin.TValue[[]any]
 	Ec2KeyName                 plugin.TValue[string]
-	Ec2InstanceProfile         plugin.TValue[string]
+	Ec2InstanceProfile         plugin.TValue[*mqlAwsIamInstanceProfile]
 	SessionEnabled             plugin.TValue[bool]
 }
 
@@ -109920,8 +109920,18 @@ func (c *mqlAwsEmrCluster) GetEc2KeyName() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsEmrCluster) GetEc2InstanceProfile() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Ec2InstanceProfile, func() (string, error) {
+func (c *mqlAwsEmrCluster) GetEc2InstanceProfile() *plugin.TValue[*mqlAwsIamInstanceProfile] {
+	return plugin.GetOrCompute[*mqlAwsIamInstanceProfile](&c.Ec2InstanceProfile, func() (*mqlAwsIamInstanceProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "ec2InstanceProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamInstanceProfile), nil
+			}
+		}
+
 		return c.ec2InstanceProfile()
 	})
 }
