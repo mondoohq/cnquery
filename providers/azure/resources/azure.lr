@@ -2172,6 +2172,10 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   flowTimeoutInMinutes int
   // List of virtual network peerings
   peerings() []azure.subscription.networkService.virtualNetwork.peering
+  // Default public NAT gateway providing outbound SNAT for subnets that do not have their own
+  defaultNatGateway() azure.subscription.networkService.natGateway
+  // Flow logs that target this virtual network
+  flowLogs() []azure.subscription.networkService.watcher.flowlog
 }
 
 // Azure VNet peering
@@ -2203,7 +2207,11 @@ azure.subscription.networkService.virtualNetwork.peering @defaults("id name peer
   // The provisioning state: Succeeded, Updating, Deleting, Failed, Creating, Canceled
   provisioningState string
   // The remote virtual network reference ID
-  remoteVirtualNetworkId string
+  //
+  // Deprecated in favor of remoteVirtualNetwork.
+  remoteVirtualNetworkId @maturity("deprecated") string
+  // The peered remote virtual network
+  remoteVirtualNetwork() azure.subscription.networkService.virtualNetwork
   // Whether traffic between the two VNets is encrypted (Azure global VNet peering encryption)
   remoteVirtualNetworkEncryptionEnabled bool
   // Encryption enforcement for the remote VNet ("AllowUnencrypted" or "DropUnencrypted")
@@ -2800,6 +2808,32 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   sslCertificates []azure.subscription.networkService.applicationGateway.sslCertificate
   // Frontend IP configurations on the application gateway (a config with a subnet is internal/private; one with a public IP is internet-facing)
   frontendIpConfigs []azure.subscription.networkService.applicationGateway.frontendIpConfig
+  // Object ID (principal ID) of the system-assigned managed identity, when one is configured
+  principalId string
+  // Tenant ID of the system-assigned managed identity, when one is configured
+  tenantId string
+  // Managed identity type: None, SystemAssigned, UserAssigned, or "SystemAssigned, UserAssigned"
+  identityType string
+  // User-assigned managed identities associated with the application gateway
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Gateway IP configurations that bind the application gateway into a subnet
+  gatewayIpConfigs() []azure.subscription.networkService.applicationGateway.gatewayIpConfig
+}
+
+// Azure Application Gateway IP configuration
+//
+// Gateway IP configuration on an Application Gateway. Each entry binds the
+// gateway into a subnet, from which the gateway draws its private addresses.
+// The `subnet` reference traces the network the gateway is deployed into.
+private azure.subscription.networkService.applicationGateway.gatewayIpConfig @defaults("name subnetId") {
+  // ARM resource ID
+  id string
+  // Gateway IP configuration name
+  name string
+  // ARM resource ID of the bound subnet (cached for the typed `subnet` accessor)
+  subnetId string
+  // Subnet the application gateway is deployed into
+  subnet() azure.subscription.networkService.subnet
 }
 
 // Azure Application Gateway frontend IP configuration

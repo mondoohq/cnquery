@@ -2840,7 +2840,14 @@ azure.subscription.networkService.applicationGateway.frontendIpConfig.publicIpAd
 azure.subscription.networkService.applicationGateway.frontendIpConfig.subnet 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.subnetId 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfigs 13.18.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfig 13.23.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfig.id 13.23.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfig.name 13.23.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfig.subnet 13.23.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfig.subnetId 13.23.1
+azure.subscription.networkService.applicationGateway.gatewayIpConfigs 13.23.1
 azure.subscription.networkService.applicationGateway.id 9.0.13
+azure.subscription.networkService.applicationGateway.identityType 13.23.1
 azure.subscription.networkService.applicationGateway.listener 13.12.2
 azure.subscription.networkService.applicationGateway.listener.hostName 13.12.2
 azure.subscription.networkService.applicationGateway.listener.hostNames 13.12.2
@@ -2856,6 +2863,7 @@ azure.subscription.networkService.applicationGateway.listeners 13.12.2
 azure.subscription.networkService.applicationGateway.location 9.0.13
 azure.subscription.networkService.applicationGateway.name 9.0.13
 azure.subscription.networkService.applicationGateway.policy 9.0.13
+azure.subscription.networkService.applicationGateway.principalId 13.23.1
 azure.subscription.networkService.applicationGateway.properties 9.0.13
 azure.subscription.networkService.applicationGateway.sslCertificate 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.id 13.12.2
@@ -2868,7 +2876,9 @@ azure.subscription.networkService.applicationGateway.sslCipherSuites 13.1.8
 azure.subscription.networkService.applicationGateway.sslMinProtocolVersion 13.1.8
 azure.subscription.networkService.applicationGateway.sslPolicyType 13.1.8
 azure.subscription.networkService.applicationGateway.tags 9.0.13
+azure.subscription.networkService.applicationGateway.tenantId 13.23.1
 azure.subscription.networkService.applicationGateway.type 9.0.13
+azure.subscription.networkService.applicationGateway.userAssignedIdentities 13.23.1
 azure.subscription.networkService.applicationGateway.wafConfiguration 11.3.3
 azure.subscription.networkService.applicationGateways 9.0.1
 azure.subscription.networkService.applicationSecurityGroups 9.0.8
@@ -3413,6 +3423,7 @@ azure.subscription.networkService.virtualHub.vnetConnections 13.12.2
 azure.subscription.networkService.virtualHubs 13.12.2
 azure.subscription.networkService.virtualNetwork 9.0.8
 azure.subscription.networkService.virtualNetwork.addressPrefixes 13.0.2
+azure.subscription.networkService.virtualNetwork.defaultNatGateway 13.23.1
 azure.subscription.networkService.virtualNetwork.dhcpOptions 9.0.10
 azure.subscription.networkService.virtualNetwork.dhcpOptions.dnsServers 9.0.10
 azure.subscription.networkService.virtualNetwork.dhcpOptions.id 9.0.10
@@ -3421,6 +3432,7 @@ azure.subscription.networkService.virtualNetwork.enableVmProtection 9.0.10
 azure.subscription.networkService.virtualNetwork.encryptionEnabled 13.0.2
 azure.subscription.networkService.virtualNetwork.encryptionEnforcement 13.0.2
 azure.subscription.networkService.virtualNetwork.etag 9.0.8
+azure.subscription.networkService.virtualNetwork.flowLogs 13.23.1
 azure.subscription.networkService.virtualNetwork.flowTimeoutInMinutes 13.0.2
 azure.subscription.networkService.virtualNetwork.id 9.0.8
 azure.subscription.networkService.virtualNetwork.location 9.0.8
@@ -3434,6 +3446,7 @@ azure.subscription.networkService.virtualNetwork.peering.name 13.0.2
 azure.subscription.networkService.virtualNetwork.peering.peeringState 13.0.2
 azure.subscription.networkService.virtualNetwork.peering.peeringSyncLevel 13.0.2
 azure.subscription.networkService.virtualNetwork.peering.provisioningState 13.0.2
+azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetwork 13.23.1
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkEncryptionEnabled 13.5.1
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkEncryptionEnforcement 13.5.1
 azure.subscription.networkService.virtualNetwork.peering.remoteVirtualNetworkId 13.0.2
