@@ -310,6 +310,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 		if db.EncryptionConfig != nil {
 			mqlSpannerDb.cacheKmsKeyNames = collectSpannerKmsKeyNames(db.EncryptionConfig)
 		}
+		mqlSpannerDb.cacheSourceBackupName = db.RestoreInfo.GetBackupInfo().GetBackup()
 		res = append(res, mqlDb)
 	}
 
@@ -340,7 +341,116 @@ func collectSpannerKmsKeyNames(cfg *databasepb.EncryptionConfig) []string {
 }
 
 type mqlGcpProjectSpannerServiceInstanceDatabaseInternal struct {
-	cacheKmsKeyNames []string
+	cacheKmsKeyNames      []string
+	cacheSourceBackupName string
+}
+
+func (g *mqlGcpProjectSpannerServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
+// getSpannerInstanceForList creates a Spanner instance resource keyed only by
+// project and full instance name so its databases()/backups() lists can be
+// walked to resolve lineage. When the parent traversal already listed the
+// instance, the fully populated resource is returned from the runtime cache.
+func getSpannerInstanceForList(runtime *plugin.Runtime, projectId, instanceName string) (*mqlGcpProjectSpannerServiceInstance, error) {
+	obj, err := CreateResource(runtime, "gcp.project.spannerService.instance", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"name":      llx.StringData(instanceName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return obj.(*mqlGcpProjectSpannerServiceInstance), nil
+}
+
+// getSpannerBackupByName resolves a Spanner backup by its full resource name
+// (projects/{project}/instances/{instance}/backups/{backup}). Returns nil when
+// the name is empty, malformed, or no matching backup exists.
+func getSpannerBackupByName(runtime *plugin.Runtime, backupName string) (*mqlGcpProjectSpannerServiceInstanceBackup, error) {
+	if backupName == "" {
+		return nil, nil
+	}
+	parts := strings.Split(backupName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "instances" || parts[4] != "backups" {
+		return nil, nil
+	}
+	instanceName := fmt.Sprintf("projects/%s/instances/%s", parts[1], parts[3])
+	inst, err := getSpannerInstanceForList(runtime, parts[1], instanceName)
+	if err != nil {
+		return nil, err
+	}
+	backups := inst.GetBackups()
+	if backups.Error != nil {
+		return nil, backups.Error
+	}
+	for _, b := range backups.Data {
+		backup := b.(*mqlGcpProjectSpannerServiceInstanceBackup)
+		if backup.Name.Error != nil {
+			return nil, backup.Name.Error
+		}
+		if backup.Name.Data == backupName {
+			return backup, nil
+		}
+	}
+	return nil, nil
+}
+
+// getSpannerDatabaseByName resolves a Spanner database by its full resource name
+// (projects/{project}/instances/{instance}/databases/{database}). Returns nil
+// when the name is empty, malformed, or no matching database exists.
+func getSpannerDatabaseByName(runtime *plugin.Runtime, dbName string) (*mqlGcpProjectSpannerServiceInstanceDatabase, error) {
+	if dbName == "" {
+		return nil, nil
+	}
+	parts := strings.Split(dbName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "instances" || parts[4] != "databases" {
+		return nil, nil
+	}
+	instanceName := fmt.Sprintf("projects/%s/instances/%s", parts[1], parts[3])
+	inst, err := getSpannerInstanceForList(runtime, parts[1], instanceName)
+	if err != nil {
+		return nil, err
+	}
+	dbs := inst.GetDatabases()
+	if dbs.Error != nil {
+		return nil, dbs.Error
+	}
+	for _, d := range dbs.Data {
+		db := d.(*mqlGcpProjectSpannerServiceInstanceDatabase)
+		if db.Name.Error != nil {
+			return nil, db.Name.Error
+		}
+		if db.Name.Data == dbName {
+			return db, nil
+		}
+	}
+	return nil, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceDatabase) sourceBackup() (*mqlGcpProjectSpannerServiceInstanceBackup, error) {
+	b, err := getSpannerBackupByName(g.MqlRuntime, g.cacheSourceBackupName)
+	if err != nil {
+		return nil, err
+	}
+	if b == nil {
+		g.SourceBackup.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return b, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceBackup) sourceDatabase() (*mqlGcpProjectSpannerServiceInstanceDatabase, error) {
+	if g.Database.Error != nil {
+		return nil, g.Database.Error
+	}
+	d, err := getSpannerDatabaseByName(g.MqlRuntime, g.Database.Data)
+	if err != nil {
+		return nil, err
+	}
+	if d == nil {
+		g.SourceDatabase.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return d, nil
 }
 
 func (g *mqlGcpProjectSpannerServiceInstanceDatabase) kmsKeys() ([]any, error) {

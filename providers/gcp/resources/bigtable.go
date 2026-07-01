@@ -185,6 +185,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/bigtableService/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
+func (g *mqlGcpProjectBigtableServiceInstance) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -654,6 +658,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlBackup.(*mqlGcpProjectBigtableServiceBackup).cacheSourceBackup = backup.SourceBackup
 			res = append(res, mqlBackup)
 		}
 	}
@@ -672,4 +677,126 @@ func (g *mqlGcpProjectBigtableServiceBackup) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/bigtableService/%s/backup/%s", g.ProjectId.Data, g.ClusterName.Data, g.Name.Data), nil
+}
+
+type mqlGcpProjectBigtableServiceBackupInternal struct {
+	cacheSourceBackup string
+}
+
+// bigtableInstanceIDFromClusterName extracts the short instance ID from a full
+// cluster resource name (projects/{project}/instances/{instance}/clusters/{cluster}).
+// Returns "" when the name does not match that shape.
+func bigtableInstanceIDFromClusterName(clusterName string) string {
+	parts := strings.Split(clusterName, "/")
+	if len(parts) < 4 || parts[0] != "projects" || parts[2] != "instances" {
+		return ""
+	}
+	return parts[3]
+}
+
+// getBigtableTableByName resolves a Bigtable table by its short ID within an
+// instance. The instance list is served from the runtime cache when the parent
+// traversal already listed it. Returns nil when the table name is empty or no
+// matching table exists.
+func getBigtableTableByName(runtime *plugin.Runtime, projectId, instanceName, tableName string) (*mqlGcpProjectBigtableServiceTable, error) {
+	if tableName == "" || instanceName == "" {
+		return nil, nil
+	}
+	obj, err := CreateResource(runtime, "gcp.project.bigtableService.instance", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"name":      llx.StringData(instanceName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	inst := obj.(*mqlGcpProjectBigtableServiceInstance)
+	tables := inst.GetTables()
+	if tables.Error != nil {
+		return nil, tables.Error
+	}
+	for _, t := range tables.Data {
+		table := t.(*mqlGcpProjectBigtableServiceTable)
+		if table.Name.Error != nil {
+			return nil, table.Name.Error
+		}
+		if table.Name.Data == tableName {
+			return table, nil
+		}
+	}
+	return nil, nil
+}
+
+// getBigtableBackupByName resolves a Bigtable backup by its full resource name
+// (projects/{project}/instances/{instance}/clusters/{cluster}/backups/{backup}).
+// Returns nil when the name is empty, malformed, or no matching backup exists.
+func getBigtableBackupByName(runtime *plugin.Runtime, backupResourceName string) (*mqlGcpProjectBigtableServiceBackup, error) {
+	if backupResourceName == "" {
+		return nil, nil
+	}
+	parts := strings.Split(backupResourceName, "/")
+	if len(parts) < 8 || parts[0] != "projects" || parts[2] != "instances" || parts[4] != "clusters" || parts[6] != "backups" {
+		return nil, nil
+	}
+	projectId := parts[1]
+	instanceName := parts[3]
+	clusterFullName := fmt.Sprintf("projects/%s/instances/%s/clusters/%s", parts[1], parts[3], parts[5])
+	backupShort := parts[7]
+
+	obj, err := CreateResource(runtime, "gcp.project.bigtableService.instance", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"name":      llx.StringData(instanceName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	inst := obj.(*mqlGcpProjectBigtableServiceInstance)
+	backups := inst.GetBackups()
+	if backups.Error != nil {
+		return nil, backups.Error
+	}
+	for _, b := range backups.Data {
+		backup := b.(*mqlGcpProjectBigtableServiceBackup)
+		if backup.Name.Error != nil {
+			return nil, backup.Name.Error
+		}
+		if backup.ClusterName.Error != nil {
+			return nil, backup.ClusterName.Error
+		}
+		if backup.Name.Data == backupShort && backup.ClusterName.Data == clusterFullName {
+			return backup, nil
+		}
+	}
+	return nil, nil
+}
+
+func (g *mqlGcpProjectBigtableServiceBackup) sourceTableRef() (*mqlGcpProjectBigtableServiceTable, error) {
+	if g.SourceTable.Error != nil {
+		return nil, g.SourceTable.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.ClusterName.Error != nil {
+		return nil, g.ClusterName.Error
+	}
+	instanceName := bigtableInstanceIDFromClusterName(g.ClusterName.Data)
+	table, err := getBigtableTableByName(g.MqlRuntime, g.ProjectId.Data, instanceName, g.SourceTable.Data)
+	if err != nil {
+		return nil, err
+	}
+	if table == nil {
+		g.SourceTableRef.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return table, nil
+}
+
+func (g *mqlGcpProjectBigtableServiceBackup) sourceBackup() (*mqlGcpProjectBigtableServiceBackup, error) {
+	backup, err := getBigtableBackupByName(g.MqlRuntime, g.cacheSourceBackup)
+	if err != nil {
+		return nil, err
+	}
+	if backup == nil {
+		g.SourceBackup.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return backup, nil
 }

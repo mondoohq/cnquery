@@ -183,10 +183,29 @@ func (g *mqlGcpProjectFirestoreService) databases() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlFirestoreDb := mqlDb.(*mqlGcpProjectFirestoreServiceDatabase)
+		mqlFirestoreDb.cacheKmsKeyName = db.GetCmekConfig().GetKmsKeyName()
 		res = append(res, mqlDb)
 	}
 
 	return res, nil
+}
+
+type mqlGcpProjectFirestoreServiceDatabaseInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectFirestoreServiceDatabase) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectFirestoreServiceDatabase) id() (string, error) {

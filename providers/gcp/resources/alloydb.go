@@ -190,6 +190,15 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 		if cluster.EncryptionConfig != nil {
 			mqlAlloyCluster.cacheKmsKeyName = cluster.EncryptionConfig.KmsKeyName
 		}
+		if cluster.NetworkConfig != nil {
+			mqlAlloyCluster.cacheNetworkName = cluster.NetworkConfig.Network
+		}
+		if cluster.SecondaryConfig != nil {
+			mqlAlloyCluster.cachePrimaryClusterName = cluster.SecondaryConfig.PrimaryClusterName
+		}
+		if cluster.PrimaryConfig != nil {
+			mqlAlloyCluster.cacheSecondaryClusterNames = cluster.PrimaryConfig.SecondaryClusterNames
+		}
 		res = append(res, mqlCluster)
 	}
 
@@ -197,7 +206,91 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 }
 
 type mqlGcpProjectAlloydbServiceClusterInternal struct {
+	cacheKmsKeyName            string
+	cacheNetworkName           string
+	cachePrimaryClusterName    string
+	cacheSecondaryClusterNames []string
+}
+
+type mqlGcpProjectAlloydbServiceBackupInternal struct {
 	cacheKmsKeyName string
+}
+
+// getAlloyDBClusterByName resolves an AlloyDB cluster by its full resource name
+// (projects/{project}/locations/{location}/clusters/{cluster}). It lists the
+// referenced project's clusters (served from the runtime cache when the parent
+// traversal already listed them) and matches by full name. Returns nil when the
+// name is empty, malformed, or no matching cluster exists (for example a source
+// cluster that has since been deleted).
+func getAlloyDBClusterByName(runtime *plugin.Runtime, resourceName string) (*mqlGcpProjectAlloydbServiceCluster, error) {
+	if resourceName == "" {
+		return nil, nil
+	}
+	parts := parseAlloyDBClusterName(resourceName)
+	if parts == nil {
+		return nil, nil
+	}
+	obj, err := CreateResource(runtime, "gcp.project.alloydbService", map[string]*llx.RawData{
+		"projectId": llx.StringData(parts.project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	svc := obj.(*mqlGcpProjectAlloydbService)
+	clusters := svc.GetClusters()
+	if clusters.Error != nil {
+		return nil, clusters.Error
+	}
+	for _, c := range clusters.Data {
+		cluster := c.(*mqlGcpProjectAlloydbServiceCluster)
+		if cluster.Name.Error != nil {
+			return nil, cluster.Name.Error
+		}
+		if cluster.Name.Data == resourceName {
+			return cluster, nil
+		}
+	}
+	return nil, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	n, err := getNetworkByUrl(g.cacheNetworkName, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return n, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) primaryCluster() (*mqlGcpProjectAlloydbServiceCluster, error) {
+	c, err := getAlloyDBClusterByName(g.MqlRuntime, g.cachePrimaryClusterName)
+	if err != nil {
+		return nil, err
+	}
+	if c == nil {
+		g.PrimaryCluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return c, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) secondaryClusters() ([]any, error) {
+	res := []any{}
+	for _, name := range g.cacheSecondaryClusterNames {
+		c, err := getAlloyDBClusterByName(g.MqlRuntime, name)
+		if err != nil {
+			return nil, err
+		}
+		if c != nil {
+			res = append(res, c)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels(), g.GetAnnotations())
 }
 
 func (g *mqlGcpProjectAlloydbServiceCluster) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -609,6 +702,10 @@ func (g *mqlGcpProjectAlloydbServiceCluster) backups() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlAlloyBackup := mqlBackup.(*mqlGcpProjectAlloydbServiceBackup)
+		if backup.EncryptionConfig != nil {
+			mqlAlloyBackup.cacheKmsKeyName = backup.EncryptionConfig.KmsKeyName
+		}
 		res = append(res, mqlBackup)
 	}
 
@@ -623,4 +720,31 @@ func (g *mqlGcpProjectAlloydbServiceBackup) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/alloydbService/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceBackup) sourceCluster() (*mqlGcpProjectAlloydbServiceCluster, error) {
+	if g.ClusterName.Error != nil {
+		return nil, g.ClusterName.Error
+	}
+	c, err := getAlloyDBClusterByName(g.MqlRuntime, g.ClusterName.Data)
+	if err != nil {
+		return nil, err
+	}
+	if c == nil {
+		g.SourceCluster.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return c, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceBackup) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }

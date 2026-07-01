@@ -2682,6 +2682,12 @@ private gcp.project.sqlService.instance @defaults("name") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name and status of the failover replica
   failoverReplica dict
+  // Standby instance designated as the high-availability failover target
+  //
+  // Resolves the instance named by the failover replica configuration, the
+  // standby the primary fails over to for high availability. Null when the
+  // instance has no failover replica.
+  failoverReplicaRef() gcp.project.sqlService.instance
   // Raw GCE zone name
   //
   // Deprecated in favor of `zone`.
@@ -2784,8 +2790,21 @@ private gcp.project.sqlService.instance @defaults("name") {
   // `failoverDrReplicaName` is set on the primary to designate the DR
   // replica.
   replicationCluster dict
+  // Cross-region disaster-recovery replica designated by this primary
+  //
+  // Resolves the instance named as the cross-region disaster-recovery
+  // replica of the replication cluster, the target an Enterprise Plus
+  // primary fails over to in another region. Null when no such replica is
+  // designated.
+  drReplica() gcp.project.sqlService.instance
   // Expiration time of the instance's server CA certificate used for TLS
   serverCaCertExpiration time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) SQL instance database
@@ -7302,6 +7321,11 @@ private gcp.project.firestoreService.database @defaults("name") {
   tags map[string]string
   // Customer-managed encryption key configuration
   cmekConfig dict
+  // Customer-managed KMS key used for encryption (null when Google-managed)
+  //
+  // Resolves the key named in the customer-managed encryption configuration.
+  // Null when the database uses Google-managed encryption.
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Version retention period
   versionRetentionPeriod string
   // Earliest timestamp to which the database can be restored
@@ -7418,6 +7442,12 @@ private gcp.project.spannerService.instance @defaults("name") {
   backupSchedules() []gcp.project.spannerService.instance.backupSchedule
   // List of instance partitions
   instancePartitions() []gcp.project.spannerService.instance.instancePartition
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Spanner database
@@ -7459,6 +7489,12 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   createdAt time
   // Restore source information if the database was restored from a backup
   restoreInfo dict
+  // Backup this database was restored from
+  //
+  // Resolves the backup named in the restore information when the database
+  // was created by restoring a backup. Null for databases created empty or
+  // when the source backup no longer exists.
+  sourceBackup() gcp.project.spannerService.instance.backup
   // Database DDL statements (schema definition)
   ddl() []string
   // IAM policy bindings for the database
@@ -7485,6 +7521,11 @@ private gcp.project.spannerService.instance.backup @defaults("name") {
   name string
   // Source database of the backup
   database string
+  // Database this backup was taken from
+  //
+  // Resolves the source database named in the backup. Null when the source
+  // database no longer exists.
+  sourceDatabase() gcp.project.spannerService.instance.database
   // Current state of the backup
   state string
   // Expiration time
@@ -7678,6 +7719,12 @@ private gcp.project.bigtableService.instance @defaults("name") {
   backups() []gcp.project.bigtableService.backup
   // IAM policy bindings for the Bigtable instance
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Bigtable cluster
@@ -7777,6 +7824,16 @@ private gcp.project.bigtableService.backup @defaults("name") {
   name string
   // Source table of the backup
   sourceTable string
+  // Table this backup was taken from
+  //
+  // Resolves the source table named in the backup. Null when the source
+  // table no longer exists.
+  sourceTableRef() gcp.project.bigtableService.table
+  // Backup this backup was copied from
+  //
+  // Set on a backup created by copying another backup, resolving the source
+  // backup in the copy chain. Null for backups taken directly from a table.
+  sourceBackup() gcp.project.bigtableService.backup
   // Expiration time
   expireTime time
   // Start time
@@ -7875,6 +7932,27 @@ private gcp.project.alloydbService.cluster @defaults("name") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Database users defined on the cluster (built-in or AlloyDB IAM users)
   users() []gcp.project.alloydbService.cluster.user
+  // VPC network the cluster is attached to for private connectivity
+  //
+  // Resolves the network named in the cluster network configuration. Null
+  // when the cluster uses Private Service Connect instead of a peered VPC.
+  network() gcp.project.computeService.network
+  // Primary cluster this secondary cluster replicates from
+  //
+  // Set on a SECONDARY cluster, resolving the cross-region primary named in
+  // its secondary configuration. Null on primary clusters.
+  primaryCluster() gcp.project.alloydbService.cluster
+  // Secondary clusters replicating from this primary cluster
+  //
+  // Set on a PRIMARY cluster, resolving each cross-region secondary named in
+  // its primary configuration. Empty on secondary clusters.
+  secondaryClusters() []gcp.project.alloydbService.cluster
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) AlloyDB cluster user
@@ -7990,6 +8068,11 @@ private gcp.project.alloydbService.backup @defaults("name") {
   description string
   // Source cluster name
   clusterName string
+  // Cluster this backup was taken from
+  //
+  // Resolves the source cluster named in the backup. Null when the source
+  // cluster no longer exists.
+  sourceCluster() gcp.project.alloydbService.cluster
   // Database version
   databaseVersion string
   // Encryption configuration
@@ -8012,6 +8095,8 @@ private gcp.project.alloydbService.backup @defaults("name") {
   createdAt time
   // Last update time
   updatedAt time
+  // Customer-managed KMS key used for backup encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy
