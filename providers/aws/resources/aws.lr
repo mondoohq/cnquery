@@ -1383,6 +1383,12 @@ private aws.efs.filesystem @defaults("name id region") {
   availabilityZone string
   // Tags for the file system
   tags map[string]string
+  // CloudFormation stack that manages this file system, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this file system
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the file system is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Creation timestamp
   createdAt time
   // Mount targets for the file system
@@ -1711,6 +1717,12 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   metadata() dict
   // Tags for the KMS key
   tags() map[string]string
+  // CloudFormation stack that manages this key, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this key
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the key is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Aliases for the KMS key
   aliases() []string
   // Current state of the key: Creating, Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
@@ -2042,6 +2054,10 @@ private aws.iam.user @defaults("arn name createdAt") {
   passwordLastUsed time
   // Tags for the IAM user
   tags map[string]string
+  // Infrastructure-management system that owns this user
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the user is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // List of inline policies attached to the user
   policies() []string
   // List of managed policies attached to the user
@@ -2507,6 +2523,12 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   region string
   // Tags for the notebook instance
   tags() map[string]string
+  // CloudFormation stack that manages this notebook instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this notebook instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the notebook instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Time when the notebook instance was created
   createdAt time
   // Time when the notebook instance was last modified
@@ -2701,6 +2723,12 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   trainingEndTime time
   // Tags for the training job
   tags() map[string]string
+  // CloudFormation stack that manages this training job, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this training job
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the training job is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // IAM role for the training job
   iamRole() aws.iam.role
   // Algorithm specification
@@ -2781,6 +2809,12 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   exitMessage string
   // Tags for the processing job
   tags() map[string]string
+  // CloudFormation stack that manages this processing job, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this processing job
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the processing job is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // IAM role for the processing job
   iamRole() aws.iam.role
   // Whether network isolation is enabled
@@ -4771,6 +4805,12 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
+  // CloudFormation stack that manages this domain, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this domain
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the domain is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Version of Elasticsearch running
   elasticsearchVersion string
   // Elasticsearch domain ID
@@ -5340,6 +5380,12 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   vpc aws.vpc
   // Tags on the load balancer
   tags() map[string]string
+  // CloudFormation stack that manages this load balancer, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this load balancer
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the load balancer is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // List of target groups for the load balancer
   targetGroups() []aws.elb.targetgroup
   // List of EC2 instances registered with the load balancer (classic ELB only)
@@ -6875,6 +6921,12 @@ aws.secretsmanager.secret @defaults("arn name") {
   rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
+  // CloudFormation stack that manages this secret, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this secret
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the secret is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Resource-based policy attached to the secret (JSON string, empty if none)
   resourcePolicy() string
   // Parsed statements from the resource-based policy
@@ -7681,6 +7733,12 @@ private aws.emr.cluster @defaults("arn") {
   id string
   // Tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Name of the security configuration applied to the cluster
   securityConfiguration() string
   // Security configuration applied to the cluster
@@ -9072,6 +9130,12 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   retentionInDays int
   // Tags for the log group
   tags() map[string]string
+  // CloudFormation stack that manages this log group, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this log group
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the log group is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Data protection policy status
   //
   // One of ACTIVATED, DELETED, or ARCHIVED. ACTIVATED indicates that the log
@@ -9980,6 +10044,12 @@ private aws.cloudtrail.trail @defaults("name region") {
   stoppedLoggingAt() time
   // Tags associated with the trail
   tags() map[string]string
+  // CloudFormation stack that manages this trail, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this trail
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the trail is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Time of the most recent delivery of log files to the trail's S3 bucket
   latestDeliveredAt() time
   // Time of the most recent delivery of log files to the trail's S3 bucket
@@ -11309,6 +11379,12 @@ private aws.dynamodb.table @defaults("name region") {
   sourceTable() aws.dynamodb.table
   // Tags for the table
   tags() map[string]string
+  // CloudFormation stack that manages this table, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this table
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the table is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Date and time the table was created
   createdAt() time
   // Whether deletion protection is enabled
@@ -11573,6 +11649,12 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   snapshots() []aws.rds.snapshot
   // Tags for the database cluster
   tags map[string]string
+  // CloudFormation stack that manages this database cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this database cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the database cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Whether the cluster is encrypted
   storageEncrypted bool
   // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
@@ -11803,6 +11885,12 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   enhancedMonitoringResourceArn string
   // Tags for the database instance
   tags map[string]string
+  // CloudFormation stack that manages this database instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this database instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the database instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Name of the compute and memory capacity class of the database instance
   dbInstanceClass string
   // User-supplied unique key that identifies a database instance
@@ -12127,6 +12215,12 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   replicationGroupId string
   // Resource tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon ElastiCache serverless cache
@@ -13458,6 +13552,12 @@ private aws.ecr.repository @defaults("uri region") {
   architectures() []string
   // AWS resource tags for the repository (private repositories only)
   tags() map[string]string
+  // CloudFormation stack that manages this repository, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this repository
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the repository is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // AWS ECR repository lifecycle policy
@@ -13774,6 +13874,12 @@ private aws.apigateway.restapi @defaults("name id") {
   region string
   // Tags for the REST API
   tags map[string]string
+  // CloudFormation stack that manages this API, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this API
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the API is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Source of the API key for metering requests (HEADER or AUTHORIZER)
   apiKeySource string
   // Whether the default execute-api endpoint is disabled
@@ -14368,6 +14474,12 @@ private aws.lambda.function @defaults("arn") {
   region string
   // Tags for the function
   tags() map[string]string
+  // CloudFormation stack that manages this function, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this function
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the function is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Instruction set architectures supported by the function (x86_64, arm64)
   architectures []string
   // Size of the /tmp directory in MB (512-10240)
@@ -14770,6 +14882,12 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   arn string
   // Tags for the SSM instance
   tags() map[string]string
+  // CloudFormation stack that manages this instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Version of the SSM Agent running on the instance
   agentVersion string
   // Last time the agent pinged the SSM service
@@ -15635,6 +15753,12 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   completionTime time
   // Tags for the snapshot
   tags map[string]string
+  // CloudFormation stack that manages this snapshot, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this snapshot
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the snapshot is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // State of the snapshot: pending, completed, error, recoverable, or recovering
   state string
   // Size of the volume, in GiB
@@ -15679,6 +15803,12 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   state string
   // A map of tags associated with the EBS volume
   tags map[string]string
+  // CloudFormation stack that manages this volume, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this volume
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the volume is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Availability Zone in which the volume was created
   availabilityZone string
   // EBS volume type: gp2, gp3, io1, io2, st1, sc1, or standard
@@ -16780,6 +16910,12 @@ aws.eks.cluster @defaults("arn version status") {
   region string
   // A map of tags associated with the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Endpoint of Kubernetes API server
   endpoint() string
   // Kubernetes server version
@@ -17621,6 +17757,12 @@ private aws.documentdb.cluster @defaults("arn name status") {
   storageType string
   // Tags for the cluster
   tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Snapshots for this cluster
   snapshots() []aws.documentdb.snapshot
   // List of VPC security groups associated with the DB cluster
@@ -21072,6 +21214,12 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   createdAt time
   // Tags for the cluster
   tags map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Encryption configuration for an MSK cluster
@@ -21625,6 +21773,12 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   createdAt time
   // Tags for the broker
   tags() map[string]string
+  // CloudFormation stack that manages this broker, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this broker
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the broker is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon MQ broker configuration

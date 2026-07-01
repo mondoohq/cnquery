@@ -94,12 +94,14 @@ aws.apigateway.restapi.apiKeySource 11.15.2
 aws.apigateway.restapi.arn 11.15.2
 aws.apigateway.restapi.authorizers 13.20.1
 aws.apigateway.restapi.binaryMediaTypes 11.15.2
+aws.apigateway.restapi.cloudformationStack 13.39.2
 aws.apigateway.restapi.createdDate 11.15.2
 aws.apigateway.restapi.description 11.15.2
 aws.apigateway.restapi.disableExecuteApiEndpoint 11.15.2
 aws.apigateway.restapi.endpointTypes 13.15.2
 aws.apigateway.restapi.endpointVpcEndpointIds 13.15.2
 aws.apigateway.restapi.id 11.15.2
+aws.apigateway.restapi.managedBy 13.39.2
 aws.apigateway.restapi.minimumCompressionSize 11.15.2
 aws.apigateway.restapi.name 11.15.2
 aws.apigateway.restapi.policy 11.15.2
@@ -1671,6 +1673,7 @@ aws.cloudtrail.trail.capturesAllManagementEvents 13.34.1
 aws.cloudtrail.trail.cloudWatchLogsLogGroupArn 11.15.2
 aws.cloudtrail.trail.cloudWatchLogsRole 13.12.1
 aws.cloudtrail.trail.cloudWatchLogsRoleArn 11.15.2
+aws.cloudtrail.trail.cloudformationStack 13.39.2
 aws.cloudtrail.trail.eventSelector 13.12.1
 aws.cloudtrail.trail.eventSelector.dataResource 13.12.1
 aws.cloudtrail.trail.eventSelector.dataResource.type 13.12.1
@@ -1707,6 +1710,7 @@ aws.cloudtrail.trail.latestNotificationTime 13.12.1
 aws.cloudtrail.trail.latestNotifiedAt 13.12.1
 aws.cloudtrail.trail.logFileValidationEnabled 11.15.2
 aws.cloudtrail.trail.logGroup 11.15.2
+aws.cloudtrail.trail.managedBy 13.39.2
 aws.cloudtrail.trail.name 11.15.2
 aws.cloudtrail.trail.region 11.15.2
 aws.cloudtrail.trail.s3bucket 11.15.2
@@ -1763,6 +1767,7 @@ aws.cloudwatch.logInsightQuery.queryString 13.6.3
 aws.cloudwatch.logInsightQuery.region 13.6.3
 aws.cloudwatch.loggroup 11.15.2
 aws.cloudwatch.loggroup.arn 11.15.2
+aws.cloudwatch.loggroup.cloudformationStack 13.39.2
 aws.cloudwatch.loggroup.createdAt 13.38.2
 aws.cloudwatch.loggroup.dataProtectionPolicy 13.26.3
 aws.cloudwatch.loggroup.dataProtectionStatus 11.15.2
@@ -1779,6 +1784,7 @@ aws.cloudwatch.loggroup.logstream.lastEventTimestamp 13.6.3
 aws.cloudwatch.loggroup.logstream.lastIngestionTime 13.6.3
 aws.cloudwatch.loggroup.logstream.name 13.6.3
 aws.cloudwatch.loggroup.logstream.region 13.6.3
+aws.cloudwatch.loggroup.managedBy 13.39.2
 aws.cloudwatch.loggroup.metricsFilters 11.15.2
 aws.cloudwatch.loggroup.metricsfilter 11.15.2
 aws.cloudwatch.loggroup.metricsfilter.applyOnTransformedLogs 13.26.3
@@ -2410,6 +2416,7 @@ aws.documentdb.cluster.auditLogsEnabled 13.19.1
 aws.documentdb.cluster.availabilityZones 11.16.1
 aws.documentdb.cluster.backupRetentionPeriod 11.16.1
 aws.documentdb.cluster.cloneGroupId 13.19.1
+aws.documentdb.cluster.cloudformationStack 13.39.2
 aws.documentdb.cluster.clusterIdentifier 11.16.1
 aws.documentdb.cluster.clusterParameterGroup 11.16.1
 aws.documentdb.cluster.clusterResourceId 11.16.1
@@ -2426,6 +2433,7 @@ aws.documentdb.cluster.hostedZoneId 13.19.1
 aws.documentdb.cluster.iamRoles 13.19.1
 aws.documentdb.cluster.kmsKey 11.16.1
 aws.documentdb.cluster.latestRestorableTime 13.19.1
+aws.documentdb.cluster.managedBy 13.39.2
 aws.documentdb.cluster.masterUsername 11.16.1
 aws.documentdb.cluster.members 13.19.1
 aws.documentdb.cluster.multiAZ 11.16.1
@@ -2794,6 +2802,7 @@ aws.dynamodb.table.arn 11.15.2
 aws.dynamodb.table.autoScalingEnabled 13.38.2
 aws.dynamodb.table.backups 11.15.2
 aws.dynamodb.table.billingMode 11.16.1
+aws.dynamodb.table.cloudformationStack 13.39.2
 aws.dynamodb.table.continuousBackups 11.15.2
 aws.dynamodb.table.continuousBackupsEnabled 13.39.2
 aws.dynamodb.table.createdAt 11.15.2
@@ -2807,6 +2816,7 @@ aws.dynamodb.table.kmsMasterKeyId 13.29.1
 aws.dynamodb.table.latestRestorableDateTime 13.39.2
 aws.dynamodb.table.latestStreamArn 11.15.2
 aws.dynamodb.table.latestStreamLabel 11.15.2
+aws.dynamodb.table.managedBy 13.39.2
 aws.dynamodb.table.name 11.15.2
 aws.dynamodb.table.pitrRecoveryPeriodInDays 13.39.2
 aws.dynamodb.table.pointInTimeRecoveryEnabled 13.39.2
@@ -3332,6 +3342,7 @@ aws.ec2.securitygroup.vpc 11.15.2
 aws.ec2.serialConsoleAccessEnabled 13.6.3
 aws.ec2.snapshot 11.15.2
 aws.ec2.snapshot.arn 11.15.2
+aws.ec2.snapshot.cloudformationStack 13.39.2
 aws.ec2.snapshot.completionTime 11.15.2
 aws.ec2.snapshot.createVolumePermission 11.15.2
 aws.ec2.snapshot.dataEncryptionKeyId 13.35.2
@@ -3340,6 +3351,7 @@ aws.ec2.snapshot.encrypted 11.15.2
 aws.ec2.snapshot.id 11.15.2
 aws.ec2.snapshot.isPublic 13.2.7
 aws.ec2.snapshot.kmsKey 11.15.2
+aws.ec2.snapshot.managedBy 13.39.2
 aws.ec2.snapshot.outpostArn 13.35.2
 aws.ec2.snapshot.ownerAlias 13.35.2
 aws.ec2.snapshot.ownerId 13.38.2
@@ -3413,12 +3425,14 @@ aws.ec2.volume 11.15.2
 aws.ec2.volume.arn 11.15.2
 aws.ec2.volume.attachments 11.15.2
 aws.ec2.volume.availabilityZone 11.15.2
+aws.ec2.volume.cloudformationStack 13.39.2
 aws.ec2.volume.createTime 11.15.2
 aws.ec2.volume.encrypted 11.15.2
 aws.ec2.volume.fastRestored 13.35.2
 aws.ec2.volume.id 11.15.2
 aws.ec2.volume.iops 11.15.2
 aws.ec2.volume.kmsKey 11.15.2
+aws.ec2.volume.managedBy 13.39.2
 aws.ec2.volume.multiAttachEnabled 11.15.2
 aws.ec2.volume.region 11.15.2
 aws.ec2.volume.size 11.15.2
@@ -3530,6 +3544,7 @@ aws.ecr.repository.aboutText 11.16.1
 aws.ecr.repository.architectures 11.16.1
 aws.ecr.repository.arn 11.15.2
 aws.ecr.repository.catalogDescription 11.16.1
+aws.ecr.repository.cloudformationStack 13.39.2
 aws.ecr.repository.createdAt 11.15.2
 aws.ecr.repository.encryptionType 11.15.2
 aws.ecr.repository.imageScanOnPush 11.15.2
@@ -3537,6 +3552,7 @@ aws.ecr.repository.imageTagMutability 11.15.2
 aws.ecr.repository.images 11.15.2
 aws.ecr.repository.isPublic 13.37.1
 aws.ecr.repository.lifecyclePolicy 11.15.2
+aws.ecr.repository.managedBy 13.39.2
 aws.ecr.repository.name 11.15.2
 aws.ecr.repository.operatingSystems 11.16.1
 aws.ecr.repository.policy 13.5.0
@@ -3857,6 +3873,7 @@ aws.efs.filesystem.accessPoints 11.15.2
 aws.efs.filesystem.arn 11.15.2
 aws.efs.filesystem.availabilityZone 11.15.2
 aws.efs.filesystem.backupPolicy 11.15.2
+aws.efs.filesystem.cloudformationStack 13.39.2
 aws.efs.filesystem.createdAt 11.15.2
 aws.efs.filesystem.encrypted 11.15.2
 aws.efs.filesystem.fileSystemPolicy 11.15.2
@@ -3869,6 +3886,7 @@ aws.efs.filesystem.lifecycleConfiguration.transitionToArchive 13.12.1
 aws.efs.filesystem.lifecycleConfiguration.transitionToIA 13.12.1
 aws.efs.filesystem.lifecycleConfiguration.transitionToPrimaryStorageClass 13.12.1
 aws.efs.filesystem.lifecycleState 13.12.1
+aws.efs.filesystem.managedBy 13.39.2
 aws.efs.filesystem.mountTargets 11.15.2
 aws.efs.filesystem.name 11.15.2
 aws.efs.filesystem.ownerId 13.38.2
@@ -3950,6 +3968,7 @@ aws.eks.cluster.arn 11.15.2
 aws.eks.cluster.authenticationMode 11.15.2
 aws.eks.cluster.availableAddonVersions 13.12.1
 aws.eks.cluster.certificateAuthority 13.12.1
+aws.eks.cluster.cloudformationStack 13.39.2
 aws.eks.cluster.clusterSecurityGroup 13.12.1
 aws.eks.cluster.clusterSecurityGroups 13.12.1
 aws.eks.cluster.clusterSubnets 13.12.1
@@ -3969,6 +3988,7 @@ aws.eks.cluster.iamRole 11.15.2
 aws.eks.cluster.identityProviderConfigs 13.6.3
 aws.eks.cluster.insights 13.12.1
 aws.eks.cluster.logging 11.15.2
+aws.eks.cluster.managedBy 13.39.2
 aws.eks.cluster.name 11.15.2
 aws.eks.cluster.networkConfig 11.15.2
 aws.eks.cluster.nodeGroups 11.15.2
@@ -4084,11 +4104,13 @@ aws.elasticache.cluster.cacheNodes 11.15.2
 aws.elasticache.cluster.cacheSecurityGroups 11.15.2
 aws.elasticache.cluster.cacheSubnetGroupName 11.15.2
 aws.elasticache.cluster.clientDownloadLandingPage 11.15.2
+aws.elasticache.cluster.cloudformationStack 13.39.2
 aws.elasticache.cluster.engine 11.15.2
 aws.elasticache.cluster.engineVersion 11.15.2
 aws.elasticache.cluster.ipDiscovery 11.15.2
 aws.elasticache.cluster.kmsKey 13.3.1
 aws.elasticache.cluster.logDeliveryConfigurations 11.15.2
+aws.elasticache.cluster.managedBy 13.39.2
 aws.elasticache.cluster.networkType 11.15.2
 aws.elasticache.cluster.nodeType 11.15.2
 aws.elasticache.cluster.notificationConfiguration 11.15.2
@@ -4281,6 +4303,7 @@ aws.elb.loadbalancer.attribute.wafFailOpenEnabled 11.15.2
 aws.elb.loadbalancer.attribute.zonalShiftEnabled 11.15.2
 aws.elb.loadbalancer.attributes 11.15.2
 aws.elb.loadbalancer.availabilityZones 11.15.2
+aws.elb.loadbalancer.cloudformationStack 13.39.2
 aws.elb.loadbalancer.createdAt 11.15.2
 aws.elb.loadbalancer.dnsName 11.15.2
 aws.elb.loadbalancer.elbType 11.15.2
@@ -4292,6 +4315,7 @@ aws.elb.loadbalancer.instances 11.15.2
 aws.elb.loadbalancer.ipAddressType 11.15.2
 aws.elb.loadbalancer.listenerDescriptions 11.15.2
 aws.elb.loadbalancer.listeners 11.15.2
+aws.elb.loadbalancer.managedBy 13.39.2
 aws.elb.loadbalancer.name 11.15.2
 aws.elb.loadbalancer.region 11.15.2
 aws.elb.loadbalancer.scheme 11.15.2
@@ -4348,6 +4372,7 @@ aws.emr.cluster.bootstrapAction.args 13.12.1
 aws.emr.cluster.bootstrapAction.name 13.12.1
 aws.emr.cluster.bootstrapAction.scriptPath 13.12.1
 aws.emr.cluster.bootstrapActions 13.12.1
+aws.emr.cluster.cloudformationStack 13.39.2
 aws.emr.cluster.configurations 13.21.4
 aws.emr.cluster.createdAt 13.38.2
 aws.emr.cluster.ebsRootVolumeIops 13.21.4
@@ -4379,6 +4404,7 @@ aws.emr.cluster.instanceGroups 13.12.1
 aws.emr.cluster.kerberosAttributes 13.21.4
 aws.emr.cluster.logEncryptionKmsKey 13.3.1
 aws.emr.cluster.logUri 13.3.0
+aws.emr.cluster.managedBy 13.39.2
 aws.emr.cluster.masterInstances 11.15.2
 aws.emr.cluster.masterPublicDnsName 13.3.1
 aws.emr.cluster.name 11.15.2
@@ -4459,6 +4485,7 @@ aws.es.domain.automatedSnapshotPauseStartTime 13.25.1
 aws.es.domain.automatedSnapshotPauseState 13.25.1
 aws.es.domain.automatedSnapshotStartHour 13.21.4
 aws.es.domain.availabilityZones 13.21.4
+aws.es.domain.cloudformationStack 13.39.2
 aws.es.domain.cognitoEnabled 13.21.4
 aws.es.domain.cognitoIdentityPoolId 13.21.4
 aws.es.domain.cognitoRoleArn 13.21.4
@@ -4492,6 +4519,7 @@ aws.es.domain.instanceType 13.21.4
 aws.es.domain.internalUserDatabaseEnabled 13.21.4
 aws.es.domain.isPublic 13.37.1
 aws.es.domain.kmsKey 13.21.4
+aws.es.domain.managedBy 13.39.2
 aws.es.domain.name 11.15.2
 aws.es.domain.nodeToNodeEncryptionEnabled 11.15.2
 aws.es.domain.policyStatements 13.37.1
@@ -5410,6 +5438,7 @@ aws.iam.user.createdAt 11.15.2
 aws.iam.user.groups 11.15.2
 aws.iam.user.id 11.15.2
 aws.iam.user.loginProfile 11.15.2
+aws.iam.user.managedBy 13.39.2
 aws.iam.user.mfaDevices 13.26.2
 aws.iam.user.name 11.15.2
 aws.iam.user.passwordLastUsed 11.15.2
@@ -5817,6 +5846,7 @@ aws.kms.grants 13.26.3
 aws.kms.key 11.15.2
 aws.kms.key.aliases 11.15.2
 aws.kms.key.arn 11.15.2
+aws.kms.key.cloudformationStack 13.39.2
 aws.kms.key.createdAt 11.15.2
 aws.kms.key.customKeyStore 13.26.3
 aws.kms.key.deletedAt 11.15.2
@@ -5837,6 +5867,7 @@ aws.kms.key.keyState 11.15.2
 aws.kms.key.keyUsage 13.6.3
 aws.kms.key.lastUsageOperation 13.18.1
 aws.kms.key.lastUsedAt 13.18.1
+aws.kms.key.managedBy 13.39.2
 aws.kms.key.metadata 11.15.2
 aws.kms.key.multiRegion 13.6.3
 aws.kms.key.multiRegionConfiguration 13.6.3
@@ -5933,6 +5964,7 @@ aws.lambda.function.aliases 11.15.2
 aws.lambda.function.allowsPublicAccess 13.33.2
 aws.lambda.function.architectures 11.15.2
 aws.lambda.function.arn 11.15.2
+aws.lambda.function.cloudformationStack 13.39.2
 aws.lambda.function.codeSha256 11.15.2
 aws.lambda.function.codeSigningConfig 11.15.2
 aws.lambda.function.codeSize 11.15.2
@@ -5964,6 +5996,7 @@ aws.lambda.function.loggingConfig.applicationLogLevel 11.15.2
 aws.lambda.function.loggingConfig.logFormat 11.15.2
 aws.lambda.function.loggingConfig.logGroup 11.15.2
 aws.lambda.function.loggingConfig.systemLogLevel 11.15.2
+aws.lambda.function.managedBy 13.39.2
 aws.lambda.function.masterArn 13.38.2
 aws.lambda.function.masterFunction 13.38.2
 aws.lambda.function.memorySize 11.15.2
@@ -6418,6 +6451,7 @@ aws.mq.broker.auditLogsEnabled 11.16.1
 aws.mq.broker.authenticationStrategy 11.16.1
 aws.mq.broker.autoMinorVersionUpgrade 11.16.1
 aws.mq.broker.brokerId 11.16.1
+aws.mq.broker.cloudformationStack 13.39.2
 aws.mq.broker.configurations 13.21.4
 aws.mq.broker.createdAt 11.16.1
 aws.mq.broker.dataReplicationMode 13.21.4
@@ -6433,6 +6467,7 @@ aws.mq.broker.ldapServerMetadata 13.21.4
 aws.mq.broker.maintenanceDayOfWeek 13.21.4
 aws.mq.broker.maintenanceTimeOfDay 13.21.4
 aws.mq.broker.maintenanceTimeZone 13.21.4
+aws.mq.broker.managedBy 13.39.2
 aws.mq.broker.name 11.16.1
 aws.mq.broker.pendingAuthenticationStrategy 13.21.4
 aws.mq.broker.pendingDataReplicationMode 13.21.4
@@ -6518,6 +6553,7 @@ aws.msk.cluster.clientVpcConnection.owner 13.14.2
 aws.msk.cluster.clientVpcConnection.state 13.14.2
 aws.msk.cluster.clientVpcConnection.vpcConnectionArn 13.14.2
 aws.msk.cluster.clientVpcConnections 13.14.2
+aws.msk.cluster.cloudformationStack 13.39.2
 aws.msk.cluster.cloudwatchLogsEnabled 11.16.1
 aws.msk.cluster.cloudwatchLogsGroup 11.16.1
 aws.msk.cluster.clusterPolicy 13.14.2
@@ -6561,6 +6597,7 @@ aws.msk.cluster.loggingInfo.s3.bucket 13.14.2
 aws.msk.cluster.loggingInfo.s3.bucketName 13.14.2
 aws.msk.cluster.loggingInfo.s3.enabled 13.14.2
 aws.msk.cluster.loggingInfo.s3.prefix 13.14.2
+aws.msk.cluster.managedBy 13.39.2
 aws.msk.cluster.monitoring 13.14.2
 aws.msk.cluster.monitoring.enhancedMonitoring 13.14.2
 aws.msk.cluster.monitoring.jmxExporterEnabled 13.14.2
@@ -7148,6 +7185,7 @@ aws.rds.dbcluster.backupSettings 11.15.2
 aws.rds.dbcluster.certificateAuthority 11.15.2
 aws.rds.dbcluster.certificateExpiresAt 11.15.2
 aws.rds.dbcluster.cloneGroupId 13.38.2
+aws.rds.dbcluster.cloudformationStack 13.39.2
 aws.rds.dbcluster.clusterDbInstanceClass 11.15.2
 aws.rds.dbcluster.copyTagsToSnapshot 11.16.1
 aws.rds.dbcluster.createdAt 11.15.2
@@ -7172,6 +7210,7 @@ aws.rds.dbcluster.iamDatabaseAuthentication 11.15.2
 aws.rds.dbcluster.id 11.15.2
 aws.rds.dbcluster.kmsKey 11.15.2
 aws.rds.dbcluster.latestRestorableTime 11.15.2
+aws.rds.dbcluster.managedBy 13.39.2
 aws.rds.dbcluster.masterUserSecret 11.16.1
 aws.rds.dbcluster.masterUsername 11.15.2
 aws.rds.dbcluster.members 11.15.2
@@ -7218,6 +7257,7 @@ aws.rds.dbinstance.backupRetentionPeriod 11.15.2
 aws.rds.dbinstance.backupSettings 11.15.2
 aws.rds.dbinstance.certificateAuthority 11.15.2
 aws.rds.dbinstance.certificateExpiresAt 11.15.2
+aws.rds.dbinstance.cloudformationStack 13.39.2
 aws.rds.dbinstance.copyTagsToSnapshot 11.15.2
 aws.rds.dbinstance.createdAt 11.15.2
 aws.rds.dbinstance.customIamInstanceProfile 11.15.2
@@ -7243,6 +7283,7 @@ aws.rds.dbinstance.id 11.15.2
 aws.rds.dbinstance.kmsKey 11.15.2
 aws.rds.dbinstance.latestRestorableTime 11.15.2
 aws.rds.dbinstance.licenseModel 11.15.2
+aws.rds.dbinstance.managedBy 13.39.2
 aws.rds.dbinstance.masterUserSecret 11.16.1
 aws.rds.dbinstance.masterUsername 11.15.2
 aws.rds.dbinstance.maxAllocatedStorage 11.15.2
@@ -8654,12 +8695,14 @@ aws.sagemaker.notebookInstances 11.15.2
 aws.sagemaker.notebookinstance 11.15.2
 aws.sagemaker.notebookinstance.additionalCodeRepositories 13.12.0
 aws.sagemaker.notebookinstance.arn 11.15.2
+aws.sagemaker.notebookinstance.cloudformationStack 13.39.2
 aws.sagemaker.notebookinstance.createdAt 11.16.1
 aws.sagemaker.notebookinstance.defaultCodeRepository 13.12.0
 aws.sagemaker.notebookinstance.details 11.15.2
 aws.sagemaker.notebookinstance.instanceType 13.12.0
 aws.sagemaker.notebookinstance.lastModifiedAt 11.16.1
 aws.sagemaker.notebookinstance.lifecycleConfigName 13.12.0
+aws.sagemaker.notebookinstance.managedBy 13.39.2
 aws.sagemaker.notebookinstance.name 11.15.2
 aws.sagemaker.notebookinstance.region 11.15.2
 aws.sagemaker.notebookinstance.status 11.16.1
@@ -8696,6 +8739,7 @@ aws.sagemaker.pipelines 13.0.2
 aws.sagemaker.processingJobs 13.0.2
 aws.sagemaker.processingjob 13.0.2
 aws.sagemaker.processingjob.arn 13.0.2
+aws.sagemaker.processingjob.cloudformationStack 13.39.2
 aws.sagemaker.processingjob.createdAt 13.0.2
 aws.sagemaker.processingjob.enableInterContainerTrafficEncryption 13.0.2
 aws.sagemaker.processingjob.enableNetworkIsolation 13.0.2
@@ -8704,6 +8748,7 @@ aws.sagemaker.processingjob.exitMessage 13.0.2
 aws.sagemaker.processingjob.failureReason 13.0.2
 aws.sagemaker.processingjob.iamRole 13.0.2
 aws.sagemaker.processingjob.lastModifiedAt 13.0.2
+aws.sagemaker.processingjob.managedBy 13.39.2
 aws.sagemaker.processingjob.name 13.0.2
 aws.sagemaker.processingjob.processingEndTime 13.0.2
 aws.sagemaker.processingjob.processingResources 13.0.2
@@ -8767,6 +8812,7 @@ aws.sagemaker.trainingjob.algorithmSpecification 13.0.2
 aws.sagemaker.trainingjob.arn 13.0.2
 aws.sagemaker.trainingjob.billableTimeInSeconds 13.0.2
 aws.sagemaker.trainingjob.checkpointConfig 13.13.4
+aws.sagemaker.trainingjob.cloudformationStack 13.39.2
 aws.sagemaker.trainingjob.createdAt 13.0.2
 aws.sagemaker.trainingjob.enableInterContainerTrafficEncryption 13.0.2
 aws.sagemaker.trainingjob.enableNetworkIsolation 13.0.2
@@ -8775,6 +8821,7 @@ aws.sagemaker.trainingjob.finalMetrics 13.13.4
 aws.sagemaker.trainingjob.hyperParameters 13.0.2
 aws.sagemaker.trainingjob.iamRole 13.0.2
 aws.sagemaker.trainingjob.lastModifiedAt 13.0.2
+aws.sagemaker.trainingjob.managedBy 13.39.2
 aws.sagemaker.trainingjob.metricData 13.13.4
 aws.sagemaker.trainingjob.metricData.metricName 13.13.4
 aws.sagemaker.trainingjob.metricData.timestamp 13.13.4
@@ -8913,6 +8960,7 @@ aws.sagemaker.workteams 13.13.4
 aws.secretsmanager 11.15.2
 aws.secretsmanager.secret 11.15.2
 aws.secretsmanager.secret.arn 11.15.2
+aws.secretsmanager.secret.cloudformationStack 13.39.2
 aws.secretsmanager.secret.createdAt 11.15.2
 aws.secretsmanager.secret.deletedAt 13.12.1
 aws.secretsmanager.secret.description 11.15.2
@@ -8922,6 +8970,7 @@ aws.secretsmanager.secret.kmsKey 11.15.2
 aws.secretsmanager.secret.lastAccessedDate 11.15.2
 aws.secretsmanager.secret.lastChangedDate 11.15.2
 aws.secretsmanager.secret.lastRotatedDate 11.15.2
+aws.secretsmanager.secret.managedBy 13.39.2
 aws.secretsmanager.secret.name 11.15.2
 aws.secretsmanager.secret.nextRotationDate 11.15.2
 aws.secretsmanager.secret.owningService 11.15.2
@@ -9303,11 +9352,13 @@ aws.ssm.instance 11.15.2
 aws.ssm.instance.activationId 13.38.2
 aws.ssm.instance.agentVersion 11.15.2
 aws.ssm.instance.arn 11.15.2
+aws.ssm.instance.cloudformationStack 13.39.2
 aws.ssm.instance.computerName 11.15.2
 aws.ssm.instance.iamRole 13.38.2
 aws.ssm.instance.instanceId 11.15.2
 aws.ssm.instance.ipAddress 11.15.2
 aws.ssm.instance.lastPingedAt 11.15.2
+aws.ssm.instance.managedBy 13.39.2
 aws.ssm.instance.pingStatus 11.15.2
 aws.ssm.instance.platformName 11.15.2
 aws.ssm.instance.platformType 11.15.2
