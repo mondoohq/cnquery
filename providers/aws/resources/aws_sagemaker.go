@@ -1636,12 +1636,16 @@ func (a *mqlAwsSagemakerProcessingjob) trainingJob() (*mqlAwsSagemakerTrainingjo
 		map[string]*llx.RawData{"arn": llx.StringData(a.cacheTrainingJobArn)})
 	if err != nil {
 		// The source training job is commonly deleted while the processing job
-		// remains, which surfaces here as an error; log it so genuine API or
-		// permission failures stay diagnosable, but leave the reference null
-		// rather than failing the whole processing job.
-		log.Warn().Err(err).Str("trainingJobArn", a.cacheTrainingJobArn).Msg("could not resolve source training job for processing job")
-		a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		// remains (not-found), or unreadable due to permissions. Treat only
+		// those as a null reference; propagate anything else (transient network
+		// errors, throttling) so genuine failures aren't hidden.
+		var notFound *sagemakerTypes.ResourceNotFound
+		if errors.As(err, &notFound) || Is400AccessDeniedError(err) {
+			log.Warn().Err(err).Str("trainingJobArn", a.cacheTrainingJobArn).Msg("could not resolve source training job for processing job")
+			a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
 	}
 	return res.(*mqlAwsSagemakerTrainingjob), nil
 }
