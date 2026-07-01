@@ -1492,6 +1492,30 @@ gcp.project.computeService.instance @defaults("name id") {
   inventory() gcp.project.computeService.instance.osInventory
   // VM Manager vulnerability report for the instance
   vulnerabilityReport() gcp.project.computeService.instance.vulnerabilityReport
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
+  // VPC networks the instance is attached to
+  //
+  // Networks resolved from every network interface, letting audits traverse the
+  // network configuration directly instead of reading self-link URLs out of the
+  // network interface list.
+  networks() []gcp.project.computeService.network
+  // VPC subnetworks the instance is attached to
+  //
+  // Subnetworks resolved from every network interface, letting audits traverse
+  // the subnetwork configuration directly instead of reading self-link URLs out
+  // of the network interface list.
+  subnetworks() []gcp.project.computeService.subnetwork
+  // IAM service accounts the instance runs as
+  //
+  // Service accounts resolved from the instance service account bindings,
+  // letting audits traverse the role bindings and keys of each identity the VM
+  // authenticates with.
+  serviceAccountRefs() []gcp.project.iamService.serviceAccount
 }
 
 // Compute instance internet-exposure breakdown
@@ -1785,6 +1809,12 @@ private gcp.project.computeService.disk @defaults("name") {
   satisfiesPzs bool
   // Source disk used to create this disk
   sourceDisk() gcp.project.computeService.disk
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -1899,6 +1929,12 @@ private gcp.project.computeService.snapshot @defaults("name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Compute Engine custom or public machine image
@@ -1963,6 +1999,12 @@ private gcp.project.computeService.image @defaults("id name") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the image's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Compute Engine VPC firewall rule
@@ -2000,12 +2042,24 @@ private gcp.project.computeService.firewall @defaults("name") {
   allowsRdpFromInternet() bool
   // Source service accounts
   sourceServiceAccounts []string
+  // IAM service accounts whose instances this rule matches as traffic source
+  //
+  // Service accounts resolved from the source service account emails, letting
+  // audits traverse the role bindings and keys of each identity this ingress
+  // rule applies to.
+  sourceServiceAccountRefs() []gcp.project.iamService.serviceAccount
   // Source tags
   sourceTags []string
   // Range of destination IP addresses for which the rule applies to traffic
   destinationRanges []string
   // List of service accounts
   targetServiceAccounts []string
+  // IAM service accounts whose instances this rule applies to as traffic target
+  //
+  // Service accounts resolved from the target service account emails, letting
+  // audits traverse the role bindings and keys of each identity this rule
+  // governs.
+  targetServiceAccountRefs() []gcp.project.iamService.serviceAccount
   // Creation timestamp
   created time
   // List of ALLOW rules specified by this firewall
@@ -2073,6 +2127,11 @@ gcp.project.computeService.network @defaults("name") {
   internalIpv6Range string
   // URL of the firewall policy applied to this network
   firewallPolicy string
+  // Firewall policy applied to this network
+  //
+  // Network firewall policy resolved from the associated policy reference,
+  // letting audits traverse the policy rules directly.
+  firewallPolicyRef() gcp.project.computeService.firewallPolicy
   // URL of the network profile applied to this network
   networkProfile string
   // Legacy single-region IPv4 range for non-subnetted networks

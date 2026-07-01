@@ -1552,6 +1552,7 @@ gcp.project.computeService.disk.lastAttachTimestamp 9.0.0
 gcp.project.computeService.disk.lastDetachTimestamp 9.0.0
 gcp.project.computeService.disk.licenses 9.0.0
 gcp.project.computeService.disk.locationHint 9.0.0
+gcp.project.computeService.disk.managedBy 13.27.2
 gcp.project.computeService.disk.name 9.0.0
 gcp.project.computeService.disk.physicalBlockSizeBytes 9.0.0
 gcp.project.computeService.disk.provisionedIops 9.0.0
@@ -1604,8 +1605,10 @@ gcp.project.computeService.firewall.openToInternet 13.12.2
 gcp.project.computeService.firewall.priority 9.0.0
 gcp.project.computeService.firewall.projectId 9.0.0
 gcp.project.computeService.firewall.sourceRanges 9.0.0
+gcp.project.computeService.firewall.sourceServiceAccountRefs 13.27.2
 gcp.project.computeService.firewall.sourceServiceAccounts 9.0.0
 gcp.project.computeService.firewall.sourceTags 9.0.0
+gcp.project.computeService.firewall.targetServiceAccountRefs 13.27.2
 gcp.project.computeService.firewall.targetServiceAccounts 9.0.0
 gcp.project.computeService.firewall.targetTags 11.6.6
 gcp.project.computeService.firewallPolicies 11.6.6
@@ -1716,6 +1719,7 @@ gcp.project.computeService.image.imageEncryptionKey 13.19.2
 gcp.project.computeService.image.kmsKey 13.12.2
 gcp.project.computeService.image.labels 9.0.0
 gcp.project.computeService.image.licenses 9.0.0
+gcp.project.computeService.image.managedBy 13.27.2
 gcp.project.computeService.image.name 9.0.0
 gcp.project.computeService.image.projectId 9.0.0
 gcp.project.computeService.image.public 13.12.2
@@ -1765,11 +1769,13 @@ gcp.project.computeService.instance.lastStartTimestamp 9.0.0
 gcp.project.computeService.instance.lastStopTimestamp 9.0.0
 gcp.project.computeService.instance.lastSuspendedTimestamp 9.0.0
 gcp.project.computeService.instance.machineType 9.0.0
+gcp.project.computeService.instance.managedBy 13.27.2
 gcp.project.computeService.instance.metadata 9.0.0
 gcp.project.computeService.instance.minCpuPlatform 9.0.0
 gcp.project.computeService.instance.name 9.0.0
 gcp.project.computeService.instance.networkInterfaces 9.0.0
 gcp.project.computeService.instance.networkStackTypes 13.18.1
+gcp.project.computeService.instance.networks 13.27.2
 gcp.project.computeService.instance.osInventory 13.15.1
 gcp.project.computeService.instance.osInventory.inventoryItems 13.18.1
 gcp.project.computeService.instance.osInventory.item 13.18.1
@@ -1802,6 +1808,7 @@ gcp.project.computeService.instance.satisfiesPzi 11.6.6
 gcp.project.computeService.instance.satisfiesPzs 11.6.6
 gcp.project.computeService.instance.scheduling 9.0.0
 gcp.project.computeService.instance.serialPortEnabled 13.12.2
+gcp.project.computeService.instance.serviceAccountRefs 13.27.2
 gcp.project.computeService.instance.serviceAccounts 9.0.0
 gcp.project.computeService.instance.shieldedInstanceConfig 11.6.3
 gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonitoring 11.6.3
@@ -1814,6 +1821,7 @@ gcp.project.computeService.instance.sourceMachineImageEncryptionKey 13.16.3
 gcp.project.computeService.instance.startRestricted 9.0.0
 gcp.project.computeService.instance.status 9.0.0
 gcp.project.computeService.instance.statusMessage 9.0.0
+gcp.project.computeService.instance.subnetworks 13.27.2
 gcp.project.computeService.instance.tags 9.0.0
 gcp.project.computeService.instance.totalEgressBandwidthTier 9.0.0
 gcp.project.computeService.instance.usesDefaultServiceAccount 13.12.2
@@ -1958,6 +1966,7 @@ gcp.project.computeService.network.created 9.0.0
 gcp.project.computeService.network.description 9.0.0
 gcp.project.computeService.network.enableUlaInternalIpv6 9.0.0
 gcp.project.computeService.network.firewallPolicy 11.6.6
+gcp.project.computeService.network.firewallPolicyRef 13.27.2
 gcp.project.computeService.network.gatewayIPv4 9.0.0
 gcp.project.computeService.network.id 9.0.0
 gcp.project.computeService.network.internalIpv6Range 11.6.6
@@ -2179,6 +2188,7 @@ gcp.project.computeService.snapshot.id 9.0.0
 gcp.project.computeService.snapshot.kmsKey 13.12.2
 gcp.project.computeService.snapshot.labels 9.0.0
 gcp.project.computeService.snapshot.licenses 9.0.0
+gcp.project.computeService.snapshot.managedBy 13.27.2
 gcp.project.computeService.snapshot.name 9.0.0
 gcp.project.computeService.snapshot.projectId 13.10.1
 gcp.project.computeService.snapshot.public 13.12.2
