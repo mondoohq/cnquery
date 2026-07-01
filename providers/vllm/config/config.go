@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "vllm",
 	ID:              "go.mondoo.com/mql/providers/vllm",
-	Version:         "13.0.13",
+	Version:         "13.0.14",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{
