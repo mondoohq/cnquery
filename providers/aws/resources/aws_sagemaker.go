@@ -1635,6 +1635,11 @@ func (a *mqlAwsSagemakerProcessingjob) trainingJob() (*mqlAwsSagemakerTrainingjo
 	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.trainingjob",
 		map[string]*llx.RawData{"arn": llx.StringData(a.cacheTrainingJobArn)})
 	if err != nil {
+		// The source training job is commonly deleted while the processing job
+		// remains, which surfaces here as an error; log it so genuine API or
+		// permission failures stay diagnosable, but leave the reference null
+		// rather than failing the whole processing job.
+		log.Warn().Err(err).Str("trainingJobArn", a.cacheTrainingJobArn).Msg("could not resolve source training job for processing job")
 		a.TrainingJob.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
