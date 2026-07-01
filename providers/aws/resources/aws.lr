@@ -24402,7 +24402,10 @@ private aws.identitycenter.instance @defaults("arn name status") {
   createdAt time
   // Owner account ID
   ownerAccountId string
-  // Additional context about the current status, populated when the instance is in a non-ACTIVE state such as CREATE_FAILED
+  // Status reason
+  //
+  // Additional context about the current status, populated when the
+  // instance is in a non-ACTIVE state such as CREATE_FAILED.
   statusReason string
   // Primary Region where the instance was originally enabled and which cannot be removed
   primaryRegion string
