@@ -31834,6 +31834,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.instance.ownerAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterInstance).GetOwnerAccountId()).ToDataRes(types.String)
 	},
+	"aws.identitycenter.instance.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.primaryRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetPrimaryRegion()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetRegions()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.identitycenter.instance.permissionSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterInstance).GetPermissionSets()).ToDataRes(types.Array(types.Resource("aws.identitycenter.permissionSet")))
 	},
@@ -73188,6 +73197,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.identitycenter.instance.ownerAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterInstance).OwnerAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.primaryRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).PrimaryRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.identitycenter.instance.permissionSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -177254,6 +177275,9 @@ type mqlAwsIdentitycenterInstance struct {
 	Status             plugin.TValue[string]
 	CreatedAt          plugin.TValue[*time.Time]
 	OwnerAccountId     plugin.TValue[string]
+	StatusReason       plugin.TValue[string]
+	PrimaryRegion      plugin.TValue[string]
+	Regions            plugin.TValue[[]any]
 	PermissionSets     plugin.TValue[[]any]
 	AccountAssignments plugin.TValue[[]any]
 	Groups             plugin.TValue[[]any]
@@ -177320,6 +177344,18 @@ func (c *mqlAwsIdentitycenterInstance) GetCreatedAt() *plugin.TValue[*time.Time]
 
 func (c *mqlAwsIdentitycenterInstance) GetOwnerAccountId() *plugin.TValue[string] {
 	return &c.OwnerAccountId
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetPrimaryRegion() *plugin.TValue[string] {
+	return &c.PrimaryRegion
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetRegions() *plugin.TValue[[]any] {
+	return &c.Regions
 }
 
 func (c *mqlAwsIdentitycenterInstance) GetPermissionSets() *plugin.TValue[[]any] {

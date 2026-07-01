@@ -5566,7 +5566,10 @@ aws.identitycenter.instance.identityStoreId 13.6.3
 aws.identitycenter.instance.name 13.6.3
 aws.identitycenter.instance.ownerAccountId 13.6.3
 aws.identitycenter.instance.permissionSets 13.6.3
+aws.identitycenter.instance.primaryRegion 13.40.1
+aws.identitycenter.instance.regions 13.40.1
 aws.identitycenter.instance.status 13.6.3
+aws.identitycenter.instance.statusReason 13.40.1
 aws.identitycenter.instance.users 13.12.1
 aws.identitycenter.instances 13.6.3
 aws.identitycenter.permissionSet 13.6.3
