@@ -348,13 +348,19 @@ func (s Status) renderProviders(b *strings.Builder, st styler) {
 }
 
 func (s Status) renderFooter(b *strings.Builder, st styler) {
+	// authFailed is the "registered but the platform rejected the credential"
+	// case (revoked or expired service account) — distinct from never having
+	// registered at all, and remediated by re-registering with a fresh token.
+	authFailed := s.Client.Registered && s.Client.PingPongError != nil
 	hasError := !s.Client.Registered || s.Client.PingPongError != nil
 	actionable := hasError || s.updateAvailable() || s.outdatedCount() > 0
 
 	b.WriteString("\n")
 	switch {
-	case hasError:
+	case !s.Client.Registered:
 		fmt.Fprintf(b, "  %s %s\n", st.bad("✗ not registered"), st.dim("· exit 1 · next steps:"))
+	case authFailed:
+		fmt.Fprintf(b, "  %s %s\n", st.bad("✗ authentication failed"), st.dim("· exit 1 · next steps:"))
 	case !actionable:
 		fmt.Fprintf(b, "  %s\n\n", st.ok("✓ all systems healthy"))
 		return
@@ -364,6 +370,9 @@ func (s Status) renderFooter(b *strings.Builder, st styler) {
 
 	if !s.Client.Registered {
 		st.footerStep(b, "mql login", "register this client with Mondoo Platform")
+	}
+	if authFailed {
+		st.footerStep(b, "mql login --token <token>", "re-register with a fresh token from Mondoo Platform")
 	}
 	if s.updateAvailable() {
 		st.footerStep(b, "visit "+s.Client.UpdatesURL, "upgrade "+s.Client.Version+" → "+s.Client.LatestVersion)

@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"path/filepath"
@@ -86,6 +87,45 @@ func TestRenderCli_HealthSummary_NotRegistered(t *testing.T) {
 	assert.Contains(t, out, "Client")
 	assert.Contains(t, out, "not registered")
 	assert.Contains(t, out, "action needed")
+}
+
+// registeredAuthFailedStatus mirrors a client whose config is present and
+// registered, but whose service account was revoked or expired on the platform:
+// the ping fails even though the API itself is reachable and SERVING.
+func registeredAuthFailedStatus() Status {
+	s := healthyRegisteredStatus()
+	s.Client.PingPongError = errors.New("rpc error: code = Unauthenticated desc = invalid service account")
+	// isolate the auth-failed path: everything else current
+	for i := range s.Client.Providers {
+		s.Client.Providers[i].Outdated = false
+		s.Client.Providers[i].Latest = s.Client.Providers[i].Installed
+	}
+	return s
+}
+
+func TestRenderCli_HealthSummary_AuthFailed(t *testing.T) {
+	s := registeredAuthFailedStatus()
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	// still registered, but the ping was rejected
+	assert.Contains(t, out, "registered")
+	assert.Contains(t, out, "authentication failed")
+}
+
+func TestRenderCli_Footer_AuthFailed(t *testing.T) {
+	s := registeredAuthFailedStatus()
+
+	out := s.RenderCli(RenderOptions{Color: false})
+
+	// footer must flag the error and give an actionable re-registration step
+	// rather than the misleading "not registered" line.
+	assert.Contains(t, out, "authentication failed")
+	assert.Contains(t, out, "exit 1")
+	assert.Contains(t, out, "next steps")
+	assert.Contains(t, out, "mql login --token <token>")
+	assert.Contains(t, out, "fresh token")
+	assert.NotContains(t, out, "not registered")
 }
 
 func TestRenderCli_HealthSummary_RegisteredAndHealthy(t *testing.T) {
@@ -271,6 +311,7 @@ func TestRenderCli_Golden(t *testing.T) {
 	}{
 		{"healthy_registered", healthyRegisteredStatus()},
 		{"stale_not_registered", staleNotRegisteredStatus()},
+		{"registered_auth_failed", registeredAuthFailedStatus()},
 	}
 
 	for _, tc := range cases {
