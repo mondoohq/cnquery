@@ -16933,6 +16933,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.continuousBackups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetContinuousBackups()).ToDataRes(types.Dict)
 	},
+	"aws.dynamodb.table.pointInTimeRecoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetPointInTimeRecoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.continuousBackupsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetContinuousBackupsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.earliestRestorableDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetEarliestRestorableDateTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.table.latestRestorableDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetLatestRestorableDateTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.table.pitrRecoveryPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetPitrRecoveryPeriodInDays()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.table.restoredFromBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetRestoredFromBackup()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.restoreInProgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetRestoreInProgress()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.restoreDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetRestoreDateTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.table.sourceTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetSourceTable()).ToDataRes(types.Resource("aws.dynamodb.table"))
+	},
 	"aws.dynamodb.table.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -51104,6 +51131,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dynamodb.table.continuousBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).ContinuousBackups, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.pointInTimeRecoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).PointInTimeRecoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.continuousBackupsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).ContinuousBackupsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.earliestRestorableDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).EarliestRestorableDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.latestRestorableDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).LatestRestorableDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.pitrRecoveryPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).PitrRecoveryPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.restoredFromBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).RestoredFromBackup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.restoreInProgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).RestoreInProgress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.restoreDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).RestoreDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.sourceTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).SourceTable, ok = plugin.RawToTValue[*mqlAwsDynamodbTable](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -123042,34 +123105,43 @@ type mqlAwsDynamodbTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsDynamodbTableInternal
-	Arn                       plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	Region                    plugin.TValue[string]
-	Id                        plugin.TValue[string]
-	Backups                   plugin.TValue[[]any]
-	SseDescription            plugin.TValue[any]
-	SseType                   plugin.TValue[string]
-	KmsMasterKeyId            plugin.TValue[string]
-	SseKmsKey                 plugin.TValue[*mqlAwsKmsKey]
-	ProvisionedThroughput     plugin.TValue[any]
-	ContinuousBackups         plugin.TValue[any]
-	Tags                      plugin.TValue[map[string]any]
-	CreatedAt                 plugin.TValue[*time.Time]
-	DeletionProtectionEnabled plugin.TValue[bool]
-	GlobalTableVersion        plugin.TValue[string]
-	Items                     plugin.TValue[int64]
-	SizeBytes                 plugin.TValue[int64]
-	LatestStreamArn           plugin.TValue[string]
-	Status                    plugin.TValue[string]
-	LatestStreamLabel         plugin.TValue[string]
-	TableClass                plugin.TValue[string]
-	StreamEnabled             plugin.TValue[bool]
-	StreamViewType            plugin.TValue[string]
-	BillingMode               plugin.TValue[string]
-	AutoScalingEnabled        plugin.TValue[bool]
-	ReplicaRegions            plugin.TValue[[]any]
-	TtlDescription            plugin.TValue[any]
-	GlobalSecondaryIndexes    plugin.TValue[[]any]
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Backups                    plugin.TValue[[]any]
+	SseDescription             plugin.TValue[any]
+	SseType                    plugin.TValue[string]
+	KmsMasterKeyId             plugin.TValue[string]
+	SseKmsKey                  plugin.TValue[*mqlAwsKmsKey]
+	ProvisionedThroughput      plugin.TValue[any]
+	ContinuousBackups          plugin.TValue[any]
+	PointInTimeRecoveryEnabled plugin.TValue[bool]
+	ContinuousBackupsEnabled   plugin.TValue[bool]
+	EarliestRestorableDateTime plugin.TValue[*time.Time]
+	LatestRestorableDateTime   plugin.TValue[*time.Time]
+	PitrRecoveryPeriodInDays   plugin.TValue[int64]
+	RestoredFromBackup         plugin.TValue[bool]
+	RestoreInProgress          plugin.TValue[bool]
+	RestoreDateTime            plugin.TValue[*time.Time]
+	SourceTable                plugin.TValue[*mqlAwsDynamodbTable]
+	Tags                       plugin.TValue[map[string]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	DeletionProtectionEnabled  plugin.TValue[bool]
+	GlobalTableVersion         plugin.TValue[string]
+	Items                      plugin.TValue[int64]
+	SizeBytes                  plugin.TValue[int64]
+	LatestStreamArn            plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	LatestStreamLabel          plugin.TValue[string]
+	TableClass                 plugin.TValue[string]
+	StreamEnabled              plugin.TValue[bool]
+	StreamViewType             plugin.TValue[string]
+	BillingMode                plugin.TValue[string]
+	AutoScalingEnabled         plugin.TValue[bool]
+	ReplicaRegions             plugin.TValue[[]any]
+	TtlDescription             plugin.TValue[any]
+	GlobalSecondaryIndexes     plugin.TValue[[]any]
 }
 
 // createAwsDynamodbTable creates a new instance of this resource
@@ -123174,6 +123246,70 @@ func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[any] {
 func (c *mqlAwsDynamodbTable) GetContinuousBackups() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ContinuousBackups, func() (any, error) {
 		return c.continuousBackups()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetPointInTimeRecoveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PointInTimeRecoveryEnabled, func() (bool, error) {
+		return c.pointInTimeRecoveryEnabled()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetContinuousBackupsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContinuousBackupsEnabled, func() (bool, error) {
+		return c.continuousBackupsEnabled()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetEarliestRestorableDateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.EarliestRestorableDateTime, func() (*time.Time, error) {
+		return c.earliestRestorableDateTime()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetLatestRestorableDateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LatestRestorableDateTime, func() (*time.Time, error) {
+		return c.latestRestorableDateTime()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetPitrRecoveryPeriodInDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PitrRecoveryPeriodInDays, func() (int64, error) {
+		return c.pitrRecoveryPeriodInDays()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetRestoredFromBackup() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestoredFromBackup, func() (bool, error) {
+		return c.restoredFromBackup()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetRestoreInProgress() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestoreInProgress, func() (bool, error) {
+		return c.restoreInProgress()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetRestoreDateTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.RestoreDateTime, func() (*time.Time, error) {
+		return c.restoreDateTime()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetSourceTable() *plugin.TValue[*mqlAwsDynamodbTable] {
+	return plugin.GetOrCompute[*mqlAwsDynamodbTable](&c.SourceTable, func() (*mqlAwsDynamodbTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb.table", c.__id, "sourceTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDynamodbTable), nil
+			}
+		}
+
+		return c.sourceTable()
 	})
 }
 

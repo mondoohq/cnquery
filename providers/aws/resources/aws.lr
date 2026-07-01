@@ -11238,6 +11238,27 @@ private aws.dynamodb.table @defaults("name region") {
   provisionedThroughput() dict
   // Continuous backups and point-in-time recovery settings for the table
   continuousBackups() dict
+  // Whether point-in-time recovery (PITR) is enabled
+  pointInTimeRecoveryEnabled() bool
+  // Whether continuous backups are enabled
+  continuousBackupsEnabled() bool
+  // Earliest point in time the table can be restored to
+  earliestRestorableDateTime() time
+  // Latest point in time the table can be restored to, typically about 5 minutes before the current time
+  latestRestorableDateTime() time
+  // Number of preceding days for which continuous backups are retained
+  //
+  // The configurable point-in-time recovery window, between 1 and 35 days. 0
+  // when PITR is disabled or no recovery period is configured.
+  pitrRecoveryPeriodInDays() int
+  // Whether the table was created by restoring from a backup or point-in-time recovery
+  restoredFromBackup() bool
+  // Whether a restore operation is currently in progress
+  restoreInProgress() bool
+  // Point in time the table was restored to its source state
+  restoreDateTime() time
+  // Source table this table was restored from, if any
+  sourceTable() aws.dynamodb.table
   // Tags for the table
   tags() map[string]string
   // Date and time the table was created
