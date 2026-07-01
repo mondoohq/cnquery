@@ -1364,19 +1364,37 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) id() (string, 
 }
 
 // remoteVirtualNetwork resolves the typed remote virtual network on the far end
-// of the peering from the cached remoteVirtualNetworkId. Returns null when the
-// peering has no remote virtual network reference.
+// of the peering from the cached remoteVirtualNetworkId. The remote network is
+// fetched directly by its ARM resource ID so cross-subscription peerings resolve
+// correctly. Returns null when the peering has no remote virtual network
+// reference.
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkPeering) remoteVirtualNetwork() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
 	if a.RemoteVirtualNetworkId.Data == "" {
 		a.RemoteVirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork",
-		map[string]*llx.RawData{"id": llx.StringData(a.RemoteVirtualNetworkId.Data)})
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	resourceID, err := ParseResourceID(a.RemoteVirtualNetworkId.Data)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+	vnetName, err := resourceID.Component("virtualNetworks")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewVirtualNetworksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	vnetRes, err := client.Get(ctx, resourceID.ResourceGroup, vnetName, &network.VirtualNetworksClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return azureVirtualNetworkToMql(a.MqlRuntime, vnetRes.VirtualNetwork)
 }
 
 func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]any, error) {
