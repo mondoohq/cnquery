@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -57,6 +58,13 @@ type Connection struct {
 	manifestFile    string
 	manifestContent []byte
 	closer          func()
+
+	// Raw manifest bytes retained for source context. Kept separate from
+	// manifestContent, which drives the stdin-vs-file platform-id hashing.
+	sourceRaw  []byte
+	posOnce    sync.Once
+	contentStr string
+	positions  map[string]shared.SourcePosition
 }
 
 func NewGitConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
@@ -115,12 +123,28 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		}
 		asset.Labels[plugin.GitUrlOptionKey] = trimGitPath(gitPath)
 	}
+	// Retain the raw manifest so we can extract the source text a resource
+	// spans for file-context. In the file case the bytes were only local.
+	c.sourceRaw = manifest
+
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+// ManifestSource returns the manifest text, the file path it was read from, and
+// a per-resource source-position index keyed by object id (kind:namespace:name).
+// The index is built lazily on first use. Resources not present in the manifest
+// (e.g. synthesized CRDs) simply have no entry.
+func (c *Connection) ManifestSource() (string, string, map[string]shared.SourcePosition) {
+	c.posOnce.Do(func() {
+		c.contentStr = string(c.sourceRaw)
+		c.positions = shared.BuildManifestPositionIndex(c.sourceRaw, c.manifestFile)
+	})
+	return c.contentStr, c.manifestFile, c.positions
 }
 
 func trimGitPath(gitPath string) string {

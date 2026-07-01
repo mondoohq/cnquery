@@ -90,6 +90,7 @@ const (
 	ResourceK8sOwnerReference                            string = "k8s.ownerReference"
 	ResourceK8sManagedField                              string = "k8s.managedField"
 	ResourceK8sAccessReview                              string = "k8s.accessReview"
+	ResourceK8sContext                                   string = "k8s.context"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -391,6 +392,10 @@ func init() {
 		"k8s.accessReview": {
 			Init:   initK8sAccessReview,
 			Create: createK8sAccessReview,
+		},
+		"k8s.context": {
+			// to override args, implement: initK8sContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sContext,
 		},
 	}
 }
@@ -856,6 +861,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.node.volumesInUse": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetVolumesInUse()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.node.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.nodeTaint.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNodeTaint).GetKey()).ToDataRes(types.String)
 	},
@@ -1192,6 +1200,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.pod.deployment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetDeployment()).ToDataRes(types.Resource("k8s.deployment"))
 	},
+	"k8s.pod.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.deployment.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
@@ -1390,6 +1401,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.deployment.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDeployment).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.deployment.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.daemonset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
@@ -1584,6 +1598,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.daemonset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sDaemonset).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.daemonset.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDaemonset).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.statefulset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
@@ -1795,6 +1812,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.statefulset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.statefulset.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStatefulset).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.replicaset.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
@@ -1974,6 +1994,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.replicaset.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReplicaset).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.replicaset.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.job.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
@@ -2191,6 +2214,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.job.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.job.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sJob).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.cronjob.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
@@ -2376,6 +2402,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjob.jobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCronjob).GetJobs()).ToDataRes(types.Array(types.Resource("k8s.job")))
+	},
+	"k8s.cronjob.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.container.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetUid()).ToDataRes(types.String)
@@ -2761,6 +2790,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.secret.certificateExpiry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sSecret).GetCertificateExpiry()).ToDataRes(types.Time)
 	},
+	"k8s.secret.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.configmap.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sConfigmap).GetId()).ToDataRes(types.String)
 	},
@@ -2802,6 +2834,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.configmap.usedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sConfigmap).GetUsedBy()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.configmap.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sConfigmap).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.service.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetId()).ToDataRes(types.String)
@@ -2916,6 +2951,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.service.networkExposures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
+	},
+	"k8s.service.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sService).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.ingressresourceref.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressresourceref).GetId()).ToDataRes(types.String)
@@ -3037,6 +3075,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.ingress.networkExposures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
+	"k8s.ingress.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.serviceaccount.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetId()).ToDataRes(types.String)
 	},
@@ -3100,6 +3141,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.serviceaccount.hasWildcardPermissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetHasWildcardPermissions()).ToDataRes(types.Bool)
 	},
+	"k8s.serviceaccount.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.rbac.clusterrole.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetId()).ToDataRes(types.String)
 	},
@@ -3156,6 +3200,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrolebinding")))
+	},
+	"k8s.rbac.clusterrole.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.rbac.policyRule.verbs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacPolicyRule).GetVerbs()).ToDataRes(types.Array(types.String))
@@ -3229,6 +3276,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrolebinding.clusterRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrolebinding).GetClusterRole()).ToDataRes(types.Resource("k8s.rbac.clusterrole"))
 	},
+	"k8s.rbac.clusterrolebinding.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrolebinding).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.rbac.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetId()).ToDataRes(types.String)
 	},
@@ -3285,6 +3335,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetBoundBy()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
+	},
+	"k8s.rbac.role.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.rbac.rolebinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetId()).ToDataRes(types.String)
@@ -3348,6 +3401,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.rbac.rolebinding.clusterRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRolebinding).GetClusterRole()).ToDataRes(types.Resource("k8s.rbac.clusterrole"))
+	},
+	"k8s.rbac.rolebinding.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.rbac.subject.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacSubject).GetKind()).ToDataRes(types.String)
@@ -3450,6 +3506,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.networkpolicy.coverage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkpolicy).GetCoverage()).ToDataRes(types.Resource("k8s.networkPolicyCoverage"))
+	},
+	"k8s.networkpolicy.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.networkExposure.sourceKind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNetworkExposure).GetSourceKind()).ToDataRes(types.String)
@@ -3661,6 +3720,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.customresource.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetManifest()).ToDataRes(types.Dict)
 	},
+	"k8s.customresource.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCustomresource).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.persistentvolume.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolume).GetId()).ToDataRes(types.String)
 	},
@@ -3742,6 +3804,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.persistentvolume.message": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolume).GetMessage()).ToDataRes(types.String)
 	},
+	"k8s.persistentvolume.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.storageclass.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStorageclass).GetId()).ToDataRes(types.String)
 	},
@@ -3793,6 +3858,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.storageclass.mountOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStorageclass).GetMountOptions()).ToDataRes(types.Array(types.String))
 	},
+	"k8s.storageclass.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.priorityclass.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPriorityclass).GetId()).ToDataRes(types.String)
 	},
@@ -3837,6 +3905,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.priorityclass.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPriorityclass).GetDescription()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.horizontalpodautoscaler.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHorizontalpodautoscaler).GetId()).ToDataRes(types.String)
@@ -3928,6 +3999,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.horizontalpodautoscaler.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHorizontalpodautoscaler).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.horizontalpodautoscaler.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.resourcequota.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sResourcequota).GetId()).ToDataRes(types.String)
 	},
@@ -3982,6 +4056,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.resourcequota.scopeSelector": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sResourcequota).GetScopeSelector()).ToDataRes(types.Dict)
 	},
+	"k8s.resourcequota.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.limitrange.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetId()).ToDataRes(types.String)
 	},
@@ -4023,6 +4100,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.limitrange.limits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLimitrange).GetLimits()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.limitrange.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.persistentvolumeclaim.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolumeclaim).GetId()).ToDataRes(types.String)
@@ -4108,6 +4188,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.persistentvolumeclaim.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPersistentvolumeclaim).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.persistentvolumeclaim.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.endpointslice.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetId()).ToDataRes(types.String)
 	},
@@ -4158,6 +4241,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.endpointslice.externalAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEndpointslice).GetExternalAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.endpointslice.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.admissionreview.request": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionreview).GetRequest()).ToDataRes(types.Resource("k8s.admissionrequest"))
@@ -4225,6 +4311,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.validatingwebhookconfiguration.failsOpen": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetFailsOpen()).ToDataRes(types.Bool)
 	},
+	"k8s.admission.validatingwebhookconfiguration.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingwebhookconfiguration).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.app.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApp).GetName()).ToDataRes(types.String)
 	},
@@ -4287,6 +4376,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.gatewayclass.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGatewayclass).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.gatewayclass.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGatewayclass).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.gateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGateway).GetId()).ToDataRes(types.String)
@@ -4354,6 +4446,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.gateway.networkExposures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGateway).GetNetworkExposures()).ToDataRes(types.Array(types.Resource("k8s.networkExposure")))
 	},
+	"k8s.gateway.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGateway).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.httproute.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHttproute).GetId()).ToDataRes(types.String)
 	},
@@ -4402,6 +4497,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.httproute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sHttproute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.httproute.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHttproute).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.grpcroute.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGrpcroute).GetId()).ToDataRes(types.String)
 	},
@@ -4449,6 +4547,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.grpcroute.parentStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sGrpcroute).GetParentStatus()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.grpcroute.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sGrpcroute).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.tlsroute.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sTlsroute).GetId()).ToDataRes(types.String)
@@ -4636,6 +4737,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.referencegrant.to": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sReferencegrant).GetTo()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.referencegrant.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReferencegrant).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.admission.mutatingwebhookconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -4674,6 +4778,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.admission.mutatingwebhookconfiguration.failsOpen": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetFailsOpen()).ToDataRes(types.Bool)
+	},
+	"k8s.admission.mutatingwebhookconfiguration.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionMutatingwebhookconfiguration).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.admission.validatingadmissionpolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetId()).ToDataRes(types.String)
@@ -4732,6 +4839,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.admission.validatingadmissionpolicy.bindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetBindings()).ToDataRes(types.Array(types.Resource("k8s.admission.validatingadmissionpolicybinding")))
 	},
+	"k8s.admission.validatingadmissionpolicy.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicy).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.admission.validatingadmissionpolicybinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetId()).ToDataRes(types.String)
 	},
@@ -4779,6 +4889,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.admission.validatingadmissionpolicybinding.matchResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetMatchResources()).ToDataRes(types.Dict)
+	},
+	"k8s.admission.validatingadmissionpolicybinding.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.poddisruptionbudget.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPoddisruptionbudget).GetId()).ToDataRes(types.String)
@@ -4846,6 +4959,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.poddisruptionbudget.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPoddisruptionbudget).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.poddisruptionbudget.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPoddisruptionbudget).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.lease.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLease).GetId()).ToDataRes(types.String)
 	},
@@ -4902,6 +5018,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.lease.preferredHolder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sLease).GetPreferredHolder()).ToDataRes(types.String)
+	},
+	"k8s.lease.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLease).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.certificatesigningrequest.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCertificatesigningrequest).GetId()).ToDataRes(types.String)
@@ -4962,6 +5081,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.certificatesigningrequest.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCertificatesigningrequest).GetConditions()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.certificatesigningrequest.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCertificatesigningrequest).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.apiservice.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiservice).GetId()).ToDataRes(types.String)
@@ -5029,6 +5151,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.apiservice.conditions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiservice).GetConditions()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.apiservice.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiservice).GetContext()).ToDataRes(types.Resource("k8s.context"))
+	},
 	"k8s.ingressclass.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressclass).GetId()).ToDataRes(types.String)
 	},
@@ -5067,6 +5192,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ingressclass.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngressclass).GetParameters()).ToDataRes(types.Dict)
+	},
+	"k8s.ingressclass.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressclass).GetContext()).ToDataRes(types.Resource("k8s.context"))
 	},
 	"k8s.ownerReference.apiVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sOwnerReference).GetApiVersion()).ToDataRes(types.String)
@@ -5130,6 +5258,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.accessReview.reason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAccessReview).GetReason()).ToDataRes(types.String)
+	},
+	"k8s.context.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContext).GetPath()).ToDataRes(types.String)
+	},
+	"k8s.context.range": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContext).GetRange()).ToDataRes(types.Range)
+	},
+	"k8s.context.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContext).GetContent()).ToDataRes(types.String)
 	},
 }
 
@@ -5683,6 +5820,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sNode).VolumesInUse, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.node.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.nodeTaint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNodeTaint).__id, ok = v.Value.(string)
 		return
@@ -6147,6 +6288,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPod).Deployment, ok = plugin.RawToTValue[*mqlK8sDeployment](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
 		return
@@ -6415,6 +6560,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sDeployment).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.deployment.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.daemonset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).__id, ok = v.Value.(string)
 		return
@@ -6677,6 +6826,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.daemonset.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sDaemonset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.daemonset.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDaemonset).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.statefulset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6963,6 +7116,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sStatefulset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.statefulset.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStatefulset).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.replicaset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
 		return
@@ -7205,6 +7362,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.replicaset.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sReplicaset).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7499,6 +7660,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sJob).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.job.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sJob).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.cronjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).__id, ok = v.Value.(string)
 		return
@@ -7749,6 +7914,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.cronjob.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCronjob).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8283,6 +8452,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sSecret).CertificateExpiry, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"k8s.secret.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.configmap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sConfigmap).__id, ok = v.Value.(string)
 		return
@@ -8341,6 +8514,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.configmap.usedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sConfigmap).UsedBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.configmap.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sConfigmap).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8497,6 +8674,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.service.networkExposures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sService).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.service.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sService).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8687,6 +8868,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sIngress).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.ingress.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sServiceaccount).__id, ok = v.Value.(string)
 		return
@@ -8775,6 +8960,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sServiceaccount).HasWildcardPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.serviceaccount.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.clusterrole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).__id, ok = v.Value.(string)
 		return
@@ -8853,6 +9042,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.clusterrole.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacClusterrole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.policyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8959,6 +9152,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sRbacClusterrolebinding).ClusterRole, ok = plugin.RawToTValue[*mqlK8sRbacClusterrole](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrolebinding.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrolebinding).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.rbac.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).__id, ok = v.Value.(string)
 		return
@@ -9037,6 +9234,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.role.boundBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRole).BoundBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.rolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9125,6 +9326,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.rbac.rolebinding.clusterRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sRbacRolebinding).ClusterRole, ok = plugin.RawToTValue[*mqlK8sRbacClusterrole](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.rbac.subject.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9273,6 +9478,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.networkpolicy.coverage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNetworkpolicy).Coverage, ok = plugin.RawToTValue[*mqlK8sNetworkPolicyCoverage](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.networkExposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9575,6 +9784,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sCustomresource).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.customresource.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCustomresource).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.persistentvolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPersistentvolume).__id, ok = v.Value.(string)
 		return
@@ -9687,6 +9900,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPersistentvolume).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.persistentvolume.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.storageclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sStorageclass).__id, ok = v.Value.(string)
 		return
@@ -9759,6 +9976,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sStorageclass).MountOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.storageclass.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.priorityclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPriorityclass).__id, ok = v.Value.(string)
 		return
@@ -9821,6 +10042,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.priorityclass.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPriorityclass).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.horizontalpodautoscaler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9947,6 +10172,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sHorizontalpodautoscaler).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.horizontalpodautoscaler.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.resourcequota.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sResourcequota).__id, ok = v.Value.(string)
 		return
@@ -10023,6 +10252,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sResourcequota).ScopeSelector, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.resourcequota.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.limitrange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLimitrange).__id, ok = v.Value.(string)
 		return
@@ -10081,6 +10314,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.limitrange.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLimitrange).Limits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.persistentvolumeclaim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10199,6 +10436,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPersistentvolumeclaim).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.persistentvolumeclaim.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.endpointslice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEndpointslice).__id, ok = v.Value.(string)
 		return
@@ -10269,6 +10510,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.endpointslice.externalAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEndpointslice).ExternalAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10375,6 +10620,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).FailsOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.validatingwebhookconfiguration.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingwebhookconfiguration).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sApp).__id, ok = v.Value.(string)
 		return
@@ -10465,6 +10714,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.gatewayclass.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGatewayclass).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.gatewayclass.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGatewayclass).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.gateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10559,6 +10812,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sGateway).NetworkExposures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.gateway.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGateway).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.httproute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sHttproute).__id, ok = v.Value.(string)
 		return
@@ -10627,6 +10884,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sHttproute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.httproute.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHttproute).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.grpcroute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGrpcroute).__id, ok = v.Value.(string)
 		return
@@ -10693,6 +10954,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.grpcroute.parentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sGrpcroute).ParentStatus, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.grpcroute.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sGrpcroute).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.tlsroute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10959,6 +11224,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sReferencegrant).To, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.referencegrant.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReferencegrant).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.admission.mutatingwebhookconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).__id, ok = v.Value.(string)
 		return
@@ -11013,6 +11282,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.admission.mutatingwebhookconfiguration.failsOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).FailsOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.mutatingwebhookconfiguration.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionMutatingwebhookconfiguration).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.admission.validatingadmissionpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11095,6 +11368,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.admission.validatingadmissionpolicy.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicy).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.admission.validatingadmissionpolicybinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).__id, ok = v.Value.(string)
 		return
@@ -11161,6 +11438,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.admission.validatingadmissionpolicybinding.matchResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).MatchResources, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.admission.validatingadmissionpolicybinding.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionValidatingadmissionpolicybinding).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.poddisruptionbudget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11255,6 +11536,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sPoddisruptionbudget).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.poddisruptionbudget.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPoddisruptionbudget).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.lease.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLease).__id, ok = v.Value.(string)
 		return
@@ -11333,6 +11618,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.lease.preferredHolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sLease).PreferredHolder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.lease.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLease).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.certificatesigningrequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11417,6 +11706,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.certificatesigningrequest.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCertificatesigningrequest).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.certificatesigningrequest.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCertificatesigningrequest).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.apiservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11511,6 +11804,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sApiservice).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"k8s.apiservice.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiservice).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
+		return
+	},
 	"k8s.ingressclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressclass).__id, ok = v.Value.(string)
 		return
@@ -11565,6 +11862,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.ingressclass.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sIngressclass).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressclass.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressclass).Context, ok = plugin.RawToTValue[*mqlK8sContext](v.Value, v.Error)
 		return
 	},
 	"k8s.ownerReference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11661,6 +11962,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.accessReview.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAccessReview).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContext).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.context.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContext).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.context.range": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContext).Range, ok = plugin.RawToTValue[llx.Range](v.Value, v.Error)
+		return
+	},
+	"k8s.context.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContext).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -13300,6 +13617,7 @@ type mqlK8sNode struct {
 	Images                  plugin.TValue[[]any]
 	VolumesAttached         plugin.TValue[[]any]
 	VolumesInUse            plugin.TValue[[]any]
+	Context                 plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sNode creates a new instance of this resource
@@ -13552,6 +13870,22 @@ func (c *mqlK8sNode) GetVolumesAttached() *plugin.TValue[[]any] {
 func (c *mqlK8sNode) GetVolumesInUse() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.VolumesInUse, func() ([]any, error) {
 		return c.volumesInUse()
+	})
+}
+
+func (c *mqlK8sNode) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -13837,6 +14171,7 @@ type mqlK8sPod struct {
 	DaemonSet                     plugin.TValue[*mqlK8sDaemonset]
 	Job                           plugin.TValue[*mqlK8sJob]
 	Deployment                    plugin.TValue[*mqlK8sDeployment]
+	Context                       plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sPod creates a new instance of this resource
@@ -14620,6 +14955,22 @@ func (c *mqlK8sPod) GetDeployment() *plugin.TValue[*mqlK8sDeployment] {
 	})
 }
 
+func (c *mqlK8sPod) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sDeployment for the k8s.deployment resource
 type mqlK8sDeployment struct {
 	MqlRuntime *plugin.Runtime
@@ -14691,6 +15042,7 @@ type mqlK8sDeployment struct {
 	ObservedGeneration           plugin.TValue[int64]
 	CollisionCount               plugin.TValue[int64]
 	Conditions                   plugin.TValue[[]any]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sDeployment creates a new instance of this resource
@@ -15162,6 +15514,22 @@ func (c *mqlK8sDeployment) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDeployment) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sDaemonset for the k8s.daemonset resource
 type mqlK8sDaemonset struct {
 	MqlRuntime *plugin.Runtime
@@ -15232,6 +15600,7 @@ type mqlK8sDaemonset struct {
 	ObservedGeneration           plugin.TValue[int64]
 	CollisionCount               plugin.TValue[int64]
 	Conditions                   plugin.TValue[[]any]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sDaemonset creates a new instance of this resource
@@ -15697,6 +16066,22 @@ func (c *mqlK8sDaemonset) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sDaemonset) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.daemonset", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sStatefulset for the k8s.statefulset resource
 type mqlK8sStatefulset struct {
 	MqlRuntime *plugin.Runtime
@@ -15772,6 +16157,7 @@ type mqlK8sStatefulset struct {
 	UpdateRevision                       plugin.TValue[string]
 	CollisionCount                       plugin.TValue[int64]
 	Conditions                           plugin.TValue[[]any]
+	Context                              plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sStatefulset creates a new instance of this resource
@@ -16267,6 +16653,22 @@ func (c *mqlK8sStatefulset) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sStatefulset) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sReplicaset for the k8s.replicaset resource
 type mqlK8sReplicaset struct {
 	MqlRuntime *plugin.Runtime
@@ -16332,6 +16734,7 @@ type mqlK8sReplicaset struct {
 	AvailableReplicas            plugin.TValue[int64]
 	ObservedGeneration           plugin.TValue[int64]
 	Conditions                   plugin.TValue[[]any]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sReplicaset creates a new instance of this resource
@@ -16767,6 +17170,22 @@ func (c *mqlK8sReplicaset) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sReplicaset) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sJob for the k8s.job resource
 type mqlK8sJob struct {
 	MqlRuntime *plugin.Runtime
@@ -16844,6 +17263,7 @@ type mqlK8sJob struct {
 	StartTime                    plugin.TValue[*time.Time]
 	CompletionTime               plugin.TValue[*time.Time]
 	Conditions                   plugin.TValue[[]any]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sJob creates a new instance of this resource
@@ -17351,6 +17771,22 @@ func (c *mqlK8sJob) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sJob) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sCronjob for the k8s.cronjob resource
 type mqlK8sCronjob struct {
 	MqlRuntime *plugin.Runtime
@@ -17418,6 +17854,7 @@ type mqlK8sCronjob struct {
 	LastSuccessfulTime           plugin.TValue[*time.Time]
 	ActiveJobs                   plugin.TValue[[]any]
 	Jobs                         plugin.TValue[[]any]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sCronjob creates a new instance of this resource
@@ -17872,6 +18309,22 @@ func (c *mqlK8sCronjob) GetJobs() *plugin.TValue[[]any] {
 		}
 
 		return c.jobs()
+	})
+}
+
+func (c *mqlK8sCronjob) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -18647,6 +19100,7 @@ type mqlK8sSecret struct {
 	IsUnused              plugin.TValue[bool]
 	HasExpiredCertificate plugin.TValue[bool]
 	CertificateExpiry     plugin.TValue[*time.Time]
+	Context               plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sSecret creates a new instance of this resource
@@ -18830,6 +19284,22 @@ func (c *mqlK8sSecret) GetCertificateExpiry() *plugin.TValue[*time.Time] {
 	})
 }
 
+func (c *mqlK8sSecret) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.secret", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sConfigmap for the k8s.configmap resource
 type mqlK8sConfigmap struct {
 	MqlRuntime *plugin.Runtime
@@ -18849,6 +19319,7 @@ type mqlK8sConfigmap struct {
 	Manifest        plugin.TValue[any]
 	Data            plugin.TValue[map[string]any]
 	UsedBy          plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sConfigmap creates a new instance of this resource
@@ -18986,6 +19457,22 @@ func (c *mqlK8sConfigmap) GetUsedBy() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sConfigmap) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.configmap", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sService for the k8s.service resource
 type mqlK8sService struct {
 	MqlRuntime *plugin.Runtime
@@ -19029,6 +19516,7 @@ type mqlK8sService struct {
 	ExternalEndpoints             plugin.TValue[[]any]
 	RoutesToPublicEndpoint        plugin.TValue[bool]
 	NetworkExposures              plugin.TValue[[]any]
+	Context                       plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sService creates a new instance of this resource
@@ -19329,6 +19817,22 @@ func (c *mqlK8sService) GetNetworkExposures() *plugin.TValue[[]any] {
 		}
 
 		return c.networkExposures()
+	})
+}
+
+func (c *mqlK8sService) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.service", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -19725,6 +20229,7 @@ type mqlK8sIngress struct {
 	LoadBalancerIngress plugin.TValue[[]any]
 	Pods                plugin.TValue[[]any]
 	NetworkExposures    plugin.TValue[[]any]
+	Context             plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sIngress creates a new instance of this resource
@@ -19922,6 +20427,22 @@ func (c *mqlK8sIngress) GetNetworkExposures() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sIngress) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sServiceaccount for the k8s.serviceaccount resource
 type mqlK8sServiceaccount struct {
 	MqlRuntime *plugin.Runtime
@@ -19948,6 +20469,7 @@ type mqlK8sServiceaccount struct {
 	CanEscalatePrivileges        plugin.TValue[bool]
 	CanReadSecrets               plugin.TValue[bool]
 	HasWildcardPermissions       plugin.TValue[bool]
+	Context                      plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sServiceaccount creates a new instance of this resource
@@ -20133,6 +20655,22 @@ func (c *mqlK8sServiceaccount) GetHasWildcardPermissions() *plugin.TValue[bool] 
 	})
 }
 
+func (c *mqlK8sServiceaccount) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.serviceaccount", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sRbacClusterrole for the k8s.rbac.clusterrole resource
 type mqlK8sRbacClusterrole struct {
 	MqlRuntime *plugin.Runtime
@@ -20157,6 +20695,7 @@ type mqlK8sRbacClusterrole struct {
 	GrantsClusterAdmin        plugin.TValue[bool]
 	AggregationRule           plugin.TValue[any]
 	BoundBy                   plugin.TValue[[]any]
+	Context                   plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sRbacClusterrole creates a new instance of this resource
@@ -20334,6 +20873,22 @@ func (c *mqlK8sRbacClusterrole) GetBoundBy() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sRbacClusterrole) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrole", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sRbacPolicyRule for the k8s.rbac.policyRule resource
 type mqlK8sRbacPolicyRule struct {
 	MqlRuntime *plugin.Runtime
@@ -20422,6 +20977,7 @@ type mqlK8sRbacClusterrolebinding struct {
 	AllowsPrivilegeEscalation plugin.TValue[bool]
 	CanReadSecrets            plugin.TValue[bool]
 	ClusterRole               plugin.TValue[*mqlK8sRbacClusterrole]
+	Context                   plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sRbacClusterrolebinding creates a new instance of this resource
@@ -20599,6 +21155,22 @@ func (c *mqlK8sRbacClusterrolebinding) GetClusterRole() *plugin.TValue[*mqlK8sRb
 	})
 }
 
+func (c *mqlK8sRbacClusterrolebinding) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.clusterrolebinding", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sRbacRole for the k8s.rbac.role resource
 type mqlK8sRbacRole struct {
 	MqlRuntime *plugin.Runtime
@@ -20623,6 +21195,7 @@ type mqlK8sRbacRole struct {
 	CanReadSecrets            plugin.TValue[bool]
 	GrantsClusterAdmin        plugin.TValue[bool]
 	BoundBy                   plugin.TValue[[]any]
+	Context                   plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sRbacRole creates a new instance of this resource
@@ -20800,6 +21373,22 @@ func (c *mqlK8sRbacRole) GetBoundBy() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sRbacRole) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.role", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sRbacRolebinding for the k8s.rbac.rolebinding resource
 type mqlK8sRbacRolebinding struct {
 	MqlRuntime *plugin.Runtime
@@ -20826,6 +21415,7 @@ type mqlK8sRbacRolebinding struct {
 	CanReadSecrets            plugin.TValue[bool]
 	Role                      plugin.TValue[*mqlK8sRbacRole]
 	ClusterRole               plugin.TValue[*mqlK8sRbacClusterrole]
+	Context                   plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sRbacRolebinding creates a new instance of this resource
@@ -21020,6 +21610,22 @@ func (c *mqlK8sRbacRolebinding) GetClusterRole() *plugin.TValue[*mqlK8sRbacClust
 		}
 
 		return c.clusterRole()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.rbac.rolebinding", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -21260,6 +21866,7 @@ type mqlK8sNetworkpolicy struct {
 	Ingress         plugin.TValue[[]any]
 	Egress          plugin.TValue[[]any]
 	Coverage        plugin.TValue[*mqlK8sNetworkPolicyCoverage]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sNetworkpolicy creates a new instance of this resource
@@ -21420,6 +22027,22 @@ func (c *mqlK8sNetworkpolicy) GetCoverage() *plugin.TValue[*mqlK8sNetworkPolicyC
 		}
 
 		return c.coverage()
+	})
+}
+
+func (c *mqlK8sNetworkpolicy) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.networkpolicy", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -21918,6 +22541,7 @@ type mqlK8sCustomresource struct {
 	Kind            plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
 	Manifest        plugin.TValue[any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sCustomresource creates a new instance of this resource
@@ -22035,6 +22659,22 @@ func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlK8sCustomresource) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.customresource", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sPersistentvolume for the k8s.persistentvolume resource
 type mqlK8sPersistentvolume struct {
 	MqlRuntime *plugin.Runtime
@@ -22067,6 +22707,7 @@ type mqlK8sPersistentvolume struct {
 	Phase                         plugin.TValue[string]
 	Reason                        plugin.TValue[string]
 	Message                       plugin.TValue[string]
+	Context                       plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sPersistentvolume creates a new instance of this resource
@@ -22296,6 +22937,22 @@ func (c *mqlK8sPersistentvolume) GetMessage() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlK8sPersistentvolume) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolume", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sStorageclass for the k8s.storageclass resource
 type mqlK8sStorageclass struct {
 	MqlRuntime *plugin.Runtime
@@ -22318,6 +22975,7 @@ type mqlK8sStorageclass struct {
 	AllowVolumeExpansion plugin.TValue[bool]
 	Parameters           plugin.TValue[map[string]any]
 	MountOptions         plugin.TValue[[]any]
+	Context              plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sStorageclass creates a new instance of this resource
@@ -22459,6 +23117,22 @@ func (c *mqlK8sStorageclass) GetMountOptions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sStorageclass) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.storageclass", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sPriorityclass for the k8s.priorityclass resource
 type mqlK8sPriorityclass struct {
 	MqlRuntime *plugin.Runtime
@@ -22479,6 +23153,7 @@ type mqlK8sPriorityclass struct {
 	GlobalDefault    plugin.TValue[bool]
 	PreemptionPolicy plugin.TValue[string]
 	Description      plugin.TValue[string]
+	Context          plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sPriorityclass creates a new instance of this resource
@@ -22608,6 +23283,22 @@ func (c *mqlK8sPriorityclass) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlK8sPriorityclass) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.priorityclass", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sHorizontalpodautoscaler for the k8s.horizontalpodautoscaler resource
 type mqlK8sHorizontalpodautoscaler struct {
 	MqlRuntime *plugin.Runtime
@@ -22643,6 +23334,7 @@ type mqlK8sHorizontalpodautoscaler struct {
 	DesiredReplicas        plugin.TValue[int64]
 	CurrentMetrics         plugin.TValue[[]any]
 	Conditions             plugin.TValue[[]any]
+	Context                plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sHorizontalpodautoscaler creates a new instance of this resource
@@ -22898,6 +23590,22 @@ func (c *mqlK8sHorizontalpodautoscaler) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sHorizontalpodautoscaler) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.horizontalpodautoscaler", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sResourcequota for the k8s.resourcequota resource
 type mqlK8sResourcequota struct {
 	MqlRuntime *plugin.Runtime
@@ -22921,6 +23629,7 @@ type mqlK8sResourcequota struct {
 	Used            plugin.TValue[map[string]any]
 	Scopes          plugin.TValue[[]any]
 	ScopeSelector   plugin.TValue[any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sResourcequota creates a new instance of this resource
@@ -23074,6 +23783,22 @@ func (c *mqlK8sResourcequota) GetScopeSelector() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlK8sResourcequota) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.resourcequota", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sLimitrange for the k8s.limitrange resource
 type mqlK8sLimitrange struct {
 	MqlRuntime *plugin.Runtime
@@ -23093,6 +23818,7 @@ type mqlK8sLimitrange struct {
 	Manifest        plugin.TValue[any]
 	Spec            plugin.TValue[any]
 	Limits          plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sLimitrange creates a new instance of this resource
@@ -23222,6 +23948,22 @@ func (c *mqlK8sLimitrange) GetLimits() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sLimitrange) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.limitrange", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sPersistentvolumeclaim for the k8s.persistentvolumeclaim resource
 type mqlK8sPersistentvolumeclaim struct {
 	MqlRuntime *plugin.Runtime
@@ -23255,6 +23997,7 @@ type mqlK8sPersistentvolumeclaim struct {
 	Capacity         plugin.TValue[map[string]any]
 	BoundAccessModes plugin.TValue[[]any]
 	Conditions       plugin.TValue[[]any]
+	Context          plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sPersistentvolumeclaim creates a new instance of this resource
@@ -23488,6 +24231,22 @@ func (c *mqlK8sPersistentvolumeclaim) GetConditions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sPersistentvolumeclaim) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.persistentvolumeclaim", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sEndpointslice for the k8s.endpointslice resource
 type mqlK8sEndpointslice struct {
 	MqlRuntime *plugin.Runtime
@@ -23510,6 +24269,7 @@ type mqlK8sEndpointslice struct {
 	Ports             plugin.TValue[[]any]
 	Service           plugin.TValue[*mqlK8sService]
 	ExternalAddresses plugin.TValue[[]any]
+	Context           plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sEndpointslice creates a new instance of this resource
@@ -23662,6 +24422,22 @@ func (c *mqlK8sEndpointslice) GetService() *plugin.TValue[*mqlK8sService] {
 func (c *mqlK8sEndpointslice) GetExternalAddresses() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ExternalAddresses, func() ([]any, error) {
 		return c.externalAddresses()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.endpointslice", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
 	})
 }
 
@@ -23879,6 +24655,7 @@ type mqlK8sAdmissionValidatingwebhookconfiguration struct {
 	Manifest        plugin.TValue[any]
 	Webhooks        plugin.TValue[[]any]
 	FailsOpen       plugin.TValue[bool]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sAdmissionValidatingwebhookconfiguration creates a new instance of this resource
@@ -24004,6 +24781,22 @@ func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetFailsOpen() *plugin.T
 	})
 }
 
+func (c *mqlK8sAdmissionValidatingwebhookconfiguration) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingwebhookconfiguration", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sApp for the k8s.app resource
 type mqlK8sApp struct {
 	MqlRuntime *plugin.Runtime
@@ -24093,6 +24886,7 @@ type mqlK8sGatewayclass struct {
 	Description     plugin.TValue[string]
 	ParametersRef   plugin.TValue[any]
 	Conditions      plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sGatewayclass creates a new instance of this resource
@@ -24222,6 +25016,22 @@ func (c *mqlK8sGatewayclass) GetConditions() *plugin.TValue[[]any] {
 	return &c.Conditions
 }
 
+func (c *mqlK8sGatewayclass) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gatewayclass", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sGateway for the k8s.gateway resource
 type mqlK8sGateway struct {
 	MqlRuntime *plugin.Runtime
@@ -24249,6 +25059,7 @@ type mqlK8sGateway struct {
 	Conditions       plugin.TValue[[]any]
 	Pods             plugin.TValue[[]any]
 	NetworkExposures plugin.TValue[[]any]
+	Context          plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sGateway creates a new instance of this resource
@@ -24442,6 +25253,22 @@ func (c *mqlK8sGateway) GetNetworkExposures() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlK8sGateway) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.gateway", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sHttproute for the k8s.httproute resource
 type mqlK8sHttproute struct {
 	MqlRuntime *plugin.Runtime
@@ -24463,6 +25290,7 @@ type mqlK8sHttproute struct {
 	Hostnames       plugin.TValue[[]any]
 	Rules           plugin.TValue[[]any]
 	ParentStatus    plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sHttproute creates a new instance of this resource
@@ -24596,6 +25424,22 @@ func (c *mqlK8sHttproute) GetParentStatus() *plugin.TValue[[]any] {
 	return &c.ParentStatus
 }
 
+func (c *mqlK8sHttproute) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.httproute", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sGrpcroute for the k8s.grpcroute resource
 type mqlK8sGrpcroute struct {
 	MqlRuntime *plugin.Runtime
@@ -24617,6 +25461,7 @@ type mqlK8sGrpcroute struct {
 	Hostnames       plugin.TValue[[]any]
 	Rules           plugin.TValue[[]any]
 	ParentStatus    plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sGrpcroute creates a new instance of this resource
@@ -24748,6 +25593,22 @@ func (c *mqlK8sGrpcroute) GetRules() *plugin.TValue[[]any] {
 
 func (c *mqlK8sGrpcroute) GetParentStatus() *plugin.TValue[[]any] {
 	return &c.ParentStatus
+}
+
+func (c *mqlK8sGrpcroute) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.grpcroute", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
 }
 
 // mqlK8sTlsroute for the k8s.tlsroute resource
@@ -25231,6 +26092,7 @@ type mqlK8sReferencegrant struct {
 	Manifest        plugin.TValue[any]
 	From            plugin.TValue[[]any]
 	To              plugin.TValue[[]any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sReferencegrant creates a new instance of this resource
@@ -25356,6 +26218,22 @@ func (c *mqlK8sReferencegrant) GetTo() *plugin.TValue[[]any] {
 	return &c.To
 }
 
+func (c *mqlK8sReferencegrant) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.referencegrant", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sAdmissionMutatingwebhookconfiguration for the k8s.admission.mutatingwebhookconfiguration resource
 type mqlK8sAdmissionMutatingwebhookconfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -25374,6 +26252,7 @@ type mqlK8sAdmissionMutatingwebhookconfiguration struct {
 	Manifest        plugin.TValue[any]
 	Webhooks        plugin.TValue[[]any]
 	FailsOpen       plugin.TValue[bool]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sAdmissionMutatingwebhookconfiguration creates a new instance of this resource
@@ -25499,6 +26378,22 @@ func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetFailsOpen() *plugin.TVa
 	})
 }
 
+func (c *mqlK8sAdmissionMutatingwebhookconfiguration) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.mutatingwebhookconfiguration", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sAdmissionValidatingadmissionpolicy for the k8s.admission.validatingadmissionpolicy resource
 type mqlK8sAdmissionValidatingadmissionpolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -25523,6 +26418,7 @@ type mqlK8sAdmissionValidatingadmissionpolicy struct {
 	AuditAnnotations plugin.TValue[[]any]
 	ParamKind        plugin.TValue[any]
 	Bindings         plugin.TValue[[]any]
+	Context          plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sAdmissionValidatingadmissionpolicy creates a new instance of this resource
@@ -25692,6 +26588,22 @@ func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetBindings() *plugin.TValue[
 	})
 }
 
+func (c *mqlK8sAdmissionValidatingadmissionpolicy) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicy", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sAdmissionValidatingadmissionpolicybinding for the k8s.admission.validatingadmissionpolicybinding resource
 type mqlK8sAdmissionValidatingadmissionpolicybinding struct {
 	MqlRuntime *plugin.Runtime
@@ -25713,6 +26625,7 @@ type mqlK8sAdmissionValidatingadmissionpolicybinding struct {
 	ValidationActions plugin.TValue[[]any]
 	ParamRef          plugin.TValue[any]
 	MatchResources    plugin.TValue[any]
+	Context           plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sAdmissionValidatingadmissionpolicybinding creates a new instance of this resource
@@ -25862,6 +26775,22 @@ func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetMatchResources() *p
 	})
 }
 
+func (c *mqlK8sAdmissionValidatingadmissionpolicybinding) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admission.validatingadmissionpolicybinding", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sPoddisruptionbudget for the k8s.poddisruptionbudget resource
 type mqlK8sPoddisruptionbudget struct {
 	MqlRuntime *plugin.Runtime
@@ -25889,6 +26818,7 @@ type mqlK8sPoddisruptionbudget struct {
 	DisruptionsAllowed         plugin.TValue[int64]
 	ObservedGeneration         plugin.TValue[int64]
 	Conditions                 plugin.TValue[[]any]
+	Context                    plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sPoddisruptionbudget creates a new instance of this resource
@@ -26046,6 +26976,22 @@ func (c *mqlK8sPoddisruptionbudget) GetConditions() *plugin.TValue[[]any] {
 	return &c.Conditions
 }
 
+func (c *mqlK8sPoddisruptionbudget) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.poddisruptionbudget", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sLease for the k8s.lease resource
 type mqlK8sLease struct {
 	MqlRuntime *plugin.Runtime
@@ -26070,6 +27016,7 @@ type mqlK8sLease struct {
 	LeaseTransitions     plugin.TValue[int64]
 	Strategy             plugin.TValue[string]
 	PreferredHolder      plugin.TValue[string]
+	Context              plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sLease creates a new instance of this resource
@@ -26215,6 +27162,22 @@ func (c *mqlK8sLease) GetPreferredHolder() *plugin.TValue[string] {
 	return &c.PreferredHolder
 }
 
+func (c *mqlK8sLease) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.lease", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sCertificatesigningrequest for the k8s.certificatesigningrequest resource
 type mqlK8sCertificatesigningrequest struct {
 	MqlRuntime *plugin.Runtime
@@ -26240,6 +27203,7 @@ type mqlK8sCertificatesigningrequest struct {
 	Groups            plugin.TValue[[]any]
 	Certificate       plugin.TValue[string]
 	Conditions        plugin.TValue[[]any]
+	Context           plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sCertificatesigningrequest creates a new instance of this resource
@@ -26389,6 +27353,22 @@ func (c *mqlK8sCertificatesigningrequest) GetConditions() *plugin.TValue[[]any] 
 	return &c.Conditions
 }
 
+func (c *mqlK8sCertificatesigningrequest) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.certificatesigningrequest", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sApiservice for the k8s.apiservice resource
 type mqlK8sApiservice struct {
 	MqlRuntime *plugin.Runtime
@@ -26416,6 +27396,7 @@ type mqlK8sApiservice struct {
 	ServicePort           plugin.TValue[int64]
 	Service               plugin.TValue[*mqlK8sService]
 	Conditions            plugin.TValue[[]any]
+	Context               plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sApiservice creates a new instance of this resource
@@ -26585,6 +27566,22 @@ func (c *mqlK8sApiservice) GetConditions() *plugin.TValue[[]any] {
 	return &c.Conditions
 }
 
+func (c *mqlK8sApiservice) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.apiservice", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
+}
+
 // mqlK8sIngressclass for the k8s.ingressclass resource
 type mqlK8sIngressclass struct {
 	MqlRuntime *plugin.Runtime
@@ -26603,6 +27600,7 @@ type mqlK8sIngressclass struct {
 	Manifest        plugin.TValue[any]
 	Controller      plugin.TValue[string]
 	Parameters      plugin.TValue[any]
+	Context         plugin.TValue[*mqlK8sContext]
 }
 
 // createK8sIngressclass creates a new instance of this resource
@@ -26722,6 +27720,22 @@ func (c *mqlK8sIngressclass) GetController() *plugin.TValue[string] {
 
 func (c *mqlK8sIngressclass) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+func (c *mqlK8sIngressclass) GetContext() *plugin.TValue[*mqlK8sContext] {
+	return plugin.GetOrCompute[*mqlK8sContext](&c.Context, func() (*mqlK8sContext, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingressclass", c.__id, "context")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sContext), nil
+			}
+		}
+
+		return c.context()
+	})
 }
 
 // mqlK8sOwnerReference for the k8s.ownerReference resource
@@ -26947,5 +27961,76 @@ func (c *mqlK8sAccessReview) GetAllowed() *plugin.TValue[bool] {
 func (c *mqlK8sAccessReview) GetReason() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Reason, func() (string, error) {
 		return c.reason()
+	})
+}
+
+// mqlK8sContext for the k8s.context resource
+type mqlK8sContext struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sContextInternal it will be used here
+	Path    plugin.TValue[string]
+	Range   plugin.TValue[llx.Range]
+	Content plugin.TValue[string]
+}
+
+// createK8sContext creates a new instance of this resource
+func createK8sContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sContext) MqlName() string {
+	return "k8s.context"
+}
+
+func (c *mqlK8sContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sContext) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlK8sContext) GetRange() *plugin.TValue[llx.Range] {
+	return &c.Range
+}
+
+func (c *mqlK8sContext) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		vargRange := c.GetRange()
+		if vargRange.Error != nil {
+			return "", vargRange.Error
+		}
+
+		return c.content(vargPath.Data, vargRange.Data)
 	})
 }

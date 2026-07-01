@@ -286,7 +286,7 @@ private k8s.namespace @defaults("name created") {
 // containerRuntimeVersion, operatingSystem, and architecture fields report the
 // node's software stack, and unschedulable reports whether the node is
 // cordoned.
-private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") {
+private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes.io/os'] ") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -397,7 +397,7 @@ private k8s.nodeAddress @defaults("type address") {
 // and runtime status by phase, qosClass, podIP, and conditions. The owning
 // controller is reached through replicaSet, statefulSet, daemonSet, job, and
 // deployment.
-private k8s.pod @defaults("namespace name created"){
+private k8s.pod @defaults("namespace name created") @context("k8s.context") {
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
   runsPrivileged() bool
   // Whether privilege escalation is possible for any container
@@ -645,7 +645,7 @@ private k8s.pod @defaults("namespace name created"){
 // the current rollout state is reported by replicas, readyReplicas,
 // availableReplicas, updatedReplicas, unavailableReplicas, and conditions. The
 // pods field returns the pods currently backing the deployment.
-private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") {
+private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -813,7 +813,7 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
 // desiredNumberScheduled, currentNumberScheduled, numberReady, numberAvailable,
 // numberMisscheduled, and updatedNumberScheduled. The pods field returns the
 // daemon pods currently running.
-private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") {
+private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberReady created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -980,7 +980,7 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
 // scale-down. Rollout state is reported by replicas, readyReplicas,
 // currentReplicas, updatedReplicas, currentRevision, updateRevision, and
 // conditions, and the pods field returns the backing pods.
-private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") {
+private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1155,7 +1155,7 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
 // desiredReplicas and selector, and the observed state is reported by replicas,
 // readyReplicas, availableReplicas, fullyLabeledReplicas, and conditions. The
 // pods field returns the pods the ReplicaSet owns.
-private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") {
+private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1310,7 +1310,7 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
 // backoffLimit, activeDeadlineSeconds, and suspend; and progress is reported by
 // active, succeeded, failed, ready, startTime, completionTime, and conditions.
 // The pods field returns the pods the job has created.
-private k8s.job @defaults("namespace name succeeded failed created") {
+private k8s.job @defaults("namespace name succeeded failed created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1490,7 +1490,7 @@ private k8s.job @defaults("namespace name succeeded failed created") {
 // finished jobs are retained. The activeJobs field returns the jobs currently
 // running, jobs returns every job the CronJob still owns, and the shared pod
 // template is available through podSpec, containers, and initContainers.
-private k8s.cronjob @defaults("namespace name schedule suspend created") {
+private k8s.cronjob @defaults("namespace name schedule suspend created") @context("k8s.context") {
   // Whether an API token is automatically mounted for the ServiceAccount
   automountServiceAccountToken() bool
   // Whether the pod shares the host network namespace
@@ -1947,7 +1947,7 @@ private k8s.ephemeralContainer @defaults("name") {
 // certificates parses any X.509 certificates the secret carries, and usedBy
 // returns the pods that consume the secret through volumes, environment
 // variables, or image-pull references.
-private k8s.secret @defaults("namespace name created") {
+private k8s.secret @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2004,7 +2004,7 @@ private k8s.secret @defaults("namespace name created") {
 // selected by namespace and name. The data field exposes the stored
 // configuration entries, and usedBy returns the pods that consume the ConfigMap
 // through volumes, environment variables, or envFrom.
-private k8s.configmap @defaults("namespace name created") {
+private k8s.configmap @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2045,7 +2045,7 @@ private k8s.configmap @defaults("namespace name created") {
 // governed by externalTrafficPolicy, internalTrafficPolicy, and
 // sessionAffinity, and endpointSlices returns the slices listing the current
 // backing endpoints.
-private k8s.service @defaults("namespace name created") {
+private k8s.service @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2202,7 +2202,7 @@ private k8s.ingresstls {
 // terminated by the ingress, and ingressClass identifies the controller that
 // implements the rules. The loadBalancerIngress field reports the addresses the
 // controller has assigned.
-private k8s.ingress @defaults("namespace name created") {
+private k8s.ingress @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2250,7 +2250,7 @@ private k8s.ingress @defaults("namespace name created") {
 // and registry credentials associated with the account, and
 // automountServiceAccountToken reports whether its API token is mounted into
 // pods by default.
-private k8s.serviceaccount @defaults("namespace name created") {
+private k8s.serviceaccount @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2301,7 +2301,7 @@ private k8s.serviceaccount @defaults("namespace name created") {
 // the API groups, resources, and verbs the role grants, aggregationRule
 // describes how the role aggregates other ClusterRoles by label, and boundBy
 // returns the ClusterRoleBindings that grant this role to subjects.
-private k8s.rbac.clusterrole @defaults("name created") {
+private k8s.rbac.clusterrole @defaults("name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2372,7 +2372,7 @@ private k8s.rbac.policyRule @defaults("verbs apiGroups resources") {
 // name. The subjects field lists the users, groups, and service accounts the
 // role is granted to, serviceAccounts resolves the service-account subjects to
 // their objects, and clusterRole returns the ClusterRole named by roleRef.
-private k8s.rbac.clusterrolebinding @defaults("name created") {
+private k8s.rbac.clusterrolebinding @defaults("name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2419,7 +2419,7 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
 // field lists the API groups, resources, and verbs the role grants within its
 // namespace, and boundBy returns the RoleBindings that grant this role to
 // subjects.
-private k8s.rbac.role @defaults("name namespace") {
+private k8s.rbac.role @defaults("name namespace") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2473,7 +2473,7 @@ private k8s.rbac.role @defaults("name namespace") {
 // and service accounts the permissions are granted to, serviceAccounts resolves
 // the service-account subjects to their objects, and role or clusterRole
 // returns the object named by roleRef depending on its kind.
-private k8s.rbac.rolebinding @defaults("name namespace created") {
+private k8s.rbac.rolebinding @defaults("name namespace created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2590,7 +2590,7 @@ private k8s.rbac.whoCan @defaults("verb resource namespace") {
 // governs, policyTypes reports whether ingress, egress, or both are restricted,
 // and the ingress and egress fields list the permitted peers and ports. Pods
 // selected by a policy deny all traffic not explicitly allowed by these rules.
-private k8s.networkpolicy @defaults("namespace name created") {
+private k8s.networkpolicy @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2785,7 +2785,7 @@ private k8s.networkPolicyCoverage @defaults("namespace policyRef defaultDenyIngr
 // by namespace and name. The kind field reports the custom type and manifest
 // exposes the object's full content, so custom API extensions can be queried
 // alongside built-in Kubernetes objects.
-private k8s.customresource @defaults("name namespace created") {
+private k8s.customresource @defaults("name namespace created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2820,7 +2820,7 @@ private k8s.customresource @defaults("name namespace created") {
 // happens when its claim is released, and phase reports its lifecycle state
 // (Available, Bound, Released, or Failed). The claim field returns the
 // PersistentVolumeClaim currently bound to the volume.
-private k8s.persistentvolume @defaults("name capacity['storage'] phase storageClassName created") {
+private k8s.persistentvolume @defaults("name capacity['storage'] phase storageClassName created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2884,7 +2884,7 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
 // carries the provisioner-specific settings, and reclaimPolicy,
 // volumeBindingMode, and allowVolumeExpansion govern reclamation, binding
 // timing, and whether bound volumes may grow.
-private k8s.storageclass @defaults("name provisioner") {
+private k8s.storageclass @defaults("name provisioner") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2928,7 +2928,7 @@ private k8s.storageclass @defaults("name provisioner") {
 // globalDefault marks the class applied to pods that request none, and
 // preemptionPolicy controls whether higher-priority pods may evict
 // lower-priority ones.
-private k8s.priorityclass @defaults("name value") {
+private k8s.priorityclass @defaults("name value") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -2970,7 +2970,7 @@ private k8s.priorityclass @defaults("name value") {
 // bound the replica count, and metrics and behavior define the targets and
 // scaling policies. Current state is reported by currentReplicas,
 // desiredReplicas, currentMetrics, lastScaleTime, and conditions.
-private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxReplicas currentReplicas created") {
+private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxReplicas currentReplicas created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3039,7 +3039,7 @@ private k8s.horizontalpodautoscaler @defaults("namespace name minReplicas maxRep
 // namespace and name. The hard field lists the enforced limits (such as CPU,
 // memory, and object counts) and used reports current consumption against them.
 // The scopes and scopeSelector fields narrow which objects the quota applies to.
-private k8s.resourcequota @defaults("namespace name created") {
+private k8s.resourcequota @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3085,7 +3085,7 @@ private k8s.resourcequota @defaults("namespace name created") {
 // default, minimum, and maximum values applied per object type (Container, Pod,
 // or PersistentVolumeClaim), supplying defaults to objects that omit them and
 // rejecting objects that fall outside the bounds.
-private k8s.limitrange @defaults("namespace name created") {
+private k8s.limitrange @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3123,7 +3123,7 @@ private k8s.limitrange @defaults("namespace name created") {
 // volume and volumeName identify the bound PersistentVolume, and phase reports
 // whether the claim is Pending, Bound, or Lost. The capacity and
 // boundAccessModes fields report what the bound volume actually provides.
-private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['storage'] storageClassName created") {
+private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['storage'] storageClassName created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3189,7 +3189,7 @@ private k8s.persistentvolumeclaim @defaults("namespace name phase capacity['stor
 // FQDN endpoints, endpoints lists the backing addresses and their readiness,
 // ports lists the ports they expose, and service returns the Service the slice
 // belongs to.
-private k8s.endpointslice @defaults("namespace name addressType") {
+private k8s.endpointslice @defaults("namespace name addressType") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3274,7 +3274,7 @@ private k8s.userinfo @defaults("username") {
 // endpoint, the resource rules and namespace and object selectors that decide
 // when it is called, its failure policy, and its admission side effects.
 // Validating webhooks may reject a request but cannot modify the object.
-private k8s.admission.validatingwebhookconfiguration @defaults("name") {
+private k8s.admission.validatingwebhookconfiguration @defaults("name") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3333,7 +3333,7 @@ private k8s.app {
 // Gateways of this class, parametersRef points to a controller-specific
 // configuration resource, and conditions reports whether the class has been
 // accepted.
-private k8s.gatewayclass @defaults("name controllerName created") {
+private k8s.gatewayclass @defaults("name controllerName created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3374,7 +3374,7 @@ private k8s.gatewayclass @defaults("name controllerName created") {
 // hostnames the Gateway accepts, and addresses requests specific entry
 // addresses. The statusAddresses and listenerStatus fields report the addresses
 // the controller assigned and the routes attached to each listener.
-private k8s.gateway @defaults("namespace name gatewayClassName created") {
+private k8s.gateway @defaults("namespace name gatewayClassName created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3429,7 +3429,7 @@ private k8s.gateway @defaults("namespace name gatewayClassName created") {
 // specific hosts, and rules describes the matches, filters, and backend
 // forwarding applied to requests. The parentStatus field reports whether each
 // parent accepted the route.
-private k8s.httproute @defaults("namespace name created") {
+private k8s.httproute @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3472,7 +3472,7 @@ private k8s.httproute @defaults("namespace name created") {
 // specific hosts, and rules describes the method matches, filters, and backend
 // forwarding applied to requests. The parentStatus field reports whether each
 // parent accepted the route.
-private k8s.grpcroute @defaults("namespace name created") {
+private k8s.grpcroute @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3641,7 +3641,7 @@ private k8s.udproute @defaults("namespace name created") {
 // namespaces allowed to make references, and the to field lists the resource
 // kinds in this namespace they may reference, letting routes and other objects
 // point at targets they would otherwise be denied.
-private k8s.referencegrant @defaults("namespace name created") {
+private k8s.referencegrant @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3680,7 +3680,7 @@ private k8s.referencegrant @defaults("namespace name created") {
 // when it is called, its reinvocation and failure policies, and its admission
 // side effects. Mutating webhooks run before validation and may patch the
 // incoming object.
-private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
+private k8s.admission.mutatingwebhookconfiguration @defaults("name") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3720,7 +3720,7 @@ private k8s.admission.mutatingwebhookconfiguration @defaults("name") {
 // `k8s.admission.validatingadmissionpolicybinding` activates it; use
 // `bindings()` to reach the bindings that reference this policy by name and
 // the enforcement actions (Deny, Warn, Audit) they apply.
-private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") {
+private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3770,7 +3770,7 @@ private k8s.admission.validatingadmissionpolicy @defaults("name failurePolicy") 
 // request, `Warn` returns a client warning, and `Audit` records the failure in
 // the audit log. Use `matchResources()` to see how the binding narrows the
 // policy's scope and `paramRef()` for the parameter resource it supplies.
-private k8s.admission.validatingadmissionpolicybinding @defaults("name policyName") {
+private k8s.admission.validatingadmissionpolicybinding @defaults("name policyName") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3813,7 +3813,7 @@ private k8s.admission.validatingadmissionpolicybinding @defaults("name policyNam
 // unhealthyPodEvictionPolicy governs eviction of unhealthy pods. Current state
 // is reported by currentHealthy, desiredHealthy, expectedPods, and
 // disruptionsAllowed.
-private k8s.poddisruptionbudget @defaults("namespace name created") {
+private k8s.poddisruptionbudget @defaults("namespace name created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3867,7 +3867,7 @@ private k8s.poddisruptionbudget @defaults("namespace name created") {
 // leaseDurationSeconds and renewTime report how long the lease is held and when
 // it was last renewed, and acquireTime and leaseTransitions track when it was
 // acquired and how often it has changed hands.
-private k8s.lease @defaults("namespace name holderIdentity created") {
+private k8s.lease @defaults("namespace name holderIdentity created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3916,7 +3916,7 @@ private k8s.lease @defaults("namespace name holderIdentity created") {
 // expirationSeconds state the requested key usages and lifetime. The username,
 // groups, and requesterUid fields identify the requester, conditions reports
 // approval state, and certificate holds the issued certificate once signed.
-private k8s.certificatesigningrequest @defaults("name signerName username created") {
+private k8s.certificatesigningrequest @defaults("name signerName username created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -3968,7 +3968,7 @@ private k8s.certificatesigningrequest @defaults("name signerName username create
 // kube-apiserver itself), and caBundle and insecureSkipTLSVerify govern how the
 // API server trusts that backend. The conditions field reports whether the API
 // is available.
-private k8s.apiservice @defaults("name group version created") {
+private k8s.apiservice @defaults("name group version created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -4021,7 +4021,7 @@ private k8s.apiservice @defaults("name group version created") {
 // name. The controller field names the controller that handles ingresses of this
 // class, and parameters points to a controller-specific configuration resource
 // that tunes its behavior.
-private k8s.ingressclass @defaults("name controller created") {
+private k8s.ingressclass @defaults("name controller created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
   // Kubernetes object UID
@@ -4125,4 +4125,19 @@ private k8s.accessReview @defaults("subject verb resource allowed") {
   allowed() bool
   // Authorizer's explanation for the decision
   reason() string
+}
+
+// Kubernetes manifest source context
+//
+// Source location and raw text of a resource declared in a manifest file: the
+// file path, the line range it spans, and the manifest text within that range.
+// Points a reviewer at the exact source of a flagged resource. Available only
+// for manifest-file scans; empty for live-cluster and admission connections.
+private k8s.context @defaults("path range content") {
+  // Path of the manifest file this resource is declared in
+  path string
+  // Line range the resource spans in the manifest
+  range range
+  // Manifest text within the range, shown as an excerpt
+  content(path, range) string
 }
