@@ -369,6 +369,7 @@ var awsPermissionOverrides = map[string]string{
 	"apigateway:GetApiKeys":           "apigateway:GET",
 	"apigateway:GetApis":              "apigateway:GET",
 	"apigateway:GetAuthorizers":       "apigateway:GET",
+	"apigateway:GetDeployments":       "apigateway:GET",
 	"apigateway:GetDomainNames":       "apigateway:GET",
 	"apigateway:GetRequestValidators": "apigateway:GET",
 	"apigateway:GetRestApis":          "apigateway:GET",
