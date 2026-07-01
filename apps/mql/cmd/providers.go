@@ -30,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(ProvidersCmd)
 	ProvidersCmd.AddCommand(listProvidersCmd)
 	ProvidersCmd.AddCommand(installProviderCmd)
+	ProvidersCmd.AddCommand(deleteProviderCmd)
 	ProvidersCmd.AddCommand(infoProviderCmd)
 	ProvidersCmd.AddCommand(resourcesProviderCmd)
 
@@ -39,6 +40,7 @@ func init() {
 	resourcesProviderCmd.Flags().Bool("json", false, "Output in JSON format")
 	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
+	deleteProviderCmd.Flags().Bool("yes", false, "Confirm removal of all providers when using the 'all' target")
 }
 
 var ProvidersCmd = &cobra.Command{
@@ -87,6 +89,42 @@ var installProviderCmd = &cobra.Command{
 
 		// if no url or file is specified, we default to installing by name from the default upstream
 		installProviderByName(args[0])
+	},
+}
+
+var deleteProviderCmd = &cobra.Command{
+	Use:   "delete <NAME>",
+	Short: "Remove an installed provider from disk",
+	Long: `Remove an installed provider plugin from disk. The provider is
+re-downloaded automatically the next time it's needed.
+
+Use the special target "all" to remove every installed provider at once. Because
+that wipes your whole provider footprint, it requires the --yes flag to confirm.
+
+Examples:
+  mql providers delete aws          # remove the aws provider
+  mql providers delete all --yes    # remove every installed provider`,
+	Args:   cobra.ExactArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name := args[0]
+		if name == "all" {
+			yes, _ := cmd.Flags().GetBool("yes")
+			if !yes {
+				return fmt.Errorf("removing all providers wipes your entire provider footprint; re-run with --yes to confirm")
+			}
+			if err := providers.DeleteAll(); err != nil {
+				return err
+			}
+			log.Info().Msg("removed all installed providers")
+			return nil
+		}
+
+		if err := providers.Delete(name); err != nil {
+			return err
+		}
+		log.Info().Str("provider", name).Msg("removed installed provider")
+		return nil
 	},
 }
 

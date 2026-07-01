@@ -68,6 +68,58 @@ func init() {
 	Coordinator = coordinator
 }
 
+// deleteProvider removes a single resolved provider from disk. The path it
+// removes is the exact one the provider was loaded from, which already honors a
+// PROVIDERS_PATH override (or the system/home paths otherwise). Builtin
+// providers have no on-disk path and cannot be removed.
+func deleteProvider(provider *Provider) error {
+	if provider.Path == "" {
+		return errors.Newf("provider %q is builtin and cannot be removed", provider.Name)
+	}
+	log.Debug().Str("path", provider.Path).Msg("removing installed provider")
+	if err := os.RemoveAll(provider.Path); err != nil {
+		return errors.Wrapf(err, "failed to remove provider %q", provider.Name)
+	}
+	return nil
+}
+
+// Delete removes a single installed provider from disk by name. It resolves the
+// provider through ListAll and delegates the removal to deleteProvider.
+func Delete(name string) error {
+	all, err := ListAll()
+	if err != nil {
+		return err
+	}
+	for _, provider := range all {
+		if provider.Name == name {
+			return deleteProvider(provider)
+		}
+	}
+	return errors.Newf("provider %q not found", name)
+}
+
+// DeleteAll removes every installed provider from disk. It goes through ListAll
+// — not the raw CachedProviders global — on purpose: ListAll returns the warm
+// cache when it's populated and otherwise rescans the provider dirs, so it works
+// regardless of cache state. A ListAll error bails rather than acting on a
+// partial list; builtin providers are skipped, and per-provider removal errors
+// are logged, not fatal (a non-root run can't remove a root-owned system path).
+func DeleteAll() error {
+	all, err := ListAll()
+	if err != nil {
+		return err
+	}
+	for _, provider := range all {
+		if provider.Path == "" {
+			continue
+		}
+		if err := deleteProvider(provider); err != nil {
+			log.Warn().Err(err).Str("path", provider.Path).Msg("failed to remove installed provider")
+		}
+	}
+	return nil
+}
+
 type ProviderLookup struct {
 	ID           string
 	ProviderName string
