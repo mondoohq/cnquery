@@ -1674,6 +1674,7 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 				"displayName":             llx.StringData(job.DisplayName),
 				"jobState":                llx.StringData(job.JobState.String()),
 				"kernelName":              llx.StringData(job.KernelName),
+				"executionUser":           llx.StringData(job.GetExecutionUser()),
 				"scheduleResourceName":    llx.StringData(job.ScheduleResourceName),
 				"executionTimeoutSeconds": llx.IntData(timeoutSeconds),
 				"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
@@ -1684,7 +1685,11 @@ func (g *mqlGcpProjectVertexaiService) notebookExecutionJobs() ([]any, error) {
 			if err != nil {
 				return nil, false, err
 			}
-			mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlNotebookJob := mqlJob.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob)
+			mqlNotebookJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlNotebookJob.cacheServiceAccountEmail = job.GetServiceAccount()
+			mqlNotebookJob.cacheProjectId = vertexaiProjectFromName(job.Name)
+			mqlNotebookJob.cacheNotebookRuntimeTemplateName = job.GetNotebookRuntimeTemplateResourceName()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2387,6 +2392,7 @@ func (g *mqlGcpProjectVertexaiService) tuningJobs() ([]any, error) {
 			mqlTuningJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
 			mqlTuningJob.cacheServiceAccountEmail = job.ServiceAccount
 			mqlTuningJob.cacheProjectId = projectId
+			mqlTuningJob.cacheTunedModelName = job.GetTunedModel().GetModel()
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2548,7 +2554,13 @@ func (g *mqlGcpProjectVertexaiService) hyperparameterTuningJobs() ([]any, error)
 			if err != nil {
 				return nil, false, err
 			}
-			mqlJob.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			mqlHyperJob := mqlJob.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob)
+			mqlHyperJob.cacheKmsKeyName = job.GetEncryptionSpec().GetKmsKeyName()
+			if job.TrialJobSpec != nil {
+				mqlHyperJob.cacheServiceAccountEmail = job.TrialJobSpec.GetServiceAccount()
+				mqlHyperJob.cacheNetwork = job.TrialJobSpec.GetNetwork()
+			}
+			mqlHyperJob.cacheProjectId = vertexaiProjectFromName(job.Name)
 			items = append(items, mqlJob)
 		}
 		return items, false, nil
@@ -2659,6 +2671,10 @@ func (a *mqlGcpProjectVertexaiServicePipelineJob) kmsKey() (*mqlGcpProjectKmsSer
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
 }
 
+func (a *mqlGcpProjectVertexaiServicePipelineJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
+}
+
 type mqlGcpProjectVertexaiServiceDatasetInternal struct {
 	cacheKmsKeyName string
 }
@@ -2689,6 +2705,10 @@ type mqlGcpProjectVertexaiServiceCustomJobInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceCustomJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceCustomJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceIndexInternal struct {
@@ -2756,11 +2776,54 @@ func (a *mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate) kmsKey() (*mqlGcpP
 }
 
 type mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName                  string
+	cacheServiceAccountEmail         string
+	cacheProjectId                   string
+	cacheNotebookRuntimeTemplateName string
 }
 
 func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccountRef, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) notebookRuntimeTemplateRef() (*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate, error) {
+	if a.cacheNotebookRuntimeTemplateName == "" {
+		a.NotebookRuntimeTemplateRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.notebookRuntimeTemplate", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheNotebookRuntimeTemplateName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) scheduleRef() (*mqlGcpProjectVertexaiServiceSchedule, error) {
+	if a.ScheduleResourceName.Error != nil {
+		return nil, a.ScheduleResourceName.Error
+	}
+	name := a.ScheduleResourceName.Data
+	if name == "" {
+		a.ScheduleRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gcp.project.vertexaiService.schedule", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectVertexaiServiceSchedule), nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceNotebookExecutionJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceReasoningEngineInternal struct {
@@ -2850,10 +2913,15 @@ func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) model() (*mqlGcpProject
 	return resolveVertexaiModelRef(a.MqlRuntime, &a.Model, a.cacheModelName)
 }
 
+func (a *mqlGcpProjectVertexaiServiceBatchPredictionJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
+}
+
 type mqlGcpProjectVertexaiServiceTuningJobInternal struct {
 	cacheKmsKeyName          string
 	cacheServiceAccountEmail string
 	cacheProjectId           string
+	cacheTunedModelName      string
 }
 
 func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -2862,6 +2930,14 @@ func (a *mqlGcpProjectVertexaiServiceTuningJob) kmsKey() (*mqlGcpProjectKmsServi
 
 func (a *mqlGcpProjectVertexaiServiceTuningJob) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
 	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccount, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) tunedModelRef() (*mqlGcpProjectVertexaiServiceModel, error) {
+	return resolveVertexaiModelRef(a.MqlRuntime, &a.TunedModelRef, a.cacheTunedModelName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceTuningJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceTrainingPipelineInternal struct {
@@ -2883,11 +2959,37 @@ func (a *mqlGcpProjectVertexaiServiceTrainingPipeline) kmsKey() (*mqlGcpProjectK
 }
 
 type mqlGcpProjectVertexaiServiceHyperparameterTuningJobInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName          string
+	cacheServiceAccountEmail string
+	cacheNetwork             string
+	cacheProjectId           string
 }
 
 func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) serviceAccountRef() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	return vertexaiServiceAccountRef(a.MqlRuntime, &a.ServiceAccountRef, a.cacheProjectId, a.cacheServiceAccountEmail)
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if a.cacheNetwork == "" {
+		a.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	n, err := getNetworkByUrl(a.cacheNetwork, a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if n == nil {
+		a.NetworkRef.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return n, nil
+}
+
+func (a *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal struct {
@@ -2897,6 +2999,10 @@ type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJobInternal struct {
 
 func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(a.MqlRuntime, &a.KmsKey, a.cacheKmsKeyName)
+}
+
+func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) managedBy() (string, error) {
+	return managedByFromLabels(a.GetLabels())
 }
 
 func (a *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) endpoint() (*mqlGcpProjectVertexaiServiceEndpoint, error) {

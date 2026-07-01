@@ -6180,6 +6180,12 @@ private gcp.project.dataprocService.cluster @defaults("name") {
   virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
   // IAM policy bindings on the cluster (who can submit jobs to or manage the cluster)
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Dataproc cluster config
@@ -6188,8 +6194,12 @@ private gcp.project.dataprocService.cluster.config {
   parentResourcePath string
   // Autoscaling configuration for the policy associated with the cluster
   autoscaling dict
+  // Autoscaling policy governing cluster scaling
+  autoscalingPolicyRef() gcp.project.dataprocService.autoscalingPolicy
   // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
   configBucket string
+  // Cloud Storage staging bucket for job dependencies, config files, and job driver console output
+  configBucketRef() gcp.project.storageService.bucket
   // Dataproc metrics configuration
   metrics dict
   // Encryption configuration
@@ -6222,6 +6232,8 @@ private gcp.project.dataprocService.cluster.config {
   software dict
   // Cloud Storage bucket used to store ephemeral cluster and jobs data
   tempBucket string
+  // Cloud Storage bucket for ephemeral cluster and jobs data
+  tempBucketRef() gcp.project.storageService.bucket
   // Compute Engine configuration for the cluster's worker instances
   worker gcp.project.dataprocService.cluster.config.instance
 }
@@ -6407,12 +6419,29 @@ private gcp.project.dataprocService.job @defaults("name status") {
   jobType string
   // Cluster the job is submitted to
   clusterName string
+  // Dataproc cluster the job is submitted to
+  cluster() gcp.project.dataprocService.cluster
+  // UUID of the cluster instance the job ran on
+  clusterUuid string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Whether the job is complete
   done bool
   // Driver output resource URI
   driverOutputResourceUri string
+  // Time the job entered its current status
+  stateStartTime time
+  // History of previous job statuses
+  //
+  // Each entry records a prior state, detail message, substate, and the time
+  // the job entered that state, forming the job's lifecycle timeline.
+  statusHistory []dict
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Dataproc autoscaling policy
@@ -11367,6 +11396,12 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   startTime time
   // End time
   endTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI dataset
@@ -11511,6 +11546,12 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   startTime time
   // End time
   endTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI vector search index
@@ -11716,8 +11757,19 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   jobState string
   // Kernel the notebook runs under
   kernelName string
+  // End-user identity the notebook execution runs on behalf of
+  executionUser string
+  // Service account identity the notebook execution runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
+  // Runtime template that defines the execution environment
+  notebookRuntimeTemplateRef() gcp.project.vertexaiService.notebookRuntimeTemplate
   // Resource name of the schedule that triggered this job, if scheduled
-  scheduleResourceName string
+  //
+  // Deprecated in favor of scheduleRef, which resolves the schedule resource
+  // (its name is available as the resource's own name).
+  scheduleResourceName @maturity("deprecated") string
+  // Schedule that triggered this job, if scheduled
+  scheduleRef() gcp.project.vertexaiService.schedule
   // Configured execution timeout, in seconds
   executionTimeoutSeconds int
   // User-defined key/value labels for organizing the resource
@@ -11730,6 +11782,12 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   createdAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI Agent Engine agent
@@ -11998,6 +12056,12 @@ private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName st
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI tuning job
@@ -12024,6 +12088,8 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   experiment string
   // Produced tuned model and its serving endpoint
   tunedModel dict
+  // Model produced by this tuning job
+  tunedModelRef() gcp.project.vertexaiService.model
   // Statistics about the tuning dataset
   tuningDataStats dict
   // Service account the job runs as
@@ -12042,6 +12108,12 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI training pipeline
@@ -12110,6 +12182,10 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   studySpec dict
   // Per-trial training job specification
   trialJobSpec dict
+  // Service account identity each trial runs as
+  serviceAccountRef() gcp.project.iamService.serviceAccount
+  // VPC network the trials peer with
+  networkRef() gcp.project.computeService.network
   // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec (CMEK)
@@ -12124,6 +12200,12 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   endedAt time
   // Last update time
   updatedAt time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Vertex AI model deployment monitoring job
@@ -12161,6 +12243,12 @@ private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("disp
   updatedAt time
   // Time the next monitoring analysis run is scheduled
   nextScheduleTime time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud Security Command Center organization settings

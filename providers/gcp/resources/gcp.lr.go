@@ -8464,14 +8464,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.cluster.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.dataprocService.cluster.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceCluster).GetManagedBy()).ToDataRes(types.String)
+	},
 	"gcp.project.dataprocService.cluster.config.parentResourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetParentResourcePath()).ToDataRes(types.String)
 	},
 	"gcp.project.dataprocService.cluster.config.autoscaling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetAutoscaling()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dataprocService.cluster.config.autoscalingPolicyRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetAutoscalingPolicyRef()).ToDataRes(types.Resource("gcp.project.dataprocService.autoscalingPolicy"))
+	},
 	"gcp.project.dataprocService.cluster.config.configBucket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetConfigBucket()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.cluster.config.configBucketRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetConfigBucketRef()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
 	},
 	"gcp.project.dataprocService.cluster.config.metrics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetMetrics()).ToDataRes(types.Dict)
@@ -8520,6 +8529,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.config.tempBucket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetTempBucket()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.cluster.config.tempBucketRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetTempBucketRef()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
 	},
 	"gcp.project.dataprocService.cluster.config.worker": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterConfig).GetWorker()).ToDataRes(types.Resource("gcp.project.dataprocService.cluster.config.instance"))
@@ -8725,6 +8737,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dataprocService.job.clusterName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceJob).GetClusterName()).ToDataRes(types.String)
 	},
+	"gcp.project.dataprocService.job.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetCluster()).ToDataRes(types.Resource("gcp.project.dataprocService.cluster"))
+	},
+	"gcp.project.dataprocService.job.clusterUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetClusterUuid()).ToDataRes(types.String)
+	},
 	"gcp.project.dataprocService.job.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -8733,6 +8751,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.job.driverOutputResourceUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceJob).GetDriverOutputResourceUri()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.stateStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetStateStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.dataprocService.job.statusHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetStatusHistory()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dataprocService.job.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.dataprocService.autoscalingPolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetProjectId()).ToDataRes(types.String)
@@ -13756,6 +13783,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.pipelineJob.endTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetEndTime()).ToDataRes(types.Time)
 	},
+	"gcp.project.vertexaiService.pipelineJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServicePipelineJob).GetManagedBy()).ToDataRes(types.String)
+	},
 	"gcp.project.vertexaiService.dataset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceDataset).GetName()).ToDataRes(types.String)
 	},
@@ -13905,6 +13935,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.customJob.endTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetEndTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.customJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceCustomJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.index.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceIndex).GetName()).ToDataRes(types.String)
@@ -14122,8 +14155,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.notebookExecutionJob.kernelName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetKernelName()).ToDataRes(types.String)
 	},
+	"gcp.project.vertexaiService.notebookExecutionJob.executionUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetExecutionUser()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.serviceAccountRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.notebookRuntimeTemplateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetNotebookRuntimeTemplateRef()).ToDataRes(types.Resource("gcp.project.vertexaiService.notebookRuntimeTemplate"))
+	},
 	"gcp.project.vertexaiService.notebookExecutionJob.scheduleResourceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetScheduleResourceName()).ToDataRes(types.String)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.scheduleRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetScheduleRef()).ToDataRes(types.Resource("gcp.project.vertexaiService.schedule"))
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.executionTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetExecutionTimeoutSeconds()).ToDataRes(types.Int)
@@ -14142,6 +14187,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.reasoningEngine.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceReasoningEngine).GetName()).ToDataRes(types.String)
@@ -14407,6 +14455,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.batchPredictionJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"gcp.project.vertexaiService.batchPredictionJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).GetManagedBy()).ToDataRes(types.String)
+	},
 	"gcp.project.vertexaiService.tuningJob.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetName()).ToDataRes(types.String)
 	},
@@ -14427,6 +14478,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.tuningJob.tunedModel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTunedModel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModelRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTunedModelRef()).ToDataRes(types.Resource("gcp.project.vertexaiService.model"))
 	},
 	"gcp.project.vertexaiService.tuningJob.tuningDataStats": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetTuningDataStats()).ToDataRes(types.Dict)
@@ -14454,6 +14508,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.tuningJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.tuningJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceTuningJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.trainingPipeline.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceTrainingPipeline).GetName()).ToDataRes(types.String)
@@ -14521,6 +14578,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.vertexaiService.hyperparameterTuningJob.trialJobSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetTrialJobSpec()).ToDataRes(types.Dict)
 	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.serviceAccountRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetServiceAccountRef()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.networkRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetNetworkRef()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.vertexaiService.hyperparameterTuningJob.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -14541,6 +14604,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.hyperparameterTuningJob.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetName()).ToDataRes(types.String)
@@ -14577,6 +14643,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.nextScheduleTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetNextScheduleTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.scc.organizationSettings.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccOrganizationSettings).GetName()).ToDataRes(types.String)
@@ -25825,6 +25894,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceCluster).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.cluster.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceCluster).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).__id, ok = v.Value.(string)
 		return
@@ -25837,8 +25910,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).Autoscaling, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.cluster.config.autoscalingPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).AutoscalingPolicyRef, ok = plugin.RawToTValue[*mqlGcpProjectDataprocServiceAutoscalingPolicy](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.cluster.config.configBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).ConfigBucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.config.configBucketRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).ConfigBucketRef, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25903,6 +25984,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.config.tempBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterConfig).TempBucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.cluster.config.tempBucketRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceClusterConfig).TempBucketRef, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.config.worker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26217,6 +26302,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDataprocServiceJob).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dataprocService.job.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).Cluster, ok = plugin.RawToTValue[*mqlGcpProjectDataprocServiceCluster](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.clusterUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).ClusterUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.job.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -26227,6 +26320,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.job.driverOutputResourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceJob).DriverOutputResourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.stateStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).StateStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.statusHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).StatusHistory, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.autoscalingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33553,6 +33658,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServicePipelineJob).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.pipelineJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServicePipelineJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.dataset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceDataset).__id, ok = v.Value.(string)
 		return
@@ -33767,6 +33876,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.customJob.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceCustomJob).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.customJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceCustomJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.index.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34077,8 +34190,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).KernelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.notebookExecutionJob.executionUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ExecutionUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.serviceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.notebookRuntimeTemplateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).NotebookRuntimeTemplateRef, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.notebookExecutionJob.scheduleResourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ScheduleResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.scheduleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ScheduleRef, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceSchedule](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.executionTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34103,6 +34232,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.notebookExecutionJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.notebookExecutionJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceNotebookExecutionJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.reasoningEngine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34489,6 +34622,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.batchPredictionJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceBatchPredictionJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.tuningJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceTuningJob).__id, ok = v.Value.(string)
 		return
@@ -34519,6 +34656,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.tuningJob.tunedModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceTuningJob).TunedModel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.tunedModelRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).TunedModelRef, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiServiceModel](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.tuningJob.tuningDataStats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34555,6 +34696,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.tuningJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceTuningJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.tuningJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceTuningJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.trainingPipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34653,6 +34798,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).TrialJobSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.serviceAccountRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).ServiceAccountRef, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.networkRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).NetworkRef, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.vertexaiService.hyperparameterTuningJob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -34679,6 +34832,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.hyperparameterTuningJob.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.hyperparameterTuningJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceHyperparameterTuningJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34731,6 +34888,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.nextScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).NextScheduleTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.vertexaiService.modelDeploymentMonitoringJob.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.organizationSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59322,6 +59483,7 @@ type mqlGcpProjectDataprocServiceCluster struct {
 	StatusHistory        plugin.TValue[[]any]
 	VirtualClusterConfig plugin.TValue[*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig]
 	IamPolicy            plugin.TValue[[]any]
+	ManagedBy            plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceCluster creates a new instance of this resource
@@ -59417,6 +59579,12 @@ func (c *mqlGcpProjectDataprocServiceCluster) GetIamPolicy() *plugin.TValue[[]an
 	})
 }
 
+func (c *mqlGcpProjectDataprocServiceCluster) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
+}
+
 // mqlGcpProjectDataprocServiceClusterConfig for the gcp.project.dataprocService.cluster.config resource
 type mqlGcpProjectDataprocServiceClusterConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -59424,7 +59592,9 @@ type mqlGcpProjectDataprocServiceClusterConfig struct {
 	mqlGcpProjectDataprocServiceClusterConfigInternal
 	ParentResourcePath      plugin.TValue[string]
 	Autoscaling             plugin.TValue[any]
+	AutoscalingPolicyRef    plugin.TValue[*mqlGcpProjectDataprocServiceAutoscalingPolicy]
 	ConfigBucket            plugin.TValue[string]
+	ConfigBucketRef         plugin.TValue[*mqlGcpProjectStorageServiceBucket]
 	Metrics                 plugin.TValue[any]
 	Encryption              plugin.TValue[any]
 	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
@@ -59441,6 +59611,7 @@ type mqlGcpProjectDataprocServiceClusterConfig struct {
 	Security                plugin.TValue[any]
 	Software                plugin.TValue[any]
 	TempBucket              plugin.TValue[string]
+	TempBucketRef           plugin.TValue[*mqlGcpProjectStorageServiceBucket]
 	Worker                  plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance]
 }
 
@@ -59489,8 +59660,40 @@ func (c *mqlGcpProjectDataprocServiceClusterConfig) GetAutoscaling() *plugin.TVa
 	return &c.Autoscaling
 }
 
+func (c *mqlGcpProjectDataprocServiceClusterConfig) GetAutoscalingPolicyRef() *plugin.TValue[*mqlGcpProjectDataprocServiceAutoscalingPolicy] {
+	return plugin.GetOrCompute[*mqlGcpProjectDataprocServiceAutoscalingPolicy](&c.AutoscalingPolicyRef, func() (*mqlGcpProjectDataprocServiceAutoscalingPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config", c.__id, "autoscalingPolicyRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDataprocServiceAutoscalingPolicy), nil
+			}
+		}
+
+		return c.autoscalingPolicyRef()
+	})
+}
+
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetConfigBucket() *plugin.TValue[string] {
 	return &c.ConfigBucket
+}
+
+func (c *mqlGcpProjectDataprocServiceClusterConfig) GetConfigBucketRef() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.ConfigBucketRef, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config", c.__id, "configBucketRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.configBucketRef()
+	})
 }
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetMetrics() *plugin.TValue[any] {
@@ -59567,6 +59770,22 @@ func (c *mqlGcpProjectDataprocServiceClusterConfig) GetSoftware() *plugin.TValue
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetTempBucket() *plugin.TValue[string] {
 	return &c.TempBucket
+}
+
+func (c *mqlGcpProjectDataprocServiceClusterConfig) GetTempBucketRef() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.TempBucketRef, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.cluster.config", c.__id, "tempBucketRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.tempBucketRef()
+	})
 }
 
 func (c *mqlGcpProjectDataprocServiceClusterConfig) GetWorker() *plugin.TValue[*mqlGcpProjectDataprocServiceClusterConfigInstance] {
@@ -60317,9 +60536,14 @@ type mqlGcpProjectDataprocServiceJob struct {
 	StatusDetail            plugin.TValue[string]
 	JobType                 plugin.TValue[string]
 	ClusterName             plugin.TValue[string]
+	Cluster                 plugin.TValue[*mqlGcpProjectDataprocServiceCluster]
+	ClusterUuid             plugin.TValue[string]
 	Labels                  plugin.TValue[map[string]any]
 	Done                    plugin.TValue[bool]
 	DriverOutputResourceUri plugin.TValue[string]
+	StateStartTime          plugin.TValue[*time.Time]
+	StatusHistory           plugin.TValue[[]any]
+	ManagedBy               plugin.TValue[string]
 }
 
 // createGcpProjectDataprocServiceJob creates a new instance of this resource
@@ -60387,6 +60611,26 @@ func (c *mqlGcpProjectDataprocServiceJob) GetClusterName() *plugin.TValue[string
 	return &c.ClusterName
 }
 
+func (c *mqlGcpProjectDataprocServiceJob) GetCluster() *plugin.TValue[*mqlGcpProjectDataprocServiceCluster] {
+	return plugin.GetOrCompute[*mqlGcpProjectDataprocServiceCluster](&c.Cluster, func() (*mqlGcpProjectDataprocServiceCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService.job", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDataprocServiceCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetClusterUuid() *plugin.TValue[string] {
+	return &c.ClusterUuid
+}
+
 func (c *mqlGcpProjectDataprocServiceJob) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
@@ -60397,6 +60641,20 @@ func (c *mqlGcpProjectDataprocServiceJob) GetDone() *plugin.TValue[bool] {
 
 func (c *mqlGcpProjectDataprocServiceJob) GetDriverOutputResourceUri() *plugin.TValue[string] {
 	return &c.DriverOutputResourceUri
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetStateStartTime() *plugin.TValue[*time.Time] {
+	return &c.StateStartTime
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetStatusHistory() *plugin.TValue[[]any] {
+	return &c.StatusHistory
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectDataprocServiceAutoscalingPolicy for the gcp.project.dataprocService.autoscalingPolicy resource
@@ -77635,6 +77893,7 @@ type mqlGcpProjectVertexaiServicePipelineJob struct {
 	UpdatedAt         plugin.TValue[*time.Time]
 	StartTime         plugin.TValue[*time.Time]
 	EndTime           plugin.TValue[*time.Time]
+	ManagedBy         plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServicePipelineJob creates a new instance of this resource
@@ -77780,6 +78039,12 @@ func (c *mqlGcpProjectVertexaiServicePipelineJob) GetStartTime() *plugin.TValue[
 
 func (c *mqlGcpProjectVertexaiServicePipelineJob) GetEndTime() *plugin.TValue[*time.Time] {
 	return &c.EndTime
+}
+
+func (c *mqlGcpProjectVertexaiServicePipelineJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectVertexaiServiceDataset for the gcp.project.vertexaiService.dataset resource
@@ -78137,6 +78402,7 @@ type mqlGcpProjectVertexaiServiceCustomJob struct {
 	Updated           plugin.TValue[*time.Time]
 	StartTime         plugin.TValue[*time.Time]
 	EndTime           plugin.TValue[*time.Time]
+	ManagedBy         plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceCustomJob creates a new instance of this resource
@@ -78278,6 +78544,12 @@ func (c *mqlGcpProjectVertexaiServiceCustomJob) GetStartTime() *plugin.TValue[*t
 
 func (c *mqlGcpProjectVertexaiServiceCustomJob) GetEndTime() *plugin.TValue[*time.Time] {
 	return &c.EndTime
+}
+
+func (c *mqlGcpProjectVertexaiServiceCustomJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectVertexaiServiceIndex for the gcp.project.vertexaiService.index resource
@@ -78873,17 +79145,22 @@ type mqlGcpProjectVertexaiServiceNotebookExecutionJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectVertexaiServiceNotebookExecutionJobInternal
-	Name                    plugin.TValue[string]
-	DisplayName             plugin.TValue[string]
-	JobState                plugin.TValue[string]
-	KernelName              plugin.TValue[string]
-	ScheduleResourceName    plugin.TValue[string]
-	ExecutionTimeoutSeconds plugin.TValue[int64]
-	Labels                  plugin.TValue[map[string]any]
-	EncryptionSpec          plugin.TValue[any]
-	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	CreatedAt               plugin.TValue[*time.Time]
-	UpdatedAt               plugin.TValue[*time.Time]
+	Name                       plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	JobState                   plugin.TValue[string]
+	KernelName                 plugin.TValue[string]
+	ExecutionUser              plugin.TValue[string]
+	ServiceAccountRef          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	NotebookRuntimeTemplateRef plugin.TValue[*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate]
+	ScheduleResourceName       plugin.TValue[string]
+	ScheduleRef                plugin.TValue[*mqlGcpProjectVertexaiServiceSchedule]
+	ExecutionTimeoutSeconds    plugin.TValue[int64]
+	Labels                     plugin.TValue[map[string]any]
+	EncryptionSpec             plugin.TValue[any]
+	KmsKey                     plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
+	ManagedBy                  plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceNotebookExecutionJob creates a new instance of this resource
@@ -78939,8 +79216,60 @@ func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetKernelName() *plug
 	return &c.KernelName
 }
 
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetExecutionUser() *plugin.TValue[string] {
+	return &c.ExecutionUser
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookExecutionJob", c.__id, "serviceAccountRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccountRef()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetNotebookRuntimeTemplateRef() *plugin.TValue[*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate](&c.NotebookRuntimeTemplateRef, func() (*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookExecutionJob", c.__id, "notebookRuntimeTemplateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceNotebookRuntimeTemplate), nil
+			}
+		}
+
+		return c.notebookRuntimeTemplateRef()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetScheduleResourceName() *plugin.TValue[string] {
 	return &c.ScheduleResourceName
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetScheduleRef() *plugin.TValue[*mqlGcpProjectVertexaiServiceSchedule] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceSchedule](&c.ScheduleRef, func() (*mqlGcpProjectVertexaiServiceSchedule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.notebookExecutionJob", c.__id, "scheduleRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceSchedule), nil
+			}
+		}
+
+		return c.scheduleRef()
+	})
 }
 
 func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetExecutionTimeoutSeconds() *plugin.TValue[int64] {
@@ -78977,6 +79306,12 @@ func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetCreatedAt() *plugi
 
 func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceNotebookExecutionJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectVertexaiServiceReasoningEngine for the gcp.project.vertexaiService.reasoningEngine resource
@@ -79760,6 +80095,7 @@ type mqlGcpProjectVertexaiServiceBatchPredictionJob struct {
 	StartedAt               plugin.TValue[*time.Time]
 	EndedAt                 plugin.TValue[*time.Time]
 	UpdatedAt               plugin.TValue[*time.Time]
+	ManagedBy               plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceBatchPredictionJob creates a new instance of this resource
@@ -79903,6 +80239,12 @@ func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetUpdatedAt() *plugin.
 	return &c.UpdatedAt
 }
 
+func (c *mqlGcpProjectVertexaiServiceBatchPredictionJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
+}
+
 // mqlGcpProjectVertexaiServiceTuningJob for the gcp.project.vertexaiService.tuningJob resource
 type mqlGcpProjectVertexaiServiceTuningJob struct {
 	MqlRuntime *plugin.Runtime
@@ -79915,6 +80257,7 @@ type mqlGcpProjectVertexaiServiceTuningJob struct {
 	State                 plugin.TValue[string]
 	Experiment            plugin.TValue[string]
 	TunedModel            plugin.TValue[any]
+	TunedModelRef         plugin.TValue[*mqlGcpProjectVertexaiServiceModel]
 	TuningDataStats       plugin.TValue[any]
 	ServiceAccount        plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	Labels                plugin.TValue[map[string]any]
@@ -79924,6 +80267,7 @@ type mqlGcpProjectVertexaiServiceTuningJob struct {
 	StartedAt             plugin.TValue[*time.Time]
 	EndedAt               plugin.TValue[*time.Time]
 	UpdatedAt             plugin.TValue[*time.Time]
+	ManagedBy             plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceTuningJob creates a new instance of this resource
@@ -79991,6 +80335,22 @@ func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTunedModel() *plugin.TValue[a
 	return &c.TunedModel
 }
 
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTunedModelRef() *plugin.TValue[*mqlGcpProjectVertexaiServiceModel] {
+	return plugin.GetOrCompute[*mqlGcpProjectVertexaiServiceModel](&c.TunedModelRef, func() (*mqlGcpProjectVertexaiServiceModel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.tuningJob", c.__id, "tunedModelRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectVertexaiServiceModel), nil
+			}
+		}
+
+		return c.tunedModelRef()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceTuningJob) GetTuningDataStats() *plugin.TValue[any] {
 	return &c.TuningDataStats
 }
@@ -80049,6 +80409,12 @@ func (c *mqlGcpProjectVertexaiServiceTuningJob) GetEndedAt() *plugin.TValue[*tim
 
 func (c *mqlGcpProjectVertexaiServiceTuningJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectVertexaiServiceTuningJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectVertexaiServiceTrainingPipeline for the gcp.project.vertexaiService.trainingPipeline resource
@@ -80214,6 +80580,8 @@ type mqlGcpProjectVertexaiServiceHyperparameterTuningJob struct {
 	MaxFailedTrialCount plugin.TValue[int64]
 	StudySpec           plugin.TValue[any]
 	TrialJobSpec        plugin.TValue[any]
+	ServiceAccountRef   plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	NetworkRef          plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	Labels              plugin.TValue[map[string]any]
 	EncryptionSpec      plugin.TValue[any]
 	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
@@ -80221,6 +80589,7 @@ type mqlGcpProjectVertexaiServiceHyperparameterTuningJob struct {
 	StartedAt           plugin.TValue[*time.Time]
 	EndedAt             plugin.TValue[*time.Time]
 	UpdatedAt           plugin.TValue[*time.Time]
+	ManagedBy           plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceHyperparameterTuningJob creates a new instance of this resource
@@ -80292,6 +80661,38 @@ func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetTrialJobSpec() 
 	return &c.TrialJobSpec
 }
 
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetServiceAccountRef() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccountRef, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.hyperparameterTuningJob", c.__id, "serviceAccountRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccountRef()
+	})
+}
+
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetNetworkRef() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.NetworkRef, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.vertexaiService.hyperparameterTuningJob", c.__id, "networkRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.networkRef()
+	})
+}
+
 func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
 }
@@ -80332,6 +80733,12 @@ func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetUpdatedAt() *pl
 	return &c.UpdatedAt
 }
 
+func (c *mqlGcpProjectVertexaiServiceHyperparameterTuningJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
+}
+
 // mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob for the gcp.project.vertexaiService.modelDeploymentMonitoringJob resource
 type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob struct {
 	MqlRuntime *plugin.Runtime
@@ -80349,6 +80756,7 @@ type mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob struct {
 	CreatedAt                    plugin.TValue[*time.Time]
 	UpdatedAt                    plugin.TValue[*time.Time]
 	NextScheduleTime             plugin.TValue[*time.Time]
+	ManagedBy                    plugin.TValue[string]
 }
 
 // createGcpProjectVertexaiServiceModelDeploymentMonitoringJob creates a new instance of this resource
@@ -80458,6 +80866,12 @@ func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetUpdatedAt(
 
 func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetNextScheduleTime() *plugin.TValue[*time.Time] {
 	return &c.NextScheduleTime
+}
+
+func (c *mqlGcpProjectVertexaiServiceModelDeploymentMonitoringJob) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpSccOrganizationSettings for the gcp.scc.organizationSettings resource
