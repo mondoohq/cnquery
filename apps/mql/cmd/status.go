@@ -344,7 +344,7 @@ func getProviders(ctx context.Context) ([]ProviderStatus, error) {
 				}
 			} else {
 				ps.Latest = latestVersion
-				if latestVersion != provider.Version && provider.Name != "core" {
+				if provider.Name != "core" && newerAvailable(provider.Version, latestVersion) {
 					ps.Outdated = true
 				}
 			}

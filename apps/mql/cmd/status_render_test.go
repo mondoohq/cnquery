@@ -427,6 +427,69 @@ func TestPadRight_CountsRunesNotBytes(t *testing.T) {
 	assert.Equal(t, "café  ", padRight("café", 6))
 }
 
+func TestNewerAvailable(t *testing.T) {
+	cases := []struct {
+		current string
+		latest  string
+		want    bool
+	}{
+		// The build stamps a "v"-prefixed version while the release feed reports
+		// it without the prefix; these are the same release, not an update.
+		{"v13.27.0", "13.27.0", false},
+		{"13.27.0", "v13.27.0", false},
+		// A locally built binary ahead of the latest release is not outdated.
+		{"13.30.0", "13.25.0", false},
+		{"v13.30.0", "13.25.0", false},
+		// A genuinely newer release is an available update.
+		{"13.22.0", "13.25.0", true},
+		{"v13.22.0", "13.25.0", true},
+		// Equal versions never report an update.
+		{"13.25.0", "13.25.0", false},
+		// Unparseable versions fall back to an exact string comparison.
+		{"unstable", "13.25.0", true},
+		{"13.25.0", "13.25.0", false},
+	}
+
+	for _, tc := range cases {
+		assert.Equalf(t, tc.want, newerAvailable(tc.current, tc.latest),
+			"newerAvailable(%q, %q)", tc.current, tc.latest)
+	}
+}
+
+func TestUpdateAvailable_IgnoresVPrefix(t *testing.T) {
+	// v-prefixed running version vs. bare latest is the same release: no update.
+	s := healthyRegisteredStatus()
+	s.Client.Version = "v13.27.0"
+	s.Client.LatestVersion = "13.27.0"
+
+	assert.False(t, s.updateAvailable())
+
+	out := s.RenderCli(RenderOptions{Color: false})
+	assert.NotContains(t, out, "update recommended")
+}
+
+func TestUpdateAvailable_ClientAheadIsNotOutdated(t *testing.T) {
+	s := healthyRegisteredStatus()
+	s.Client.Version = "13.30.0"
+	s.Client.LatestVersion = "13.25.0"
+
+	assert.False(t, s.updateAvailable())
+
+	out := s.RenderCli(RenderOptions{Color: false})
+	assert.NotContains(t, out, "update recommended")
+}
+
+func TestUpdateAvailable_NewerReleaseIsFlagged(t *testing.T) {
+	s := healthyRegisteredStatus()
+	s.Client.Version = "v13.22.0"
+	s.Client.LatestVersion = "13.25.0"
+
+	assert.True(t, s.updateAvailable())
+
+	out := s.RenderCli(RenderOptions{Color: false})
+	assert.Contains(t, out, "update recommended")
+}
+
 func TestRenderCli_PlatformSection_WarningsAndFeatures(t *testing.T) {
 	s := healthyRegisteredStatus()
 	s.Upstream.Features = []string{"alpha", "beta"}

@@ -12,6 +12,7 @@ import (
 	"github.com/muesli/termenv"
 	"go.mondoo.com/mql/v13/cli/theme"
 	"go.mondoo.com/mql/v13/cli/theme/colors"
+	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
 )
 
 // RenderOptions controls how RenderCli formats the status screen. Color is
@@ -281,8 +282,24 @@ func clientAPINewer(clientVersion, serverVersion string) bool {
 // builds ("unstable") never count as outdated.
 func (s Status) updateAvailable() bool {
 	return s.Client.LatestVersion != "" &&
-		s.Client.Version != s.Client.LatestVersion &&
-		s.Client.Version != "unstable"
+		s.Client.Version != "unstable" &&
+		newerAvailable(s.Client.Version, s.Client.LatestVersion)
+}
+
+// newerAvailable reports whether latest is a strictly newer release than
+// current, compared semantically. The build stamps a "v"-prefixed version
+// (e.g. "v13.27.0") while the release feed reports it bare ("13.27.0"), so a
+// raw string compare treats identical releases as different; a semver compare
+// ignores the prefix. It also means a local build ahead of the latest published
+// release is not flagged as outdated. When either version can't be parsed as
+// semver (a rolling dev build, say) it falls back to an exact string compare,
+// preserving the previous behavior.
+func newerAvailable(current, latest string) bool {
+	diff, err := semver.Parser{}.Compare(current, latest)
+	if err != nil {
+		return current != latest
+	}
+	return diff < 0
 }
 
 func (s Status) outdatedCount() int {
