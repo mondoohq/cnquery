@@ -1381,13 +1381,21 @@ private aws.efs.filesystem @defaults("name id region") {
   region string
   // Availability zone where the file system exists if a specific AZ is defined
   availabilityZone string
+  // ID of the availability zone where the file system exists if a specific AZ is defined
+  availabilityZoneId string
+  // Opaque idempotency token supplied when the file system was created
+  //
+  // Infrastructure-as-code tools often set this to a meaningful value. When left unset, the Terraform AWS provider auto-generates a token with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  creationToken string
+  // Provisioned throughput in MiBps, set only when throughputMode is provisioned
+  provisionedThroughputInMibps float
   // Tags for the file system
   tags map[string]string
   // CloudFormation stack that manages this file system, if any
   cloudformationStack() aws.cloudformation.stack
   // Infrastructure-management system that owns this file system
   //
-  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the file system is unmanaged or managed by a tool that leaves no recognizable tag.
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the creationToken carries Terraform's "terraform-" prefix. Empty when the file system is unmanaged or managed by a tool that leaves no recognizable signal.
   managedBy() string
   // Creation timestamp
   createdAt time
@@ -7162,6 +7170,16 @@ private aws.ecs.instance {
   versionInfo dict
   // Custom and built-in attributes attached to the container instance
   attributes []dict
+  // Tags for the container instance
+  tags map[string]string
+  // CloudFormation stack that manages this container instance, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this container instance
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the container instance is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
+  // Version counter, incremented on every change to the container instance state
+  version int
 }
 
 // Amazon ECS task

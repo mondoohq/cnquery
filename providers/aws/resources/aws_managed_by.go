@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -69,10 +71,31 @@ func (a *mqlAwsEc2Snapshot) cloudformationStack() (*mqlAwsCloudformationStack, e
 }
 
 func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {
-	return managedByFromResourceTags(a.GetTags())
+	owner, err := managedByFromResourceTags(a.GetTags())
+	if err != nil {
+		return "", err
+	}
+	if owner != "" {
+		return owner, nil
+	}
+	// Terraform injects no provenance tag, but when creation_token is left
+	// unset the Terraform AWS provider auto-generates one with a "terraform-"
+	// prefix. Fall back to that heuristic only when no tag-based owner matched.
+	if strings.HasPrefix(a.GetCreationToken().Data, "terraform-") {
+		return "terraform", nil
+	}
+	return "", nil
 }
 
 func (a *mqlAwsEfsFilesystem) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
+}
+
+func (a *mqlAwsEcsInstance) managedBy() (string, error) {
+	return managedByFromResourceTags(a.GetTags())
+}
+
+func (a *mqlAwsEcsInstance) cloudformationStack() (*mqlAwsCloudformationStack, error) {
 	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
 }
 

@@ -6051,6 +6051,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetAvailabilityZone()).ToDataRes(types.String)
 	},
+	"aws.efs.filesystem.availabilityZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetAvailabilityZoneId()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.creationToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetCreationToken()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.provisionedThroughputInMibps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetProvisionedThroughputInMibps()).ToDataRes(types.Float)
+	},
 	"aws.efs.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -12677,6 +12686,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.instance.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetAttributes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ecs.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.instance.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
+	"aws.ecs.instance.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetManagedBy()).ToDataRes(types.String)
+	},
+	"aws.ecs.instance.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetVersion()).ToDataRes(types.Int)
 	},
 	"aws.ecs.task.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetArn()).ToDataRes(types.String)
@@ -35411,6 +35432,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.availabilityZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).AvailabilityZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.creationToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).CreationToken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.provisionedThroughputInMibps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).ProvisionedThroughputInMibps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -45077,6 +45110,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.instance.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsInstance).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80930,31 +80979,34 @@ type mqlAwsEfsFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsFilesystemInternal
-	Name                     plugin.TValue[string]
-	Id                       plugin.TValue[string]
-	Arn                      plugin.TValue[string]
-	Encrypted                plugin.TValue[bool]
-	OwnerId                  plugin.TValue[string]
-	KmsKey                   plugin.TValue[*mqlAwsKmsKey]
-	BackupPolicy             plugin.TValue[any]
-	Region                   plugin.TValue[string]
-	AvailabilityZone         plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	CloudformationStack      plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                plugin.TValue[string]
-	CreatedAt                plugin.TValue[*time.Time]
-	MountTargets             plugin.TValue[[]any]
-	AccessPoints             plugin.TValue[[]any]
-	FileSystemPolicy         plugin.TValue[string]
-	PolicyStatements         plugin.TValue[[]any]
-	IsPublic                 plugin.TValue[bool]
-	PerformanceMode          plugin.TValue[string]
-	ThroughputMode           plugin.TValue[string]
-	SizeInBytes              plugin.TValue[int64]
-	LifecycleState           plugin.TValue[string]
-	LifecycleConfiguration   plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
-	ReplicationConfiguration plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
-	FileSystemProtection     plugin.TValue[any]
+	Name                         plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	Arn                          plugin.TValue[string]
+	Encrypted                    plugin.TValue[bool]
+	OwnerId                      plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	BackupPolicy                 plugin.TValue[any]
+	Region                       plugin.TValue[string]
+	AvailabilityZone             plugin.TValue[string]
+	AvailabilityZoneId           plugin.TValue[string]
+	CreationToken                plugin.TValue[string]
+	ProvisionedThroughputInMibps plugin.TValue[float64]
+	Tags                         plugin.TValue[map[string]any]
+	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                    plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	MountTargets                 plugin.TValue[[]any]
+	AccessPoints                 plugin.TValue[[]any]
+	FileSystemPolicy             plugin.TValue[string]
+	PolicyStatements             plugin.TValue[[]any]
+	IsPublic                     plugin.TValue[bool]
+	PerformanceMode              plugin.TValue[string]
+	ThroughputMode               plugin.TValue[string]
+	SizeInBytes                  plugin.TValue[int64]
+	LifecycleState               plugin.TValue[string]
+	LifecycleConfiguration       plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
+	ReplicationConfiguration     plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
+	FileSystemProtection         plugin.TValue[any]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -81042,6 +81094,18 @@ func (c *mqlAwsEfsFilesystem) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsEfsFilesystem) GetAvailabilityZone() *plugin.TValue[string] {
 	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsEfsFilesystem) GetAvailabilityZoneId() *plugin.TValue[string] {
+	return &c.AvailabilityZoneId
+}
+
+func (c *mqlAwsEfsFilesystem) GetCreationToken() *plugin.TValue[string] {
+	return &c.CreationToken
+}
+
+func (c *mqlAwsEfsFilesystem) GetProvisionedThroughputInMibps() *plugin.TValue[float64] {
+	return &c.ProvisionedThroughputInMibps
 }
 
 func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]any] {
@@ -106379,20 +106443,24 @@ type mqlAwsEcsInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsInstanceInternal it will be used here
-	AgentConnected    plugin.TValue[bool]
-	Id                plugin.TValue[string]
-	Arn               plugin.TValue[string]
-	CapacityProvider  plugin.TValue[string]
-	Ec2Instance       plugin.TValue[*mqlAwsEc2Instance]
-	Region            plugin.TValue[string]
-	Status            plugin.TValue[string]
-	StatusReason      plugin.TValue[string]
-	HealthStatus      plugin.TValue[string]
-	RunningTasksCount plugin.TValue[int64]
-	PendingTasksCount plugin.TValue[int64]
-	RegisteredAt      plugin.TValue[*time.Time]
-	VersionInfo       plugin.TValue[any]
-	Attributes        plugin.TValue[[]any]
+	AgentConnected      plugin.TValue[bool]
+	Id                  plugin.TValue[string]
+	Arn                 plugin.TValue[string]
+	CapacityProvider    plugin.TValue[string]
+	Ec2Instance         plugin.TValue[*mqlAwsEc2Instance]
+	Region              plugin.TValue[string]
+	Status              plugin.TValue[string]
+	StatusReason        plugin.TValue[string]
+	HealthStatus        plugin.TValue[string]
+	RunningTasksCount   plugin.TValue[int64]
+	PendingTasksCount   plugin.TValue[int64]
+	RegisteredAt        plugin.TValue[*time.Time]
+	VersionInfo         plugin.TValue[any]
+	Attributes          plugin.TValue[[]any]
+	Tags                plugin.TValue[map[string]any]
+	CloudformationStack plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy           plugin.TValue[string]
+	Version             plugin.TValue[int64]
 }
 
 // createAwsEcsInstance creates a new instance of this resource
@@ -106498,6 +106566,36 @@ func (c *mqlAwsEcsInstance) GetVersionInfo() *plugin.TValue[any] {
 
 func (c *mqlAwsEcsInstance) GetAttributes() *plugin.TValue[[]any] {
 	return &c.Attributes
+}
+
+func (c *mqlAwsEcsInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEcsInstance) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.instance", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsEcsInstance) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
+}
+
+func (c *mqlAwsEcsInstance) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
 }
 
 // mqlAwsEcsTask for the aws.ecs.task resource

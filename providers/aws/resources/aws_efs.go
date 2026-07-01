@@ -105,20 +105,30 @@ func buildEfsFilesystemResource(runtime *plugin.Runtime, region string, fs efsty
 		sizeInBytes = fs.SizeInBytes.Value
 	}
 
+	// Provisioned throughput is only set when throughputMode is provisioned;
+	// leave the field null otherwise instead of reporting a misleading 0.
+	provisionedThroughput := llx.NilData
+	if fs.ProvisionedThroughputInMibps != nil {
+		provisionedThroughput = llx.FloatData(*fs.ProvisionedThroughputInMibps)
+	}
+
 	args := map[string]*llx.RawData{
-		"id":               llx.StringDataPtr(fs.FileSystemId),
-		"arn":              llx.StringDataPtr(fs.FileSystemArn),
-		"name":             llx.StringDataPtr(fs.Name),
-		"encrypted":        llx.BoolData(convert.ToValue(fs.Encrypted)),
-		"ownerId":          llx.StringDataPtr(fs.OwnerId),
-		"region":           llx.StringData(region),
-		"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
-		"createdAt":        llx.TimeDataPtr(fs.CreationTime),
-		"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),
-		"performanceMode":  llx.StringData(string(fs.PerformanceMode)),
-		"throughputMode":   llx.StringData(string(fs.ThroughputMode)),
-		"sizeInBytes":      llx.IntData(sizeInBytes),
-		"lifecycleState":   llx.StringData(string(fs.LifeCycleState)),
+		"id":                           llx.StringDataPtr(fs.FileSystemId),
+		"arn":                          llx.StringDataPtr(fs.FileSystemArn),
+		"name":                         llx.StringDataPtr(fs.Name),
+		"encrypted":                    llx.BoolData(convert.ToValue(fs.Encrypted)),
+		"ownerId":                      llx.StringDataPtr(fs.OwnerId),
+		"region":                       llx.StringData(region),
+		"availabilityZone":             llx.StringDataPtr(fs.AvailabilityZoneName),
+		"availabilityZoneId":           llx.StringDataPtr(fs.AvailabilityZoneId),
+		"creationToken":                llx.StringDataPtr(fs.CreationToken),
+		"provisionedThroughputInMibps": provisionedThroughput,
+		"createdAt":                    llx.TimeDataPtr(fs.CreationTime),
+		"tags":                         llx.MapData(efsTagsToMap(fs.Tags), types.String),
+		"performanceMode":              llx.StringData(string(fs.PerformanceMode)),
+		"throughputMode":               llx.StringData(string(fs.ThroughputMode)),
+		"sizeInBytes":                  llx.IntData(sizeInBytes),
+		"lifecycleState":               llx.StringData(string(fs.LifeCycleState)),
 	}
 	mqlFilesystem, err := CreateResource(runtime, "aws.efs.filesystem", args)
 	if err != nil {

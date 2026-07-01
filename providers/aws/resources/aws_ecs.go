@@ -315,7 +315,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 		nextToken = containerInstances.NextToken
 	}
 	if len(allContainerInstanceArns) > 0 {
-		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns})
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns, Include: []ecstypes.ContainerInstanceField{ecstypes.ContainerInstanceFieldTags}})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				versionInfo, err := convert.JsonToDict(ci.VersionInfo)
@@ -345,6 +345,8 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 					"registeredAt":      llx.TimeDataPtr(ci.RegisteredAt),
 					"versionInfo":       llx.DictData(versionInfo),
 					"attributes":        llx.ArrayData(attributes, types.Dict),
+					"tags":              llx.MapData(ecsTagsToMap(ci.Tags), types.String),
+					"version":           llx.IntData(ci.Version),
 				}
 				if strings.HasPrefix(convert.ToValue(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
