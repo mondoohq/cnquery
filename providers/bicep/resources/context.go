@@ -82,23 +82,30 @@ func (r *mqlBicepContext) content(path string, rnge llx.Range) (string, error) {
 
 // context is populated at creation for each declaration, so these fallback
 // resolvers only run if a resource was built without one (e.g. a nested
-// resource, whose source position is not tracked).
+// resource, whose source position is not tracked). Mark the field null rather
+// than erroring so a query touching .context resolves to null instead of
+// failing.
 func (x *mqlBicepParameter) context() (*mqlBicepContext, error) {
-	return nil, errors.New("context was not provided for bicep.parameter")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlBicepVariable) context() (*mqlBicepContext, error) {
-	return nil, errors.New("context was not provided for bicep.variable")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlBicepResource) context() (*mqlBicepContext, error) {
-	return nil, errors.New("context was not provided for bicep.resource")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlBicepModule) context() (*mqlBicepContext, error) {
-	return nil, errors.New("context was not provided for bicep.module")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlBicepOutput) context() (*mqlBicepContext, error) {
-	return nil, errors.New("context was not provided for bicep.output")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
