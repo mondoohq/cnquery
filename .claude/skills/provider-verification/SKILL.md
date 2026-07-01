@@ -74,7 +74,48 @@ For each affected cloud, confirm credentials before provisioning anything:
 project`, `oci iam region list`. If a cloud is not authenticated, stop and tell
 the user — do not try to provision it.
 
-### 4. Generate Terraform
+### 4. Pre-flight: remove leftovers from prior runs
+
+A run that crashed or was interrupted before teardown leaves tagged infra
+behind — and it keeps billing until deleted. Clear it **before** provisioning
+anything new. Everything this skill creates carries `project = mql-pr-verify`,
+so leftovers are unambiguous. Two sources, cleanest first:
+
+1. **Local scratch dirs with live state.** Any `~/dev/mql-verify-*/<cloud>/`
+   whose `terraform state list` is non-empty is a prior run that never
+   destroyed. Run `terraform destroy` there — intact state tears down in
+   dependency order, which is more reliable than deleting resource-by-resource.
+
+2. **Cloud tag sweep** (catches runs whose scratch dir or state was lost). For
+   each authenticated cloud, list resources tagged `project = mql-pr-verify`,
+   then delete them:
+
+   ```bash
+   # Azure — each run puts everything in one resource group
+   az group list --query "[?tags.project=='mql-pr-verify'].name" -o tsv \
+     | xargs -r -I{} az group delete -n {} --yes --no-wait
+
+   # AWS — per region you provision in
+   aws resourcegroupstaggingapi get-resources \
+     --tag-filters Key=Project,Values=mql-pr-verify \
+     --query 'ResourceTagMappingList[].ResourceARN' --output text
+
+   # GCP — Terraform tags land as labels
+   gcloud asset search-all-resources \
+     --scope=projects/<project> --query='labels.project=mql-pr-verify' \
+     --format='value(name,assetType)'
+   ```
+
+**List what matched before deleting.** If a match was created within the last
+few minutes it may belong to a **concurrent** run — pause and confirm rather
+than deleting it. AWS and GCP have no single "delete the whole tagged set"
+command: delete by resource (see cloud-notes for per-service gotchas), or
+`terraform destroy` via the leftover scratch dir when one still exists.
+
+Report what was removed (or that nothing was) in the final report's Teardown
+section.
+
+### 5. Generate Terraform
 
 Goal: the **cheapest** real resources that make each changed field return
 non-empty, non-error data. Smallest SKUs, smallest instances, free tiers where
@@ -93,7 +134,7 @@ and reports a per-resource hourly cost. Agents must not `apply`.
 
 Tag every resource with `project = mql-pr-verify` so leftovers are findable.
 
-### 5. Cost gate
+### 6. Cost gate
 
 Sum the 1-hour cost across every cloud's `terraform plan`. Present a per-resource
 cost table and the total.
@@ -102,7 +143,7 @@ cost table and the total.
 - **Total > $2/hour**: STOP. Show the table and ask the user to approve before
   applying. Do not apply until they say yes.
 
-### 6. Apply
+### 7. Apply
 
 `terraform apply -auto-approve` per cloud — run them in parallel in the
 background; some resources are slow (see cloud-notes). Re-apply on transient
@@ -112,7 +153,7 @@ limitation and stop retrying. If a resource genuinely cannot be created,
 remove it from the stack, note it, and continue — one bad resource must not
 block the rest.
 
-### 7. Verify with `mql run`
+### 8. Verify with `mql run`
 
 For **every** new or changed resource and field, run a query and confirm two
 things: it returns **no error**, and it returns **appropriate data**.
@@ -134,19 +175,19 @@ best-effort via the cloud CLI (see cloud-notes) so the accessor still gets
 exercised. If even that is impossible, verify the accessor resolves cleanly
 (empty, no error) and say so.
 
-### 8. Triage bugs
+### 9. Triage bugs
 
 A bug is any verification failure caused by **provider code**, including
 preexisting bugs in code outside the PRs under test. For each:
 
-- **Has a clear, verifiable fix**: fix it (see step 9).
+- **Has a clear, verifiable fix**: fix it (see step 10).
 - **No confident fix** (e.g. an SDK lagging a new API): do **not** guess a fix.
   Record it in the report and offer to open a tracking GitHub issue.
 
 A failure caused by the cloud account (expired trial, missing quota, un-enabled
 API) is **not** a provider bug — report it as an environment limitation.
 
-### 9. Fix PR
+### 10. Fix PR
 
 If there are bugs with verifiable fixes, open **one combined PR** for all of
 them, across every provider:
@@ -161,10 +202,10 @@ them, across every provider:
 
 Verify fixes **before** teardown — the infrastructure is needed to prove them.
 
-### 10. Teardown — always
+### 11. Teardown — always
 
 Always destroy every stack at the end, even on failure, even when bugs were
-found (the fix PR was already verified in step 9). Run `terraform destroy` per
+found (the fix PR was already verified in step 10). Run `terraform destroy` per
 cloud.
 
 Destroy is fragile — handle the known failure modes in cloud-notes (orphaned
@@ -175,7 +216,7 @@ destroy` cannot finish. Confirm nothing tagged `mql-pr-verify` remains.
 Note anything that genuinely cannot be deleted (e.g. an App Engine app) in the
 report — do not leave the user guessing.
 
-### 11. Report
+### 12. Report
 
 Always end with this structure:
 
@@ -215,5 +256,5 @@ After the report, if there are unfixable bugs, offer to open a tracking issue.
 ## Reference
 
 - `references/cloud-notes.md` — per-cloud Terraform/CLI gotchas, slow resources,
-  and what cannot be provisioned or destroyed. Read it before steps 4, 6, 10.
+  and what cannot be provisioned or destroyed. Read it before steps 4, 5, 7, 11.
 - `extract_changes.py` — diff → changed resources/fields, grouped by provider.
