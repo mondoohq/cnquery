@@ -1268,8 +1268,14 @@ azure.subscription.batchService.account @defaults("id name location") {
   tags map[string]string
   // Batch account type
   type string
-  // Batch account identity
-  identity dict
+  // Raw identity block for the Batch account
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Principal ID of the account's system-assigned managed identity; empty when only user-assigned identities are used
+  principalId string
+  // User-assigned managed identities attached to the Batch account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Batch account properties
   properties dict
   // Batch account endpoint
@@ -1297,11 +1303,23 @@ azure.subscription.batchService.account @defaults("id name location") {
   // Batch account allowed authentication modes
   allowedAuthenticationModes []string
   // Batch account auto storage settings
-  autoStorage dict
+  //
+  // Deprecated in favor of autoStorageAccount.
+  autoStorage @maturity("deprecated") dict
   // Batch account encryption settings
-  encryption dict
+  //
+  // Deprecated in favor of encryptionKey.
+  encryption @maturity("deprecated") dict
   // Batch account key vault reference
-  keyVaultReference dict
+  //
+  // Deprecated in favor of keyVault.
+  keyVaultReference @maturity("deprecated") dict
+  // Storage account used for auto-storage by the Batch account
+  autoStorageAccount() azure.subscription.storageService.account
+  // Key Vault associated with the Batch account for user-subscription pool allocation
+  keyVault() azure.subscription.keyVaultService.vault
+  // Key Vault key used to encrypt Batch account data with a customer-managed key
+  encryptionKey() azure.subscription.keyVaultService.key
   // Batch account network profile
   networkProfile dict
   // Batch account private endpoint connections
@@ -7651,6 +7669,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   identity dict
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
+  // User-assigned managed identities attached to the cluster control plane
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Disk encryption set used to encrypt cluster OS and data disks with a customer-managed key
+  diskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
   // Managed identity used by the kubelet to pull images from Azure Container Registry
   kubeletIdentity() azure.subscription.managedIdentity
   // Client ID of the legacy service principal used by the cluster; empty when the cluster uses a managed identity

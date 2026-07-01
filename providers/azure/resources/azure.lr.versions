@@ -70,6 +70,7 @@ azure.subscription.aksService.cluster.defenderEnabled 11.4.28
 azure.subscription.aksService.cluster.disableLocalAccounts 11.4.28
 azure.subscription.aksService.cluster.disableRunCommand 11.4.28
 azure.subscription.aksService.cluster.diskCsiDriverEnabled 13.18.1
+azure.subscription.aksService.cluster.diskEncryptionSet 13.23.1
 azure.subscription.aksService.cluster.dnsPrefix 9.0.1
 azure.subscription.aksService.cluster.enablePrivateCluster 11.4.28
 azure.subscription.aksService.cluster.enablePrivateClusterPublicFQDN 11.4.28
@@ -163,6 +164,7 @@ azure.subscription.aksService.cluster.storageProfile 9.0.1
 azure.subscription.aksService.cluster.supportPlan 13.1.8
 azure.subscription.aksService.cluster.systemMetadata 13.19.2
 azure.subscription.aksService.cluster.tags 9.0.1
+azure.subscription.aksService.cluster.userAssignedIdentities 13.23.1
 azure.subscription.aksService.cluster.workloadAutoScalerProfile 9.0.1
 azure.subscription.aksService.cluster.workloadIdentityEnabled 11.4.28
 azure.subscription.aksService.clusters 9.0.1
@@ -335,13 +337,16 @@ azure.subscription.batchService.account.accountEndpoint 11.4.0
 azure.subscription.batchService.account.activeJobAndJobScheduleQuota 11.4.0
 azure.subscription.batchService.account.allowedAuthenticationModes 11.4.0
 azure.subscription.batchService.account.autoStorage 11.4.0
+azure.subscription.batchService.account.autoStorageAccount 13.23.1
 azure.subscription.batchService.account.dedicatedCoreQuota 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamily 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamilyEnforced 11.4.0
 azure.subscription.batchService.account.diagnosticSettings 11.4.0
 azure.subscription.batchService.account.encryption 11.4.0
+azure.subscription.batchService.account.encryptionKey 13.23.1
 azure.subscription.batchService.account.id 11.4.0
 azure.subscription.batchService.account.identity 11.4.0
+azure.subscription.batchService.account.keyVault 13.23.1
 azure.subscription.batchService.account.keyVaultReference 11.4.0
 azure.subscription.batchService.account.location 11.4.0
 azure.subscription.batchService.account.lowPriorityCoreQuota 11.4.0
@@ -369,6 +374,7 @@ azure.subscription.batchService.account.pool.vmSize 11.4.0
 azure.subscription.batchService.account.poolAllocationMode 11.4.0
 azure.subscription.batchService.account.poolQuota 11.4.0
 azure.subscription.batchService.account.pools 11.4.0
+azure.subscription.batchService.account.principalId 13.23.1
 azure.subscription.batchService.account.privateEndpointConnections 11.4.0
 azure.subscription.batchService.account.properties 11.4.0
 azure.subscription.batchService.account.provisioningState 11.4.0
@@ -376,6 +382,7 @@ azure.subscription.batchService.account.publicNetworkAccess 11.4.0
 azure.subscription.batchService.account.systemMetadata 13.22.1
 azure.subscription.batchService.account.tags 11.4.0
 azure.subscription.batchService.account.type 11.4.0
+azure.subscription.batchService.account.userAssignedIdentities 13.23.1
 azure.subscription.batchService.accounts 11.4.0
 azure.subscription.batchService.subscriptionId 11.4.0
 azure.subscription.cache 11.4.28
