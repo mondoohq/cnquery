@@ -14871,6 +14871,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.subscriptionfilter.destinationArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetDestinationArn()).ToDataRes(types.String)
 	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.lambdaFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetLambdaFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.kinesisStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetKinesisStream()).ToDataRes(types.Resource("aws.kinesis.stream"))
+	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.firehoseDeliveryStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetFirehoseDeliveryStream()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream"))
+	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
@@ -48357,6 +48366,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.lambdaFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).LambdaFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.kinesisStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).KinesisStream, ok = plugin.RawToTValue[*mqlAwsKinesisStream](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.subscriptionfilter.firehoseDeliveryStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).FirehoseDeliveryStream, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStream](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -115772,6 +115793,9 @@ type mqlAwsCloudwatchLoggroupSubscriptionfilter struct {
 	FilterName             plugin.TValue[string]
 	FilterPattern          plugin.TValue[string]
 	DestinationArn         plugin.TValue[string]
+	LambdaFunction         plugin.TValue[*mqlAwsLambdaFunction]
+	KinesisStream          plugin.TValue[*mqlAwsKinesisStream]
+	FirehoseDeliveryStream plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream]
 	IamRole                plugin.TValue[*mqlAwsIamRole]
 	RoleArn                plugin.TValue[string]
 	Distribution           plugin.TValue[string]
@@ -115831,6 +115855,54 @@ func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetFilterPattern() *plugin.
 
 func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetDestinationArn() *plugin.TValue[string] {
 	return &c.DestinationArn
+}
+
+func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetLambdaFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.LambdaFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.loggroup.subscriptionfilter", c.__id, "lambdaFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambdaFunction()
+	})
+}
+
+func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetKinesisStream() *plugin.TValue[*mqlAwsKinesisStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisStream](&c.KinesisStream, func() (*mqlAwsKinesisStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.loggroup.subscriptionfilter", c.__id, "kinesisStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisStream), nil
+			}
+		}
+
+		return c.kinesisStream()
+	})
+}
+
+func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetFirehoseDeliveryStream() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStream](&c.FirehoseDeliveryStream, func() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.loggroup.subscriptionfilter", c.__id, "firehoseDeliveryStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+			}
+		}
+
+		return c.firehoseDeliveryStream()
+	})
 }
 
 func (c *mqlAwsCloudwatchLoggroupSubscriptionfilter) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {

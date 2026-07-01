@@ -9226,6 +9226,12 @@ private aws.cloudwatch.loggroup.subscriptionfilter @defaults("filterName destina
   filterPattern string
   // ARN of the destination (Kinesis, Lambda, or Firehose)
   destinationArn string
+  // Lambda function this filter streams matching log events to, when the destination is a function
+  lambdaFunction() aws.lambda.function
+  // Kinesis data stream this filter streams matching log events to, when the destination is a stream
+  kinesisStream() aws.kinesis.stream
+  // Firehose delivery stream this filter streams matching log events to, when the destination is a delivery stream
+  firehoseDeliveryStream() aws.kinesis.firehoseDeliveryStream
   // IAM role used to write to the destination
   iamRole() aws.iam.role
   // ARN of the IAM role used to write to the destination

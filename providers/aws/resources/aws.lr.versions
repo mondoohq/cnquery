@@ -1811,8 +1811,11 @@ aws.cloudwatch.loggroup.subscriptionfilter.destinationArn 13.6.3
 aws.cloudwatch.loggroup.subscriptionfilter.distribution 13.6.3
 aws.cloudwatch.loggroup.subscriptionfilter.filterName 13.6.3
 aws.cloudwatch.loggroup.subscriptionfilter.filterPattern 13.6.3
+aws.cloudwatch.loggroup.subscriptionfilter.firehoseDeliveryStream 13.39.2
 aws.cloudwatch.loggroup.subscriptionfilter.iamRole 13.12.1
 aws.cloudwatch.loggroup.subscriptionfilter.id 13.6.3
+aws.cloudwatch.loggroup.subscriptionfilter.kinesisStream 13.39.2
+aws.cloudwatch.loggroup.subscriptionfilter.lambdaFunction 13.39.2
 aws.cloudwatch.loggroup.subscriptionfilter.region 13.6.3
 aws.cloudwatch.loggroup.subscriptionfilter.roleArn 13.6.3
 aws.cloudwatch.loggroup.tags 11.15.2
