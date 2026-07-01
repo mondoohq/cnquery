@@ -5,6 +5,7 @@ package local
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -132,16 +133,59 @@ func (p *LocalConnection) FileSystem() afero.Fs {
 func (p *LocalConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := p.FileSystem()
 	afs := &afero.Afero{Fs: fs}
+
+	// Use Lstat as the primary call — for non-symlinks it returns the same
+	// result as Stat with no extra cost. For symlinks we detect the type
+	// here and call Stat once more to get the target's metadata.
+	lstater, hasLstat := fs.(afero.Lstater)
+	if hasLstat {
+		linfo, _, err := lstater.LstatIfPossible(path)
+		if err != nil {
+			return shared.FileInfoDetails{}, err
+		}
+
+		if linfo.Mode()&os.ModeSymlink != 0 {
+			stat, err := afs.Stat(path)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return shared.FileInfoDetails{}, err
+				}
+				// Dangling symlink: target doesn't exist, use lstat info.
+				uid, gid := p.fileowner(linfo)
+				return shared.FileInfoDetails{
+					Mode: shared.FileModeDetails{FileMode: linfo.Mode()},
+					Size: linfo.Size(),
+					Uid:  uid,
+					Gid:  gid,
+				}, nil
+			}
+			uid, gid := p.fileowner(stat)
+			return shared.FileInfoDetails{
+				Mode: shared.FileModeDetails{FileMode: stat.Mode() | os.ModeSymlink},
+				Size: stat.Size(),
+				Uid:  uid,
+				Gid:  gid,
+			}, nil
+		}
+
+		// Not a symlink — lstat result is the final answer.
+		uid, gid := p.fileowner(linfo)
+		return shared.FileInfoDetails{
+			Mode: shared.FileModeDetails{FileMode: linfo.Mode()},
+			Size: linfo.Size(),
+			Uid:  uid,
+			Gid:  gid,
+		}, nil
+	}
+
+	// Fallback for filesystems without Lstat (e.g. cat).
 	stat, err := afs.Stat(path)
 	if err != nil {
 		return shared.FileInfoDetails{}, err
 	}
-
 	uid, gid := p.fileowner(stat)
-
-	mode := stat.Mode()
 	return shared.FileInfoDetails{
-		Mode: shared.FileModeDetails{mode},
+		Mode: shared.FileModeDetails{FileMode: stat.Mode()},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

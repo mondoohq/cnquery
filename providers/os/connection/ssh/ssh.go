@@ -250,33 +250,81 @@ func (c *Connection) FileSystem() afero.Fs {
 func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := c.FileSystem()
 	afs := &afero.Afero{Fs: fs}
+
+	// Use Lstat as the primary call when available (SFTP has it). For
+	// non-symlinks the result is identical to Stat with no extra cost.
+	// For symlinks we call Stat once more to get the target's metadata.
+	type lstater interface {
+		Lstat(string) (os.FileInfo, error)
+	}
+	if ls, ok := fs.(lstater); ok {
+		linfo, err := ls.Lstat(path)
+		if err != nil {
+			return shared.FileInfoDetails{}, err
+		}
+
+		if linfo.Mode()&os.ModeSymlink != 0 {
+			stat, err := afs.Stat(path)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return shared.FileInfoDetails{}, err
+				}
+				// Dangling symlink: target doesn't exist.
+				return shared.FileInfoDetails{
+					Mode: shared.FileModeDetails{FileMode: linfo.Mode()},
+					Size: linfo.Size(),
+					Uid:  -1,
+					Gid:  -1,
+				}, nil
+			}
+			uid, gid := c.extractOwnership(stat)
+			return shared.FileInfoDetails{
+				Mode: shared.FileModeDetails{FileMode: stat.Mode() | os.ModeSymlink},
+				Size: stat.Size(),
+				Uid:  uid,
+				Gid:  gid,
+			}, nil
+		}
+
+		// Not a symlink — lstat result is the final answer.
+		uid, gid := c.extractOwnership(linfo)
+		return shared.FileInfoDetails{
+			Mode: shared.FileModeDetails{FileMode: linfo.Mode()},
+			Size: linfo.Size(),
+			Uid:  uid,
+			Gid:  gid,
+		}, nil
+	}
+
+	// Fallback for filesystems without Lstat (cat, SCP).
+	// Symlink detection handled by statutil's compound command.
 	stat, err := afs.Stat(path)
 	if err != nil {
 		return shared.FileInfoDetails{}, err
 	}
-
-	uid := int64(-1)
-	gid := int64(-1)
-
-	if c.Sudo != nil || c.UseScpFilesystem {
-		if stat, ok := stat.Sys().(*shared.FileInfo); ok {
-			uid = int64(stat.Uid)
-			gid = int64(stat.Gid)
-		}
-	} else {
-		if stat, ok := stat.Sys().(*rawsftp.FileStat); ok {
-			uid = int64(stat.UID)
-			gid = int64(stat.GID)
-		}
-	}
-	mode := stat.Mode()
-
+	uid, gid := c.extractOwnership(stat)
 	return shared.FileInfoDetails{
-		Mode: shared.FileModeDetails{mode},
+		Mode: shared.FileModeDetails{FileMode: stat.Mode()},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,
 	}, nil
+}
+
+func (c *Connection) extractOwnership(stat os.FileInfo) (uid, gid int64) {
+	uid, gid = -1, -1
+	if c.Sudo != nil || c.UseScpFilesystem {
+		if si, ok := stat.Sys().(*shared.FileInfo); ok {
+			uid = si.Uid
+			gid = si.Gid
+		}
+	} else {
+		if si, ok := stat.Sys().(*rawsftp.FileStat); ok {
+			uid = int64(si.UID)
+			gid = int64(si.GID)
+		}
+	}
+	return
 }
 
 func (c *Connection) Close() {
