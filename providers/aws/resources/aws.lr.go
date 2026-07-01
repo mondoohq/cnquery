@@ -120,6 +120,7 @@ const (
 	ResourceAwsSagemakerModel                                                   string = "aws.sagemaker.model"
 	ResourceAwsSagemakerModelContainer                                          string = "aws.sagemaker.model.container"
 	ResourceAwsSagemakerTrainingjob                                             string = "aws.sagemaker.trainingjob"
+	ResourceAwsSagemakerTrainingjobChannel                                      string = "aws.sagemaker.trainingjob.channel"
 	ResourceAwsSagemakerTrainingjobStatusTransition                             string = "aws.sagemaker.trainingjob.statusTransition"
 	ResourceAwsSagemakerTrainingjobMetricData                                   string = "aws.sagemaker.trainingjob.metricData"
 	ResourceAwsSagemakerProcessingjob                                           string = "aws.sagemaker.processingjob"
@@ -1340,6 +1341,10 @@ func init() {
 		"aws.sagemaker.trainingjob": {
 			Init:   initAwsSagemakerTrainingjob,
 			Create: createAwsSagemakerTrainingjob,
+		},
+		"aws.sagemaker.trainingjob.channel": {
+			// to override args, implement: initAwsSagemakerTrainingjobChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerTrainingjobChannel,
 		},
 		"aws.sagemaker.trainingjob.statusTransition": {
 			// to override args, implement: initAwsSagemakerTrainingjobStatusTransition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7605,8 +7610,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.trainingjob.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
+	"aws.sagemaker.trainingjob.inputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetInputDataConfig()).ToDataRes(types.Array(types.Resource("aws.sagemaker.trainingjob.channel")))
+	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetOutputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.trainingjob.modelArtifactsUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetModelArtifactsUrl()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.tuningJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetTuningJobArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.autoMLJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetAutoMLJobArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.labelingJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetLabelingJobArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.trainingStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetTrainingStartTime()).ToDataRes(types.Time)
 	},
 	"aws.sagemaker.trainingjob.resourceConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetResourceConfig()).ToDataRes(types.Dict)
@@ -7625,6 +7648,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.trainingjob.wallClockTimeInSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetWallClockTimeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.trainingjob.channel.channelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetChannelName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.s3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.s3DataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetS3DataType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.s3DataDistributionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetS3DataDistributionType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetContentType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.compressionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetCompressionType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.recordWrapperType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetRecordWrapperType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingjob.channel.inputMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjobChannel).GetInputMode()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.trainingjob.statusTransition.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjobStatusTransition).GetStatus()).ToDataRes(types.String)
@@ -7703,6 +7753,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.processingjob.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerProcessingjob).GetEnvironment()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.processingjob.processingInputs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetProcessingInputs()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.sagemaker.processingjob.imageUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetImageUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.processingjob.trainingJob": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetTrainingJob()).ToDataRes(types.Resource("aws.sagemaker.trainingjob"))
+	},
+	"aws.sagemaker.processingjob.autoMLJobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetAutoMLJobArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.processingjob.monitoringScheduleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetMonitoringScheduleArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.processingjob.processingStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetProcessingStartTime()).ToDataRes(types.Time)
 	},
 	"aws.sagemaker.pipeline.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerPipeline).GetArn()).ToDataRes(types.String)
@@ -37706,8 +37774,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerTrainingjob).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.trainingjob.inputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).InputDataConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjob).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.modelArtifactsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).ModelArtifactsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.tuningJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).TuningJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.autoMLJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).AutoMLJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.labelingJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).LabelingJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.trainingStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).TrainingStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.trainingjob.resourceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37732,6 +37824,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.trainingjob.wallClockTimeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjob).WallClockTimeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.channelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).ChannelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.s3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).S3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.s3DataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).S3DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.s3DataDistributionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).S3DataDistributionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.compressionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).CompressionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.recordWrapperType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).RecordWrapperType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.channel.inputMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjobChannel).InputMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.trainingjob.statusTransition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37848,6 +37980,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.processingjob.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerProcessingjob).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.processingInputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).ProcessingInputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.imageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).ImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.trainingJob": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).TrainingJob, ok = plugin.RawToTValue[*mqlAwsSagemakerTrainingjob](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.autoMLJobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).AutoMLJobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.monitoringScheduleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).MonitoringScheduleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.processingStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).ProcessingStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.pipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -87217,7 +87373,13 @@ type mqlAwsSagemakerTrainingjob struct {
 	BillableTimeInSeconds                 plugin.TValue[int64]
 	VpcConfig                             plugin.TValue[any]
 	Vpc                                   plugin.TValue[*mqlAwsVpc]
+	InputDataConfig                       plugin.TValue[[]any]
 	OutputDataConfig                      plugin.TValue[any]
+	ModelArtifactsUrl                     plugin.TValue[string]
+	TuningJobArn                          plugin.TValue[string]
+	AutoMLJobArn                          plugin.TValue[string]
+	LabelingJobArn                        plugin.TValue[string]
+	TrainingStartTime                     plugin.TValue[*time.Time]
 	ResourceConfig                        plugin.TValue[any]
 	StoppingCondition                     plugin.TValue[any]
 	SecondaryStatusTransitions            plugin.TValue[[]any]
@@ -87393,9 +87555,55 @@ func (c *mqlAwsSagemakerTrainingjob) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
+func (c *mqlAwsSagemakerTrainingjob) GetInputDataConfig() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InputDataConfig, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingjob", c.__id, "inputDataConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inputDataConfig()
+	})
+}
+
 func (c *mqlAwsSagemakerTrainingjob) GetOutputDataConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
 		return c.outputDataConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetModelArtifactsUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ModelArtifactsUrl, func() (string, error) {
+		return c.modelArtifactsUrl()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetTuningJobArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TuningJobArn, func() (string, error) {
+		return c.tuningJobArn()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetAutoMLJobArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutoMLJobArn, func() (string, error) {
+		return c.autoMLJobArn()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetLabelingJobArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LabelingJobArn, func() (string, error) {
+		return c.labelingJobArn()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingjob) GetTrainingStartTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.TrainingStartTime, func() (*time.Time, error) {
+		return c.trainingStartTime()
 	})
 }
 
@@ -87453,6 +87661,90 @@ func (c *mqlAwsSagemakerTrainingjob) GetWallClockTimeInSeconds() *plugin.TValue[
 	return plugin.GetOrCompute[int64](&c.WallClockTimeInSeconds, func() (int64, error) {
 		return c.wallClockTimeInSeconds()
 	})
+}
+
+// mqlAwsSagemakerTrainingjobChannel for the aws.sagemaker.trainingjob.channel resource
+type mqlAwsSagemakerTrainingjobChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSagemakerTrainingjobChannelInternal it will be used here
+	ChannelName            plugin.TValue[string]
+	S3Uri                  plugin.TValue[string]
+	S3DataType             plugin.TValue[string]
+	S3DataDistributionType plugin.TValue[string]
+	FileSystemId           plugin.TValue[string]
+	ContentType            plugin.TValue[string]
+	CompressionType        plugin.TValue[string]
+	RecordWrapperType      plugin.TValue[string]
+	InputMode              plugin.TValue[string]
+}
+
+// createAwsSagemakerTrainingjobChannel creates a new instance of this resource
+func createAwsSagemakerTrainingjobChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerTrainingjobChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.trainingjob.channel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) MqlName() string {
+	return "aws.sagemaker.trainingjob.channel"
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetChannelName() *plugin.TValue[string] {
+	return &c.ChannelName
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetS3Uri() *plugin.TValue[string] {
+	return &c.S3Uri
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetS3DataType() *plugin.TValue[string] {
+	return &c.S3DataType
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetS3DataDistributionType() *plugin.TValue[string] {
+	return &c.S3DataDistributionType
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetCompressionType() *plugin.TValue[string] {
+	return &c.CompressionType
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetRecordWrapperType() *plugin.TValue[string] {
+	return &c.RecordWrapperType
+}
+
+func (c *mqlAwsSagemakerTrainingjobChannel) GetInputMode() *plugin.TValue[string] {
+	return &c.InputMode
 }
 
 // mqlAwsSagemakerTrainingjobStatusTransition for the aws.sagemaker.trainingjob.statusTransition resource
@@ -87602,6 +87894,12 @@ type mqlAwsSagemakerProcessingjob struct {
 	Vpc                                   plugin.TValue[*mqlAwsVpc]
 	ProcessingResources                   plugin.TValue[any]
 	Environment                           plugin.TValue[map[string]any]
+	ProcessingInputs                      plugin.TValue[[]any]
+	ImageUri                              plugin.TValue[string]
+	TrainingJob                           plugin.TValue[*mqlAwsSagemakerTrainingjob]
+	AutoMLJobArn                          plugin.TValue[string]
+	MonitoringScheduleArn                 plugin.TValue[string]
+	ProcessingStartTime                   plugin.TValue[*time.Time]
 }
 
 // createAwsSagemakerProcessingjob creates a new instance of this resource
@@ -87764,6 +88062,52 @@ func (c *mqlAwsSagemakerProcessingjob) GetProcessingResources() *plugin.TValue[a
 func (c *mqlAwsSagemakerProcessingjob) GetEnvironment() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Environment, func() (map[string]any, error) {
 		return c.environment()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetProcessingInputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProcessingInputs, func() ([]any, error) {
+		return c.processingInputs()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetImageUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ImageUri, func() (string, error) {
+		return c.imageUri()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetTrainingJob() *plugin.TValue[*mqlAwsSagemakerTrainingjob] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerTrainingjob](&c.TrainingJob, func() (*mqlAwsSagemakerTrainingjob, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.processingjob", c.__id, "trainingJob")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerTrainingjob), nil
+			}
+		}
+
+		return c.trainingJob()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetAutoMLJobArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutoMLJobArn, func() (string, error) {
+		return c.autoMLJobArn()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetMonitoringScheduleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MonitoringScheduleArn, func() (string, error) {
+		return c.monitoringScheduleArn()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetProcessingStartTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ProcessingStartTime, func() (*time.Time, error) {
+		return c.processingStartTime()
 	})
 }
 

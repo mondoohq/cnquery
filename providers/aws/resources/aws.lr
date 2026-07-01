@@ -2757,8 +2757,20 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   vpcConfig() @maturity("deprecated") dict
   // VPC associated with this training job
   vpc() aws.vpc
+  // Input data channels the training job consumed
+  inputDataConfig() []aws.sagemaker.trainingjob.channel
   // Output data configuration
   outputDataConfig() dict
+  // S3 URI of the model artifact the training job produced
+  modelArtifactsUrl() string
+  // ARN of the hyperparameter tuning job that created this training job, if any
+  tuningJobArn() string
+  // ARN of the AutoML job that created this training job, if any
+  autoMLJobArn() string
+  // ARN of the labeling job that created this training job, if any
+  labelingJobArn() string
+  // Time when model training started
+  trainingStartTime() time
   // Resource configuration (instanceType, instanceCount, volumeSizeInGB)
   resourceConfig() dict
   // Stopping condition
@@ -2771,6 +2783,33 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   checkpointConfig() dict
   // Wall clock time in seconds
   wallClockTimeInSeconds() int
+}
+
+// Input data channel for a SageMaker training job
+//
+// Examine one named training-data channel: its source location (s3Uri or
+// fileSystemId), format, and input mode. Together the channels record exactly
+// what data a training job consumed, which is the core lineage fact for the
+// model it produced.
+private aws.sagemaker.trainingjob.channel @defaults("channelName s3Uri") {
+  // Name of the channel
+  channelName string
+  // S3 URI of the channel's input data, when the source is S3
+  s3Uri string
+  // S3 data type: S3Prefix, ManifestFile, or AugmentedManifestFile
+  s3DataType string
+  // How the data is distributed to training instances: FullyReplicated or ShardedByS3Key
+  s3DataDistributionType string
+  // File system ID of the channel's input data, when the source is a file system
+  fileSystemId string
+  // MIME content type of the channel data
+  contentType string
+  // Compression type of the channel data: None or Gzip
+  compressionType string
+  // Record wrapper format: None or RecordIO
+  recordWrapperType string
+  // Input mode for the channel: Pipe, File, or FastFile
+  inputMode string
 }
 
 // AWS SageMaker training job status transition
@@ -2839,6 +2878,18 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   processingResources() dict
   // Environment variables
   environment() map[string]string
+  // Input datasets the processing job consumed
+  processingInputs() []dict
+  // Container image URI the processing job ran
+  imageUri() string
+  // Training job that created this processing job, if any
+  trainingJob() aws.sagemaker.trainingjob
+  // ARN of the AutoML job that created this processing job, if any
+  autoMLJobArn() string
+  // ARN of the monitoring schedule that created this processing job, if any
+  monitoringScheduleArn() string
+  // Time when processing started
+  processingStartTime() time
 }
 
 // AWS SageMaker pipeline
