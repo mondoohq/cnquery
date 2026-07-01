@@ -637,6 +637,7 @@ gcp.project.bigqueryService.dataset.kmsKey 13.12.2
 gcp.project.bigqueryService.dataset.kmsName 9.0.0
 gcp.project.bigqueryService.dataset.labels 9.0.0
 gcp.project.bigqueryService.dataset.location 9.0.0
+gcp.project.bigqueryService.dataset.managedBy 13.27.2
 gcp.project.bigqueryService.dataset.maxTimeTravelHours 13.1.2
 gcp.project.bigqueryService.dataset.models 9.0.0
 gcp.project.bigqueryService.dataset.modified 9.0.0
@@ -2901,6 +2902,7 @@ gcp.project.dns 9.0.0
 gcp.project.dnsService 9.0.0
 gcp.project.dnsService.managedZones 9.0.0
 gcp.project.dnsService.managedzone 9.0.0
+gcp.project.dnsService.managedzone.authorizedNetworks 13.27.2
 gcp.project.dnsService.managedzone.cloudLoggingEnabled 11.6.6
 gcp.project.dnsService.managedzone.created 9.0.0
 gcp.project.dnsService.managedzone.description 9.0.0
@@ -2914,6 +2916,7 @@ gcp.project.dnsService.managedzone.forwardingTargets 13.18.1
 gcp.project.dnsService.managedzone.iamPolicy 13.9.1
 gcp.project.dnsService.managedzone.id 9.0.0
 gcp.project.dnsService.managedzone.labels 11.6.6
+gcp.project.dnsService.managedzone.managedBy 13.27.2
 gcp.project.dnsService.managedzone.name 9.0.0
 gcp.project.dnsService.managedzone.nameServerSet 9.0.0
 gcp.project.dnsService.managedzone.nameServers 9.0.0
@@ -3614,6 +3617,8 @@ gcp.project.liens 13.18.1
 gcp.project.logging 9.0.0
 gcp.project.loggingservice 9.0.0
 gcp.project.loggingservice.bucket 9.0.0
+gcp.project.loggingservice.bucket.cmekServiceAccount 13.27.2
+gcp.project.loggingservice.bucket.cmekServiceAccountId 13.27.2
 gcp.project.loggingservice.bucket.cmekSettings 9.0.0
 gcp.project.loggingservice.bucket.created 9.0.0
 gcp.project.loggingservice.bucket.description 9.0.0
@@ -4662,8 +4667,10 @@ gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore 11
 gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions 11.0.79
 gcp.project.storageService.bucket.location 9.0.0
 gcp.project.storageService.bucket.locationType 9.0.0
+gcp.project.storageService.bucket.logBucket 13.27.2
 gcp.project.storageService.bucket.logging 13.16.3
 gcp.project.storageService.bucket.loggingEnabled 13.12.2
+gcp.project.storageService.bucket.managedBy 13.27.2
 gcp.project.storageService.bucket.metageneration 13.1.2
 gcp.project.storageService.bucket.name 9.0.0
 gcp.project.storageService.bucket.objectRetentionMode 13.7.2

@@ -147,23 +147,26 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 			}
 
 			var bucketKmsKeyName string
+			var cmekServiceAccountId string
 			if bucket.CmekSettings != nil {
 				bucketKmsKeyName = bucket.CmekSettings.KmsKeyName
+				cmekServiceAccountId = bucket.CmekSettings.ServiceAccountId
 			}
 			mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
-				"projectId":           llx.StringData(projectId),
-				"location":            llx.StringData(parseLocationFromPath(bucket.Name)),
-				"cmekSettings":        llx.DictData(mqlCmekSettingsDict),
-				"created":             llx.TimeDataPtr(parseTime(bucket.CreateTime)),
-				"description":         llx.StringData(bucket.Description),
-				"indexConfigs":        llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
-				"lifecycleState":      llx.StringData(bucket.LifecycleState),
-				"locked":              llx.BoolData(bucket.Locked),
-				"name":                llx.StringData(bucket.Name),
-				"restrictedFields":    llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
-				"retentionDays":       llx.IntData(bucket.RetentionDays),
-				"updated":             llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
-				"logAnalyticsEnabled": llx.BoolData(bucket.AnalyticsEnabled),
+				"projectId":            llx.StringData(projectId),
+				"location":             llx.StringData(parseLocationFromPath(bucket.Name)),
+				"cmekSettings":         llx.DictData(mqlCmekSettingsDict),
+				"cmekServiceAccountId": llx.StringData(cmekServiceAccountId),
+				"created":              llx.TimeDataPtr(parseTime(bucket.CreateTime)),
+				"description":          llx.StringData(bucket.Description),
+				"indexConfigs":         llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
+				"lifecycleState":       llx.StringData(bucket.LifecycleState),
+				"locked":               llx.BoolData(bucket.Locked),
+				"name":                 llx.StringData(bucket.Name),
+				"restrictedFields":     llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
+				"retentionDays":        llx.IntData(bucket.RetentionDays),
+				"updated":              llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
+				"logAnalyticsEnabled":  llx.BoolData(bucket.AnalyticsEnabled),
 			})
 			if err != nil {
 				return err
@@ -537,6 +540,23 @@ func (g *mqlGcpProjectLoggingserviceBucket) kmsKey() (*mqlGcpProjectKmsServiceKe
 		return nil, err
 	}
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceBucket) cmekServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.CmekServiceAccountId.Error != nil {
+		return nil, g.CmekServiceAccountId.Error
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.CmekServiceAccountId.Data, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.CmekServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return sa, nil
 }
 
 func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {

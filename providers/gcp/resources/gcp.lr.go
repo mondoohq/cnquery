@@ -5005,6 +5005,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetLogging()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.logBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetLogBucket()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
+	},
+	"gcp.project.storageService.bucket.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetManagedBy()).ToDataRes(types.String)
+	},
 	"gcp.project.storageService.bucket.cors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetCors()).ToDataRes(types.Array(types.Dict))
 	},
@@ -5707,6 +5713,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.dataset.defaultPartitionExpirationMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetDefaultPartitionExpirationMs()).ToDataRes(types.Int)
 	},
+	"gcp.project.bigqueryService.dataset.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetManagedBy()).ToDataRes(types.String)
+	},
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetIsCaseInsensitive()).ToDataRes(types.Bool)
 	},
@@ -6097,6 +6106,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPrivateVisibilityConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.dnsService.managedzone.authorizedNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetAuthorizedNetworks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network")))
+	},
 	"gcp.project.dnsService.managedzone.forwardingTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetForwardingTargets()).ToDataRes(types.Array(types.String))
 	},
@@ -6111,6 +6123,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dnsService.managedzone.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.dnsService.managedzone.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.dnsService.recordset.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceRecordset).GetProjectId()).ToDataRes(types.String)
@@ -7521,6 +7536,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.loggingservice.bucket.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.loggingservice.bucket.cmekServiceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucket).GetCmekServiceAccountId()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.bucket.cmekServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucket).GetCmekServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.loggingservice.bucket.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetCreated()).ToDataRes(types.Time)
@@ -20773,6 +20794,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.logBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).LogBucket, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.cors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Cors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -21789,6 +21818,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryServiceDataset).DefaultPartitionExpirationMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigqueryService.dataset.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceDataset).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).IsCaseInsensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -22349,6 +22382,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDnsServiceManagedzone).PrivateVisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dnsService.managedzone.authorizedNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).AuthorizedNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dnsService.managedzone.forwardingTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).ForwardingTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -22367,6 +22404,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dnsService.managedzone.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.recordset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24467,6 +24508,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.loggingservice.bucket.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.cmekServiceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucket).CmekServiceAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.cmekServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucket).CmekServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.bucket.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47351,6 +47400,8 @@ type mqlGcpProjectStorageServiceBucket struct {
 	HierarchicalNamespace           plugin.TValue[any]
 	CustomPlacementConfig           plugin.TValue[any]
 	Logging                         plugin.TValue[any]
+	LogBucket                       plugin.TValue[*mqlGcpProjectStorageServiceBucket]
+	ManagedBy                       plugin.TValue[string]
 	Cors                            plugin.TValue[[]any]
 	Website                         plugin.TValue[any]
 	Billing                         plugin.TValue[any]
@@ -47615,6 +47666,28 @@ func (c *mqlGcpProjectStorageServiceBucket) GetCustomPlacementConfig() *plugin.T
 
 func (c *mqlGcpProjectStorageServiceBucket) GetLogging() *plugin.TValue[any] {
 	return &c.Logging
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetLogBucket() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.LogBucket, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket", c.__id, "logBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.logBucket()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetCors() *plugin.TValue[[]any] {
@@ -49715,6 +49788,7 @@ type mqlGcpProjectBigqueryServiceDataset struct {
 	StorageBillingModel          plugin.TValue[string]
 	DefaultCollation             plugin.TValue[string]
 	DefaultPartitionExpirationMs plugin.TValue[int64]
+	ManagedBy                    plugin.TValue[string]
 	IsCaseInsensitive            plugin.TValue[bool]
 	ExternalDatasetReference     plugin.TValue[any]
 }
@@ -49888,6 +49962,12 @@ func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultCollation() *plugin.TVal
 
 func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultPartitionExpirationMs() *plugin.TValue[int64] {
 	return &c.DefaultPartitionExpirationMs
+}
+
+func (c *mqlGcpProjectBigqueryServiceDataset) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 func (c *mqlGcpProjectBigqueryServiceDataset) GetIsCaseInsensitive() *plugin.TValue[bool] {
@@ -50970,7 +51050,7 @@ func (c *mqlGcpProjectDnsService) GetResponsePolicies() *plugin.TValue[[]any] {
 type mqlGcpProjectDnsServiceManagedzone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectDnsServiceManagedzoneInternal it will be used here
+	mqlGcpProjectDnsServiceManagedzoneInternal
 	Id                         plugin.TValue[string]
 	ProjectId                  plugin.TValue[string]
 	Name                       plugin.TValue[string]
@@ -50988,11 +51068,13 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	DnsSecAlgorithmWeak        plugin.TValue[bool]
 	DnssecDefaultKeyAlgorithms plugin.TValue[[]any]
 	PrivateVisibilityConfig    plugin.TValue[any]
+	AuthorizedNetworks         plugin.TValue[[]any]
 	ForwardingTargets          plugin.TValue[[]any]
 	PeeringNetwork             plugin.TValue[string]
 	PeeringNetworkRef          plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	RecordSets                 plugin.TValue[[]any]
 	IamPolicy                  plugin.TValue[[]any]
+	ManagedBy                  plugin.TValue[string]
 }
 
 // createGcpProjectDnsServiceManagedzone creates a new instance of this resource
@@ -51102,6 +51184,22 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetPrivateVisibilityConfig() *plugi
 	return &c.PrivateVisibilityConfig
 }
 
+func (c *mqlGcpProjectDnsServiceManagedzone) GetAuthorizedNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizedNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dnsService.managedzone", c.__id, "authorizedNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizedNetworks()
+	})
+}
+
 func (c *mqlGcpProjectDnsServiceManagedzone) GetForwardingTargets() *plugin.TValue[[]any] {
 	return &c.ForwardingTargets
 }
@@ -51155,6 +51253,12 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetIamPolicy() *plugin.TValue[[]any
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -56268,21 +56372,23 @@ type mqlGcpProjectLoggingserviceBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectLoggingserviceBucketInternal
-	ProjectId           plugin.TValue[string]
-	Location            plugin.TValue[string]
-	CmekSettings        plugin.TValue[any]
-	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	Created             plugin.TValue[*time.Time]
-	Description         plugin.TValue[string]
-	IndexConfigs        plugin.TValue[[]any]
-	LifecycleState      plugin.TValue[string]
-	Locked              plugin.TValue[bool]
-	Name                plugin.TValue[string]
-	RestrictedFields    plugin.TValue[[]any]
-	RetentionDays       plugin.TValue[int64]
-	Updated             plugin.TValue[*time.Time]
-	LogAnalyticsEnabled plugin.TValue[bool]
-	Views               plugin.TValue[[]any]
+	ProjectId            plugin.TValue[string]
+	Location             plugin.TValue[string]
+	CmekSettings         plugin.TValue[any]
+	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CmekServiceAccountId plugin.TValue[string]
+	CmekServiceAccount   plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Created              plugin.TValue[*time.Time]
+	Description          plugin.TValue[string]
+	IndexConfigs         plugin.TValue[[]any]
+	LifecycleState       plugin.TValue[string]
+	Locked               plugin.TValue[bool]
+	Name                 plugin.TValue[string]
+	RestrictedFields     plugin.TValue[[]any]
+	RetentionDays        plugin.TValue[int64]
+	Updated              plugin.TValue[*time.Time]
+	LogAnalyticsEnabled  plugin.TValue[bool]
+	Views                plugin.TValue[[]any]
 }
 
 // createGcpProjectLoggingserviceBucket creates a new instance of this resource
@@ -56347,6 +56453,26 @@ func (c *mqlGcpProjectLoggingserviceBucket) GetKmsKey() *plugin.TValue[*mqlGcpPr
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectLoggingserviceBucket) GetCmekServiceAccountId() *plugin.TValue[string] {
+	return &c.CmekServiceAccountId
+}
+
+func (c *mqlGcpProjectLoggingserviceBucket) GetCmekServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.CmekServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.loggingservice.bucket", c.__id, "cmekServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.cmekServiceAccount()
 	})
 }
 

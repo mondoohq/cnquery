@@ -2526,6 +2526,17 @@ private gcp.project.storageService.bucket @defaults("id") {
   // optional prefix applied to log object names. Use this to find where logs
   // go; the `loggingEnabled` predicate is the simple is-it-on check.
   logging dict
+  // Access-log destination bucket
+  //
+  // Bucket that receives this bucket's access logs. Null when access logging
+  // is disabled. The `loggingEnabled` predicate is the simple is-it-on check.
+  logBucket() gcp.project.storageService.bucket
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Cross-Origin Resource Sharing (CORS) rules
   //
   // Each rule is shaped `{origin, method, responseHeader, maxAgeSeconds}`.
@@ -3227,6 +3238,12 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   defaultCollation string
   // Default partition expiration time in milliseconds
   defaultPartitionExpirationMs int
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
   // Whether field names are treated as case insensitive
   isCaseInsensitive bool
   // External source backing this dataset
@@ -3625,6 +3642,11 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecDefaultKeyAlgorithms []string
   // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
   privateVisibilityConfig dict
+  // Authorized VPC networks for a private zone
+  //
+  // VPC networks permitted to query this private zone. Empty for public zones
+  // and for private zones without network authorization.
+  authorizedNetworks() []gcp.project.computeService.network
   // IPv4 addresses of the name servers this private zone forwards outbound queries to (empty when forwarding is not configured)
   forwardingTargets []string
   // Fully qualified URL of the VPC network this private zone peers with for DNS resolution (empty when peering is not configured)
@@ -3637,6 +3659,12 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   recordSets() []gcp.project.dnsService.recordset
   // IAM policy bindings for this managed zone
   iamPolicy() []gcp.resourcemanager.binding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud DNS record set
@@ -5239,6 +5267,18 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   cmekSettings @maturity("deprecated") dict
   // Customer-managed KMS key used to encrypt log entries in this bucket (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // CMEK service-agent identity
+  //
+  // Email of the Google-managed service agent that encrypts and decrypts log
+  // entries in this bucket with the customer-managed key. Empty when the
+  // bucket uses Google-managed encryption.
+  cmekServiceAccountId string
+  // Service account that encrypts log entries with the customer-managed key
+  //
+  // Resolved from the CMEK service-agent identity. Null when the bucket uses
+  // Google-managed encryption or the identity does not map to a service
+  // account resource.
+  cmekServiceAccount() gcp.project.iamService.serviceAccount
   // Creation timestamp
   created time
   // Description of the bucket

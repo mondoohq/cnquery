@@ -280,11 +280,15 @@ func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage
 	if bucket.Encryption != nil {
 		mqlBucket.cacheDefaultKmsKeyName = bucket.Encryption.DefaultKmsKeyName
 	}
+	if bucket.Logging != nil {
+		mqlBucket.cacheLogBucket = bucket.Logging.LogBucket
+	}
 	return mqlBucket, nil
 }
 
 type mqlGcpProjectStorageServiceBucketInternal struct {
 	cacheDefaultKmsKeyName string
+	cacheLogBucket         string
 
 	aclLock            sync.Mutex
 	aclFetched         bool
@@ -307,6 +311,23 @@ func (g *mqlGcpProjectStorageServiceBucket) defaultKmsKey() (*mqlGcpProjectKmsSe
 
 func (g *mqlGcpProjectStorageServiceBucket) defaultEncryptionEnabled() (bool, error) {
 	return g.cacheDefaultKmsKeyName != "", nil
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) logBucket() (*mqlGcpProjectStorageServiceBucket, error) {
+	if g.cacheLogBucket == "" {
+		g.LogBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.storageService.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(g.cacheLogBucket)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectStorageServiceBucket), nil
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) tags() (map[string]interface{}, error) {

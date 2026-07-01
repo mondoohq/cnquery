@@ -297,6 +297,10 @@ func (g *mqlGcpProjectBigqueryServiceDataset) kmsKey() (*mqlGcpProjectKmsService
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectBigqueryServiceDataset) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
 func (g *mqlGcpProjectBigqueryServiceTable) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	if g.cacheKmsKeyName == "" {
 		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet

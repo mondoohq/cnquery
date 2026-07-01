@@ -136,6 +136,28 @@ func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
+type mqlGcpProjectDnsServiceManagedzoneInternal struct {
+	cacheAuthorizedNetworkUrls []string
+}
+
+func (g *mqlGcpProjectDnsServiceManagedzone) authorizedNetworks() ([]any, error) {
+	res := make([]any, 0, len(g.cacheAuthorizedNetworkUrls))
+	for _, url := range g.cacheAuthorizedNetworkUrls {
+		n, err := getNetworkByUrl(url, g.MqlRuntime)
+		if err != nil {
+			return nil, err
+		}
+		if n != nil {
+			res = append(res, n)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectDnsServiceManagedzone) managedBy() (string, error) {
+	return managedByFromLabels(&g.Labels)
+}
+
 func (g *mqlGcpProjectDnsServiceManagedzone) peeringNetworkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
 	if g.PeeringNetwork.Error != nil {
 		return nil, g.PeeringNetwork.Error
@@ -220,12 +242,16 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			}
 
 			var mqlPrivateVisibilityCfg map[string]any
+			authorizedNetworkUrls := []string{}
 			if managedZone.PrivateVisibilityConfig != nil {
 				networks := make([]any, 0, len(managedZone.PrivateVisibilityConfig.Networks))
 				for _, n := range managedZone.PrivateVisibilityConfig.Networks {
 					networks = append(networks, map[string]any{
 						"networkUrl": n.NetworkUrl,
 					})
+					if n.NetworkUrl != "" {
+						authorizedNetworkUrls = append(authorizedNetworkUrls, n.NetworkUrl)
+					}
 				}
 				gkeClusters := make([]any, 0, len(managedZone.PrivateVisibilityConfig.GkeClusters))
 				for _, c := range managedZone.PrivateVisibilityConfig.GkeClusters {
@@ -276,6 +302,7 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlManagedZone.(*mqlGcpProjectDnsServiceManagedzone).cacheAuthorizedNetworkUrls = authorizedNetworkUrls
 			res = append(res, mqlManagedZone)
 		}
 		return nil
