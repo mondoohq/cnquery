@@ -489,6 +489,11 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			// AWS-managed keys reject ListResourceTags with AccessDenied;
+			// treat that as no tags rather than failing managedBy/tags.
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
 			return nil, err
 		}
 		for i := range page.Tags {

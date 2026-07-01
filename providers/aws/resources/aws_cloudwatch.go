@@ -798,7 +798,9 @@ func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
 	svc := conn.CloudwatchLogs(a.Region.Data)
 	ctx := context.Background()
 
-	arnVal := a.Arn.Data
+	// CloudWatch Logs stores the log-group ARN with a trailing ":*" wildcard,
+	// which ListTagsForResource rejects as an invalid resourceArn. Strip it.
+	arnVal := strings.TrimSuffix(a.Arn.Data, ":*")
 	tagsResp, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: &arnVal})
 	if err != nil {
 		if Is400AccessDeniedError(err) {

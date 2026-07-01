@@ -659,6 +659,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 				return nil, err
 			}
 			mqlBackup.(*mqlGcpProjectBigtableServiceBackup).cacheSourceBackup = backup.SourceBackup
+			mqlBackup.(*mqlGcpProjectBigtableServiceBackup).cacheInstanceName = instanceName
 			res = append(res, mqlBackup)
 		}
 	}
@@ -681,6 +682,7 @@ func (g *mqlGcpProjectBigtableServiceBackup) id() (string, error) {
 
 type mqlGcpProjectBigtableServiceBackupInternal struct {
 	cacheSourceBackup string
+	cacheInstanceName string
 }
 
 // bigtableInstanceIDFromClusterName extracts the short instance ID from a full
@@ -779,7 +781,13 @@ func (g *mqlGcpProjectBigtableServiceBackup) sourceTableRef() (*mqlGcpProjectBig
 	if g.ClusterName.Error != nil {
 		return nil, g.ClusterName.Error
 	}
-	instanceName := bigtableInstanceIDFromClusterName(g.ClusterName.Data)
+	// Backups are keyed by the short cluster ID, so the instance cannot be
+	// re-derived from ClusterName; use the instance name cached at creation
+	// (falling back to the cluster-name parse for backups built elsewhere).
+	instanceName := g.cacheInstanceName
+	if instanceName == "" {
+		instanceName = bigtableInstanceIDFromClusterName(g.ClusterName.Data)
+	}
 	table, err := getBigtableTableByName(g.MqlRuntime, g.ProjectId.Data, instanceName, g.SourceTable.Data)
 	if err != nil {
 		return nil, err

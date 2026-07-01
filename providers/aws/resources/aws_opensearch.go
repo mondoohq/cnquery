@@ -324,7 +324,11 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		serviceSoftwareUpdateAvailable = convert.ToValue(s.UpdateAvailable)
 		serviceSoftwareCancellable = convert.ToValue(s.Cancellable)
 		serviceSoftwareUpdateStatus = string(s.UpdateStatus)
-		serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(s.AutomatedUpdateDate)
+		// AWS returns the Unix epoch when no automated update is scheduled;
+		// surface that sentinel as null rather than a 1970 timestamp.
+		if d := s.AutomatedUpdateDate; d != nil && d.Unix() > 0 {
+			serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(d)
+		}
 	}
 
 	// Last configuration change progress (change provenance: who initiated the

@@ -254,11 +254,6 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		layers = append(layers, mqlLayer)
 	}
 
-	var runtimeVersionArn string
-	if function.RuntimeVersionConfig != nil {
-		runtimeVersionArn = convert.ToValue(function.RuntimeVersionConfig.RuntimeVersionArn)
-	}
-
 	args := map[string]*llx.RawData{
 		"arn":                         llx.StringDataPtr(function.FunctionArn),
 		"name":                        llx.StringDataPtr(function.FunctionName),
@@ -275,7 +270,6 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"packageType":                 llx.StringData(string(function.PackageType)),
 		"codeSha256":                  llx.StringDataPtr(function.CodeSha256),
 		"revisionId":                  llx.StringDataPtr(function.RevisionId),
-		"runtimeVersionArn":           llx.StringData(runtimeVersionArn),
 		"description":                 llx.StringDataPtr(function.Description),
 		"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
 		"state":                       llx.StringData(string(function.State)),
@@ -1304,6 +1298,37 @@ func (a *mqlAwsLambdaFunction) eventInvokeConfig() (any, error) {
 		result["destinationConfig"] = destConfig
 	}
 	return result, nil
+}
+
+// runtimeVersionArn resolves the exact patched managed-runtime build the
+// function runs on. The ListFunctions summary omits RuntimeVersionConfig, so
+// this is fetched per function via GetFunctionConfiguration.
+func (a *mqlAwsLambdaFunction) runtimeVersionArn() (string, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetFunctionConfiguration(ctx, &lambda.GetFunctionConfigurationInput{
+		FunctionName: &funcName,
+	})
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			return "", nil
+		}
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	if resp.RuntimeVersionConfig != nil {
+		return convert.ToValue(resp.RuntimeVersionConfig.RuntimeVersionArn), nil
+	}
+	return "", nil
 }
 
 func (a *mqlAwsLambdaFunction) runtimeManagementConfig() (any, error) {

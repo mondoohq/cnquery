@@ -294,7 +294,13 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		serviceSoftwareUpdateAvailable = convert.ToValue(s.UpdateAvailable)
 		serviceSoftwareCancellable = convert.ToValue(s.Cancellable)
 		serviceSoftwareUpdateStatus = string(s.UpdateStatus)
-		serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(s.AutomatedUpdateDate)
+		// AWS returns the Unix epoch when no automated update is scheduled;
+		// surface that sentinel as null rather than a 1970 timestamp.
+		if d := s.AutomatedUpdateDate; d != nil && d.Unix() > 0 {
+			serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(d)
+		} else {
+			serviceSoftwareAutomatedUpdateDate = llx.NilData
+		}
 	} else {
 		serviceSoftwareAutomatedUpdateDate = llx.NilData
 	}

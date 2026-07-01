@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.40.0",
-  "generated_at": "2026-06-30T21:58:44-07:00",
+  "generated_at": "2026-06-30T23:35:09-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -526,6 +526,7 @@
     "lambda:GetFunction",
     "lambda:GetFunctionCodeSigningConfig",
     "lambda:GetFunctionConcurrency",
+    "lambda:GetFunctionConfiguration",
     "lambda:GetFunctionEventInvokeConfig",
     "lambda:GetFunctionRecursionConfig",
     "lambda:GetFunctionUrlConfig",
@@ -4146,6 +4147,12 @@
       "permission": "lambda:GetFunctionConcurrency",
       "service": "lambda",
       "action": "GetFunctionConcurrency",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetFunctionConfiguration",
+      "service": "lambda",
+      "action": "GetFunctionConfiguration",
       "source_file": "aws_lambda.go"
     },
     {

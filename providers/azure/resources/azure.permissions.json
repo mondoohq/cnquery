@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.23.0",
-  "generated_at": "2026-06-30T21:33:11-07:00",
+  "generated_at": "2026-06-30T23:35:09-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1091,7 +1091,7 @@
     {
       "permission": "Microsoft.Network/networkWatchers/flowLogs/read",
       "service": "Microsoft.Network",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {

@@ -137774,7 +137774,9 @@ func (c *mqlAwsLambdaFunction) GetRevisionId() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsLambdaFunction) GetRuntimeVersionArn() *plugin.TValue[string] {
-	return &c.RuntimeVersionArn
+	return plugin.GetOrCompute[string](&c.RuntimeVersionArn, func() (string, error) {
+		return c.runtimeVersionArn()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetDescription() *plugin.TValue[string] {

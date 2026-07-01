@@ -1195,11 +1195,42 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) defaultNatGateway() (
 // empty list when none are configured.
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) flowLogs() ([]any, error) {
 	res := []any{}
+	if len(a.cacheFlowLogs) == 0 {
+		return res, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
 	for _, flowLog := range a.cacheFlowLogs {
-		if flowLog == nil {
+		if flowLog == nil || flowLog.ID == nil {
 			continue
 		}
-		mqlFlowLog, err := flowLogToMql(a.MqlRuntime, *flowLog)
+		// The flow logs embedded on the virtual network are ID-only
+		// references (their Properties are nil), so resolve each by ID to
+		// populate enabled, targetResourceId, retention, analytics, etc.
+		resourceID, err := ParseResourceID(*flowLog.ID)
+		if err != nil {
+			return nil, err
+		}
+		watcherName, err := resourceID.Component("networkWatchers")
+		if err != nil {
+			return nil, err
+		}
+		flowLogName, err := resourceID.Component("flowLogs")
+		if err != nil {
+			return nil, err
+		}
+		client, err := network.NewFlowLogsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		flowLogRes, err := client.Get(ctx, resourceID.ResourceGroup, watcherName, flowLogName, &network.FlowLogsClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		mqlFlowLog, err := flowLogToMql(a.MqlRuntime, flowLogRes.FlowLog)
 		if err != nil {
 			return nil, err
 		}
