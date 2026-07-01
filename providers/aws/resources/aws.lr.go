@@ -521,6 +521,7 @@ const (
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
 	ResourceAwsApigatewayAuthorizer                                             string = "aws.apigateway.authorizer"
 	ResourceAwsApigatewayRequestValidator                                       string = "aws.apigateway.requestValidator"
+	ResourceAwsApigatewayDeployment                                             string = "aws.apigateway.deployment"
 	ResourceAwsApigatewayApiKey                                                 string = "aws.apigateway.apiKey"
 	ResourceAwsApigatewayUsagePlan                                              string = "aws.apigateway.usagePlan"
 	ResourceAwsApigatewayVpcLink                                                string = "aws.apigateway.vpcLink"
@@ -2944,6 +2945,10 @@ func init() {
 		"aws.apigateway.requestValidator": {
 			// to override args, implement: initAwsApigatewayRequestValidator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsApigatewayRequestValidator,
+		},
+		"aws.apigateway.deployment": {
+			// to override args, implement: initAwsApigatewayDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayDeployment,
 		},
 		"aws.apigateway.apiKey": {
 			// to override args, implement: initAwsApigatewayApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -20025,6 +20030,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.restapi.requestValidators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetRequestValidators()).ToDataRes(types.Array(types.Resource("aws.apigateway.requestValidator")))
 	},
+	"aws.apigateway.restapi.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRestapi).GetDeployments()).ToDataRes(types.Array(types.Resource("aws.apigateway.deployment")))
+	},
 	"aws.apigateway.restapi.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetRegion()).ToDataRes(types.String)
 	},
@@ -20183,6 +20191,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigateway.requestValidator.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRequestValidator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apigateway.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.deployment.restApiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetRestApiId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.deployment.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"aws.apigateway.deployment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.apigateway.deployment.apiSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetApiSummary()).ToDataRes(types.Dict)
+	},
+	"aws.apigateway.deployment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayDeployment).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.apigateway.apiKey.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayApiKey).GetArn()).ToDataRes(types.String)
@@ -55918,6 +55944,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayRestapi).RequestValidators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.apigateway.restapi.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRestapi).Deployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.apigateway.restapi.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayRestapi).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56140,6 +56170,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.requestValidator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayRequestValidator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.restApiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).RestApiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.apiSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).ApiSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.deployment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayDeployment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -134486,6 +134544,7 @@ type mqlAwsApigatewayRestapi struct {
 	Stages                    plugin.TValue[[]any]
 	Authorizers               plugin.TValue[[]any]
 	RequestValidators         plugin.TValue[[]any]
+	Deployments               plugin.TValue[[]any]
 	Region                    plugin.TValue[string]
 	Tags                      plugin.TValue[map[string]any]
 	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
@@ -134603,6 +134662,22 @@ func (c *mqlAwsApigatewayRestapi) GetRequestValidators() *plugin.TValue[[]any] {
 		}
 
 		return c.requestValidators()
+	})
+}
+
+func (c *mqlAwsApigatewayRestapi) GetDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deployments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.restapi", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deployments()
 	})
 }
 
@@ -135049,6 +135124,75 @@ func (c *mqlAwsApigatewayRequestValidator) GetValidateRequestParameters() *plugi
 }
 
 func (c *mqlAwsApigatewayRequestValidator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApigatewayDeployment for the aws.apigateway.deployment resource
+type mqlAwsApigatewayDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayDeploymentInternal it will be used here
+	Id          plugin.TValue[string]
+	RestApiId   plugin.TValue[string]
+	CreatedDate plugin.TValue[*time.Time]
+	Description plugin.TValue[string]
+	ApiSummary  plugin.TValue[any]
+	Region      plugin.TValue[string]
+}
+
+// createAwsApigatewayDeployment creates a new instance of this resource
+func createAwsApigatewayDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayDeployment) MqlName() string {
+	return "aws.apigateway.deployment"
+}
+
+func (c *mqlAwsApigatewayDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayDeployment) GetRestApiId() *plugin.TValue[string] {
+	return &c.RestApiId
+}
+
+func (c *mqlAwsApigatewayDeployment) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAwsApigatewayDeployment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsApigatewayDeployment) GetApiSummary() *plugin.TValue[any] {
+	return &c.ApiSummary
+}
+
+func (c *mqlAwsApigatewayDeployment) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 

@@ -13986,6 +13986,8 @@ private aws.apigateway.restapi @defaults("name id") {
   authorizers() []aws.apigateway.authorizer
   // Request validators for the REST API
   requestValidators() []aws.apigateway.requestValidator
+  // Deployments of the REST API
+  deployments() []aws.apigateway.deployment
   // Region where the REST API exists
   region string
   // Tags for the REST API
@@ -14109,6 +14111,28 @@ private aws.apigateway.requestValidator @defaults("name restApiId") {
   // Whether request parameters are validated
   validateRequestParameters bool
   // Region where the request validator exists
+  region string
+}
+
+// Deployment of an API Gateway REST API
+//
+// Examine a single deployment of a REST API: when it was created, its
+// description, and a snapshot of the API methods it captured. The deployment
+// history records when each version of the API was pushed live, which is the
+// change provenance for the API. Select by the deployment `id` within a REST
+// API.
+private aws.apigateway.deployment @defaults("id createdDate") {
+  // Identifier of the deployment
+  id string
+  // Identifier of the REST API the deployment belongs to
+  restApiId string
+  // Time when the deployment was created
+  createdDate time
+  // Description of the deployment
+  description string
+  // Snapshot of the API methods captured at deployment time, keyed by resource path then HTTP method
+  apiSummary dict
+  // Region where the deployment exists
   region string
 }
 
