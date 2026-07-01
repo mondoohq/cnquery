@@ -10479,6 +10479,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.opensearch.domain.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.opensearch.domain.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
+	"aws.opensearch.domain.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.opensearch.domain.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
@@ -41956,6 +41962,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -98081,6 +98095,8 @@ type mqlAwsOpensearchDomain struct {
 	AutomatedSnapshotPauseStartTime    plugin.TValue[*time.Time]
 	AutomatedSnapshotPauseEndTime      plugin.TValue[*time.Time]
 	Tags                               plugin.TValue[map[string]any]
+	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                          plugin.TValue[string]
 	SecurityGroups                     plugin.TValue[[]any]
 	Subnets                            plugin.TValue[[]any]
 }
@@ -98413,6 +98429,28 @@ func (c *mqlAwsOpensearchDomain) GetAutomatedSnapshotPauseEndTime() *plugin.TVal
 func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsOpensearchDomain) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsOpensearchDomain) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 

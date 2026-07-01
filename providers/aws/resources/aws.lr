@@ -5116,6 +5116,12 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   automatedSnapshotPauseEndTime time
   // Tags for the domain
   tags() map[string]string
+  // CloudFormation stack that manages this domain, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this domain
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the domain is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
   // Security groups associated with the VPC domain
   securityGroups() []aws.ec2.securitygroup
   // Subnets for the VPC domain

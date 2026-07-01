@@ -116,6 +116,14 @@ func (a *mqlAwsEcsInstance) cloudformationStack() (*mqlAwsCloudformationStack, e
 	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
 }
 
+func (a *mqlAwsOpensearchDomain) managedBy() (string, error) {
+	return managedByFromResourceTags(a.GetTags())
+}
+
+func (a *mqlAwsOpensearchDomain) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
+}
+
 func (a *mqlAwsApigatewayRestapi) managedBy() (string, error) {
 	return managedByFromResourceTags(a.GetTags())
 }
