@@ -19707,6 +19707,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.image.mediaType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetMediaType()).ToDataRes(types.String)
 	},
+	"aws.ecr.image.artifactMediaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetArtifactMediaType()).ToDataRes(types.String)
+	},
 	"aws.ecr.image.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -19715,6 +19718,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecr.image.repoName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetRepoName()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetRepository()).ToDataRes(types.Resource("aws.ecr.repository"))
 	},
 	"aws.ecr.image.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetRegion()).ToDataRes(types.String)
@@ -21167,6 +21173,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.instance.resourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.ssm.instance.ec2Instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetEc2Instance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
+	"aws.ssm.instance.registeredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetRegisteredAt()).ToDataRes(types.Time)
+	},
+	"aws.ssm.instance.isLatestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetIsLatestVersion()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
@@ -55454,6 +55469,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrImage).MediaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.image.artifactMediaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).ArtifactMediaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrImage).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -55464,6 +55483,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecr.image.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrImage).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Repository, ok = plugin.RawToTValue[*mqlAwsEcrRepository](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57564,6 +57587,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.instance.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmInstance).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.ec2Instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).Ec2Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.registeredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).RegisteredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.isLatestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).IsLatestVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133296,9 +133331,11 @@ type mqlAwsEcrImage struct {
 	mqlAwsEcrImageInternal
 	Digest                    plugin.TValue[string]
 	MediaType                 plugin.TValue[string]
+	ArtifactMediaType         plugin.TValue[string]
 	Tags                      plugin.TValue[[]any]
 	RegistryId                plugin.TValue[string]
 	RepoName                  plugin.TValue[string]
+	Repository                plugin.TValue[*mqlAwsEcrRepository]
 	Region                    plugin.TValue[string]
 	Arn                       plugin.TValue[string]
 	Uri                       plugin.TValue[string]
@@ -133355,6 +133392,10 @@ func (c *mqlAwsEcrImage) GetMediaType() *plugin.TValue[string] {
 	return &c.MediaType
 }
 
+func (c *mqlAwsEcrImage) GetArtifactMediaType() *plugin.TValue[string] {
+	return &c.ArtifactMediaType
+}
+
 func (c *mqlAwsEcrImage) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
 }
@@ -133365,6 +133406,22 @@ func (c *mqlAwsEcrImage) GetRegistryId() *plugin.TValue[string] {
 
 func (c *mqlAwsEcrImage) GetRepoName() *plugin.TValue[string] {
 	return &c.RepoName
+}
+
+func (c *mqlAwsEcrImage) GetRepository() *plugin.TValue[*mqlAwsEcrRepository] {
+	return plugin.GetOrCompute[*mqlAwsEcrRepository](&c.Repository, func() (*mqlAwsEcrRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.image", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
 }
 
 func (c *mqlAwsEcrImage) GetRegion() *plugin.TValue[string] {
@@ -138340,6 +138397,9 @@ type mqlAwsSsmInstance struct {
 	SourceId            plugin.TValue[string]
 	ActivationId        plugin.TValue[string]
 	ResourceType        plugin.TValue[string]
+	Ec2Instance         plugin.TValue[*mqlAwsEc2Instance]
+	RegisteredAt        plugin.TValue[*time.Time]
+	IsLatestVersion     plugin.TValue[bool]
 }
 
 // createAwsSsmInstance creates a new instance of this resource
@@ -138481,6 +138541,30 @@ func (c *mqlAwsSsmInstance) GetActivationId() *plugin.TValue[string] {
 
 func (c *mqlAwsSsmInstance) GetResourceType() *plugin.TValue[string] {
 	return &c.ResourceType
+}
+
+func (c *mqlAwsSsmInstance) GetEc2Instance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Ec2Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.instance", c.__id, "ec2Instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.ec2Instance()
+	})
+}
+
+func (c *mqlAwsSsmInstance) GetRegisteredAt() *plugin.TValue[*time.Time] {
+	return &c.RegisteredAt
+}
+
+func (c *mqlAwsSsmInstance) GetIsLatestVersion() *plugin.TValue[bool] {
+	return &c.IsLatestVersion
 }
 
 // mqlAwsEc2 for the aws.ec2 resource

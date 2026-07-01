@@ -13716,12 +13716,16 @@ private aws.ecr.image @defaults("uri region") {
   digest string
   // Type of image manifest
   mediaType string
+  // Media type of the artifact, when the image is an attached artifact rather than a container image (for example an SBOM or signature)
+  artifactMediaType string
   // List of tags associated with image
   tags []string
   // AWS account ID associated with public registry for this image
   registryId string
   // Name of the repository for the image
   repoName string
+  // ECR repository that contains the image
+  repository() aws.ecr.repository
   // Region where the ECR image is located
   region string
   // ARN for the image
@@ -15026,6 +15030,12 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   activationId string
   // Type of the managed resource: EC2Instance or ManagedInstance
   resourceType string
+  // EC2 instance backing this managed node, when it is an EC2 instance rather than a hybrid/on-premises node
+  ec2Instance() aws.ec2.instance
+  // Time the managed node was registered with Systems Manager
+  registeredAt time
+  // Whether the instance is running the latest version of the SSM Agent
+  isLatestVersion bool
 }
 
 // Amazon Elastic Compute Cloud (EC2)

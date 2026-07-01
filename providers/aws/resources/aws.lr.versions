@@ -3507,6 +3507,7 @@ aws.ec2.vpnconnection.vpnGateway 13.6.3
 aws.ecr 11.15.2
 aws.ecr.image 11.15.2
 aws.ecr.image.arn 11.15.2
+aws.ecr.image.artifactMediaType 13.39.2
 aws.ecr.image.digest 11.15.2
 aws.ecr.image.lastRecordedPullTime 11.15.2
 aws.ecr.image.mediaType 11.15.2
@@ -3514,6 +3515,7 @@ aws.ecr.image.pushedAt 11.15.2
 aws.ecr.image.region 11.15.2
 aws.ecr.image.registryId 11.15.2
 aws.ecr.image.repoName 11.15.2
+aws.ecr.image.repository 13.39.2
 aws.ecr.image.scanFinding 13.12.1
 aws.ecr.image.scanFinding.attributes 13.12.1
 aws.ecr.image.scanFinding.description 13.12.1
@@ -9414,9 +9416,11 @@ aws.ssm.instance.agentVersion 11.15.2
 aws.ssm.instance.arn 11.15.2
 aws.ssm.instance.cloudformationStack 13.39.2
 aws.ssm.instance.computerName 11.15.2
+aws.ssm.instance.ec2Instance 13.39.2
 aws.ssm.instance.iamRole 13.38.2
 aws.ssm.instance.instanceId 11.15.2
 aws.ssm.instance.ipAddress 11.15.2
+aws.ssm.instance.isLatestVersion 13.39.2
 aws.ssm.instance.lastPingedAt 11.15.2
 aws.ssm.instance.managedBy 13.39.2
 aws.ssm.instance.pingStatus 11.15.2
@@ -9424,6 +9428,7 @@ aws.ssm.instance.platformName 11.15.2
 aws.ssm.instance.platformType 11.15.2
 aws.ssm.instance.platformVersion 11.15.2
 aws.ssm.instance.region 11.15.2
+aws.ssm.instance.registeredAt 13.39.2
 aws.ssm.instance.resourceType 13.38.2
 aws.ssm.instance.sourceId 13.38.2
 aws.ssm.instance.sourceType 13.38.2

@@ -273,14 +273,15 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				}
 				mqlImage, err := CreateResource(a.MqlRuntime, ResourceAwsEcrImage,
 					map[string]*llx.RawData{
-						"digest":     llx.StringDataPtr(image.ImageDigest),
-						"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
-						"tags":       llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
-						"registryId": llx.StringDataPtr(image.RegistryId),
-						"repoName":   llx.StringData(name),
-						"region":     llx.StringData(region),
-						"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
-						"uri":        llx.StringData(uri),
+						"digest":            llx.StringDataPtr(image.ImageDigest),
+						"mediaType":         llx.StringDataPtr(image.ImageManifestMediaType),
+						"artifactMediaType": llx.StringDataPtr(image.ArtifactMediaType),
+						"tags":              llx.ArrayData(toInterfaceArr(image.ImageTags), types.String),
+						"registryId":        llx.StringDataPtr(image.RegistryId),
+						"repoName":          llx.StringData(name),
+						"region":            llx.StringData(region),
+						"arn":               llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToValue(image.RegistryId), RepoName: name, Digest: convert.ToValue(image.ImageDigest)})),
+						"uri":               llx.StringData(uri),
 					})
 				if err != nil {
 					return nil, err
@@ -315,6 +316,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 					"digest":               llx.StringDataPtr(image.ImageDigest),
 					"lastRecordedPullTime": llx.TimeDataPtr(image.LastRecordedPullTime),
 					"mediaType":            llx.StringDataPtr(image.ImageManifestMediaType),
+					"artifactMediaType":    llx.StringDataPtr(image.ArtifactMediaType),
 					"pushedAt":             llx.TimeDataPtr(image.ImagePushedAt),
 					"region":               llx.StringData(region),
 					"registryId":           llx.StringDataPtr(image.RegistryId),
@@ -480,6 +482,24 @@ func ecrImageArn(i ImageInfo) string {
 
 func EcrImageName(i ImageInfo) string {
 	return i.RepoName + "@" + i.Digest
+}
+
+func (a *mqlAwsEcrImage) repository() (*mqlAwsEcrRepository, error) {
+	repoName := a.RepoName.Data
+	if repoName == "" {
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	arnVal := fmt.Sprintf("arn:aws:ecr:%s:%s:repository/%s", a.Region.Data, a.RegistryId.Data, repoName)
+	res, err := NewResource(a.MqlRuntime, "aws.ecr.repository",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		// Public-gallery images and cross-account repositories won't resolve to a
+		// repository in this account; leave the reference null rather than failing.
+		a.Repository.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return res.(*mqlAwsEcrRepository), nil
 }
 
 func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
