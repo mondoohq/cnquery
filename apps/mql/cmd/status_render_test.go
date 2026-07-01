@@ -241,14 +241,18 @@ func TestRenderCli_PlatformSection_ClientBehindWarns(t *testing.T) {
 	assert.Contains(t, out, "version mismatch")
 }
 
-func TestRenderCli_PlatformSection_UnstableClientWarns(t *testing.T) {
+func TestRenderCli_PlatformSection_UnstableClientIsNotAWarning(t *testing.T) {
 	s := healthyRegisteredStatus()
-	s.Client.APIVersion = "unstable" // dev build can't be compared numerically
+	s.Client.APIVersion = "unstable" // local dev build, no version stamped in
 	s.Upstream.API.Version = "13"
 
 	out := s.RenderCli(RenderOptions{Color: false})
 
-	assert.Contains(t, out, "version mismatch")
+	// A dev build is expected to run against any released platform, so it must
+	// not be flagged as a mismatch; it's surfaced as a healthy dev build with
+	// the same ✓ treatment as an in-sync production release.
+	assert.NotContains(t, out, "version mismatch")
+	assert.Contains(t, out, "✓ dev build")
 }
 
 func TestRenderCli_PlatformSection_NotRegisteredShowsLoginHint(t *testing.T) {

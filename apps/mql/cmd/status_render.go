@@ -168,13 +168,18 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 	}
 	sync := st.ok("✓ in sync")
 	if s.Upstream.API.Version != s.Client.APIVersion {
-		// A client running a newer API version than the server is expected
-		// during a staged rollout (the CLI updates ahead of the platform) and
-		// is not a problem, so only flag a mismatch when the client trails the
-		// server (or the versions can't be compared numerically).
-		if clientAPINewer(s.Client.APIVersion, s.Upstream.API.Version) {
+		// A development build reports its API version as "unstable" and is
+		// expected to run against any released platform, so it never counts as
+		// a mismatch. A client running a newer API version than the server is
+		// likewise fine during a staged rollout (the CLI updates ahead of the
+		// platform), so only flag a mismatch when the client trails the server
+		// (or the versions can't be compared numerically).
+		switch {
+		case s.Client.APIVersion == "unstable":
+			sync = st.ok("✓ dev build")
+		case clientAPINewer(s.Client.APIVersion, s.Upstream.API.Version):
 			sync = st.ok("✓ client ahead")
-		} else {
+		default:
 			sync = st.warn("⚠ version mismatch")
 		}
 	}
