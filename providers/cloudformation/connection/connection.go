@@ -22,7 +22,7 @@ type CloudformationConnection struct {
 	asset *inventory.Asset
 	// Add custom connection fields here
 	path        string
-	content     []byte
+	content     string
 	cftTemplate cft.Template
 }
 
@@ -46,7 +46,10 @@ func NewCloudformationConnection(id uint32, asset *inventory.Asset, conf *invent
 	if err != nil {
 		return nil, err
 	}
-	conn.content = data
+	// Convert to a string once here; nodeContext extracts source ranges from it
+	// for every resource/output/parameter, and a per-call []byte->string copy of
+	// a large template would be wasteful.
+	conn.content = string(data)
 
 	cftTemplate, err := parse.Reader(bytes.NewReader(data))
 	if err != nil {
@@ -77,8 +80,10 @@ func (c *CloudformationConnection) Path() string {
 	return c.path
 }
 
-// Content returns the raw bytes of the template file, used to extract the
-// source text a resource/output/parameter spans for file-context.
-func (c *CloudformationConnection) Content() []byte {
+// Content returns the raw text of the template file, used to extract the
+// source text a resource/output/parameter spans for file-context. The string
+// is converted once at connection time so repeated range extractions don't
+// each re-copy the whole template.
+func (c *CloudformationConnection) Content() string {
 	return c.content
 }

@@ -309,7 +309,7 @@ func (r *mqlCloudformationTemplate) nodeContext(keyNode, valueNode *yaml.Node) (
 		end = start
 	}
 	rnge := llx.NewRange().AddLineRange(start, end)
-	content := rnge.ExtractString(string(conn.Content()), llx.DefaultExtractConfig)
+	content := rnge.ExtractString(conn.Content(), llx.DefaultExtractConfig)
 
 	cobj, err := CreateResource(r.MqlRuntime, "cloudformation.context", map[string]*llx.RawData{
 		"path":    llx.StringData(conn.Path()),
@@ -334,11 +334,7 @@ func (r *mqlCloudformationContext) content(path string, rnge llx.Range) (string,
 		return "", errors.New("no path information for cloudformation.context")
 	}
 	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
-	src := conn.Content()
-	if src == nil {
-		return "", errors.New("missing cloudformation template source in cache")
-	}
-	return rnge.ExtractString(string(src), llx.DefaultExtractConfig), nil
+	return rnge.ExtractString(conn.Content(), llx.DefaultExtractConfig), nil
 }
 
 // context is populated at creation for each block, so these fallback resolvers
