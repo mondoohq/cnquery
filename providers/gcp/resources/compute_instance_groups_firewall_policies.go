@@ -89,6 +89,9 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkUrl.Error != nil {
+		return nil, g.NetworkUrl.Error
+	}
 	net, err := getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
 	if err != nil {
 		return nil, err
