@@ -338,17 +338,22 @@ func (r *mqlCloudformationContext) content(path string, rnge llx.Range) (string,
 }
 
 // context is populated at creation for each block, so these fallback resolvers
-// only run if a resource was built without one.
+// only run if a resource was built without one (e.g. from a recording that
+// predates the field). Mark the field null rather than erroring so a query
+// touching .context resolves to null instead of failing.
 func (x *mqlCloudformationResource) context() (*mqlCloudformationContext, error) {
-	return nil, errors.New("context was not provided for cloudformation.resource")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlCloudformationOutput) context() (*mqlCloudformationContext, error) {
-	return nil, errors.New("context was not provided for cloudformation.output")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlCloudformationParameter) context() (*mqlCloudformationContext, error) {
-	return nil, errors.New("context was not provided for cloudformation.parameter")
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
