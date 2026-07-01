@@ -269,6 +269,7 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"tracingMode":                 llx.StringData(tracingMode),
 		"packageType":                 llx.StringData(string(function.PackageType)),
 		"codeSha256":                  llx.StringDataPtr(function.CodeSha256),
+		"revisionId":                  llx.StringDataPtr(function.RevisionId),
 		"description":                 llx.StringDataPtr(function.Description),
 		"lastModifiedAt":              llx.TimeDataPtr(lastModifiedAt),
 		"state":                       llx.StringData(string(function.State)),

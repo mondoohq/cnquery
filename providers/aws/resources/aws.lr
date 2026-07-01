@@ -14544,6 +14544,8 @@ private aws.lambda.function @defaults("arn") {
   packageType string
   // SHA-256 hash of the function deployment package
   codeSha256 string
+  // Latest revision of the function's configuration and code, updated on every change
+  revisionId string
   // Human-readable description of the function
   description string
   // When the function was last updated

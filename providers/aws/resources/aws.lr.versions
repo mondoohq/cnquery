@@ -6016,6 +6016,7 @@ aws.lambda.function.provisionedConcurrencyConfigs 11.15.2
 aws.lambda.function.recursiveLoop 13.29.1
 aws.lambda.function.region 11.15.2
 aws.lambda.function.resolvedImageUri 13.26.2
+aws.lambda.function.revisionId 13.39.2
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
 aws.lambda.function.runtimeManagementConfig 13.6.3

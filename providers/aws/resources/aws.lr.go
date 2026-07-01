@@ -20586,6 +20586,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.codeSha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetCodeSha256()).ToDataRes(types.String)
 	},
+	"aws.lambda.function.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetRevisionId()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetDescription()).ToDataRes(types.String)
 	},
@@ -56625,6 +56628,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.codeSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).CodeSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -136053,6 +136060,7 @@ type mqlAwsLambdaFunction struct {
 	TracingMode                   plugin.TValue[string]
 	PackageType                   plugin.TValue[string]
 	CodeSha256                    plugin.TValue[string]
+	RevisionId                    plugin.TValue[string]
 	Description                   plugin.TValue[string]
 	LastModifiedAt                plugin.TValue[*time.Time]
 	UrlConfig                     plugin.TValue[*mqlAwsLambdaFunctionUrlConfig]
@@ -136316,6 +136324,10 @@ func (c *mqlAwsLambdaFunction) GetPackageType() *plugin.TValue[string] {
 
 func (c *mqlAwsLambdaFunction) GetCodeSha256() *plugin.TValue[string] {
 	return &c.CodeSha256
+}
+
+func (c *mqlAwsLambdaFunction) GetRevisionId() *plugin.TValue[string] {
+	return &c.RevisionId
 }
 
 func (c *mqlAwsLambdaFunction) GetDescription() *plugin.TValue[string] {
