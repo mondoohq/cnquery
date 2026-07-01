@@ -70,25 +70,36 @@ func (a *mqlAwsEc2Snapshot) cloudformationStack() (*mqlAwsCloudformationStack, e
 	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
 }
 
+// managedByWithCreationToken augments the tag-based owner with an EFS-specific
+// Terraform fallback. Terraform injects no provenance tag, but when
+// creation_token is left unset the Terraform AWS provider auto-generates one
+// with a "terraform-" prefix, which is the only managed-by signal it leaves.
+// The tag-based owner always wins when present.
+func managedByWithCreationToken(tagOwner, creationToken string) string {
+	if tagOwner != "" {
+		return tagOwner
+	}
+	if strings.HasPrefix(creationToken, "terraform-") {
+		return "terraform"
+	}
+	return ""
+}
+
 func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {
 	owner, err := managedByFromResourceTags(a.GetTags())
 	if err != nil {
 		return "", err
 	}
+	// A definitive tag-based owner short-circuits before touching the creation
+	// token, so a token resolution error never masks a known owner.
 	if owner != "" {
 		return owner, nil
 	}
-	// Terraform injects no provenance tag, but when creation_token is left
-	// unset the Terraform AWS provider auto-generates one with a "terraform-"
-	// prefix. Fall back to that heuristic only when no tag-based owner matched.
 	ct := a.GetCreationToken()
 	if ct.Error != nil {
 		return "", ct.Error
 	}
-	if strings.HasPrefix(ct.Data, "terraform-") {
-		return "terraform", nil
-	}
-	return "", nil
+	return managedByWithCreationToken(owner, ct.Data), nil
 }
 
 func (a *mqlAwsEfsFilesystem) cloudformationStack() (*mqlAwsCloudformationStack, error) {
