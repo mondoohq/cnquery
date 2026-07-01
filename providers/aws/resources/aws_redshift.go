@@ -149,7 +149,6 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"expectedNextSnapshotScheduleStatus": llx.StringDataPtr(cluster.ExpectedNextSnapshotScheduleTimeStatus),
 							"snapshotScheduleState":              llx.StringData(string(cluster.SnapshotScheduleState)),
 							"customDomainName":                   llx.StringDataPtr(cluster.CustomDomainName),
-							"customDomainCertificateArn":         llx.StringDataPtr(cluster.CustomDomainCertificateArn),
 							"customDomainCertificateExpiresAt":   llx.TimeDataPtr(cluster.CustomDomainCertificateExpiryDate),
 							"availabilityZoneRelocationStatus":   llx.StringDataPtr(cluster.AvailabilityZoneRelocationStatus),
 							"elasticIp":                          llx.StringData(elasticIp),
@@ -197,6 +196,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					mqlCluster.cacheMasterPasswordSecretKmsKey = cluster.MasterPasswordSecretKmsKeyId
 					mqlCluster.cacheDefaultIamRoleArn = cluster.DefaultIamRoleArn
 					mqlCluster.cacheMasterPasswordSecretArn = cluster.MasterPasswordSecretArn
+					mqlCluster.cacheCustomDomainCertificateArn = cluster.CustomDomainCertificateArn
 					iamRoleArns := make([]string, 0, len(cluster.IamRoles))
 					for _, role := range cluster.IamRoles {
 						if role.IamRoleArn != nil && *role.IamRoleArn != "" {
@@ -241,6 +241,7 @@ type mqlAwsRedshiftClusterInternal struct {
 	cacheIamRoleArns                []string
 	cacheDefaultIamRoleArn          *string
 	cacheMasterPasswordSecretArn    *string
+	cacheCustomDomainCertificateArn *string
 }
 
 // redshiftRestoreProgressPercent computes how far a restore-from-snapshot has
@@ -344,6 +345,19 @@ func (a *mqlAwsRedshiftCluster) masterPasswordSecret() (*mqlAwsSecretsmanagerSec
 
 func (a *mqlAwsRedshiftCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsRedshiftCluster) customDomainCertificate() (*mqlAwsAcmCertificate, error) {
+	if a.cacheCustomDomainCertificateArn == nil || *a.cacheCustomDomainCertificateArn == "" {
+		a.CustomDomainCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheCustomDomainCertificateArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
 }
 
 func (a *mqlAwsRedshiftCluster) managedBy() (string, error) {

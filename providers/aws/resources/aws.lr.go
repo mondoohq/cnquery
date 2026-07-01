@@ -18465,8 +18465,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.customDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainName()).ToDataRes(types.String)
 	},
-	"aws.redshift.cluster.customDomainCertificateArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainCertificateArn()).ToDataRes(types.String)
+	"aws.redshift.cluster.customDomainCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
 	"aws.redshift.cluster.customDomainCertificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainCertificateExpiresAt()).ToDataRes(types.Time)
@@ -53559,8 +53559,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftCluster).CustomDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.redshift.cluster.customDomainCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).CustomDomainCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.redshift.cluster.customDomainCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CustomDomainCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.customDomainCertificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -128357,7 +128357,7 @@ type mqlAwsRedshiftCluster struct {
 	SnapshotScheduleState              plugin.TValue[string]
 	SecurityGroups                     plugin.TValue[[]any]
 	CustomDomainName                   plugin.TValue[string]
-	CustomDomainCertificateArn         plugin.TValue[string]
+	CustomDomainCertificate            plugin.TValue[*mqlAwsAcmCertificate]
 	CustomDomainCertificateExpiresAt   plugin.TValue[*time.Time]
 	AvailabilityZoneRelocationStatus   plugin.TValue[string]
 	ElasticIp                          plugin.TValue[string]
@@ -128760,8 +128760,20 @@ func (c *mqlAwsRedshiftCluster) GetCustomDomainName() *plugin.TValue[string] {
 	return &c.CustomDomainName
 }
 
-func (c *mqlAwsRedshiftCluster) GetCustomDomainCertificateArn() *plugin.TValue[string] {
-	return &c.CustomDomainCertificateArn
+func (c *mqlAwsRedshiftCluster) GetCustomDomainCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.CustomDomainCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "customDomainCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.customDomainCertificate()
+	})
 }
 
 func (c *mqlAwsRedshiftCluster) GetCustomDomainCertificateExpiresAt() *plugin.TValue[*time.Time] {

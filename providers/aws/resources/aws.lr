@@ -12536,7 +12536,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // Custom domain name configured for the cluster endpoint
   customDomainName string
   // ACM certificate backing the custom domain
-  customDomainCertificateArn string
+  customDomainCertificate() aws.acm.certificate
   // Expiration date of the custom domain certificate
   customDomainCertificateExpiresAt time
   // Status of Availability Zone relocation for the cluster

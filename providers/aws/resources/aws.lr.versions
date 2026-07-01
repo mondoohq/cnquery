@@ -7458,7 +7458,7 @@ aws.redshift.cluster.clusterSubnetGroupName 11.15.2
 aws.redshift.cluster.clusterVersion 11.15.2
 aws.redshift.cluster.createdAt 11.15.2
 aws.redshift.cluster.crossRegionSnapshotCopyEnabled 13.39.2
-aws.redshift.cluster.customDomainCertificateArn 13.39.2
+aws.redshift.cluster.customDomainCertificate 13.39.2
 aws.redshift.cluster.customDomainCertificateExpiresAt 13.39.2
 aws.redshift.cluster.customDomainName 13.39.2
 aws.redshift.cluster.dbName 11.15.2
