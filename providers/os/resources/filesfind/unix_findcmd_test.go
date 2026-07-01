@@ -71,13 +71,12 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			ExpectedCmd: "find -L \"/etc\" -xdev -type f -regex '.*\\.conf$' -perm -0",
 		},
 		{
-			// Because we run `find -L` (follow symlinks), `-type l` only matches
-			// dangling links — valid links are resolved to their target's type.
-			// `-xtype l` matches the symlink itself regardless of its target, so
-			// `files.find(type: "link")` returns every symlink as users expect.
+			// -H follows only command-line symlinks so -type l still works,
+			// unlike -L which resolves all links (breaking -type l) and
+			// -xtype l which is GNU-only (absent on BSD/macOS find).
 			From:        "/home/user",
 			FileType:    "link",
-			ExpectedCmd: "find -L \"/home/user\" -xdev -xtype l -perm -0",
+			ExpectedCmd: "find -H \"/home/user\" -xdev -type l -perm -0",
 		},
 	}
 

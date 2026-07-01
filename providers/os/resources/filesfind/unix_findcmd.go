@@ -31,7 +31,23 @@ func shellSingleQuote(s string) string {
 
 func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64) string {
 	var call strings.Builder
-	call.WriteString("find -L ")
+
+	isLinkSearch := false
+	if fileType != "" {
+		if t, ok := findTypes[fileType]; ok && t == "l" {
+			isLinkSearch = true
+		}
+	}
+
+	// -L follows all symlinks, so -type l only matches dangling ones.
+	// -xtype l fixes that on GNU find but is absent on BSD (macOS).
+	// -H follows only command-line symlinks (resolving the start path)
+	// while keeping -type l functional for discovered symlinks.
+	if isLinkSearch {
+		call.WriteString("find -H ")
+	} else {
+		call.WriteString("find -L ")
+	}
 	call.WriteString(strconv.Quote(from))
 
 	if !xdev {
@@ -41,15 +57,7 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	if fileType != "" {
 		t, ok := findTypes[fileType]
 		if ok {
-			// We run `find -L`, which follows symlinks. Under -L, `-type l`
-			// only matches dangling links because valid links are resolved to
-			// their target's type. `-xtype l` matches the symlink itself
-			// regardless of where it points, so searching for links works.
-			if t == "l" {
-				call.WriteString(" -xtype l")
-			} else {
-				call.WriteString(" -type " + t)
-			}
+			call.WriteString(" -type " + t)
 		}
 	}
 
