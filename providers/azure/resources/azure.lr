@@ -3606,7 +3606,19 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // Storage account properties
   properties dict
   // Storage account identity
-  identity dict
+  //
+  // Deprecated in favor of principalId, tenantId, userAssignedIdentities,
+  // and encryptionIdentity, which expose the managed identity configuration
+  // as typed accessors.
+  identity @maturity("deprecated") dict
+  // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the account's managed identity; empty when no managed identity is configured
+  tenantId string
+  // User-assigned managed identities attached to the storage account
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // User-assigned managed identity used to access the customer-managed encryption key; null when account-level encryption identity is not configured
+  encryptionIdentity() azure.subscription.managedIdentity
   // Storage account SKU
   sku dict
   // Storage account kind
@@ -8469,7 +8481,16 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   // SKU name ("Basic", "Standard", or "Premium")
   skuName string
   // Identity configuration
-  identity dict
+  //
+  // Deprecated in favor of principalId, tenantId, and userAssignedIdentities,
+  // which expose the managed identity configuration as typed accessors.
+  identity @maturity("deprecated") dict
+  // Principal ID of the registry's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // Tenant ID of the registry's managed identity; empty when no managed identity is configured
+  tenantId string
+  // User-assigned managed identities attached to the registry
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether admin user is enabled
   adminUserEnabled bool
   // Whether registry-wide pull from unauthenticated clients is enabled

@@ -25,6 +25,7 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryInternal struct {
 	cacheEncryption                 *armcontainerregistry.EncryptionProperty
 	cachePrivateEndpointConnections []*armcontainerregistry.PrivateEndpointConnection
 	cacheSystemData                 any
+	cacheUserAssignedIdentityIds    []string
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryTokenInternal struct {
@@ -146,6 +147,13 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 	if err != nil {
 		return nil, err
 	}
+	var regPrincipalId, regTenantId *string
+	var userAssignedIdentityIds []string
+	if reg.Identity != nil {
+		regPrincipalId = reg.Identity.PrincipalID
+		regTenantId = reg.Identity.TenantID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(reg.Identity.UserAssignedIdentities)
+	}
 
 	var skuName string
 	if reg.SKU != nil && reg.SKU.Name != nil {
@@ -193,6 +201,8 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 			"tags":                             llx.MapData(convert.PtrMapStrToInterface(reg.Tags), types.String),
 			"skuName":                          llx.StringData(skuName),
 			"identity":                         llx.DictData(identity),
+			"principalId":                      llx.StringDataPtr(regPrincipalId),
+			"tenantId":                         llx.StringDataPtr(regTenantId),
 			"adminUserEnabled":                 llx.BoolDataPtr(props.AdminUserEnabled),
 			"anonymousPullEnabled":             llx.BoolDataPtr(props.AnonymousPullEnabled),
 			"networkRuleBypassAllowedForTasks": llx.BoolDataPtr(props.NetworkRuleBypassAllowedForTasks),
@@ -214,6 +224,7 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 	mqlReg.cachePolicies = props.Policies
 	mqlReg.cacheEncryption = props.Encryption
 	mqlReg.cachePrivateEndpointConnections = props.PrivateEndpointConnections
+	mqlReg.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(reg.SystemData)
 	if err != nil {
 		return nil, err
@@ -221,6 +232,10 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 	mqlReg.cacheSystemData = sysData
 
 	return mqlReg, nil
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 // networkRuleSet builds the network rule set sub-resource from cached data.

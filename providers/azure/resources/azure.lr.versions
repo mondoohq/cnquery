@@ -1536,6 +1536,7 @@ azure.subscription.containerRegistryService.registry.policies.retentionPolicyDay
 azure.subscription.containerRegistryService.registry.policies.retentionPolicyEnabled 13.3.3
 azure.subscription.containerRegistryService.registry.policies.trustPolicyEnabled 13.3.3
 azure.subscription.containerRegistryService.registry.policies.trustPolicyType 13.3.3
+azure.subscription.containerRegistryService.registry.principalId 13.23.1
 azure.subscription.containerRegistryService.registry.privateEndpointConnections 13.3.3
 azure.subscription.containerRegistryService.registry.provisioningState 13.3.3
 azure.subscription.containerRegistryService.registry.publicNetworkAccess 13.3.3
@@ -1562,6 +1563,7 @@ azure.subscription.containerRegistryService.registry.scopeMaps 13.3.3
 azure.subscription.containerRegistryService.registry.skuName 13.3.3
 azure.subscription.containerRegistryService.registry.systemMetadata 13.19.2
 azure.subscription.containerRegistryService.registry.tags 13.3.3
+azure.subscription.containerRegistryService.registry.tenantId 13.23.1
 azure.subscription.containerRegistryService.registry.token 13.3.3
 azure.subscription.containerRegistryService.registry.token.certificates 13.3.3
 azure.subscription.containerRegistryService.registry.token.creationDate 13.3.3
@@ -1574,6 +1576,7 @@ azure.subscription.containerRegistryService.registry.token.status 13.3.3
 azure.subscription.containerRegistryService.registry.token.type 13.3.3
 azure.subscription.containerRegistryService.registry.tokens 13.3.3
 azure.subscription.containerRegistryService.registry.type 13.3.3
+azure.subscription.containerRegistryService.registry.userAssignedIdentities 13.23.1
 azure.subscription.containerRegistryService.registry.webhook 13.3.3
 azure.subscription.containerRegistryService.registry.webhook.actions 13.3.3
 azure.subscription.containerRegistryService.registry.webhook.id 13.3.3
@@ -4409,6 +4412,7 @@ azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDat
 azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatus 13.11.2
 azure.subscription.storageService.account.enableHttpsTrafficOnly 11.4.28
 azure.subscription.storageService.account.enableNfsV3 11.6.2
+azure.subscription.storageService.account.encryptionIdentity 13.23.1
 azure.subscription.storageService.account.encryptionKey 13.1.8
 azure.subscription.storageService.account.encryptionKeySource 13.1.8
 azure.subscription.storageService.account.encryptionScope 13.3.3
@@ -4540,6 +4544,7 @@ azure.subscription.storageService.account.objectReplicationPolicy.sourceAccount 
 azure.subscription.storageService.account.objectReplicationPolicy.tagsReplicationEnabled 13.12.2
 azure.subscription.storageService.account.objectReplicationPolicy.type 13.10.2
 azure.subscription.storageService.account.primaryLocation 11.6.2
+azure.subscription.storageService.account.principalId 13.23.1
 azure.subscription.storageService.account.privateEndpointConnection 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.actionsRequired 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.description 13.10.2
@@ -4612,7 +4617,9 @@ azure.subscription.storageService.account.table.signedIdentifiers 13.10.2
 azure.subscription.storageService.account.tableProperties 9.0.1
 azure.subscription.storageService.account.tables 13.10.2
 azure.subscription.storageService.account.tags 9.0.1
+azure.subscription.storageService.account.tenantId 13.23.1
 azure.subscription.storageService.account.type 9.0.1
+azure.subscription.storageService.account.userAssignedIdentities 13.23.1
 azure.subscription.storageService.accounts 9.0.1
 azure.subscription.storageService.subscriptionId 9.0.1
 azure.subscription.subscriptionId 11.4.28

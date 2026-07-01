@@ -6034,6 +6034,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetIdentity()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.storageService.account.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.storageService.account.encryptionIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetEncryptionIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.storageService.account.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSku()).ToDataRes(types.Dict)
 	},
@@ -11697,6 +11709,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.containerRegistryService.registry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.containerRegistryService.registry.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.containerRegistryService.registry.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.containerRegistryService.registry.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
 	"azure.subscription.containerRegistryService.registry.adminUserEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).GetAdminUserEnabled()).ToDataRes(types.Bool)
@@ -21404,6 +21425,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).EncryptionIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -29658,6 +29695,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.containerRegistryService.registry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerRegistryService.registry.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerRegistryService.registry.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerRegistryService.registry.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistry).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerRegistryService.registry.adminUserEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48664,6 +48713,10 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	Type                                             plugin.TValue[string]
 	Properties                                       plugin.TValue[any]
 	Identity                                         plugin.TValue[any]
+	PrincipalId                                      plugin.TValue[string]
+	TenantId                                         plugin.TValue[string]
+	UserAssignedIdentities                           plugin.TValue[[]any]
+	EncryptionIdentity                               plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	Sku                                              plugin.TValue[any]
 	Kind                                             plugin.TValue[string]
 	MinimumTlsVersion                                plugin.TValue[string]
@@ -48789,6 +48842,46 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetProperties() *plugin.TVal
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetEncryptionIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.EncryptionIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "encryptionIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.encryptionIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetSku() *plugin.TValue[any] {
@@ -68561,6 +68654,9 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistry struct {
 	Tags                             plugin.TValue[map[string]any]
 	SkuName                          plugin.TValue[string]
 	Identity                         plugin.TValue[any]
+	PrincipalId                      plugin.TValue[string]
+	TenantId                         plugin.TValue[string]
+	UserAssignedIdentities           plugin.TValue[[]any]
 	AdminUserEnabled                 plugin.TValue[bool]
 	AnonymousPullEnabled             plugin.TValue[bool]
 	NetworkRuleBypassAllowedForTasks plugin.TValue[bool]
@@ -68649,6 +68745,30 @@ func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetSkuName() *plu
 
 func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.containerRegistryService.registry", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
 }
 
 func (c *mqlAzureSubscriptionContainerRegistryServiceRegistry) GetAdminUserEnabled() *plugin.TValue[bool] {
