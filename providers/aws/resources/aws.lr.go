@@ -19620,6 +19620,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetEncryptionType()).ToDataRes(types.String)
 	},
+	"aws.ecr.repository.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.ecr.repository.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -55324,6 +55327,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecr.repository.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.repository.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -132919,6 +132926,7 @@ type mqlAwsEcrRepository struct {
 	ImageScanOnPush     plugin.TValue[bool]
 	ImageTagMutability  plugin.TValue[string]
 	EncryptionType      plugin.TValue[string]
+	KmsKey              plugin.TValue[*mqlAwsKmsKey]
 	CreatedAt           plugin.TValue[*time.Time]
 	ScanningFrequency   plugin.TValue[string]
 	Policy              plugin.TValue[any]
@@ -133022,6 +133030,22 @@ func (c *mqlAwsEcrRepository) GetImageTagMutability() *plugin.TValue[string] {
 
 func (c *mqlAwsEcrRepository) GetEncryptionType() *plugin.TValue[string] {
 	return &c.EncryptionType
+}
+
+func (c *mqlAwsEcrRepository) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.repository", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsEcrRepository) GetCreatedAt() *plugin.TValue[*time.Time] {

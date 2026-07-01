@@ -572,8 +572,10 @@ func buildEcrPrivateRepositoryResource(runtime *plugin.Runtime, region string, r
 		imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
 	}
 	var encryptionType string
+	var kmsKeyArn *string
 	if r.EncryptionConfiguration != nil {
 		encryptionType = string(r.EncryptionConfiguration.EncryptionType)
+		kmsKeyArn = r.EncryptionConfiguration.KmsKey
 	}
 	mqlRepoResource, err := CreateResource(runtime, ResourceAwsEcrRepository,
 		map[string]*llx.RawData{
@@ -591,7 +593,9 @@ func buildEcrPrivateRepositoryResource(runtime *plugin.Runtime, region string, r
 	if err != nil {
 		return nil, err
 	}
-	return mqlRepoResource.(*mqlAwsEcrRepository), nil
+	res := mqlRepoResource.(*mqlAwsEcrRepository)
+	res.cacheKmsKeyArn = kmsKeyArn
+	return res, nil
 }
 
 func buildEcrPublicRepositoryResource(runtime *plugin.Runtime, r ecrpublic_types.Repository) (*mqlAwsEcrRepository, error) {
@@ -621,6 +625,20 @@ type mqlAwsEcrRepositoryInternal struct {
 	catalogFetched bool
 	catalogData    *ecrpublic_types.RepositoryCatalogData
 	catalogLock    sync.Mutex
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsEcrRepository) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcrRepository) fetchCatalogData() (*ecrpublic_types.RepositoryCatalogData, error) {

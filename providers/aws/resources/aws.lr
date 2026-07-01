@@ -13644,6 +13644,8 @@ private aws.ecr.repository @defaults("uri region") {
   imageTagMutability string
   // Encryption type for images at rest (AES256, KMS, or KMS_DSSE)
   encryptionType string
+  // KMS key protecting images at rest, when encryptionType is KMS or KMS_DSSE
+  kmsKey() aws.kms.key
   // When the repository was created
   createdAt time
   // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
