@@ -98,6 +98,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]any, error) {
 				"comment":                llx.StringData(comment),
 				"tags":                   llx.MapData(tags, types.String),
 				"config":                 llx.DictData(config),
+				"callerReference":        llx.StringData(convert.ToValue(hz.CallerReference)),
 			})
 		if err != nil {
 			return nil, err

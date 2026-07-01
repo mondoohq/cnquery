@@ -7668,6 +7668,7 @@ aws.route53.healthCheck.type 11.15.3
 aws.route53.healthChecks 11.15.3
 aws.route53.hostedZone 11.15.3
 aws.route53.hostedZone.arn 11.15.3
+aws.route53.hostedZone.callerReference 13.39.2
 aws.route53.hostedZone.comment 11.15.3
 aws.route53.hostedZone.config 11.15.3
 aws.route53.hostedZone.dnssec 13.26.3
@@ -7678,6 +7679,7 @@ aws.route53.hostedZone.dnssecStatus 11.15.3
 aws.route53.hostedZone.id 11.15.3
 aws.route53.hostedZone.isPrivate 11.15.3
 aws.route53.hostedZone.keySigningKeys 11.15.3
+aws.route53.hostedZone.managedBy 13.39.2
 aws.route53.hostedZone.name 11.15.3
 aws.route53.hostedZone.nameServers 11.15.3
 aws.route53.hostedZone.queryLoggingConfig 11.15.3

@@ -12844,6 +12844,14 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   isPrivate bool
   // Comment associated with the hosted zone
   comment string
+  // Idempotency token supplied when the hosted zone was created
+  //
+  // Infrastructure-as-code tools set this to a meaningful value; the Terraform AWS provider auto-generates one with a "terraform-" prefix, which managedBy uses as a fallback signal.
+  callerReference string
+  // Infrastructure-management system that owns this hosted zone
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Falls back to "terraform" when no provenance tag is present but the callerReference carries Terraform's "terraform-" prefix. Empty when the hosted zone is unmanaged or managed by a tool that leaves no recognizable signal.
+  managedBy() string
   // List of VPCs associated with a private hosted zone
   vpcs() []dict
   // ARN of the hosted zone

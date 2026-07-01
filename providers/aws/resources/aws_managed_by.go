@@ -70,11 +70,12 @@ func (a *mqlAwsEc2Snapshot) cloudformationStack() (*mqlAwsCloudformationStack, e
 	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
 }
 
-// managedByWithCreationToken augments the tag-based owner with an EFS-specific
-// Terraform fallback. Terraform injects no provenance tag, but when
-// creation_token is left unset the Terraform AWS provider auto-generates one
-// with a "terraform-" prefix, which is the only managed-by signal it leaves.
-// The tag-based owner always wins when present.
+// managedByWithCreationToken augments the tag-based owner with a Terraform
+// fallback. Terraform injects no provenance tag, but for idempotency tokens it
+// leaves unset (the EFS creation token, the Route 53 hosted zone caller
+// reference) the Terraform AWS provider auto-generates a "terraform-" prefixed
+// value, which is the only managed-by signal it leaves. The tag-based owner
+// always wins when present.
 func managedByWithCreationToken(tagOwner, creationToken string) string {
 	if tagOwner != "" {
 		return tagOwner
@@ -83,6 +84,23 @@ func managedByWithCreationToken(tagOwner, creationToken string) string {
 		return "terraform"
 	}
 	return ""
+}
+
+func (a *mqlAwsRoute53HostedZone) managedBy() (string, error) {
+	owner, err := managedByFromResourceTags(a.GetTags())
+	if err != nil {
+		return "", err
+	}
+	if owner != "" {
+		return owner, nil
+	}
+	// Route 53 injects no provenance tag, but Terraform sets the hosted zone
+	// caller reference to a "terraform-" prefixed value; fall back to that.
+	cr := a.GetCallerReference()
+	if cr.Error != nil {
+		return "", cr.Error
+	}
+	return managedByWithCreationToken("", cr.Data), nil
 }
 
 func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {

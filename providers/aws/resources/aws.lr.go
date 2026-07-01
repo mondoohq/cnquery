@@ -18831,6 +18831,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.hostedZone.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetComment()).ToDataRes(types.String)
 	},
+	"aws.route53.hostedZone.callerReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetCallerReference()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetManagedBy()).ToDataRes(types.String)
+	},
 	"aws.route53.hostedZone.vpcs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetVpcs()).ToDataRes(types.Array(types.Dict))
 	},
@@ -54188,6 +54194,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.hostedZone.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53HostedZone).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.callerReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).CallerReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.route53.hostedZone.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -130276,6 +130290,8 @@ type mqlAwsRoute53HostedZone struct {
 	Config                 plugin.TValue[any]
 	IsPrivate              plugin.TValue[bool]
 	Comment                plugin.TValue[string]
+	CallerReference        plugin.TValue[string]
+	ManagedBy              plugin.TValue[string]
 	Vpcs                   plugin.TValue[[]any]
 	Arn                    plugin.TValue[string]
 	Tags                   plugin.TValue[map[string]any]
@@ -130350,6 +130366,16 @@ func (c *mqlAwsRoute53HostedZone) GetIsPrivate() *plugin.TValue[bool] {
 
 func (c *mqlAwsRoute53HostedZone) GetComment() *plugin.TValue[string] {
 	return &c.Comment
+}
+
+func (c *mqlAwsRoute53HostedZone) GetCallerReference() *plugin.TValue[string] {
+	return &c.CallerReference
+}
+
+func (c *mqlAwsRoute53HostedZone) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 func (c *mqlAwsRoute53HostedZone) GetVpcs() *plugin.TValue[[]any] {
