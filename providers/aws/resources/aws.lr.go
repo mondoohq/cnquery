@@ -22113,6 +22113,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.snapshot.storageTier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetStorageTier()).ToDataRes(types.String)
 	},
+	"aws.ec2.snapshot.transferType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetTransferType()).ToDataRes(types.String)
+	},
+	"aws.ec2.snapshot.restoreExpiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetRestoreExpiryTime()).ToDataRes(types.Time)
+	},
 	"aws.ec2.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
@@ -22202,6 +22208,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.volume.fastRestored": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetFastRestored()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.volume.sourceVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetSourceVolume()).ToDataRes(types.Resource("aws.ec2.volume"))
 	},
 	"aws.signer.signingProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSigner).GetSigningProfiles()).ToDataRes(types.Array(types.Resource("aws.signer.signingProfile")))
@@ -58851,6 +58860,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Snapshot).StorageTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.snapshot.transferType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).TransferType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.restoreExpiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).RestoreExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
@@ -58973,6 +58990,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.volume.fastRestored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Volume).FastRestored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.sourceVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).SourceVolume, ok = plugin.RawToTValue[*mqlAwsEc2Volume](v.Value, v.Error)
 		return
 	},
 	"aws.signer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -141727,6 +141748,8 @@ type mqlAwsEc2Snapshot struct {
 	Description            plugin.TValue[string]
 	Encrypted              plugin.TValue[bool]
 	StorageTier            plugin.TValue[string]
+	TransferType           plugin.TValue[string]
+	RestoreExpiryTime      plugin.TValue[*time.Time]
 	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
 	SourceVolume           plugin.TValue[*mqlAwsEc2Volume]
 	DataEncryptionKeyId    plugin.TValue[string]
@@ -141851,6 +141874,14 @@ func (c *mqlAwsEc2Snapshot) GetStorageTier() *plugin.TValue[string] {
 	return &c.StorageTier
 }
 
+func (c *mqlAwsEc2Snapshot) GetTransferType() *plugin.TValue[string] {
+	return &c.TransferType
+}
+
+func (c *mqlAwsEc2Snapshot) GetRestoreExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.RestoreExpiryTime
+}
+
 func (c *mqlAwsEc2Snapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
@@ -141943,6 +141974,7 @@ type mqlAwsEc2Volume struct {
 	SnapshotId          plugin.TValue[string]
 	Snapshot            plugin.TValue[*mqlAwsEc2Snapshot]
 	FastRestored        plugin.TValue[bool]
+	SourceVolume        plugin.TValue[*mqlAwsEc2Volume]
 }
 
 // createAwsEc2Volume creates a new instance of this resource
@@ -142102,6 +142134,22 @@ func (c *mqlAwsEc2Volume) GetSnapshot() *plugin.TValue[*mqlAwsEc2Snapshot] {
 
 func (c *mqlAwsEc2Volume) GetFastRestored() *plugin.TValue[bool] {
 	return &c.FastRestored
+}
+
+func (c *mqlAwsEc2Volume) GetSourceVolume() *plugin.TValue[*mqlAwsEc2Volume] {
+	return plugin.GetOrCompute[*mqlAwsEc2Volume](&c.SourceVolume, func() (*mqlAwsEc2Volume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.volume", c.__id, "sourceVolume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Volume), nil
+			}
+		}
+
+		return c.sourceVolume()
+	})
 }
 
 // mqlAwsSigner for the aws.signer resource

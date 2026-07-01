@@ -3356,6 +3356,7 @@ aws.ec2.snapshot.outpostArn 13.35.2
 aws.ec2.snapshot.ownerAlias 13.35.2
 aws.ec2.snapshot.ownerId 13.38.2
 aws.ec2.snapshot.region 11.15.2
+aws.ec2.snapshot.restoreExpiryTime 13.39.2
 aws.ec2.snapshot.sharedExternally 13.37.1
 aws.ec2.snapshot.sharedWithAccounts 13.37.1
 aws.ec2.snapshot.sourceVolume 13.35.2
@@ -3363,6 +3364,7 @@ aws.ec2.snapshot.startTime 11.15.2
 aws.ec2.snapshot.state 11.15.2
 aws.ec2.snapshot.storageTier 11.15.2
 aws.ec2.snapshot.tags 11.15.2
+aws.ec2.snapshot.transferType 13.39.2
 aws.ec2.snapshot.volumeId 11.15.2
 aws.ec2.snapshot.volumeSize 11.15.2
 aws.ec2.snapshots 11.15.2
@@ -3438,6 +3440,7 @@ aws.ec2.volume.region 11.15.2
 aws.ec2.volume.size 11.15.2
 aws.ec2.volume.snapshot 13.35.2
 aws.ec2.volume.snapshotId 13.35.2
+aws.ec2.volume.sourceVolume 13.39.2
 aws.ec2.volume.sseType 11.16.1
 aws.ec2.volume.state 11.15.2
 aws.ec2.volume.tags 11.15.2

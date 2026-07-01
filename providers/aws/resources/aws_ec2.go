@@ -2511,11 +2511,13 @@ func buildVolumeResource(runtime *plugin.Runtime, region, accountID string, vol 
 	}
 	v := mqlVol.(*mqlAwsEc2Volume)
 	v.cacheKmsKeyId = vol.KmsKeyId
+	v.cacheSourceVolumeId = vol.SourceVolumeId
 	return v, nil
 }
 
 type mqlAwsEc2VolumeInternal struct {
-	cacheKmsKeyId *string
+	cacheKmsKeyId       *string
+	cacheSourceVolumeId *string
 }
 
 // snapshot resolves the source snapshot when it is still present in this
@@ -2534,6 +2536,25 @@ func (a *mqlAwsEc2Volume) snapshot() (*mqlAwsEc2Snapshot, error) {
 		return nil, nil
 	}
 	return mqlSnap.(*mqlAwsEc2Snapshot), nil
+}
+
+// sourceVolume resolves the volume this volume was copied from when it is still
+// present in this account. The source id is only set for volume copies, and the
+// source is frequently since-deleted; in that case the reference is null.
+func (a *mqlAwsEc2Volume) sourceVolume() (*mqlAwsEc2Volume, error) {
+	if a.cacheSourceVolumeId == nil || *a.cacheSourceVolumeId == "" {
+		a.SourceVolume.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	volumeArn := fmt.Sprintf(volumeArnPattern, a.Region.Data, conn.AccountId(), *a.cacheSourceVolumeId)
+	mqlVol, err := NewResource(a.MqlRuntime, ResourceAwsEc2Volume,
+		map[string]*llx.RawData{"arn": llx.StringData(volumeArn)})
+	if err != nil {
+		a.SourceVolume.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return mqlVol.(*mqlAwsEc2Volume), nil
 }
 
 func (a *mqlAwsEc2Volume) kmsKey() (*mqlAwsKmsKey, error) {
@@ -2642,6 +2663,8 @@ func buildSnapshotResource(runtime *plugin.Runtime, region, accountID string, sn
 			"ownerAlias":          llx.StringDataPtr(snapshot.OwnerAlias),
 			"ownerId":             llx.StringDataPtr(snapshot.OwnerId),
 			"outpostArn":          llx.StringDataPtr(snapshot.OutpostArn),
+			"transferType":        llx.StringData(string(snapshot.TransferType)),
+			"restoreExpiryTime":   llx.TimeDataPtr(snapshot.RestoreExpiryTime),
 		})
 	if err != nil {
 		return nil, err

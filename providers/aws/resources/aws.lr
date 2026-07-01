@@ -15815,6 +15815,14 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   encrypted bool
   // The storage tier in which the snapshot is stored
   storageTier string
+  // How a snapshot copy was created
+  //
+  // One of standard or time-based, and only set for snapshot copies. Time-based copies complete within a requested duration; standard copies complete on a best-effort basis.
+  transferType string
+  // Time an archived snapshot that was temporarily restored will be automatically re-archived
+  //
+  // Only set for archived snapshots that are currently in a temporary restore.
+  restoreExpiryTime time
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
   // Volume the snapshot was created from, when it is still present in this account
@@ -15883,6 +15891,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   snapshot() aws.ec2.snapshot
   // Whether the volume was created from a snapshot using fast snapshot restore
   fastRestored bool
+  // Source volume this volume was copied from, when it is still present in this account
+  sourceVolume() aws.ec2.volume
 }
 
 // AWS Signer
