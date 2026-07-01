@@ -83,171 +83,212 @@ func setK8sSourceContext(runtime *plugin.Runtime, kt shared.Connection, obj meta
 	return nil
 }
 
-// errK8sContextNotProvided is returned by the fallback context() resolvers.
-// context is populated at resource creation for manifest scans, so these only
-// run when a resource was built without one (live cluster, admission review).
-var errK8sContextNotProvided = errors.New("context is only available for manifest-file scans")
+// The fallback context() resolvers below mark the field null rather than
+// erroring. context is populated at creation for manifest-file scans; for
+// live-cluster and admission connections it is legitimately absent, so a query
+// touching .context there returns null instead of failing.
 
 func (x *mqlK8sAdmissionMutatingwebhookconfiguration) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sAdmissionValidatingadmissionpolicy) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sAdmissionValidatingadmissionpolicybinding) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sAdmissionValidatingwebhookconfiguration) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sApiservice) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sCertificatesigningrequest) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sConfigmap) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sCronjob) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sCustomresource) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sDaemonset) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sDeployment) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sEndpointslice) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sGateway) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sGatewayclass) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sGrpcroute) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sHorizontalpodautoscaler) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sHttproute) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sIngress) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sIngressclass) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sJob) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sLease) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sLimitrange) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sNetworkpolicy) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sNode) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sPersistentvolume) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sPersistentvolumeclaim) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sPod) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sPoddisruptionbudget) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sPriorityclass) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sRbacClusterrole) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sRbacClusterrolebinding) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sRbacRole) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sRbacRolebinding) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sReferencegrant) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sReplicaset) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sResourcequota) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sSecret) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sService) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sServiceaccount) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sStatefulset) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (x *mqlK8sStorageclass) context() (*mqlK8sContext, error) {
-	return nil, errK8sContextNotProvided
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }

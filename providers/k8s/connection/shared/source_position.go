@@ -114,6 +114,11 @@ func mappingScalar(node *yaml.Node, key string) string {
 // maximum start line over the node and all of its descendants. yaml.v3 records
 // only the start position of each node, so this approximates the block end from
 // its deepest child.
+//
+// Limitation: when the last descendant is a multi-line block scalar (a folded
+// `>` or literal `|` value), the reported end is that scalar's start line, so
+// the excerpt can stop a few lines short. Acceptable for a line-range v1;
+// revisit if end positions become available upstream.
 func nodeEndLine(n *yaml.Node) int {
 	if n == nil {
 		return 0
