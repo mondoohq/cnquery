@@ -23,8 +23,9 @@ import (
 )
 
 type mqlAzureSubscriptionContainerAppServiceContainerAppInternal struct {
-	cacheSystemData any
-	cacheRGAndName  struct {
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+	cacheRGAndName               struct {
 		resourceGroup string
 		name          string
 	}
@@ -240,6 +241,78 @@ func initAzureSubscriptionContainerAppServiceContainerApp(runtime *plugin.Runtim
 		return nil, nil, err
 	}
 	return args, mql, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+// managedEnvironment resolves the parent managed environment of the container
+// app from its ARM resource ID. The runtime cache short-circuits environments
+// already listed by managedEnvironments(); otherwise the init fetches it on
+// demand.
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) managedEnvironment() (*mqlAzureSubscriptionContainerAppServiceManagedEnvironment, error) {
+	if a.ManagedEnvironmentId.Data == "" {
+		a.ManagedEnvironment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment",
+		map[string]*llx.RawData{"id": llx.StringData(a.ManagedEnvironmentId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment), nil
+}
+
+// initAzureSubscriptionContainerAppServiceManagedEnvironment resolves a single
+// managed environment by its ARM resource ID so typed cross-references (and
+// platform-discovered assets) can be queried directly without re-listing every
+// environment in the subscription.
+func initAzureSubscriptionContainerAppServiceManagedEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	envName, err := resourceID.Component("managedEnvironments")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client, err := apps.NewManagedEnvironmentsClient(resourceID.SubscriptionID, conn.Token(), acaClientOptions(conn))
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, envName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlEnv, err := acaManagedEnvironmentToMQL(runtime, &resp.ManagedEnvironment)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlEnv, nil
 }
 
 // resourceGroupAndName parses an ARM resource ID and returns the resource
@@ -811,12 +884,16 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 		}
 	}
 
+	var principalId *string
+	var userAssignedIdentityIds []string
 	if entry.Identity != nil {
 		d, err := convert.JsonToDict(entry.Identity)
 		if err != nil {
 			return nil, err
 		}
 		identity = d
+		principalId = entry.Identity.PrincipalID
+		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
 	}
 	if entry.Kind != nil {
 		kind = string(*entry.Kind)
@@ -851,6 +928,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"maxReplicas":              llx.IntDataDefault(maxReplicas, 0),
 			"scaleRules":               llx.ArrayData(scaleRules, types.Dict),
 			"identity":                 llx.DictData(identity),
+			"principalId":              llx.StringDataPtr(principalId),
 			"registries":               llx.ArrayData(registries, types.Dict),
 			"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
 			"secretNames":              llx.ArrayData(secretNames, types.String),
@@ -861,6 +939,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	}
 
 	appRes := mqlApp.(*mqlAzureSubscriptionContainerAppServiceContainerApp)
+	appRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	rg, name := resourceGroupAndName(appRes.Id.Data, "containerApps")
 	appRes.cacheRGAndName.resourceGroup = rg
 	appRes.cacheRGAndName.name = name

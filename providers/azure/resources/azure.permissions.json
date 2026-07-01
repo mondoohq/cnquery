@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.23.0",
-  "generated_at": "2026-06-29T23:43:33-07:00",
+  "generated_at": "2026-06-30T21:33:11-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -311,7 +311,7 @@
     {
       "permission": "Microsoft.App/managedEnvironments/read",
       "service": "Microsoft.App",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "appcontainers.go"
     },
     {

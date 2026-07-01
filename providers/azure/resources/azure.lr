@@ -4309,9 +4309,15 @@ azure.subscription.webService.appsite @defaults("id name location") {
   // App site properties
   properties dict
   // App site identity
-  identity dict
+  //
+  // Deprecated in favor of principalId, userAssignedIdentities, and identityType.
+  identity @maturity("deprecated") dict
   // Managed identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned")
   identityType string
+  // Principal ID of the app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the app requires HTTPS only
   httpsOnly bool
   // Whether client certificate authentication is enabled
@@ -4356,6 +4362,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   sshEnabled bool
   // ARM resource ID of the user-assigned identity used to fetch Key Vault references in app settings (empty when system-assigned identity is used)
   keyVaultReferenceIdentity string
+  // User-assigned managed identity used to fetch Key Vault references in app settings; null when the system-assigned identity is used
+  keyVaultReferenceIdentityRef() azure.subscription.managedIdentity
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
   // IP address mode for the app ("IPv4", "IPv4AndIPv6", "IPv6")
@@ -8152,10 +8160,16 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   staticIp string
   // Subnet ID for VNet-injected caches
   subnetId string
+  // Subnet the cache is injected into; null when the cache is not VNet-injected
+  subnet() azure.subscription.networkService.subnet
   // Availability zones for the cache
   zones []string
   // Managed identity information
   identity dict
+  // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the cache
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
@@ -9256,11 +9270,21 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   // Client certificate mode (Required, Optional, OptionalInteractiveUser)
   clientCertMode string
   // Managed service identity ID
-  managedServiceIdentityId string
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  managedServiceIdentityId @maturity("deprecated") string
+  // Principal ID of the function app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the function app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Identity used to resolve Key Vault references in app settings and connection strings (resource ID of a user-assigned identity, or "SystemAssigned")
   keyVaultReferenceIdentity string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // ARM resource ID of the subnet the function app is regionally VNet-integrated with; empty when no regional VNet integration is configured
+  virtualNetworkSubnetId string
+  // Subnet the function app is regionally VNet-integrated with; null when no regional VNet integration is configured
+  virtualNetworkSubnet() azure.subscription.networkService.subnet
   // Function App properties
   properties dict
   // Site configuration: minimum TLS version, FTPS state, HTTP/2, always-on, remote debugging, and IP restrictions
@@ -10290,6 +10314,8 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   outboundIpAddresses []string
   // ARM resource ID of the parent managed environment
   managedEnvironmentId string
+  // Parent managed environment that hosts the container app
+  managedEnvironment() azure.subscription.containerAppService.managedEnvironment
   // Active revision mode ("Single" or "Multiple")
   revisionMode string
   // Latest revision name
@@ -10333,7 +10359,13 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   //   custom:     {type, metadata, identity}
   scaleRules []dict
   // Identity block (system + user-assigned principal IDs)
-  identity dict
+  //
+  // Deprecated in favor of principalId and userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Principal ID of the container app's system-assigned managed identity; empty when no system-assigned identity is enabled
+  principalId string
+  // User-assigned managed identities attached to the container app
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Container registry references (server, identity, passwordSecretRef)
   registries []dict
   // Whether any registry credential uses managed identity

@@ -88,6 +88,8 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		}
 	}
 
+	var userAssignedIdentityIds []string
+
 	args := map[string]*llx.RawData{
 		"id":         llx.StringDataPtr(site.ID),
 		"name":       llx.StringDataPtr(site.Name),
@@ -144,6 +146,12 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 			identityType = string(*site.Identity.Type)
 		}
 		args["identityType"] = llx.StringData(identityType)
+		var principalId *string
+		if site.Identity != nil {
+			principalId = site.Identity.PrincipalID
+			userAssignedIdentityIds = sortedUserAssignedIdentityIDs(site.Identity.UserAssignedIdentities)
+		}
+		args["principalId"] = llx.StringDataPtr(principalId)
 	}
 
 	res, err := CreateResource(runtime, resourceType, args)
@@ -156,7 +164,9 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 	}
 	switch resourceType {
 	case ResourceAzureSubscriptionWebServiceAppsite:
-		res.(*mqlAzureSubscriptionWebServiceAppsite).cacheSystemData = sysData
+		mqlAppsite := res.(*mqlAzureSubscriptionWebServiceAppsite)
+		mqlAppsite.cacheSystemData = sysData
+		mqlAppsite.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	case ResourceAzureSubscriptionWebServiceAppslot:
 		res.(*mqlAzureSubscriptionWebServiceAppslot).cacheSystemData = sysData
 	}
@@ -164,7 +174,8 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 }
 
 type mqlAzureSubscriptionWebServiceAppsiteInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 type mqlAzureSubscriptionWebServiceAppslotInternal struct {
@@ -641,6 +652,28 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsite) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+// keyVaultReferenceIdentityRef resolves the user-assigned managed identity used
+// to fetch Key Vault references in app settings. When the app uses its
+// system-assigned identity the raw value is "SystemAssigned" (not a resource
+// ID), so the reference is null.
+func (a *mqlAzureSubscriptionWebServiceAppsite) keyVaultReferenceIdentityRef() (*mqlAzureSubscriptionManagedIdentity, error) {
+	id := a.KeyVaultReferenceIdentity.Data
+	if id == "" || strings.EqualFold(id, "SystemAssigned") {
+		a.KeyVaultReferenceIdentityRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(id)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) virtualNetworkSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {

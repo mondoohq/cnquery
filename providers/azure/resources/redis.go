@@ -28,10 +28,28 @@ type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
 	// This will be populated when the SDK adds support for CMK encryption configuration.
 	cacheEncryptionKeyURI           string
 	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
+	cacheUserAssignedIdentityIds    []string
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.SubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.SubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func initAzureSubscriptionCacheService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -102,6 +120,9 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	if resp.Properties != nil {
 		mqlRedis.cachePrivateEndpointConnections = resp.Properties.PrivateEndpointConnections
 	}
+	if resp.Identity != nil {
+		mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(resp.Identity.UserAssignedIdentities)
+	}
 	return args, mqlRedis, nil
 }
 
@@ -149,6 +170,9 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			mqlRedis := cacheData.(*mqlAzureSubscriptionCacheServiceRedisInstance)
 			if cache.Properties != nil {
 				mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			}
+			if cache.Identity != nil {
+				mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(cache.Identity.UserAssignedIdentities)
 			}
 			caches = append(caches, mqlRedis)
 		}
@@ -203,6 +227,11 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		return nil, err
 	}
 
+	var principalId *string
+	if cache.Identity != nil {
+		principalId = cache.Identity.PrincipalID
+	}
+
 	zones := []any{}
 	for _, z := range cache.Zones {
 		if z != nil {
@@ -234,6 +263,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"subnetId":            llx.StringDataPtr(cache.Properties.SubnetID),
 		"zones":               llx.ArrayData(zones, types.String),
 		"identity":            llx.DictData(identity),
+		"principalId":         llx.StringDataPtr(principalId),
 	}, nil
 }
 
