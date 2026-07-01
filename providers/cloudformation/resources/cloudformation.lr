@@ -53,7 +53,7 @@ cloudformation.template @defaults("description") {
 // condition, full properties body, attributes, dependsOn list, and the
 // documentation URL — the unit IaC policies match against to enforce
 // resource-shape rules (encryption, public access, tags, etc.).
-cloudformation.resource @defaults("name") {
+cloudformation.resource @defaults("name") @context("cloudformation.context") {
   // Resource name
   name string
   // Resource type
@@ -106,7 +106,7 @@ cloudformation.resource @defaults("name") {
 // Examine a single Outputs section entry: name and the properties body
 // (Value, Description, Export, Condition) — useful for spotting outputs
 // that leak resource ARNs, secrets, or sensitive state across stacks.
-cloudformation.output @defaults("name") {
+cloudformation.output @defaults("name") @context("cloudformation.context") {
   // Output name
   name string
   // Output properties
@@ -138,7 +138,7 @@ cloudformation.output @defaults("name") {
 // primary surface for policies that enforce strong input typing, secret
 // masking (`NoEcho: true` for credential-shaped parameters), and bounded
 // inputs.
-cloudformation.parameter @defaults("name type") {
+cloudformation.parameter @defaults("name type") @context("cloudformation.context") {
   // Parameter name
   name string
   // Parameter type
@@ -177,4 +177,18 @@ cloudformation.parameter @defaults("name type") {
   maxValue int
   // `ConstraintDescription` shown when validation fails
   constraintDescription string
+}
+
+// CloudFormation template source context
+//
+// Source location and raw text of a template element: the file path, the
+// line range it spans, and the template text within that range. Points a
+// reviewer at the exact source of a flagged resource, output, or parameter.
+private cloudformation.context @defaults("path range content") {
+  // Path of the template file this element is declared in
+  path string
+  // Line range the element spans in the template
+  range range
+  // Template text within the range, shown as an excerpt
+  content(path, range) string
 }

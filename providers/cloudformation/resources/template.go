@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"errors"
+
 	"github.com/aws-cloudformation/rain/cft"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -239,6 +241,11 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			return nil, err
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.resource", map[string]*llx.RawData{
 			"name":                llx.StringData(keyNode.Value),
 			"type":                llx.StringData(resourceType),
@@ -252,6 +259,7 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			"creationPolicy":      llx.DictData(creationPolicy),
 			"updatePolicy":        llx.DictData(updatePolicy),
 			"resourceMetadata":    llx.DictData(resourceMetadata),
+			"context":             llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -270,6 +278,81 @@ func (x *mqlCloudformationOutput) id() (string, error) {
 
 func (x *mqlCloudformationParameter) id() (string, error) {
 	return x.Name.Data, nil
+}
+
+// nodeEndLine returns the last source line spanned by a YAML node, computed as
+// the maximum start line over the node and all of its descendants. yaml.v3
+// records only the start position of each node, so this approximates the end
+// of a multi-line block from its deepest child.
+func nodeEndLine(n *yaml.Node) int {
+	if n == nil {
+		return 0
+	}
+	end := n.Line
+	for _, c := range n.Content {
+		if e := nodeEndLine(c); e > end {
+			end = e
+		}
+	}
+	return end
+}
+
+// nodeContext builds a cloudformation.context spanning the source lines a
+// template block occupies. keyNode is the block's logical-name key (its start
+// line); valueNode is the block body (its end line is the deepest child).
+func (r *mqlCloudformationTemplate) nodeContext(keyNode, valueNode *yaml.Node) (*mqlCloudformationContext, error) {
+	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
+
+	start := uint32(keyNode.Line)
+	end := uint32(nodeEndLine(valueNode))
+	if end < start {
+		end = start
+	}
+	rnge := llx.NewRange().AddLineRange(start, end)
+	content := rnge.ExtractString(string(conn.Content()), llx.DefaultExtractConfig)
+
+	cobj, err := CreateResource(r.MqlRuntime, "cloudformation.context", map[string]*llx.RawData{
+		"path":    llx.StringData(conn.Path()),
+		"range":   llx.RangeData(rnge),
+		"content": llx.StringData(content),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cobj.(*mqlCloudformationContext), nil
+}
+
+func (r *mqlCloudformationContext) id() (string, error) {
+	if r.Path.Data == "" {
+		return "", errors.New("need path to exist for cloudformation.context ID")
+	}
+	return r.Path.Data + ":" + r.Range.Data.String(), nil
+}
+
+func (r *mqlCloudformationContext) content(path string, rnge llx.Range) (string, error) {
+	if path == "" {
+		return "", errors.New("no path information for cloudformation.context")
+	}
+	conn := r.MqlRuntime.Connection.(*connection.CloudformationConnection)
+	src := conn.Content()
+	if src == nil {
+		return "", errors.New("missing cloudformation template source in cache")
+	}
+	return rnge.ExtractString(string(src), llx.DefaultExtractConfig), nil
+}
+
+// context is populated at creation for each block, so these fallback resolvers
+// only run if a resource was built without one.
+func (x *mqlCloudformationResource) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.resource")
+}
+
+func (x *mqlCloudformationOutput) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.output")
+}
+
+func (x *mqlCloudformationParameter) context() (*mqlCloudformationContext, error) {
+	return nil, errors.New("context was not provided for cloudformation.parameter")
 }
 
 func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
@@ -321,6 +404,11 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			}
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.output", map[string]*llx.RawData{
 			"name":        llx.StringData(keyNode.Value),
 			"properties":  llx.DictData(dict),
@@ -328,6 +416,7 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			"description": llx.StringData(description),
 			"exportName":  llx.StringData(exportName),
 			"condition":   llx.StringData(condition),
+			"context":     llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err
@@ -414,6 +503,11 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			return nil, err
 		}
 
+		ctx, err := r.nodeContext(keyNode, valueNode)
+		if err != nil {
+			return nil, err
+		}
+
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.parameter", map[string]*llx.RawData{
 			"__id":                  llx.StringData(keyNode.Value),
 			"name":                  llx.StringData(keyNode.Value),
@@ -428,6 +522,7 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 			"minValue":              llx.IntData(minValue),
 			"maxValue":              llx.IntData(maxValue),
 			"constraintDescription": llx.StringData(constraintDescription),
+			"context":               llx.ResourceData(ctx, "cloudformation.context"),
 		})
 		if err != nil {
 			return nil, err

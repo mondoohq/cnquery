@@ -1,8 +1,13 @@
 # Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
+cloudformation.context 13.1.8
+cloudformation.context.content 13.1.8
+cloudformation.context.path 13.1.8
+cloudformation.context.range 13.1.8
 cloudformation.output 11.0.0
 cloudformation.output.condition 13.0.13
+cloudformation.output.context 13.1.8
 cloudformation.output.description 13.0.13
 cloudformation.output.exportName 13.0.13
 cloudformation.output.name 11.0.0
@@ -12,6 +17,7 @@ cloudformation.parameter 13.0.13
 cloudformation.parameter.allowedPattern 13.0.13
 cloudformation.parameter.allowedValues 13.0.13
 cloudformation.parameter.constraintDescription 13.0.13
+cloudformation.parameter.context 13.1.8
 cloudformation.parameter.default 13.0.13
 cloudformation.parameter.description 13.0.13
 cloudformation.parameter.maxLength 13.0.13
@@ -24,6 +30,7 @@ cloudformation.parameter.type 13.0.13
 cloudformation.resource 11.0.0
 cloudformation.resource.attributes 11.0.0
 cloudformation.resource.condition 11.0.0
+cloudformation.resource.context 13.1.8
 cloudformation.resource.creationPolicy 13.0.13
 cloudformation.resource.deletionPolicy 13.0.13
 cloudformation.resource.dependsOn 13.0.1
