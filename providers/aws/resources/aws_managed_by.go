@@ -99,7 +99,9 @@ func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {
 	if ct.Error != nil {
 		return "", ct.Error
 	}
-	return managedByWithCreationToken(owner, ct.Data), nil
+	// owner is "" here (the early return above handled the non-empty case); pass
+	// it explicitly so the call doesn't read as depending on a live value.
+	return managedByWithCreationToken("", ct.Data), nil
 }
 
 func (a *mqlAwsEfsFilesystem) cloudformationStack() (*mqlAwsCloudformationStack, error) {
