@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/mql/v13"
+	"go.mondoo.com/mql/v13/cli/components"
 	"go.mondoo.com/mql/v13/cli/config"
 	cli_errors "go.mondoo.com/mql/v13/cli/errors"
 	"go.mondoo.com/mql/v13/providers"
@@ -135,7 +136,8 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		case "json":
 			s.RenderJson()
 		default:
-			fmt.Fprint(os.Stdout, s.RenderCli(RenderOptions{Color: defaultRenderColor(), Binary: cmd.Root().Name()}))
+			width, _ := components.TerminalWidth(os.Stdout)
+			fmt.Fprint(os.Stdout, s.RenderCli(RenderOptions{Color: defaultRenderColor(), Binary: cmd.Root().Name(), Width: width}))
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {

@@ -54,20 +54,6 @@ func healthyRegisteredStatus() Status {
 	return s
 }
 
-func TestRenderCli_Header(t *testing.T) {
-	s := healthyRegisteredStatus()
-
-	out := s.RenderCli(RenderOptions{Color: false})
-
-	// The header is the first line: the command name plus a metadata strip with
-	// the version, os/arch, and the timestamp.
-	firstLine := strings.SplitN(strings.TrimLeft(out, "\n"), "\n", 2)[0]
-	assert.Contains(t, firstLine, "mql status")
-	assert.Contains(t, firstLine, "13.25.0")
-	assert.Contains(t, firstLine, "macos/arm64")
-	assert.Contains(t, firstLine, "2026-06-29")
-}
-
 func TestRenderCli_NoColorHasNoEscapes(t *testing.T) {
 	s := healthyRegisteredStatus()
 
@@ -345,20 +331,71 @@ func TestRenderCli_Footer_SingleOutdatedKeepsInstallHint(t *testing.T) {
 	assert.NotContains(t, out, "mql providers update")
 }
 
+// manyCurrentProviders returns a registered status whose providers are all
+// current, with long names, so the "✓ current" list is long enough to exercise
+// the width budgeting.
+func manyCurrentProviders() Status {
+	s := healthyRegisteredStatus()
+	s.Client.Providers = nil
+	for _, name := range []string{
+		"ansible", "arista", "atlassian", "aws", "azure", "cloudflare",
+		"equinix", "gcp", "github", "gitlab", "google-workspace", "k8s",
+		"ms365", "network", "oci", "okta", "opcua", "os", "slack",
+		"terraform", "vcd", "vsphere",
+	} {
+		s.Client.Providers = append(s.Client.Providers,
+			ProviderStatus{Name: name, Installed: "13.25.0", Latest: "13.25.0", Outdated: false})
+	}
+	return s
+}
+
+// currentLine returns the "✓ current ..." row from a rendered status screen.
+func currentLine(out string) string {
+	for ln := range strings.SplitSeq(out, "\n") {
+		if strings.Contains(ln, "✓ current") {
+			return ln
+		}
+	}
+	return ""
+}
+
+func TestRenderCli_CurrentProviders_NarrowWidthCollapses(t *testing.T) {
+	s := manyCurrentProviders()
+
+	out := s.RenderCli(RenderOptions{Color: false, Width: 60})
+
+	line := currentLine(out)
+	assert.NotEmpty(t, line)
+	// the list must be trimmed to fit and the remainder folded into a "+N" marker
+	assert.Contains(t, line, "+")
+	// the provider list must fit inside the terminal so it doesn't wrap
+	assert.LessOrEqual(t, len([]rune(line)), 60, "current-providers line exceeds width: %q", line)
+}
+
+func TestRenderCli_CurrentProviders_WideWidthShowsAll(t *testing.T) {
+	s := manyCurrentProviders()
+
+	out := s.RenderCli(RenderOptions{Color: false, Width: 500})
+
+	line := currentLine(out)
+	assert.NotEmpty(t, line)
+	// with room to spare, no provider is dropped
+	assert.NotContains(t, line, "+")
+	assert.Contains(t, line, "vsphere")
+}
+
 func TestRenderCli_BinaryNameDrivesCommandHints(t *testing.T) {
-	// stale + unregistered surfaces the header plus login/update hints, so a
-	// single render exercises several command strings at once.
+	// stale + unregistered surfaces the login/update hints, so a single render
+	// exercises several command strings at once.
 	s := staleNotRegisteredStatus()
 
 	out := s.RenderCli(RenderOptions{Color: false, Binary: "cnspec"})
 
-	assert.Contains(t, out, "cnspec status")
 	assert.Contains(t, out, "cnspec login")
 	assert.Contains(t, out, "cnspec providers update")
 	// no command hint should leak the other binary's name
 	assert.NotContains(t, out, "mql login")
 	assert.NotContains(t, out, "mql providers")
-	assert.NotContains(t, out, "mql status")
 }
 
 func TestRenderCli_BinaryNameDefaultsToMql(t *testing.T) {
@@ -367,7 +404,6 @@ func TestRenderCli_BinaryNameDefaultsToMql(t *testing.T) {
 	// empty Binary (as the existing tests and goldens use) falls back to "mql"
 	out := s.RenderCli(RenderOptions{Color: false})
 
-	assert.Contains(t, out, "mql status")
 	assert.Contains(t, out, "mql login")
 	assert.NotContains(t, out, "cnspec")
 }

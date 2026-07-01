@@ -37,6 +37,7 @@ type styler struct {
 	profile termenv.Profile
 	palette colors.Theme
 	binary  string
+	width   int
 }
 
 // defaultRenderColor reports whether the status screen should be rendered with
@@ -46,7 +47,7 @@ func defaultRenderColor() bool {
 	return colors.Profile != termenv.Ascii
 }
 
-func newStyler(color bool, binary string) styler {
+func newStyler(color bool, binary string, width int) styler {
 	p := colors.Profile
 	if !color {
 		p = termenv.Ascii
@@ -54,7 +55,13 @@ func newStyler(color bool, binary string) styler {
 	if binary == "" {
 		binary = "mql"
 	}
-	return styler{on: color, profile: p, palette: theme.DefaultTheme.Colors, binary: binary}
+	// When the width is unknown (non-TTY output, tests) fall back to a standard
+	// 80-column budget so long lists still collapse rather than assuming an
+	// unbounded terminal.
+	if width <= 0 {
+		width = 80
+	}
+	return styler{on: color, profile: p, palette: theme.DefaultTheme.Colors, binary: binary, width: width}
 }
 
 func (st styler) fg(c termenv.Color, s string) string {
@@ -84,10 +91,9 @@ func (st styler) accent(s string) string { return st.fg(st.palette.Secondary, s)
 // I/O and reads no globals: everything it needs is on the Status value, which
 // makes it directly unit-testable.
 func (s Status) RenderCli(opts RenderOptions) string {
-	st := newStyler(opts.Color, opts.Binary)
+	st := newStyler(opts.Color, opts.Binary, opts.Width)
 	var b strings.Builder
 
-	s.renderHeader(&b, st)
 	s.renderHealth(&b, st)
 	s.renderSystem(&b, st)
 	s.renderMql(&b, st)
@@ -202,20 +208,6 @@ func (s Status) renderPlatform(b *strings.Builder, st styler) {
 	for _, w := range s.Upstream.Warnings {
 		st.rowRaw(b, st.warn("⚠ "+w))
 	}
-}
-
-func (s Status) renderHeader(b *strings.Builder, st styler) {
-	meta := fmt.Sprintf("%s · %s · %s", s.Client.Version, s.osArch(), s.Client.Timestamp)
-	fmt.Fprintf(b, "\n  %s    %s\n", st.bold(st.binary+" status"), st.dim(meta))
-}
-
-// osArch returns "<os>/<arch>" for the header, or "unknown" when platform info
-// could not be determined.
-func (s Status) osArch() string {
-	if s.Client.Platform == nil {
-		return "unknown"
-	}
-	return s.Client.Platform.Name + "/" + s.Client.Platform.Arch
 }
 
 // renderHealth renders the at-a-glance summary: one dot per dimension (Client,
@@ -388,18 +380,42 @@ func (s Status) renderProviders(b *strings.Builder, st styler) {
 	}
 	if len(currentNames) > 0 {
 		st.rowRaw(b, "")
-		extra := 0
-		const currentLimit = 12
-		if len(currentNames) > currentLimit {
-			extra = len(currentNames) - currentLimit
-			currentNames = currentNames[:currentLimit]
-		}
-		line := st.ok("✓ current") + "  " + st.dim(strings.Join(currentNames, ", "))
+		shown, extra := st.fitNames(currentNames)
+		line := st.ok("✓ current") + "  " + st.dim(strings.Join(shown, ", "))
 		if extra > 0 {
 			line += st.dim(fmt.Sprintf(", +%d", extra))
 		}
 		st.rowRaw(b, line)
 	}
+}
+
+// fitNames trims a comma-separated provider list to what fits on one terminal
+// line, returning the names to show and how many were dropped into the "+N"
+// marker. It measures visible width only (the styling escapes don't occupy
+// columns) and always keeps at least the first name so the row is never empty.
+func (st styler) fitNames(names []string) (shown []string, extra int) {
+	// Columns consumed before the first name: the row gutter ("  │  ") plus the
+	// "✓ current  " label.
+	const prefix = len("  │  ") + len("✓ current  ")
+	budget := st.width - prefix
+
+	used := 0
+	for i, name := range names {
+		add := len(name)
+		if i > 0 {
+			add += len(", ")
+		}
+		// Reserve room for a ", +N" marker when names would remain after this one.
+		marker := 0
+		if remaining := len(names) - i - 1; remaining > 0 {
+			marker = len(fmt.Sprintf(", +%d", remaining))
+		}
+		if i > 0 && used+add+marker > budget {
+			return names[:i], len(names) - i
+		}
+		used += add
+	}
+	return names, 0
 }
 
 func (s Status) renderFooter(b *strings.Builder, st styler) {

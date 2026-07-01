@@ -1,6 +1,4 @@
 
-  mql status    13.22.0 · macos/arm64 · 2026-06-29T14:37:00-07:00
-
   ● Client     not registered   ✗ action needed
   ● Platform   reachable · SERVING   ✓ healthy
   ● Updates    mql 13.22.0 → 13.25.0 · 2 providers outdated
