@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v4"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -29,6 +29,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
 	cacheEncryptionKeyURI           string
 	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
 	cacheUserAssignedIdentityIds    []string
+	cacheSystemData                 any
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) id() (string, error) {
@@ -123,6 +124,11 @@ func initAzureSubscriptionCacheServiceRedisInstance(runtime *plugin.Runtime, arg
 	if resp.Identity != nil {
 		mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(resp.Identity.UserAssignedIdentities)
 	}
+	sysData, err := convert.JsonToDict(resp.ResourceInfo.SystemData)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlRedis.cacheSystemData = sysData
 	return args, mqlRedis, nil
 }
 
@@ -174,6 +180,11 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			if cache.Identity != nil {
 				mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(cache.Identity.UserAssignedIdentities)
 			}
+			sysData, err := convert.JsonToDict(cache.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRedis.cacheSystemData = sysData
 			caches = append(caches, mqlRedis)
 		}
 	}
@@ -291,6 +302,14 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnectio
 			val := string(*pec.Properties.ProvisioningState)
 			pecProvisioningState = &val
 		}
+		groupIds := []any{}
+		if pec.Properties != nil {
+			for _, g := range pec.Properties.GroupIDs {
+				if g != nil {
+					groupIds = append(groupIds, *g)
+				}
+			}
+		}
 		pecResource, err := CreateResource(a.MqlRuntime, "azure.subscription.cacheService.redisInstance.privateEndpointConnection",
 			map[string]*llx.RawData{
 				"id":                llx.StringDataPtr(pec.ID),
@@ -300,6 +319,7 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnectio
 				"status":            llx.StringDataPtr(status),
 				"description":       llx.StringDataPtr(description),
 				"provisioningState": llx.StringDataPtr(pecProvisioningState),
+				"groupIds":          llx.ArrayData(groupIds, types.String),
 			})
 		if err != nil {
 			return nil, err

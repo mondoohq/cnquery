@@ -196,6 +196,7 @@ const (
 	ResourceAzureSubscriptionMySqlServiceServer                                                  string = "azure.subscription.mySqlService.server"
 	ResourceAzureSubscriptionMySqlServiceDatabase                                                string = "azure.subscription.mySqlService.database"
 	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                          string = "azure.subscription.mySqlService.flexibleServer"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServerAdministrator                             string = "azure.subscription.mySqlService.flexibleServer.administrator"
 	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
 	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
@@ -1146,6 +1147,10 @@ func init() {
 		"azure.subscription.mySqlService.flexibleServer": {
 			Init:   initAzureSubscriptionMySqlServiceFlexibleServer,
 			Create: createAzureSubscriptionMySqlServiceFlexibleServer,
+		},
+		"azure.subscription.mySqlService.flexibleServer.administrator": {
+			// to override args, implement: initAzureSubscriptionMySqlServiceFlexibleServerAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMySqlServiceFlexibleServerAdministrator,
 		},
 		"azure.subscription.cosmosDbService": {
 			Init:   initAzureSubscriptionCosmosDbService,
@@ -2438,6 +2443,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.deployment.error": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDeployment).GetError()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.deployment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDeployment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.computeService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeService).GetSubscriptionId()).ToDataRes(types.String)
@@ -8754,8 +8762,59 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.flexibleServer.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
+	"azure.subscription.mySqlService.flexibleServer.fullVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetFullVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.databasePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetDatabasePort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageAutoIoScaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetStorageAutoIoScaling()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageLogOnDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetStorageLogOnDisk()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetStorageRedundancy()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.backupIntervalHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetBackupIntervalHours()).ToDataRes(types.Int)
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenancePatchStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenancePatchStrategy()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.mySqlService.flexibleServer.threatProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetThreatProtectionState()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.azureAdAdministrators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetAzureAdAdministrators()).ToDataRes(types.Array(types.Resource("azure.subscription.mySqlService.flexibleServer.administrator")))
+	},
 	"azure.subscription.mySqlService.flexibleServer.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.administratorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetAdministratorType()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.login": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetLogin()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetSid()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).GetTenantId()).ToDataRes(types.String)
 	},
 	"azure.subscription.cosmosDbService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbService).GetSubscriptionId()).ToDataRes(types.String)
@@ -11541,6 +11600,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.redisInstance.patchSchedules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPatchSchedules()).ToDataRes(types.Array(types.Resource("azure.subscription.cacheService.redisInstance.patchSchedule")))
 	},
+	"azure.subscription.cacheService.redisInstance.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.cacheService.redisInstance.firewallRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).GetId()).ToDataRes(types.String)
 	},
@@ -11591,6 +11653,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.groupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetGroupIds()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.dataFactoryService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataFactoryService).GetSubscriptionId()).ToDataRes(types.String)
@@ -16432,6 +16497,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.deployment.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDeployment).Error, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.deployment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDeployment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25546,8 +25615,80 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.mySqlService.flexibleServer.fullVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).FullVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.databasePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).DatabasePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageAutoIoScaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).StorageAutoIoScaling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageLogOnDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).StorageLogOnDisk, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.storageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).StorageRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.backupIntervalHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).BackupIntervalHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenancePatchStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenancePatchStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.threatProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).ThreatProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.azureAdAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).AzureAdAdministrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.mySqlService.flexibleServer.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.administratorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).AdministratorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.login": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).Login, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.administrator.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29590,6 +29731,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).PatchSchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cacheService.redisInstance.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cacheService.redisInstance.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).__id, ok = v.Value.(string)
 		return
@@ -29668,6 +29813,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.groupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dataFactoryService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37365,7 +37514,7 @@ func (c *mqlAzureSubscriptionSystemData) GetLastModifiedAt() *plugin.TValue[*tim
 type mqlAzureSubscriptionDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionDeploymentInternal it will be used here
+	mqlAzureSubscriptionDeploymentInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
@@ -37384,6 +37533,7 @@ type mqlAzureSubscriptionDeployment struct {
 	Providers         plugin.TValue[[]any]
 	OutputResources   plugin.TValue[[]any]
 	Error             plugin.TValue[any]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionDeployment creates a new instance of this resource
@@ -37493,6 +37643,22 @@ func (c *mqlAzureSubscriptionDeployment) GetOutputResources() *plugin.TValue[[]a
 
 func (c *mqlAzureSubscriptionDeployment) GetError() *plugin.TValue[any] {
 	return &c.Error
+}
+
+func (c *mqlAzureSubscriptionDeployment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.deployment", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
 }
 
 // mqlAzureSubscriptionComputeService for the azure.subscription.computeService resource
@@ -58558,31 +58724,41 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionMySqlServiceFlexibleServerInternal
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	Type                   plugin.TValue[string]
-	Properties             plugin.TValue[any]
-	Version                plugin.TValue[string]
-	SslEnforcement         plugin.TValue[bool]
-	PublicNetworkAccess    plugin.TValue[string]
-	DataEncryptionKey      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
-	DataEncryptionType     plugin.TValue[string]
-	Configuration          plugin.TValue[[]any]
-	Databases              plugin.TValue[[]any]
-	FirewallRules          plugin.TValue[[]any]
-	BackupRetentionDays    plugin.TValue[int64]
-	GeoRedundantBackup     plugin.TValue[string]
-	GeoBackupEncryptionKey plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
-	HighAvailabilityMode   plugin.TValue[string]
-	HighAvailabilityState  plugin.TValue[string]
-	InternetReachable      plugin.TValue[bool]
-	IdentityType           plugin.TValue[string]
-	PrincipalId            plugin.TValue[string]
-	TenantId               plugin.TValue[string]
-	UserAssignedIdentities plugin.TValue[[]any]
-	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Type                       plugin.TValue[string]
+	Properties                 plugin.TValue[any]
+	Version                    plugin.TValue[string]
+	SslEnforcement             plugin.TValue[bool]
+	PublicNetworkAccess        plugin.TValue[string]
+	DataEncryptionKey          plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	DataEncryptionType         plugin.TValue[string]
+	Configuration              plugin.TValue[[]any]
+	Databases                  plugin.TValue[[]any]
+	FirewallRules              plugin.TValue[[]any]
+	BackupRetentionDays        plugin.TValue[int64]
+	GeoRedundantBackup         plugin.TValue[string]
+	GeoBackupEncryptionKey     plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	HighAvailabilityMode       plugin.TValue[string]
+	HighAvailabilityState      plugin.TValue[string]
+	InternetReachable          plugin.TValue[bool]
+	IdentityType               plugin.TValue[string]
+	PrincipalId                plugin.TValue[string]
+	TenantId                   plugin.TValue[string]
+	UserAssignedIdentities     plugin.TValue[[]any]
+	FullVersion                plugin.TValue[string]
+	DatabasePort               plugin.TValue[int64]
+	StorageAutoIoScaling       plugin.TValue[bool]
+	StorageLogOnDisk           plugin.TValue[bool]
+	StorageRedundancy          plugin.TValue[string]
+	BackupIntervalHours        plugin.TValue[int64]
+	MaintenancePatchStrategy   plugin.TValue[string]
+	PrivateEndpointConnections plugin.TValue[[]any]
+	ThreatProtectionState      plugin.TValue[string]
+	AzureAdAdministrators      plugin.TValue[[]any]
+	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionMySqlServiceFlexibleServer creates a new instance of this resource
@@ -58794,6 +58970,72 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetUserAssignedIdentiti
 	})
 }
 
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetFullVersion() *plugin.TValue[string] {
+	return &c.FullVersion
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetDatabasePort() *plugin.TValue[int64] {
+	return &c.DatabasePort
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetStorageAutoIoScaling() *plugin.TValue[bool] {
+	return &c.StorageAutoIoScaling
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetStorageLogOnDisk() *plugin.TValue[bool] {
+	return &c.StorageLogOnDisk
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetStorageRedundancy() *plugin.TValue[string] {
+	return &c.StorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetBackupIntervalHours() *plugin.TValue[int64] {
+	return &c.BackupIntervalHours
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenancePatchStrategy() *plugin.TValue[string] {
+	return &c.MaintenancePatchStrategy
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mySqlService.flexibleServer", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetThreatProtectionState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ThreatProtectionState, func() (string, error) {
+		return c.threatProtectionState()
+	})
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetAzureAdAdministrators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AzureAdAdministrators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mySqlService.flexibleServer", c.__id, "azureAdAdministrators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.azureAdAdministrators()
+	})
+}
+
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -58808,6 +59050,85 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetSystemMetadata() *pl
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator for the azure.subscription.mySqlService.flexibleServer.administrator resource
+type mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMySqlServiceFlexibleServerAdministratorInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	AdministratorType plugin.TValue[string]
+	Login             plugin.TValue[string]
+	Sid               plugin.TValue[string]
+	TenantId          plugin.TValue[string]
+}
+
+// createAzureSubscriptionMySqlServiceFlexibleServerAdministrator creates a new instance of this resource
+func createAzureSubscriptionMySqlServiceFlexibleServerAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.mySqlService.flexibleServer.administrator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) MqlName() string {
+	return "azure.subscription.mySqlService.flexibleServer.administrator"
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetAdministratorType() *plugin.TValue[string] {
+	return &c.AdministratorType
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetLogin() *plugin.TValue[string] {
+	return &c.Login
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
 }
 
 // mqlAzureSubscriptionCosmosDbService for the azure.subscription.cosmosDbService resource
@@ -68217,6 +68538,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	PrivateEndpointConnections plugin.TValue[[]any]
 	FirewallRules              plugin.TValue[[]any]
 	PatchSchedules             plugin.TValue[[]any]
+	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCacheServiceRedisInstance creates a new instance of this resource
@@ -68448,6 +68770,22 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPatchSchedules() *plu
 	})
 }
 
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService.redisInstance", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule for the azure.subscription.cacheService.redisInstance.firewallRule resource
 type mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule struct {
 	MqlRuntime *plugin.Runtime
@@ -68594,6 +68932,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection stru
 	Status            plugin.TValue[string]
 	Description       plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
+	GroupIds          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection creates a new instance of this resource
@@ -68675,6 +69014,10 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection)
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetGroupIds() *plugin.TValue[[]any] {
+	return &c.GroupIds
 }
 
 // mqlAzureSubscriptionDataFactoryService for the azure.subscription.dataFactoryService resource

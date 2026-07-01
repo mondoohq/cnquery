@@ -141,3 +141,11 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) systemMetadata() (*mqlAzu
 func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+func (a *mqlAzureSubscriptionDeployment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}

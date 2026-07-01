@@ -2009,6 +2009,8 @@ func isAzureReadMethod(name string) bool {
 		"NewListByResourceGroupPager", "Get",
 		"NewListByServerPager", "NewListByAccountPager",
 		"NewListByNamespacePager",
+		// Non-paged list variants (some SDKs return the full list in one call)
+		"ListByServer",
 	}
 	for _, m := range readMethods {
 		if name == m {

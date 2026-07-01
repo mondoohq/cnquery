@@ -291,6 +291,8 @@ private azure.subscription.deployment @defaults("name provisioningState timestam
   outputResources []string
   // Error details when the deployment failed
   error dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Compute
@@ -5914,8 +5916,51 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   tenantId string
   // User-assigned managed identities attached to the server
   userAssignedIdentities() []azure.subscription.managedIdentity
+  // Exact MySQL engine version, including the patch level (for example "8.0.37")
+  fullVersion string
+  // Custom database port the server listens on
+  databasePort int
+  // Whether storage IOPS auto-scaling is enabled
+  storageAutoIoScaling bool
+  // Whether the server keeps its logs on the data disk
+  storageLogOnDisk bool
+  // Storage redundancy type ("LocalRedundancy" or "ZoneRedundancy")
+  storageRedundancy string
+  // Interval between automatic backups, in hours
+  backupIntervalHours int
+  // Maintenance patch strategy ("Regular" or "VirtualCanary")
+  maintenancePatchStrategy string
+  // Private endpoint connections that attach the server to private networks
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Microsoft Defender for Cloud advanced threat protection state ("Enabled", "Disabled", or "" when never configured)
+  threatProtectionState() string
+  // Microsoft Entra ID (Azure AD) administrators configured on the server
+  azureAdAdministrators() []azure.subscription.mySqlService.flexibleServer.administrator
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Azure Database for MySQL flexible server Microsoft Entra administrator
+//
+// A Microsoft Entra ID (Azure AD) administrator configured on a MySQL flexible
+// server. Presence of an administrator indicates Entra-based authentication is
+// configured; the administratorType, login, and object ID (sid) identify the
+// principal granted administrative access.
+private azure.subscription.mySqlService.flexibleServer.administrator @defaults("login administratorType") {
+  // Administrator resource ID
+  id string
+  // Administrator resource name
+  name string
+  // Administrator resource type
+  type string
+  // Administrator type (for example "ActiveDirectory")
+  administratorType string
+  // Login name of the server administrator
+  login string
+  // Object ID (SID) of the administrator principal
+  sid string
+  // Tenant ID of the administrator
+  tenantId string
 }
 
 // Azure Cosmos DB
@@ -8284,6 +8329,8 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   firewallRules() []azure.subscription.cacheService.redisInstance.firewallRule
   // Patch schedules for the Redis cache
   patchSchedules() []azure.subscription.cacheService.redisInstance.patchSchedule
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cache for Redis firewall rule
@@ -8332,6 +8379,8 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   description string
   // Provisioning state. Possible values: "Succeeded", "Creating", "Deleting", "Failed", "Updating"
   provisioningState string
+  // Private link group IDs the connection targets (for example "redisCache")
+  groupIds []string
 }
 
 // Azure Data Factory service

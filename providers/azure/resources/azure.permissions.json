@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.23.0",
-  "generated_at": "2026-06-30T21:33:11-07:00",
+  "generated_at": "2026-06-30T23:35:09-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -69,6 +69,9 @@
     "Microsoft.ContainerService/identityBindings/read",
     "Microsoft.ContainerService/managedClusters/agentPools/read",
     "Microsoft.ContainerService/managedClusters/read",
+    "Microsoft.DBforMySQL/advancedThreatProtectionSettings/read",
+    "Microsoft.DBforMySQL/azureADAdministrators/read",
+    "Microsoft.DBforMySQL/privateEndpointConnections/read",
     "Microsoft.DBforMySQL/servers/configurations/read",
     "Microsoft.DBforMySQL/servers/databases/read",
     "Microsoft.DBforMySQL/servers/firewallRules/read",
@@ -637,6 +640,24 @@
       "service": "Microsoft.ContainerService",
       "action": "NewListPager",
       "source_file": "aks.go"
+    },
+    {
+      "permission": "Microsoft.DBforMySQL/advancedThreatProtectionSettings/read",
+      "service": "Microsoft.DBforMySQL",
+      "action": "Get",
+      "source_file": "mysql.go"
+    },
+    {
+      "permission": "Microsoft.DBforMySQL/azureADAdministrators/read",
+      "service": "Microsoft.DBforMySQL",
+      "action": "NewListByServerPager",
+      "source_file": "mysql.go"
+    },
+    {
+      "permission": "Microsoft.DBforMySQL/privateEndpointConnections/read",
+      "service": "Microsoft.DBforMySQL",
+      "action": "ListByServer",
+      "source_file": "mysql.go"
     },
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
