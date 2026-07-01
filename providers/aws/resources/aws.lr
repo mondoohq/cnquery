@@ -12497,6 +12497,52 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   snapshotScheduleIdentifier string
   // Snapshots for this cluster
   snapshots() []aws.redshift.snapshot
+  // Whether the cluster was created by restoring from a snapshot
+  restoredFromSnapshot bool
+  // Status of the restore-from-snapshot operation: starting, restoring, completed, or failed
+  restoreStatus string
+  // Percentage of the restore completed, when a restore is in progress
+  restoreProgressPercent float
+  // IAM roles the cluster can assume to access other AWS services, such as S3 and Glue
+  iamRoles() []aws.iam.role
+  // Default IAM role used for operations that don't name a role
+  defaultIamRole() aws.iam.role
+  // Master user password secret managed by Secrets Manager
+  masterPasswordSecret() aws.secretsmanager.secret
+  // Infrastructure-management system that owns the cluster, inferred from provenance tags
+  managedBy() string
+  // CloudFormation stack that provisioned the cluster, when tagged
+  cloudformationStack() aws.cloudformation.stack
+  // Namespace ARN, a stable identity that persists across cluster rename and restore
+  clusterNamespaceArn string
+  // Whether cross-region snapshot copy is enabled for the cluster
+  crossRegionSnapshotCopyEnabled bool
+  // Destination region automated snapshots are copied to
+  snapshotCopyDestinationRegion string
+  // Retention period, in days, for automated snapshots copied to the destination region
+  snapshotCopyRetentionPeriod int
+  // Retention period, in days, for manual snapshots copied to the destination region
+  snapshotCopyManualRetentionPeriod int
+  // Snapshot copy grant used to encrypt copied snapshots in the destination region
+  snapshotCopyGrantName string
+  // Time the next automatic snapshot is expected to be taken
+  expectedNextSnapshotScheduleAt time
+  // State of the next expected scheduled snapshot: OnTrack or Pending
+  expectedNextSnapshotScheduleStatus string
+  // State of the snapshot schedule attached to the cluster: ACTIVE, MODIFYING, or FAILED
+  snapshotScheduleState string
+  // VPC security groups attached to the cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Custom domain name configured for the cluster endpoint
+  customDomainName string
+  // ACM certificate backing the custom domain
+  customDomainCertificateArn string
+  // Expiration date of the custom domain certificate
+  customDomainCertificateExpiresAt time
+  // Status of Availability Zone relocation for the cluster
+  availabilityZoneRelocationStatus string
+  // Elastic IP address of the cluster, when one is configured
+  elasticIp string
 }
 
 // Amazon Redshift cluster snapshot

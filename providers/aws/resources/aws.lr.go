@@ -18408,6 +18408,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.redshift.snapshot")))
 	},
+	"aws.redshift.cluster.restoredFromSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetRestoredFromSnapshot()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.restoreStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetRestoreStatus()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.restoreProgressPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetRestoreProgressPercent()).ToDataRes(types.Float)
+	},
+	"aws.redshift.cluster.iamRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetIamRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
+	},
+	"aws.redshift.cluster.defaultIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetDefaultIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.redshift.cluster.masterPasswordSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetMasterPasswordSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.redshift.cluster.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetManagedBy()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.cloudformationStack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCloudformationStack()).ToDataRes(types.Resource("aws.cloudformation.stack"))
+	},
+	"aws.redshift.cluster.clusterNamespaceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterNamespaceArn()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.crossRegionSnapshotCopyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCrossRegionSnapshotCopyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.snapshotCopyDestinationRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSnapshotCopyDestinationRegion()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.snapshotCopyRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSnapshotCopyRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.snapshotCopyManualRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSnapshotCopyManualRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.snapshotCopyGrantName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSnapshotCopyGrantName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.expectedNextSnapshotScheduleAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetExpectedNextSnapshotScheduleAt()).ToDataRes(types.Time)
+	},
+	"aws.redshift.cluster.expectedNextSnapshotScheduleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetExpectedNextSnapshotScheduleStatus()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.snapshotScheduleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSnapshotScheduleState()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.redshift.cluster.customDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.customDomainCertificateArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainCertificateArn()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.customDomainCertificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainCertificateExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.redshift.cluster.availabilityZoneRelocationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetAvailabilityZoneRelocationStatus()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.elasticIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetElasticIp()).ToDataRes(types.String)
+	},
 	"aws.redshift.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -53412,6 +53481,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.restoredFromSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).RestoredFromSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.restoreStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).RestoreStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.restoreProgressPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).RestoreProgressPercent, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.iamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).IamRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.defaultIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).DefaultIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.masterPasswordSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).MasterPasswordSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.cloudformationStack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CloudformationStack, ok = plugin.RawToTValue[*mqlAwsCloudformationStack](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.clusterNamespaceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterNamespaceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.crossRegionSnapshotCopyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CrossRegionSnapshotCopyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.snapshotCopyDestinationRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SnapshotCopyDestinationRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.snapshotCopyRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SnapshotCopyRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.snapshotCopyManualRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SnapshotCopyManualRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.snapshotCopyGrantName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SnapshotCopyGrantName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.expectedNextSnapshotScheduleAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ExpectedNextSnapshotScheduleAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.expectedNextSnapshotScheduleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ExpectedNextSnapshotScheduleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.snapshotScheduleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SnapshotScheduleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.customDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CustomDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.customDomainCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CustomDomainCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.customDomainCertificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CustomDomainCertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.availabilityZoneRelocationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).AvailabilityZoneRelocationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.elasticIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ElasticIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -128135,48 +128296,71 @@ type mqlAwsRedshiftCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRedshiftClusterInternal
-	AllowVersionUpgrade              plugin.TValue[bool]
-	Arn                              plugin.TValue[string]
-	AutomatedSnapshotRetentionPeriod plugin.TValue[int64]
-	AvailabilityZone                 plugin.TValue[string]
-	ClusterParameterGroupNames       plugin.TValue[[]any]
-	ClusterRevisionNumber            plugin.TValue[string]
-	ClusterStatus                    plugin.TValue[string]
-	ClusterSubnetGroupName           plugin.TValue[string]
-	ClusterVersion                   plugin.TValue[string]
-	CreatedAt                        plugin.TValue[*time.Time]
-	DbName                           plugin.TValue[string]
-	Encrypted                        plugin.TValue[bool]
-	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
-	EnhancedVpcRouting               plugin.TValue[bool]
-	Logging                          plugin.TValue[any]
-	MasterUsername                   plugin.TValue[string]
-	Name                             plugin.TValue[string]
-	NextMaintenanceWindowStartTime   plugin.TValue[*time.Time]
-	NodeType                         plugin.TValue[string]
-	NumberOfNodes                    plugin.TValue[int64]
-	Parameters                       plugin.TValue[[]any]
-	PreferredMaintenanceWindow       plugin.TValue[string]
-	PubliclyAccessible               plugin.TValue[bool]
-	InternetReachable                plugin.TValue[bool]
-	EndpointAddress                  plugin.TValue[string]
-	EndpointPort                     plugin.TValue[int64]
-	EndpointVpcEndpoints             plugin.TValue[[]any]
-	Region                           plugin.TValue[string]
-	Tags                             plugin.TValue[map[string]any]
-	VpcId                            plugin.TValue[string]
-	Vpc                              plugin.TValue[*mqlAwsVpc]
-	ClusterAvailabilityStatus        plugin.TValue[string]
-	TotalStorageCapacityInMegaBytes  plugin.TValue[int64]
-	MaintenanceTrackName             plugin.TValue[string]
-	HsmStatus                        plugin.TValue[any]
-	ModifyStatus                     plugin.TValue[string]
-	MultiAZ                          plugin.TValue[bool]
-	ManualSnapshotRetentionPeriod    plugin.TValue[int64]
-	IpAddressType                    plugin.TValue[string]
-	MasterPasswordSecretKmsKey       plugin.TValue[*mqlAwsKmsKey]
-	SnapshotScheduleIdentifier       plugin.TValue[string]
-	Snapshots                        plugin.TValue[[]any]
+	AllowVersionUpgrade                plugin.TValue[bool]
+	Arn                                plugin.TValue[string]
+	AutomatedSnapshotRetentionPeriod   plugin.TValue[int64]
+	AvailabilityZone                   plugin.TValue[string]
+	ClusterParameterGroupNames         plugin.TValue[[]any]
+	ClusterRevisionNumber              plugin.TValue[string]
+	ClusterStatus                      plugin.TValue[string]
+	ClusterSubnetGroupName             plugin.TValue[string]
+	ClusterVersion                     plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	DbName                             plugin.TValue[string]
+	Encrypted                          plugin.TValue[bool]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
+	EnhancedVpcRouting                 plugin.TValue[bool]
+	Logging                            plugin.TValue[any]
+	MasterUsername                     plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	NextMaintenanceWindowStartTime     plugin.TValue[*time.Time]
+	NodeType                           plugin.TValue[string]
+	NumberOfNodes                      plugin.TValue[int64]
+	Parameters                         plugin.TValue[[]any]
+	PreferredMaintenanceWindow         plugin.TValue[string]
+	PubliclyAccessible                 plugin.TValue[bool]
+	InternetReachable                  plugin.TValue[bool]
+	EndpointAddress                    plugin.TValue[string]
+	EndpointPort                       plugin.TValue[int64]
+	EndpointVpcEndpoints               plugin.TValue[[]any]
+	Region                             plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	VpcId                              plugin.TValue[string]
+	Vpc                                plugin.TValue[*mqlAwsVpc]
+	ClusterAvailabilityStatus          plugin.TValue[string]
+	TotalStorageCapacityInMegaBytes    plugin.TValue[int64]
+	MaintenanceTrackName               plugin.TValue[string]
+	HsmStatus                          plugin.TValue[any]
+	ModifyStatus                       plugin.TValue[string]
+	MultiAZ                            plugin.TValue[bool]
+	ManualSnapshotRetentionPeriod      plugin.TValue[int64]
+	IpAddressType                      plugin.TValue[string]
+	MasterPasswordSecretKmsKey         plugin.TValue[*mqlAwsKmsKey]
+	SnapshotScheduleIdentifier         plugin.TValue[string]
+	Snapshots                          plugin.TValue[[]any]
+	RestoredFromSnapshot               plugin.TValue[bool]
+	RestoreStatus                      plugin.TValue[string]
+	RestoreProgressPercent             plugin.TValue[float64]
+	IamRoles                           plugin.TValue[[]any]
+	DefaultIamRole                     plugin.TValue[*mqlAwsIamRole]
+	MasterPasswordSecret               plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	ManagedBy                          plugin.TValue[string]
+	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
+	ClusterNamespaceArn                plugin.TValue[string]
+	CrossRegionSnapshotCopyEnabled     plugin.TValue[bool]
+	SnapshotCopyDestinationRegion      plugin.TValue[string]
+	SnapshotCopyRetentionPeriod        plugin.TValue[int64]
+	SnapshotCopyManualRetentionPeriod  plugin.TValue[int64]
+	SnapshotCopyGrantName              plugin.TValue[string]
+	ExpectedNextSnapshotScheduleAt     plugin.TValue[*time.Time]
+	ExpectedNextSnapshotScheduleStatus plugin.TValue[string]
+	SnapshotScheduleState              plugin.TValue[string]
+	SecurityGroups                     plugin.TValue[[]any]
+	CustomDomainName                   plugin.TValue[string]
+	CustomDomainCertificateArn         plugin.TValue[string]
+	CustomDomainCertificateExpiresAt   plugin.TValue[*time.Time]
+	AvailabilityZoneRelocationStatus   plugin.TValue[string]
+	ElasticIp                          plugin.TValue[string]
 }
 
 // createAwsRedshiftCluster creates a new instance of this resource
@@ -128436,6 +128620,160 @@ func (c *mqlAwsRedshiftCluster) GetSnapshots() *plugin.TValue[[]any] {
 
 		return c.snapshots()
 	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetRestoredFromSnapshot() *plugin.TValue[bool] {
+	return &c.RestoredFromSnapshot
+}
+
+func (c *mqlAwsRedshiftCluster) GetRestoreStatus() *plugin.TValue[string] {
+	return &c.RestoreStatus
+}
+
+func (c *mqlAwsRedshiftCluster) GetRestoreProgressPercent() *plugin.TValue[float64] {
+	return &c.RestoreProgressPercent
+}
+
+func (c *mqlAwsRedshiftCluster) GetIamRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "iamRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamRoles()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetDefaultIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.DefaultIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "defaultIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.defaultIamRole()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetMasterPasswordSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.MasterPasswordSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "masterPasswordSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.masterPasswordSecret()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetCloudformationStack() *plugin.TValue[*mqlAwsCloudformationStack] {
+	return plugin.GetOrCompute[*mqlAwsCloudformationStack](&c.CloudformationStack, func() (*mqlAwsCloudformationStack, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "cloudformationStack")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudformationStack), nil
+			}
+		}
+
+		return c.cloudformationStack()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterNamespaceArn() *plugin.TValue[string] {
+	return &c.ClusterNamespaceArn
+}
+
+func (c *mqlAwsRedshiftCluster) GetCrossRegionSnapshotCopyEnabled() *plugin.TValue[bool] {
+	return &c.CrossRegionSnapshotCopyEnabled
+}
+
+func (c *mqlAwsRedshiftCluster) GetSnapshotCopyDestinationRegion() *plugin.TValue[string] {
+	return &c.SnapshotCopyDestinationRegion
+}
+
+func (c *mqlAwsRedshiftCluster) GetSnapshotCopyRetentionPeriod() *plugin.TValue[int64] {
+	return &c.SnapshotCopyRetentionPeriod
+}
+
+func (c *mqlAwsRedshiftCluster) GetSnapshotCopyManualRetentionPeriod() *plugin.TValue[int64] {
+	return &c.SnapshotCopyManualRetentionPeriod
+}
+
+func (c *mqlAwsRedshiftCluster) GetSnapshotCopyGrantName() *plugin.TValue[string] {
+	return &c.SnapshotCopyGrantName
+}
+
+func (c *mqlAwsRedshiftCluster) GetExpectedNextSnapshotScheduleAt() *plugin.TValue[*time.Time] {
+	return &c.ExpectedNextSnapshotScheduleAt
+}
+
+func (c *mqlAwsRedshiftCluster) GetExpectedNextSnapshotScheduleStatus() *plugin.TValue[string] {
+	return &c.ExpectedNextSnapshotScheduleStatus
+}
+
+func (c *mqlAwsRedshiftCluster) GetSnapshotScheduleState() *plugin.TValue[string] {
+	return &c.SnapshotScheduleState
+}
+
+func (c *mqlAwsRedshiftCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetCustomDomainName() *plugin.TValue[string] {
+	return &c.CustomDomainName
+}
+
+func (c *mqlAwsRedshiftCluster) GetCustomDomainCertificateArn() *plugin.TValue[string] {
+	return &c.CustomDomainCertificateArn
+}
+
+func (c *mqlAwsRedshiftCluster) GetCustomDomainCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.CustomDomainCertificateExpiresAt
+}
+
+func (c *mqlAwsRedshiftCluster) GetAvailabilityZoneRelocationStatus() *plugin.TValue[string] {
+	return &c.AvailabilityZoneRelocationStatus
+}
+
+func (c *mqlAwsRedshiftCluster) GetElasticIp() *plugin.TValue[string] {
+	return &c.ElasticIp
 }
 
 // mqlAwsRedshiftSnapshot for the aws.redshift.snapshot resource
