@@ -103,6 +103,14 @@ func (a *mqlAwsRoute53HostedZone) managedBy() (string, error) {
 	return managedByWithCreationToken("", cr.Data), nil
 }
 
+func (a *mqlAwsNeptuneCluster) managedBy() (string, error) {
+	return managedByFromResourceTags(a.GetTags())
+}
+
+func (a *mqlAwsNeptuneCluster) cloudformationStack() (*mqlAwsCloudformationStack, error) {
+	return cloudformationStackFromResourceTags(a.MqlRuntime, a.Region.Data, a.GetTags(), &a.CloudformationStack)
+}
+
 func (a *mqlAwsEfsFilesystem) managedBy() (string, error) {
 	owner, err := managedByFromResourceTags(a.GetTags())
 	if err != nil {

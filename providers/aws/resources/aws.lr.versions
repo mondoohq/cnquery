@@ -6789,6 +6789,7 @@ aws.neptune.cluster.arn 11.15.2
 aws.neptune.cluster.automaticRestartTime 11.15.2
 aws.neptune.cluster.availabilityZones 11.15.2
 aws.neptune.cluster.backupRetentionPeriod 11.15.2
+aws.neptune.cluster.cloudformationStack 13.39.2
 aws.neptune.cluster.clusterIdentifier 11.15.2
 aws.neptune.cluster.clusterParameterGroup 11.15.2
 aws.neptune.cluster.clusterResourceId 11.15.2
@@ -6802,9 +6803,11 @@ aws.neptune.cluster.engine 11.15.2
 aws.neptune.cluster.engineVersion 11.15.2
 aws.neptune.cluster.globalClusterIdentifier 11.15.2
 aws.neptune.cluster.iamDatabaseAuthenticationEnabled 11.15.2
+aws.neptune.cluster.iamRoles 13.39.2
 aws.neptune.cluster.kmsKey 11.16.1
 aws.neptune.cluster.kmsKeyId 11.15.2
 aws.neptune.cluster.latestRestorableTime 11.15.2
+aws.neptune.cluster.managedBy 13.39.2
 aws.neptune.cluster.masterUsername 11.15.2
 aws.neptune.cluster.multiAZ 11.15.2
 aws.neptune.cluster.name 11.15.2
@@ -6812,6 +6815,7 @@ aws.neptune.cluster.networkType 13.35.2
 aws.neptune.cluster.port 11.15.2
 aws.neptune.cluster.preferredBackupWindow 11.15.2
 aws.neptune.cluster.preferredMaintenanceWindow 11.15.2
+aws.neptune.cluster.readerEndpoint 13.39.2
 aws.neptune.cluster.region 11.15.2
 aws.neptune.cluster.securityGroups 13.3.1
 aws.neptune.cluster.snapshots 11.15.2
@@ -6819,6 +6823,7 @@ aws.neptune.cluster.status 11.15.2
 aws.neptune.cluster.storageEncrypted 11.15.2
 aws.neptune.cluster.storageType 11.15.2
 aws.neptune.cluster.subnetGroup 11.15.2
+aws.neptune.cluster.tags 13.39.2
 aws.neptune.clusters 11.15.2
 aws.neptune.instance 11.15.2
 aws.neptune.instance.arn 11.15.2

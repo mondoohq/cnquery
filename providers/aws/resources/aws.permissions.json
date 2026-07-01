@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.39.1",
-  "generated_at": "2026-06-30T23:48:59+02:00",
+  "generated_at": "2026-06-30T20:58:00-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -14,6 +14,7 @@
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
     "apigateway:GET",
+    "apigateway:GetDeployments",
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
@@ -997,6 +998,12 @@
       "service": "apigateway",
       "action": "GetApis",
       "source_file": "aws_apigatewayv2.go"
+    },
+    {
+      "permission": "apigateway:GetDeployments",
+      "service": "apigateway",
+      "action": "GetDeployments",
+      "source_file": "aws_apigateway.go"
     },
     {
       "permission": "application-autoscaling:DescribeScalableTargets",
@@ -4891,6 +4898,12 @@
       "service": "rds",
       "action": "ListTagsForResource",
       "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:ListTagsForResource",
+      "service": "rds",
+      "action": "ListTagsForResource",
+      "source_file": "aws_neptune.go"
     },
     {
       "permission": "rds:ListTagsForResource",

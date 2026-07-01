@@ -17510,6 +17510,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   enabledCloudwatchLogsExports []string
   // Connection endpoint for the primary instance
   endpoint string
+  // Reader endpoint for the cluster, balancing read connections across replicas
+  readerEndpoint string
   // Whether mapping of Amazon Identity and Access Management (IAM) accounts to database accounts is enabled
   iamDatabaseAuthenticationEnabled bool
   // Latest time to which a database can be restored
@@ -17534,6 +17536,16 @@ private aws.neptune.cluster @defaults("arn name status") {
   networkType string
   // List of VPC security groups associated with the DB cluster
   securityGroups() []aws.ec2.securitygroup
+  // IAM roles associated with the cluster
+  iamRoles() []aws.iam.role
+  // Tags for the cluster
+  tags() map[string]string
+  // CloudFormation stack that manages this cluster, if any
+  cloudformationStack() aws.cloudformation.stack
+  // Infrastructure-management system that owns this cluster
+  //
+  // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the cluster is unmanaged or managed by a tool that leaves no recognizable tag.
+  managedBy() string
 }
 
 // Amazon Neptune instance

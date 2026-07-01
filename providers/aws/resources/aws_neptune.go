@@ -94,6 +94,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 
 type mqlAwsNeptuneClusterInternal struct {
 	securityGroupIdHandler
+	cacheRoleArns []string
 }
 
 func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID string, cluster neptune_types.DBCluster) (*mqlAwsNeptuneCluster, error) {
@@ -120,6 +121,7 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 			"earliestRestorableTime":           llx.TimeDataPtr(cluster.EarliestRestorableTime),
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(cluster.EnabledCloudwatchLogsExports), types.String),
 			"endpoint":                         llx.StringDataPtr(cluster.Endpoint),
+			"readerEndpoint":                   llx.StringDataPtr(cluster.ReaderEndpoint),
 			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(cluster.IAMDatabaseAuthenticationEnabled),
 			"latestRestorableTime":             llx.TimeDataPtr(cluster.LatestRestorableTime),
 			"masterUsername":                   llx.StringDataPtr(cluster.MasterUsername),
@@ -141,9 +143,50 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 			sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, *sg.VpcSecurityGroupId))
 		}
 	}
+	roleArns := []string{}
+	for _, r := range cluster.AssociatedRoles {
+		if r.RoleArn != nil {
+			roleArns = append(roleArns, *r.RoleArn)
+		}
+	}
 	mqlCluster := resource.(*mqlAwsNeptuneCluster)
 	mqlCluster.setSecurityGroupArns(sgsArn)
+	mqlCluster.cacheRoleArns = roleArns
 	return mqlCluster, nil
+}
+
+func (a *mqlAwsNeptuneCluster) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Neptune(a.Region.Data)
+	ctx := context.Background()
+	arnVal := a.Arn.Data
+	resp, err := svc.ListTagsForResource(ctx, &neptune.ListTagsForResourceInput{ResourceName: &arnVal})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+	tags := map[string]any{}
+	for _, t := range resp.TagList {
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsNeptuneCluster) iamRoles() ([]any, error) {
+	res := []any{}
+	for _, roleArn := range a.cacheRoleArns {
+		ref, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+			map[string]*llx.RawData{"arn": llx.StringData(roleArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ref)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsNeptuneCluster) securityGroups() ([]any, error) {
