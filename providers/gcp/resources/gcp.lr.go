@@ -2989,6 +2989,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.folder.managementProject": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetManagementProject()).ToDataRes(types.String)
 	},
+	"gcp.folder.managementProjectRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetManagementProjectRef()).ToDataRes(types.Resource("gcp.project"))
+	},
 	"gcp.folder.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetState()).ToDataRes(types.String)
 	},
@@ -3279,6 +3282,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.tagBindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetTagBindings()).ToDataRes(types.Array(types.Resource("gcp.project.tagBinding")))
+	},
+	"gcp.project.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.lien.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLien).GetName()).ToDataRes(types.String)
@@ -7189,6 +7195,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.kmsService.keyring.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyring).GetProject()).ToDataRes(types.Resource("gcp.project"))
+	},
 	"gcp.project.kmsService.keyring.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetResourcePath()).ToDataRes(types.String)
 	},
@@ -7266,6 +7275,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.public": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetPublic()).ToDataRes(types.Bool)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetResourcePath()).ToDataRes(types.String)
@@ -7444,6 +7456,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKey).GetProjectId()).ToDataRes(types.String)
 	},
+	"gcp.project.apiKey.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKey).GetProject()).ToDataRes(types.Resource("gcp.project"))
+	},
+	"gcp.project.apiKey.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKey).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.apiKey.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKey).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
 	"gcp.project.apiKey.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKey).GetName()).ToDataRes(types.String)
 	},
@@ -7467,6 +7488,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.apiKey.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKey).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.apiKey.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKey).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.apiKey.restrictions.parentResourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetParentResourcePath()).ToDataRes(types.String)
@@ -7713,6 +7737,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.serviceAccount.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetProject()).ToDataRes(types.Resource("gcp.project"))
 	},
 	"gcp.project.iamService.serviceAccount.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetName()).ToDataRes(types.String)
@@ -9490,6 +9517,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.secretmanagerService.secret.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetTopics()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.secretmanagerService.secret.topicRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetTopicRefs()).ToDataRes(types.Array(types.Resource("gcp.project.pubsubService.topic")))
+	},
 	"gcp.project.secretmanagerService.secret.expireTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetExpireTime()).ToDataRes(types.Time)
 	},
@@ -9540,6 +9570,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.secretmanagerService.secret.public": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetPublic()).ToDataRes(types.Bool)
+	},
+	"gcp.project.secretmanagerService.secret.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSecretmanagerServiceSecret).GetManagedBy()).ToDataRes(types.String)
 	},
 	"gcp.project.secretmanagerService.secret.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerServiceSecretVersion).GetResourcePath()).ToDataRes(types.String)
@@ -17941,6 +17974,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpFolder).ManagementProject, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.folder.managementProjectRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).ManagementProjectRef, ok = plugin.RawToTValue[*mqlGcpProject](v.Value, v.Error)
+		return
+	},
 	"gcp.folder.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolder).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -18335,6 +18372,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.tagBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).TagBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.lien.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23973,6 +24014,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyring).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyring).Project, ok = plugin.RawToTValue[*mqlGcpProject](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyring).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24079,6 +24124,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24353,6 +24402,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKey).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKey).Project, ok = plugin.RawToTValue[*mqlGcpProject](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKey).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKey).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
 	"gcp.project.apiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24383,6 +24444,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.apiKey.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKey).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKey).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24755,6 +24820,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccount).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).Project, ok = plugin.RawToTValue[*mqlGcpProject](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27349,6 +27418,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.secretmanagerService.secret.topicRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).TopicRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.secretmanagerService.secret.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -27415,6 +27488,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.secretmanagerService.secret.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSecretmanagerServiceSecret).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.secretmanagerService.secret.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSecretmanagerServiceSecret).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.secret.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40579,23 +40656,24 @@ type mqlGcpFolder struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpFolderInternal
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Created            plugin.TValue[*time.Time]
-	Updated            plugin.TValue[*time.Time]
-	ParentId           plugin.TValue[string]
-	ParentFolder       plugin.TValue[*mqlGcpFolder]
-	ParentOrganization plugin.TValue[*mqlGcpOrganization]
-	ManagementProject  plugin.TValue[string]
-	State              plugin.TValue[string]
-	DeleteTime         plugin.TValue[*time.Time]
-	Folders            plugin.TValue[*mqlGcpFolders]
-	Projects           plugin.TValue[*mqlGcpProjects]
-	OrgPolicies        plugin.TValue[[]any]
-	IamPolicy          plugin.TValue[[]any]
-	AuditConfig        plugin.TValue[[]any]
-	Logging            plugin.TValue[*mqlGcpFolderLoggingService]
-	EssentialContacts  plugin.TValue[[]any]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Updated              plugin.TValue[*time.Time]
+	ParentId             plugin.TValue[string]
+	ParentFolder         plugin.TValue[*mqlGcpFolder]
+	ParentOrganization   plugin.TValue[*mqlGcpOrganization]
+	ManagementProject    plugin.TValue[string]
+	ManagementProjectRef plugin.TValue[*mqlGcpProject]
+	State                plugin.TValue[string]
+	DeleteTime           plugin.TValue[*time.Time]
+	Folders              plugin.TValue[*mqlGcpFolders]
+	Projects             plugin.TValue[*mqlGcpProjects]
+	OrgPolicies          plugin.TValue[[]any]
+	IamPolicy            plugin.TValue[[]any]
+	AuditConfig          plugin.TValue[[]any]
+	Logging              plugin.TValue[*mqlGcpFolderLoggingService]
+	EssentialContacts    plugin.TValue[[]any]
 }
 
 // createGcpFolder creates a new instance of this resource
@@ -40689,6 +40767,22 @@ func (c *mqlGcpFolder) GetParentOrganization() *plugin.TValue[*mqlGcpOrganizatio
 
 func (c *mqlGcpFolder) GetManagementProject() *plugin.TValue[string] {
 	return &c.ManagementProject
+}
+
+func (c *mqlGcpFolder) GetManagementProjectRef() *plugin.TValue[*mqlGcpProject] {
+	return plugin.GetOrCompute[*mqlGcpProject](&c.ManagementProjectRef, func() (*mqlGcpProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "managementProjectRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProject), nil
+			}
+		}
+
+		return c.managementProjectRef()
+	})
 }
 
 func (c *mqlGcpFolder) GetState() *plugin.TValue[string] {
@@ -40984,6 +41078,7 @@ type mqlGcpProject struct {
 	CloudDomains             plugin.TValue[*mqlGcpProjectCloudDomainsService]
 	Liens                    plugin.TValue[[]any]
 	TagBindings              plugin.TValue[[]any]
+	ManagedBy                plugin.TValue[string]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -42268,6 +42363,12 @@ func (c *mqlGcpProject) GetTagBindings() *plugin.TValue[[]any] {
 		}
 
 		return c.tagBindings()
+	})
+}
+
+func (c *mqlGcpProject) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -55037,6 +55138,7 @@ type mqlGcpProjectKmsServiceKeyring struct {
 	__id       string
 	// optional: if you define mqlGcpProjectKmsServiceKeyringInternal it will be used here
 	ProjectId    plugin.TValue[string]
+	Project      plugin.TValue[*mqlGcpProject]
 	ResourcePath plugin.TValue[string]
 	Name         plugin.TValue[string]
 	Created      plugin.TValue[*time.Time]
@@ -55086,6 +55188,22 @@ func (c *mqlGcpProjectKmsServiceKeyring) MqlID() string {
 
 func (c *mqlGcpProjectKmsServiceKeyring) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectKmsServiceKeyring) GetProject() *plugin.TValue[*mqlGcpProject] {
+	return plugin.GetOrCompute[*mqlGcpProject](&c.Project, func() (*mqlGcpProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService.keyring", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 func (c *mqlGcpProjectKmsServiceKeyring) GetResourcePath() *plugin.TValue[string] {
@@ -55181,6 +55299,7 @@ type mqlGcpProjectKmsServiceKeyringCryptokey struct {
 	Versions                      plugin.TValue[[]any]
 	IamPolicy                     plugin.TValue[[]any]
 	Public                        plugin.TValue[bool]
+	ManagedBy                     plugin.TValue[string]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokey creates a new instance of this resource
@@ -55317,6 +55436,12 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() *plugin.TValue[
 func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
 		return c.public()
+	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 
@@ -55962,16 +56087,20 @@ type mqlGcpProjectApiKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectApiKeyInternal it will be used here
-	Id           plugin.TValue[string]
-	ProjectId    plugin.TValue[string]
-	Name         plugin.TValue[string]
-	ResourcePath plugin.TValue[string]
-	Annotations  plugin.TValue[map[string]any]
-	Created      plugin.TValue[*time.Time]
-	Deleted      plugin.TValue[*time.Time]
-	KeyString    plugin.TValue[string]
-	Restrictions plugin.TValue[*mqlGcpProjectApiKeyRestrictions]
-	Updated      plugin.TValue[*time.Time]
+	Id                  plugin.TValue[string]
+	ProjectId           plugin.TValue[string]
+	Project             plugin.TValue[*mqlGcpProject]
+	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Name                plugin.TValue[string]
+	ResourcePath        plugin.TValue[string]
+	Annotations         plugin.TValue[map[string]any]
+	Created             plugin.TValue[*time.Time]
+	Deleted             plugin.TValue[*time.Time]
+	KeyString           plugin.TValue[string]
+	Restrictions        plugin.TValue[*mqlGcpProjectApiKeyRestrictions]
+	Updated             plugin.TValue[*time.Time]
+	ManagedBy           plugin.TValue[string]
 }
 
 // createGcpProjectApiKey creates a new instance of this resource
@@ -56019,6 +56148,42 @@ func (c *mqlGcpProjectApiKey) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
 }
 
+func (c *mqlGcpProjectApiKey) GetProject() *plugin.TValue[*mqlGcpProject] {
+	return plugin.GetOrCompute[*mqlGcpProject](&c.Project, func() (*mqlGcpProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.apiKey", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+func (c *mqlGcpProjectApiKey) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectApiKey) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.apiKey", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
+}
+
 func (c *mqlGcpProjectApiKey) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -56049,6 +56214,12 @@ func (c *mqlGcpProjectApiKey) GetRestrictions() *plugin.TValue[*mqlGcpProjectApi
 
 func (c *mqlGcpProjectApiKey) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+func (c *mqlGcpProjectApiKey) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
+	})
 }
 
 // mqlGcpProjectApiKeyRestrictions for the gcp.project.apiKey.restrictions resource
@@ -57076,6 +57247,7 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	__id       string
 	mqlGcpProjectIamServiceServiceAccountInternal
 	ProjectId             plugin.TValue[string]
+	Project               plugin.TValue[*mqlGcpProject]
 	Name                  plugin.TValue[string]
 	UniqueId              plugin.TValue[string]
 	Email                 plugin.TValue[string]
@@ -57131,6 +57303,22 @@ func (c *mqlGcpProjectIamServiceServiceAccount) MqlID() string {
 
 func (c *mqlGcpProjectIamServiceServiceAccount) GetProjectId() *plugin.TValue[string] {
 	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetProject() *plugin.TValue[*mqlGcpProject] {
+	return plugin.GetOrCompute[*mqlGcpProject](&c.Project, func() (*mqlGcpProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.serviceAccount", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }
 
 func (c *mqlGcpProjectIamServiceServiceAccount) GetName() *plugin.TValue[string] {
@@ -63003,6 +63191,7 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	Replication                      plugin.TValue[any]
 	ReplicationType                  plugin.TValue[string]
 	Topics                           plugin.TValue[[]any]
+	TopicRefs                        plugin.TValue[[]any]
 	ExpireTime                       plugin.TValue[*time.Time]
 	Ttl                              plugin.TValue[string]
 	Etag                             plugin.TValue[string]
@@ -63020,6 +63209,7 @@ type mqlGcpProjectSecretmanagerServiceSecret struct {
 	Versions                         plugin.TValue[[]any]
 	IamPolicy                        plugin.TValue[[]any]
 	Public                           plugin.TValue[bool]
+	ManagedBy                        plugin.TValue[string]
 }
 
 // createGcpProjectSecretmanagerServiceSecret creates a new instance of this resource
@@ -63089,6 +63279,22 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetReplicationType() *plugin.T
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetTopics() *plugin.TValue[[]any] {
 	return &c.Topics
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetTopicRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TopicRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.secretmanagerService.secret", c.__id, "topicRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.topicRefs()
+	})
 }
 
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetExpireTime() *plugin.TValue[*time.Time] {
@@ -63198,6 +63404,12 @@ func (c *mqlGcpProjectSecretmanagerServiceSecret) GetIamPolicy() *plugin.TValue[
 func (c *mqlGcpProjectSecretmanagerServiceSecret) GetPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
 		return c.public()
+	})
+}
+
+func (c *mqlGcpProjectSecretmanagerServiceSecret) GetManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
+		return c.managedBy()
 	})
 }
 

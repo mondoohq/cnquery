@@ -128,6 +128,20 @@ func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
 	return g.UniqueId.Data, nil
 }
 
+func (g *mqlGcpProjectIamServiceServiceAccount) project() (*mqlGcpProject, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	proj, err := projectRefById(g.MqlRuntime, g.ProjectId.Data)
+	if err != nil {
+		return nil, err
+	}
+	if proj == nil {
+		g.Project.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return proj, nil
+}
+
 func (g *mqlGcpProjectIamServiceServiceAccountKey) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }

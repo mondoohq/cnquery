@@ -92,6 +92,7 @@ gcp.folder.loggingService.sink.updated 13.16.3
 gcp.folder.loggingService.sink.writerIdentity 13.16.3
 gcp.folder.loggingService.sinks 13.16.3
 gcp.folder.managementProject 13.25.2
+gcp.folder.managementProjectRef 13.27.2
 gcp.folder.name 9.0.0
 gcp.folder.orgPolicies 13.16.3
 gcp.folder.parentFolder 13.25.2
@@ -345,7 +346,9 @@ gcp.project.apiKey.created 9.0.0
 gcp.project.apiKey.deleted 9.0.0
 gcp.project.apiKey.id 9.0.0
 gcp.project.apiKey.keyString 9.0.0
+gcp.project.apiKey.managedBy 13.27.2
 gcp.project.apiKey.name 9.0.0
+gcp.project.apiKey.project 13.27.2
 gcp.project.apiKey.projectId 9.0.0
 gcp.project.apiKey.resourcePath 9.0.0
 gcp.project.apiKey.restrictions 9.0.0
@@ -357,6 +360,8 @@ gcp.project.apiKey.restrictions.iosKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.parentResourcePath 9.0.0
 gcp.project.apiKey.restrictions.serverKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.unrestricted 13.12.2
+gcp.project.apiKey.serviceAccount 13.27.2
+gcp.project.apiKey.serviceAccountEmail 13.27.2
 gcp.project.apiKey.updated 9.0.0
 gcp.project.apiKeys 9.0.0
 gcp.project.appEngine 11.6.6
@@ -3436,6 +3441,7 @@ gcp.project.iamService.serviceAccount.keys 9.0.0
 gcp.project.iamService.serviceAccount.lastAuthenticatedTime 13.9.1
 gcp.project.iamService.serviceAccount.name 9.0.0
 gcp.project.iamService.serviceAccount.oauth2ClientId 9.0.0
+gcp.project.iamService.serviceAccount.project 13.27.2
 gcp.project.iamService.serviceAccount.projectId 9.0.0
 gcp.project.iamService.serviceAccount.uniqueId 9.0.0
 gcp.project.iamService.serviceAccounts 9.0.0
@@ -3534,6 +3540,7 @@ gcp.project.kmsService.keyring.cryptokey.iamPolicy 9.0.0
 gcp.project.kmsService.keyring.cryptokey.importOnly 9.0.0
 gcp.project.kmsService.keyring.cryptokey.keyAccessJustificationsPolicy 13.7.2
 gcp.project.kmsService.keyring.cryptokey.labels 9.0.0
+gcp.project.kmsService.keyring.cryptokey.managedBy 13.27.2
 gcp.project.kmsService.keyring.cryptokey.name 9.0.0
 gcp.project.kmsService.keyring.cryptokey.nextRotation 9.0.0
 gcp.project.kmsService.keyring.cryptokey.primary 9.0.0
@@ -3591,6 +3598,7 @@ gcp.project.kmsService.keyring.importJob.state 13.16.3
 gcp.project.kmsService.keyring.importJobs 13.16.3
 gcp.project.kmsService.keyring.location 9.0.0
 gcp.project.kmsService.keyring.name 9.0.0
+gcp.project.kmsService.keyring.project 13.27.2
 gcp.project.kmsService.keyring.projectId 9.0.0
 gcp.project.kmsService.keyring.public 13.19.2
 gcp.project.kmsService.keyring.resourcePath 9.0.0
@@ -3678,6 +3686,7 @@ gcp.project.loggingservice.sink.projectId 9.0.0
 gcp.project.loggingservice.sink.storageBucket 9.0.0
 gcp.project.loggingservice.sink.writerIdentity 9.0.0
 gcp.project.loggingservice.sinks 9.0.0
+gcp.project.managedBy 13.27.2
 gcp.project.memcache 13.11.2
 gcp.project.memcacheService 13.11.2
 gcp.project.memcacheService.instance 13.11.2
@@ -4266,6 +4275,7 @@ gcp.project.secretmanagerService.secret.expireTime 11.1.0
 gcp.project.secretmanagerService.secret.iamPolicy 11.1.0
 gcp.project.secretmanagerService.secret.kmsKeys 13.12.2
 gcp.project.secretmanagerService.secret.labels 11.1.0
+gcp.project.secretmanagerService.secret.managedBy 13.27.2
 gcp.project.secretmanagerService.secret.name 11.1.0
 gcp.project.secretmanagerService.secret.nextRotationTime 13.18.1
 gcp.project.secretmanagerService.secret.projectId 11.1.0
@@ -4277,6 +4287,7 @@ gcp.project.secretmanagerService.secret.rotation 11.1.0
 gcp.project.secretmanagerService.secret.rotationEnabled 13.12.2
 gcp.project.secretmanagerService.secret.rotationPeriod 13.18.1
 gcp.project.secretmanagerService.secret.tags 13.12.2
+gcp.project.secretmanagerService.secret.topicRefs 13.27.2
 gcp.project.secretmanagerService.secret.topics 11.1.0
 gcp.project.secretmanagerService.secret.ttl 13.18.1
 gcp.project.secretmanagerService.secret.version 11.1.0

@@ -101,6 +101,21 @@ func resolveServiceAccountRef(runtime *plugin.Runtime, raw, fallbackProjectId st
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
+// projectRefById resolves the typed gcp.project resource for a project id.
+// Returns nil when the id is empty, leaving the caller to mark the field null.
+func projectRefById(runtime *plugin.Runtime, projectId string) (*mqlGcpProject, error) {
+	if projectId == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProject), nil
+}
+
 // parentFolderFromId resolves the typed folder for a Cloud Resource Manager
 // parent reference. It returns nil when the parent is not a folder (for example
 // an organization or an empty reference), leaving the caller to mark the field

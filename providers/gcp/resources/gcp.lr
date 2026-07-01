@@ -648,6 +648,12 @@ private gcp.folder @defaults("name") {
   parentOrganization() gcp.organization
   // Resource name of the management project associated with this folder
   managementProject string
+  // Management project associated with this folder
+  //
+  // Resolves the managementProject resource name to the project that holds
+  // the folder's management resources. Null when the folder has no
+  // management project.
+  managementProjectRef() gcp.project
   // Folder state
   state string
   // Timestamp when deletion was requested
@@ -867,6 +873,12 @@ gcp.project @defaults("name number") {
   liens() []gcp.project.lien
   // Resource Manager tag bindings attached to the project
   tagBindings() []gcp.project.tagBinding
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Resource Manager lien
@@ -4869,6 +4881,10 @@ private gcp.project.kmsService {
 private gcp.project.kmsService.keyring @defaults("name") {
   // Project ID
   projectId string
+  // Project that owns the key ring
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
   // Full resource path
   resourcePath string
   // Keyring name
@@ -4933,6 +4949,12 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the key's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) KMS crypto key version
@@ -5147,6 +5169,18 @@ private gcp.project.apiKey @defaults("name") {
   id string
   // Project ID
   projectId string
+  // Project that owns the API key
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
+  // Email of the service account the key acts as
+  serviceAccountEmail string
+  // Service account the key acts as
+  //
+  // Resolves serviceAccountEmail to the service account whose identity the
+  // key assumes when calling APIs. Null when the key is not bound to a
+  // service account.
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Human-readable display name of this key
   name string
   // Full resource path
@@ -5163,6 +5197,12 @@ private gcp.project.apiKey @defaults("name") {
   restrictions gcp.project.apiKey.restrictions
   // Update timestamp
   updated time
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) project API key restrictions
@@ -5446,6 +5486,10 @@ private gcp.project.iamService.role @defaults("title name") {
 private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // Project ID
   projectId string
+  // Project that owns the service account
+  //
+  // Resolves projectId to the owning project.
+  project() gcp.project
   // Service account name
   name string
   // Unique, stable, numeric ID for the service account
@@ -7192,6 +7236,11 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   replicationType string
   // Pub/Sub topics for event notifications
   topics []string
+  // Pub/Sub topics that receive event notifications for this secret
+  //
+  // Resolves the topics resource names to the notification topics that
+  // receive secret lifecycle events.
+  topicRefs() []gcp.project.pubsubService.topic
   // Expiration time (if set)
   expireTime time
   // Input-only time-to-live duration after which the secret is scheduled to expire (empty when an absolute expireTime is set instead)
@@ -7228,6 +7277,12 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the secret's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Infrastructure-management system that provisioned the resource
+  //
+  // Value derived from the provenance labels and annotations Google and IaC
+  // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
+  // when the resource carries no management signal.
+  managedBy() string
 }
 
 // Google Cloud (GCP) Secret Manager secret version

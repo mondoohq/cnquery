@@ -153,6 +153,10 @@ func (g *mqlGcpProject) deleteTime() (*time.Time, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (g *mqlGcpProject) managedBy() (string, error) {
+	return managedByFromLabels(g.GetLabels())
+}
+
 func (g *mqlGcpProject) number() (string, error) {
 	return "", errors.New("not implemented")
 }
