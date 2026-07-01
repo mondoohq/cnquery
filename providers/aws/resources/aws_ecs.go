@@ -680,6 +680,10 @@ func (a *mqlAwsEcsContainer) ecrImage() (*mqlAwsEcrImage, error) {
 	res, err := NewResource(a.MqlRuntime, "aws.ecr.image",
 		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
 	if err != nil {
+		// The image is commonly absent (deleted, or in another account), which
+		// surfaces here as an error; log it so genuine API/permission failures
+		// are still visible, but leave the reference null rather than failing.
+		log.Warn().Err(err).Str("arn", arnVal).Msg("could not resolve ECR image for ECS container")
 		a.EcrImage.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
