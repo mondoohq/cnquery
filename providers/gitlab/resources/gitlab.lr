@@ -928,6 +928,10 @@ private gitlab.project.webhook @defaults("url sslVerification") {
   branchFilterStrategy string
   // Custom webhook payload template configured for this hook (empty when default payload is used)
   customWebhookTemplate string
+  // Custom HTTP headers sent with the webhook request (values may be redacted by GitLab)
+  customHeaders map[string]string
+  // URL variables interpolated into the webhook URL (values may be redacted by GitLab)
+  urlVariables map[string]string
   // Webhook creation time
   createdAt time
   // Time until which the webhook is disabled (set by GitLab when too many failures occur)
@@ -970,6 +974,40 @@ private gitlab.project.mergeRequest @defaults("internalId title state") {
   labels []string
   // Merge request milestone
   milestone() gitlab.project.milestone
+  // Users assigned to review the merge request
+  reviewers []gitlab.user
+  // Users assigned to the merge request
+  assignees []gitlab.user
+  // User who merged the merge request (null when not merged)
+  mergeUser() gitlab.user
+  // User who closed the merge request (null when not closed)
+  closedBy() gitlab.user
+  // When the merge request was closed (null when not closed)
+  closedAt time
+  // Detailed merge-readiness status (for example mergeable, ci_still_running, not_approved)
+  detailedMergeStatus string
+  // Head commit SHA of the source branch
+  sha string
+  // Merge commit SHA (empty until merged)
+  mergeCommitSha string
+  // Squash commit SHA when the merge request was squashed on merge
+  squashCommitSha string
+  // Whether the merge request has conflicts with the target branch
+  hasConflicts bool
+  // Whether all blocking discussions are resolved
+  blockingDiscussionsResolved bool
+  // Whether the merge request auto-merges once the pipeline succeeds
+  mergeWhenPipelineSucceeds bool
+  // Whether the source branch is removed after merge
+  forceRemoveSourceBranch bool
+  // Whether members of the target project can push to the source branch
+  allowMaintainerToPush bool
+  // Whether discussion on the merge request is locked
+  discussionLocked bool
+  // Number of upvotes
+  upvotes int
+  // Number of downvotes
+  downvotes int
 }
 
 // GitLab project issue

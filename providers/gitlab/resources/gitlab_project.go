@@ -761,6 +761,18 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 
 	var mqlWebhooks []any
 	for _, hook := range allHooks {
+		customHeaders := map[string]any{}
+		for _, h := range hook.CustomHeaders {
+			if h == nil {
+				continue
+			}
+			customHeaders[h.Key] = h.Value
+		}
+		urlVariables := map[string]any{}
+		for _, v := range hook.URLVariables {
+			urlVariables[v.Key] = v.Value
+		}
+
 		hookInfo := map[string]*llx.RawData{
 			"id":                        llx.IntData(hook.ID),
 			"url":                       llx.StringData(hook.URL),
@@ -788,6 +800,8 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
 			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
 			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
+			"customHeaders":             llx.MapData(customHeaders, types.String),
+			"urlVariables":              llx.MapData(urlVariables, types.String),
 			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
 			"disabledUntil":             llx.TimeDataPtr(hook.DisabledUntil),
 			"alertStatus":               llx.StringData(hook.AlertStatus),
@@ -900,21 +914,45 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 			authorName = mr.Author.Username
 		}
 
+		reviewers, err := basicUsersToMqlUsers(p.MqlRuntime, mr.Reviewers)
+		if err != nil {
+			return nil, err
+		}
+		assignees, err := basicUsersToMqlUsers(p.MqlRuntime, mr.Assignees)
+		if err != nil {
+			return nil, err
+		}
+
 		mrInfo := map[string]*llx.RawData{
-			"id":           llx.IntData(int64(mr.ID)),
-			"internalId":   llx.IntData(int64(mr.IID)),
-			"title":        llx.StringData(mr.Title),
-			"state":        llx.StringData(mr.State),
-			"description":  llx.StringData(mr.Description),
-			"sourceBranch": llx.StringData(mr.SourceBranch),
-			"targetBranch": llx.StringData(mr.TargetBranch),
-			"author":       llx.StringData(authorName),
-			"createdAt":    llx.TimeDataPtr(mr.CreatedAt),
-			"updatedAt":    llx.TimeDataPtr(mr.UpdatedAt),
-			"mergedAt":     llx.TimeDataPtr(mr.MergedAt),
-			"draft":        llx.BoolData(mr.Draft),
-			"webURL":       llx.StringData(mr.WebURL),
-			"labels":       llx.ArrayData(convert.SliceAnyToInterface([]string(mr.Labels)), types.String),
+			"id":                          llx.IntData(int64(mr.ID)),
+			"internalId":                  llx.IntData(int64(mr.IID)),
+			"title":                       llx.StringData(mr.Title),
+			"state":                       llx.StringData(mr.State),
+			"description":                 llx.StringData(mr.Description),
+			"sourceBranch":                llx.StringData(mr.SourceBranch),
+			"targetBranch":                llx.StringData(mr.TargetBranch),
+			"author":                      llx.StringData(authorName),
+			"createdAt":                   llx.TimeDataPtr(mr.CreatedAt),
+			"updatedAt":                   llx.TimeDataPtr(mr.UpdatedAt),
+			"mergedAt":                    llx.TimeDataPtr(mr.MergedAt),
+			"closedAt":                    llx.TimeDataPtr(mr.ClosedAt),
+			"draft":                       llx.BoolData(mr.Draft),
+			"webURL":                      llx.StringData(mr.WebURL),
+			"labels":                      llx.ArrayData(convert.SliceAnyToInterface([]string(mr.Labels)), types.String),
+			"reviewers":                   llx.ArrayData(reviewers, types.Resource("gitlab.user")),
+			"assignees":                   llx.ArrayData(assignees, types.Resource("gitlab.user")),
+			"detailedMergeStatus":         llx.StringData(mr.DetailedMergeStatus),
+			"sha":                         llx.StringData(mr.SHA),
+			"mergeCommitSha":              llx.StringData(mr.MergeCommitSHA),
+			"squashCommitSha":             llx.StringData(mr.SquashCommitSHA),
+			"hasConflicts":                llx.BoolData(mr.HasConflicts),
+			"blockingDiscussionsResolved": llx.BoolData(mr.BlockingDiscussionsResolved),
+			"mergeWhenPipelineSucceeds":   llx.BoolData(mr.MergeWhenPipelineSucceeds),
+			"forceRemoveSourceBranch":     llx.BoolData(mr.ForceRemoveSourceBranch),
+			"allowMaintainerToPush":       llx.BoolData(mr.AllowMaintainerToPush),
+			"discussionLocked":            llx.BoolData(mr.DiscussionLocked),
+			"upvotes":                     llx.IntData(mr.Upvotes),
+			"downvotes":                   llx.IntData(mr.Downvotes),
 		}
 
 		// Add milestone if present
@@ -932,11 +970,57 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mm := mqlMR.(*mqlGitlabProjectMergeRequest)
+		if mr.MergeUser != nil {
+			mm.cacheMergeUserID = mr.MergeUser.ID
+		}
+		if mr.ClosedBy != nil {
+			mm.cacheClosedByID = mr.ClosedBy.ID
+		}
 
 		mqlMergeRequests = append(mqlMergeRequests, mqlMR)
 	}
 
 	return mqlMergeRequests, nil
+}
+
+// mqlGitlabProjectMergeRequestInternal caches the merge/close actor ids so the
+// typed mergeUser()/closedBy() accessors resolve lazily.
+type mqlGitlabProjectMergeRequestInternal struct {
+	cacheMergeUserID int64
+	cacheClosedByID  int64
+}
+
+// mergeUser returns the user who merged the request, or null when it was not
+// merged (or GitLab does not report the actor).
+func (m *mqlGitlabProjectMergeRequest) mergeUser() (*mqlGitlabUser, error) {
+	if m.cacheMergeUserID <= 0 {
+		m.MergeUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheMergeUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// closedBy returns the user who closed the request, or null when it was not
+// closed.
+func (m *mqlGitlabProjectMergeRequest) closedBy() (*mqlGitlabUser, error) {
+	if m.cacheClosedByID <= 0 {
+		m.ClosedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheClosedByID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // id function for gitlab.project.issue

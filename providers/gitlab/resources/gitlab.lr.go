@@ -1360,6 +1360,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.webhook.customWebhookTemplate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectWebhook).GetCustomWebhookTemplate()).ToDataRes(types.String)
 	},
+	"gitlab.project.webhook.customHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetCustomHeaders()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gitlab.project.webhook.urlVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetUrlVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gitlab.project.webhook.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectWebhook).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1416,6 +1422,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectMergeRequest).GetMilestone()).ToDataRes(types.Resource("gitlab.project.milestone"))
+	},
+	"gitlab.project.mergeRequest.reviewers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetReviewers()).ToDataRes(types.Array(types.Resource("gitlab.user")))
+	},
+	"gitlab.project.mergeRequest.assignees": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetAssignees()).ToDataRes(types.Array(types.Resource("gitlab.user")))
+	},
+	"gitlab.project.mergeRequest.mergeUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMergeUser()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.mergeRequest.closedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetClosedBy()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.mergeRequest.closedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetClosedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.project.mergeRequest.detailedMergeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetDetailedMergeStatus()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.sha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetSha()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.mergeCommitSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMergeCommitSha()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.squashCommitSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetSquashCommitSha()).ToDataRes(types.String)
+	},
+	"gitlab.project.mergeRequest.hasConflicts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetHasConflicts()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.blockingDiscussionsResolved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetBlockingDiscussionsResolved()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.mergeWhenPipelineSucceeds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetMergeWhenPipelineSucceeds()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.forceRemoveSourceBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetForceRemoveSourceBranch()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.allowMaintainerToPush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetAllowMaintainerToPush()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.discussionLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetDiscussionLocked()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequest.upvotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetUpvotes()).ToDataRes(types.Int)
+	},
+	"gitlab.project.mergeRequest.downvotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectMergeRequest).GetDownvotes()).ToDataRes(types.Int)
 	},
 	"gitlab.project.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectIssue).GetId()).ToDataRes(types.Int)
@@ -3692,6 +3749,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectWebhook).CustomWebhookTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.webhook.customHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).CustomHeaders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.urlVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).UrlVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.webhook.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectWebhook).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -3770,6 +3835,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.mergeRequest.milestone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectMergeRequest).Milestone, ok = plugin.RawToTValue[*mqlGitlabProjectMilestone](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.reviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Reviewers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.assignees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Assignees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.mergeUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).MergeUser, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.closedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).ClosedBy, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.closedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).ClosedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.detailedMergeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).DetailedMergeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.sha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Sha, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.mergeCommitSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).MergeCommitSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.squashCommitSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).SquashCommitSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.hasConflicts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).HasConflicts, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.blockingDiscussionsResolved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).BlockingDiscussionsResolved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.mergeWhenPipelineSucceeds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).MergeWhenPipelineSucceeds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.forceRemoveSourceBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).ForceRemoveSourceBranch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.allowMaintainerToPush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).AllowMaintainerToPush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.discussionLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).DiscussionLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.upvotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Upvotes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequest.downvotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectMergeRequest).Downvotes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8151,6 +8284,8 @@ type mqlGitlabProjectWebhook struct {
 	RepositoryUpdateEvents    plugin.TValue[bool]
 	BranchFilterStrategy      plugin.TValue[string]
 	CustomWebhookTemplate     plugin.TValue[string]
+	CustomHeaders             plugin.TValue[map[string]any]
+	UrlVariables              plugin.TValue[map[string]any]
 	CreatedAt                 plugin.TValue[*time.Time]
 	DisabledUntil             plugin.TValue[*time.Time]
 	AlertStatus               plugin.TValue[string]
@@ -8298,6 +8433,14 @@ func (c *mqlGitlabProjectWebhook) GetCustomWebhookTemplate() *plugin.TValue[stri
 	return &c.CustomWebhookTemplate
 }
 
+func (c *mqlGitlabProjectWebhook) GetCustomHeaders() *plugin.TValue[map[string]any] {
+	return &c.CustomHeaders
+}
+
+func (c *mqlGitlabProjectWebhook) GetUrlVariables() *plugin.TValue[map[string]any] {
+	return &c.UrlVariables
+}
+
 func (c *mqlGitlabProjectWebhook) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -8330,22 +8473,39 @@ func (c *mqlGitlabProjectWebhook) GetProject() *plugin.TValue[*mqlGitlabProject]
 type mqlGitlabProjectMergeRequest struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabProjectMergeRequestInternal it will be used here
-	Id           plugin.TValue[int64]
-	InternalId   plugin.TValue[int64]
-	Title        plugin.TValue[string]
-	State        plugin.TValue[string]
-	Description  plugin.TValue[string]
-	SourceBranch plugin.TValue[string]
-	TargetBranch plugin.TValue[string]
-	Author       plugin.TValue[string]
-	CreatedAt    plugin.TValue[*time.Time]
-	UpdatedAt    plugin.TValue[*time.Time]
-	MergedAt     plugin.TValue[*time.Time]
-	Draft        plugin.TValue[bool]
-	WebURL       plugin.TValue[string]
-	Labels       plugin.TValue[[]any]
-	Milestone    plugin.TValue[*mqlGitlabProjectMilestone]
+	mqlGitlabProjectMergeRequestInternal
+	Id                          plugin.TValue[int64]
+	InternalId                  plugin.TValue[int64]
+	Title                       plugin.TValue[string]
+	State                       plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	SourceBranch                plugin.TValue[string]
+	TargetBranch                plugin.TValue[string]
+	Author                      plugin.TValue[string]
+	CreatedAt                   plugin.TValue[*time.Time]
+	UpdatedAt                   plugin.TValue[*time.Time]
+	MergedAt                    plugin.TValue[*time.Time]
+	Draft                       plugin.TValue[bool]
+	WebURL                      plugin.TValue[string]
+	Labels                      plugin.TValue[[]any]
+	Milestone                   plugin.TValue[*mqlGitlabProjectMilestone]
+	Reviewers                   plugin.TValue[[]any]
+	Assignees                   plugin.TValue[[]any]
+	MergeUser                   plugin.TValue[*mqlGitlabUser]
+	ClosedBy                    plugin.TValue[*mqlGitlabUser]
+	ClosedAt                    plugin.TValue[*time.Time]
+	DetailedMergeStatus         plugin.TValue[string]
+	Sha                         plugin.TValue[string]
+	MergeCommitSha              plugin.TValue[string]
+	SquashCommitSha             plugin.TValue[string]
+	HasConflicts                plugin.TValue[bool]
+	BlockingDiscussionsResolved plugin.TValue[bool]
+	MergeWhenPipelineSucceeds   plugin.TValue[bool]
+	ForceRemoveSourceBranch     plugin.TValue[bool]
+	AllowMaintainerToPush       plugin.TValue[bool]
+	DiscussionLocked            plugin.TValue[bool]
+	Upvotes                     plugin.TValue[int64]
+	Downvotes                   plugin.TValue[int64]
 }
 
 // createGitlabProjectMergeRequest creates a new instance of this resource
@@ -8455,6 +8615,98 @@ func (c *mqlGitlabProjectMergeRequest) GetMilestone() *plugin.TValue[*mqlGitlabP
 
 		return c.milestone()
 	})
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetReviewers() *plugin.TValue[[]any] {
+	return &c.Reviewers
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetAssignees() *plugin.TValue[[]any] {
+	return &c.Assignees
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetMergeUser() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.MergeUser, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.mergeRequest", c.__id, "mergeUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.mergeUser()
+	})
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetClosedBy() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.ClosedBy, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.mergeRequest", c.__id, "closedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.closedBy()
+	})
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetClosedAt() *plugin.TValue[*time.Time] {
+	return &c.ClosedAt
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetDetailedMergeStatus() *plugin.TValue[string] {
+	return &c.DetailedMergeStatus
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetSha() *plugin.TValue[string] {
+	return &c.Sha
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetMergeCommitSha() *plugin.TValue[string] {
+	return &c.MergeCommitSha
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetSquashCommitSha() *plugin.TValue[string] {
+	return &c.SquashCommitSha
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetHasConflicts() *plugin.TValue[bool] {
+	return &c.HasConflicts
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetBlockingDiscussionsResolved() *plugin.TValue[bool] {
+	return &c.BlockingDiscussionsResolved
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetMergeWhenPipelineSucceeds() *plugin.TValue[bool] {
+	return &c.MergeWhenPipelineSucceeds
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetForceRemoveSourceBranch() *plugin.TValue[bool] {
+	return &c.ForceRemoveSourceBranch
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetAllowMaintainerToPush() *plugin.TValue[bool] {
+	return &c.AllowMaintainerToPush
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetDiscussionLocked() *plugin.TValue[bool] {
+	return &c.DiscussionLocked
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetUpvotes() *plugin.TValue[int64] {
+	return &c.Upvotes
+}
+
+func (c *mqlGitlabProjectMergeRequest) GetDownvotes() *plugin.TValue[int64] {
+	return &c.Downvotes
 }
 
 // mqlGitlabProjectIssue for the gitlab.project.issue resource
