@@ -190,6 +190,20 @@ func (a *mqlAwsEc2ClientVpnEndpoint) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
+func (a *mqlAwsEc2ClientVpnEndpoint) serverCertificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.ServerCertificateArn.Data
+	if arnVal == "" {
+		a.ServerCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
 func (a *mqlAwsEc2ClientVpnEndpoint) transitGateway() (*mqlAwsEc2Transitgateway, error) {
 	if a.cacheTransitGatewayId == nil || *a.cacheTransitGatewayId == "" {
 		a.TransitGateway.State = plugin.StateIsNull | plugin.StateIsSet

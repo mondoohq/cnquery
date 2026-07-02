@@ -3373,6 +3373,20 @@ func (a *mqlAwsEc2CustomerGateway) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsEc2CustomerGateway) certificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.CertificateArn.Data
+	if arnVal == "" {
+		a.Certificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
 func initAwsEc2CustomerGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil

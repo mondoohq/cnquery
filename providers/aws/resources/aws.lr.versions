@@ -2954,6 +2954,7 @@ aws.ec2.clientVpnEndpoint.id 13.6.3
 aws.ec2.clientVpnEndpoint.region 13.6.3
 aws.ec2.clientVpnEndpoint.securityGroups 13.6.3
 aws.ec2.clientVpnEndpoint.selfServicePortalUrl 13.6.3
+aws.ec2.clientVpnEndpoint.serverCertificate 13.41.1
 aws.ec2.clientVpnEndpoint.serverCertificateArn 13.6.3
 aws.ec2.clientVpnEndpoint.sessionTimeoutHours 13.6.3
 aws.ec2.clientVpnEndpoint.splitTunnel 13.6.3
@@ -2970,6 +2971,7 @@ aws.ec2.customerGateway 13.6.3
 aws.ec2.customerGateway.arn 13.6.3
 aws.ec2.customerGateway.bgpAsn 13.6.3
 aws.ec2.customerGateway.bgpAsnExtended 13.6.3
+aws.ec2.customerGateway.certificate 13.41.1
 aws.ec2.customerGateway.certificateArn 13.6.3
 aws.ec2.customerGateway.deviceName 13.6.3
 aws.ec2.customerGateway.id 13.6.3
@@ -4606,6 +4608,7 @@ aws.es.domain.cognitoUserPoolId 13.21.4
 aws.es.domain.coldStorageEnabled 13.21.4
 aws.es.domain.created 13.21.4
 aws.es.domain.customEndpoint 13.21.4
+aws.es.domain.customEndpointCertificate 13.41.1
 aws.es.domain.customEndpointCertificateArn 13.21.4
 aws.es.domain.customEndpointEnabled 13.21.4
 aws.es.domain.dedicatedMasterCount 13.21.4
@@ -9434,6 +9437,7 @@ aws.signer.signingProfile.profileVersionArn 13.35.2
 aws.signer.signingProfile.region 13.35.2
 aws.signer.signingProfile.signatureValidityType 13.35.2
 aws.signer.signingProfile.signatureValidityValue 13.35.2
+aws.signer.signingProfile.signingMaterialCertificate 13.41.1
 aws.signer.signingProfile.signingMaterialCertificateArn 13.35.2
 aws.signer.signingProfile.signingParameters 13.35.2
 aws.signer.signingProfile.status 13.35.2
@@ -9876,6 +9880,7 @@ aws.verifiedaccess 13.10.0
 aws.verifiedaccess.endpoint 13.10.0
 aws.verifiedaccess.endpoint.applicationDomain 13.10.0
 aws.verifiedaccess.endpoint.attachmentType 13.10.0
+aws.verifiedaccess.endpoint.domainCertificate 13.41.1
 aws.verifiedaccess.endpoint.domainCertificateArn 13.10.0
 aws.verifiedaccess.endpoint.endpointDomain 13.10.0
 aws.verifiedaccess.endpoint.endpointType 13.10.0

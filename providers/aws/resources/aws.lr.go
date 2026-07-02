@@ -10236,6 +10236,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.customEndpointCertificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetCustomEndpointCertificateArn()).ToDataRes(types.String)
 	},
+	"aws.es.domain.customEndpointCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCustomEndpointCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
 	"aws.es.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
@@ -21993,6 +21996,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.clientVpnEndpoint.serverCertificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetServerCertificateArn()).ToDataRes(types.String)
 	},
+	"aws.ec2.clientVpnEndpoint.serverCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetServerCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
 	"aws.ec2.clientVpnEndpoint.transportProtocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetTransportProtocol()).ToDataRes(types.String)
 	},
@@ -22064,6 +22070,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.customerGateway.certificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2CustomerGateway).GetCertificateArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.customerGateway.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2CustomerGateway).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
 	"aws.ec2.customerGateway.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2CustomerGateway).GetDeviceName()).ToDataRes(types.String)
@@ -22574,6 +22583,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.signer.signingProfile.signingMaterialCertificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSignerSigningProfile).GetSigningMaterialCertificateArn()).ToDataRes(types.String)
+	},
+	"aws.signer.signingProfile.signingMaterialCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSignerSigningProfile).GetSigningMaterialCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
 	"aws.signer.signingProfile.signatureValidityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSignerSigningProfile).GetSignatureValidityType()).ToDataRes(types.String)
@@ -32322,6 +32334,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.endpoint.domainCertificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetDomainCertificateArn()).ToDataRes(types.String)
 	},
+	"aws.verifiedaccess.endpoint.domainCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetDomainCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
 	"aws.verifiedaccess.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetStatus()).ToDataRes(types.Dict)
 	},
@@ -42012,6 +42027,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.es.domain.customEndpointCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).CustomEndpointCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.customEndpointCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CustomEndpointCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59146,6 +59165,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2ClientVpnEndpoint).ServerCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.clientVpnEndpoint.serverCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ServerCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.clientVpnEndpoint.transportProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ClientVpnEndpoint).TransportProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -59244,6 +59267,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.customerGateway.certificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2CustomerGateway).CertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.customerGateway.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2CustomerGateway).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.customerGateway.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59980,6 +60007,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.signer.signingProfile.signingMaterialCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSignerSigningProfile).SigningMaterialCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.signer.signingProfile.signingMaterialCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSignerSigningProfile).SigningMaterialCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.signer.signingProfile.signatureValidityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74112,6 +74143,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.verifiedaccess.endpoint.domainCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVerifiedaccessEndpoint).DomainCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.domainCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).DomainCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -98620,6 +98655,7 @@ type mqlAwsEsDomain struct {
 	CustomEndpointEnabled              plugin.TValue[bool]
 	CustomEndpoint                     plugin.TValue[string]
 	CustomEndpointCertificateArn       plugin.TValue[string]
+	CustomEndpointCertificate          plugin.TValue[*mqlAwsAcmCertificate]
 	Vpc                                plugin.TValue[*mqlAwsVpc]
 	Subnets                            plugin.TValue[[]any]
 	SecurityGroups                     plugin.TValue[[]any]
@@ -98857,6 +98893,22 @@ func (c *mqlAwsEsDomain) GetCustomEndpoint() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetCustomEndpointCertificateArn() *plugin.TValue[string] {
 	return &c.CustomEndpointCertificateArn
+}
+
+func (c *mqlAwsEsDomain) GetCustomEndpointCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.CustomEndpointCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "customEndpointCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.customEndpointCertificate()
+	})
 }
 
 func (c *mqlAwsEsDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
@@ -142533,6 +142585,7 @@ type mqlAwsEc2ClientVpnEndpoint struct {
 	CreatedAt                       plugin.TValue[*time.Time]
 	Vpc                             plugin.TValue[*mqlAwsVpc]
 	ServerCertificateArn            plugin.TValue[string]
+	ServerCertificate               plugin.TValue[*mqlAwsAcmCertificate]
 	TransportProtocol               plugin.TValue[string]
 	VpnProtocol                     plugin.TValue[string]
 	SplitTunnel                     plugin.TValue[bool]
@@ -142629,6 +142682,22 @@ func (c *mqlAwsEc2ClientVpnEndpoint) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetServerCertificateArn() *plugin.TValue[string] {
 	return &c.ServerCertificateArn
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetServerCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.ServerCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "serverCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.serverCertificate()
+	})
 }
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetTransportProtocol() *plugin.TValue[string] {
@@ -142729,6 +142798,7 @@ type mqlAwsEc2CustomerGateway struct {
 	BgpAsnExtended plugin.TValue[string]
 	IpAddress      plugin.TValue[string]
 	CertificateArn plugin.TValue[string]
+	Certificate    plugin.TValue[*mqlAwsAcmCertificate]
 	DeviceName     plugin.TValue[string]
 	Tags           plugin.TValue[map[string]any]
 }
@@ -142804,6 +142874,22 @@ func (c *mqlAwsEc2CustomerGateway) GetIpAddress() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2CustomerGateway) GetCertificateArn() *plugin.TValue[string] {
 	return &c.CertificateArn
+}
+
+func (c *mqlAwsEc2CustomerGateway) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.Certificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.customerGateway", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.certificate()
+	})
 }
 
 func (c *mqlAwsEc2CustomerGateway) GetDeviceName() *plugin.TValue[string] {
@@ -144407,6 +144493,7 @@ type mqlAwsSignerSigningProfile struct {
 	PlatformDisplayName           plugin.TValue[string]
 	Status                        plugin.TValue[string]
 	SigningMaterialCertificateArn plugin.TValue[string]
+	SigningMaterialCertificate    plugin.TValue[*mqlAwsAcmCertificate]
 	SignatureValidityType         plugin.TValue[string]
 	SignatureValidityValue        plugin.TValue[int64]
 	SigningParameters             plugin.TValue[map[string]any]
@@ -144476,6 +144563,22 @@ func (c *mqlAwsSignerSigningProfile) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsSignerSigningProfile) GetSigningMaterialCertificateArn() *plugin.TValue[string] {
 	return &c.SigningMaterialCertificateArn
+}
+
+func (c *mqlAwsSignerSigningProfile) GetSigningMaterialCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.SigningMaterialCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.signer.signingProfile", c.__id, "signingMaterialCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.signingMaterialCertificate()
+	})
 }
 
 func (c *mqlAwsSignerSigningProfile) GetSignatureValidityType() *plugin.TValue[string] {
@@ -179672,6 +179775,7 @@ type mqlAwsVerifiedaccessEndpoint struct {
 	EndpointType             plugin.TValue[string]
 	AttachmentType           plugin.TValue[string]
 	DomainCertificateArn     plugin.TValue[string]
+	DomainCertificate        plugin.TValue[*mqlAwsAcmCertificate]
 	Status                   plugin.TValue[any]
 	SecurityGroups           plugin.TValue[[]any]
 	SseSpecification         plugin.TValue[any]
@@ -179749,6 +179853,22 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetAttachmentType() *plugin.TValue[string
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetDomainCertificateArn() *plugin.TValue[string] {
 	return &c.DomainCertificateArn
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetDomainCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.DomainCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.endpoint", c.__id, "domainCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.domainCertificate()
+	})
 }
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetStatus() *plugin.TValue[any] {

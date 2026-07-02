@@ -510,6 +510,20 @@ func (a *mqlAwsEsDomain) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
+func (a *mqlAwsEsDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, error) {
+	arnVal := a.CustomEndpointCertificateArn.Data
+	if arnVal == "" {
+		a.CustomEndpointCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsAcmCertificate,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAcmCertificate), nil
+}
+
 func (a *mqlAwsEsDomain) subnets() ([]any, error) {
 	res := []any{}
 	for _, subnetId := range a.cacheSubnetIds {

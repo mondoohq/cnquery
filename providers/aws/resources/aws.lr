@@ -4911,7 +4911,11 @@ private aws.es.domain @defaults("arn name") {
   // Custom endpoint hostname for the domain
   customEndpoint string
   // ACM certificate ARN for the custom endpoint
-  customEndpointCertificateArn string
+  //
+  // Deprecated in favor of `customEndpointCertificate`.
+  customEndpointCertificateArn @maturity("deprecated") string
+  // ACM certificate for the custom endpoint
+  customEndpointCertificate() aws.acm.certificate
   // VPC the domain is deployed into
   vpc() aws.vpc
   // Subnets the domain is deployed into
@@ -15688,7 +15692,11 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   // VPC associated with the Client VPN endpoint
   vpc() aws.vpc
   // ARN of the server certificate
-  serverCertificateArn string
+  //
+  // Deprecated in favor of `serverCertificate`.
+  serverCertificateArn @maturity("deprecated") string
+  // Server certificate presented by the endpoint
+  serverCertificate() aws.acm.certificate
   // Transport protocol: tcp or udp
   transportProtocol string
   // VPN protocol: openvpn
@@ -15740,7 +15748,11 @@ private aws.ec2.customerGateway @defaults("id state type") {
   // Public IP address of the customer gateway device
   ipAddress string
   // ARN of the certificate for the customer gateway
-  certificateArn string
+  //
+  // Deprecated in favor of `certificate`.
+  certificateArn @maturity("deprecated") string
+  // Certificate associated with the customer gateway device
+  certificate() aws.acm.certificate
   // Name of the customer gateway device
   deviceName string
   // Tags on the customer gateway
@@ -16164,7 +16176,11 @@ private aws.signer.signingProfile @defaults("profileName platformId status") {
   // Status of the signing profile: Active, Canceled, or Revoked
   status string
   // Certificate ARN of the signing material used to sign artifacts
-  signingMaterialCertificateArn string
+  //
+  // Deprecated in favor of `signingMaterialCertificate`.
+  signingMaterialCertificateArn @maturity("deprecated") string
+  // Certificate of the signing material used to sign artifacts
+  signingMaterialCertificate() aws.acm.certificate
   // Validity period unit applied to generated signatures: DAYS, MONTHS, or YEARS
   signatureValidityType string
   // Number of validity-period units applied to generated signatures
@@ -24815,7 +24831,11 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   // Attachment type
   attachmentType string
   // Domain certificate ARN
-  domainCertificateArn string
+  //
+  // Deprecated in favor of `domainCertificate`.
+  domainCertificateArn @maturity("deprecated") string
+  // Domain certificate presented by the endpoint
+  domainCertificate() aws.acm.certificate
   // Status of the endpoint
   status dict
   // Security groups associated with the endpoint
