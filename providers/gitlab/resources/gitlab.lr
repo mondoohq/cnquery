@@ -37,6 +37,46 @@ gitlab.settings @defaults("requireTwoFactorAuthentication") {
   defaultProjectVisibility string
   // The default group visibility (private, internal, public)
   defaultGroupVisibility string
+  // Minimum length required for new passwords
+  minimumPasswordLength int
+  // Whether new passwords must contain a number
+  passwordNumberRequired bool
+  // Whether new passwords must contain a symbol
+  passwordSymbolRequired bool
+  // Whether new passwords must contain an uppercase letter
+  passwordUppercaseRequired bool
+  // Whether new passwords must contain a lowercase letter
+  passwordLowercaseRequired bool
+  // Whether personal access tokens are required to have an expiration date
+  enforcePatExpiration bool
+  // Whether SSH keys are required to have an expiration date
+  enforceSshKeyExpiration bool
+  // Whether new sign-ups require administrator approval before activation
+  requireAdminApprovalAfterUserSignup bool
+  // Email domains allowed to sign up (empty means no allowlist)
+  domainAllowlist []string
+  // Whether the sign-up email domain denylist is enforced
+  domainDenylistEnabled bool
+  // Email domains denied from signing up
+  domainDenylist []string
+  // OAuth sign-in sources that are disabled (for example google_oauth2, github)
+  disabledOauthSignInSources []string
+  // Whether users are notified of sign-ins from unrecognized IP addresses
+  notifyOnUnknownSignIn bool
+  // Whether an external authorization service gates project access
+  externalAuthorizationServiceEnabled bool
+  // Whether webhooks and integrations may send requests to the local network (SSRF exposure)
+  allowLocalRequestsFromWebHooksAndServices bool
+  // Whether system hooks may send requests to the local network (SSRF exposure)
+  allowLocalRequestsFromSystemHooks bool
+  // Whether CI/CD variables are protected by default
+  protectedCiVariables bool
+  // Enabled project import sources (for example github, bitbucket, git)
+  importSources []string
+  // Web session expiry, in minutes
+  sessionExpireDelay int
+  // Maximum web-terminal session time, in seconds
+  terminalMaxSessionTime int
 }
 
 // GitLab user

@@ -371,6 +371,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.settings.defaultGroupVisibility": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabSettings).GetDefaultGroupVisibility()).ToDataRes(types.String)
 	},
+	"gitlab.settings.minimumPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetMinimumPasswordLength()).ToDataRes(types.Int)
+	},
+	"gitlab.settings.passwordNumberRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordNumberRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.passwordSymbolRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordSymbolRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.passwordUppercaseRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordUppercaseRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.passwordLowercaseRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordLowercaseRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.enforcePatExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetEnforcePatExpiration()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.enforceSshKeyExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetEnforceSshKeyExpiration()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.requireAdminApprovalAfterUserSignup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetRequireAdminApprovalAfterUserSignup()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.domainAllowlist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDomainAllowlist()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.settings.domainDenylistEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDomainDenylistEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.domainDenylist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDomainDenylist()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.settings.disabledOauthSignInSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDisabledOauthSignInSources()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.settings.notifyOnUnknownSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetNotifyOnUnknownSignIn()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.externalAuthorizationServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetExternalAuthorizationServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.allowLocalRequestsFromWebHooksAndServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetAllowLocalRequestsFromWebHooksAndServices()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.allowLocalRequestsFromSystemHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetAllowLocalRequestsFromSystemHooks()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.protectedCiVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetProtectedCiVariables()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.importSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetImportSources()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.settings.sessionExpireDelay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetSessionExpireDelay()).ToDataRes(types.Int)
+	},
+	"gitlab.settings.terminalMaxSessionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetTerminalMaxSessionTime()).ToDataRes(types.Int)
+	},
 	"gitlab.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetId()).ToDataRes(types.Int)
 	},
@@ -2349,6 +2409,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.settings.defaultGroupVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabSettings).DefaultGroupVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.minimumPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).MinimumPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordNumberRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordNumberRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordSymbolRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordSymbolRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordUppercaseRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordUppercaseRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordLowercaseRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordLowercaseRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.enforcePatExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).EnforcePatExpiration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.enforceSshKeyExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).EnforceSshKeyExpiration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.requireAdminApprovalAfterUserSignup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).RequireAdminApprovalAfterUserSignup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.domainAllowlist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DomainAllowlist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.domainDenylistEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DomainDenylistEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.domainDenylist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DomainDenylist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.disabledOauthSignInSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DisabledOauthSignInSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.notifyOnUnknownSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).NotifyOnUnknownSignIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.externalAuthorizationServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).ExternalAuthorizationServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.allowLocalRequestsFromWebHooksAndServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).AllowLocalRequestsFromWebHooksAndServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.allowLocalRequestsFromSystemHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).AllowLocalRequestsFromSystemHooks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.protectedCiVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).ProtectedCiVariables, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.importSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).ImportSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.sessionExpireDelay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).SessionExpireDelay, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.terminalMaxSessionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).TerminalMaxSessionTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gitlab.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5132,17 +5272,37 @@ type mqlGitlabSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGitlabSettingsInternal it will be used here
-	Id                                  plugin.TValue[int64]
-	UpdatedAt                           plugin.TValue[*time.Time]
-	RequireTwoFactorAuthentication      plugin.TValue[bool]
-	TwoFactorGracePeriod                plugin.TValue[int64]
-	RequireAdminTwoFactorAuthentication plugin.TValue[bool]
-	GitTwoFactorSessionExpiry           plugin.TValue[int64]
-	PasswordAuthenticationEnabledForWeb plugin.TValue[bool]
-	PasswordAuthenticationEnabledForGit plugin.TValue[bool]
-	SignupEnabled                       plugin.TValue[bool]
-	DefaultProjectVisibility            plugin.TValue[string]
-	DefaultGroupVisibility              plugin.TValue[string]
+	Id                                        plugin.TValue[int64]
+	UpdatedAt                                 plugin.TValue[*time.Time]
+	RequireTwoFactorAuthentication            plugin.TValue[bool]
+	TwoFactorGracePeriod                      plugin.TValue[int64]
+	RequireAdminTwoFactorAuthentication       plugin.TValue[bool]
+	GitTwoFactorSessionExpiry                 plugin.TValue[int64]
+	PasswordAuthenticationEnabledForWeb       plugin.TValue[bool]
+	PasswordAuthenticationEnabledForGit       plugin.TValue[bool]
+	SignupEnabled                             plugin.TValue[bool]
+	DefaultProjectVisibility                  plugin.TValue[string]
+	DefaultGroupVisibility                    plugin.TValue[string]
+	MinimumPasswordLength                     plugin.TValue[int64]
+	PasswordNumberRequired                    plugin.TValue[bool]
+	PasswordSymbolRequired                    plugin.TValue[bool]
+	PasswordUppercaseRequired                 plugin.TValue[bool]
+	PasswordLowercaseRequired                 plugin.TValue[bool]
+	EnforcePatExpiration                      plugin.TValue[bool]
+	EnforceSshKeyExpiration                   plugin.TValue[bool]
+	RequireAdminApprovalAfterUserSignup       plugin.TValue[bool]
+	DomainAllowlist                           plugin.TValue[[]any]
+	DomainDenylistEnabled                     plugin.TValue[bool]
+	DomainDenylist                            plugin.TValue[[]any]
+	DisabledOauthSignInSources                plugin.TValue[[]any]
+	NotifyOnUnknownSignIn                     plugin.TValue[bool]
+	ExternalAuthorizationServiceEnabled       plugin.TValue[bool]
+	AllowLocalRequestsFromWebHooksAndServices plugin.TValue[bool]
+	AllowLocalRequestsFromSystemHooks         plugin.TValue[bool]
+	ProtectedCiVariables                      plugin.TValue[bool]
+	ImportSources                             plugin.TValue[[]any]
+	SessionExpireDelay                        plugin.TValue[int64]
+	TerminalMaxSessionTime                    plugin.TValue[int64]
 }
 
 // createGitlabSettings creates a new instance of this resource
@@ -5224,6 +5384,86 @@ func (c *mqlGitlabSettings) GetDefaultProjectVisibility() *plugin.TValue[string]
 
 func (c *mqlGitlabSettings) GetDefaultGroupVisibility() *plugin.TValue[string] {
 	return &c.DefaultGroupVisibility
+}
+
+func (c *mqlGitlabSettings) GetMinimumPasswordLength() *plugin.TValue[int64] {
+	return &c.MinimumPasswordLength
+}
+
+func (c *mqlGitlabSettings) GetPasswordNumberRequired() *plugin.TValue[bool] {
+	return &c.PasswordNumberRequired
+}
+
+func (c *mqlGitlabSettings) GetPasswordSymbolRequired() *plugin.TValue[bool] {
+	return &c.PasswordSymbolRequired
+}
+
+func (c *mqlGitlabSettings) GetPasswordUppercaseRequired() *plugin.TValue[bool] {
+	return &c.PasswordUppercaseRequired
+}
+
+func (c *mqlGitlabSettings) GetPasswordLowercaseRequired() *plugin.TValue[bool] {
+	return &c.PasswordLowercaseRequired
+}
+
+func (c *mqlGitlabSettings) GetEnforcePatExpiration() *plugin.TValue[bool] {
+	return &c.EnforcePatExpiration
+}
+
+func (c *mqlGitlabSettings) GetEnforceSshKeyExpiration() *plugin.TValue[bool] {
+	return &c.EnforceSshKeyExpiration
+}
+
+func (c *mqlGitlabSettings) GetRequireAdminApprovalAfterUserSignup() *plugin.TValue[bool] {
+	return &c.RequireAdminApprovalAfterUserSignup
+}
+
+func (c *mqlGitlabSettings) GetDomainAllowlist() *plugin.TValue[[]any] {
+	return &c.DomainAllowlist
+}
+
+func (c *mqlGitlabSettings) GetDomainDenylistEnabled() *plugin.TValue[bool] {
+	return &c.DomainDenylistEnabled
+}
+
+func (c *mqlGitlabSettings) GetDomainDenylist() *plugin.TValue[[]any] {
+	return &c.DomainDenylist
+}
+
+func (c *mqlGitlabSettings) GetDisabledOauthSignInSources() *plugin.TValue[[]any] {
+	return &c.DisabledOauthSignInSources
+}
+
+func (c *mqlGitlabSettings) GetNotifyOnUnknownSignIn() *plugin.TValue[bool] {
+	return &c.NotifyOnUnknownSignIn
+}
+
+func (c *mqlGitlabSettings) GetExternalAuthorizationServiceEnabled() *plugin.TValue[bool] {
+	return &c.ExternalAuthorizationServiceEnabled
+}
+
+func (c *mqlGitlabSettings) GetAllowLocalRequestsFromWebHooksAndServices() *plugin.TValue[bool] {
+	return &c.AllowLocalRequestsFromWebHooksAndServices
+}
+
+func (c *mqlGitlabSettings) GetAllowLocalRequestsFromSystemHooks() *plugin.TValue[bool] {
+	return &c.AllowLocalRequestsFromSystemHooks
+}
+
+func (c *mqlGitlabSettings) GetProtectedCiVariables() *plugin.TValue[bool] {
+	return &c.ProtectedCiVariables
+}
+
+func (c *mqlGitlabSettings) GetImportSources() *plugin.TValue[[]any] {
+	return &c.ImportSources
+}
+
+func (c *mqlGitlabSettings) GetSessionExpireDelay() *plugin.TValue[int64] {
+	return &c.SessionExpireDelay
+}
+
+func (c *mqlGitlabSettings) GetTerminalMaxSessionTime() *plugin.TValue[int64] {
+	return &c.TerminalMaxSessionTime
 }
 
 // mqlGitlabUser for the gitlab.user resource
