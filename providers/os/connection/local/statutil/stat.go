@@ -22,6 +22,28 @@ type CommandRunner interface {
 	RunCommand(command string) (*shared.Command, error)
 }
 
+// linuxStatScript detects symlinks, verifies existence, and stats in one
+// round-trip. SL=1 if symlink. Falls back to stat without -L for dangling
+// symlinks. Captures stat -L stdout before checking exit code so SELinux
+// %C errors don't trigger a spurious fallback. Path is passed as $1.
+const linuxStatScript = `sh -c '` +
+	`SL=0; test -L "$1" && SL=1; ` +
+	`test -e "$1" -o $SL -eq 1 || exit 1; ` +
+	`r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) ` +
+	`&& printf "%s\n" "$r" ` +
+	`|| { [ -n "$r" ] && printf "%s\n" "$r" ` +
+	`|| stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }` +
+	`' _ `
+
+// bsdStatScript detects symlinks and stats in one round-trip. Falls back
+// to stat without -L for dangling symlinks. Path is passed as $1.
+const bsdStatScript = `sh -c '` +
+	`SL=0; test -L "$1" && SL=1; ` +
+	`test -e "$1" -o $SL -eq 1 || exit 1; ` +
+	`stat -L -f "$SL:%z:%p:%u:%g:%a:%m" "$1" 2>/dev/null ` +
+	`|| stat -f "$SL:%z:%p:%u:%g:%a:%m" "$1"` +
+	`' _ `
+
 type statParser func(name string) (os.FileInfo, error)
 
 func New(cmdRunner CommandRunner) *statHelper {
@@ -82,24 +104,8 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	path := shared.ShellEscape(name)
 
-	// Single compound command: detect symlink, verify existence, and stat
-	// in one round-trip. SL=1 if symlink, 0 otherwise. Falls back to
-	// stat without -L for dangling symlinks whose target doesn't exist.
-	// Wrapped in sh -c with the path as $1 so sudo can apply to the
-	// entire compound command as a single sh invocation.
-	//
-	// The %C (SELinux context) format can make stat exit non-zero even
-	// though it produced valid output. To prevent the || fallback from
-	// firing on that false failure, the first stat is wrapped in a
-	// subshell that captures output and only falls through when stdout
-	// is empty (i.e. a genuine failure like a dangling symlink target).
-	var sb strings.Builder
-	sb.WriteString(`sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) && printf "%s\n" "$r" || { [ -n "$r" ] && printf "%s\n" "$r" || stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }' _ `)
-	sb.WriteString(path)
+	command := linuxStatScript + path
 
-	// NOTE: stat may exit non-zero when it cannot get the SELinux context,
-	// even though the output is valid. Do not check exit status here.
-	command := sb.String()
 	cmd, err := s.commandRunner.RunCommand(command)
 	if err != nil {
 		log.Debug().Str("path", path).Str("command", command).Err(err).Send()
@@ -179,15 +185,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	path := shared.ShellEscape(name)
 
-	// Single compound command: detect symlink and stat in one round-trip.
-	// SL=1 if symlink, 0 otherwise. Prepended to the output as the first
-	// colon-separated field. Wrapped in sh -c for sudo compatibility.
-	// Falls back to stat without -L for dangling symlinks.
-	var sb strings.Builder
-	sb.WriteString(`sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; stat -L -f "$SL:%z:%p:%u:%g:%a:%m" "$1" 2>/dev/null || stat -f "$SL:%z:%p:%u:%g:%a:%m" "$1"' _ `)
-	sb.WriteString(path)
-
-	cmd, err := s.commandRunner.RunCommand(sb.String())
+	cmd, err := s.commandRunner.RunCommand(bsdStatScript + path)
 	if err != nil {
 		log.Debug().Err(err).Send()
 	}

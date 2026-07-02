@@ -42,6 +42,10 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	// GNU find: -L -xtype l follows all symlinks AND finds symlinks.
 	// BSD find: -xtype is absent; fall back to -H -type l which
 	// follows only the start path but still detects symlinks.
+	// hasGNUFind is approximated via platform family ("linux"). This
+	// misses FreeBSD with GNU findutils and BusyBox find on Linux,
+	// but both are rare in mql's target environments; the -H fallback
+	// still finds symlinks, just without following symlink-dirs.
 	if isLinkSearch && !hasGNUFind {
 		call.WriteString("find -H ")
 	} else {
