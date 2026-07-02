@@ -26110,3 +26110,157 @@ private aws.fms.resourceSet @defaults("name id status") {
   // Time the resource set was last modified
   lastUpdateTime time
 }
+
+// AWS DataSync
+//
+// Use the DataSync namespace to enumerate the managed data-transfer
+// service in the account. Iterate `tasks()` for each transfer job (its
+// status, task mode, source and destination locations, CloudWatch
+// logging destination, data-integrity verification mode, and schedule),
+// `locations()` for the storage endpoints that tasks read from and write
+// to (each keyed by its ARN, with the URI that identifies the backing S3
+// bucket, file system, or on-premises host, such as
+// `s3://my-bucket/prefix`), and `agents()` for the on-premises agents
+// that connect source storage to the service, including whether an agent
+// reaches the service over the public internet or PrivateLink.
+aws.datasync @defaults("tasks") {
+  // List of DataSync tasks
+  tasks() []aws.datasync.task
+  // List of DataSync locations
+  locations() []aws.datasync.location
+  // List of DataSync agents
+  agents() []aws.datasync.agent
+}
+
+// AWS DataSync task
+private aws.datasync.task @defaults("arn name status") {
+  // ARN of the task
+  arn string
+  // Name of the task
+  name string
+  // Region where the task exists
+  region string
+  // Status of the task: AVAILABLE, CREATING, QUEUED, RUNNING, UNAVAILABLE
+  status string
+  // Task mode: BASIC or ENHANCED
+  taskMode string
+  // Source location that the task reads from
+  sourceLocation() aws.datasync.location
+  // Destination location that the task writes to
+  destinationLocation() aws.datasync.location
+  // CloudWatch log group used to monitor the task (null when logging is not configured)
+  cloudwatchLogGroup() aws.cloudwatch.loggroup
+  // Level of detail sent to the log group: OFF, BASIC, TRANSFER
+  logLevel() string
+  // How the task verifies data integrity after a transfer: NONE, POINT_IN_TIME_CONSISTENT, ONLY_FILES_TRANSFERRED
+  verifyMode() string
+  // Schedule expression that determines when the task runs (null when the task is not scheduled)
+  scheduleExpression() string
+  // Status of the task schedule: ENABLED or DISABLED
+  scheduleStatus() string
+  // Time the task was created
+  createdAt() time
+}
+
+// AWS DataSync location
+private aws.datasync.location @defaults("arn locationUri") {
+  // ARN of the location
+  arn string
+  // URI of the location in the form TYPE://GLOBAL_ID/SUBDIR, such as s3://my-bucket/prefix
+  locationUri string
+  // Type of the location parsed from the URI, such as s3, efs, nfs, smb, hdfs, or azure-blob
+  locationType string
+  // Region where the location exists
+  region string
+}
+
+// AWS DataSync agent
+private aws.datasync.agent @defaults("arn name status") {
+  // ARN of the agent
+  arn string
+  // Name of the agent
+  name string
+  // Region where the agent exists
+  region string
+  // Status of the agent: ONLINE or OFFLINE
+  status string
+  // Agent software version
+  version string
+  // Type of service endpoint the agent connects to: PUBLIC, FIPS, or PRIVATE_LINK
+  endpointType() string
+  // ID of the VPC endpoint the agent uses when it connects over PrivateLink (null for public endpoints)
+  vpcEndpointId() string
+  // Time the agent was activated
+  createdAt() time
+}
+
+// AWS AppFlow
+//
+// Use the AppFlow namespace to enumerate the managed integration service
+// that transfers data between software-as-a-service applications and AWS
+// services. Iterate `flows()` for each configured transfer (its status,
+// source and destination connector types, trigger type, the principal
+// that created it, and the customer-managed KMS key that encrypts its
+// data), and `connectorProfiles()` for the stored connection
+// configurations that flows authenticate through, each keyed by ARN with
+// its connector type, the connection mode that determines whether traffic
+// leaves over the public internet or PrivateLink, and the Secrets Manager
+// secret that holds its credentials.
+aws.appflow @defaults("flows") {
+  // List of AppFlow flows
+  flows() []aws.appflow.flow
+  // List of AppFlow connector profiles
+  connectorProfiles() []aws.appflow.connectorProfile
+}
+
+// AWS AppFlow flow
+private aws.appflow.flow @defaults("arn name flowStatus") {
+  // ARN of the flow
+  arn string
+  // Name of the flow
+  name string
+  // Region where the flow exists
+  region string
+  // Description of the flow
+  description string
+  // Status of the flow: Active, Draft, Errored, Suspended, Deprecated, or Deleted
+  flowStatus string
+  // Source connector type, such as Salesforce, S3, Marketo, or Zendesk
+  sourceConnectorType string
+  // Destination connector type, such as Salesforce, S3, Redshift, or EventBridge
+  destinationConnectorType string
+  // How the flow runs: OnDemand, Scheduled, or Event
+  triggerType string
+  // Principal that created the flow
+  createdBy string
+  // Time the flow was created
+  createdAt time
+  // Time the flow was last updated
+  lastUpdatedAt time
+  // Tags for the flow
+  tags map[string]string
+  // Customer-managed KMS key that encrypts the flow's data (null when an AWS-owned key is used)
+  kmsKey() aws.kms.key
+}
+
+// AWS AppFlow connector profile
+private aws.appflow.connectorProfile @defaults("arn name connectorType connectionMode") {
+  // ARN of the connector profile
+  arn string
+  // Name of the connector profile
+  name string
+  // Region where the connector profile exists
+  region string
+  // Connector type the profile is for, such as Salesforce, Snowflake, or Redshift
+  connectorType string
+  // Label of the custom connector the profile is for (null for AWS-provided connectors)
+  connectorLabel string
+  // Connection mode that determines network exposure: Public or Private
+  connectionMode string
+  // Secrets Manager secret that holds the profile's credentials
+  credentials() aws.secretsmanager.secret
+  // Time the connector profile was created
+  createdAt time
+  // Time the connector profile was last updated
+  lastUpdatedAt time
+}

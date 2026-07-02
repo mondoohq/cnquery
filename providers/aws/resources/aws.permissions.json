@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.40.0",
-  "generated_at": "2026-06-30T23:35:09-07:00",
+  "version": "13.40.1",
+  "generated_at": "2026-07-01T17:26:26-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -14,6 +14,9 @@
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
     "apigateway:GET",
+    "appflow:DescribeConnectorProfiles",
+    "appflow:DescribeFlow",
+    "appflow:ListFlows",
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
@@ -206,6 +209,11 @@
     "config:GetConformancePackComplianceSummary",
     "controltower:ListEnabledBaselines",
     "controltower:ListLandingZones",
+    "datasync:DescribeAgent",
+    "datasync:DescribeTask",
+    "datasync:ListAgents",
+    "datasync:ListLocations",
+    "datasync:ListTasks",
     "dax:DescribeClusters",
     "dax:ListTags",
     "detective:ListDatasourcePackages",
@@ -998,6 +1006,24 @@
       "service": "apigateway",
       "action": "GetApis",
       "source_file": "aws_apigatewayv2.go"
+    },
+    {
+      "permission": "appflow:DescribeConnectorProfiles",
+      "service": "appflow",
+      "action": "DescribeConnectorProfiles",
+      "source_file": "aws_appflow.go"
+    },
+    {
+      "permission": "appflow:DescribeFlow",
+      "service": "appflow",
+      "action": "DescribeFlow",
+      "source_file": "aws_appflow.go"
+    },
+    {
+      "permission": "appflow:ListFlows",
+      "service": "appflow",
+      "action": "ListFlows",
+      "source_file": "aws_appflow.go"
     },
     {
       "permission": "application-autoscaling:DescribeScalableTargets",
@@ -2156,6 +2182,36 @@
       "service": "controltower",
       "action": "ListLandingZones",
       "source_file": "aws_controltower.go"
+    },
+    {
+      "permission": "datasync:DescribeAgent",
+      "service": "datasync",
+      "action": "DescribeAgent",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:DescribeTask",
+      "service": "datasync",
+      "action": "DescribeTask",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListAgents",
+      "service": "datasync",
+      "action": "ListAgents",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListLocations",
+      "service": "datasync",
+      "action": "ListLocations",
+      "source_file": "aws_datasync.go"
+    },
+    {
+      "permission": "datasync:ListTasks",
+      "service": "datasync",
+      "action": "ListTasks",
+      "source_file": "aws_datasync.go"
     },
     {
       "permission": "dax:DescribeClusters",

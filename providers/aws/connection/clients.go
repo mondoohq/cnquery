@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
@@ -41,6 +42,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -2408,6 +2410,46 @@ func (t *AwsConnection) Transfer(region string) *transfer.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := transfer.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) DataSync(region string) *datasync.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_datasync_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached datasync client")
+		return c.Data.(*datasync.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := datasync.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) AppFlow(region string) *appflow.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_appflow_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached appflow client")
+		return c.Data.(*appflow.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := appflow.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client

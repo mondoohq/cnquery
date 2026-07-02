@@ -921,6 +921,13 @@ const (
 	ResourceAwsFmsAppsList                                                      string = "aws.fms.appsList"
 	ResourceAwsFmsProtocolsList                                                 string = "aws.fms.protocolsList"
 	ResourceAwsFmsResourceSet                                                   string = "aws.fms.resourceSet"
+	ResourceAwsDatasync                                                         string = "aws.datasync"
+	ResourceAwsDatasyncTask                                                     string = "aws.datasync.task"
+	ResourceAwsDatasyncLocation                                                 string = "aws.datasync.location"
+	ResourceAwsDatasyncAgent                                                    string = "aws.datasync.agent"
+	ResourceAwsAppflow                                                          string = "aws.appflow"
+	ResourceAwsAppflowFlow                                                      string = "aws.appflow.flow"
+	ResourceAwsAppflowConnectorProfile                                          string = "aws.appflow.connectorProfile"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -4546,6 +4553,34 @@ func init() {
 		"aws.fms.resourceSet": {
 			Init:   initAwsFmsResourceSet,
 			Create: createAwsFmsResourceSet,
+		},
+		"aws.datasync": {
+			// to override args, implement: initAwsDatasync(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDatasync,
+		},
+		"aws.datasync.task": {
+			// to override args, implement: initAwsDatasyncTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDatasyncTask,
+		},
+		"aws.datasync.location": {
+			Init:   initAwsDatasyncLocation,
+			Create: createAwsDatasyncLocation,
+		},
+		"aws.datasync.agent": {
+			// to override args, implement: initAwsDatasyncAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDatasyncAgent,
+		},
+		"aws.appflow": {
+			// to override args, implement: initAwsAppflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppflow,
+		},
+		"aws.appflow.flow": {
+			// to override args, implement: initAwsAppflowFlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppflowFlow,
+		},
+		"aws.appflow.connectorProfile": {
+			// to override args, implement: initAwsAppflowConnectorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppflowConnectorProfile,
 		},
 	}
 }
@@ -33534,6 +33569,162 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fms.resourceSet.lastUpdateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFmsResourceSet).GetLastUpdateTime()).ToDataRes(types.Time)
+	},
+	"aws.datasync.tasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasync).GetTasks()).ToDataRes(types.Array(types.Resource("aws.datasync.task")))
+	},
+	"aws.datasync.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasync).GetLocations()).ToDataRes(types.Array(types.Resource("aws.datasync.location")))
+	},
+	"aws.datasync.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasync).GetAgents()).ToDataRes(types.Array(types.Resource("aws.datasync.agent")))
+	},
+	"aws.datasync.task.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetArn()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetName()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.taskMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetTaskMode()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetSourceLocation()).ToDataRes(types.Resource("aws.datasync.location"))
+	},
+	"aws.datasync.task.destinationLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetDestinationLocation()).ToDataRes(types.Resource("aws.datasync.location"))
+	},
+	"aws.datasync.task.cloudwatchLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetCloudwatchLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.datasync.task.logLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetLogLevel()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.verifyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetVerifyMode()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetScheduleExpression()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.scheduleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetScheduleStatus()).ToDataRes(types.String)
+	},
+	"aws.datasync.task.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncTask).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.datasync.location.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncLocation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.datasync.location.locationUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncLocation).GetLocationUri()).ToDataRes(types.String)
+	},
+	"aws.datasync.location.locationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncLocation).GetLocationType()).ToDataRes(types.String)
+	},
+	"aws.datasync.location.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncLocation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetArn()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetName()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.endpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetEndpointType()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.vpcEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetVpcEndpointId()).ToDataRes(types.String)
+	},
+	"aws.datasync.agent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDatasyncAgent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appflow.flows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflow).GetFlows()).ToDataRes(types.Array(types.Resource("aws.appflow.flow")))
+	},
+	"aws.appflow.connectorProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflow).GetConnectorProfiles()).ToDataRes(types.Array(types.Resource("aws.appflow.connectorProfile")))
+	},
+	"aws.appflow.flow.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetName()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.flowStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetFlowStatus()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.sourceConnectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetSourceConnectorType()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.destinationConnectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetDestinationConnectorType()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.triggerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetTriggerType()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.appflow.flow.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appflow.flow.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appflow.flow.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appflow.flow.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowFlow).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.appflow.connectorProfile.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetName()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.connectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetConnectorType()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.connectorLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetConnectorLabel()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.connectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetConnectionMode()).ToDataRes(types.String)
+	},
+	"aws.appflow.connectorProfile.credentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetCredentials()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.appflow.connectorProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appflow.connectorProfile.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppflowConnectorProfile).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 }
 
@@ -75721,6 +75912,242 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fms.resourceSet.lastUpdateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFmsResourceSet).LastUpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasync).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.datasync.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasync).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasync).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasync).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.datasync.task.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.taskMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).TaskMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).SourceLocation, ok = plugin.RawToTValue[*mqlAwsDatasyncLocation](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.destinationLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).DestinationLocation, ok = plugin.RawToTValue[*mqlAwsDatasyncLocation](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.cloudwatchLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).CloudwatchLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.verifyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).VerifyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.scheduleExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.scheduleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).ScheduleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.task.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncTask).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.location.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncLocation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.datasync.location.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncLocation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.location.locationUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncLocation).LocationUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.location.locationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncLocation).LocationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.location.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncLocation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.datasync.agent.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.endpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).EndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.vpcEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).VpcEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.datasync.agent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDatasyncAgent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflow).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appflow.flows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflow).Flows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflow).ConnectorProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appflow.flow.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.flowStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).FlowStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.sourceConnectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).SourceConnectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.destinationConnectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).DestinationConnectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.triggerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).TriggerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.flow.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowFlow).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appflow.connectorProfile.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.connectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).ConnectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.connectorLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).ConnectorLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.connectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).ConnectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).Credentials, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appflow.connectorProfile.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppflowConnectorProfile).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -184245,4 +184672,708 @@ func (c *mqlAwsFmsResourceSet) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsFmsResourceSet) GetLastUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.LastUpdateTime
+}
+
+// mqlAwsDatasync for the aws.datasync resource
+type mqlAwsDatasync struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDatasyncInternal it will be used here
+	Tasks     plugin.TValue[[]any]
+	Locations plugin.TValue[[]any]
+	Agents    plugin.TValue[[]any]
+}
+
+// createAwsDatasync creates a new instance of this resource
+func createAwsDatasync(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDatasync{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.datasync", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDatasync) MqlName() string {
+	return "aws.datasync"
+}
+
+func (c *mqlAwsDatasync) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDatasync) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync", c.__id, "tasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tasks()
+	})
+}
+
+func (c *mqlAwsDatasync) GetLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Locations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync", c.__id, "locations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.locations()
+	})
+}
+
+func (c *mqlAwsDatasync) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync", c.__id, "agents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agents()
+	})
+}
+
+// mqlAwsDatasyncTask for the aws.datasync.task resource
+type mqlAwsDatasyncTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDatasyncTaskInternal
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	Status              plugin.TValue[string]
+	TaskMode            plugin.TValue[string]
+	SourceLocation      plugin.TValue[*mqlAwsDatasyncLocation]
+	DestinationLocation plugin.TValue[*mqlAwsDatasyncLocation]
+	CloudwatchLogGroup  plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	LogLevel            plugin.TValue[string]
+	VerifyMode          plugin.TValue[string]
+	ScheduleExpression  plugin.TValue[string]
+	ScheduleStatus      plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+}
+
+// createAwsDatasyncTask creates a new instance of this resource
+func createAwsDatasyncTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDatasyncTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.datasync.task", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDatasyncTask) MqlName() string {
+	return "aws.datasync.task"
+}
+
+func (c *mqlAwsDatasyncTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDatasyncTask) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDatasyncTask) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDatasyncTask) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDatasyncTask) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDatasyncTask) GetTaskMode() *plugin.TValue[string] {
+	return &c.TaskMode
+}
+
+func (c *mqlAwsDatasyncTask) GetSourceLocation() *plugin.TValue[*mqlAwsDatasyncLocation] {
+	return plugin.GetOrCompute[*mqlAwsDatasyncLocation](&c.SourceLocation, func() (*mqlAwsDatasyncLocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync.task", c.__id, "sourceLocation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDatasyncLocation), nil
+			}
+		}
+
+		return c.sourceLocation()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetDestinationLocation() *plugin.TValue[*mqlAwsDatasyncLocation] {
+	return plugin.GetOrCompute[*mqlAwsDatasyncLocation](&c.DestinationLocation, func() (*mqlAwsDatasyncLocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync.task", c.__id, "destinationLocation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDatasyncLocation), nil
+			}
+		}
+
+		return c.destinationLocation()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetCloudwatchLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.CloudwatchLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.datasync.task", c.__id, "cloudwatchLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.cloudwatchLogGroup()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetLogLevel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogLevel, func() (string, error) {
+		return c.logLevel()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetVerifyMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VerifyMode, func() (string, error) {
+		return c.verifyMode()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetScheduleExpression() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScheduleExpression, func() (string, error) {
+		return c.scheduleExpression()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetScheduleStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScheduleStatus, func() (string, error) {
+		return c.scheduleStatus()
+	})
+}
+
+func (c *mqlAwsDatasyncTask) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+// mqlAwsDatasyncLocation for the aws.datasync.location resource
+type mqlAwsDatasyncLocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDatasyncLocationInternal it will be used here
+	Arn          plugin.TValue[string]
+	LocationUri  plugin.TValue[string]
+	LocationType plugin.TValue[string]
+	Region       plugin.TValue[string]
+}
+
+// createAwsDatasyncLocation creates a new instance of this resource
+func createAwsDatasyncLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDatasyncLocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.datasync.location", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDatasyncLocation) MqlName() string {
+	return "aws.datasync.location"
+}
+
+func (c *mqlAwsDatasyncLocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDatasyncLocation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDatasyncLocation) GetLocationUri() *plugin.TValue[string] {
+	return &c.LocationUri
+}
+
+func (c *mqlAwsDatasyncLocation) GetLocationType() *plugin.TValue[string] {
+	return &c.LocationType
+}
+
+func (c *mqlAwsDatasyncLocation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsDatasyncAgent for the aws.datasync.agent resource
+type mqlAwsDatasyncAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDatasyncAgentInternal
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Version       plugin.TValue[string]
+	EndpointType  plugin.TValue[string]
+	VpcEndpointId plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+}
+
+// createAwsDatasyncAgent creates a new instance of this resource
+func createAwsDatasyncAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDatasyncAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.datasync.agent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDatasyncAgent) MqlName() string {
+	return "aws.datasync.agent"
+}
+
+func (c *mqlAwsDatasyncAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDatasyncAgent) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDatasyncAgent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDatasyncAgent) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDatasyncAgent) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDatasyncAgent) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsDatasyncAgent) GetEndpointType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointType, func() (string, error) {
+		return c.endpointType()
+	})
+}
+
+func (c *mqlAwsDatasyncAgent) GetVpcEndpointId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VpcEndpointId, func() (string, error) {
+		return c.vpcEndpointId()
+	})
+}
+
+func (c *mqlAwsDatasyncAgent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+// mqlAwsAppflow for the aws.appflow resource
+type mqlAwsAppflow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppflowInternal it will be used here
+	Flows             plugin.TValue[[]any]
+	ConnectorProfiles plugin.TValue[[]any]
+}
+
+// createAwsAppflow creates a new instance of this resource
+func createAwsAppflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppflow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appflow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppflow) MqlName() string {
+	return "aws.appflow"
+}
+
+func (c *mqlAwsAppflow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppflow) GetFlows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Flows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appflow", c.__id, "flows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.flows()
+	})
+}
+
+func (c *mqlAwsAppflow) GetConnectorProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectorProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appflow", c.__id, "connectorProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectorProfiles()
+	})
+}
+
+// mqlAwsAppflowFlow for the aws.appflow.flow resource
+type mqlAwsAppflowFlow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsAppflowFlowInternal
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Description              plugin.TValue[string]
+	FlowStatus               plugin.TValue[string]
+	SourceConnectorType      plugin.TValue[string]
+	DestinationConnectorType plugin.TValue[string]
+	TriggerType              plugin.TValue[string]
+	CreatedBy                plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	LastUpdatedAt            plugin.TValue[*time.Time]
+	Tags                     plugin.TValue[map[string]any]
+	KmsKey                   plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsAppflowFlow creates a new instance of this resource
+func createAwsAppflowFlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppflowFlow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appflow.flow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppflowFlow) MqlName() string {
+	return "aws.appflow.flow"
+}
+
+func (c *mqlAwsAppflowFlow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppflowFlow) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppflowFlow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppflowFlow) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppflowFlow) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAppflowFlow) GetFlowStatus() *plugin.TValue[string] {
+	return &c.FlowStatus
+}
+
+func (c *mqlAwsAppflowFlow) GetSourceConnectorType() *plugin.TValue[string] {
+	return &c.SourceConnectorType
+}
+
+func (c *mqlAwsAppflowFlow) GetDestinationConnectorType() *plugin.TValue[string] {
+	return &c.DestinationConnectorType
+}
+
+func (c *mqlAwsAppflowFlow) GetTriggerType() *plugin.TValue[string] {
+	return &c.TriggerType
+}
+
+func (c *mqlAwsAppflowFlow) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsAppflowFlow) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppflowFlow) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsAppflowFlow) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsAppflowFlow) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appflow.flow", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsAppflowConnectorProfile for the aws.appflow.connectorProfile resource
+type mqlAwsAppflowConnectorProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsAppflowConnectorProfileInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	ConnectorType  plugin.TValue[string]
+	ConnectorLabel plugin.TValue[string]
+	ConnectionMode plugin.TValue[string]
+	Credentials    plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastUpdatedAt  plugin.TValue[*time.Time]
+}
+
+// createAwsAppflowConnectorProfile creates a new instance of this resource
+func createAwsAppflowConnectorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppflowConnectorProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appflow.connectorProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppflowConnectorProfile) MqlName() string {
+	return "aws.appflow.connectorProfile"
+}
+
+func (c *mqlAwsAppflowConnectorProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetConnectorType() *plugin.TValue[string] {
+	return &c.ConnectorType
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetConnectorLabel() *plugin.TValue[string] {
+	return &c.ConnectorLabel
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetConnectionMode() *plugin.TValue[string] {
+	return &c.ConnectionMode
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetCredentials() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.Credentials, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appflow.connectorProfile", c.__id, "credentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentials()
+	})
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppflowConnectorProfile) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
 }

@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.4
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.42.0
+	github.com/aws/aws-sdk-go-v2 v1.42.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.26
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.25
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29
@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.35.7
+	github.com/aws/aws-sdk-go-v2/service/appflow v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.40.7
@@ -44,6 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.65.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.64.5
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.59.9
 	github.com/aws/aws-sdk-go-v2/service/dax v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/detective v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.39.5
@@ -149,8 +151,8 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.13 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.30 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect

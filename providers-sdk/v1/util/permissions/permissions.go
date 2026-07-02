@@ -638,6 +638,8 @@ func awsConnectionMethodToService(method string) string {
 		"apigateway":               "apigateway",
 		"autoscaling":              "autoscaling",
 		"backup":                   "backup",
+		"datasync":                 "datasync",
+		"appflow":                  "appflow",
 		"codebuild":                "codebuild",
 		"emr":                      "emr",
 		"guardduty":                "guardduty",
