@@ -71,7 +71,6 @@ nextdns.profileSecurity.threatIntelligenceFeeds 13.0.2
 nextdns.profileSecurity.tlds 13.0.2
 nextdns.profileSecurity.typosquatting 13.0.2
 nextdns.profileSettings 13.0.2
-nextdns.profileSettings.blockBypassMethods 13.0.2
 nextdns.profileSettings.blockPageEnabled 13.0.2
 nextdns.profileSettings.cacheBoost 13.0.2
 nextdns.profileSettings.cnameFlattening 13.0.2

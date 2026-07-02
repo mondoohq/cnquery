@@ -343,9 +343,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"nextdns.profileSettings.cnameFlattening": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNextdnsProfileSettings).GetCnameFlattening()).ToDataRes(types.Bool)
 	},
-	"nextdns.profileSettings.blockBypassMethods": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNextdnsProfileSettings).GetBlockBypassMethods()).ToDataRes(types.Bool)
-	},
 	"nextdns.profileSettings.web3": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNextdnsProfileSettings).GetWeb3()).ToDataRes(types.Bool)
 	},
@@ -681,10 +678,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nextdns.profileSettings.cnameFlattening": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNextdnsProfileSettings).CnameFlattening, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"nextdns.profileSettings.blockBypassMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNextdnsProfileSettings).BlockBypassMethods, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"nextdns.profileSettings.web3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1557,17 +1550,16 @@ type mqlNextdnsProfileSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNextdnsProfileSettingsInternal it will be used here
-	LogsEnabled        plugin.TValue[bool]
-	LogsDropIp         plugin.TValue[bool]
-	LogsDropDomain     plugin.TValue[bool]
-	LogsRetention      plugin.TValue[int64]
-	LogsLocation       plugin.TValue[string]
-	BlockPageEnabled   plugin.TValue[bool]
-	Ecs                plugin.TValue[bool]
-	CacheBoost         plugin.TValue[bool]
-	CnameFlattening    plugin.TValue[bool]
-	BlockBypassMethods plugin.TValue[bool]
-	Web3               plugin.TValue[bool]
+	LogsEnabled      plugin.TValue[bool]
+	LogsDropIp       plugin.TValue[bool]
+	LogsDropDomain   plugin.TValue[bool]
+	LogsRetention    plugin.TValue[int64]
+	LogsLocation     plugin.TValue[string]
+	BlockPageEnabled plugin.TValue[bool]
+	Ecs              plugin.TValue[bool]
+	CacheBoost       plugin.TValue[bool]
+	CnameFlattening  plugin.TValue[bool]
+	Web3             plugin.TValue[bool]
 }
 
 // createNextdnsProfileSettings creates a new instance of this resource
@@ -1636,10 +1628,6 @@ func (c *mqlNextdnsProfileSettings) GetCacheBoost() *plugin.TValue[bool] {
 
 func (c *mqlNextdnsProfileSettings) GetCnameFlattening() *plugin.TValue[bool] {
 	return &c.CnameFlattening
-}
-
-func (c *mqlNextdnsProfileSettings) GetBlockBypassMethods() *plugin.TValue[bool] {
-	return &c.BlockBypassMethods
 }
 
 func (c *mqlNextdnsProfileSettings) GetWeb3() *plugin.TValue[bool] {

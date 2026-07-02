@@ -134,7 +134,6 @@ type settingsData struct {
 	Logs        logsData        `json:"logs"`
 	BlockPage   blockPageData   `json:"blockPage"`
 	Performance performanceData `json:"performance"`
-	Bav         bool            `json:"bav"`
 	Web3        bool            `json:"web3"`
 }
 
@@ -343,18 +342,17 @@ func (r *mqlNextdnsProfile) settings() (*mqlNextdnsProfileSettings, error) {
 	}
 	s := d.Settings
 	res, err := CreateResource(r.MqlRuntime, "nextdns.profileSettings", map[string]*llx.RawData{
-		"__id":               llx.StringData(r.Id.Data + "/settings"),
-		"logsEnabled":        llx.BoolData(s.Logs.Enabled),
-		"logsDropIp":         llx.BoolData(s.Logs.Drop.IP),
-		"logsDropDomain":     llx.BoolData(s.Logs.Drop.Domain),
-		"logsRetention":      llx.IntData(s.Logs.Retention),
-		"logsLocation":       llx.StringData(s.Logs.Location),
-		"blockPageEnabled":   llx.BoolData(s.BlockPage.Enabled),
-		"ecs":                llx.BoolData(s.Performance.Ecs),
-		"cacheBoost":         llx.BoolData(s.Performance.CacheBoost),
-		"cnameFlattening":    llx.BoolData(s.Performance.CnameFlattening),
-		"blockBypassMethods": llx.BoolData(s.Bav),
-		"web3":               llx.BoolData(s.Web3),
+		"__id":             llx.StringData(r.Id.Data + "/settings"),
+		"logsEnabled":      llx.BoolData(s.Logs.Enabled),
+		"logsDropIp":       llx.BoolData(s.Logs.Drop.IP),
+		"logsDropDomain":   llx.BoolData(s.Logs.Drop.Domain),
+		"logsRetention":    llx.IntData(s.Logs.Retention),
+		"logsLocation":     llx.StringData(s.Logs.Location),
+		"blockPageEnabled": llx.BoolData(s.BlockPage.Enabled),
+		"ecs":              llx.BoolData(s.Performance.Ecs),
+		"cacheBoost":       llx.BoolData(s.Performance.CacheBoost),
+		"cnameFlattening":  llx.BoolData(s.Performance.CnameFlattening),
+		"web3":             llx.BoolData(s.Web3),
 	})
 	if err != nil {
 		return nil, err

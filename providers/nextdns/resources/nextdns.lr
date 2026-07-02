@@ -139,14 +139,14 @@ private nextdns.profileBlocklist @defaults("id name entries") {
 //
 // Examine the parental-control posture of a profile: blocked `services` and
 // `categories`, the SafeSearch and YouTube Restricted Mode toggles, whether
-// users may bypass blocks, and the recreation-time schedule during which
+// bypass methods are blocked, and the recreation-time schedule during which
 // recreation-flagged services and categories are allowed.
 private nextdns.profileParentalControl @defaults("safeSearch youtubeRestrictedMode blockBypass") {
   // Whether SafeSearch is enforced for supported search engines
   safeSearch bool
   // Whether YouTube Restricted Mode is enforced
   youtubeRestrictedMode bool
-  // Whether end users are allowed to bypass blocks
+  // Whether methods used to circumvent parental controls (VPNs, proxies, Tor, and public DNS resolvers) are blocked
   blockBypass bool
   // Timezone the recreation schedule is evaluated in (for example "America/New_York")
   recreationTimezone string
@@ -212,8 +212,6 @@ private nextdns.profileSettings @defaults("logsEnabled logsLocation web3") {
   cacheBoost bool
   // Whether CNAME flattening is enabled
   cnameFlattening bool
-  // Whether block-bypass methods (VPNs, proxies, Tor, and public resolvers used to circumvent NextDNS) are blocked
-  blockBypassMethods bool
   // Whether Web3 name resolution is enabled
   web3 bool
 }
