@@ -17652,6 +17652,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.rds.dbcluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.rds.dbcluster.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
 	},
@@ -18725,6 +18728,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.redshift.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.redshift.cluster.customDomainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetCustomDomainName()).ToDataRes(types.String)
@@ -20027,6 +20033,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dms.replicationInstance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDmsReplicationInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.dms.replicationInstance.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.dms.replicationInstance.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDmsReplicationInstance).GetSubnetGroup()).ToDataRes(types.Resource("aws.dms.replicationSubnetGroup"))
@@ -28587,6 +28596,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.msk.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.msk.cluster.storageMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetStorageMode()).ToDataRes(types.String)
 	},
@@ -29222,6 +29234,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.mq.broker.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.mq.broker.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.mq.broker.maintenanceDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetMaintenanceDayOfWeek()).ToDataRes(types.String)
@@ -52870,6 +52885,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -54368,6 +54387,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.customDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56252,6 +56275,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dms.replicationInstance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDmsReplicationInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.dms.replicationInstance.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68634,6 +68661,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMskCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.msk.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.msk.cluster.storageMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskCluster).StorageMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -69592,6 +69623,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.mq.broker.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMqBroker).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.mq.broker.maintenanceDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -127146,6 +127181,7 @@ type mqlAwsRdsDbcluster struct {
 	MultiAZ                            plugin.TValue[bool]
 	DeletionProtection                 plugin.TValue[bool]
 	SecurityGroups                     plugin.TValue[[]any]
+	Exposure                           plugin.TValue[*mqlAwsNetworkExposure]
 	AvailabilityZones                  plugin.TValue[[]any]
 	Port                               plugin.TValue[int64]
 	Endpoint                           plugin.TValue[string]
@@ -127358,6 +127394,22 @@ func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsRdsDbcluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -130201,6 +130253,7 @@ type mqlAwsRedshiftCluster struct {
 	ExpectedNextSnapshotScheduleStatus plugin.TValue[string]
 	SnapshotScheduleState              plugin.TValue[string]
 	SecurityGroups                     plugin.TValue[[]any]
+	Exposure                           plugin.TValue[*mqlAwsNetworkExposure]
 	CustomDomainName                   plugin.TValue[string]
 	CustomDomainCertificate            plugin.TValue[*mqlAwsAcmCertificate]
 	CustomDomainCertificateExpiresAt   plugin.TValue[*time.Time]
@@ -130598,6 +130651,22 @@ func (c *mqlAwsRedshiftCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -135109,6 +135178,7 @@ type mqlAwsDmsReplicationInstance struct {
 	Region                                plugin.TValue[string]
 	KmsKey                                plugin.TValue[*mqlAwsKmsKey]
 	SecurityGroups                        plugin.TValue[[]any]
+	Exposure                              plugin.TValue[*mqlAwsNetworkExposure]
 	SubnetGroup                           plugin.TValue[*mqlAwsDmsReplicationSubnetGroup]
 	PendingModifiedValues                 plugin.TValue[any]
 }
@@ -135255,6 +135325,22 @@ func (c *mqlAwsDmsReplicationInstance) GetSecurityGroups() *plugin.TValue[[]any]
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationInstance", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -165537,6 +165623,7 @@ type mqlAwsMskCluster struct {
 	NodeExporterEnabled             plugin.TValue[bool]
 	Subnets                         plugin.TValue[[]any]
 	SecurityGroups                  plugin.TValue[[]any]
+	Exposure                        plugin.TValue[*mqlAwsNetworkExposure]
 	StorageMode                     plugin.TValue[string]
 	NetworkType                     plugin.TValue[string]
 	EbsVolumeSizeGiB                plugin.TValue[int64]
@@ -165777,6 +165864,22 @@ func (c *mqlAwsMskCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -168414,6 +168517,7 @@ type mqlAwsMqBroker struct {
 	StorageType                   plugin.TValue[string]
 	Subnets                       plugin.TValue[[]any]
 	SecurityGroups                plugin.TValue[[]any]
+	Exposure                      plugin.TValue[*mqlAwsNetworkExposure]
 	MaintenanceDayOfWeek          plugin.TValue[string]
 	MaintenanceTimeOfDay          plugin.TValue[string]
 	MaintenanceTimeZone           plugin.TValue[string]
@@ -168625,6 +168729,22 @@ func (c *mqlAwsMqBroker) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 

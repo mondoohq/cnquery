@@ -11844,6 +11844,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   deletionProtection bool
   // List of VPC security group elements that the database cluster belongs to
   securityGroups() []aws.ec2.securitygroup
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // List of Availability Zones (AZs) where instances in the database cluster can be created
   availabilityZones []string
   // Port on which the database engine is listening
@@ -12625,9 +12627,10 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   publiclyAccessible bool
   // Whether the cluster is reachable from the internet
   //
-  // True when the cluster is configured for public access, which assigns it a
-  // publicly resolvable endpoint reachable from outside its VPC.
-  internetReachable() bool
+  // Deprecated in favor of exposure.internetReachable, which additionally
+  // accounts for whether an attached security group opens the cluster to the
+  // internet.
+  internetReachable() @maturity("deprecated") bool
   // Connection endpoint address for the cluster (empty when the cluster has no endpoint)
   endpointAddress string
   // Connection endpoint port for the cluster (0 when the cluster has no endpoint)
@@ -12702,6 +12705,8 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   snapshotScheduleState string
   // VPC security groups attached to the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // Custom domain name configured for the cluster endpoint
   customDomainName string
   // ACM certificate backing the custom domain
@@ -13951,6 +13956,8 @@ private aws.dms.replicationInstance @defaults("arn replicationInstanceIdentifier
   kmsKey() aws.kms.key
   // VPC security groups attached to the replication instance
   securityGroups() []aws.ec2.securitygroup
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // Subnet group that scopes the replication instance to a VPC
   subnetGroup() aws.dms.replicationSubnetGroup
   // Pending modifications scheduled for the next maintenance window
@@ -21475,6 +21482,8 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   subnets() []aws.vpc.subnet
   // Security groups attached to the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Internet-exposure breakdown (public-access flag combined with security group ingress)
+  exposure() aws.network.exposure
   // Storage mode: LOCAL or TIERED (TIERED-storage bucket is AWS-managed and not customer-visible)
   storageMode() string
   // Network type of the cluster: IPv4 or DUAL
@@ -22034,6 +22043,8 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   subnets() []aws.vpc.subnet
   // Security groups attached to the broker
   securityGroups() []aws.ec2.securitygroup
+  // Internet-exposure breakdown (publicly-accessible flag combined with security group ingress)
+  exposure() aws.network.exposure
   // Day of the week when the maintenance window begins: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
   maintenanceDayOfWeek() string
   // Time of day, in 24-hour format, when the maintenance window begins

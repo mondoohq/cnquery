@@ -2438,6 +2438,7 @@ aws.dms.replicationInstance.autoMinorVersionUpgrade 13.21.4
 aws.dms.replicationInstance.availabilityZone 13.21.4
 aws.dms.replicationInstance.dnsNameServers 13.21.4
 aws.dms.replicationInstance.engineVersion 13.21.4
+aws.dms.replicationInstance.exposure 13.40.2
 aws.dms.replicationInstance.instanceCreateTime 13.21.4
 aws.dms.replicationInstance.kmsKey 13.21.4
 aws.dms.replicationInstance.multiAZ 13.21.4
@@ -6580,6 +6581,7 @@ aws.mq.broker.dataReplicationRole 13.21.4
 aws.mq.broker.deploymentMode 11.16.1
 aws.mq.broker.engineType 11.16.1
 aws.mq.broker.engineVersion 11.16.1
+aws.mq.broker.exposure 13.40.2
 aws.mq.broker.generalLogGroup 13.21.4
 aws.mq.broker.generalLogsEnabled 11.16.1
 aws.mq.broker.hostInstanceType 11.16.1
@@ -6698,6 +6700,7 @@ aws.msk.cluster.encryptionInfo.inTransitClientBroker 13.14.2
 aws.msk.cluster.encryptionInfo.inTransitInCluster 13.14.2
 aws.msk.cluster.encryptionInfo.kmsKey 13.14.2
 aws.msk.cluster.enhancedMonitoring 11.16.1
+aws.msk.cluster.exposure 13.40.2
 aws.msk.cluster.firehoseLogsEnabled 11.16.1
 aws.msk.cluster.iamAuthEnabled 11.16.1
 aws.msk.cluster.jmxExporterEnabled 11.16.1
@@ -7339,6 +7342,7 @@ aws.rds.dbcluster.engine 11.15.2
 aws.rds.dbcluster.engineLifecycleSupport 11.15.2
 aws.rds.dbcluster.engineMode 11.15.2
 aws.rds.dbcluster.engineVersion 11.15.2
+aws.rds.dbcluster.exposure 13.40.2
 aws.rds.dbcluster.globalCluster 13.21.4
 aws.rds.dbcluster.globalClusterIdentifier 11.15.2
 aws.rds.dbcluster.globalWriteForwardingStatus 13.14.2
@@ -7609,6 +7613,7 @@ aws.redshift.cluster.endpointVpcEndpoints 13.15.2
 aws.redshift.cluster.enhancedVpcRouting 11.15.2
 aws.redshift.cluster.expectedNextSnapshotScheduleAt 13.39.2
 aws.redshift.cluster.expectedNextSnapshotScheduleStatus 13.39.2
+aws.redshift.cluster.exposure 13.40.2
 aws.redshift.cluster.hsmStatus 11.16.1
 aws.redshift.cluster.iamRoles 13.39.2
 aws.redshift.cluster.internetReachable 13.37.1
