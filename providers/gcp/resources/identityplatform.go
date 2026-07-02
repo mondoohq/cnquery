@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
-	"google.golang.org/api/googleapi"
 	identitytoolkit "google.golang.org/api/identitytoolkit/v2"
 	"google.golang.org/api/option"
 )
@@ -83,16 +82,6 @@ func (g *mqlGcpProjectIdentityPlatformService) identityPlatformClient() (*identi
 	return identitytoolkit.NewService(context.Background(), option.WithHTTPClient(client))
 }
 
-// isNotFoundOrDenied reports whether the API returned a 403/404, which we treat
-// as "no configuration present" rather than a fatal error.
-func isNotFoundOrDenied(err error) bool {
-	var gerr *googleapi.Error
-	if errors.As(err, &gerr) {
-		return gerr.Code == 403 || gerr.Code == 404
-	}
-	return false
-}
-
 func (g *mqlGcpProjectIdentityPlatformService) config() (*mqlGcpProjectIdentityPlatformServiceConfig, error) {
 	if !g.serviceEnabled {
 		g.Config.State = plugin.StateIsSet | plugin.StateIsNull
@@ -110,7 +99,7 @@ func (g *mqlGcpProjectIdentityPlatformService) config() (*mqlGcpProjectIdentityP
 
 	cfg, err := svc.Projects.GetConfig(fmt.Sprintf("projects/%s/config", projectId)).Do()
 	if err != nil {
-		if isNotFoundOrDenied(err) {
+		if isHTTPSkippable(err) {
 			g.Config.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
@@ -170,7 +159,7 @@ func (g *mqlGcpProjectIdentityPlatformService) config() (*mqlGcpProjectIdentityP
 	if mfa := cfg.Mfa; mfa != nil {
 		args["mfaState"] = llx.StringData(mfa.State)
 		args["mfaEnabledProviders"] = llx.ArrayData(convert.SliceAnyToInterface(mfa.EnabledProviders), types.String)
-		providerConfigs, err := jsonSliceToDict(mfa.ProviderConfigs)
+		providerConfigs, err := convert.JsonToDictSlice(mfa.ProviderConfigs)
 		if err != nil {
 			return nil, err
 		}
@@ -281,7 +270,7 @@ func (g *mqlGcpProjectIdentityPlatformService) tenants() ([]any, error) {
 			return nil
 		})
 	if err != nil {
-		if isNotFoundOrDenied(err) {
+		if isHTTPSkippable(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -334,17 +323,4 @@ func newMqlIdentityPlatformTenant(runtime *plugin.Runtime, t *identitytoolkit.Go
 	}
 
 	return CreateResource(runtime, "gcp.project.identityPlatformService.tenant", args)
-}
-
-// jsonSliceToDict converts a slice of API structs into a []dict for MQL.
-func jsonSliceToDict[T any](items []T) ([]any, error) {
-	res := make([]any, 0, len(items))
-	for i := range items {
-		d, err := convert.JsonToDict(items[i])
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, d)
-	}
-	return res, nil
 }
