@@ -378,7 +378,7 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 			f := items[i]
 			associationStatus := ""
 			if f.AssociationStatus != nil {
-				associationStatus = f.AssociationStatus.GetName()
+				associationStatus = *f.AssociationStatus
 			}
 			projectName, ownerId, projectId := metadataProvenance(f.Metadata)
 			mqlFip, err := CreateResource(a.MqlRuntime, "nutanix.network.floatingIp", map[string]*llx.RawData{

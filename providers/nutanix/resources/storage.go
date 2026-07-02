@@ -84,10 +84,11 @@ func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.Storag
 		"isSoftwareEncryptionEnabled":          llx.BoolData(derefBool(c.IsSoftwareEncryptionEnabled)),
 		"nfsWhitelistAddresses":                llx.ArrayData(nfsWhitelist, types.String),
 		"isNfsWhitelistInherited":              llx.BoolData(derefBool(c.IsNfsWhitelistInherited)),
-		"isShared":                             llx.BoolData(derefBool(c.IsShared)),
-		"isInternal":                           llx.BoolData(derefBool(c.IsInternal)),
-		"isMarkedForRemoval":                   llx.BoolData(derefBool(c.IsMarkedForRemoval)),
-		"storagePoolId":                        llx.StringDataPtr(c.StoragePoolExtId),
+		// The v4.0 API does not report whether a container is shared across clusters.
+		"isShared":           llx.BoolDataPtr(nil),
+		"isInternal":         llx.BoolData(derefBool(c.IsInternal)),
+		"isMarkedForRemoval": llx.BoolData(derefBool(c.IsMarkedForRemoval)),
+		"storagePoolId":      llx.StringDataPtr(c.StoragePoolExtId),
 	})
 	if err != nil {
 		return nil, err

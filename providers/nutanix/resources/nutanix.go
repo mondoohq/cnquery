@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -320,6 +321,20 @@ func newMqlCluster(runtime *plugin.Runtime, c *clustermgmtconfig.Cluster) (*mqlN
 		for _, fn := range cfg.ClusterFunction {
 			functions = append(functions, fn.GetName())
 		}
+		// The v4.0 API does not expose a distinct cluster type; the cluster
+		// functions carry the equivalent classification. Surface it as
+		// clusterType so audits can select clusters by role (an AOS compute
+		// cluster versus the Prism Central cluster).
+		switch {
+		case slices.Contains(functions, "AOS"):
+			clusterType = "AOS"
+		case slices.Contains(functions, "PRISM_CENTRAL"):
+			clusterType = "PRISM_CENTRAL"
+		case slices.Contains(functions, "CLOUD_DATA_GATEWAY"):
+			clusterType = "CLOUD_DATA_GATEWAY"
+		default:
+			clusterType = "UNKNOWN"
+		}
 		for _, eo := range cfg.EncryptionOption {
 			encryptionOptions = append(encryptionOptions, eo.GetName())
 		}
@@ -341,9 +356,6 @@ func newMqlCluster(runtime *plugin.Runtime, c *clustermgmtconfig.Cluster) (*mqlN
 		}
 		if cfg.ClusterArch != nil {
 			arch = cfg.ClusterArch.GetName()
-		}
-		if cfg.ClusterType != nil {
-			clusterType = cfg.ClusterType.GetName()
 		}
 		if cfg.OperationMode != nil {
 			operationMode = cfg.OperationMode.GetName()
@@ -683,15 +695,16 @@ func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanix
 	}
 
 	res, err := CreateResource(runtime, "nutanix.host", map[string]*llx.RawData{
-		"__id":                               llx.StringDataPtr(h.ExtId),
-		"id":                                 llx.StringDataPtr(h.ExtId),
-		"tenantId":                           llx.StringDataPtr(h.TenantId),
-		"name":                               llx.StringDataPtr(h.HostName),
-		"hostType":                           llx.StringData(hostType),
-		"blockModel":                         llx.StringDataPtr(h.BlockModel),
-		"blockSerial":                        llx.StringDataPtr(h.BlockSerial),
-		"rackableUnitUuid":                   llx.StringDataPtr(h.RackableUnitUuid),
-		"nodeSerial":                         llx.StringDataPtr(h.NodeSerial),
+		"__id":             llx.StringDataPtr(h.ExtId),
+		"id":               llx.StringDataPtr(h.ExtId),
+		"tenantId":         llx.StringDataPtr(h.TenantId),
+		"name":             llx.StringDataPtr(h.HostName),
+		"hostType":         llx.StringData(hostType),
+		"blockModel":       llx.StringDataPtr(h.BlockModel),
+		"blockSerial":      llx.StringDataPtr(h.BlockSerial),
+		"rackableUnitUuid": llx.StringDataPtr(h.RackableUnitUuid),
+		// The v4.0 API does not report a node-level serial number.
+		"nodeSerial":                         llx.StringDataPtr(nil),
 		"cpuModel":                           llx.StringDataPtr(h.CpuModel),
 		"cpuCores":                           llx.IntData(derefInt64(h.NumberOfCpuCores)),
 		"cpuSockets":                         llx.IntData(derefInt64(h.NumberOfCpuSockets)),
@@ -835,11 +848,6 @@ func newMqlVm(runtime *plugin.Runtime, vm *vmmconfig.Vm) (*mqlNutanixVm, error) 
 		}
 	}
 
-	projectId := ""
-	if vm.Project != nil && vm.Project.ExtId != nil {
-		projectId = *vm.Project.ExtId
-	}
-
 	// Source carries the entity the VM was created from. When the entity is a
 	// VM, sourceVm resolves it; otherwise the raw ExtId is exposed as sourceId.
 	sourceType := ""
@@ -859,10 +867,11 @@ func newMqlVm(runtime *plugin.Runtime, vm *vmmconfig.Vm) (*mqlNutanixVm, error) 
 	}
 
 	res, err := CreateResource(runtime, "nutanix.vm", map[string]*llx.RawData{
-		"__id":                              llx.StringDataPtr(vm.ExtId),
-		"id":                                llx.StringDataPtr(vm.ExtId),
-		"tenantId":                          llx.StringDataPtr(vm.TenantId),
-		"projectId":                         llx.StringData(projectId),
+		"__id":     llx.StringDataPtr(vm.ExtId),
+		"id":       llx.StringDataPtr(vm.ExtId),
+		"tenantId": llx.StringDataPtr(vm.TenantId),
+		// The v4.0 API does not report a project reference on the VM.
+		"projectId":                         llx.StringDataPtr(nil),
 		"sourceType":                        llx.StringData(sourceType),
 		"sourceId":                          llx.StringData(sourceId),
 		"name":                              llx.StringDataPtr(vm.Name),

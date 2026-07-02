@@ -2,14 +2,27 @@ module go.mondoo.com/mql/v13/providers/nutanix
 
 replace go.mondoo.com/mql/v13 => ../..
 
+// Nutanix serves the v4 REST APIs only at v4.0 on GA Prism Central. The v4.1+
+// SDKs request URL paths (e.g. /api/clustermgmt/v4.2/...) that GA PCs return 404
+// for, breaking every non-IAM resource (customer issue #222, PR #8917). These
+// replace directives pin the four clients to v4.0.x so a `go get -u` cannot pull
+// them forward. Do NOT bump without confirming the minimum supported Prism
+// Central serves the newer path version.
+replace (
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 => github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.0.2
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 => github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 => github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 => github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
+)
+
 go 1.26.4
 
 require (
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.2
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.0.2
 	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1
-	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.26.0
 )
