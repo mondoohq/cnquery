@@ -439,6 +439,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.user.note": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetNote()).ToDataRes(types.String)
 	},
+	"gitlab.user.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCreatedBy()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.user.lastSignInIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetLastSignInIp()).ToDataRes(types.String)
+	},
+	"gitlab.user.currentSignInIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCurrentSignInIp()).ToDataRes(types.String)
+	},
+	"gitlab.user.canCreateOrganization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCanCreateOrganization()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.publicEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetPublicEmail()).ToDataRes(types.String)
+	},
+	"gitlab.user.projectsLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetProjectsLimit()).ToDataRes(types.Int)
+	},
+	"gitlab.user.sharedRunnersMinutesLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetSharedRunnersMinutesLimit()).ToDataRes(types.Int)
+	},
 	"gitlab.user.externalIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetExternalIdentities()).ToDataRes(types.Array(types.Resource("gitlab.user.externalIdentity")))
 	},
@@ -1477,6 +1498,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.release.author": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectRelease).GetAuthor()).ToDataRes(types.String)
 	},
+	"gitlab.project.release.authorUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetAuthorUser()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.project.release.upcomingRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetUpcomingRelease()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.release.commit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetCommit()).ToDataRes(types.Dict)
+	},
+	"gitlab.project.release.evidences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetEvidences()).ToDataRes(types.Array(types.Dict))
+	},
+	"gitlab.project.release.assets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectRelease).GetAssets()).ToDataRes(types.Dict)
+	},
 	"gitlab.project.variable.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectVariable).GetKey()).ToDataRes(types.String)
 	},
@@ -2390,6 +2426,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.user.note": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabUser).Note, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CreatedBy, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.lastSignInIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).LastSignInIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.currentSignInIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CurrentSignInIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.canCreateOrganization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CanCreateOrganization, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.publicEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).PublicEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.projectsLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).ProjectsLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.sharedRunnersMinutesLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).SharedRunnersMinutesLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gitlab.user.externalIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3860,6 +3924,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectRelease).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.release.authorUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).AuthorUser, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.upcomingRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).UpcomingRelease, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.commit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Commit, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.evidences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Evidences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.release.assets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectRelease).Assets, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectVariable).__id, ok = v.Value.(string)
 		return
@@ -5080,34 +5164,41 @@ type mqlGitlabUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGitlabUserInternal
-	Id                 plugin.TValue[int64]
-	Username           plugin.TValue[string]
-	Name               plugin.TValue[string]
-	State              plugin.TValue[string]
-	Email              plugin.TValue[string]
-	WebURL             plugin.TValue[string]
-	AvatarURL          plugin.TValue[string]
-	CreatedAt          plugin.TValue[*time.Time]
-	JobTitle           plugin.TValue[string]
-	Organization       plugin.TValue[string]
-	Location           plugin.TValue[string]
-	Locked             plugin.TValue[bool]
-	Bot                plugin.TValue[bool]
-	TwoFactorEnabled   plugin.TValue[bool]
-	IsAdmin            plugin.TValue[bool]
-	IsAuditor          plugin.TValue[bool]
-	External           plugin.TValue[bool]
-	PrivateProfile     plugin.TValue[bool]
-	UsingLicenseSeat   plugin.TValue[bool]
-	CanCreateGroup     plugin.TValue[bool]
-	CanCreateProject   plugin.TValue[bool]
-	LastSignInAt       plugin.TValue[*time.Time]
-	CurrentSignInAt    plugin.TValue[*time.Time]
-	LastActivityOn     plugin.TValue[*time.Time]
-	ConfirmedAt        plugin.TValue[*time.Time]
-	Note               plugin.TValue[string]
-	ExternalIdentities plugin.TValue[[]any]
-	SshKeys            plugin.TValue[[]any]
+	Id                        plugin.TValue[int64]
+	Username                  plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	State                     plugin.TValue[string]
+	Email                     plugin.TValue[string]
+	WebURL                    plugin.TValue[string]
+	AvatarURL                 plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	JobTitle                  plugin.TValue[string]
+	Organization              plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Locked                    plugin.TValue[bool]
+	Bot                       plugin.TValue[bool]
+	TwoFactorEnabled          plugin.TValue[bool]
+	IsAdmin                   plugin.TValue[bool]
+	IsAuditor                 plugin.TValue[bool]
+	External                  plugin.TValue[bool]
+	PrivateProfile            plugin.TValue[bool]
+	UsingLicenseSeat          plugin.TValue[bool]
+	CanCreateGroup            plugin.TValue[bool]
+	CanCreateProject          plugin.TValue[bool]
+	LastSignInAt              plugin.TValue[*time.Time]
+	CurrentSignInAt           plugin.TValue[*time.Time]
+	LastActivityOn            plugin.TValue[*time.Time]
+	ConfirmedAt               plugin.TValue[*time.Time]
+	Note                      plugin.TValue[string]
+	CreatedBy                 plugin.TValue[*mqlGitlabUser]
+	LastSignInIp              plugin.TValue[string]
+	CurrentSignInIp           plugin.TValue[string]
+	CanCreateOrganization     plugin.TValue[bool]
+	PublicEmail               plugin.TValue[string]
+	ProjectsLimit             plugin.TValue[int64]
+	SharedRunnersMinutesLimit plugin.TValue[int64]
+	ExternalIdentities        plugin.TValue[[]any]
+	SshKeys                   plugin.TValue[[]any]
 }
 
 // createGitlabUser creates a new instance of this resource
@@ -5272,6 +5363,58 @@ func (c *mqlGitlabUser) GetConfirmedAt() *plugin.TValue[*time.Time] {
 func (c *mqlGitlabUser) GetNote() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Note, func() (string, error) {
 		return c.note()
+	})
+}
+
+func (c *mqlGitlabUser) GetCreatedBy() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.CreatedBy, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.user", c.__id, "createdBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.createdBy()
+	})
+}
+
+func (c *mqlGitlabUser) GetLastSignInIp() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastSignInIp, func() (string, error) {
+		return c.lastSignInIp()
+	})
+}
+
+func (c *mqlGitlabUser) GetCurrentSignInIp() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CurrentSignInIp, func() (string, error) {
+		return c.currentSignInIp()
+	})
+}
+
+func (c *mqlGitlabUser) GetCanCreateOrganization() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanCreateOrganization, func() (bool, error) {
+		return c.canCreateOrganization()
+	})
+}
+
+func (c *mqlGitlabUser) GetPublicEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicEmail, func() (string, error) {
+		return c.publicEmail()
+	})
+}
+
+func (c *mqlGitlabUser) GetProjectsLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ProjectsLimit, func() (int64, error) {
+		return c.projectsLimit()
+	})
+}
+
+func (c *mqlGitlabUser) GetSharedRunnersMinutesLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SharedRunnersMinutesLimit, func() (int64, error) {
+		return c.sharedRunnersMinutesLimit()
 	})
 }
 
@@ -8587,13 +8730,18 @@ func (c *mqlGitlabProjectIssue) GetMilestone() *plugin.TValue[*mqlGitlabProjectM
 type mqlGitlabProjectRelease struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabProjectReleaseInternal it will be used here
-	TagName     plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	ReleasedAt  plugin.TValue[*time.Time]
-	Author      plugin.TValue[string]
+	mqlGitlabProjectReleaseInternal
+	TagName         plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	ReleasedAt      plugin.TValue[*time.Time]
+	Author          plugin.TValue[string]
+	AuthorUser      plugin.TValue[*mqlGitlabUser]
+	UpcomingRelease plugin.TValue[bool]
+	Commit          plugin.TValue[any]
+	Evidences       plugin.TValue[[]any]
+	Assets          plugin.TValue[any]
 }
 
 // createGitlabProjectRelease creates a new instance of this resource
@@ -8655,6 +8803,38 @@ func (c *mqlGitlabProjectRelease) GetReleasedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGitlabProjectRelease) GetAuthor() *plugin.TValue[string] {
 	return &c.Author
+}
+
+func (c *mqlGitlabProjectRelease) GetAuthorUser() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.AuthorUser, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.release", c.__id, "authorUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.authorUser()
+	})
+}
+
+func (c *mqlGitlabProjectRelease) GetUpcomingRelease() *plugin.TValue[bool] {
+	return &c.UpcomingRelease
+}
+
+func (c *mqlGitlabProjectRelease) GetCommit() *plugin.TValue[any] {
+	return &c.Commit
+}
+
+func (c *mqlGitlabProjectRelease) GetEvidences() *plugin.TValue[[]any] {
+	return &c.Evidences
+}
+
+func (c *mqlGitlabProjectRelease) GetAssets() *plugin.TValue[any] {
+	return &c.Assets
 }
 
 // mqlGitlabProjectVariable for the gitlab.project.variable resource

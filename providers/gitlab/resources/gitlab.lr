@@ -110,6 +110,20 @@ gitlab.user @defaults("username name state") {
   //
   // Often used to record the reason an account is restricted, banned, or kept under review.
   note() string
+  // User who created this account (null when unknown)
+  createdBy() gitlab.user
+  // IP address of the most recent sign-in (admin-only; empty otherwise)
+  lastSignInIp() string
+  // IP address of the current session's sign-in (admin-only; empty otherwise)
+  currentSignInIp() string
+  // Whether the user can create organizations
+  canCreateOrganization() bool
+  // Publicly visible email address
+  publicEmail() string
+  // Maximum number of projects the user may create
+  projectsLimit() int
+  // Monthly shared-runner CI minutes quota (0 means unlimited)
+  sharedRunnersMinutesLimit() int
   // External SSO identities linked to this user (SAML, LDAP, OAuth providers, etc.)
   externalIdentities() []gitlab.user.externalIdentity
   // SSH keys registered for this user (requires admin or self-access)
@@ -1018,6 +1032,24 @@ private gitlab.project.release @defaults("tagName name") {
   releasedAt time
   // Release author username
   author string
+  // User who created the release (null when unknown)
+  authorUser() gitlab.user
+  // Whether the release is scheduled but not yet published
+  upcomingRelease bool
+  // Commit the release points to
+  //
+  // A dict with id, shortId, title, authorName, authoredDate, committedDate,
+  // and webUrl keys.
+  commit dict
+  // Release evidence collected at publish time (tamper-evidence)
+  //
+  // Each entry is a dict with sha, filepath, and collectedAt keys.
+  evidences []dict
+  // Downloadable assets attached to the release
+  //
+  // A dict with count, sources (format/url), and links (id/name/url/linkType/
+  // external) keys.
+  assets dict
 }
 
 // GitLab project CI/CD variable

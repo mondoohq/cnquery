@@ -228,6 +228,73 @@ func (u *mqlGitlabUser) note() (string, error) {
 	return user.Note, nil
 }
 
+// createdBy returns the account that created this user (admin-only), or null.
+func (u *mqlGitlabUser) createdBy() (*mqlGitlabUser, error) {
+	user, err := u.fetchUser()
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || user.CreatedBy == nil || user.CreatedBy.ID <= 0 {
+		u.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(u.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(user.CreatedBy.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func (u *mqlGitlabUser) lastSignInIp() (string, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil || user.LastSignInIP == nil {
+		return "", err
+	}
+	return user.LastSignInIP.String(), nil
+}
+
+func (u *mqlGitlabUser) currentSignInIp() (string, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil || user.CurrentSignInIP == nil {
+		return "", err
+	}
+	return user.CurrentSignInIP.String(), nil
+}
+
+func (u *mqlGitlabUser) canCreateOrganization() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.CanCreateOrganization, nil
+}
+
+func (u *mqlGitlabUser) publicEmail() (string, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return "", err
+	}
+	return user.PublicEmail, nil
+}
+
+func (u *mqlGitlabUser) projectsLimit() (int64, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return 0, err
+	}
+	return user.ProjectsLimit, nil
+}
+
+func (u *mqlGitlabUser) sharedRunnersMinutesLimit() (int64, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return 0, err
+	}
+	return user.SharedRunnersMinutesLimit, nil
+}
+
 // id function for gitlab.user.externalIdentity
 func (i *mqlGitlabUserExternalIdentity) id() (string, error) {
 	return "gitlab.user.externalIdentity/" + i.Provider.Data + "/" + i.ExternUID.Data, nil

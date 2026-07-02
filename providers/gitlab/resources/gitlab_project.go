@@ -1071,23 +1071,106 @@ func (p *mqlGitlabProject) releases() ([]any, error) {
 	var mqlReleases []any
 	for _, release := range allReleases {
 		releaseInfo := map[string]*llx.RawData{
-			"tagName":     llx.StringData(release.TagName),
-			"name":        llx.StringData(release.Name),
-			"description": llx.StringData(release.Description),
-			"createdAt":   llx.TimeDataPtr(release.CreatedAt),
-			"releasedAt":  llx.TimeDataPtr(release.ReleasedAt),
-			"author":      llx.StringData(release.Author.Username),
+			"tagName":         llx.StringData(release.TagName),
+			"name":            llx.StringData(release.Name),
+			"description":     llx.StringData(release.Description),
+			"createdAt":       llx.TimeDataPtr(release.CreatedAt),
+			"releasedAt":      llx.TimeDataPtr(release.ReleasedAt),
+			"author":          llx.StringData(release.Author.Username),
+			"upcomingRelease": llx.BoolData(release.UpcomingRelease),
+			"commit":          llx.DictData(releaseCommitToDict(release.Commit)),
+			"evidences":       llx.ArrayData(releaseEvidencesToDicts(release.Evidences), types.Dict),
+			"assets":          llx.DictData(releaseAssetsToDict(release.Assets)),
 		}
 
 		mqlRelease, err := CreateResource(p.MqlRuntime, "gitlab.project.release", releaseInfo)
 		if err != nil {
 			return nil, err
 		}
+		mqlRelease.(*mqlGitlabProjectRelease).cacheAuthorID = release.Author.ID
 
 		mqlReleases = append(mqlReleases, mqlRelease)
 	}
 
 	return mqlReleases, nil
+}
+
+// mqlGitlabProjectReleaseInternal caches the release author id so the typed
+// authorUser() accessor resolves lazily.
+type mqlGitlabProjectReleaseInternal struct {
+	cacheAuthorID int64
+}
+
+func (r *mqlGitlabProjectRelease) authorUser() (*mqlGitlabUser, error) {
+	if r.cacheAuthorID <= 0 {
+		r.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(r.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func releaseCommitToDict(c gitlab.Commit) any {
+	if c.ID == "" {
+		return nil
+	}
+	return map[string]any{
+		"id":            c.ID,
+		"shortId":       c.ShortID,
+		"title":         c.Title,
+		"authorName":    c.AuthorName,
+		"authoredDate":  c.AuthoredDate,
+		"committedDate": c.CommittedDate,
+		"webUrl":        c.WebURL,
+	}
+}
+
+func releaseEvidencesToDicts(evidences []*gitlab.ReleaseEvidence) []any {
+	out := make([]any, 0, len(evidences))
+	for _, e := range evidences {
+		if e == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"sha":         e.SHA,
+			"filepath":    e.Filepath,
+			"collectedAt": e.CollectedAt,
+		})
+	}
+	return out
+}
+
+func releaseAssetsToDict(a gitlab.ReleaseAssets) any {
+	sources := make([]any, 0, len(a.Sources))
+	for _, s := range a.Sources {
+		sources = append(sources, map[string]any{
+			"format": s.Format,
+			"url":    s.URL,
+		})
+	}
+	links := make([]any, 0, len(a.Links))
+	for _, l := range a.Links {
+		if l == nil {
+			continue
+		}
+		links = append(links, map[string]any{
+			"id":       l.ID,
+			"name":     l.Name,
+			"url":      l.URL,
+			"linkType": string(l.LinkType),
+			"external": l.External,
+		})
+	}
+	return map[string]any{
+		"count":   a.Count,
+		"sources": sources,
+		"links":   links,
+	}
 }
 
 // id function for gitlab.project.variable
