@@ -77902,7 +77902,7 @@ func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsVpcRoutetableRoute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVpcRoutetableRouteInternal it will be used here
+	mqlAwsVpcRoutetableRouteInternal
 	Id                          plugin.TValue[string]
 	DestinationCidrBlock        plugin.TValue[string]
 	DestinationIpv6CidrBlock    plugin.TValue[string]
