@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/cli/execruntime"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers"
@@ -72,6 +73,7 @@ type AssetExplorer struct {
 
 	upstream      *upstream.UpstreamConfig
 	recording     llx.Recording
+	features      []byte
 	runtimeLabels map[string]string
 	rootAssets    []*inventory.Asset // original root assets, for prepareAsset
 	errors        []*AssetWithError
@@ -100,8 +102,13 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 	}
 
 	e := &AssetExplorer{
-		upstream:      cfg.Upstream,
-		recording:     cfg.Recording,
+		upstream:  cfg.Upstream,
+		recording: cfg.Recording,
+		// Carry the context's mql features (which include platform/server-activated
+		// ones like TerraformResolveVars) into every asset connection, unioned with
+		// the local cli/config.Features global. Without this, connection-level
+		// features present only on the context never reach the provider.
+		features:      []byte(mql.GetFeatures(ctx)),
 		runtimeLabels: runtimeLabels,
 	}
 
@@ -111,7 +118,7 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 			return nil, err
 		}
 
-		awr, err := createRuntimeForAsset(resolvedRootAsset, cfg.Upstream, cfg.Recording)
+		awr, err := createRuntimeForAsset(resolvedRootAsset, cfg.Upstream, cfg.Recording, e.features)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
 			e.errors = append(e.errors, &AssetWithError{Asset: resolvedRootAsset, Err: err})
@@ -194,7 +201,7 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) (*TrackedAsset, error) {
 		return nil, fmt.Errorf("asset %q has been closed and cannot be reconnected", asset.Asset.GetName())
 	}
 
-	awr, err := createRuntimeForAsset(asset.Asset, e.upstream, e.recording)
+	awr, err := createRuntimeForAsset(asset.Asset, e.upstream, e.recording, e.features)
 	if err != nil {
 		e.errors = append(e.errors, &AssetWithError{Asset: asset.Asset, Err: err})
 		return nil, err

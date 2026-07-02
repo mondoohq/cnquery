@@ -25,7 +25,31 @@ type AssetWithError struct {
 	Err   error
 }
 
-func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
+// mergeConnectionFeatures unions the process-global CLI features
+// (cli/config.Features, populated from local config/MONDOO_FEATURES) with any
+// caller-supplied features (e.g. platform/server-activated ones). Both must
+// reach the provider connection: connection-level features like
+// TerraformResolveVars are read at Connect time, and the global alone never
+// carries server-activated features.
+func mergeConnectionFeatures(extra []byte) []byte {
+	out := make([]byte, 0, len(config.Features)+len(extra))
+	seen := make(map[byte]bool, len(config.Features)+len(extra))
+	for _, f := range config.Features {
+		if !seen[f] {
+			seen[f] = true
+			out = append(out, f)
+		}
+	}
+	for _, f := range extra {
+		if !seen[f] {
+			seen[f] = true
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording, features []byte) (*AssetWithRuntime, error) {
 	var runtime *providers.Runtime
 	var err error
 	// Close the runtime if an error occurred
@@ -50,7 +74,7 @@ func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamCo
 	}
 
 	err = runtime.Connect(&plugin.ConnectReq{
-		Features: config.Features,
+		Features: mergeConnectionFeatures(features),
 		Asset:    asset,
 		Upstream: upstream,
 	})
