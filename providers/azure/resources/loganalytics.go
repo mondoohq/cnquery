@@ -13,7 +13,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -379,14 +379,27 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) dataExports() ([]any, erro
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(de.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlDe.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).cacheSystemData = sysData
 			res = append(res, mqlDe)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionMonitorServiceWorkspaceDataExportInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // linkedServices fetches linked services for the workspace.
@@ -449,14 +462,27 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) linkedServices() ([]any, e
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ls.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlLs.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).cacheSystemData = sysData
 			res = append(res, mqlLs)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionMonitorServiceWorkspaceLinkedServiceInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // replication builds the replication sub-resource from cached data.

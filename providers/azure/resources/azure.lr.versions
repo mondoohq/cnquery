@@ -1914,6 +1914,7 @@ azure.subscription.dnsService.privateZone.maxNumberOfRecordSets 13.3.3
 azure.subscription.dnsService.privateZone.name 13.3.3
 azure.subscription.dnsService.privateZone.numberOfRecordSets 13.3.3
 azure.subscription.dnsService.privateZone.numberOfVirtualNetworkLinks 13.3.3
+azure.subscription.dnsService.privateZone.systemMetadata 13.25.1
 azure.subscription.dnsService.privateZone.tags 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLink 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLink.id 13.3.3
@@ -1921,6 +1922,7 @@ azure.subscription.dnsService.privateZone.virtualNetworkLink.location 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLink.name 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLink.provisioningState 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLink.registrationEnabled 13.3.3
+azure.subscription.dnsService.privateZone.virtualNetworkLink.systemMetadata 13.25.1
 azure.subscription.dnsService.privateZone.virtualNetworkLink.tags 13.3.3
 azure.subscription.dnsService.privateZone.virtualNetworkLinks 13.3.3
 azure.subscription.dnsService.privateZones 13.3.3
@@ -2747,6 +2749,7 @@ azure.subscription.monitorService.workspace.dataExport.enabled 13.3.3
 azure.subscription.monitorService.workspace.dataExport.id 13.3.3
 azure.subscription.monitorService.workspace.dataExport.lastModifiedDate 13.3.3
 azure.subscription.monitorService.workspace.dataExport.name 13.3.3
+azure.subscription.monitorService.workspace.dataExport.systemMetadata 13.25.1
 azure.subscription.monitorService.workspace.dataExport.tableNames 13.3.3
 azure.subscription.monitorService.workspace.dataExport.type 13.3.3
 azure.subscription.monitorService.workspace.dataExports 13.3.3
@@ -2772,6 +2775,7 @@ azure.subscription.monitorService.workspace.linkedService.id 13.3.3
 azure.subscription.monitorService.workspace.linkedService.name 13.3.3
 azure.subscription.monitorService.workspace.linkedService.provisioningState 13.3.3
 azure.subscription.monitorService.workspace.linkedService.resourceId 13.3.3
+azure.subscription.monitorService.workspace.linkedService.systemMetadata 13.25.1
 azure.subscription.monitorService.workspace.linkedService.type 13.3.3
 azure.subscription.monitorService.workspace.linkedService.writeAccessResourceId 13.3.3
 azure.subscription.monitorService.workspace.linkedServices 13.3.3

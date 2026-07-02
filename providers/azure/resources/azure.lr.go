@@ -12466,6 +12466,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.workspace.dataExport.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetLastModifiedDate()).ToDataRes(types.Time)
 	},
+	"azure.subscription.monitorService.workspace.dataExport.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.monitorService.workspace.linkedService.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetId()).ToDataRes(types.String)
 	},
@@ -12483,6 +12486,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.workspace.linkedService.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.monitorService.workspace.replication.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceReplication).GetId()).ToDataRes(types.String)
@@ -13510,6 +13516,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dnsService.privateZone.virtualNetworkLinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsServicePrivateZone).GetVirtualNetworkLinks()).ToDataRes(types.Array(types.Resource("azure.subscription.dnsService.privateZone.virtualNetworkLink")))
 	},
+	"azure.subscription.dnsService.privateZone.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDnsServicePrivateZone).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.dnsService.privateZone.virtualNetworkLink.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).GetId()).ToDataRes(types.String)
 	},
@@ -13527,6 +13536,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dnsService.privateZone.virtualNetworkLink.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dnsService.privateZone.virtualNetworkLink.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.frontDoorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorService).GetSubscriptionId()).ToDataRes(types.String)
@@ -31150,6 +31162,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).LastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.monitorService.workspace.dataExport.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.monitorService.workspace.linkedService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).__id, ok = v.Value.(string)
 		return
@@ -31176,6 +31192,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.workspace.linkedService.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.workspace.replication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32706,6 +32726,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDnsServicePrivateZone).VirtualNetworkLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.dnsService.privateZone.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDnsServicePrivateZone).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.dnsService.privateZone.virtualNetworkLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).__id, ok = v.Value.(string)
 		return
@@ -32732,6 +32756,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dnsService.privateZone.virtualNetworkLink.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dnsService.privateZone.virtualNetworkLink.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72292,7 +72320,7 @@ func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetAssociations() 
 type mqlAzureSubscriptionMonitorServiceWorkspaceDataExport struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceDataExportInternal it will be used here
+	mqlAzureSubscriptionMonitorServiceWorkspaceDataExportInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	Type                  plugin.TValue[string]
@@ -72301,6 +72329,7 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceDataExport struct {
 	DestinationResourceId plugin.TValue[string]
 	CreatedDate           plugin.TValue[*time.Time]
 	LastModifiedDate      plugin.TValue[*time.Time]
+	SystemMetadata        plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionMonitorServiceWorkspaceDataExport creates a new instance of this resource
@@ -72372,17 +72401,34 @@ func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetLastModifiedD
 	return &c.LastModifiedDate
 }
 
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace.dataExport", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService for the azure.subscription.monitorService.workspace.linkedService resource
 type mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceLinkedServiceInternal it will be used here
+	mqlAzureSubscriptionMonitorServiceWorkspaceLinkedServiceInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	Type                  plugin.TValue[string]
 	ResourceId            plugin.TValue[string]
 	WriteAccessResourceId plugin.TValue[string]
 	ProvisioningState     plugin.TValue[string]
+	SystemMetadata        plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionMonitorServiceWorkspaceLinkedService creates a new instance of this resource
@@ -72444,6 +72490,22 @@ func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetWriteAcces
 
 func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace.linkedService", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
 }
 
 // mqlAzureSubscriptionMonitorServiceWorkspaceReplication for the azure.subscription.monitorService.workspace.replication resource
@@ -76458,7 +76520,7 @@ func (c *mqlAzureSubscriptionDnsServiceZoneRecordSet) GetProperties() *plugin.TV
 type mqlAzureSubscriptionDnsServicePrivateZone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionDnsServicePrivateZoneInternal it will be used here
+	mqlAzureSubscriptionDnsServicePrivateZoneInternal
 	Id                          plugin.TValue[string]
 	Name                        plugin.TValue[string]
 	Location                    plugin.TValue[string]
@@ -76467,6 +76529,7 @@ type mqlAzureSubscriptionDnsServicePrivateZone struct {
 	MaxNumberOfRecordSets       plugin.TValue[int64]
 	NumberOfVirtualNetworkLinks plugin.TValue[int64]
 	VirtualNetworkLinks         plugin.TValue[[]any]
+	SystemMetadata              plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionDnsServicePrivateZone creates a new instance of this resource
@@ -76550,17 +76613,34 @@ func (c *mqlAzureSubscriptionDnsServicePrivateZone) GetVirtualNetworkLinks() *pl
 	})
 }
 
+func (c *mqlAzureSubscriptionDnsServicePrivateZone) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dnsService.privateZone", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink for the azure.subscription.dnsService.privateZone.virtualNetworkLink resource
 type mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLinkInternal it will be used here
+	mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLinkInternal
 	Id                  plugin.TValue[string]
 	Name                plugin.TValue[string]
 	Location            plugin.TValue[string]
 	Tags                plugin.TValue[map[string]any]
 	RegistrationEnabled plugin.TValue[bool]
 	ProvisioningState   plugin.TValue[string]
+	SystemMetadata      plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink creates a new instance of this resource
@@ -76622,6 +76702,22 @@ func (c *mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink) GetRegistr
 
 func (c *mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dnsService.privateZone.virtualNetworkLink", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
 }
 
 // mqlAzureSubscriptionFrontDoorService for the azure.subscription.frontDoorService resource

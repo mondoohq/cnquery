@@ -9085,6 +9085,8 @@ private azure.subscription.monitorService.workspace.dataExport @defaults("id nam
   createdDate time
   // Last modified date
   lastModifiedDate time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Linked service for a Log Analytics workspace
@@ -9101,6 +9103,8 @@ private azure.subscription.monitorService.workspace.linkedService @defaults("id 
   writeAccessResourceId string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Replication configuration for a Log Analytics workspace
@@ -10096,6 +10100,8 @@ azure.subscription.dnsService.privateZone @defaults("id name") {
   numberOfVirtualNetworkLinks int
   // Virtual network links for this private zone
   virtualNetworkLinks() []azure.subscription.dnsService.privateZone.virtualNetworkLink
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure private DNS zone virtual network link
@@ -10112,6 +10118,8 @@ private azure.subscription.dnsService.privateZone.virtualNetworkLink @defaults("
   registrationEnabled bool
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // ===== Azure Front Door / CDN Service =====
