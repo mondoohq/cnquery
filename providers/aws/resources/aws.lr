@@ -1649,7 +1649,11 @@ private aws.fsx.backup @defaults("backupId type lifecycle") {
   // Lifecycle status
   lifecycle string
   // Associated file system ID
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // File system this backup was taken from
+  fileSystem() aws.fsx.filesystem
   // File system type
   fileSystemType string
   // KMS key ID used for encryption
@@ -1675,7 +1679,11 @@ private aws.fsx.volume @defaults("id name lifecycle region") {
   // Volume name
   name string
   // Associated file system ID
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // File system this volume belongs to
+  fileSystem() aws.fsx.filesystem
   // Volume type (ONTAP or OPENZFS)
   volumeType string
   // Lifecycle status (AVAILABLE, CREATING, DELETING, FAILED, MISCONFIGURED, PENDING)

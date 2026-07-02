@@ -6381,6 +6381,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.backup.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetFileSystemId()).ToDataRes(types.String)
 	},
+	"aws.fsx.backup.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetFileSystem()).ToDataRes(types.Resource("aws.fsx.filesystem"))
+	},
 	"aws.fsx.backup.fileSystemType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetFileSystemType()).ToDataRes(types.String)
 	},
@@ -6410,6 +6413,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.volume.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxVolume).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.fsx.volume.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxVolume).GetFileSystem()).ToDataRes(types.Resource("aws.fsx.filesystem"))
 	},
 	"aws.fsx.volume.volumeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxVolume).GetVolumeType()).ToDataRes(types.String)
@@ -36445,6 +36451,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxBackup).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.fsx.backup.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).FileSystem, ok = plugin.RawToTValue[*mqlAwsFsxFilesystem](v.Value, v.Error)
+		return
+	},
 	"aws.fsx.backup.fileSystemType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxBackup).FileSystemType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -36487,6 +36497,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.volume.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxVolume).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.volume.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxVolume).FileSystem, ok = plugin.RawToTValue[*mqlAwsFsxFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.volume.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83546,6 +83560,7 @@ type mqlAwsFsxBackup struct {
 	Type           plugin.TValue[string]
 	Lifecycle      plugin.TValue[string]
 	FileSystemId   plugin.TValue[string]
+	FileSystem     plugin.TValue[*mqlAwsFsxFilesystem]
 	FileSystemType plugin.TValue[string]
 	KmsKeyId       plugin.TValue[string]
 	KmsKey         plugin.TValue[*mqlAwsKmsKey]
@@ -83611,6 +83626,22 @@ func (c *mqlAwsFsxBackup) GetFileSystemId() *plugin.TValue[string] {
 	return &c.FileSystemId
 }
 
+func (c *mqlAwsFsxBackup) GetFileSystem() *plugin.TValue[*mqlAwsFsxFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsFsxFilesystem](&c.FileSystem, func() (*mqlAwsFsxFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.backup", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsFsxFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
 func (c *mqlAwsFsxBackup) GetFileSystemType() *plugin.TValue[string] {
 	return &c.FileSystemType
 }
@@ -83656,6 +83687,7 @@ type mqlAwsFsxVolume struct {
 	Arn                                  plugin.TValue[string]
 	Name                                 plugin.TValue[string]
 	FileSystemId                         plugin.TValue[string]
+	FileSystem                           plugin.TValue[*mqlAwsFsxFilesystem]
 	VolumeType                           plugin.TValue[string]
 	Lifecycle                            plugin.TValue[string]
 	StorageVirtualMachineId              plugin.TValue[string]
@@ -83730,6 +83762,22 @@ func (c *mqlAwsFsxVolume) GetName() *plugin.TValue[string] {
 
 func (c *mqlAwsFsxVolume) GetFileSystemId() *plugin.TValue[string] {
 	return &c.FileSystemId
+}
+
+func (c *mqlAwsFsxVolume) GetFileSystem() *plugin.TValue[*mqlAwsFsxFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsFsxFilesystem](&c.FileSystem, func() (*mqlAwsFsxFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.volume", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsFsxFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
 }
 
 func (c *mqlAwsFsxVolume) GetVolumeType() *plugin.TValue[string] {

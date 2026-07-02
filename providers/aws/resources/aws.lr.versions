@@ -5097,6 +5097,7 @@ aws.fsx.backup 11.15.2
 aws.fsx.backup.arn 11.15.2
 aws.fsx.backup.backupId 11.15.2
 aws.fsx.backup.createdAt 11.15.2
+aws.fsx.backup.fileSystem 13.41.1
 aws.fsx.backup.fileSystemId 11.15.2
 aws.fsx.backup.fileSystemType 11.15.2
 aws.fsx.backup.kmsKey 11.16.1
@@ -5141,6 +5142,7 @@ aws.fsx.filesystem.vpcId 11.15.2
 aws.fsx.volume 11.15.2
 aws.fsx.volume.arn 11.15.2
 aws.fsx.volume.createdAt 11.15.2
+aws.fsx.volume.fileSystem 13.41.1
 aws.fsx.volume.fileSystemId 11.15.2
 aws.fsx.volume.id 11.15.2
 aws.fsx.volume.lifecycle 11.15.2

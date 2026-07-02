@@ -546,12 +546,44 @@ func (a *mqlAwsFsxBackup) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsFsxBackup) fileSystem() (*mqlAwsFsxFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(fsxFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.fsx.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsFsxFilesystem), nil
+}
+
 // ========================
 // aws.fsx.volume
 // ========================
 
 func (a *mqlAwsFsxVolume) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsFsxVolume) fileSystem() (*mqlAwsFsxFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(fsxFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.fsx.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsFsxFilesystem), nil
 }
 
 func (a *mqlAwsFsx) volumes() ([]any, error) {
