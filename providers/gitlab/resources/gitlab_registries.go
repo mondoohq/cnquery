@@ -441,6 +441,17 @@ func (p *mqlGitlabProjectPackage) files() ([]any, error) {
 	}
 	out := make([]any, 0, len(all))
 	for _, f := range all {
+		pipelines := []any{}
+		if f.Pipeline != nil {
+			for _, pl := range *f.Pipeline {
+				mqlPipeline, err := newMqlGitlabPipelineFromDetail(p.MqlRuntime, &pl)
+				if err != nil {
+					return nil, err
+				}
+				pipelines = append(pipelines, mqlPipeline)
+			}
+		}
+
 		args := map[string]*llx.RawData{
 			"id":         llx.IntData(f.ID),
 			"fileName":   llx.StringData(f.FileName),
@@ -449,6 +460,7 @@ func (p *mqlGitlabProjectPackage) files() ([]any, error) {
 			"fileSHA1":   llx.StringData(f.FileSHA1),
 			"fileSHA256": llx.StringData(f.FileSHA256),
 			"createdAt":  llx.TimeDataPtr(f.CreatedAt),
+			"pipelines":  llx.ArrayData(pipelines, types.Resource("gitlab.project.pipeline")),
 		}
 		res, err := CreateResource(p.MqlRuntime, "gitlab.project.package.file", args)
 		if err != nil {

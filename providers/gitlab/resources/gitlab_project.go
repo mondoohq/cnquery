@@ -140,6 +140,34 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 		return nil, err
 	}
 
+	approverUsers := make([]any, 0, len(approvalConfig.Approvers))
+	for _, a := range approvalConfig.Approvers {
+		if a == nil || a.User == nil {
+			continue
+		}
+		u, err := NewResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+			"id": llx.IntData(a.User.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		approverUsers = append(approverUsers, u)
+	}
+
+	approverGroups := make([]any, 0, len(approvalConfig.ApproverGroups))
+	for _, g := range approvalConfig.ApproverGroups {
+		if g == nil {
+			continue
+		}
+		grp, err := NewResource(p.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+			"id": llx.IntData(g.Group.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		approverGroups = append(approverGroups, grp)
+	}
+
 	approvalSettings := map[string]*llx.RawData{
 		"approvalsBeforeMerge":                      llx.IntData(int64(approvalConfig.ApprovalsBeforeMerge)),
 		"resetApprovalsOnPush":                      llx.BoolData(approvalConfig.ResetApprovalsOnPush),
@@ -148,6 +176,8 @@ func (p *mqlGitlabProject) approvalSettings() (*mqlGitlabProjectApprovalSetting,
 		"mergeRequestsDisableCommittersApproval":    llx.BoolData(approvalConfig.MergeRequestsDisableCommittersApproval),
 		"requirePasswordToApprove":                  llx.BoolData(approvalConfig.RequirePasswordToApprove),
 		"selectiveCodeOwnerRemovals":                llx.BoolData(approvalConfig.SelectiveCodeOwnerRemovals),
+		"approvers":                                 llx.ArrayData(approverUsers, types.Resource("gitlab.user")),
+		"approverGroups":                            llx.ArrayData(approverGroups, types.Resource("gitlab.group")),
 	}
 
 	mqlApprovalSettings, err := CreateResource(p.MqlRuntime, "gitlab.project.approvalSetting", approvalSettings)
@@ -1202,6 +1232,161 @@ func (p *mqlGitlabProject) pipelines() ([]any, error) {
 	return mqlPipelines, nil
 }
 
+// mqlGitlabProjectPipelineInternal caches the full pipeline payload from
+// GetPipeline. The list endpoint (ListProjectPipelines) only returns a subset
+// of fields; richer provenance (triggering user, timing, coverage, detailed
+// status) needs a per-pipeline fetch shared across accessors, mirroring the
+// runner-details pattern.
+type mqlGitlabProjectPipelineInternal struct {
+	detailsOnce sync.Once
+	details     *gitlab.Pipeline
+	detailsErr  error
+}
+
+func (p *mqlGitlabProjectPipeline) loadDetails() (*gitlab.Pipeline, error) {
+	p.detailsOnce.Do(func() {
+		conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+		pipeline, _, err := conn.Client().Pipelines.GetPipeline(int(p.ProjectId.Data), p.Id.Data)
+		p.details = pipeline
+		p.detailsErr = err
+	})
+	return p.details, p.detailsErr
+}
+
+func (p *mqlGitlabProjectPipeline) beforeSha() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.BeforeSHA, nil
+}
+
+func (p *mqlGitlabProjectPipeline) tag() (bool, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return false, err
+	}
+	return d.Tag, nil
+}
+
+func (p *mqlGitlabProjectPipeline) yamlErrors() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.YamlErrors, nil
+}
+
+func (p *mqlGitlabProjectPipeline) user() (*mqlGitlabUser, error) {
+	d, err := p.loadDetails()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil || d.User == nil {
+		p.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(d.User.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func (p *mqlGitlabProjectPipeline) detailedStatus() (interface{}, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil || d.DetailedStatus == nil {
+		return nil, err
+	}
+	s := d.DetailedStatus
+	return map[string]interface{}{
+		"icon":    s.Icon,
+		"text":    s.Text,
+		"label":   s.Label,
+		"group":   s.Group,
+		"tooltip": s.Tooltip,
+	}, nil
+}
+
+func (p *mqlGitlabProjectPipeline) startedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.StartedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) finishedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.FinishedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) committedAt() (*time.Time, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return d.CommittedAt, nil
+}
+
+func (p *mqlGitlabProjectPipeline) duration() (int64, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.Duration, nil
+}
+
+func (p *mqlGitlabProjectPipeline) queuedDuration() (int64, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return d.QueuedDuration, nil
+}
+
+func (p *mqlGitlabProjectPipeline) coverage() (string, error) {
+	d, err := p.loadDetails()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.Coverage, nil
+}
+
+// newMqlGitlabPipelineFromDetail builds a gitlab.project.pipeline from a full
+// SDK Pipeline (as embedded in e.g. package files). Eager fields are seeded
+// from the detail payload; lazy accessors re-fetch via GetPipeline if used.
+func newMqlGitlabPipelineFromDetail(runtime *plugin.Runtime, pl *gitlab.Pipeline) (*mqlGitlabProjectPipeline, error) {
+	res, err := CreateResource(runtime, "gitlab.project.pipeline", map[string]*llx.RawData{
+		"id":         llx.IntData(pl.ID),
+		"internalId": llx.IntData(pl.IID),
+		"projectId":  llx.IntData(pl.ProjectID),
+		"status":     llx.StringData(pl.Status),
+		"source":     llx.StringData(string(pl.Source)),
+		"ref":        llx.StringData(pl.Ref),
+		"sha":        llx.StringData(pl.SHA),
+		"name":       llx.StringData(pl.Name),
+		"webURL":     llx.StringData(pl.WebURL),
+		"createdAt":  llx.TimeDataPtr(pl.CreatedAt),
+		"updatedAt":  llx.TimeDataPtr(pl.UpdatedAt),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pipeline := res.(*mqlGitlabProjectPipeline)
+	// We already hold the full detail payload, so seed the cache and mark it
+	// resolved. This spares the lazy accessors (user(), duration(), …) a
+	// redundant GetPipeline when they're read off a package-file pipeline.
+	pipeline.details = pl
+	pipeline.detailsOnce.Do(func() {})
+	return pipeline, nil
+}
+
 // id function for gitlab.project.runner
 func (r *mqlGitlabProjectRunner) id() (string, error) {
 	return strconv.FormatInt(r.Id.Data, 10), nil
@@ -1240,14 +1425,15 @@ func (p *mqlGitlabProject) runners() ([]any, error) {
 	var mqlRunners []any
 	for _, runner := range allRunners {
 		runnerInfo := map[string]*llx.RawData{
-			"id":          llx.IntData(runner.ID),
-			"description": llx.StringData(runner.Description),
-			"name":        llx.StringData(runner.Name),
-			"runnerType":  llx.StringData(runner.RunnerType),
-			"paused":      llx.BoolData(runner.Paused),
-			"isShared":    llx.BoolData(runner.IsShared),
-			"online":      llx.BoolData(runner.Online),
-			"status":      llx.StringData(runner.Status),
+			"id":             llx.IntData(runner.ID),
+			"description":    llx.StringData(runner.Description),
+			"name":           llx.StringData(runner.Name),
+			"runnerType":     llx.StringData(runner.RunnerType),
+			"paused":         llx.BoolData(runner.Paused),
+			"isShared":       llx.BoolData(runner.IsShared),
+			"online":         llx.BoolData(runner.Online),
+			"status":         llx.StringData(runner.Status),
+			"tokenExpiresAt": llx.TimeDataPtr(runner.TokenExpiresAt),
 		}
 
 		mqlRunner, err := CreateResource(p.MqlRuntime, "gitlab.project.runner", runnerInfo)
@@ -1368,11 +1554,35 @@ func (p *mqlGitlabProject) accessTokens() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlToken.(*mqlGitlabProjectAccessToken).cacheUserID = token.UserID
 
 		mqlTokens = append(mqlTokens, mqlToken)
 	}
 
 	return mqlTokens, nil
+}
+
+// mqlGitlabProjectAccessTokenInternal caches the bot user id so the typed
+// user() accessor can resolve it lazily.
+type mqlGitlabProjectAccessTokenInternal struct {
+	cacheUserID int64
+}
+
+// user returns the bot user the token authenticates as. Access-token bot users
+// are not always resolvable via the users API; initGitlabUser degrades to a
+// bare resource on 403/404, and this returns null when there is no user id.
+func (t *mqlGitlabProjectAccessToken) user() (*mqlGitlabUser, error) {
+	if t.cacheUserID <= 0 {
+		t.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(t.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(t.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // id function for gitlab.project.deployKey

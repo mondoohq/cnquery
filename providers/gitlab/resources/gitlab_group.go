@@ -560,11 +560,35 @@ func (g *mqlGitlabGroup) accessTokens() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlToken.(*mqlGitlabGroupAccessToken).cacheUserID = token.UserID
 
 		mqlTokens = append(mqlTokens, mqlToken)
 	}
 
 	return mqlTokens, nil
+}
+
+// mqlGitlabGroupAccessTokenInternal caches the bot user id so the typed user()
+// accessor can resolve it lazily.
+type mqlGitlabGroupAccessTokenInternal struct {
+	cacheUserID int64
+}
+
+// user returns the bot user the token authenticates as. Access-token bot users
+// are not always resolvable via the users API; initGitlabUser degrades to a
+// bare resource on 403/404, and this returns null when there is no user id.
+func (t *mqlGitlabGroupAccessToken) user() (*mqlGitlabUser, error) {
+	if t.cacheUserID <= 0 {
+		t.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(t.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(t.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // id function for gitlab.group.deployToken

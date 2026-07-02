@@ -725,6 +725,10 @@ private gitlab.project.approvalSetting @defaults("approvalsBeforeMerge requirePa
   requirePasswordToApprove bool
   // Whether approvals are reset from Code Owners if their files changed
   selectiveCodeOwnerRemovals bool
+  // Users configured as default approvers on the project
+  approvers []gitlab.user
+  // Groups configured as default approvers on the project
+  approverGroups []gitlab.group
 }
 
 // GitLab protected branch
@@ -1029,6 +1033,31 @@ private gitlab.project.pipeline @defaults("id status ref") {
   createdAt time
   // Pipeline last update time
   updatedAt time
+  // Commit SHA the pipeline ran against before the change
+  beforeSha() string
+  // Whether the pipeline ran on a tag reference
+  tag() bool
+  // CI configuration (.gitlab-ci.yml) parse errors; empty when the config is valid
+  yamlErrors() string
+  // User who triggered the pipeline
+  user() gitlab.user
+  // Detailed status breakdown
+  //
+  // A dict with icon, text, label, group, and tooltip keys describing the
+  // pipeline's status in richer terms than the plain `status` string.
+  detailedStatus() dict
+  // When the pipeline started running
+  startedAt() time
+  // When the pipeline finished
+  finishedAt() time
+  // When the commit behind the pipeline was authored
+  committedAt() time
+  // Total run duration in seconds
+  duration() int
+  // Time spent queued before running, in seconds
+  queuedDuration() int
+  // Reported test coverage percentage as a string; empty when not reported
+  coverage() string
 }
 
 // GitLab CI/CD runner
@@ -1063,6 +1092,8 @@ private gitlab.project.runner @defaults("id description status runnerType") {
   online bool
   // Runner status (online, offline, stale, never_contacted, active, paused)
   status string
+  // Registration token expiry; nil when the token does not expire
+  tokenExpiresAt time
   // Tags applied to the runner — jobs with matching `tags:` are routed here
   tagList() []string
   // Whether the runner picks up jobs that don't carry a `tags:` directive
@@ -1171,6 +1202,8 @@ private gitlab.project.accessToken @defaults("id name active expiresAt") {
   lastUsedAt time
   // Access level granted by the token
   accessLevel int
+  // Bot user the token authenticates as, or null when it cannot be resolved
+  user() gitlab.user
 }
 
 // GitLab group access token
@@ -1193,6 +1226,8 @@ private gitlab.group.accessToken @defaults("id name active expiresAt") {
   lastUsedAt time
   // Access level granted by the token
   accessLevel int
+  // Bot user the token authenticates as, or null when it cannot be resolved
+  user() gitlab.user
 }
 
 // GitLab project deploy key
@@ -1556,6 +1591,8 @@ private gitlab.project.package.file @defaults("fileName size fileSHA256") {
   fileSHA256 string
   // When the file was uploaded
   createdAt time
+  // Pipelines that produced this package file (build provenance)
+  pipelines []gitlab.project.pipeline
 }
 
 // Package protection rule
