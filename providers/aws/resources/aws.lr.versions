@@ -3961,6 +3961,7 @@ aws.efs 11.15.2
 aws.efs.accessPoint 11.15.2
 aws.efs.accessPoint.accessPointId 11.15.2
 aws.efs.accessPoint.arn 11.15.2
+aws.efs.accessPoint.fileSystem 13.41.1
 aws.efs.accessPoint.fileSystemId 11.15.2
 aws.efs.accessPoint.lifecycleState 11.15.2
 aws.efs.accessPoint.name 11.15.2
@@ -3999,11 +4000,14 @@ aws.efs.filesystem.region 11.15.2
 aws.efs.filesystem.replicationConfiguration 13.12.1
 aws.efs.filesystem.replicationConfiguration.creationTime 13.12.1
 aws.efs.filesystem.replicationConfiguration.destinations 13.12.1
+aws.efs.filesystem.replicationConfiguration.originalSourceFileSystem 13.41.1
 aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn 13.12.1
+aws.efs.filesystem.replicationConfiguration.sourceFileSystem 13.41.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystemArn 13.12.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystemId 13.12.1
 aws.efs.filesystem.replicationConfiguration.sourceFileSystemRegion 13.12.1
 aws.efs.filesystem.replicationDestination 13.12.1
+aws.efs.filesystem.replicationDestination.fileSystem 13.41.1
 aws.efs.filesystem.replicationDestination.fileSystemId 13.12.1
 aws.efs.filesystem.replicationDestination.lastReplicatedTimestamp 13.12.1
 aws.efs.filesystem.replicationDestination.region 13.12.1
@@ -4014,6 +4018,7 @@ aws.efs.filesystem.throughputMode 13.12.1
 aws.efs.filesystems 11.15.2
 aws.efs.mountTarget 11.15.2
 aws.efs.mountTarget.availabilityZone 11.15.2
+aws.efs.mountTarget.fileSystem 13.41.1
 aws.efs.mountTarget.fileSystemId 11.15.2
 aws.efs.mountTarget.ipAddress 11.15.2
 aws.efs.mountTarget.lifecycleState 11.15.2

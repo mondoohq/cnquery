@@ -376,8 +376,52 @@ func (a *mqlAwsEfsFilesystemReplicationConfiguration) id() (string, error) {
 	return a.__id, nil
 }
 
+func (a *mqlAwsEfsFilesystemReplicationConfiguration) sourceFileSystem() (*mqlAwsEfsFilesystem, error) {
+	arnVal := a.SourceFileSystemArn.Data
+	if arnVal == "" {
+		a.SourceFileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
+}
+
+func (a *mqlAwsEfsFilesystemReplicationConfiguration) originalSourceFileSystem() (*mqlAwsEfsFilesystem, error) {
+	arnVal := a.OriginalSourceFileSystemArn.Data
+	if arnVal == "" {
+		a.OriginalSourceFileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
+}
+
 func (a *mqlAwsEfsFilesystemReplicationDestination) id() (string, error) {
 	return a.__id, nil
+}
+
+func (a *mqlAwsEfsFilesystemReplicationDestination) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	fsId := a.FileSystemId.Data
+	if fsId == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(efsFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsId)
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
 }
 
 func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
@@ -634,4 +678,36 @@ func (a *mqlAwsEfsMountTarget) networkInterface() (*mqlAwsEc2Networkinterface, e
 		return nil, err
 	}
 	return res.(*mqlAwsEc2Networkinterface), nil
+}
+
+func (a *mqlAwsEfsMountTarget) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	fsId := a.FileSystemId.Data
+	if fsId == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(efsFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsId)
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
+}
+
+func (a *mqlAwsEfsAccessPoint) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	fsId := a.FileSystemId.Data
+	if fsId == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(efsFilesystemArnPattern, a.Region.Data, conn.AccountId(), fsId)
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
 }

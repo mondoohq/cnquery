@@ -1453,9 +1453,17 @@ private aws.efs.filesystem.replicationConfiguration @defaults("sourceFileSystemI
   // Source file system region
   sourceFileSystemRegion string
   // Source file system ARN
-  sourceFileSystemArn string
+  //
+  // Deprecated in favor of `sourceFileSystem`.
+  sourceFileSystemArn @maturity("deprecated") string
+  // Source file system being replicated
+  sourceFileSystem() aws.efs.filesystem
   // Original source file system ARN
-  originalSourceFileSystemArn string
+  //
+  // Deprecated in favor of `originalSourceFileSystem`.
+  originalSourceFileSystemArn @maturity("deprecated") string
+  // Original source file system in the replication chain
+  originalSourceFileSystem() aws.efs.filesystem
   // When replication was created
   creationTime time
   // Replication destinations
@@ -1465,7 +1473,11 @@ private aws.efs.filesystem.replicationConfiguration @defaults("sourceFileSystemI
 // AWS EFS replication destination
 private aws.efs.filesystem.replicationDestination @defaults("fileSystemId region status") {
   // Destination file system ID
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // Destination file system replicated to
+  fileSystem() aws.efs.filesystem
   // Destination region
   region string
   // Replication status: ENABLED, ENABLING, DELETING, ERROR, PAUSED, PAUSING
@@ -1479,7 +1491,11 @@ private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
   // Mount target ID
   mountTargetId string
   // Associated file system ID
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // File system the mount target exposes
+  fileSystem() aws.efs.filesystem
   // Subnet ID where mount target resides
   //
   // Deprecated in favor of `subnet`.
@@ -1511,7 +1527,11 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   // Access point ARN
   arn string
   // Associated file system ID
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // File system the access point belongs to
+  fileSystem() aws.efs.filesystem
   // Access point name
   name string
   // POSIX user identity (uid, gid, secondaryGids)

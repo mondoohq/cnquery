@@ -53,6 +53,7 @@ const (
 	apiUsagePlanArnPattern        = "arn:aws:apigateway:%s:%s::/usageplans/%s"
 	apiVpcLinkArnPattern          = "arn:aws:apigateway:%s:%s::/vpclinks/%s"
 	transitGatewayArnPattern      = "arn:aws:ec2:%s:%s:transit-gateway/%s"
+	efsFilesystemArnPattern       = "arn:aws:elasticfilesystem:%s:%s:file-system/%s"
 )
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {

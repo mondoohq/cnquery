@@ -6174,8 +6174,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetSourceFileSystemArn()).ToDataRes(types.String)
 	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetSourceFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
+	},
 	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetOriginalSourceFileSystemArn()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetOriginalSourceFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
 	},
 	"aws.efs.filesystem.replicationConfiguration.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetCreationTime()).ToDataRes(types.Time)
@@ -6185,6 +6191,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.replicationDestination.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationDestination.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
 	},
 	"aws.efs.filesystem.replicationDestination.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetRegion()).ToDataRes(types.String)
@@ -6200,6 +6209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
 	},
 	"aws.efs.mountTarget.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetSubnetId()).ToDataRes(types.String)
@@ -6236,6 +6248,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
 	},
 	"aws.efs.accessPoint.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetName()).ToDataRes(types.String)
@@ -36108,8 +36123,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystemReplicationConfiguration).SourceFileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).SourceFileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystemReplicationConfiguration).OriginalSourceFileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).OriginalSourceFileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.replicationConfiguration.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36126,6 +36149,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.filesystem.replicationDestination.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystemReplicationDestination).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).FileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.replicationDestination.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36150,6 +36177,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.mountTarget.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsMountTarget).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).FileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.efs.mountTarget.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36202,6 +36233,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.accessPoint.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsAccessPoint).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).FileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.efs.accessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -82628,7 +82663,9 @@ type mqlAwsEfsFilesystemReplicationConfiguration struct {
 	SourceFileSystemId          plugin.TValue[string]
 	SourceFileSystemRegion      plugin.TValue[string]
 	SourceFileSystemArn         plugin.TValue[string]
+	SourceFileSystem            plugin.TValue[*mqlAwsEfsFilesystem]
 	OriginalSourceFileSystemArn plugin.TValue[string]
+	OriginalSourceFileSystem    plugin.TValue[*mqlAwsEfsFilesystem]
 	CreationTime                plugin.TValue[*time.Time]
 	Destinations                plugin.TValue[[]any]
 }
@@ -82682,8 +82719,40 @@ func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetSourceFileSystemArn() *
 	return &c.SourceFileSystemArn
 }
 
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetSourceFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.SourceFileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem.replicationConfiguration", c.__id, "sourceFileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.sourceFileSystem()
+	})
+}
+
 func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetOriginalSourceFileSystemArn() *plugin.TValue[string] {
 	return &c.OriginalSourceFileSystemArn
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetOriginalSourceFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.OriginalSourceFileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem.replicationConfiguration", c.__id, "originalSourceFileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.originalSourceFileSystem()
+	})
 }
 
 func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetCreationTime() *plugin.TValue[*time.Time] {
@@ -82700,6 +82769,7 @@ type mqlAwsEfsFilesystemReplicationDestination struct {
 	__id       string
 	// optional: if you define mqlAwsEfsFilesystemReplicationDestinationInternal it will be used here
 	FileSystemId            plugin.TValue[string]
+	FileSystem              plugin.TValue[*mqlAwsEfsFilesystem]
 	Region                  plugin.TValue[string]
 	Status                  plugin.TValue[string]
 	LastReplicatedTimestamp plugin.TValue[*time.Time]
@@ -82746,6 +82816,22 @@ func (c *mqlAwsEfsFilesystemReplicationDestination) GetFileSystemId() *plugin.TV
 	return &c.FileSystemId
 }
 
+func (c *mqlAwsEfsFilesystemReplicationDestination) GetFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.FileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem.replicationDestination", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
+}
+
 func (c *mqlAwsEfsFilesystemReplicationDestination) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -82765,6 +82851,7 @@ type mqlAwsEfsMountTarget struct {
 	mqlAwsEfsMountTargetInternal
 	MountTargetId      plugin.TValue[string]
 	FileSystemId       plugin.TValue[string]
+	FileSystem         plugin.TValue[*mqlAwsEfsFilesystem]
 	SubnetId           plugin.TValue[string]
 	Subnet             plugin.TValue[*mqlAwsVpcSubnet]
 	AvailabilityZone   plugin.TValue[string]
@@ -82814,6 +82901,22 @@ func (c *mqlAwsEfsMountTarget) GetMountTargetId() *plugin.TValue[string] {
 
 func (c *mqlAwsEfsMountTarget) GetFileSystemId() *plugin.TValue[string] {
 	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsMountTarget) GetFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.FileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.mountTarget", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
 }
 
 func (c *mqlAwsEfsMountTarget) GetSubnetId() *plugin.TValue[string] {
@@ -82896,6 +82999,7 @@ type mqlAwsEfsAccessPoint struct {
 	AccessPointId  plugin.TValue[string]
 	Arn            plugin.TValue[string]
 	FileSystemId   plugin.TValue[string]
+	FileSystem     plugin.TValue[*mqlAwsEfsFilesystem]
 	Name           plugin.TValue[string]
 	PosixUser      plugin.TValue[any]
 	RootDirectory  plugin.TValue[any]
@@ -82946,6 +83050,22 @@ func (c *mqlAwsEfsAccessPoint) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEfsAccessPoint) GetFileSystemId() *plugin.TValue[string] {
 	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsAccessPoint) GetFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.FileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.accessPoint", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
 }
 
 func (c *mqlAwsEfsAccessPoint) GetName() *plugin.TValue[string] {
