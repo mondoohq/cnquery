@@ -17607,6 +17607,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetStorageEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbcluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.rds.dbcluster.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetStorageEncryptionType()).ToDataRes(types.String)
 	},
@@ -24779,6 +24782,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.cluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.cluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.documentdb.cluster.storageType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetStorageType()).ToDataRes(types.String)
@@ -52840,6 +52846,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).TransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -63146,6 +63156,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.cluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).TransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.cluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -127201,6 +127215,7 @@ type mqlAwsRdsDbcluster struct {
 	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                          plugin.TValue[string]
 	StorageEncrypted                   plugin.TValue[bool]
+	TransitEncryptionEnabled           plugin.TValue[bool]
 	StorageEncryptionType              plugin.TValue[string]
 	StorageAllocated                   plugin.TValue[int64]
 	StorageIops                        plugin.TValue[int64]
@@ -127358,6 +127373,12 @@ func (c *mqlAwsRdsDbcluster) GetManagedBy() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbcluster) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsDbcluster) GetTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TransitEncryptionEnabled, func() (bool, error) {
+		return c.transitEncryptionEnabled()
+	})
 }
 
 func (c *mqlAwsRdsDbcluster) GetStorageEncryptionType() *plugin.TValue[string] {
@@ -151961,6 +151982,7 @@ type mqlAwsDocumentdbCluster struct {
 	CloneGroupId                 plugin.TValue[string]
 	Status                       plugin.TValue[string]
 	StorageEncrypted             plugin.TValue[bool]
+	TransitEncryptionEnabled     plugin.TValue[bool]
 	StorageType                  plugin.TValue[string]
 	Tags                         plugin.TValue[map[string]any]
 	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
@@ -152189,6 +152211,12 @@ func (c *mqlAwsDocumentdbCluster) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsDocumentdbCluster) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsDocumentdbCluster) GetTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TransitEncryptionEnabled, func() (bool, error) {
+		return c.transitEncryptionEnabled()
+	})
 }
 
 func (c *mqlAwsDocumentdbCluster) GetStorageType() *plugin.TValue[string] {
