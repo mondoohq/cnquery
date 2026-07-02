@@ -128,6 +128,35 @@ gitlab.user @defaults("username name state") {
   externalIdentities() []gitlab.user.externalIdentity
   // SSH keys registered for this user (requires admin or self-access)
   sshKeys() []gitlab.user.sshKey
+  // Personal access tokens belonging to this user (requires admin or self-access)
+  personalAccessTokens() []gitlab.user.personalAccessToken
+}
+
+// GitLab personal access token
+//
+// Examine a personal access token and its security posture: the `scopes` it
+// grants, whether it is `active` or `revoked`, and its `expiresAt` and
+// `lastUsedAt` timestamps. Use these to audit over-scoped, stale, or
+// non-expiring tokens.
+private gitlab.user.personalAccessToken @defaults("name active expiresAt") {
+  // Token ID
+  id int
+  // Token name
+  name string
+  // Description of the token
+  description string
+  // Whether the token is active
+  active bool
+  // Whether the token has been revoked
+  revoked bool
+  // Scopes granted by the token (api, read_api, read_repository, etc.)
+  scopes []string
+  // When the token was created
+  createdAt time
+  // When the token expires; null when it never expires
+  expiresAt time
+  // When the token was last used
+  lastUsedAt time
 }
 
 // External SSO identity linked to a GitLab user (SAML, LDAP, OAuth provider, etc.)
@@ -712,6 +741,88 @@ gitlab.project @defaults("fullName visibility webURL") {
   jobTokenScope() gitlab.project.jobTokenScope
   // Protected tags and who may create them
   protectedTags() []gitlab.project.protectedTag
+  // Active integrations (external services) configured for the project
+  integrations() []gitlab.project.integration
+  // Protected environments and their deploy/approval gates
+  protectedEnvironments() []gitlab.project.protectedEnvironment
+}
+
+// GitLab project integration
+//
+// Examine an active integration (external service) wired into the project,
+// such as Slack, Jira, or a generic webhook-style service. `slug` identifies
+// the integration type and the event flags show which project events are
+// forwarded to it. Integrations are a data-egress and inbound-trigger surface.
+private gitlab.project.integration @defaults("title slug active") {
+  // Integration ID
+  id int
+  // Human-readable title
+  title string
+  // Integration type slug (for example slack, jira, pipelines-email)
+  slug string
+  // Whether the integration is active
+  active bool
+  // Whether the integration is inherited from the group or instance level
+  inherited bool
+  // When the integration was created
+  createdAt time
+  // When the integration was last updated
+  updatedAt time
+  // Whether commenting on events is enabled
+  commentOnEventEnabled bool
+  // Whether push events are forwarded
+  pushEvents bool
+  // Whether issue events are forwarded
+  issuesEvents bool
+  // Whether confidential-issue events are forwarded
+  confidentialIssuesEvents bool
+  // Whether merge-request events are forwarded
+  mergeRequestsEvents bool
+  // Whether note (comment) events are forwarded
+  noteEvents bool
+  // Whether confidential-note events are forwarded
+  confidentialNoteEvents bool
+  // Whether pipeline events are forwarded
+  pipelineEvents bool
+  // Whether tag-push events are forwarded
+  tagPushEvents bool
+  // Whether CI job events are forwarded
+  jobEvents bool
+  // Whether deployment events are forwarded
+  deploymentEvents bool
+  // Whether wiki-page events are forwarded
+  wikiPageEvents bool
+  // Whether commit events are forwarded
+  commitEvents bool
+  // Whether alert events are forwarded
+  alertEvents bool
+  // Whether incident events are forwarded
+  incidentEvents bool
+  // Whether vulnerability events are forwarded
+  vulnerabilityEvents bool
+}
+
+// GitLab protected environment
+//
+// Examine a protected deployment environment and the gates guarding it. The
+// `name` field is the environment (or wildcard). `deployAccessLevels` lists
+// who may deploy, `requiredApprovalCount` is the number of approvals a
+// deployment needs, and `approvalRules` describes the approver groups/users.
+private gitlab.project.protectedEnvironment @defaults("name requiredApprovalCount") {
+  // Environment name or wildcard pattern
+  name string
+  // Number of approvals required before a deployment proceeds
+  requiredApprovalCount int
+  // Access levels permitted to deploy to the environment
+  //
+  // Each entry is a dict with accessLevel, accessLevelDescription, userId,
+  // groupId, and groupInheritanceType keys.
+  deployAccessLevels []dict
+  // Deployment approval rules for the environment
+  //
+  // Each entry is a dict with id, accessLevel, accessLevelDescription, userId,
+  // groupId, requiredApprovalCount, and groupInheritanceType keys.
+  approvalRules []dict
 }
 
 // CI/CD job-token access scope

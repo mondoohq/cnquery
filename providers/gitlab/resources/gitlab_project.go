@@ -540,6 +540,137 @@ func projectTagAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*g
 	return out, nil
 }
 
+func (i *mqlGitlabProjectIntegration) id() (string, error) {
+	return "gitlab.project.integration/" + strconv.FormatInt(i.Id.Data, 10), nil
+}
+
+// integrations lists the project's active external integrations (services).
+// ListServices returns the full set of active integrations (a bounded,
+// non-paginated collection), so there is no page loop.
+func (p *mqlGitlabProject) integrations() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	services, resp, err := conn.Client().Services.ListServices(int(p.Id.Data))
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	out := make([]any, 0, len(services))
+	for _, s := range services {
+		if s == nil {
+			continue
+		}
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.integration", map[string]*llx.RawData{
+			"id":                       llx.IntData(s.ID),
+			"title":                    llx.StringData(s.Title),
+			"slug":                     llx.StringData(s.Slug),
+			"active":                   llx.BoolData(s.Active),
+			"inherited":                llx.BoolData(s.Inherited),
+			"createdAt":                llx.TimeDataPtr(s.CreatedAt),
+			"updatedAt":                llx.TimeDataPtr(s.UpdatedAt),
+			"commentOnEventEnabled":    llx.BoolData(s.CommentOnEventEnabled),
+			"pushEvents":               llx.BoolData(s.PushEvents),
+			"issuesEvents":             llx.BoolData(s.IssuesEvents),
+			"confidentialIssuesEvents": llx.BoolData(s.ConfidentialIssuesEvents),
+			"mergeRequestsEvents":      llx.BoolData(s.MergeRequestsEvents),
+			"noteEvents":               llx.BoolData(s.NoteEvents),
+			"confidentialNoteEvents":   llx.BoolData(s.ConfidentialNoteEvents),
+			"pipelineEvents":           llx.BoolData(s.PipelineEvents),
+			"tagPushEvents":            llx.BoolData(s.TagPushEvents),
+			"jobEvents":                llx.BoolData(s.JobEvents),
+			"deploymentEvents":         llx.BoolData(s.DeploymentEvents),
+			"wikiPageEvents":           llx.BoolData(s.WikiPageEvents),
+			"commitEvents":             llx.BoolData(s.CommitEvents),
+			"alertEvents":              llx.BoolData(s.AlertEvents),
+			"incidentEvents":           llx.BoolData(s.IncidentEvents),
+			"vulnerabilityEvents":      llx.BoolData(s.VulnerabilityEvents),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// protectedEnvironments lists the project's protected deployment environments
+// and their deploy/approval gates.
+func (p *mqlGitlabProject) protectedEnvironments() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.ProtectedEnvironment
+	for {
+		envs, resp, err := conn.Client().ProtectedEnvironments.ListProtectedEnvironments(projectID, &gitlab.ListProtectedEnvironmentsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		all = append(all, envs...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, env := range all {
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedEnvironment", map[string]*llx.RawData{
+			"__id":                  llx.StringData(fmt.Sprintf("gitlab.project.protectedEnvironment/%d/%s", p.Id.Data, env.Name)),
+			"name":                  llx.StringData(env.Name),
+			"requiredApprovalCount": llx.IntData(env.RequiredApprovalCount),
+			"deployAccessLevels":    llx.ArrayData(envDeployAccessLevelsToDicts(env.DeployAccessLevels), types.Dict),
+			"approvalRules":         llx.ArrayData(envApprovalRulesToDicts(env.ApprovalRules), types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func envDeployAccessLevelsToDicts(descs []*gitlab.EnvironmentAccessDescription) []any {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"accessLevel":            int64(d.AccessLevel),
+			"accessLevelDescription": d.AccessLevelDescription,
+			"userId":                 int64(d.UserID),
+			"groupId":                int64(d.GroupID),
+			"groupInheritanceType":   int64(d.GroupInheritanceType),
+		})
+	}
+	return out
+}
+
+func envApprovalRulesToDicts(rules []*gitlab.EnvironmentApprovalRule) []any {
+	out := make([]any, 0, len(rules))
+	for _, r := range rules {
+		if r == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":                     int64(r.ID),
+			"accessLevel":            int64(r.AccessLevel),
+			"accessLevelDescription": r.AccessLevelDescription,
+			"userId":                 int64(r.UserID),
+			"groupId":                int64(r.GroupID),
+			"requiredApprovalCount":  int64(r.RequiredApprovalCount),
+			"groupInheritanceType":   int64(r.GroupInheritanceType),
+		})
+	}
+	return out
+}
+
 // protectedTags lists the project's protected tags and who may create them.
 func (p *mqlGitlabProject) protectedTags() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)

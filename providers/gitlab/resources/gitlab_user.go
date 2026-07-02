@@ -12,7 +12,9 @@ import (
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // gitlabUserScopeWarn logs once per session when fetching /users/:id is
@@ -443,4 +445,62 @@ func (u *mqlGitlabUser) sshKeys() ([]any, error) {
 	}
 
 	return mqlKeys, nil
+}
+
+func (t *mqlGitlabUserPersonalAccessToken) id() (string, error) {
+	return "gitlab.user.personalAccessToken/" + strconv.FormatInt(t.Id.Data, 10), nil
+}
+
+// personalAccessTokens lists the user's personal access tokens. Requires an
+// admin token (to see other users' tokens) or self-access; on 403/404 it
+// returns an empty list rather than failing the resource graph.
+func (u *mqlGitlabUser) personalAccessTokens() ([]any, error) {
+	conn := u.MqlRuntime.Connection.(*connection.GitLabConnection)
+	userID := u.Id.Data
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.PersonalAccessToken
+	for {
+		tokens, resp, err := conn.Client().PersonalAccessTokens.ListPersonalAccessTokens(&gitlab.ListPersonalAccessTokensOptions{
+			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+			UserID:      &userID,
+		})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		all = append(all, tokens...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, t := range all {
+		var expiresAt *time.Time
+		if t.ExpiresAt != nil {
+			e := time.Time(*t.ExpiresAt)
+			expiresAt = &e
+		}
+		res, err := CreateResource(u.MqlRuntime, "gitlab.user.personalAccessToken", map[string]*llx.RawData{
+			"id":          llx.IntData(t.ID),
+			"name":        llx.StringData(t.Name),
+			"description": llx.StringData(t.Description),
+			"active":      llx.BoolData(t.Active),
+			"revoked":     llx.BoolData(t.Revoked),
+			"scopes":      llx.ArrayData(convert.SliceAnyToInterface(t.Scopes), types.String),
+			"createdAt":   llx.TimeDataPtr(t.CreatedAt),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"lastUsedAt":  llx.TimeDataPtr(t.LastUsedAt),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
