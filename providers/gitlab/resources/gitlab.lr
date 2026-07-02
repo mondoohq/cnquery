@@ -154,6 +154,78 @@ private gitlab.member @defaults("user role") {
   user gitlab.user
   // Access level of the user within the group or project (e.g., Guest, Reporter, Developer, Maintainer, Owner)
   role string
+  // Numeric access level backing the role (10 Guest, 20 Reporter, 30 Developer, 40 Maintainer, 50 Owner)
+  accessLevel int
+  // Membership state (for example active or awaiting)
+  state string
+  // When the membership expires; null if it never expires
+  expiresAt time
+  // When the membership was created
+  createdAt time
+  // Whether this member consumes a billable seat
+  isUsingSeat bool
+  // User who granted this membership, or null when GitLab does not report it
+  createdBy() gitlab.user
+  // Custom role assigned to this member, or null when the member holds only a standard role
+  memberRole() gitlab.memberRole
+}
+
+// GitLab custom member role
+//
+// A custom role layered on a base access level that grants granular
+// administrative permissions. Examine the permission flags to find roles
+// that elevate holders beyond their base access level, such as a Reporter
+// based role that can manage project access tokens or administer CI/CD
+// variables. Select a role by `id` from a group's `memberRoles`.
+private gitlab.memberRole @defaults("name baseAccessLevel") {
+  // Member role ID
+  id int
+  // Human-readable name of the role
+  name string
+  // Description of the role
+  description string
+  // Base access level the custom permissions are layered onto (10 Guest, 20 Reporter, 30 Developer, 40 Maintainer, 50 Owner)
+  baseAccessLevel int
+  // Whether the role can administer CI/CD variables
+  adminCicdVariables bool
+  // Whether the role can administer compliance frameworks
+  adminComplianceFramework bool
+  // Whether the role can administer group members
+  adminGroupMembers bool
+  // Whether the role can administer merge requests
+  adminMergeRequests bool
+  // Whether the role can administer push rules
+  adminPushRules bool
+  // Whether the role can administer Terraform state
+  adminTerraformState bool
+  // Whether the role can administer vulnerabilities
+  adminVulnerability bool
+  // Whether the role can administer webhooks
+  adminWebHook bool
+  // Whether the role can archive projects
+  archiveProject bool
+  // Whether the role can manage deploy tokens
+  manageDeployTokens bool
+  // Whether the role can manage group access tokens
+  manageGroupAccessTokens bool
+  // Whether the role can manage merge request settings
+  manageMergeRequestSettings bool
+  // Whether the role can manage project access tokens
+  manageProjectAccessTokens bool
+  // Whether the role can manage security policy links
+  manageSecurityPolicyLink bool
+  // Whether the role can read repository code
+  readCode bool
+  // Whether the role can view runners
+  readRunners bool
+  // Whether the role can read dependency information
+  readDependency bool
+  // Whether the role can read vulnerability information
+  readVulnerability bool
+  // Whether the role can remove groups
+  removeGroup bool
+  // Whether the role can remove projects
+  removeProject bool
 }
 
 // GitLab Namespace
@@ -252,6 +324,8 @@ gitlab.group @defaults("name visibility webURL") {
   lfsEnabled bool
   // List of members in the group with their roles
   members() []gitlab.member
+  // Custom member roles defined in the group
+  memberRoles() []gitlab.memberRole
   // List of subgroups that belong to this group
   subgroups() []gitlab.group
   // List of labels for the group
@@ -325,6 +399,53 @@ private gitlab.group.auditEvent @defaults("id eventName createdAt") {
   // IP address the action originated from
   ipAddress string
   // Path of the entity within the group hierarchy
+  entityPath string
+  // Whether this was a failed login event
+  failedLogin string
+  // User who performed the action (null if the author cannot be resolved)
+  author() gitlab.user
+  // User entity targeted by this audit event when entityType is "User" (null otherwise)
+  entityUser() gitlab.user
+  // Group entity targeted by this audit event when entityType is "Group" (null otherwise)
+  entityGroup() gitlab.group
+  // Project entity targeted by this audit event when entityType is "Project" (null otherwise)
+  entityProject() gitlab.project
+}
+
+// GitLab project audit event
+//
+// Records a security-relevant action against the project.
+// Available on Premium and Ultimate tiers via /projects/:id/audit_events.
+private gitlab.project.auditEvent @defaults("id eventName createdAt") {
+  // Audit event ID
+  id int
+  // ID of the user who performed the action
+  authorId int
+  // ID of the entity the event applies to
+  entityId int
+  // Entity type (Project, User, etc.)
+  entityType string
+  // Name of the event (e.g., project_deploy_token_created)
+  eventName string
+  // Event type
+  eventType string
+  // Time the event occurred
+  createdAt time
+  // Display name of the author
+  authorName string
+  // Email of the author
+  authorEmail string
+  // Class of the author (User, DeployToken, etc.)
+  authorClass string
+  // Description of the change
+  customMessage string
+  // Type of the target object
+  targetType string
+  // Target details
+  targetDetails string
+  // IP address the action originated from
+  ipAddress string
+  // Path of the entity the event applies to
   entityPath string
   // Whether this was a failed login event
   failedLogin string
@@ -482,6 +603,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   packages() []gitlab.project.package
   // Package protection rules gating who can push and delete packages
   packageProtectionRules() []gitlab.project.packageProtectionRule
+  // Audit events recorded for the project (Premium/Ultimate)
+  auditEvents() []gitlab.project.auditEvent
 }
 
 // GitLab project approval rule

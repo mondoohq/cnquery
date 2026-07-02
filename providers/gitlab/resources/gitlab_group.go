@@ -27,6 +27,108 @@ func (m *mqlGitlabMember) id() (string, error) {
 	return "gitlab.member/" + strconv.FormatInt(m.Id.Data, 10), nil
 }
 
+// mqlGitlabMemberInternal caches source data needed to resolve the member's
+// typed references (createdBy user, custom member role) lazily.
+type mqlGitlabMemberInternal struct {
+	cacheCreatedByID int64
+	cacheMemberRole  *gitlab.MemberRole
+}
+
+// createdBy returns a typed reference to the user who granted the membership.
+// Returns null when GitLab does not report a creator (e.g. legacy memberships).
+func (m *mqlGitlabMember) createdBy() (*mqlGitlabUser, error) {
+	if m.cacheCreatedByID <= 0 {
+		m.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheCreatedByID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// memberRole returns the custom role assigned to the member, or null when the
+// member holds only a standard access level.
+func (m *mqlGitlabMember) memberRole() (*mqlGitlabMemberRole, error) {
+	if m.cacheMemberRole == nil {
+		m.MemberRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlGitlabMemberRole(m.MqlRuntime, m.cacheMemberRole)
+}
+
+func (r *mqlGitlabMemberRole) id() (string, error) {
+	return "gitlab.memberRole/" + strconv.FormatInt(r.Id.Data, 10), nil
+}
+
+// newMqlGitlabMemberRole builds a gitlab.memberRole resource from an SDK
+// MemberRole. Shared by gitlab.group.memberRoles and gitlab.member.memberRole.
+func newMqlGitlabMemberRole(runtime *plugin.Runtime, role *gitlab.MemberRole) (*mqlGitlabMemberRole, error) {
+	res, err := CreateResource(runtime, "gitlab.memberRole", map[string]*llx.RawData{
+		"id":                         llx.IntData(role.ID),
+		"name":                       llx.StringData(role.Name),
+		"description":                llx.StringData(role.Description),
+		"baseAccessLevel":            llx.IntData(int64(role.BaseAccessLevel)),
+		"adminCicdVariables":         llx.BoolData(role.AdminCICDVariables),
+		"adminComplianceFramework":   llx.BoolData(role.AdminComplianceFramework),
+		"adminGroupMembers":          llx.BoolData(role.AdminGroupMembers),
+		"adminMergeRequests":         llx.BoolData(role.AdminMergeRequests),
+		"adminPushRules":             llx.BoolData(role.AdminPushRules),
+		"adminTerraformState":        llx.BoolData(role.AdminTerraformState),
+		"adminVulnerability":         llx.BoolData(role.AdminVulnerability),
+		"adminWebHook":               llx.BoolData(role.AdminWebHook),
+		"archiveProject":             llx.BoolData(role.ArchiveProject),
+		"manageDeployTokens":         llx.BoolData(role.ManageDeployTokens),
+		"manageGroupAccessTokens":    llx.BoolData(role.ManageGroupAccessTokens),
+		"manageMergeRequestSettings": llx.BoolData(role.ManageMergeRequestSettings),
+		"manageProjectAccessTokens":  llx.BoolData(role.ManageProjectAccessTokens),
+		"manageSecurityPolicyLink":   llx.BoolData(role.ManageSecurityPolicyLink),
+		"readCode":                   llx.BoolData(role.ReadCode),
+		"readRunners":                llx.BoolData(role.ReadRunners),
+		"readDependency":             llx.BoolData(role.ReadDependency),
+		"readVulnerability":          llx.BoolData(role.ReadVulnerability),
+		"removeGroup":                llx.BoolData(role.RemoveGroup),
+		"removeProject":              llx.BoolData(role.RemoveProject),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabMemberRole), nil
+}
+
+// memberRoles fetches the custom member roles defined in the group.
+//
+// Custom roles are a Premium/Ultimate feature. On lower tiers the API returns
+// 403/404, in which case we return an empty list rather than failing the whole
+// resource graph.
+//
+// see https://docs.gitlab.com/api/member_roles/
+func (g *mqlGitlabGroup) memberRoles() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	roles, resp, err := conn.Client().MemberRolesService.ListMemberRoles(int(g.Id.Data))
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return []any{}, nil // not available on this GitLab tier
+		}
+		return nil, err
+	}
+
+	var mqlRoles []any
+	for _, role := range roles {
+		mqlRole, err := newMqlGitlabMemberRole(g.MqlRuntime, role)
+		if err != nil {
+			return nil, err
+		}
+		mqlRoles = append(mqlRoles, mqlRole)
+	}
+
+	return mqlRoles, nil
+}
+
 // init initializes the gitlab group with the arguments
 // see https://docs.gitlab.com/ee/api/groups.html#new-group
 func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -183,16 +285,32 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 			return nil, err
 		}
 
+		var expiresAt *time.Time
+		if member.ExpiresAt != nil {
+			t := time.Time(*member.ExpiresAt)
+			expiresAt = &t
+		}
+
 		memberInfo := map[string]*llx.RawData{
-			"id":   llx.IntData(member.ID),
-			"user": llx.ResourceData(mqlUser, "gitlab.user"),
-			"role": llx.StringData(role),
+			"id":          llx.IntData(member.ID),
+			"user":        llx.ResourceData(mqlUser, "gitlab.user"),
+			"role":        llx.StringData(role),
+			"accessLevel": llx.IntData(int64(member.AccessLevel)),
+			"state":       llx.StringData(member.State),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"createdAt":   llx.TimeDataPtr(member.CreatedAt),
+			"isUsingSeat": llx.BoolData(member.IsUsingSeat),
 		}
 
 		mqlMember, err := CreateResource(g.MqlRuntime, "gitlab.member", memberInfo)
 		if err != nil {
 			return nil, err
 		}
+		mm := mqlMember.(*mqlGitlabMember)
+		if member.CreatedBy != nil {
+			mm.cacheCreatedByID = member.CreatedBy.ID
+		}
+		mm.cacheMemberRole = member.MemberRole
 
 		mqlMembers = append(mqlMembers, mqlMember)
 	}

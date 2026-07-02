@@ -418,16 +418,32 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 			return nil, err
 		}
 
+		var expiresAt *time.Time
+		if member.ExpiresAt != nil {
+			t := time.Time(*member.ExpiresAt)
+			expiresAt = &t
+		}
+
 		memberInfo := map[string]*llx.RawData{
-			"id":   llx.IntData(int64(member.ID)),
-			"user": llx.ResourceData(mqlUser, "gitlab.user"),
-			"role": llx.StringData(role),
+			"id":          llx.IntData(int64(member.ID)),
+			"user":        llx.ResourceData(mqlUser, "gitlab.user"),
+			"role":        llx.StringData(role),
+			"accessLevel": llx.IntData(int64(member.AccessLevel)),
+			"state":       llx.StringData(member.State),
+			"expiresAt":   llx.TimeDataPtr(expiresAt),
+			"createdAt":   llx.TimeDataPtr(member.CreatedAt),
+			"isUsingSeat": llx.BoolData(member.IsUsingSeat),
 		}
 
 		mqlMember, err := CreateResource(p.MqlRuntime, "gitlab.member", memberInfo)
 		if err != nil {
 			return nil, err
 		}
+		mm := mqlMember.(*mqlGitlabMember)
+		if member.CreatedBy != nil {
+			mm.cacheCreatedByID = member.CreatedBy.ID
+		}
+		mm.cacheMemberRole = member.MemberRole
 
 		mqlMembers = append(mqlMembers, mqlMember)
 	}
@@ -1539,4 +1555,138 @@ func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting,
 	}
 
 	return mqlSetting.(*mqlGitlabProjectSecuritySetting), nil
+}
+
+// id function for gitlab.project.auditEvent
+func (a *mqlGitlabProjectAuditEvent) id() (string, error) {
+	return "gitlab.project.auditEvent/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// author returns a typed reference to the user who performed the action.
+// Returns null when authorId is unknown (e.g. system-generated events).
+func (a *mqlGitlabProjectAuditEvent) author() (*mqlGitlabUser, error) {
+	if a.AuthorId.Data <= 0 {
+		a.Author.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.AuthorId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// entityUser returns a typed user reference when entityType is "User", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityUser() (*mqlGitlabUser, error) {
+	if a.EntityType.Data != "User" || a.EntityId.Data <= 0 {
+		a.EntityUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+// entityGroup returns a typed group reference when entityType is "Group", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityGroup() (*mqlGitlabGroup, error) {
+	if a.EntityType.Data != "Group" || a.EntityId.Data <= 0 {
+		a.EntityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+// entityProject returns a typed project reference when entityType is "Project", null otherwise.
+func (a *mqlGitlabProjectAuditEvent) entityProject() (*mqlGitlabProject, error) {
+	if a.EntityType.Data != "Project" || a.EntityId.Data <= 0 {
+		a.EntityProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(a.EntityId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
+}
+
+// auditEvents fetches audit events for the project.
+//
+// Project audit events are a Premium/Ultimate feature. On lower tiers the API
+// returns 403/404, in which case we return an empty list rather than failing
+// the whole resource graph.
+//
+// see https://docs.gitlab.com/api/audit_events/#project-audit-events
+func (p *mqlGitlabProject) auditEvents() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allEvents []*gitlab.AuditEvent
+
+	for {
+		events, resp, err := conn.Client().AuditEvents.ListProjectAuditEvents(projectID, &gitlab.ListAuditEventsOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil // not available on this GitLab tier
+			}
+			return nil, err
+		}
+
+		allEvents = append(allEvents, events...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlEvents []any
+	for _, event := range allEvents {
+		eventInfo := map[string]*llx.RawData{
+			"id":            llx.IntData(event.ID),
+			"authorId":      llx.IntData(event.AuthorID),
+			"entityId":      llx.IntData(event.EntityID),
+			"entityType":    llx.StringData(event.EntityType),
+			"eventName":     llx.StringData(event.EventName),
+			"eventType":     llx.StringData(event.EventType),
+			"createdAt":     llx.TimeDataPtr(event.CreatedAt),
+			"authorName":    llx.StringData(event.Details.AuthorName),
+			"authorEmail":   llx.StringData(event.Details.AuthorEmail),
+			"authorClass":   llx.StringData(event.Details.AuthorClass),
+			"customMessage": llx.StringData(event.Details.CustomMessage),
+			"targetType":    llx.StringData(event.Details.TargetType),
+			"targetDetails": llx.StringData(event.Details.TargetDetails),
+			"ipAddress":     llx.StringData(event.Details.IPAddress),
+			"entityPath":    llx.StringData(event.Details.EntityPath),
+			"failedLogin":   llx.StringData(event.Details.FailedLogin),
+		}
+		mqlEvent, err := CreateResource(p.MqlRuntime, "gitlab.project.auditEvent", eventInfo)
+		if err != nil {
+			return nil, err
+		}
+		mqlEvents = append(mqlEvents, mqlEvent)
+	}
+
+	return mqlEvents, nil
 }
