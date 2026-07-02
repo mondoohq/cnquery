@@ -21,9 +21,14 @@ import (
 )
 
 type mqlAzureSubscriptionSynapseServiceWorkspaceInternal struct {
-	cacheDefaultStorageId        string
-	cacheCmkKeyURI               string
-	cacheUserAssignedIdentityIds []string
+	cacheDefaultStorageId           string
+	cacheCmkKeyURI                  string
+	cacheUserAssignedIdentityIds    []string
+	cachePrivateEndpointConnections []*armsynapse.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionSynapseServiceWorkspace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 func (a *mqlAzureSubscriptionSynapseService) id() (string, error) {
@@ -163,6 +168,9 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 			workspaceRes.cacheDefaultStorageId = defaultStorageId
 			workspaceRes.cacheCmkKeyURI = cmkKeyURI
 			workspaceRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			if ws.Properties != nil {
+				workspaceRes.cachePrivateEndpointConnections = ws.Properties.PrivateEndpointConnections
+			}
 			res = append(res, workspaceRes)
 		}
 	}

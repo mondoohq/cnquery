@@ -21,10 +21,15 @@ import (
 )
 
 type mqlAzureSubscriptionServiceBusServiceNamespaceInternal struct {
-	networkRuleSetFetched bool
-	networkRuleSetProps   *armservicebus.NetworkRuleSetProperties
-	networkRuleSetLock    sync.Mutex
-	cacheSystemData       any
+	networkRuleSetFetched           bool
+	networkRuleSetProps             *armservicebus.NetworkRuleSetProperties
+	networkRuleSetLock              sync.Mutex
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armservicebus.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 type mqlAzureSubscriptionServiceBusServiceNamespaceQueueInternal struct {
@@ -179,7 +184,11 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlNs.(*mqlAzureSubscriptionServiceBusServiceNamespace).cacheSystemData = sysData
+			mqlNsRes := mqlNs.(*mqlAzureSubscriptionServiceBusServiceNamespace)
+			mqlNsRes.cacheSystemData = sysData
+			if ns.Properties != nil {
+				mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
+			}
 			res = append(res, mqlNs)
 		}
 	}

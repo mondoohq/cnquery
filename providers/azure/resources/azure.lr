@@ -7816,6 +7816,8 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   kubeletIdentity() azure.subscription.managedIdentity
   // Client ID of the legacy service principal used by the cluster; empty when the cluster uses a managed identity
   servicePrincipalClientId string
+  // Private endpoint connections to the cluster API server
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // Whether the AKS API server is reachable from the public internet
@@ -8246,6 +8248,16 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   enableDataResidency bool
   // Network rule set: defaultAction, applyToBuiltInEventHubEndpoint, ipRules
   networkRuleSet dict
+  // Managed identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
+  // Principal ID of the system-assigned managed identity
+  principalId string
+  // Tenant ID of the system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities associated with the IoT hub
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Private endpoint connections to the IoT hub
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Diagnostic settings configured on the IoT hub (forwarding logs and metrics to Log Analytics, storage, or Event Hub)
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -8628,6 +8640,8 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   cmkKey() azure.subscription.keyVaultService.key
   // User-assigned managed identities associated with the workspace
   userAssignedIdentities() []azure.subscription.managedIdentity
+  // Private endpoint connections to the workspace
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
 // Azure Container Registry service
@@ -9595,6 +9609,8 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
   topics() []azure.subscription.serviceBusService.namespace.topic
+  // Private endpoint connections to the namespace
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // When the namespace was created
   creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -9783,6 +9799,8 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+  // Private endpoint connections to the namespace
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // When the namespace was created
   creationTime time
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -11023,6 +11041,12 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   http2Enabled bool
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
+  // Principal ID of the system-assigned managed identity
+  principalId string
+  // Tenant ID of the system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities associated with the service
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Public load-balanced IPv4 addresses of the service in its primary region (Basic / Standard / Premium / Isolated SKUs)
   publicIpAddresses []string
   // Private load-balanced IPv4 addresses of the service in its primary region when deployed in an Internal VNet
@@ -11030,7 +11054,11 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   // Outbound public IPv4 prefixes associated with NAT Gateway-deployed services (Premium SKU on stv2)
   outboundPublicIpAddresses []string
   // Number of private endpoint connections to the service
-  privateEndpointConnectionCount int
+  //
+  // Deprecated in favor of `privateEndpointConnections`.
+  privateEndpointConnectionCount @maturity("deprecated") int
+  // Private endpoint connections to the service
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Availability zones the service is spread across
   zones []string
   // Public IP address attached to the service (null when not configured)
@@ -11106,6 +11134,8 @@ private azure.subscription.purviewService.account @defaults("name location publi
   createdBy string
   // Unmodeled raw properties returned by the Azure API
   properties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure AI Search
@@ -11652,6 +11682,8 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   defaultKeyValueRevisionRetentionPeriodInSeconds int
   // When the configuration store was created
   creationTime time
+  // Private endpoint connections to the configuration store
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -11741,6 +11773,8 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   projects() []azure.subscription.cognitiveServicesService.account.project
   // Account-scoped connections to external resources, model providers, data sources, and tool servers
   connections() []azure.subscription.cognitiveServicesService.account.connection
+  // Private endpoint connections to the account
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -12163,6 +12197,8 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   networkAclsDefaultAction string
   // Provisioning state
   provisioningState string
+  // Private endpoint connections to the instance
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -12222,6 +12258,8 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   networkAclsDefaultAction string
   // Provisioning state
   provisioningState string
+  // Private endpoint connections to the instance
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

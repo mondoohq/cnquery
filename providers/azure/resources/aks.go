@@ -561,6 +561,38 @@ func (a *mqlAzureSubscriptionAksServiceClusterIdentityBinding) id() (string, err
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionAksServiceCluster) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := clusters.NewPrivateEndpointConnectionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.List(ctx, resourceID.ResourceGroup, a.Name.Data, nil)
+	if err != nil {
+		// Private endpoint connections are absent on clusters without private
+		// networking, and the endpoint returns 403 when the caller lacks
+		// access. Treat both as "no connections" rather than failing.
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, resp.Value)
+}
+
 func (a *mqlAzureSubscriptionAksServiceCluster) identityBindings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

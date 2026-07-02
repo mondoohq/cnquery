@@ -186,11 +186,19 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		return nil, err
 	}
 	mqlAccount.cacheSystemData = sysData
+	if account.Properties != nil {
+		mqlAccount.cachePrivateEndpointConnections = account.Properties.PrivateEndpointConnections
+	}
 	return mqlAccount, nil
 }
 
 type mqlAzureSubscriptionCognitiveServicesServiceAccountInternal struct {
-	cacheSystemData any
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armcognitiveservices.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) id() (string, error) {

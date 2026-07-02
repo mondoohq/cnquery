@@ -17,7 +17,17 @@ import (
 )
 
 type mqlAzureSubscriptionIotServiceIotHubInternal struct {
-	cacheSystemData any
+	cacheSystemData                 any
+	cacheUserAssignedIdentityIds    []string
+	cachePrivateEndpointConnections []*armiothub.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionIotServiceIotHub) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionIotServiceIotHub) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 func (a *mqlAzureSubscriptionIotServiceIotHub) id() (string, error) {
@@ -151,6 +161,18 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				}
 			}
 
+			var identityType, identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if hub.Identity != nil {
+				if hub.Identity.Type != nil {
+					s := string(*hub.Identity.Type)
+					identityType = &s
+				}
+				identityPrincipalId = hub.Identity.PrincipalID
+				identityTenantId = hub.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(hub.Identity.UserAssignedIdentities)
+			}
+
 			mqlHub, err := CreateResource(a.MqlRuntime, "azure.subscription.iotService.iotHub", map[string]*llx.RawData{
 				"id":                            llx.StringDataPtr(hub.ID),
 				"name":                          llx.StringDataPtr(hub.Name),
@@ -170,6 +192,9 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				"allowedFqdnList":               llx.ArrayData(allowedFqdns, types.String),
 				"enableDataResidency":           llx.BoolDataPtr(enableDataResidency),
 				"networkRuleSet":                llx.DictData(nrs),
+				"identityType":                  llx.StringDataPtr(identityType),
+				"principalId":                   llx.StringDataPtr(identityPrincipalId),
+				"tenantId":                      llx.StringDataPtr(identityTenantId),
 			})
 			if err != nil {
 				return nil, err
@@ -178,7 +203,12 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlHub.(*mqlAzureSubscriptionIotServiceIotHub).cacheSystemData = sysData
+			mqlHubRes := mqlHub.(*mqlAzureSubscriptionIotServiceIotHub)
+			mqlHubRes.cacheSystemData = sysData
+			mqlHubRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			if hub.Properties != nil {
+				mqlHubRes.cachePrivateEndpointConnections = hub.Properties.PrivateEndpointConnections
+			}
 			res = append(res, mqlHub)
 		}
 	}

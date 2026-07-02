@@ -152,6 +152,7 @@ azure.subscription.aksService.cluster.podIdentityProfile 9.0.1
 azure.subscription.aksService.cluster.powerState 9.0.1
 azure.subscription.aksService.cluster.principalId 13.22.1
 azure.subscription.aksService.cluster.privateDnsZone 11.4.28
+azure.subscription.aksService.cluster.privateEndpointConnections 13.24.1
 azure.subscription.aksService.cluster.privateFqdn 13.1.8
 azure.subscription.aksService.cluster.provisioningState 9.0.1
 azure.subscription.aksService.cluster.publicNetworkAccess 11.4.28
@@ -195,7 +196,9 @@ azure.subscription.apiManagementService.service.notificationSenderEmail 13.10.2
 azure.subscription.apiManagementService.service.outboundPublicIpAddresses 13.10.2
 azure.subscription.apiManagementService.service.platformVersion 13.10.2
 azure.subscription.apiManagementService.service.portalUrl 13.10.2
+azure.subscription.apiManagementService.service.principalId 13.24.1
 azure.subscription.apiManagementService.service.privateEndpointConnectionCount 13.10.2
+azure.subscription.apiManagementService.service.privateEndpointConnections 13.24.1
 azure.subscription.apiManagementService.service.privateIpAddresses 13.10.2
 azure.subscription.apiManagementService.service.provisioningState 13.10.2
 azure.subscription.apiManagementService.service.publicIpAddress 13.10.2
@@ -210,9 +213,11 @@ azure.subscription.apiManagementService.service.ssl30Enabled 13.24.1
 azure.subscription.apiManagementService.service.systemMetadata 13.22.1
 azure.subscription.apiManagementService.service.tags 13.10.2
 azure.subscription.apiManagementService.service.targetProvisioningState 13.10.2
+azure.subscription.apiManagementService.service.tenantId 13.24.1
 azure.subscription.apiManagementService.service.tls10Enabled 13.24.1
 azure.subscription.apiManagementService.service.tls11Enabled 13.24.1
 azure.subscription.apiManagementService.service.tripleDesEnabled 13.24.1
+azure.subscription.apiManagementService.service.userAssignedIdentities 13.24.1
 azure.subscription.apiManagementService.service.virtualNetworkType 13.10.2
 azure.subscription.apiManagementService.service.zones 13.10.2
 azure.subscription.apiManagementService.services 13.10.2
@@ -232,6 +237,7 @@ azure.subscription.appConfigurationService.configurationStore.id 13.11.3
 azure.subscription.appConfigurationService.configurationStore.identity 13.11.3
 azure.subscription.appConfigurationService.configurationStore.location 13.11.3
 azure.subscription.appConfigurationService.configurationStore.name 13.11.3
+azure.subscription.appConfigurationService.configurationStore.privateEndpointConnections 13.24.1
 azure.subscription.appConfigurationService.configurationStore.provisioningState 13.11.3
 azure.subscription.appConfigurationService.configurationStore.publicNetworkAccess 13.11.3
 azure.subscription.appConfigurationService.configurationStore.sku 13.11.3
@@ -794,6 +800,7 @@ azure.subscription.cognitiveServicesService.account.name 13.11.3
 azure.subscription.cognitiveServicesService.account.networkAcls 13.11.3
 azure.subscription.cognitiveServicesService.account.networkAclsBypass 13.16.2
 azure.subscription.cognitiveServicesService.account.networkAclsDefaultAction 13.16.2
+azure.subscription.cognitiveServicesService.account.privateEndpointConnections 13.24.1
 azure.subscription.cognitiveServicesService.account.project 13.15.2
 azure.subscription.cognitiveServicesService.account.project.connection 13.15.2
 azure.subscription.cognitiveServicesService.account.project.connection.authType 13.15.2
@@ -2029,6 +2036,7 @@ azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule 13.
 azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint 13.12.2
 azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.subnet 13.12.2
 azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules 13.12.2
+azure.subscription.eventHubService.namespace.privateEndpointConnections 13.24.1
 azure.subscription.eventHubService.namespace.publicNetworkAccess 13.4.3
 azure.subscription.eventHubService.namespace.requireInfrastructureEncryption 13.5.1
 azure.subscription.eventHubService.namespace.sku 13.3.3
@@ -2173,10 +2181,13 @@ azure.subscription.iotService.iotHub.disableModuleSAS 13.5.1
 azure.subscription.iotService.iotHub.enableDataResidency 13.5.1
 azure.subscription.iotService.iotHub.hostName 13.5.1
 azure.subscription.iotService.iotHub.id 13.5.1
+azure.subscription.iotService.iotHub.identityType 13.24.1
 azure.subscription.iotService.iotHub.location 13.5.1
 azure.subscription.iotService.iotHub.minTlsVersion 13.5.1
 azure.subscription.iotService.iotHub.name 13.5.1
 azure.subscription.iotService.iotHub.networkRuleSet 13.5.1
+azure.subscription.iotService.iotHub.principalId 13.24.1
+azure.subscription.iotService.iotHub.privateEndpointConnections 13.24.1
 azure.subscription.iotService.iotHub.provisioningState 13.5.1
 azure.subscription.iotService.iotHub.publicNetworkAccess 13.5.1
 azure.subscription.iotService.iotHub.restrictOutboundNetworkAccess 13.5.1
@@ -2184,7 +2195,9 @@ azure.subscription.iotService.iotHub.sku 13.5.1
 azure.subscription.iotService.iotHub.state 13.5.1
 azure.subscription.iotService.iotHub.systemMetadata 13.22.1
 azure.subscription.iotService.iotHub.tags 13.5.1
+azure.subscription.iotService.iotHub.tenantId 13.24.1
 azure.subscription.iotService.iotHub.type 13.5.1
+azure.subscription.iotService.iotHub.userAssignedIdentities 13.24.1
 azure.subscription.iotService.iotHubs 13.5.1
 azure.subscription.iotService.subscriptionId 11.3.0
 azure.subscription.keyVault 9.0.0
@@ -3885,6 +3898,7 @@ azure.subscription.purviewService.account.properties 13.11.2
 azure.subscription.purviewService.account.provisioningState 13.11.2
 azure.subscription.purviewService.account.publicNetworkAccess 13.11.2
 azure.subscription.purviewService.account.sku 13.11.2
+azure.subscription.purviewService.account.systemMetadata 13.24.1
 azure.subscription.purviewService.account.tags 13.11.2
 azure.subscription.purviewService.account.type 13.11.2
 azure.subscription.purviewService.accounts 13.11.2
@@ -4045,6 +4059,7 @@ azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule 1
 azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint 13.12.2
 azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.subnet 13.12.2
 azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules 13.12.2
+azure.subscription.serviceBusService.namespace.privateEndpointConnections 13.24.1
 azure.subscription.serviceBusService.namespace.provisioningState 13.5.1
 azure.subscription.serviceBusService.namespace.queue 13.3.3
 azure.subscription.serviceBusService.namespace.queue.creationTime 13.22.1
@@ -4112,6 +4127,7 @@ azure.subscription.signalRService.signalR.kind 13.16.2
 azure.subscription.signalRService.signalR.location 13.16.2
 azure.subscription.signalRService.signalR.name 13.16.2
 azure.subscription.signalRService.signalR.networkAclsDefaultAction 13.16.2
+azure.subscription.signalRService.signalR.privateEndpointConnections 13.24.1
 azure.subscription.signalRService.signalR.provisioningState 13.16.2
 azure.subscription.signalRService.signalR.publicNetworkAccess 13.16.2
 azure.subscription.signalRService.signalR.sku 13.16.2
@@ -4749,6 +4765,7 @@ azure.subscription.synapseService.workspace.location 13.3.0
 azure.subscription.synapseService.workspace.managedResourceGroupName 13.3.0
 azure.subscription.synapseService.workspace.managedVirtualNetwork 13.3.0
 azure.subscription.synapseService.workspace.name 13.3.0
+azure.subscription.synapseService.workspace.privateEndpointConnections 13.24.1
 azure.subscription.synapseService.workspace.properties 13.3.0
 azure.subscription.synapseService.workspace.provisioningState 13.3.0
 azure.subscription.synapseService.workspace.publicNetworkAccess 13.3.0
@@ -4784,6 +4801,7 @@ azure.subscription.webPubSubService.webPubSub.kind 13.16.2
 azure.subscription.webPubSubService.webPubSub.location 13.16.2
 azure.subscription.webPubSubService.webPubSub.name 13.16.2
 azure.subscription.webPubSubService.webPubSub.networkAclsDefaultAction 13.16.2
+azure.subscription.webPubSubService.webPubSub.privateEndpointConnections 13.24.1
 azure.subscription.webPubSubService.webPubSub.provisioningState 13.16.2
 azure.subscription.webPubSubService.webPubSub.publicNetworkAccess 13.16.2
 azure.subscription.webPubSubService.webPubSub.sku 13.16.2

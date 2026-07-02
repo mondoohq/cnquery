@@ -21,10 +21,15 @@ import (
 )
 
 type mqlAzureSubscriptionEventHubServiceNamespaceInternal struct {
-	networkRuleSetFetched bool
-	networkRuleSetProps   *armeventhub.NetworkRuleSetProperties
-	networkRuleSetLock    sync.Mutex
-	cacheSystemData       any
+	networkRuleSetFetched           bool
+	networkRuleSetProps             *armeventhub.NetworkRuleSetProperties
+	networkRuleSetLock              sync.Mutex
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armeventhub.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 type mqlAzureSubscriptionEventHubServiceNamespaceEventHubInternal struct {
@@ -173,7 +178,11 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace).cacheSystemData = sysData
+			mqlNsRes := mqlNs.(*mqlAzureSubscriptionEventHubServiceNamespace)
+			mqlNsRes.cacheSystemData = sysData
+			if ns.Properties != nil {
+				mqlNsRes.cachePrivateEndpointConnections = ns.Properties.PrivateEndpointConnections
+			}
 			res = append(res, mqlNs)
 		}
 	}

@@ -163,9 +163,17 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		return nil, err
 	}
 	mqlStore.cacheSystemData = sysData
+	if store.Properties != nil {
+		mqlStore.cachePrivateEndpointConnections = store.Properties.PrivateEndpointConnections
+	}
 	return mqlStore, nil
 }
 
 type mqlAzureSubscriptionAppConfigurationServiceConfigurationStoreInternal struct {
-	cacheSystemData any
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armappconfiguration.PrivateEndpointConnectionReference
+}
+
+func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }

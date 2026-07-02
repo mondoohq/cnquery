@@ -23,8 +23,18 @@ import (
 )
 
 type mqlAzureSubscriptionApiManagementServiceServiceInternal struct {
-	cachePublicIpAddressId string
-	cacheSystemData        any
+	cachePublicIpAddressId          string
+	cacheSystemData                 any
+	cacheUserAssignedIdentityIds    []string
+	cachePrivateEndpointConnections []*apim.RemotePrivateEndpointConnectionWrapper
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 // API Management encodes its gateway TLS protocol and cipher policy as
@@ -112,8 +122,15 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			}
 
 			var identityType string
-			if svc.Identity != nil && svc.Identity.Type != nil {
-				identityType = string(*svc.Identity.Type)
+			var identityPrincipalId, identityTenantId *string
+			var userAssignedIdentityIds []string
+			if svc.Identity != nil {
+				if svc.Identity.Type != nil {
+					identityType = string(*svc.Identity.Type)
+				}
+				identityPrincipalId = svc.Identity.PrincipalID
+				identityTenantId = svc.Identity.TenantID
+				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(svc.Identity.UserAssignedIdentities)
 			}
 
 			var (
@@ -285,6 +302,8 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 					"tripleDesEnabled":               llx.BoolDataPtr(tripleDesEnabled),
 					"http2Enabled":                   llx.BoolDataPtr(http2Enabled),
 					"identityType":                   llx.StringData(identityType),
+					"principalId":                    llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                       llx.StringDataPtr(identityTenantId),
 					"publicIpAddresses":              llx.ArrayData(publicIpAddresses, types.String),
 					"privateIpAddresses":             llx.ArrayData(privateIpAddresses, types.String),
 					"outboundPublicIpAddresses":      llx.ArrayData(outboundPublicIpAddresses, types.String),
@@ -297,6 +316,10 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			}
 			svcRes := mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService)
 			svcRes.cachePublicIpAddressId = publicIpAddressId
+			svcRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			if p := svc.Properties; p != nil {
+				svcRes.cachePrivateEndpointConnections = p.PrivateEndpointConnections
+			}
 			sysData, err := convert.JsonToDict(svc.SystemData)
 			if err != nil {
 				return nil, err
