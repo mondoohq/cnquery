@@ -522,6 +522,153 @@ func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs [
 	return out, nil
 }
 
+// projectTagAccessLevels reuses the shared protectedBranch.accessLevel row for
+// protected-tag create-access grants (TagAccessDescription is structurally
+// identical to BranchAccessDescription).
+func projectTagAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.TagAccessDescription) ([]any, error) {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, al)
+	}
+	return out, nil
+}
+
+// protectedTags lists the project's protected tags and who may create them.
+func (p *mqlGitlabProject) protectedTags() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	projectID := int(p.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.ProtectedTag
+	for {
+		tags, resp, err := conn.Client().ProtectedTags.ListProtectedTags(projectID, &gitlab.ListProtectedTagsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, tags...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, tag := range all {
+		prefix := fmt.Sprintf("gitlab.project.protectedTag/%d/%s", p.Id.Data, tag.Name)
+		levels, err := projectTagAccessLevels(p.MqlRuntime, prefix+"/create", tag.CreateAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedTag", map[string]*llx.RawData{
+			"__id":               llx.StringData(prefix),
+			"name":               llx.StringData(tag.Name),
+			"createAccessLevels": llx.ArrayData(levels, types.Resource("gitlab.protectedBranch.accessLevel")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// mqlGitlabProjectJobTokenScopeInternal caches the project id so the lazy
+// allowlist accessors can page their respective endpoints.
+type mqlGitlabProjectJobTokenScopeInternal struct {
+	projectID int64
+}
+
+// jobTokenScope returns the project's CI/CD job-token access scope, or null
+// when the setting is unavailable (permissions/tier).
+func (p *mqlGitlabProject) jobTokenScope() (*mqlGitlabProjectJobTokenScope, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	settings, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenAccessSettings(int(p.Id.Data))
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			p.JobTokenScope.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	res, err := CreateResource(p.MqlRuntime, "gitlab.project.jobTokenScope", map[string]*llx.RawData{
+		"__id":           llx.StringData(fmt.Sprintf("gitlab.project.jobTokenScope/%d", p.Id.Data)),
+		"inboundEnabled": llx.BoolData(settings.InboundEnabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlGitlabProjectJobTokenScope).projectID = p.Id.Data
+	return res.(*mqlGitlabProjectJobTokenScope), nil
+}
+
+func (j *mqlGitlabProjectJobTokenScope) inboundAllowlistProjects() ([]any, error) {
+	conn := j.MqlRuntime.Connection.(*connection.GitLabConnection)
+	pid := int(j.projectID)
+
+	perPage := int64(50)
+	page := int64(1)
+	var out []any
+	for {
+		projects, resp, err := conn.Client().JobTokenScope.GetProjectJobTokenInboundAllowList(pid, &gitlab.GetJobTokenInboundAllowListOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, pr := range projects {
+			mqlPr, err := NewResource(j.MqlRuntime, "gitlab.project", map[string]*llx.RawData{"id": llx.IntData(int64(pr.ID))})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, mqlPr)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+	return out, nil
+}
+
+func (j *mqlGitlabProjectJobTokenScope) allowlistGroups() ([]any, error) {
+	conn := j.MqlRuntime.Connection.(*connection.GitLabConnection)
+	pid := int(j.projectID)
+
+	perPage := int64(50)
+	page := int64(1)
+	var out []any
+	for {
+		groups, resp, err := conn.Client().JobTokenScope.GetJobTokenAllowlistGroups(pid, &gitlab.GetJobTokenAllowlistGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, g := range groups {
+			mqlGrp, err := NewResource(j.MqlRuntime, "gitlab.group", map[string]*llx.RawData{"id": llx.IntData(int64(g.ID))})
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, mqlGrp)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+	return out, nil
+}
+
 // projectMembers fetches the list of members in the project with their roles
 func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)

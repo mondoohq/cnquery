@@ -28,6 +28,8 @@ const (
 	ResourceGitlabGroupAuditEvent                        string = "gitlab.group.auditEvent"
 	ResourceGitlabProjectAuditEvent                      string = "gitlab.project.auditEvent"
 	ResourceGitlabProject                                string = "gitlab.project"
+	ResourceGitlabProjectJobTokenScope                   string = "gitlab.project.jobTokenScope"
+	ResourceGitlabProjectProtectedTag                    string = "gitlab.project.protectedTag"
 	ResourceGitlabProjectApprovalRule                    string = "gitlab.project.approvalRule"
 	ResourceGitlabProjectCodeowners                      string = "gitlab.project.codeowners"
 	ResourceGitlabProjectCodeownersRule                  string = "gitlab.project.codeowners.rule"
@@ -116,6 +118,14 @@ func init() {
 		"gitlab.project": {
 			Init:   initGitlabProject,
 			Create: createGitlabProject,
+		},
+		"gitlab.project.jobTokenScope": {
+			// to override args, implement: initGitlabProjectJobTokenScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectJobTokenScope,
+		},
+		"gitlab.project.protectedTag": {
+			// to override args, implement: initGitlabProjectProtectedTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProjectProtectedTag,
 		},
 		"gitlab.project.approvalRule": {
 			// to override args, implement: initGitlabProjectApprovalRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1161,6 +1171,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.auditEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetAuditEvents()).ToDataRes(types.Array(types.Resource("gitlab.project.auditEvent")))
+	},
+	"gitlab.project.jobTokenScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetJobTokenScope()).ToDataRes(types.Resource("gitlab.project.jobTokenScope"))
+	},
+	"gitlab.project.protectedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetProtectedTags()).ToDataRes(types.Array(types.Resource("gitlab.project.protectedTag")))
+	},
+	"gitlab.project.jobTokenScope.inboundEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectJobTokenScope).GetInboundEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.jobTokenScope.inboundAllowlistProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectJobTokenScope).GetInboundAllowlistProjects()).ToDataRes(types.Array(types.Resource("gitlab.project")))
+	},
+	"gitlab.project.jobTokenScope.allowlistGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectJobTokenScope).GetAllowlistGroups()).ToDataRes(types.Array(types.Resource("gitlab.group")))
+	},
+	"gitlab.project.protectedTag.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedTag).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.project.protectedTag.createAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedTag).GetCreateAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
 	},
 	"gitlab.project.approvalRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectApprovalRule).GetId()).ToDataRes(types.Int)
@@ -3430,6 +3461,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.auditEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).AuditEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.jobTokenScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).JobTokenScope, ok = plugin.RawToTValue[*mqlGitlabProjectJobTokenScope](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ProtectedTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.jobTokenScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectJobTokenScope).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.jobTokenScope.inboundEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectJobTokenScope).InboundEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.jobTokenScope.inboundAllowlistProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectJobTokenScope).InboundAllowlistProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.jobTokenScope.allowlistGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectJobTokenScope).AllowlistGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedTag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedTag).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.project.protectedTag.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedTag).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedTag.createAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedTag).CreateAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7009,6 +7076,8 @@ type mqlGitlabProject struct {
 	Packages                                  plugin.TValue[[]any]
 	PackageProtectionRules                    plugin.TValue[[]any]
 	AuditEvents                               plugin.TValue[[]any]
+	JobTokenScope                             plugin.TValue[*mqlGitlabProjectJobTokenScope]
+	ProtectedTags                             plugin.TValue[[]any]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -7702,6 +7771,165 @@ func (c *mqlGitlabProject) GetAuditEvents() *plugin.TValue[[]any] {
 
 		return c.auditEvents()
 	})
+}
+
+func (c *mqlGitlabProject) GetJobTokenScope() *plugin.TValue[*mqlGitlabProjectJobTokenScope] {
+	return plugin.GetOrCompute[*mqlGitlabProjectJobTokenScope](&c.JobTokenScope, func() (*mqlGitlabProjectJobTokenScope, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "jobTokenScope")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProjectJobTokenScope), nil
+			}
+		}
+
+		return c.jobTokenScope()
+	})
+}
+
+func (c *mqlGitlabProject) GetProtectedTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtectedTags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project", c.__id, "protectedTags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protectedTags()
+	})
+}
+
+// mqlGitlabProjectJobTokenScope for the gitlab.project.jobTokenScope resource
+type mqlGitlabProjectJobTokenScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGitlabProjectJobTokenScopeInternal
+	InboundEnabled           plugin.TValue[bool]
+	InboundAllowlistProjects plugin.TValue[[]any]
+	AllowlistGroups          plugin.TValue[[]any]
+}
+
+// createGitlabProjectJobTokenScope creates a new instance of this resource
+func createGitlabProjectJobTokenScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectJobTokenScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.jobTokenScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectJobTokenScope) MqlName() string {
+	return "gitlab.project.jobTokenScope"
+}
+
+func (c *mqlGitlabProjectJobTokenScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectJobTokenScope) GetInboundEnabled() *plugin.TValue[bool] {
+	return &c.InboundEnabled
+}
+
+func (c *mqlGitlabProjectJobTokenScope) GetInboundAllowlistProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InboundAllowlistProjects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.jobTokenScope", c.__id, "inboundAllowlistProjects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inboundAllowlistProjects()
+	})
+}
+
+func (c *mqlGitlabProjectJobTokenScope) GetAllowlistGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowlistGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.project.jobTokenScope", c.__id, "allowlistGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowlistGroups()
+	})
+}
+
+// mqlGitlabProjectProtectedTag for the gitlab.project.protectedTag resource
+type mqlGitlabProjectProtectedTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabProjectProtectedTagInternal it will be used here
+	Name               plugin.TValue[string]
+	CreateAccessLevels plugin.TValue[[]any]
+}
+
+// createGitlabProjectProtectedTag creates a new instance of this resource
+func createGitlabProjectProtectedTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProjectProtectedTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.project.protectedTag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProjectProtectedTag) MqlName() string {
+	return "gitlab.project.protectedTag"
+}
+
+func (c *mqlGitlabProjectProtectedTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProjectProtectedTag) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabProjectProtectedTag) GetCreateAccessLevels() *plugin.TValue[[]any] {
+	return &c.CreateAccessLevels
 }
 
 // mqlGitlabProjectApprovalRule for the gitlab.project.approvalRule resource

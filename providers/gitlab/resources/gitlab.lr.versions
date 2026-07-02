@@ -354,6 +354,10 @@ gitlab.project.issue.webURL 11.1.129
 gitlab.project.issues 11.1.129
 gitlab.project.issuesAccessLevel 13.3.9
 gitlab.project.issuesEnabled 9.0.1
+gitlab.project.jobTokenScope 13.3.9
+gitlab.project.jobTokenScope.allowlistGroups 13.3.9
+gitlab.project.jobTokenScope.inboundAllowlistProjects 13.3.9
+gitlab.project.jobTokenScope.inboundEnabled 13.3.9
 gitlab.project.jobsEnabled 11.1.36
 gitlab.project.label 11.1.129
 gitlab.project.label.closedIssuesCount 11.1.129
@@ -477,6 +481,10 @@ gitlab.project.protectedBranch.name 11.1.12
 gitlab.project.protectedBranch.pushAccessLevels 13.3.9
 gitlab.project.protectedBranch.unprotectAccessLevels 13.3.9
 gitlab.project.protectedBranches 11.1.12
+gitlab.project.protectedTag 13.3.9
+gitlab.project.protectedTag.createAccessLevels 13.3.9
+gitlab.project.protectedTag.name 13.3.9
+gitlab.project.protectedTags 13.3.9
 gitlab.project.publicJobs 13.3.9
 gitlab.project.pushRule 11.1.138
 gitlab.project.pushRule.authorEmailRegex 11.1.138

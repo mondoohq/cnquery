@@ -708,6 +708,39 @@ gitlab.project @defaults("fullName visibility webURL") {
   packageProtectionRules() []gitlab.project.packageProtectionRule
   // Audit events recorded for the project (Premium/Ultimate)
   auditEvents() []gitlab.project.auditEvent
+  // CI/CD job-token access scope for the project
+  jobTokenScope() gitlab.project.jobTokenScope
+  // Protected tags and who may create them
+  protectedTags() []gitlab.project.protectedTag
+}
+
+// CI/CD job-token access scope
+//
+// Examine how the project restricts inbound CI/CD job-token access. When
+// `inboundEnabled` is true, only the projects in `inboundAllowlistProjects`
+// and groups in `allowlistGroups` may use their job tokens to access this
+// project; when false, any project's job token may reach it (a lateral-
+// movement risk).
+private gitlab.project.jobTokenScope @defaults("inboundEnabled") {
+  // Whether inbound job-token access is limited to the allowlist
+  inboundEnabled bool
+  // Projects whose CI job tokens are allowed to access this project
+  inboundAllowlistProjects() []gitlab.project
+  // Groups whose CI job tokens are allowed to access this project
+  allowlistGroups() []gitlab.group
+}
+
+// GitLab protected tag
+//
+// Examine a protected tag rule and the access levels permitted to create
+// tags matching it. The `name` is the tag name or wildcard pattern (for
+// example `v*`). `createAccessLevels` lists each role, user, group, or deploy
+// key allowed to create the tag.
+private gitlab.project.protectedTag @defaults("name") {
+  // Tag name or wildcard pattern
+  name string
+  // Access levels permitted to create the protected tag
+  createAccessLevels []gitlab.protectedBranch.accessLevel
 }
 
 // GitLab project approval rule
