@@ -5,8 +5,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	memorydb_types "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/rs/zerolog/log"
@@ -81,6 +84,52 @@ func (a *mqlAwsMemorydb) getClusters(conn *connection.AwsConnection) []*jobpool.
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsMemorydbCluster) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// During a discovered-asset scan the resource is queried with no args; recover
+	// the cluster's region and name from the ARN carried on the asset.
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch memorydb cluster")
+	}
+
+	arnVal := args["arn"].Value.(string)
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, err
+	}
+	region := parsed.Region
+	name := strings.TrimPrefix(parsed.Resource, "cluster/")
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Memorydb(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeClusters(ctx, &memorydb.DescribeClustersInput{ClusterName: &name})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(resp.Clusters) == 0 {
+		return nil, nil, errors.New("aws memorydb cluster not found: " + name)
+	}
+
+	mqlCluster, err := newMqlAwsMemorydbCluster(runtime, region, conn.AccountId(), resp.Clusters[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlCluster, nil
 }
 
 func newMqlAwsMemorydbCluster(runtime *plugin.Runtime, region string, accountID string, cluster memorydb_types.Cluster) (*mqlAwsMemorydbCluster, error) {

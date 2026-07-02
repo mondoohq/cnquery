@@ -52,6 +52,10 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "aws-neptune-cluster", Title: "AWS Neptune Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-emr-cluster", Title: "AWS EMR Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-documentdb-cluster", Title: "AWS DocumentDB Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-memorydb-cluster", Title: "AWS MemoryDB Cluster", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-codebuild-project", Title: "AWS CodeBuild Project", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-cognito-userpool", Title: "AWS Cognito User Pool", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-transfer-server", Title: "AWS Transfer Family Server", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

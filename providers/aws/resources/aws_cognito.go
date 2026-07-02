@@ -6,9 +6,11 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	cognitoidentityprovidertypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -106,6 +108,67 @@ func (a *mqlAwsCognito) getUserPools(conn *connection.AwsConnection) []*jobpool.
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// During a discovered-asset scan the resource is queried with no args; recover
+	// the pool's region and id from the ARN carried on the asset.
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch cognito user pool")
+	}
+
+	arnVal := args["arn"].Value.(string)
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, err
+	}
+	region := parsed.Region
+	poolId := strings.TrimPrefix(parsed.Resource, "userpool/")
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.CognitoIdentityProvider(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeUserPool(ctx, &cognitoidentityprovider.DescribeUserPoolInput{
+		UserPoolId: &poolId,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.UserPool == nil {
+		return nil, nil, errors.New("aws cognito user pool not found: " + poolId)
+	}
+
+	up := resp.UserPool
+	mqlPool, err := CreateResource(runtime, "aws.cognito.userPool",
+		map[string]*llx.RawData{
+			"__id":      llx.StringData(arnVal),
+			"arn":       llx.StringData(arnVal),
+			"id":        llx.StringData(poolId),
+			"name":      llx.StringDataPtr(up.Name),
+			"region":    llx.StringData(region),
+			"status":    llx.StringData(string(up.Status)),
+			"createdAt": llx.TimeDataPtr(up.CreationDate),
+			"updatedAt": llx.TimeDataPtr(up.LastModifiedDate),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Pre-populate the DescribeUserPool cache so the computed fields (policies,
+	// MFA config, schema, etc.) don't trigger a second API call.
+	pool := mqlPool.(*mqlAwsCognitoUserPool)
+	pool.descFetched = true
+	pool.descData = resp
+	return nil, pool, nil
 }
 
 // Internal caching for DescribeUserPool results

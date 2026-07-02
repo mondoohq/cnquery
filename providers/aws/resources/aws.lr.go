@@ -3427,7 +3427,7 @@ func init() {
 			Create: createAwsCognito,
 		},
 		"aws.cognito.userPool": {
-			// to override args, implement: initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsCognitoUserPool,
 			Create: createAwsCognitoUserPool,
 		},
 		"aws.cognito.userPoolClient": {
@@ -3763,7 +3763,7 @@ func init() {
 			Create: createAwsMemorydb,
 		},
 		"aws.memorydb.cluster": {
-			// to override args, implement: initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsMemorydbCluster,
 			Create: createAwsMemorydbCluster,
 		},
 		"aws.memorydb.acl": {
@@ -4259,7 +4259,7 @@ func init() {
 			Create: createAwsTransferWorkflow,
 		},
 		"aws.transfer.server": {
-			// to override args, implement: initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsTransferServer,
 			Create: createAwsTransferServer,
 		},
 		"aws.appmesh": {
@@ -161849,7 +161849,12 @@ func createAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.memorydb.cluster", res.__id)

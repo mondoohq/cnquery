@@ -5,9 +5,12 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	transfertypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/rs/zerolog/log"
@@ -95,6 +98,64 @@ func (a *mqlAwsTransfer) getServers(conn *connection.AwsConnection) []*jobpool.J
 
 func (a *mqlAwsTransferServer) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// During a discovered-asset scan the resource is queried with no args; recover
+	// the server's region and id from the ARN carried on the asset.
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch transfer server")
+	}
+
+	arnVal := args["arn"].Value.(string)
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, err
+	}
+	region := parsed.Region
+	serverId := strings.TrimPrefix(parsed.Resource, "server/")
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Transfer(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeServer(ctx, &transfer.DescribeServerInput{ServerId: &serverId})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp == nil || resp.Server == nil {
+		return nil, nil, errors.New("aws transfer server not found: " + serverId)
+	}
+
+	s := resp.Server
+	mqlServer, err := CreateResource(runtime, "aws.transfer.server",
+		map[string]*llx.RawData{
+			"__id":         llx.StringData(arnVal),
+			"arn":          llx.StringData(arnVal),
+			"serverId":     llx.StringDataPtr(s.ServerId),
+			"region":       llx.StringData(region),
+			"endpointType": llx.StringData(string(s.EndpointType)),
+			"state":        llx.StringData(string(s.State)),
+			"userCount":    llx.IntData(int64(convert.ToValue(s.UserCount))),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Pre-populate the DescribeServer cache so the computed fields (protocols,
+	// logging role, certificate, etc.) don't trigger a second API call.
+	server := mqlServer.(*mqlAwsTransferServer)
+	server.fetched = true
+	server.descResp = resp
+	return nil, server, nil
 }
 
 type mqlAwsTransferServerInternal struct {

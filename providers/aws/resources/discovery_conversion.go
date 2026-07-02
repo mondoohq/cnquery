@@ -258,6 +258,22 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "hostedzone" {
 			return "aws-route53-hostedzone"
 		}
+	case "memorydb":
+		if awsObject.objectType == "cluster" {
+			return "aws-memorydb-cluster"
+		}
+	case "codebuild":
+		if awsObject.objectType == "project" {
+			return "aws-codebuild-project"
+		}
+	case "cognito":
+		if awsObject.objectType == "userpool" {
+			return "aws-cognito-userpool"
+		}
+	case "transfer":
+		if awsObject.objectType == "server" {
+			return "aws-transfer-server"
+		}
 	}
 	return ""
 }

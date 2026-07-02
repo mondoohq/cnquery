@@ -70,6 +70,10 @@ const (
 	DiscoveryEcsTaskDefinitions         = "ecs-taskdefinitions"
 	DiscoveryRoute53HostedZones         = "route53-hostedzones"
 	DiscoveryEcrRepositories            = "ecr-repositories"
+	DiscoveryMemorydbClusters           = "memorydb-clusters"
+	DiscoveryCodebuildProjects          = "codebuild-projects"
+	DiscoveryCognitoUserPools           = "cognito-userpools"
+	DiscoveryTransferServers            = "transfer-servers"
 )
 
 var AllAPIResources = []string{
@@ -113,6 +117,10 @@ var AllAPIResources = []string{
 	DiscoveryEcsTaskDefinitions,
 	DiscoveryRoute53HostedZones,
 	DiscoveryEcrRepositories,
+	DiscoveryMemorydbClusters,
+	DiscoveryCodebuildProjects,
+	DiscoveryCognitoUserPools,
+	DiscoveryTransferServers,
 }
 
 var Auto = append(
@@ -1409,6 +1417,107 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryMemorydbClusters:
+		res, err := NewResource(runtime, "aws.memorydb", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		m := res.(*mqlAwsMemorydb)
+
+		clusters := m.GetClusters()
+		if clusters == nil {
+			return assetList, nil
+		}
+
+		for i := range clusters.Data {
+			f := clusters.Data[i].(*mqlAwsMemorydbCluster)
+
+			obj := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "memorydb", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryCodebuildProjects:
+		res, err := NewResource(runtime, "aws.codebuild", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		cb := res.(*mqlAwsCodebuild)
+
+		projects := cb.GetProjects()
+		if projects == nil {
+			return assetList, nil
+		}
+
+		for i := range projects.Data {
+			f := projects.Data[i].(*mqlAwsCodebuildProject)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "codebuild", objectType: "project",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryCognitoUserPools:
+		res, err := NewResource(runtime, "aws.cognito", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		c := res.(*mqlAwsCognito)
+
+		pools := c.GetUserPools()
+		if pools == nil {
+			return assetList, nil
+		}
+
+		for i := range pools.Data {
+			f := pools.Data[i].(*mqlAwsCognitoUserPool)
+
+			obj := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "cognito", objectType: "userpool",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryTransferServers:
+		res, err := NewResource(runtime, "aws.transfer", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		t := res.(*mqlAwsTransfer)
+
+		servers := t.GetServers()
+		if servers == nil {
+			return assetList, nil
+		}
+
+		for i := range servers.Data {
+			f := servers.Data[i].(*mqlAwsTransferServer)
+
+			obj := mqlObject{
+				name: f.ServerId.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.ServerId.Data, service: "transfer", objectType: "server",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
 		}
 	}
 	return assetList, nil

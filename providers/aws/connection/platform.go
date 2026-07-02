@@ -117,6 +117,14 @@ func getServiceName(platformName string) string {
 		return "emr"
 	case "aws-documentdb-cluster":
 		return "documentdb"
+	case "aws-memorydb-cluster":
+		return "memorydb"
+	case "aws-codebuild-project":
+		return "codebuild"
+	case "aws-cognito-userpool":
+		return "cognito"
+	case "aws-transfer-server":
+		return "transfer"
 	}
 	return "other"
 }
