@@ -11814,6 +11814,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   managedBy() string
   // Whether the cluster is encrypted
   storageEncrypted bool
+  // Whether client connections to the cluster are required to use TLS
+  transitEncryptionEnabled() bool
   // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
   storageEncryptionType string
   // Amount of storage, in GiB, provisioned on the cluster
@@ -18055,6 +18057,8 @@ private aws.documentdb.cluster @defaults("arn name status") {
   status string
   // Whether the DB cluster is encrypted
   storageEncrypted bool
+  // Whether client connections to the cluster are required to use TLS
+  transitEncryptionEnabled() bool
   // Storage type
   storageType string
   // Tags for the cluster

@@ -2539,6 +2539,7 @@ aws.documentdb.cluster.storageType 11.16.1
 aws.documentdb.cluster.subnetGroup 11.16.1
 aws.documentdb.cluster.subnets 13.19.1
 aws.documentdb.cluster.tags 11.16.1
+aws.documentdb.cluster.transitEncryptionEnabled 13.40.2
 aws.documentdb.cluster.vpc 13.19.1
 aws.documentdb.cluster.writer 13.19.1
 aws.documentdb.clusterParameter 13.19.1
@@ -7385,6 +7386,7 @@ aws.rds.dbcluster.storageEncryptionType 13.3.1
 aws.rds.dbcluster.storageIops 11.15.2
 aws.rds.dbcluster.storageType 11.15.2
 aws.rds.dbcluster.tags 11.15.2
+aws.rds.dbcluster.transitEncryptionEnabled 13.40.2
 aws.rds.dbcluster.upgradeRolloutOrder 13.14.2
 aws.rds.dbinstance 11.15.2
 aws.rds.dbinstance.activityStreamKmsKey 11.16.1
