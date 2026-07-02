@@ -380,6 +380,10 @@ const (
 	ResourceAzureSubscriptionPurviewServiceAccount                                               string = "azure.subscription.purviewService.account"
 	ResourceAzureSubscriptionSearchService                                                       string = "azure.subscription.searchService"
 	ResourceAzureSubscriptionSearchServiceService                                                string = "azure.subscription.searchService.service"
+	ResourceAzureSubscriptionLighthouseService                                                   string = "azure.subscription.lighthouseService"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinition                             string = "azure.subscription.lighthouseService.registrationDefinition"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization                string = "azure.subscription.lighthouseService.registrationDefinition.authorization"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                             string = "azure.subscription.lighthouseService.registrationAssignment"
 	ResourceAzureSubscriptionMachineLearningService                                              string = "azure.subscription.machineLearningService"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                     string = "azure.subscription.machineLearningService.workspace"
 	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                       string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
@@ -1884,6 +1888,22 @@ func init() {
 			// to override args, implement: initAzureSubscriptionSearchServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSearchServiceService,
 		},
+		"azure.subscription.lighthouseService": {
+			Init:   initAzureSubscriptionLighthouseService,
+			Create: createAzureSubscriptionLighthouseService,
+		},
+		"azure.subscription.lighthouseService.registrationDefinition": {
+			// to override args, implement: initAzureSubscriptionLighthouseServiceRegistrationDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionLighthouseServiceRegistrationDefinition,
+		},
+		"azure.subscription.lighthouseService.registrationDefinition.authorization": {
+			// to override args, implement: initAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization,
+		},
+		"azure.subscription.lighthouseService.registrationAssignment": {
+			// to override args, implement: initAzureSubscriptionLighthouseServiceRegistrationAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionLighthouseServiceRegistrationAssignment,
+		},
 		"azure.subscription.machineLearningService": {
 			Init:   initAzureSubscriptionMachineLearningService,
 			Create: createAzureSubscriptionMachineLearningService,
@@ -2263,6 +2283,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.search": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetSearch()).ToDataRes(types.Resource("azure.subscription.searchService"))
+	},
+	"azure.subscription.lighthouse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetLighthouse()).ToDataRes(types.Resource("azure.subscription.lighthouseService"))
 	},
 	"azure.subscription.appConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetAppConfiguration()).ToDataRes(types.Resource("azure.subscription.appConfigurationService"))
@@ -14657,6 +14680,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.searchService.service.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSearchServiceService).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.lighthouseService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseService).GetRegistrationDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.lighthouseService.registrationDefinition")))
+	},
+	"azure.subscription.lighthouseService.registrationAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseService).GetRegistrationAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.lighthouseService.registrationAssignment")))
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.managedByTenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetManagedByTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.managedByTenantName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetManagedByTenantName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetAuthorizations()).ToDataRes(types.Array(types.Resource("azure.subscription.lighthouseService.registrationDefinition.authorization")))
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.eligibleAuthorizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetEligibleAuthorizations()).ToDataRes(types.Array(types.Resource("azure.subscription.lighthouseService.registrationDefinition.authorization")))
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.principalIdDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetPrincipalIdDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.delegatedRoleDefinitionIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetDelegatedRoleDefinitionIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.eligible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetEligible()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.justInTimeAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetJustInTimeAccessPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.roleDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).GetRoleDefinition()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.registrationDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetRegistrationDefinition()).ToDataRes(types.Resource("azure.subscription.lighthouseService.registrationDefinition"))
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.machineLearningService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -16237,6 +16338,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.search": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Search, ok = plugin.RawToTValue[*mqlAzureSubscriptionSearchService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Lighthouse, ok = plugin.RawToTValue[*mqlAzureSubscriptionLighthouseService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.appConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34211,6 +34316,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSearchServiceService).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.lighthouseService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.lighthouseService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseService).RegistrationDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseService).RegistrationAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.managedByTenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).ManagedByTenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.managedByTenantName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).ManagedByTenantName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).Authorizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.eligibleAuthorizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).EligibleAuthorizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.principalIdDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).PrincipalIdDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.delegatedRoleDefinitionIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).DelegatedRoleDefinitionIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.eligible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).Eligible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.justInTimeAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).JustInTimeAccessPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationDefinition.authorization.roleDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization).RoleDefinition, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.registrationDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).RegistrationDefinition, ok = plugin.RawToTValue[*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.lighthouseService.registrationAssignment.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLighthouseServiceRegistrationAssignment).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.machineLearningService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMachineLearningService).__id, ok = v.Value.(string)
 		return
@@ -36326,6 +36551,7 @@ type mqlAzureSubscription struct {
 	ApiManagement         plugin.TValue[*mqlAzureSubscriptionApiManagementService]
 	Purview               plugin.TValue[*mqlAzureSubscriptionPurviewService]
 	Search                plugin.TValue[*mqlAzureSubscriptionSearchService]
+	Lighthouse            plugin.TValue[*mqlAzureSubscriptionLighthouseService]
 	AppConfiguration      plugin.TValue[*mqlAzureSubscriptionAppConfigurationService]
 	CognitiveServices     plugin.TValue[*mqlAzureSubscriptionCognitiveServicesService]
 	Sentinel              plugin.TValue[*mqlAzureSubscriptionSentinelService]
@@ -37003,6 +37229,22 @@ func (c *mqlAzureSubscription) GetSearch() *plugin.TValue[*mqlAzureSubscriptionS
 		}
 
 		return c.search()
+	})
+}
+
+func (c *mqlAzureSubscription) GetLighthouse() *plugin.TValue[*mqlAzureSubscriptionLighthouseService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionLighthouseService](&c.Lighthouse, func() (*mqlAzureSubscriptionLighthouseService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "lighthouse")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionLighthouseService), nil
+			}
+		}
+
+		return c.lighthouse()
 	})
 }
 
@@ -79976,6 +80218,379 @@ func (c *mqlAzureSubscriptionSearchServiceService) GetSystemMetadata() *plugin.T
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.searchService.service", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionLighthouseService for the azure.subscription.lighthouseService resource
+type mqlAzureSubscriptionLighthouseService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionLighthouseServiceInternal it will be used here
+	SubscriptionId          plugin.TValue[string]
+	RegistrationDefinitions plugin.TValue[[]any]
+	RegistrationAssignments plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionLighthouseService creates a new instance of this resource
+func createAzureSubscriptionLighthouseService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLighthouseService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.lighthouseService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLighthouseService) MqlName() string {
+	return "azure.subscription.lighthouseService"
+}
+
+func (c *mqlAzureSubscriptionLighthouseService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLighthouseService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionLighthouseService) GetRegistrationDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegistrationDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService", c.__id, "registrationDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.registrationDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionLighthouseService) GetRegistrationAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegistrationAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService", c.__id, "registrationAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.registrationAssignments()
+	})
+}
+
+// mqlAzureSubscriptionLighthouseServiceRegistrationDefinition for the azure.subscription.lighthouseService.registrationDefinition resource
+type mqlAzureSubscriptionLighthouseServiceRegistrationDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	Description            plugin.TValue[string]
+	ManagedByTenantId      plugin.TValue[string]
+	ManagedByTenantName    plugin.TValue[string]
+	ProvisioningState      plugin.TValue[string]
+	Authorizations         plugin.TValue[[]any]
+	EligibleAuthorizations plugin.TValue[[]any]
+	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionLighthouseServiceRegistrationDefinition creates a new instance of this resource
+func createAzureSubscriptionLighthouseServiceRegistrationDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLighthouseServiceRegistrationDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.lighthouseService.registrationDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) MqlName() string {
+	return "azure.subscription.lighthouseService.registrationDefinition"
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetManagedByTenantId() *plugin.TValue[string] {
+	return &c.ManagedByTenantId
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetManagedByTenantName() *plugin.TValue[string] {
+	return &c.ManagedByTenantName
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetAuthorizations() *plugin.TValue[[]any] {
+	return &c.Authorizations
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetEligibleAuthorizations() *plugin.TValue[[]any] {
+	return &c.EligibleAuthorizations
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService.registrationDefinition", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization for the azure.subscription.lighthouseService.registrationDefinition.authorization resource
+type mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorizationInternal
+	PrincipalId                plugin.TValue[string]
+	PrincipalIdDisplayName     plugin.TValue[string]
+	RoleDefinitionId           plugin.TValue[string]
+	DelegatedRoleDefinitionIds plugin.TValue[[]any]
+	Eligible                   plugin.TValue[bool]
+	JustInTimeAccessPolicy     plugin.TValue[any]
+	RoleDefinition             plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+}
+
+// createAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization creates a new instance of this resource
+func createAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.lighthouseService.registrationDefinition.authorization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) MqlName() string {
+	return "azure.subscription.lighthouseService.registrationDefinition.authorization"
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetPrincipalIdDisplayName() *plugin.TValue[string] {
+	return &c.PrincipalIdDisplayName
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetDelegatedRoleDefinitionIds() *plugin.TValue[[]any] {
+	return &c.DelegatedRoleDefinitionIds
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetEligible() *plugin.TValue[bool] {
+	return &c.Eligible
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetJustInTimeAccessPolicy() *plugin.TValue[any] {
+	return &c.JustInTimeAccessPolicy
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization) GetRoleDefinition() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](&c.RoleDefinition, func() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService.registrationDefinition.authorization", c.__id, "roleDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition), nil
+			}
+		}
+
+		return c.roleDefinition()
+	})
+}
+
+// mqlAzureSubscriptionLighthouseServiceRegistrationAssignment for the azure.subscription.lighthouseService.registrationAssignment resource
+type mqlAzureSubscriptionLighthouseServiceRegistrationAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionLighthouseServiceRegistrationAssignmentInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Scope                  plugin.TValue[string]
+	ProvisioningState      plugin.TValue[string]
+	RegistrationDefinition plugin.TValue[*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition]
+	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionLighthouseServiceRegistrationAssignment creates a new instance of this resource
+func createAzureSubscriptionLighthouseServiceRegistrationAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLighthouseServiceRegistrationAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.lighthouseService.registrationAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) MqlName() string {
+	return "azure.subscription.lighthouseService.registrationAssignment"
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetRegistrationDefinition() *plugin.TValue[*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition](&c.RegistrationDefinition, func() (*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService.registrationAssignment", c.__id, "registrationDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition), nil
+			}
+		}
+
+		return c.registrationDefinition()
+	})
+}
+
+func (c *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.lighthouseService.registrationAssignment", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}

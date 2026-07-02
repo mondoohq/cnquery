@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.23.0",
-  "generated_at": "2026-06-30T23:35:09-07:00",
+  "version": "13.24.0",
+  "generated_at": "2026-07-01T17:26:26-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -126,6 +126,8 @@
     "Microsoft.MachineLearningServices/workspaces/serverlessEndpoints/read",
     "Microsoft.ManagedIdentity/federatedIdentityCredentials/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
+    "Microsoft.Managedservices/registrationAssignments/read",
+    "Microsoft.Managedservices/registrationDefinitions/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/applicationGateways/read",
     "Microsoft.Network/applicationSecurityGroups/read",
@@ -982,6 +984,18 @@
       "service": "Microsoft.ManagedIdentity",
       "action": "Get",
       "source_file": "iam.go"
+    },
+    {
+      "permission": "Microsoft.Managedservices/registrationAssignments/read",
+      "service": "Microsoft.Managedservices",
+      "action": "NewListPager",
+      "source_file": "lighthouse.go"
+    },
+    {
+      "permission": "Microsoft.Managedservices/registrationDefinitions/read",
+      "service": "Microsoft.Managedservices",
+      "action": "NewListPager",
+      "source_file": "lighthouse.go"
     },
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",

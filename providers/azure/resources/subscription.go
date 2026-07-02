@@ -426,6 +426,16 @@ func (a *mqlAzureSubscription) search() (*mqlAzureSubscriptionSearchService, err
 	return svc.(*mqlAzureSubscriptionSearchService), nil
 }
 
+func (a *mqlAzureSubscription) lighthouse() (*mqlAzureSubscriptionLighthouseService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.lighthouseService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionLighthouseService), nil
+}
+
 func (a *mqlAzureSubscription) signalR() (*mqlAzureSubscriptionSignalRService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.signalRService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

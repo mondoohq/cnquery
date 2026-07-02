@@ -129,6 +129,8 @@ azure.subscription @defaults ("name") {
   purview() azure.subscription.purviewService
   // Azure AI Search resources in the subscription
   search() azure.subscription.searchService
+  // Azure Lighthouse cross-tenant delegated resource management on the subscription
+  lighthouse() azure.subscription.lighthouseService
   // App Configuration resources in the subscription
   appConfiguration() azure.subscription.appConfigurationService
   // Azure AI Services / Cognitive Services resources in the subscription
@@ -11151,6 +11153,115 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   status string
   // Network rule set: IP firewall rules and the bypass setting governing public access
   networkRuleSet dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Lighthouse
+//
+// Cross-tenant delegated resource management on the subscription, backed by
+// the `Microsoft.ManagedServices` resource provider. Registration definitions
+// describe an external (managedBy) tenant and the access its principals
+// receive; registration assignments attach those definitions to this
+// subscription or a resource group within it. A standing delegation grants an
+// outside tenant persistent access, so this namespace is the entry point for
+// detecting unexpected or overprivileged cross-tenant management. Iterate
+// `registrationDefinitions()` for the offers and `registrationAssignments()`
+// for the attachments in effect.
+private azure.subscription.lighthouseService {
+  // Subscription identifier
+  subscriptionId string
+  // Registration definitions delegating access to a managedBy tenant
+  registrationDefinitions() []azure.subscription.lighthouseService.registrationDefinition
+  // Registration assignments attaching definitions to this subscription
+  registrationAssignments() []azure.subscription.lighthouseService.registrationAssignment
+}
+
+// Azure Lighthouse registration definition
+//
+// A single Lighthouse offer delegating access to an external managing tenant.
+// The `managedByTenantId` and `managedByTenantName` fields identify the
+// tenant whose principals gain access; `authorizations` lists each principal
+// and the built-in role it holds on the delegated scope, and
+// `eligibleAuthorizations` lists the just-in-time grants activated through
+// Microsoft Entra Privileged Identity Management. Select a definition by its
+// `name`, which is the registration GUID, for example
+// `azure.subscription.lighthouseService.registrationDefinitions.where(name == "26c128c2-fefa-4340-9bb1-6e081c90ada2")`.
+azure.subscription.lighthouseService.registrationDefinition @defaults("name managedByTenantName provisioningState") {
+  // Fully qualified resource ID of the registration definition
+  id string
+  // Registration definition name, which is the registration GUID
+  name string
+  // Display name of the registration definition
+  displayName string
+  // Description of the registration definition
+  description string
+  // Identifier of the managing (managedBy) tenant
+  managedByTenantId string
+  // Name of the managing (managedBy) tenant
+  managedByTenantName string
+  // Provisioning state of the definition
+  //
+  // One of Running, Ready, Creating, Created, Deleting, Deleted, Canceled,
+  // Failed, Succeeded, Updating, or NotSpecified.
+  provisioningState string
+  // Standing authorizations granting managedBy-tenant principals access
+  authorizations []azure.subscription.lighthouseService.registrationDefinition.authorization
+  // Just-in-time authorizations activated through Privileged Identity Management
+  eligibleAuthorizations []azure.subscription.lighthouseService.registrationDefinition.authorization
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Lighthouse authorization
+//
+// A single grant within a registration definition, pairing a managedBy-tenant
+// principal with the built-in role it receives on the delegated scope. The
+// `principalId` and `principalIdDisplayName` fields identify the user, group,
+// or service principal; `roleDefinition` resolves the granted role; and
+// `delegatedRoleDefinitionIds` is populated when the role is User Access
+// Administrator, listing the roles the principal may in turn assign to others.
+// The `eligible` field distinguishes just-in-time grants from standing ones,
+// and `justInTimeAccessPolicy` carries their activation constraints.
+azure.subscription.lighthouseService.registrationDefinition.authorization @defaults("principalIdDisplayName roleDefinitionId eligible") {
+  // Identifier of the Azure Active Directory principal in the managedBy tenant
+  principalId string
+  // Display name of the principal
+  principalIdDisplayName string
+  // Identifier of the granted Azure built-in role
+  roleDefinitionId string
+  // Role definitions the principal may assign to others, set when the granted role is User Access Administrator
+  delegatedRoleDefinitionIds []string
+  // Whether this is a just-in-time (eligible) grant rather than a standing one
+  eligible bool
+  // Just-in-time activation policy (multiFactorAuthProvider, managedByTenantApprovers, maximumActivationDuration); empty for standing grants
+  justInTimeAccessPolicy dict
+  // Granted Azure built-in role definition
+  roleDefinition() azure.subscription.authorizationService.roleDefinition
+}
+
+// Azure Lighthouse registration assignment
+//
+// A single attachment of a registration definition to this subscription or a
+// resource group within it. The `scope` field is the delegated resource path
+// the assignment applies to, `registrationDefinition` resolves the definition
+// that grants the access, and `provisioningState` reflects whether the
+// delegation is active. Select an assignment by its `name`, which is the
+// assignment GUID.
+azure.subscription.lighthouseService.registrationAssignment @defaults("name scope provisioningState") {
+  // Fully qualified resource ID of the registration assignment
+  id string
+  // Registration assignment name, which is the assignment GUID
+  name string
+  // Delegated scope (subscription or resource group) the assignment applies to
+  scope string
+  // Provisioning state of the assignment
+  //
+  // One of Running, Ready, Creating, Created, Deleting, Deleted, Canceled,
+  // Failed, Succeeded, Updating, or NotSpecified.
+  provisioningState string
+  // Registration definition granting the delegated access
+  registrationDefinition() azure.subscription.lighthouseService.registrationDefinition
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
