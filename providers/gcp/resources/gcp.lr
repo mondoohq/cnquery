@@ -27,6 +27,7 @@ alias gcp.artifactregistry = gcp.project.artifactRegistryService
 alias gcp.backupdr = gcp.project.backupdrService
 alias gcp.vertexai = gcp.project.vertexaiService
 alias gcp.modelarmor = gcp.project.modelArmorService
+alias gcp.identityplatform = gcp.project.identityPlatformService
 alias gcp.discoveryengine = gcp.project.discoveryEngineService
 alias gcp.memcache = gcp.project.memcacheService
 alias gcp.datastream = gcp.project.datastreamService
@@ -831,6 +832,8 @@ gcp.project @defaults("name number") {
   vertexai() gcp.project.vertexaiService
   // GCP Model Armor resources
   modelArmor() gcp.project.modelArmorService
+  // GCP Identity Platform resources
+  identityPlatform() gcp.project.identityPlatformService
   // GCP Discovery Engine (AI Applications / Agentspace) resources
   discoveryEngine() gcp.project.discoveryEngineService
   // Security Command Center findings for this project (active findings only)
@@ -12925,6 +12928,128 @@ private gcp.project.modelArmorService.floorSetting @defaults("name") {
   created time
   // Last update time
   updated time
+}
+
+// Google Cloud (GCP) Identity Platform
+//
+// Customer identity and access management (CIAM) for a project. Hosts the
+// project-level `config`, which holds the enabled sign-in methods,
+// multi-factor authentication state, blocking functions, password policy,
+// reCAPTCHA enforcement, email-privacy protection, and the domains
+// authorized for OAuth redirects. In multi-tenant projects it also hosts
+// the `tenants`, each an isolated user pool with its own authentication
+// settings.
+private gcp.project.identityPlatformService {
+  // Project ID
+  projectId string
+  // Project-level Identity Platform configuration
+  config() gcp.project.identityPlatformService.config
+  // Tenants defined in a multi-tenant project
+  tenants() []gcp.project.identityPlatformService.tenant
+}
+
+// Google Cloud (GCP) Identity Platform configuration
+//
+// Project-level authentication settings for Identity Platform: the enabled
+// sign-in methods (email/password, phone, anonymous), the multi-factor
+// authentication state and second-factor providers, the password policy
+// enforcement state, reCAPTCHA enforcement for email/password and phone
+// flows, improved email privacy that blocks user enumeration, blocking-
+// function triggers, self-service account restrictions, request logging,
+// multi-tenancy enablement, and the domains authorized for OAuth redirects.
+private gcp.project.identityPlatformService.config @defaults("mfaState improvedEmailPrivacyEnabled") {
+  // Project ID
+  projectId string
+  // Config subtype, one of IDENTITY_PLATFORM or FIREBASE_AUTH
+  subtype string
+  // Domains authorized for OAuth redirects
+  authorizedDomains []string
+  // Whether anonymous users are auto-deleted after 30 days
+  autodeleteAnonymousUsers bool
+  // Multi-factor authentication state, one of DISABLED, ENABLED, or MANDATORY
+  mfaState string
+  // Second-factor providers usable for multi-factor authentication
+  mfaEnabledProviders []string
+  // Additional configured second-factor providers (for example TOTP)
+  mfaProviderConfigs []dict
+  // Whether email sign-in is enabled
+  signInEmailEnabled bool
+  // Whether a password is required for email sign-in
+  signInEmailPasswordRequired bool
+  // Whether phone-number sign-in is enabled
+  signInPhoneEnabled bool
+  // Whether anonymous sign-in is enabled
+  signInAnonymousEnabled bool
+  // Whether more than one account can share the same email address
+  signInAllowDuplicateEmails bool
+  // Whether improved email privacy is enabled, which blocks user enumeration
+  improvedEmailPrivacyEnabled bool
+  // Password policy enforcement state, one of OFF or ENFORCE
+  passwordPolicyEnforcementState string
+  // Whether users must have a compliant password to sign in
+  passwordPolicyForceUpgradeOnSignin bool
+  // Password strength constraints (length limits and character-class requirements)
+  passwordPolicyConstraints dict
+  // reCAPTCHA enforcement state for email/password flows, one of OFF, AUDIT, or ENFORCE
+  recaptchaEmailPasswordEnforcementState string
+  // reCAPTCHA enforcement state for phone flows, one of OFF, AUDIT, or ENFORCE
+  recaptchaPhoneEnforcementState string
+  // Whether the reCAPTCHA account defender is used
+  recaptchaUseAccountDefender bool
+  // Blocking-function triggers (beforeCreate, beforeSignIn) and forwarded credentials
+  blockingFunctions dict
+  // Whether users are blocked from signing themselves up
+  clientDisabledUserSignup bool
+  // Whether users are blocked from deleting their own account
+  clientDisabledUserDeletion bool
+  // Whether request logging to Cloud Logging is enabled
+  requestLoggingEnabled bool
+  // Whether the project can contain tenants
+  multiTenantAllowed bool
+  // Default parent organization or folder for new tenant projects
+  multiTenantDefaultTenantLocation string
+  // Allowed and disallowed regions for SMS verification-code delivery
+  smsRegionConfig dict
+}
+
+// Google Cloud (GCP) Identity Platform tenant
+//
+// Isolated user pool within a multi-tenant Identity Platform project, with
+// its own sign-in methods, multi-factor authentication, password policy,
+// reCAPTCHA enforcement, and email-privacy settings. The `name` field
+// selects a tenant by its resource path, for example
+// `gcp.project.identityPlatformService.tenants.where(name == "projects/my-project/tenants/my-tenant-abc12")`.
+private gcp.project.identityPlatformService.tenant @defaults("displayName tenantId mfaState") {
+  // Full resource name (projects/{project}/tenants/{tenant})
+  name string
+  // Tenant ID
+  tenantId string
+  // Display name of the tenant
+  displayName string
+  // Whether email/password sign-up is allowed
+  allowPasswordSignup bool
+  // Whether email-link sign-in is enabled
+  enableEmailLinkSignin bool
+  // Whether anonymous sign-in is enabled
+  enableAnonymousUser bool
+  // Whether authentication is disabled for the tenant
+  disableAuth bool
+  // Whether anonymous users are auto-deleted after 30 days
+  autodeleteAnonymousUsers bool
+  // Multi-factor authentication state, one of DISABLED, ENABLED, or MANDATORY
+  mfaState string
+  // Second-factor providers usable for multi-factor authentication
+  mfaEnabledProviders []string
+  // Whether improved email privacy is enabled, which blocks user enumeration
+  improvedEmailPrivacyEnabled bool
+  // Password policy enforcement state, one of OFF or ENFORCE
+  passwordPolicyEnforcementState string
+  // reCAPTCHA enforcement state for email/password flows, one of OFF, AUDIT, or ENFORCE
+  recaptchaEmailPasswordEnforcementState string
+  // reCAPTCHA enforcement state for phone flows, one of OFF, AUDIT, or ENFORCE
+  recaptchaPhoneEnforcementState string
+  // Test phone numbers and codes usable for multi-factor authentication
+  testPhoneNumbers map[string]string
 }
 
 // Google Cloud (GCP) Discovery Engine

@@ -43,6 +43,7 @@ const (
 	service_storage             = "storage.googleapis.com"
 	service_iam                 = "iam.googleapis.com"
 	service_modelarmor          = "modelarmor.googleapis.com"
+	service_identityplatform    = "identitytoolkit.googleapis.com"
 	service_eventarc            = "eventarc.googleapis.com"
 	service_dlp                 = "dlp.googleapis.com"
 	service_batch               = "batch.googleapis.com"

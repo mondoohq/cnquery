@@ -384,6 +384,9 @@ const (
 	ResourceGcpProjectModelArmorService                                                string = "gcp.project.modelArmorService"
 	ResourceGcpProjectModelArmorServiceTemplate                                        string = "gcp.project.modelArmorService.template"
 	ResourceGcpProjectModelArmorServiceFloorSetting                                    string = "gcp.project.modelArmorService.floorSetting"
+	ResourceGcpProjectIdentityPlatformService                                          string = "gcp.project.identityPlatformService"
+	ResourceGcpProjectIdentityPlatformServiceConfig                                    string = "gcp.project.identityPlatformService.config"
+	ResourceGcpProjectIdentityPlatformServiceTenant                                    string = "gcp.project.identityPlatformService.tenant"
 	ResourceGcpProjectDiscoveryEngineService                                           string = "gcp.project.discoveryEngineService"
 	ResourceGcpProjectDiscoveryEngineServiceDataStore                                  string = "gcp.project.discoveryEngineService.dataStore"
 	ResourceGcpProjectDiscoveryEngineServiceEngine                                     string = "gcp.project.discoveryEngineService.engine"
@@ -1943,6 +1946,18 @@ func init() {
 			// to override args, implement: initGcpProjectModelArmorServiceFloorSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectModelArmorServiceFloorSetting,
 		},
+		"gcp.project.identityPlatformService": {
+			Init:   initGcpProjectIdentityPlatformService,
+			Create: createGcpProjectIdentityPlatformService,
+		},
+		"gcp.project.identityPlatformService.config": {
+			// to override args, implement: initGcpProjectIdentityPlatformServiceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIdentityPlatformServiceConfig,
+		},
+		"gcp.project.identityPlatformService.tenant": {
+			// to override args, implement: initGcpProjectIdentityPlatformServiceTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIdentityPlatformServiceTenant,
+		},
 		"gcp.project.discoveryEngineService": {
 			Init:   initGcpProjectDiscoveryEngineService,
 			Create: createGcpProjectDiscoveryEngineService,
@@ -3213,6 +3228,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.modelArmor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetModelArmor()).ToDataRes(types.Resource("gcp.project.modelArmorService"))
+	},
+	"gcp.project.identityPlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetIdentityPlatform()).ToDataRes(types.Resource("gcp.project.identityPlatformService"))
 	},
 	"gcp.project.discoveryEngine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetDiscoveryEngine()).ToDataRes(types.Resource("gcp.project.discoveryEngineService"))
@@ -15157,6 +15175,138 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.modelArmorService.floorSetting.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetUpdated()).ToDataRes(types.Time)
 	},
+	"gcp.project.identityPlatformService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformService).GetConfig()).ToDataRes(types.Resource("gcp.project.identityPlatformService.config"))
+	},
+	"gcp.project.identityPlatformService.tenants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformService).GetTenants()).ToDataRes(types.Array(types.Resource("gcp.project.identityPlatformService.tenant")))
+	},
+	"gcp.project.identityPlatformService.config.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.subtype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSubtype()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.authorizedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetAuthorizedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.identityPlatformService.config.autodeleteAnonymousUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetAutodeleteAnonymousUsers()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.mfaState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetMfaState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.mfaEnabledProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetMfaEnabledProviders()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.identityPlatformService.config.mfaProviderConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetMfaProviderConfigs()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.identityPlatformService.config.signInEmailEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSignInEmailEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.signInEmailPasswordRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSignInEmailPasswordRequired()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.signInPhoneEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSignInPhoneEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.signInAnonymousEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSignInAnonymousEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.signInAllowDuplicateEmails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSignInAllowDuplicateEmails()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.improvedEmailPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetImprovedEmailPrivacyEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetPasswordPolicyEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyForceUpgradeOnSignin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetPasswordPolicyForceUpgradeOnSignin()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetPasswordPolicyConstraints()).ToDataRes(types.Dict)
+	},
+	"gcp.project.identityPlatformService.config.recaptchaEmailPasswordEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetRecaptchaEmailPasswordEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.recaptchaPhoneEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetRecaptchaPhoneEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.recaptchaUseAccountDefender": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetRecaptchaUseAccountDefender()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.blockingFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetBlockingFunctions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.identityPlatformService.config.clientDisabledUserSignup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetClientDisabledUserSignup()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.clientDisabledUserDeletion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetClientDisabledUserDeletion()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.requestLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetRequestLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.multiTenantAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetMultiTenantAllowed()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.config.multiTenantDefaultTenantLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetMultiTenantDefaultTenantLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.config.smsRegionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceConfig).GetSmsRegionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.identityPlatformService.tenant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetTenantId()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.allowPasswordSignup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetAllowPasswordSignup()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.enableEmailLinkSignin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetEnableEmailLinkSignin()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.enableAnonymousUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetEnableAnonymousUser()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.disableAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetDisableAuth()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.autodeleteAnonymousUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetAutodeleteAnonymousUsers()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.mfaState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetMfaState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.mfaEnabledProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetMfaEnabledProviders()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.identityPlatformService.tenant.improvedEmailPrivacyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetImprovedEmailPrivacyEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.identityPlatformService.tenant.passwordPolicyEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetPasswordPolicyEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.recaptchaEmailPasswordEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetRecaptchaEmailPasswordEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.recaptchaPhoneEnforcementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetRecaptchaPhoneEnforcementState()).ToDataRes(types.String)
+	},
+	"gcp.project.identityPlatformService.tenant.testPhoneNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIdentityPlatformServiceTenant).GetTestPhoneNumbers()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.discoveryEngineService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDiscoveryEngineService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -18535,6 +18685,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.modelArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).ModelArmor, ok = plugin.RawToTValue[*mqlGcpProjectModelArmorService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).IdentityPlatform, ok = plugin.RawToTValue[*mqlGcpProjectIdentityPlatformService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.discoveryEngine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35845,6 +35999,194 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectModelArmorServiceFloorSetting).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.identityPlatformService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.identityPlatformService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformService).Config, ok = plugin.RawToTValue[*mqlGcpProjectIdentityPlatformServiceConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformService).Tenants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.identityPlatformService.config.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.subtype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).Subtype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.authorizedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).AuthorizedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.autodeleteAnonymousUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).AutodeleteAnonymousUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.mfaState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).MfaState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.mfaEnabledProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).MfaEnabledProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.mfaProviderConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).MfaProviderConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.signInEmailEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SignInEmailEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.signInEmailPasswordRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SignInEmailPasswordRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.signInPhoneEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SignInPhoneEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.signInAnonymousEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SignInAnonymousEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.signInAllowDuplicateEmails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SignInAllowDuplicateEmails, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.improvedEmailPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).ImprovedEmailPrivacyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).PasswordPolicyEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyForceUpgradeOnSignin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).PasswordPolicyForceUpgradeOnSignin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.passwordPolicyConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).PasswordPolicyConstraints, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.recaptchaEmailPasswordEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).RecaptchaEmailPasswordEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.recaptchaPhoneEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).RecaptchaPhoneEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.recaptchaUseAccountDefender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).RecaptchaUseAccountDefender, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.blockingFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).BlockingFunctions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.clientDisabledUserSignup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).ClientDisabledUserSignup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.clientDisabledUserDeletion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).ClientDisabledUserDeletion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.requestLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).RequestLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.multiTenantAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).MultiTenantAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.multiTenantDefaultTenantLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).MultiTenantDefaultTenantLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.config.smsRegionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceConfig).SmsRegionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.allowPasswordSignup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).AllowPasswordSignup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.enableEmailLinkSignin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).EnableEmailLinkSignin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.enableAnonymousUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).EnableAnonymousUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.disableAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).DisableAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.autodeleteAnonymousUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).AutodeleteAnonymousUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.mfaState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).MfaState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.mfaEnabledProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).MfaEnabledProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.improvedEmailPrivacyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).ImprovedEmailPrivacyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.passwordPolicyEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).PasswordPolicyEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.recaptchaEmailPasswordEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).RecaptchaEmailPasswordEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.recaptchaPhoneEnforcementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).RecaptchaPhoneEnforcementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.identityPlatformService.tenant.testPhoneNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIdentityPlatformServiceTenant).TestPhoneNumbers, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.discoveryEngineService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDiscoveryEngineService).__id, ok = v.Value.(string)
 		return
@@ -41720,6 +42062,7 @@ type mqlGcpProject struct {
 	Backupdr                 plugin.TValue[*mqlGcpProjectBackupdrService]
 	Vertexai                 plugin.TValue[*mqlGcpProjectVertexaiService]
 	ModelArmor               plugin.TValue[*mqlGcpProjectModelArmorService]
+	IdentityPlatform         plugin.TValue[*mqlGcpProjectIdentityPlatformService]
 	DiscoveryEngine          plugin.TValue[*mqlGcpProjectDiscoveryEngineService]
 	SccFindings              plugin.TValue[[]any]
 	Eventarc                 plugin.TValue[*mqlGcpProjectEventarcService]
@@ -42585,6 +42928,22 @@ func (c *mqlGcpProject) GetModelArmor() *plugin.TValue[*mqlGcpProjectModelArmorS
 		}
 
 		return c.modelArmor()
+	})
+}
+
+func (c *mqlGcpProject) GetIdentityPlatform() *plugin.TValue[*mqlGcpProjectIdentityPlatformService] {
+	return plugin.GetOrCompute[*mqlGcpProjectIdentityPlatformService](&c.IdentityPlatform, func() (*mqlGcpProjectIdentityPlatformService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "identityPlatform")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIdentityPlatformService), nil
+			}
+		}
+
+		return c.identityPlatform()
 	})
 }
 
@@ -83455,6 +83814,377 @@ func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetCreated() *plugin.TValue
 
 func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectIdentityPlatformService for the gcp.project.identityPlatformService resource
+type mqlGcpProjectIdentityPlatformService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectIdentityPlatformServiceInternal
+	ProjectId plugin.TValue[string]
+	Config    plugin.TValue[*mqlGcpProjectIdentityPlatformServiceConfig]
+	Tenants   plugin.TValue[[]any]
+}
+
+// createGcpProjectIdentityPlatformService creates a new instance of this resource
+func createGcpProjectIdentityPlatformService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIdentityPlatformService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.identityPlatformService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIdentityPlatformService) MqlName() string {
+	return "gcp.project.identityPlatformService"
+}
+
+func (c *mqlGcpProjectIdentityPlatformService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIdentityPlatformService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIdentityPlatformService) GetConfig() *plugin.TValue[*mqlGcpProjectIdentityPlatformServiceConfig] {
+	return plugin.GetOrCompute[*mqlGcpProjectIdentityPlatformServiceConfig](&c.Config, func() (*mqlGcpProjectIdentityPlatformServiceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.identityPlatformService", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIdentityPlatformServiceConfig), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+func (c *mqlGcpProjectIdentityPlatformService) GetTenants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tenants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.identityPlatformService", c.__id, "tenants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tenants()
+	})
+}
+
+// mqlGcpProjectIdentityPlatformServiceConfig for the gcp.project.identityPlatformService.config resource
+type mqlGcpProjectIdentityPlatformServiceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIdentityPlatformServiceConfigInternal it will be used here
+	ProjectId                              plugin.TValue[string]
+	Subtype                                plugin.TValue[string]
+	AuthorizedDomains                      plugin.TValue[[]any]
+	AutodeleteAnonymousUsers               plugin.TValue[bool]
+	MfaState                               plugin.TValue[string]
+	MfaEnabledProviders                    plugin.TValue[[]any]
+	MfaProviderConfigs                     plugin.TValue[[]any]
+	SignInEmailEnabled                     plugin.TValue[bool]
+	SignInEmailPasswordRequired            plugin.TValue[bool]
+	SignInPhoneEnabled                     plugin.TValue[bool]
+	SignInAnonymousEnabled                 plugin.TValue[bool]
+	SignInAllowDuplicateEmails             plugin.TValue[bool]
+	ImprovedEmailPrivacyEnabled            plugin.TValue[bool]
+	PasswordPolicyEnforcementState         plugin.TValue[string]
+	PasswordPolicyForceUpgradeOnSignin     plugin.TValue[bool]
+	PasswordPolicyConstraints              plugin.TValue[any]
+	RecaptchaEmailPasswordEnforcementState plugin.TValue[string]
+	RecaptchaPhoneEnforcementState         plugin.TValue[string]
+	RecaptchaUseAccountDefender            plugin.TValue[bool]
+	BlockingFunctions                      plugin.TValue[any]
+	ClientDisabledUserSignup               plugin.TValue[bool]
+	ClientDisabledUserDeletion             plugin.TValue[bool]
+	RequestLoggingEnabled                  plugin.TValue[bool]
+	MultiTenantAllowed                     plugin.TValue[bool]
+	MultiTenantDefaultTenantLocation       plugin.TValue[string]
+	SmsRegionConfig                        plugin.TValue[any]
+}
+
+// createGcpProjectIdentityPlatformServiceConfig creates a new instance of this resource
+func createGcpProjectIdentityPlatformServiceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIdentityPlatformServiceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.identityPlatformService.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) MqlName() string {
+	return "gcp.project.identityPlatformService.config"
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSubtype() *plugin.TValue[string] {
+	return &c.Subtype
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetAuthorizedDomains() *plugin.TValue[[]any] {
+	return &c.AuthorizedDomains
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetAutodeleteAnonymousUsers() *plugin.TValue[bool] {
+	return &c.AutodeleteAnonymousUsers
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetMfaState() *plugin.TValue[string] {
+	return &c.MfaState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetMfaEnabledProviders() *plugin.TValue[[]any] {
+	return &c.MfaEnabledProviders
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetMfaProviderConfigs() *plugin.TValue[[]any] {
+	return &c.MfaProviderConfigs
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSignInEmailEnabled() *plugin.TValue[bool] {
+	return &c.SignInEmailEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSignInEmailPasswordRequired() *plugin.TValue[bool] {
+	return &c.SignInEmailPasswordRequired
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSignInPhoneEnabled() *plugin.TValue[bool] {
+	return &c.SignInPhoneEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSignInAnonymousEnabled() *plugin.TValue[bool] {
+	return &c.SignInAnonymousEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSignInAllowDuplicateEmails() *plugin.TValue[bool] {
+	return &c.SignInAllowDuplicateEmails
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetImprovedEmailPrivacyEnabled() *plugin.TValue[bool] {
+	return &c.ImprovedEmailPrivacyEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetPasswordPolicyEnforcementState() *plugin.TValue[string] {
+	return &c.PasswordPolicyEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetPasswordPolicyForceUpgradeOnSignin() *plugin.TValue[bool] {
+	return &c.PasswordPolicyForceUpgradeOnSignin
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetPasswordPolicyConstraints() *plugin.TValue[any] {
+	return &c.PasswordPolicyConstraints
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetRecaptchaEmailPasswordEnforcementState() *plugin.TValue[string] {
+	return &c.RecaptchaEmailPasswordEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetRecaptchaPhoneEnforcementState() *plugin.TValue[string] {
+	return &c.RecaptchaPhoneEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetRecaptchaUseAccountDefender() *plugin.TValue[bool] {
+	return &c.RecaptchaUseAccountDefender
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetBlockingFunctions() *plugin.TValue[any] {
+	return &c.BlockingFunctions
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetClientDisabledUserSignup() *plugin.TValue[bool] {
+	return &c.ClientDisabledUserSignup
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetClientDisabledUserDeletion() *plugin.TValue[bool] {
+	return &c.ClientDisabledUserDeletion
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetRequestLoggingEnabled() *plugin.TValue[bool] {
+	return &c.RequestLoggingEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetMultiTenantAllowed() *plugin.TValue[bool] {
+	return &c.MultiTenantAllowed
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetMultiTenantDefaultTenantLocation() *plugin.TValue[string] {
+	return &c.MultiTenantDefaultTenantLocation
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceConfig) GetSmsRegionConfig() *plugin.TValue[any] {
+	return &c.SmsRegionConfig
+}
+
+// mqlGcpProjectIdentityPlatformServiceTenant for the gcp.project.identityPlatformService.tenant resource
+type mqlGcpProjectIdentityPlatformServiceTenant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIdentityPlatformServiceTenantInternal it will be used here
+	Name                                   plugin.TValue[string]
+	TenantId                               plugin.TValue[string]
+	DisplayName                            plugin.TValue[string]
+	AllowPasswordSignup                    plugin.TValue[bool]
+	EnableEmailLinkSignin                  plugin.TValue[bool]
+	EnableAnonymousUser                    plugin.TValue[bool]
+	DisableAuth                            plugin.TValue[bool]
+	AutodeleteAnonymousUsers               plugin.TValue[bool]
+	MfaState                               plugin.TValue[string]
+	MfaEnabledProviders                    plugin.TValue[[]any]
+	ImprovedEmailPrivacyEnabled            plugin.TValue[bool]
+	PasswordPolicyEnforcementState         plugin.TValue[string]
+	RecaptchaEmailPasswordEnforcementState plugin.TValue[string]
+	RecaptchaPhoneEnforcementState         plugin.TValue[string]
+	TestPhoneNumbers                       plugin.TValue[map[string]any]
+}
+
+// createGcpProjectIdentityPlatformServiceTenant creates a new instance of this resource
+func createGcpProjectIdentityPlatformServiceTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIdentityPlatformServiceTenant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.identityPlatformService.tenant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) MqlName() string {
+	return "gcp.project.identityPlatformService.tenant"
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetAllowPasswordSignup() *plugin.TValue[bool] {
+	return &c.AllowPasswordSignup
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetEnableEmailLinkSignin() *plugin.TValue[bool] {
+	return &c.EnableEmailLinkSignin
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetEnableAnonymousUser() *plugin.TValue[bool] {
+	return &c.EnableAnonymousUser
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetDisableAuth() *plugin.TValue[bool] {
+	return &c.DisableAuth
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetAutodeleteAnonymousUsers() *plugin.TValue[bool] {
+	return &c.AutodeleteAnonymousUsers
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetMfaState() *plugin.TValue[string] {
+	return &c.MfaState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetMfaEnabledProviders() *plugin.TValue[[]any] {
+	return &c.MfaEnabledProviders
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetImprovedEmailPrivacyEnabled() *plugin.TValue[bool] {
+	return &c.ImprovedEmailPrivacyEnabled
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetPasswordPolicyEnforcementState() *plugin.TValue[string] {
+	return &c.PasswordPolicyEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetRecaptchaEmailPasswordEnforcementState() *plugin.TValue[string] {
+	return &c.RecaptchaEmailPasswordEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetRecaptchaPhoneEnforcementState() *plugin.TValue[string] {
+	return &c.RecaptchaPhoneEnforcementState
+}
+
+func (c *mqlGcpProjectIdentityPlatformServiceTenant) GetTestPhoneNumbers() *plugin.TValue[map[string]any] {
+	return &c.TestPhoneNumbers
 }
 
 // mqlGcpProjectDiscoveryEngineService for the gcp.project.discoveryEngineService resource
