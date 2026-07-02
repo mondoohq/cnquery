@@ -22374,6 +22374,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.launchconfiguration.imageId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchconfiguration).GetImageId()).ToDataRes(types.String)
 	},
+	"aws.ec2.launchconfiguration.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetImage()).ToDataRes(types.Resource("aws.ec2.image"))
+	},
 	"aws.ec2.launchconfiguration.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchconfiguration).GetInstanceType()).ToDataRes(types.String)
 	},
@@ -23378,6 +23381,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.device.volumeId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetVolumeId()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.device.volume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceDevice).GetVolume()).ToDataRes(types.Resource("aws.ec2.volume"))
 	},
 	"aws.ec2.instance.device.deviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceDevice).GetDeviceName()).ToDataRes(types.String)
@@ -59749,6 +59755,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Launchconfiguration).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchconfiguration.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).Image, ok = plugin.RawToTValue[*mqlAwsEc2Image](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.launchconfiguration.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Launchconfiguration).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -61199,6 +61209,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.device.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2InstanceDevice).VolumeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.device.volume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceDevice).Volume, ok = plugin.RawToTValue[*mqlAwsEc2Volume](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.device.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -143999,6 +144013,7 @@ type mqlAwsEc2Launchconfiguration struct {
 	Name                      plugin.TValue[string]
 	Region                    plugin.TValue[string]
 	ImageId                   plugin.TValue[string]
+	Image                     plugin.TValue[*mqlAwsEc2Image]
 	InstanceType              plugin.TValue[string]
 	KeyName                   plugin.TValue[string]
 	SecurityGroups            plugin.TValue[[]any]
@@ -144064,6 +144079,22 @@ func (c *mqlAwsEc2Launchconfiguration) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Launchconfiguration) GetImageId() *plugin.TValue[string] {
 	return &c.ImageId
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
+	return plugin.GetOrCompute[*mqlAwsEc2Image](&c.Image, func() (*mqlAwsEc2Image, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.launchconfiguration", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Image), nil
+			}
+		}
+
+		return c.image()
+	})
 }
 
 func (c *mqlAwsEc2Launchconfiguration) GetInstanceType() *plugin.TValue[string] {
@@ -147405,10 +147436,11 @@ func (c *mqlAwsEc2InstanceExposure) GetInternetFacingLoadBalancers() *plugin.TVa
 type mqlAwsEc2InstanceDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEc2InstanceDeviceInternal it will be used here
+	mqlAwsEc2InstanceDeviceInternal
 	DeleteOnTermination plugin.TValue[bool]
 	Status              plugin.TValue[string]
 	VolumeId            plugin.TValue[string]
+	Volume              plugin.TValue[*mqlAwsEc2Volume]
 	DeviceName          plugin.TValue[string]
 }
 
@@ -147459,6 +147491,22 @@ func (c *mqlAwsEc2InstanceDevice) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2InstanceDevice) GetVolumeId() *plugin.TValue[string] {
 	return &c.VolumeId
+}
+
+func (c *mqlAwsEc2InstanceDevice) GetVolume() *plugin.TValue[*mqlAwsEc2Volume] {
+	return plugin.GetOrCompute[*mqlAwsEc2Volume](&c.Volume, func() (*mqlAwsEc2Volume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance.device", c.__id, "volume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Volume), nil
+			}
+		}
+
+		return c.volume()
+	})
 }
 
 func (c *mqlAwsEc2InstanceDevice) GetDeviceName() *plugin.TValue[string] {

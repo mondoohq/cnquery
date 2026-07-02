@@ -3092,6 +3092,7 @@ aws.ec2.instance.device 11.15.2
 aws.ec2.instance.device.deleteOnTermination 11.15.2
 aws.ec2.instance.device.deviceName 11.15.2
 aws.ec2.instance.device.status 11.15.2
+aws.ec2.instance.device.volume 13.41.1
 aws.ec2.instance.device.volumeId 11.15.2
 aws.ec2.instance.deviceMappings 11.15.2
 aws.ec2.instance.disableApiTermination 11.15.2
@@ -3286,6 +3287,7 @@ aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.volumeType 13.6.0
 aws.ec2.launchconfiguration.ebsOptimized 13.6.0
 aws.ec2.launchconfiguration.iamInstanceProfile 13.6.0
+aws.ec2.launchconfiguration.image 13.41.1
 aws.ec2.launchconfiguration.imageId 13.6.0
 aws.ec2.launchconfiguration.instanceType 13.6.0
 aws.ec2.launchconfiguration.keyName 13.6.0

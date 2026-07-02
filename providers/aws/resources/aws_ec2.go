@@ -1322,6 +1322,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			if err != nil {
 				return nil, err
 			}
+			mqlInstanceDevice.(*mqlAwsEc2InstanceDevice).region = regionVal
 			mqlDevices = append(mqlDevices, mqlInstanceDevice)
 		}
 
@@ -2222,8 +2223,28 @@ func anyStringEquals(list []any, target string) bool {
 	return false
 }
 
+type mqlAwsEc2InstanceDeviceInternal struct {
+	region string
+}
+
 func (a *mqlAwsEc2InstanceDevice) id() (string, error) {
 	return a.VolumeId.Data, nil
+}
+
+func (a *mqlAwsEc2InstanceDevice) volume() (*mqlAwsEc2Volume, error) {
+	volumeID := a.VolumeId.Data
+	if volumeID == "" {
+		a.Volume.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(volumeArnPattern, a.region, conn.AccountId(), volumeID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Volume,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Volume), nil
 }
 
 func (a *mqlAwsEc2Instance) id() (string, error) {

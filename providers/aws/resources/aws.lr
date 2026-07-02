@@ -16012,7 +16012,11 @@ private aws.ec2.launchconfiguration @defaults("name region") {
   // Region for the launch configuration
   region string
   // AMI ID used by the launch configuration
-  imageId string
+  //
+  // Deprecated in favor of `image`.
+  imageId @maturity("deprecated") string
+  // AMI used by the launch configuration
+  image() aws.ec2.image
   // Instance type
   instanceType string
   // Name of the key pair
@@ -16856,7 +16860,11 @@ private aws.ec2.instance.device @defaults("deviceName volumeId status") {
   // Status of the device
   status string
   // Volume ID for the device
-  volumeId string
+  //
+  // Deprecated in favor of `volume`.
+  volumeId @maturity("deprecated") string
+  // EBS volume backing the device
+  volume() aws.ec2.volume
   // Name for the device
   deviceName string
 }

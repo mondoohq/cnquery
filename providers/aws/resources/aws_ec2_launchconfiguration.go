@@ -29,6 +29,22 @@ func (a *mqlAwsEc2Launchconfiguration) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsEc2Launchconfiguration) image() (*mqlAwsEc2Image, error) {
+	imageID := a.ImageId.Data
+	if imageID == "" {
+		a.Image.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(imageArnPattern, a.Region.Data, conn.AccountId(), imageID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Image,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Image), nil
+}
+
 func (a *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) id() (string, error) {
 	return a.DeviceName.Data, nil
 }
