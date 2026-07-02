@@ -10,12 +10,29 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// newVscodeExtensionPurl builds a vscode-extension PURL per the purl-spec
+// definition at:
+//
+//	https://github.com/package-url/purl-spec/blob/main/types-doc/vscode-extension-definition.md
+//
+// Format: pkg:vscode-extension/<publisher>/<name>@<version>
+// Empty publisher / name / version yields an empty string — callers that
+// pass incomplete extension metadata get no PURL rather than a malformed one.
+func newVscodeExtensionPurl(publisher, name, version string) string {
+	if publisher == "" || name == "" {
+		return ""
+	}
+	return packageurl.NewPackageURL("vscode-extension", publisher, name, version, nil, "").String()
+}
 
 // vsCodeEditor represents a VS Code-based editor with its extension directory
 type vsCodeEditor struct {
@@ -218,6 +235,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 					"path":          llx.StringData(extPath),
 					"vscodeVersion": llx.StringData(pkgJSON.Engines.VSCode),
 					"categories":    llx.ArrayData(categories, types.String),
+					"purl":          llx.StringData(newVscodeExtensionPurl(pkgJSON.Publisher, pkgJSON.Name, pkgJSON.Version)),
 				})
 				if err != nil {
 					log.Debug().Err(err).Str("extension", identifier).Msg("failed to create VS Code extension resource")
@@ -233,6 +251,16 @@ func (c *mqlVscode) extensions() ([]any, error) {
 
 func (e *mqlVscodeExtension) id() (string, error) {
 	return e.Identifier.Data + "|" + e.Path.Data, nil
+}
+
+// purl is populated eagerly in the vscode.extensions() enumerator from
+// the extension's package.json publisher/name/version. The stub satisfies
+// the generated lazy-init contract; if for any reason a caller constructs
+// a vscode.extension without going through the enumerator (e.g. tests),
+// returning the empty string keeps the field non-nil rather than panicking.
+func (e *mqlVscodeExtension) purl() (string, error) {
+	e.Purl = plugin.TValue[string]{State: plugin.StateIsSet, Data: newVscodeExtensionPurl(e.Publisher.Data, e.Name.Data, e.Version.Data)}
+	return e.Purl.Data, nil
 }
 
 // readVSCodePackageJSON reads and parses a VS Code extension package.json file

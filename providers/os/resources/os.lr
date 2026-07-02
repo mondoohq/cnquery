@@ -9098,6 +9098,12 @@ private vscode.extension @defaults("editor name version") {
   vscodeVersion string
   // Extension categories
   categories []string
+  // Package URL
+  //
+  // Package URL identifying the extension in the form
+  // pkg:vscode-extension/<publisher>/<name>@<version>, per
+  // https://github.com/package-url/purl-spec/blob/main/types-doc/vscode-extension-definition.md
+  purl() string
 }
 
 // logrotate configuration

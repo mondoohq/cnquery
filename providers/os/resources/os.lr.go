@@ -10319,6 +10319,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vscode.extension.categories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVscodeExtension).GetCategories()).ToDataRes(types.Array(types.String))
 	},
+	"vscode.extension.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVscodeExtension).GetPurl()).ToDataRes(types.String)
+	},
 	"logrotate.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogrotate).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
 	},
@@ -23734,6 +23737,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vscode.extension.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVscodeExtension).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vscode.extension.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVscodeExtension).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"logrotate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62253,6 +62260,7 @@ type mqlVscodeExtension struct {
 	Path          plugin.TValue[string]
 	VscodeVersion plugin.TValue[string]
 	Categories    plugin.TValue[[]any]
+	Purl          plugin.TValue[string]
 }
 
 // createVscodeExtension creates a new instance of this resource
@@ -62330,6 +62338,12 @@ func (c *mqlVscodeExtension) GetVscodeVersion() *plugin.TValue[string] {
 
 func (c *mqlVscodeExtension) GetCategories() *plugin.TValue[[]any] {
 	return &c.Categories
+}
+
+func (c *mqlVscodeExtension) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
 }
 
 // mqlLogrotate for the logrotate resource
