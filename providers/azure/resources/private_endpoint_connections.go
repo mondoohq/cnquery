@@ -46,7 +46,13 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 		return nil, nil
 	}
 
+	// A connection with no ID has no stable cache key, and everything useful
+	// about it (name, navigation) derives from that ID. Skip it rather than
+	// letting multiple ID-less entries collide on an empty __id.
 	id, _ := dict["id"].(string)
+	if id == "" {
+		return nil, nil
+	}
 	args := map[string]*llx.RawData{
 		"__id": llx.StringData(id),
 		"id":   llx.StringData(id),
