@@ -2508,6 +2508,7 @@ aws.documentdb.cluster.enabledCloudwatchLogsExports 11.16.1
 aws.documentdb.cluster.endpoint 11.16.1
 aws.documentdb.cluster.engine 11.16.1
 aws.documentdb.cluster.engineVersion 11.16.1
+aws.documentdb.cluster.exposure 13.40.2
 aws.documentdb.cluster.globalCluster 13.19.1
 aws.documentdb.cluster.globalClusterIdentifier 13.19.1
 aws.documentdb.cluster.hostedZoneId 13.19.1
@@ -4207,6 +4208,7 @@ aws.elasticache.cluster.configurationEndpointAddress 13.39.2
 aws.elasticache.cluster.configurationEndpointPort 13.39.2
 aws.elasticache.cluster.engine 11.15.2
 aws.elasticache.cluster.engineVersion 11.15.2
+aws.elasticache.cluster.exposure 13.40.2
 aws.elasticache.cluster.ipDiscovery 11.15.2
 aws.elasticache.cluster.kmsKey 13.3.1
 aws.elasticache.cluster.logDeliveryConfigurations 11.15.2
@@ -4244,6 +4246,7 @@ aws.elasticache.serverlessCache.dailySnapshotTime 11.15.2
 aws.elasticache.serverlessCache.description 11.15.2
 aws.elasticache.serverlessCache.engine 11.15.2
 aws.elasticache.serverlessCache.engineVersion 11.15.2
+aws.elasticache.serverlessCache.exposure 13.40.2
 aws.elasticache.serverlessCache.kmsKey 11.16.1
 aws.elasticache.serverlessCache.kmsKeyId 11.15.2
 aws.elasticache.serverlessCache.majorEngineVersion 11.15.2
@@ -6518,6 +6521,7 @@ aws.memorydb.cluster.description 11.16.1
 aws.memorydb.cluster.engine 11.16.1
 aws.memorydb.cluster.enginePatchVersion 11.16.1
 aws.memorydb.cluster.engineVersion 11.16.1
+aws.memorydb.cluster.exposure 13.40.2
 aws.memorydb.cluster.kmsKey 11.16.1
 aws.memorydb.cluster.maintenanceWindow 11.16.1
 aws.memorydb.cluster.name 11.16.1
@@ -6876,6 +6880,7 @@ aws.neptune.cluster.enabledCloudwatchLogsExports 11.15.2
 aws.neptune.cluster.endpoint 11.15.2
 aws.neptune.cluster.engine 11.15.2
 aws.neptune.cluster.engineVersion 11.15.2
+aws.neptune.cluster.exposure 13.40.2
 aws.neptune.cluster.globalClusterIdentifier 11.15.2
 aws.neptune.cluster.iamDatabaseAuthenticationEnabled 11.15.2
 aws.neptune.cluster.iamRoles 13.39.2

@@ -18291,6 +18291,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.elasticache.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
 	},
@@ -18362,6 +18365,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheServerlessCache).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.elasticache.serverlessCache.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.elasticache.serverlessCache.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheServerlessCache).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
@@ -24231,6 +24237,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.neptune.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
 	"aws.neptune.cluster.iamRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetIamRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
 	},
@@ -24788,6 +24797,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.documentdb.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.documentdb.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetNetworkType()).ToDataRes(types.String)
@@ -27404,6 +27416,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.memorydb.cluster.exposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
 	},
 	"aws.memorydb.acl.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbAcl).GetArn()).ToDataRes(types.String)
@@ -53773,6 +53788,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -53871,6 +53890,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheServerlessCache).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.serverlessCache.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.serverlessCache.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62361,6 +62384,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.neptune.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
 	"aws.neptune.cluster.iamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneCluster).IamRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -63143,6 +63170,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66943,6 +66974,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMemorydbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
 		return
 	},
 	"aws.memorydb.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -129109,6 +129144,7 @@ type mqlAwsElasticacheCluster struct {
 	PreferredAvailabilityZone          plugin.TValue[string]
 	Region                             plugin.TValue[string]
 	SecurityGroups                     plugin.TValue[[]any]
+	Exposure                           plugin.TValue[*mqlAwsNetworkExposure]
 	SnapshotRetentionLimit             plugin.TValue[int64]
 	SnapshotWindow                     plugin.TValue[string]
 	TransitEncryptionEnabled           plugin.TValue[bool]
@@ -129298,6 +129334,22 @@ func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsElasticacheCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
+	})
+}
+
 func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
 	return &c.SnapshotRetentionLimit
 }
@@ -129412,6 +129464,7 @@ type mqlAwsElasticacheServerlessCache struct {
 	KmsKeyId               plugin.TValue[string]
 	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
 	SecurityGroups         plugin.TValue[[]any]
+	Exposure               plugin.TValue[*mqlAwsNetworkExposure]
 	SnapshotRetentionLimit plugin.TValue[int64]
 	DailySnapshotTime      plugin.TValue[string]
 	Status                 plugin.TValue[string]
@@ -129509,6 +129562,22 @@ func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.serverlessCache", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -150195,6 +150264,7 @@ type mqlAwsNeptuneCluster struct {
 	StorageType                      plugin.TValue[string]
 	NetworkType                      plugin.TValue[string]
 	SecurityGroups                   plugin.TValue[[]any]
+	Exposure                         plugin.TValue[*mqlAwsNetworkExposure]
 	IamRoles                         plugin.TValue[[]any]
 	Tags                             plugin.TValue[map[string]any]
 	CloudformationStack              plugin.TValue[*mqlAwsCloudformationStack]
@@ -150406,6 +150476,22 @@ func (c *mqlAwsNeptuneCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsNeptuneCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -151881,6 +151967,7 @@ type mqlAwsDocumentdbCluster struct {
 	ManagedBy                    plugin.TValue[string]
 	Snapshots                    plugin.TValue[[]any]
 	SecurityGroups               plugin.TValue[[]any]
+	Exposure                     plugin.TValue[*mqlAwsNetworkExposure]
 	NetworkType                  plugin.TValue[string]
 	ReplicationSource            plugin.TValue[*mqlAwsDocumentdbCluster]
 	ReadReplicas                 plugin.TValue[[]any]
@@ -152165,6 +152252,22 @@ func (c *mqlAwsDocumentdbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
@@ -161704,6 +161807,7 @@ type mqlAwsMemorydbCluster struct {
 	Region                  plugin.TValue[string]
 	Tags                    plugin.TValue[map[string]any]
 	SecurityGroups          plugin.TValue[[]any]
+	Exposure                plugin.TValue[*mqlAwsNetworkExposure]
 }
 
 // createAwsMemorydbCluster creates a new instance of this resource
@@ -161845,6 +161949,22 @@ func (c *mqlAwsMemorydbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsMemorydbCluster) GetExposure() *plugin.TValue[*mqlAwsNetworkExposure] {
+	return plugin.GetOrCompute[*mqlAwsNetworkExposure](&c.Exposure, func() (*mqlAwsNetworkExposure, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb.cluster", c.__id, "exposure")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkExposure), nil
+			}
+		}
+
+		return c.exposure()
 	})
 }
 
