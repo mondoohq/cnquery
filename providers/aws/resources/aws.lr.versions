@@ -614,6 +614,7 @@ aws.appstream.session.fleetName 13.20.1
 aws.appstream.session.id 13.20.1
 aws.appstream.session.instanceId 13.20.1
 aws.appstream.session.maxExpirationTime 13.20.1
+aws.appstream.session.networkInterface 13.41.1
 aws.appstream.session.region 13.20.1
 aws.appstream.session.stack 13.20.1
 aws.appstream.session.stackName 13.20.1
@@ -1668,6 +1669,7 @@ aws.cloudhsm.hsm.eniId 13.28.1
 aws.cloudhsm.hsm.eniIp 13.28.1
 aws.cloudhsm.hsm.hsmId 13.28.1
 aws.cloudhsm.hsm.hsmType 13.28.1
+aws.cloudhsm.hsm.networkInterface 13.41.1
 aws.cloudhsm.hsm.state 13.28.1
 aws.cloudhsm.hsm.stateMessage 13.28.1
 aws.cloudhsm.hsm.subnet 13.28.1
@@ -4014,6 +4016,7 @@ aws.efs.mountTarget.fileSystemId 11.15.2
 aws.efs.mountTarget.ipAddress 11.15.2
 aws.efs.mountTarget.lifecycleState 11.15.2
 aws.efs.mountTarget.mountTargetId 11.15.2
+aws.efs.mountTarget.networkInterface 13.41.1
 aws.efs.mountTarget.networkInterfaceId 11.15.2
 aws.efs.mountTarget.region 11.15.2
 aws.efs.mountTarget.securityGroups 11.15.2
@@ -9990,6 +9993,7 @@ aws.vpc.natgateway 11.15.2
 aws.vpc.natgateway.address 11.15.2
 aws.vpc.natgateway.address.allocationId 11.15.2
 aws.vpc.natgateway.address.isPrimary 11.15.2
+aws.vpc.natgateway.address.networkInterface 13.41.1
 aws.vpc.natgateway.address.networkInterfaceId 11.15.2
 aws.vpc.natgateway.address.privateIp 11.15.2
 aws.vpc.natgateway.address.publicIp 11.15.2
@@ -10048,6 +10052,7 @@ aws.vpc.routetable.route.instanceId 11.15.2
 aws.vpc.routetable.route.instanceOwnerId 11.15.2
 aws.vpc.routetable.route.localGatewayId 11.15.2
 aws.vpc.routetable.route.natGatewayId 11.15.2
+aws.vpc.routetable.route.networkInterface 13.41.1
 aws.vpc.routetable.route.networkInterfaceId 11.15.2
 aws.vpc.routetable.route.origin 11.15.2
 aws.vpc.routetable.route.state 11.15.2

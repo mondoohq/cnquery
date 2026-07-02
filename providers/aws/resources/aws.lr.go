@@ -5037,6 +5037,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routetable.route.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetNetworkInterfaceId()).ToDataRes(types.String)
 	},
+	"aws.vpc.routetable.route.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
+	},
 	"aws.vpc.routetable.route.natGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetNatGatewayId()).ToDataRes(types.String)
 	},
@@ -6218,6 +6221,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"aws.efs.mountTarget.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsMountTarget).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
 	},
 	"aws.efs.mountTarget.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetRegion()).ToDataRes(types.String)
@@ -15726,6 +15732,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudhsm.hsm.eniId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudhsmHsm).GetEniId()).ToDataRes(types.String)
 	},
+	"aws.cloudhsm.hsm.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmHsm).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
+	},
 	"aws.cloudhsm.hsm.eniIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudhsmHsm).GetEniIp()).ToDataRes(types.String)
 	},
@@ -21534,6 +21543,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.natgateway.address.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgatewayAddress).GetNetworkInterfaceId()).ToDataRes(types.String)
 	},
+	"aws.vpc.natgateway.address.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
+	},
 	"aws.vpc.natgateway.address.privateIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgatewayAddress).GetPrivateIp()).ToDataRes(types.String)
 	},
@@ -25949,6 +25961,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appstream.session.eniId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamSession).GetEniId()).ToDataRes(types.String)
+	},
+	"aws.appstream.session.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamSession).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
 	},
 	"aws.appstream.session.eniPrivateIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamSession).GetEniPrivateIpAddress()).ToDataRes(types.String)
@@ -34362,6 +34377,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcRoutetableRoute).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.route.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.route.natGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).NatGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -36144,6 +36163,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.mountTarget.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsMountTarget).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.mountTarget.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsMountTarget).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
 		return
 	},
 	"aws.efs.mountTarget.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50094,6 +50117,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudhsmHsm).EniId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudhsm.hsm.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmHsm).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
+		return
+	},
 	"aws.cloudhsm.hsm.eniIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudhsmHsm).EniIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -58462,6 +58489,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcNatgatewayAddress).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.natgateway.address.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.natgateway.address.privateIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcNatgatewayAddress).PrivateIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -64832,6 +64863,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appstream.session.eniId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamSession).EniId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.session.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamSession).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.session.eniPrivateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77876,6 +77911,7 @@ type mqlAwsVpcRoutetableRoute struct {
 	InstanceId                  plugin.TValue[string]
 	InstanceOwnerId             plugin.TValue[string]
 	NetworkInterfaceId          plugin.TValue[string]
+	NetworkInterface            plugin.TValue[*mqlAwsEc2Networkinterface]
 	NatGatewayId                plugin.TValue[string]
 	TransitGatewayId            plugin.TValue[string]
 	VpcPeeringConnectionId      plugin.TValue[string]
@@ -77954,6 +77990,22 @@ func (c *mqlAwsVpcRoutetableRoute) GetInstanceOwnerId() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcRoutetableRoute) GetNetworkInterfaceId() *plugin.TValue[string] {
 	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsVpcRoutetableRoute) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
 }
 
 func (c *mqlAwsVpcRoutetableRoute) GetNatGatewayId() *plugin.TValue[string] {
@@ -82685,6 +82737,7 @@ type mqlAwsEfsMountTarget struct {
 	SecurityGroups     plugin.TValue[[]any]
 	LifecycleState     plugin.TValue[string]
 	NetworkInterfaceId plugin.TValue[string]
+	NetworkInterface   plugin.TValue[*mqlAwsEc2Networkinterface]
 	Region             plugin.TValue[string]
 }
 
@@ -82778,6 +82831,22 @@ func (c *mqlAwsEfsMountTarget) GetLifecycleState() *plugin.TValue[string] {
 
 func (c *mqlAwsEfsMountTarget) GetNetworkInterfaceId() *plugin.TValue[string] {
 	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsEfsMountTarget) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.mountTarget", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
 }
 
 func (c *mqlAwsEfsMountTarget) GetRegion() *plugin.TValue[string] {
@@ -120001,6 +120070,7 @@ type mqlAwsCloudhsmHsm struct {
 	AvailabilityZone plugin.TValue[string]
 	HsmType          plugin.TValue[string]
 	EniId            plugin.TValue[string]
+	NetworkInterface plugin.TValue[*mqlAwsEc2Networkinterface]
 	EniIp            plugin.TValue[string]
 	Subnet           plugin.TValue[*mqlAwsVpcSubnet]
 }
@@ -120063,6 +120133,22 @@ func (c *mqlAwsCloudhsmHsm) GetHsmType() *plugin.TValue[string] {
 
 func (c *mqlAwsCloudhsmHsm) GetEniId() *plugin.TValue[string] {
 	return &c.EniId
+}
+
+func (c *mqlAwsCloudhsmHsm) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudhsm.hsm", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
 }
 
 func (c *mqlAwsCloudhsmHsm) GetEniIp() *plugin.TValue[string] {
@@ -140821,6 +140907,7 @@ type mqlAwsVpcNatgatewayAddress struct {
 	mqlAwsVpcNatgatewayAddressInternal
 	AllocationId       plugin.TValue[string]
 	NetworkInterfaceId plugin.TValue[string]
+	NetworkInterface   plugin.TValue[*mqlAwsEc2Networkinterface]
 	PrivateIp          plugin.TValue[string]
 	PublicIp           plugin.TValue[*mqlAwsEc2Eip]
 	IsPrimary          plugin.TValue[bool]
@@ -140869,6 +140956,22 @@ func (c *mqlAwsVpcNatgatewayAddress) GetAllocationId() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcNatgatewayAddress) GetNetworkInterfaceId() *plugin.TValue[string] {
 	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.natgateway.address", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
 }
 
 func (c *mqlAwsVpcNatgatewayAddress) GetPrivateIp() *plugin.TValue[string] {
@@ -156170,6 +156273,7 @@ type mqlAwsAppstreamSession struct {
 	StartTime           plugin.TValue[*time.Time]
 	MaxExpirationTime   plugin.TValue[*time.Time]
 	EniId               plugin.TValue[string]
+	NetworkInterface    plugin.TValue[*mqlAwsEc2Networkinterface]
 	EniPrivateIpAddress plugin.TValue[string]
 	Region              plugin.TValue[string]
 }
@@ -156285,6 +156389,22 @@ func (c *mqlAwsAppstreamSession) GetMaxExpirationTime() *plugin.TValue[*time.Tim
 
 func (c *mqlAwsAppstreamSession) GetEniId() *plugin.TValue[string] {
 	return &c.EniId
+}
+
+func (c *mqlAwsAppstreamSession) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.session", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
 }
 
 func (c *mqlAwsAppstreamSession) GetEniPrivateIpAddress() *plugin.TValue[string] {

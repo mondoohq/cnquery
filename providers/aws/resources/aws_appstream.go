@@ -1153,3 +1153,17 @@ func (a *mqlAwsAppstreamSession) stack() (*mqlAwsAppstreamStack, error) {
 	}
 	return res.(*mqlAwsAppstreamStack), nil
 }
+
+func (a *mqlAwsAppstreamSession) networkInterface() (*mqlAwsEc2Networkinterface, error) {
+	eniId := a.EniId.Data
+	if eniId == "" {
+		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+		map[string]*llx.RawData{"id": llx.StringData(eniId), "region": llx.StringData(a.Region.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Networkinterface), nil
+}

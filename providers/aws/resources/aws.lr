@@ -420,7 +420,11 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // ID of the Amazon Web Services account that owns the instance
   instanceOwnerId string
   // ID of the network interface
-  networkInterfaceId string
+  //
+  // Deprecated in favor of `networkInterface`.
+  networkInterfaceId @maturity("deprecated") string
+  // Network interface a route sends traffic to
+  networkInterface() aws.ec2.networkinterface
   // ID of a NAT gateway
   natGatewayId string
   // ID of a transit gateway
@@ -1491,7 +1495,11 @@ private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
   // Mount target state (creating, available, deleting)
   lifecycleState string
   // Network interface ID
-  networkInterfaceId string
+  //
+  // Deprecated in favor of `networkInterface`.
+  networkInterfaceId @maturity("deprecated") string
+  // Network interface the mount target uses
+  networkInterface() aws.ec2.networkinterface
   // Region where the mount target exists
   region string
 }
@@ -10051,7 +10059,11 @@ private aws.cloudhsm.hsm @defaults("hsmId state availabilityZone") {
   // HSM instance type
   hsmType string
   // ID of the elastic network interface attached to the HSM
-  eniId string
+  //
+  // Deprecated in favor of `networkInterface`.
+  eniId @maturity("deprecated") string
+  // Elastic network interface attached to the HSM
+  networkInterface() aws.ec2.networkinterface
   // Private IP address of the HSM's elastic network interface
   eniIp string
   // Subnet the HSM runs in
@@ -15299,7 +15311,11 @@ private aws.vpc.natgateway.address {
   // Allocation ID for the address
   allocationId string
   // Network interface ID for the address
-  networkInterfaceId string
+  //
+  // Deprecated in favor of `networkInterface`.
+  networkInterfaceId @maturity("deprecated") string
+  // Network interface associated with the address
+  networkInterface() aws.ec2.networkinterface
   // Private IP associated with the address
   privateIp string
   // EIP associated with the address
@@ -19026,7 +19042,11 @@ private aws.appstream.session @defaults("id userId state fleetName stackName") {
   // Time when the session is set to expire (per the fleet's max-user-duration)
   maxExpirationTime time
   // ENI ID for the session network access (VPC-enabled fleets only)
-  eniId string
+  //
+  // Deprecated in favor of `networkInterface`.
+  eniId @maturity("deprecated") string
+  // Network interface for the session network access (VPC-enabled fleets only)
+  networkInterface() aws.ec2.networkinterface
   // Private IP address attached to the session ENI (VPC-enabled fleets only)
   eniPrivateIpAddress string
   // Region where the session exists
