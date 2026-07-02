@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -402,8 +403,43 @@ func (a *mqlAwsSecretsmanagerSecret) versions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlVersion.(*mqlAwsSecretsmanagerSecretVersion).region = region
+			mqlVersion.(*mqlAwsSecretsmanagerSecretVersion).accountID = conn.AccountId()
 			res = append(res, mqlVersion)
 		}
+	}
+	return res, nil
+}
+
+type mqlAwsSecretsmanagerSecretVersionInternal struct {
+	region    string
+	accountID string
+}
+
+func (a *mqlAwsSecretsmanagerSecretVersion) kmsKeys() ([]any, error) {
+	res := []any{}
+	for _, idAny := range a.KmsKeyIds.Data {
+		keyID, ok := idAny.(string)
+		if !ok || keyID == "" {
+			continue
+		}
+		// Versions encrypted with the AWS-managed secrets manager key report the
+		// literal "DefaultEncryptionKey" sentinel rather than a resolvable key id.
+		if keyID == "DefaultEncryptionKey" {
+			continue
+		}
+		// KmsKeyIds may already be full ARNs or bare key ids; build an ARN from
+		// the version's region + account only when it isn't one already.
+		arnStr := keyID
+		if !strings.HasPrefix(keyID, "arn:") {
+			arnStr = fmt.Sprintf(kmsKeyArnPattern, a.region, a.accountID, keyID)
+		}
+		mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+			map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlKey)
 	}
 	return res, nil
 }

@@ -12696,6 +12696,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.version.kmsKeyIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecretVersion).GetKmsKeyIds()).ToDataRes(types.Array(types.String))
 	},
+	"aws.secretsmanager.secret.version.kmsKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretVersion).GetKmsKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
+	},
 	"aws.secretsmanager.secret.rotationRules.automaticallyAfterDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecretRotationRules).GetAutomaticallyAfterDays()).ToDataRes(types.Int)
 	},
@@ -45635,6 +45638,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.version.kmsKeyIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecretVersion).KmsKeyIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.version.kmsKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretVersion).KmsKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.rotationRules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -107604,12 +107611,13 @@ func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetLastAccessedDate() *plugin.
 type mqlAwsSecretsmanagerSecretVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSecretsmanagerSecretVersionInternal it will be used here
+	mqlAwsSecretsmanagerSecretVersionInternal
 	VersionId        plugin.TValue[string]
 	VersionStages    plugin.TValue[[]any]
 	CreatedDate      plugin.TValue[*time.Time]
 	LastAccessedDate plugin.TValue[*time.Time]
 	KmsKeyIds        plugin.TValue[[]any]
+	KmsKeys          plugin.TValue[[]any]
 }
 
 // createAwsSecretsmanagerSecretVersion creates a new instance of this resource
@@ -107662,6 +107670,22 @@ func (c *mqlAwsSecretsmanagerSecretVersion) GetLastAccessedDate() *plugin.TValue
 
 func (c *mqlAwsSecretsmanagerSecretVersion) GetKmsKeyIds() *plugin.TValue[[]any] {
 	return &c.KmsKeyIds
+}
+
+func (c *mqlAwsSecretsmanagerSecretVersion) GetKmsKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KmsKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret.version", c.__id, "kmsKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kmsKeys()
+	})
 }
 
 // mqlAwsSecretsmanagerSecretRotationRules for the aws.secretsmanager.secret.rotationRules resource

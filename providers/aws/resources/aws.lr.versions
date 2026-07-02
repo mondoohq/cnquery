@@ -9213,6 +9213,7 @@ aws.secretsmanager.secret.type 13.12.1
 aws.secretsmanager.secret.version 13.12.1
 aws.secretsmanager.secret.version.createdDate 13.12.1
 aws.secretsmanager.secret.version.kmsKeyIds 13.12.1
+aws.secretsmanager.secret.version.kmsKeys 13.41.1
 aws.secretsmanager.secret.version.lastAccessedDate 13.12.1
 aws.secretsmanager.secret.version.versionId 13.12.1
 aws.secretsmanager.secret.version.versionStages 13.12.1

@@ -7123,6 +7123,8 @@ private aws.secretsmanager.secret.version @defaults("versionId versionStages") {
   lastAccessedDate time
   // KMS key IDs used to encrypt this version
   kmsKeyIds []string
+  // KMS keys used to encrypt this version
+  kmsKeys() []aws.kms.key
 }
 
 // AWS Secrets Manager secret rotation rules configuration
