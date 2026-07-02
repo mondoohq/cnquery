@@ -124,7 +124,7 @@ func TestFileExistsSharesStatMetadataLoad(t *testing.T) {
 	require.NoError(t, size.Error)
 
 	assert.Equal(t, 1, countRecordedCommands(conn.runner.commands, "sudo uname -s"))
-	assert.Equal(t, 1, countRecordedCommands(conn.runner.commands, `sudo SL=0; test -L /etc/ssh/sshd_config && SL=1; test -e /etc/ssh/sshd_config -o $SL -eq 1 || exit 1; stat -L /etc/ssh/sshd_config -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null || stat /etc/ssh/sshd_config -c "$SL.%s.%f.%u.%g.%X.%Y.%C"`))
+	assert.Equal(t, 1, countRecordedCommands(conn.runner.commands, `sudo sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) && printf "%s\n" "$r" || { [ -n "$r" ] && printf "%s\n" "$r" || stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }' _ /etc/ssh/sshd_config`))
 }
 
 func countRecordedCommands(commands []string, target string) int {

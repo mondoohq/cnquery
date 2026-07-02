@@ -29,7 +29,7 @@ func shellSingleQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
-func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64) string {
+func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, permission int64, search string, depth *int64, hasGNUFind bool) string {
 	var call strings.Builder
 
 	isLinkSearch := false
@@ -39,11 +39,10 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 		}
 	}
 
-	// -L follows all symlinks, so -type l only matches dangling ones.
-	// -xtype l fixes that on GNU find but is absent on BSD (macOS).
-	// -H follows only command-line symlinks (resolving the start path)
-	// while keeping -type l functional for discovered symlinks.
-	if isLinkSearch {
+	// GNU find: -L -xtype l follows all symlinks AND finds symlinks.
+	// BSD find: -xtype is absent; fall back to -H -type l which
+	// follows only the start path but still detects symlinks.
+	if isLinkSearch && !hasGNUFind {
 		call.WriteString("find -H ")
 	} else {
 		call.WriteString("find -L ")
@@ -57,7 +56,11 @@ func BuildFilesFindCmd(from string, xdev bool, fileType string, regex string, pe
 	if fileType != "" {
 		t, ok := findTypes[fileType]
 		if ok {
-			call.WriteString(" -type " + t)
+			if t == "l" && hasGNUFind {
+				call.WriteString(" -xtype " + t)
+			} else {
+				call.WriteString(" -type " + t)
+			}
 		}
 	}
 

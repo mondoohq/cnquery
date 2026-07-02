@@ -99,7 +99,7 @@ func TestPamConfPrefersPamDirOverPamConf(t *testing.T) {
 	// When /etc/pam.d exists, Linux-PAM ignores /etc/pam.conf entirely. Our
 	// parsing must do the same: only the pam.d files are read, and a service
 	// defined only in /etc/pam.conf must not appear.
-	findCmd := filesfind.BuildFilesFindCmd(defaultPamDir, false, "file", "", 0, "", nil)
+	findCmd := filesfind.BuildFilesFindCmd(defaultPamDir, false, "file", "", 0, "", nil, true)
 	conn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux", "unix"}},
 	}, mock.WithData(&mock.TomlData{

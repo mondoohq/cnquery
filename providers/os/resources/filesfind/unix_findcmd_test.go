@@ -20,6 +20,7 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 		Permission  int64
 		Search      string
 		Depth       *int64
+		HasGNUFind  bool
 		ExpectedCmd string
 	}{
 		{
@@ -71,17 +72,24 @@ func TestUnixFilesCmdGeneration(t *testing.T) {
 			ExpectedCmd: "find -L \"/etc\" -xdev -type f -regex '.*\\.conf$' -perm -0",
 		},
 		{
-			// -H follows only command-line symlinks so -type l still works,
-			// unlike -L which resolves all links (breaking -type l) and
-			// -xtype l which is GNU-only (absent on BSD/macOS find).
+			// BSD/macOS: -H follows only command-line symlinks so -type l
+			// still works, unlike -L which resolves all links.
 			From:        "/home/user",
 			FileType:    "link",
+			HasGNUFind:  false,
 			ExpectedCmd: "find -H \"/home/user\" -xdev -type l -perm -0",
+		},
+		{
+			// GNU/Linux: -L -xtype l follows all symlinks AND finds them.
+			From:        "/home/user",
+			FileType:    "link",
+			HasGNUFind:  true,
+			ExpectedCmd: "find -L \"/home/user\" -xdev -xtype l -perm -0",
 		},
 	}
 
 	for _, tt := range tests {
-		cmd := BuildFilesFindCmd(tt.From, tt.Xdev, tt.FileType, tt.Regex, tt.Permission, tt.Search, tt.Depth)
+		cmd := BuildFilesFindCmd(tt.From, tt.Xdev, tt.FileType, tt.Regex, tt.Permission, tt.Search, tt.Depth, tt.HasGNUFind)
 		assert.Equal(t, tt.ExpectedCmd, cmd)
 	}
 }

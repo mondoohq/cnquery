@@ -85,31 +85,28 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// Single compound command: detect symlink, verify existence, and stat
 	// in one round-trip. SL=1 if symlink, 0 otherwise. Falls back to
 	// stat without -L for dangling symlinks whose target doesn't exist.
+	// Wrapped in sh -c with the path as $1 so sudo can apply to the
+	// entire compound command as a single sh invocation.
+	//
+	// The %C (SELinux context) format can make stat exit non-zero even
+	// though it produced valid output. To prevent the || fallback from
+	// firing on that false failure, the first stat is wrapped in a
+	// subshell that captures output and only falls through when stdout
+	// is empty (i.e. a genuine failure like a dangling symlink target).
 	var sb strings.Builder
-	sb.WriteString("SL=0; test -L ")
+	sb.WriteString(`sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) && printf "%s\n" "$r" || { [ -n "$r" ] && printf "%s\n" "$r" || stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }' _ `)
 	sb.WriteString(path)
-	sb.WriteString(" && SL=1; test -e ")
-	sb.WriteString(path)
-	sb.WriteString(` -o $SL -eq 1 || exit 1; stat -L `)
-	sb.WriteString(path)
-	sb.WriteString(` -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null || stat `)
-	sb.WriteString(path)
-	sb.WriteString(` -c "$SL.%s.%f.%u.%g.%X.%Y.%C"`)
 
-	// NOTE: handling the exit code here does not work for all cases
-	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
-	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
+	// NOTE: stat may exit non-zero when it cannot get the SELinux context,
+	// even though the output is valid. Do not check exit status here.
 	command := sb.String()
 	cmd, err := s.commandRunner.RunCommand(command)
-
-	// we get stderr content in cases where we could not gather the security context via failed to get security context of
-	// it could also include: No such file or directory
 	if err != nil {
 		log.Debug().Str("path", path).Str("command", command).Err(err).Send()
 	}
 
-	if cmd == nil || cmd.ExitStatus != 0 {
-		return nil, os.ErrNotExist
+	if cmd == nil {
+		return nil, errors.New("could not parse file stat: " + path)
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
@@ -118,8 +115,16 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	}
 
 	// Output format: SL.size.mode.uid.gid.atime.mtime.selinux
-	// where SL is 1 (symlink) or 0 (not a symlink)
-	statsData := strings.Split(strings.TrimSpace(string(data)), ".")
+	// where SL is 1 (symlink) or 0 (not a symlink).
+	// Take only the first line in case stderr leaked into the output.
+	output := strings.TrimSpace(string(data))
+	if output == "" {
+		return nil, os.ErrNotExist
+	}
+	if idx := strings.IndexByte(output, '\n'); idx >= 0 {
+		output = output[:idx]
+	}
+	statsData := strings.Split(output, ".")
 	if len(statsData) != 8 {
 		log.Debug().Str("path", path).Msg("could not parse file stat information")
 		return nil, errors.New("could not parse file stat: " + path)
@@ -176,11 +181,10 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 
 	// Single compound command: detect symlink and stat in one round-trip.
 	// SL=1 if symlink, 0 otherwise. Prepended to the output as the first
-	// colon-separated field.
+	// colon-separated field. Wrapped in sh -c for sudo compatibility.
+	// Falls back to stat without -L for dangling symlinks.
 	var sb strings.Builder
-	sb.WriteString("SL=0; test -L ")
-	sb.WriteString(path)
-	sb.WriteString(` && SL=1; stat -L -f "$SL:%z:%p:%u:%g:%a:%m" `)
+	sb.WriteString(`sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; stat -L -f "$SL:%z:%p:%u:%g:%a:%m" "$1" 2>/dev/null || stat -f "$SL:%z:%p:%u:%g:%a:%m" "$1"' _ `)
 	sb.WriteString(path)
 
 	cmd, err := s.commandRunner.RunCommand(sb.String())
@@ -262,7 +266,8 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 	//10 ctime    inode change time (NOT creation time!) since the epoch
 	//11 blksize  preferred block size for file system I/O
 	//12 blocks   actual number of blocks allocated
-	script := `perl -e '$p = shift; $l = -l $p ? 1 : 0; @a = stat($p) or exit 2; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("%d:0%o:%s:%d:%s:%d:%d:%d", $l, $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
+	// perl stat() follows symlinks; lstat() fallback handles dangling symlinks
+	script := `perl -e '$p = shift; $l = -l $p ? 1 : 0; @a = stat($p); @a = lstat($p) if !@a && $l; exit 2 if !@a; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("%d:0%o:%s:%d:%s:%d:%d:%d", $l, $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
 	sb.WriteString(script)
 	sb.WriteString(" ")
 	sb.WriteString(path)
