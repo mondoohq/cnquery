@@ -3921,6 +3921,7 @@ aws.ecs.taskDefinition.volume.efsVolumeConfiguration 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.accessPointId 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig.iam 11.15.2
+aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystem 13.41.1
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory 11.15.2
 aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryption 11.15.2

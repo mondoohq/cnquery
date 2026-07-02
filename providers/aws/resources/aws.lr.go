@@ -13485,6 +13485,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetFileSystemId()).ToDataRes(types.String)
 	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetFileSystem()).ToDataRes(types.Resource("aws.efs.filesystem"))
+	},
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetRootDirectory()).ToDataRes(types.String)
 	},
@@ -46783,6 +46786,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).FileSystem, ok = plugin.RawToTValue[*mqlAwsEfsFilesystem](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -110540,8 +110547,9 @@ func (c *mqlAwsEcsTaskDefinitionVolume) GetS3filesVolumeConfiguration() *plugin.
 type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal it will be used here
+	mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal
 	FileSystemId          plugin.TValue[string]
+	FileSystem            plugin.TValue[*mqlAwsEfsFilesystem]
 	RootDirectory         plugin.TValue[string]
 	TransitEncryption     plugin.TValue[string]
 	TransitEncryptionPort plugin.TValue[int64]
@@ -110587,6 +110595,22 @@ func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) MqlID() string {
 
 func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetFileSystemId() *plugin.TValue[string] {
 	return &c.FileSystemId
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetFileSystem() *plugin.TValue[*mqlAwsEfsFilesystem] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystem](&c.FileSystem, func() (*mqlAwsEfsFilesystem, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume.efsVolumeConfiguration", c.__id, "fileSystem")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystem), nil
+			}
+		}
+
+		return c.fileSystem()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) GetRootDirectory() *plugin.TValue[string] {

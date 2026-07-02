@@ -922,7 +922,7 @@ func createTaskDefinitionResource(runtime *plugin.Runtime, region string, td *ec
 	// Create volumes
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(runtime, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(runtime, region, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1218,7 +1218,7 @@ func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn strin
 		})
 }
 
-func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, error) {
+func createVolumeResource(runtime *plugin.Runtime, region string, vol *ecstypes.Volume) (any, error) {
 	volName := ""
 	if vol.Name != nil {
 		volName = *vol.Name
@@ -1291,6 +1291,7 @@ func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, e
 		if err != nil {
 			return nil, err
 		}
+		mqlEfsConfig.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).region = region
 		efsVolConfig = mqlEfsConfig
 	} else {
 		// Create empty EFS config
@@ -1781,7 +1782,7 @@ func (a *mqlAwsEcsTaskDefinition) volumes() ([]any, error) {
 	}
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := createVolumeResource(a.MqlRuntime, &td.Volumes[i])
+		mqlVolume, err := createVolumeResource(a.MqlRuntime, a.Region.Data, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1936,8 +1937,28 @@ func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) authorizationConfi
 	return a.AuthorizationConfig.Data, nil
 }
 
+type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal struct {
+	region string
+}
+
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) id() (string, error) {
 	return a.__id, nil
+}
+
+func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) fileSystem() (*mqlAwsEfsFilesystem, error) {
+	fsID := a.FileSystemId.Data
+	if fsID == "" {
+		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(efsFilesystemArnPattern, a.region, conn.AccountId(), fsID)
+	res, err := NewResource(a.MqlRuntime, "aws.efs.filesystem",
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEfsFilesystem), nil
 }
 
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig) id() (string, error) {

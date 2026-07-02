@@ -7798,7 +7798,11 @@ private aws.ecs.taskDefinition.volume {
 // Amazon ECS Task Definition Volume EFS Configuration
 private aws.ecs.taskDefinition.volume.efsVolumeConfiguration {
   // ID of the EFS file system
-  fileSystemId string
+  //
+  // Deprecated in favor of `fileSystem`.
+  fileSystemId @maturity("deprecated") string
+  // EFS file system this volume mounts
+  fileSystem() aws.efs.filesystem
   // Directory within the EFS file system to mount
   rootDirectory string
   // Whether to enable encryption in transit (ENABLED, DISABLED)
