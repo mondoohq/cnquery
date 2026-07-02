@@ -307,7 +307,11 @@ gitlab.group @defaults("name visibility webURL") {
   // Whether forking projects outside this group is forbidden
   preventForkingOutsideGroup bool
   // Whether group email notifications are disabled
-  emailsDisabled bool
+  //
+  // Deprecated in favor of emailsEnabled.
+  emailsDisabled @maturity("deprecated") bool
+  // Whether group email notifications are enabled
+  emailsEnabled bool
   // Whether group mentions within issues and merge requests are disabled
   mentionsDisabled bool
   // Whether users can request membership to the group
@@ -322,6 +326,38 @@ gitlab.group @defaults("name visibility webURL") {
   allowedEmailDomainsList string
   // Whether the group has Large File Storage (LFS) enabled
   lfsEnabled bool
+  // Allowed IP address ranges (CIDR) for accessing the group; empty when unrestricted
+  ipRestrictionRanges string
+  // Groups this group is shared with and their access levels
+  //
+  // Each entry is a dict with groupId, groupName, groupFullPath, and
+  // groupAccessLevel keys.
+  sharedWithGroups []dict
+  // Whether sharing this group's projects with other groups is locked
+  shareWithGroupLock bool
+  // Shared-runner policy for the group (enabled, disabled_and_overridable, disabled_and_unoverridable)
+  sharedRunnersSetting string
+  // Minimum role that can create projects in the group (noone, maintainer, developer)
+  projectCreationLevel string
+  // Minimum role that can create subgroups in the group (owner, maintainer)
+  subGroupCreationLevel string
+  // Whether Auto DevOps is enabled by default for projects in the group
+  autoDevopsEnabled bool
+  // Visibility of the group wiki (disabled, private, enabled)
+  wikiAccessLevel string
+  // Default branch-protection policy inherited by new projects
+  //
+  // A dict with allowForcePush, developerCanInitialPush,
+  // codeOwnerApprovalRequired, allowedToPush, and allowedToMerge keys.
+  defaultBranchProtection dict
+  // Common Name of the LDAP group synced to this group; empty when none
+  ldapCn string
+  // Access level granted to members synced from the LDAP group
+  ldapAccess int
+  // LDAP group links mapping directory groups to access levels
+  //
+  // Each entry is a dict with cn, filter, provider, and groupAccess keys.
+  ldapGroupLinks []dict
   // List of members in the group with their roles
   members() []gitlab.member
   // Custom member roles defined in the group
@@ -500,7 +536,11 @@ gitlab.project @defaults("fullName visibility webURL") {
   // URL of the project
   webURL string
   // Whether project email notifications are disabled
-  emailsDisabled bool
+  //
+  // Deprecated in favor of emailsEnabled.
+  emailsDisabled @maturity("deprecated") bool
+  // Whether project email notifications are enabled
+  emailsEnabled bool
   // Whether merging merge requests is allowed when a pipeline is skipped
   allowMergeOnSkippedPipeline bool
   // Whether merging merge requests is allowed only if the pipelines succeed
@@ -508,15 +548,35 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Whether merging merge requests is allowed only if all discussions are resolved
   onlyAllowMergeIfAllDiscussionsAreResolved bool
   // Whether the issues feature is enabled
-  issuesEnabled bool
+  //
+  // Deprecated in favor of issuesAccessLevel.
+  issuesEnabled @maturity("deprecated") bool
+  // Visibility of the issues feature (disabled, private, enabled)
+  issuesAccessLevel string
   // Whether the merge request feature is enabled
-  mergeRequestsEnabled bool
+  //
+  // Deprecated in favor of mergeRequestsAccessLevel.
+  mergeRequestsEnabled @maturity("deprecated") bool
+  // Visibility of the merge requests feature (disabled, private, enabled)
+  mergeRequestsAccessLevel string
   // Whether the wiki feature is enabled
-  wikiEnabled bool
+  //
+  // Deprecated in favor of wikiAccessLevel.
+  wikiEnabled @maturity("deprecated") bool
+  // Visibility of the wiki feature (disabled, private, enabled)
+  wikiAccessLevel string
   // Whether the snippets feature is enabled
-  snippetsEnabled bool
+  //
+  // Deprecated in favor of snippetsAccessLevel.
+  snippetsEnabled @maturity("deprecated") bool
+  // Visibility of the snippets feature (disabled, private, enabled)
+  snippetsAccessLevel string
   // Whether the container registry feature is enabled
-  containerRegistryEnabled bool
+  //
+  // Deprecated in favor of containerRegistryAccessLevel.
+  containerRegistryEnabled @maturity("deprecated") bool
+  // Visibility of the container registry feature (disabled, private, enabled)
+  containerRegistryAccessLevel string
   // Whether the Service Desk feature is enabled
   serviceDeskEnabled bool
   // Whether the packages feature is enabled
@@ -525,6 +585,31 @@ gitlab.project @defaults("fullName visibility webURL") {
   autoDevopsEnabled bool
   // Whether the requirements feature is enabled
   requirementsEnabled bool
+  // Visibility of the repository (disabled, private, enabled)
+  repositoryAccessLevel string
+  // Who can fork the project (disabled, private, enabled)
+  forkingAccessLevel string
+  // Whether the Security & Compliance feature is enabled
+  securityAndComplianceEnabled bool
+  // Visibility of the Security & Compliance feature (disabled, private, enabled)
+  securityAndComplianceAccessLevel string
+  // Whether CI job tokens are scoped to an allowlist of projects
+  ciJobTokenScopeEnabled bool
+  // Whether job logs and artifacts are visible to non-members
+  publicJobs bool
+  // Whether server-side secret push protection is enabled
+  preReceiveSecretDetectionEnabled bool
+  // Compliance frameworks applied to the project
+  complianceFrameworks []string
+  // Groups the project is shared with and their access levels
+  //
+  // Each entry is a dict with groupId, groupName, groupFullPath, and
+  // groupAccessLevel keys.
+  sharedWithGroups []dict
+  // Whether mirrored branches trigger CI pipelines
+  mirrorTriggerBuilds bool
+  // Whether mirroring is limited to protected branches
+  onlyMirrorProtectedBranches bool
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
   // Merge methods for the project
@@ -540,7 +625,11 @@ gitlab.project @defaults("fullName visibility webURL") {
   // List of webhooks for the project
   webhooks() []gitlab.project.webhook
   // Whether CI jobs are enabled
-  jobsEnabled bool
+  //
+  // Deprecated in favor of buildsAccessLevel.
+  jobsEnabled @maturity("deprecated") bool
+  // Visibility of the CI/CD builds feature (disabled, private, enabled)
+  buildsAccessLevel string
   // Whether the repo is empty
   emptyRepo bool
   // Whether the project is enabled for shared runners

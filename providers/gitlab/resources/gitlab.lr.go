@@ -664,6 +664,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetEmailsDisabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.group.emailsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetEmailsEnabled()).ToDataRes(types.Bool)
+	},
 	"gitlab.group.mentionsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetMentionsDisabled()).ToDataRes(types.Bool)
 	},
@@ -684,6 +687,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.group.lfsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetLfsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.ipRestrictionRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetIpRestrictionRanges()).ToDataRes(types.String)
+	},
+	"gitlab.group.sharedWithGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetSharedWithGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"gitlab.group.shareWithGroupLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetShareWithGroupLock()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.sharedRunnersSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetSharedRunnersSetting()).ToDataRes(types.String)
+	},
+	"gitlab.group.projectCreationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetProjectCreationLevel()).ToDataRes(types.String)
+	},
+	"gitlab.group.subGroupCreationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetSubGroupCreationLevel()).ToDataRes(types.String)
+	},
+	"gitlab.group.autoDevopsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetAutoDevopsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.wikiAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetWikiAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.group.defaultBranchProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetDefaultBranchProtection()).ToDataRes(types.Dict)
+	},
+	"gitlab.group.ldapCn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetLdapCn()).ToDataRes(types.String)
+	},
+	"gitlab.group.ldapAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetLdapAccess()).ToDataRes(types.Int)
+	},
+	"gitlab.group.ldapGroupLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetLdapGroupLinks()).ToDataRes(types.Array(types.Dict))
 	},
 	"gitlab.group.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetMembers()).ToDataRes(types.Array(types.Resource("gitlab.member")))
@@ -895,6 +934,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetEmailsDisabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.emailsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetEmailsEnabled()).ToDataRes(types.Bool)
+	},
 	"gitlab.project.allowMergeOnSkippedPipeline": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetAllowMergeOnSkippedPipeline()).ToDataRes(types.Bool)
 	},
@@ -907,17 +949,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.issuesEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetIssuesEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.issuesAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetIssuesAccessLevel()).ToDataRes(types.String)
+	},
 	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetMergeRequestsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequestsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMergeRequestsAccessLevel()).ToDataRes(types.String)
 	},
 	"gitlab.project.wikiEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetWikiEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.wikiAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetWikiAccessLevel()).ToDataRes(types.String)
+	},
 	"gitlab.project.snippetsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetSnippetsEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.snippetsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSnippetsAccessLevel()).ToDataRes(types.String)
+	},
 	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetContainerRegistryEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.containerRegistryAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetContainerRegistryAccessLevel()).ToDataRes(types.String)
 	},
 	"gitlab.project.serviceDeskEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetServiceDeskEnabled()).ToDataRes(types.Bool)
@@ -930,6 +987,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.requirementsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetRequirementsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.repositoryAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetRepositoryAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.project.forkingAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetForkingAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.project.securityAndComplianceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSecurityAndComplianceEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.securityAndComplianceAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSecurityAndComplianceAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.project.ciJobTokenScopeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetCiJobTokenScopeEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.publicJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetPublicJobs()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.preReceiveSecretDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetPreReceiveSecretDetectionEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.complianceFrameworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetComplianceFrameworks()).ToDataRes(types.Array(types.String))
+	},
+	"gitlab.project.sharedWithGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSharedWithGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"gitlab.project.mirrorTriggerBuilds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMirrorTriggerBuilds()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.onlyMirrorProtectedBranches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetOnlyMirrorProtectedBranches()).ToDataRes(types.Bool)
 	},
 	"gitlab.project.approvalRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetApprovalRules()).ToDataRes(types.Array(types.Resource("gitlab.project.approvalRule")))
@@ -954,6 +1044,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.jobsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetJobsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.buildsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetBuildsAccessLevel()).ToDataRes(types.String)
 	},
 	"gitlab.project.emptyRepo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetEmptyRepo()).ToDataRes(types.Bool)
@@ -2623,6 +2716,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabGroup).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.group.emailsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).EmailsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.mentionsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).MentionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2649,6 +2746,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.lfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).LfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.ipRestrictionRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).IpRestrictionRanges, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.sharedWithGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).SharedWithGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.shareWithGroupLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).ShareWithGroupLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.sharedRunnersSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).SharedRunnersSetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.projectCreationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).ProjectCreationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.subGroupCreationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).SubGroupCreationLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.autoDevopsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).AutoDevopsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.wikiAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).WikiAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.defaultBranchProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).DefaultBranchProtection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.ldapCn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).LdapCn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.ldapAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).LdapAccess, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.ldapGroupLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).LdapGroupLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2947,6 +3092,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.emailsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).EmailsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.allowMergeOnSkippedPipeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).AllowMergeOnSkippedPipeline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2963,20 +3112,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).IssuesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.issuesAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).IssuesAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).MergeRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequestsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).MergeRequestsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.wikiEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).WikiEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.wikiAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).WikiAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.snippetsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).SnippetsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.snippetsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SnippetsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).ContainerRegistryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.containerRegistryAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ContainerRegistryAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.serviceDeskEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2993,6 +3162,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.requirementsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).RequirementsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.repositoryAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).RepositoryAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.forkingAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ForkingAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.securityAndComplianceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SecurityAndComplianceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.securityAndComplianceAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SecurityAndComplianceAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.ciJobTokenScopeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).CiJobTokenScopeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.publicJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).PublicJobs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.preReceiveSecretDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).PreReceiveSecretDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.complianceFrameworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ComplianceFrameworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.sharedWithGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SharedWithGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mirrorTriggerBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).MirrorTriggerBuilds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.onlyMirrorProtectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).OnlyMirrorProtectedBranches, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3025,6 +3238,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.jobsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).JobsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.buildsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).BuildsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.emptyRepo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5674,6 +5891,7 @@ type mqlGitlabGroup struct {
 	MembershipLock                 plugin.TValue[bool]
 	PreventForkingOutsideGroup     plugin.TValue[bool]
 	EmailsDisabled                 plugin.TValue[bool]
+	EmailsEnabled                  plugin.TValue[bool]
 	MentionsDisabled               plugin.TValue[bool]
 	RequestAccessEnabled           plugin.TValue[bool]
 	MarkedForDeletionOn            plugin.TValue[*time.Time]
@@ -5681,6 +5899,18 @@ type mqlGitlabGroup struct {
 	Projects                       plugin.TValue[[]any]
 	AllowedEmailDomainsList        plugin.TValue[string]
 	LfsEnabled                     plugin.TValue[bool]
+	IpRestrictionRanges            plugin.TValue[string]
+	SharedWithGroups               plugin.TValue[[]any]
+	ShareWithGroupLock             plugin.TValue[bool]
+	SharedRunnersSetting           plugin.TValue[string]
+	ProjectCreationLevel           plugin.TValue[string]
+	SubGroupCreationLevel          plugin.TValue[string]
+	AutoDevopsEnabled              plugin.TValue[bool]
+	WikiAccessLevel                plugin.TValue[string]
+	DefaultBranchProtection        plugin.TValue[any]
+	LdapCn                         plugin.TValue[string]
+	LdapAccess                     plugin.TValue[int64]
+	LdapGroupLinks                 plugin.TValue[[]any]
 	Members                        plugin.TValue[[]any]
 	MemberRoles                    plugin.TValue[[]any]
 	Subgroups                      plugin.TValue[[]any]
@@ -5789,6 +6019,10 @@ func (c *mqlGitlabGroup) GetEmailsDisabled() *plugin.TValue[bool] {
 	return &c.EmailsDisabled
 }
 
+func (c *mqlGitlabGroup) GetEmailsEnabled() *plugin.TValue[bool] {
+	return &c.EmailsEnabled
+}
+
 func (c *mqlGitlabGroup) GetMentionsDisabled() *plugin.TValue[bool] {
 	return &c.MentionsDisabled
 }
@@ -5839,6 +6073,54 @@ func (c *mqlGitlabGroup) GetAllowedEmailDomainsList() *plugin.TValue[string] {
 
 func (c *mqlGitlabGroup) GetLfsEnabled() *plugin.TValue[bool] {
 	return &c.LfsEnabled
+}
+
+func (c *mqlGitlabGroup) GetIpRestrictionRanges() *plugin.TValue[string] {
+	return &c.IpRestrictionRanges
+}
+
+func (c *mqlGitlabGroup) GetSharedWithGroups() *plugin.TValue[[]any] {
+	return &c.SharedWithGroups
+}
+
+func (c *mqlGitlabGroup) GetShareWithGroupLock() *plugin.TValue[bool] {
+	return &c.ShareWithGroupLock
+}
+
+func (c *mqlGitlabGroup) GetSharedRunnersSetting() *plugin.TValue[string] {
+	return &c.SharedRunnersSetting
+}
+
+func (c *mqlGitlabGroup) GetProjectCreationLevel() *plugin.TValue[string] {
+	return &c.ProjectCreationLevel
+}
+
+func (c *mqlGitlabGroup) GetSubGroupCreationLevel() *plugin.TValue[string] {
+	return &c.SubGroupCreationLevel
+}
+
+func (c *mqlGitlabGroup) GetAutoDevopsEnabled() *plugin.TValue[bool] {
+	return &c.AutoDevopsEnabled
+}
+
+func (c *mqlGitlabGroup) GetWikiAccessLevel() *plugin.TValue[string] {
+	return &c.WikiAccessLevel
+}
+
+func (c *mqlGitlabGroup) GetDefaultBranchProtection() *plugin.TValue[any] {
+	return &c.DefaultBranchProtection
+}
+
+func (c *mqlGitlabGroup) GetLdapCn() *plugin.TValue[string] {
+	return &c.LdapCn
+}
+
+func (c *mqlGitlabGroup) GetLdapAccess() *plugin.TValue[int64] {
+	return &c.LdapAccess
+}
+
+func (c *mqlGitlabGroup) GetLdapGroupLinks() *plugin.TValue[[]any] {
+	return &c.LdapGroupLinks
 }
 
 func (c *mqlGitlabGroup) GetMembers() *plugin.TValue[[]any] {
@@ -6515,18 +6797,35 @@ type mqlGitlabProject struct {
 	Mirror                                    plugin.TValue[bool]
 	WebURL                                    plugin.TValue[string]
 	EmailsDisabled                            plugin.TValue[bool]
+	EmailsEnabled                             plugin.TValue[bool]
 	AllowMergeOnSkippedPipeline               plugin.TValue[bool]
 	OnlyAllowMergeIfPipelineSucceeds          plugin.TValue[bool]
 	OnlyAllowMergeIfAllDiscussionsAreResolved plugin.TValue[bool]
 	IssuesEnabled                             plugin.TValue[bool]
+	IssuesAccessLevel                         plugin.TValue[string]
 	MergeRequestsEnabled                      plugin.TValue[bool]
+	MergeRequestsAccessLevel                  plugin.TValue[string]
 	WikiEnabled                               plugin.TValue[bool]
+	WikiAccessLevel                           plugin.TValue[string]
 	SnippetsEnabled                           plugin.TValue[bool]
+	SnippetsAccessLevel                       plugin.TValue[string]
 	ContainerRegistryEnabled                  plugin.TValue[bool]
+	ContainerRegistryAccessLevel              plugin.TValue[string]
 	ServiceDeskEnabled                        plugin.TValue[bool]
 	PackagesEnabled                           plugin.TValue[bool]
 	AutoDevopsEnabled                         plugin.TValue[bool]
 	RequirementsEnabled                       plugin.TValue[bool]
+	RepositoryAccessLevel                     plugin.TValue[string]
+	ForkingAccessLevel                        plugin.TValue[string]
+	SecurityAndComplianceEnabled              plugin.TValue[bool]
+	SecurityAndComplianceAccessLevel          plugin.TValue[string]
+	CiJobTokenScopeEnabled                    plugin.TValue[bool]
+	PublicJobs                                plugin.TValue[bool]
+	PreReceiveSecretDetectionEnabled          plugin.TValue[bool]
+	ComplianceFrameworks                      plugin.TValue[[]any]
+	SharedWithGroups                          plugin.TValue[[]any]
+	MirrorTriggerBuilds                       plugin.TValue[bool]
+	OnlyMirrorProtectedBranches               plugin.TValue[bool]
 	ApprovalRules                             plugin.TValue[[]any]
 	MergeMethod                               plugin.TValue[string]
 	ApprovalSettings                          plugin.TValue[*mqlGitlabProjectApprovalSetting]
@@ -6535,6 +6834,7 @@ type mqlGitlabProject struct {
 	ProjectFiles                              plugin.TValue[[]any]
 	Webhooks                                  plugin.TValue[[]any]
 	JobsEnabled                               plugin.TValue[bool]
+	BuildsAccessLevel                         plugin.TValue[string]
 	EmptyRepo                                 plugin.TValue[bool]
 	SharedRunnersEnabled                      plugin.TValue[bool]
 	GroupRunnersEnabled                       plugin.TValue[bool]
@@ -6657,6 +6957,10 @@ func (c *mqlGitlabProject) GetEmailsDisabled() *plugin.TValue[bool] {
 	return &c.EmailsDisabled
 }
 
+func (c *mqlGitlabProject) GetEmailsEnabled() *plugin.TValue[bool] {
+	return &c.EmailsEnabled
+}
+
 func (c *mqlGitlabProject) GetAllowMergeOnSkippedPipeline() *plugin.TValue[bool] {
 	return &c.AllowMergeOnSkippedPipeline
 }
@@ -6673,20 +6977,40 @@ func (c *mqlGitlabProject) GetIssuesEnabled() *plugin.TValue[bool] {
 	return &c.IssuesEnabled
 }
 
+func (c *mqlGitlabProject) GetIssuesAccessLevel() *plugin.TValue[string] {
+	return &c.IssuesAccessLevel
+}
+
 func (c *mqlGitlabProject) GetMergeRequestsEnabled() *plugin.TValue[bool] {
 	return &c.MergeRequestsEnabled
+}
+
+func (c *mqlGitlabProject) GetMergeRequestsAccessLevel() *plugin.TValue[string] {
+	return &c.MergeRequestsAccessLevel
 }
 
 func (c *mqlGitlabProject) GetWikiEnabled() *plugin.TValue[bool] {
 	return &c.WikiEnabled
 }
 
+func (c *mqlGitlabProject) GetWikiAccessLevel() *plugin.TValue[string] {
+	return &c.WikiAccessLevel
+}
+
 func (c *mqlGitlabProject) GetSnippetsEnabled() *plugin.TValue[bool] {
 	return &c.SnippetsEnabled
 }
 
+func (c *mqlGitlabProject) GetSnippetsAccessLevel() *plugin.TValue[string] {
+	return &c.SnippetsAccessLevel
+}
+
 func (c *mqlGitlabProject) GetContainerRegistryEnabled() *plugin.TValue[bool] {
 	return &c.ContainerRegistryEnabled
+}
+
+func (c *mqlGitlabProject) GetContainerRegistryAccessLevel() *plugin.TValue[string] {
+	return &c.ContainerRegistryAccessLevel
 }
 
 func (c *mqlGitlabProject) GetServiceDeskEnabled() *plugin.TValue[bool] {
@@ -6703,6 +7027,50 @@ func (c *mqlGitlabProject) GetAutoDevopsEnabled() *plugin.TValue[bool] {
 
 func (c *mqlGitlabProject) GetRequirementsEnabled() *plugin.TValue[bool] {
 	return &c.RequirementsEnabled
+}
+
+func (c *mqlGitlabProject) GetRepositoryAccessLevel() *plugin.TValue[string] {
+	return &c.RepositoryAccessLevel
+}
+
+func (c *mqlGitlabProject) GetForkingAccessLevel() *plugin.TValue[string] {
+	return &c.ForkingAccessLevel
+}
+
+func (c *mqlGitlabProject) GetSecurityAndComplianceEnabled() *plugin.TValue[bool] {
+	return &c.SecurityAndComplianceEnabled
+}
+
+func (c *mqlGitlabProject) GetSecurityAndComplianceAccessLevel() *plugin.TValue[string] {
+	return &c.SecurityAndComplianceAccessLevel
+}
+
+func (c *mqlGitlabProject) GetCiJobTokenScopeEnabled() *plugin.TValue[bool] {
+	return &c.CiJobTokenScopeEnabled
+}
+
+func (c *mqlGitlabProject) GetPublicJobs() *plugin.TValue[bool] {
+	return &c.PublicJobs
+}
+
+func (c *mqlGitlabProject) GetPreReceiveSecretDetectionEnabled() *plugin.TValue[bool] {
+	return &c.PreReceiveSecretDetectionEnabled
+}
+
+func (c *mqlGitlabProject) GetComplianceFrameworks() *plugin.TValue[[]any] {
+	return &c.ComplianceFrameworks
+}
+
+func (c *mqlGitlabProject) GetSharedWithGroups() *plugin.TValue[[]any] {
+	return &c.SharedWithGroups
+}
+
+func (c *mqlGitlabProject) GetMirrorTriggerBuilds() *plugin.TValue[bool] {
+	return &c.MirrorTriggerBuilds
+}
+
+func (c *mqlGitlabProject) GetOnlyMirrorProtectedBranches() *plugin.TValue[bool] {
+	return &c.OnlyMirrorProtectedBranches
 }
 
 func (c *mqlGitlabProject) GetApprovalRules() *plugin.TValue[[]any] {
@@ -6809,6 +7177,10 @@ func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]any] {
 
 func (c *mqlGitlabProject) GetJobsEnabled() *plugin.TValue[bool] {
 	return &c.JobsEnabled
+}
+
+func (c *mqlGitlabProject) GetBuildsAccessLevel() *plugin.TValue[string] {
+	return &c.BuildsAccessLevel
 }
 
 func (c *mqlGitlabProject) GetEmptyRepo() *plugin.TValue[bool] {

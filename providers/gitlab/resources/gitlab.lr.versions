@@ -37,8 +37,10 @@ gitlab.group.auditEvent.ipAddress 13.0.8
 gitlab.group.auditEvent.targetDetails 13.0.8
 gitlab.group.auditEvent.targetType 13.0.8
 gitlab.group.auditEvents 13.0.8
+gitlab.group.autoDevopsEnabled 13.3.9
 gitlab.group.containerRegistryRepositories 13.3.1
 gitlab.group.createdAt 9.0.1
+gitlab.group.defaultBranchProtection 13.3.9
 gitlab.group.deployToken 11.1.138
 gitlab.group.deployToken.expired 11.1.138
 gitlab.group.deployToken.expiresAt 11.1.138
@@ -50,9 +52,11 @@ gitlab.group.deployToken.username 11.1.138
 gitlab.group.deployTokens 11.1.138
 gitlab.group.description 9.0.0
 gitlab.group.emailsDisabled 9.0.1
+gitlab.group.emailsEnabled 13.3.9
 gitlab.group.fullName 11.1.129
 gitlab.group.fullPath 11.1.129
 gitlab.group.id 9.0.0
+gitlab.group.ipRestrictionRanges 13.3.9
 gitlab.group.label 11.1.129
 gitlab.group.label.closedIssuesCount 11.1.129
 gitlab.group.label.color 11.1.129
@@ -67,6 +71,9 @@ gitlab.group.label.priority 11.1.129
 gitlab.group.label.subscribed 11.1.129
 gitlab.group.label.textColor 11.1.129
 gitlab.group.labels 11.1.129
+gitlab.group.ldapAccess 13.3.9
+gitlab.group.ldapCn 13.3.9
+gitlab.group.ldapGroupLinks 13.3.9
 gitlab.group.lfsEnabled 11.1.129
 gitlab.group.markedForDeletionOn 11.1.129
 gitlab.group.memberRoles 13.3.9
@@ -78,6 +85,7 @@ gitlab.group.namespace 11.2.1
 gitlab.group.packages 13.3.1
 gitlab.group.path 9.0.0
 gitlab.group.preventForkingOutsideGroup 9.0.1
+gitlab.group.projectCreationLevel 13.3.9
 gitlab.group.projects 9.0.0
 gitlab.group.protectedBranch 11.1.138
 gitlab.group.protectedBranch.allowForcePush 11.1.138
@@ -113,11 +121,16 @@ gitlab.group.samlGroupLink.memberRoleId 13.0.8
 gitlab.group.samlGroupLink.name 13.0.8
 gitlab.group.samlGroupLink.provider 13.0.8
 gitlab.group.samlGroupLinks 13.0.8
+gitlab.group.shareWithGroupLock 13.3.9
+gitlab.group.sharedRunnersSetting 13.3.9
+gitlab.group.sharedWithGroups 13.3.9
+gitlab.group.subGroupCreationLevel 13.3.9
 gitlab.group.subgroups 11.1.129
 gitlab.group.twoFactorGracePeriod 13.0.8
 gitlab.group.visibility 9.0.0
 gitlab.group.vulnerabilities 13.3.1
 gitlab.group.webURL 9.0.1
+gitlab.group.wikiAccessLevel 13.3.9
 gitlab.member 11.1.129
 gitlab.member.accessLevel 13.3.9
 gitlab.member.createdAt 13.3.9
@@ -232,6 +245,8 @@ gitlab.project.auditEvent.targetType 13.3.9
 gitlab.project.auditEvents 13.3.9
 gitlab.project.autoDevopsEnabled 9.0.1
 gitlab.project.autocloseReferencedIssues 11.1.107
+gitlab.project.buildsAccessLevel 13.3.9
+gitlab.project.ciJobTokenScopeEnabled 13.3.9
 gitlab.project.codeowners 13.2.3
 gitlab.project.codeowners.content 13.2.3
 gitlab.project.codeowners.path 13.2.3
@@ -245,6 +260,7 @@ gitlab.project.codeowners.rule.pattern 13.2.3
 gitlab.project.codeowners.rule.required 13.2.3
 gitlab.project.codeowners.rule.section 13.2.3
 gitlab.project.codeowners.rules 13.2.3
+gitlab.project.complianceFrameworks 13.3.9
 gitlab.project.containerExpirationPolicy 13.3.1
 gitlab.project.containerExpirationPolicy.cadence 13.3.1
 gitlab.project.containerExpirationPolicy.enabled 13.3.1
@@ -253,6 +269,7 @@ gitlab.project.containerExpirationPolicy.nameRegexDelete 13.3.1
 gitlab.project.containerExpirationPolicy.nameRegexKeep 13.3.1
 gitlab.project.containerExpirationPolicy.nextRunAt 13.3.1
 gitlab.project.containerExpirationPolicy.olderThan 13.3.1
+gitlab.project.containerRegistryAccessLevel 13.3.9
 gitlab.project.containerRegistryEnabled 9.0.1
 gitlab.project.containerRegistryProtectionRule 13.3.1
 gitlab.project.containerRegistryProtectionRule.id 13.3.1
@@ -306,12 +323,14 @@ gitlab.project.deployToken.username 11.1.138
 gitlab.project.deployTokens 11.1.138
 gitlab.project.description 9.0.0
 gitlab.project.emailsDisabled 9.0.1
+gitlab.project.emailsEnabled 13.3.9
 gitlab.project.emptyRepo 11.1.36
 gitlab.project.file 11.1.13
 gitlab.project.file.content 11.1.13
 gitlab.project.file.name 11.1.13
 gitlab.project.file.path 11.1.13
 gitlab.project.file.type 11.1.13
+gitlab.project.forkingAccessLevel 13.3.9
 gitlab.project.forksCount 11.1.129
 gitlab.project.fullName 9.0.1
 gitlab.project.fullPath 13.3.1
@@ -333,6 +352,7 @@ gitlab.project.issue.title 11.1.129
 gitlab.project.issue.updatedAt 11.1.129
 gitlab.project.issue.webURL 11.1.129
 gitlab.project.issues 11.1.129
+gitlab.project.issuesAccessLevel 13.3.9
 gitlab.project.issuesEnabled 9.0.1
 gitlab.project.jobsEnabled 11.1.36
 gitlab.project.label 11.1.129
@@ -369,6 +389,7 @@ gitlab.project.mergeRequest.title 11.1.129
 gitlab.project.mergeRequest.updatedAt 11.1.129
 gitlab.project.mergeRequest.webURL 11.1.129
 gitlab.project.mergeRequests 11.1.129
+gitlab.project.mergeRequestsAccessLevel 13.3.9
 gitlab.project.mergeRequestsEnabled 9.0.1
 gitlab.project.milestone 11.1.129
 gitlab.project.milestone.createdAt 11.1.129
@@ -384,9 +405,11 @@ gitlab.project.milestone.title 11.1.129
 gitlab.project.milestone.updatedAt 11.1.129
 gitlab.project.milestones 11.1.129
 gitlab.project.mirror 9.0.1
+gitlab.project.mirrorTriggerBuilds 13.3.9
 gitlab.project.name 9.0.0
 gitlab.project.onlyAllowMergeIfAllDiscussionsAreResolved 9.0.1
 gitlab.project.onlyAllowMergeIfPipelineSucceeds 9.0.1
+gitlab.project.onlyMirrorProtectedBranches 13.3.9
 gitlab.project.package 13.3.1
 gitlab.project.package.createdAt 13.3.1
 gitlab.project.package.file 13.3.1
@@ -442,6 +465,7 @@ gitlab.project.pipeline.user 13.3.9
 gitlab.project.pipeline.webURL 11.1.130
 gitlab.project.pipeline.yamlErrors 13.3.9
 gitlab.project.pipelines 11.1.130
+gitlab.project.preReceiveSecretDetectionEnabled 13.3.9
 gitlab.project.projectFiles 11.1.13
 gitlab.project.projectMembers 11.1.129
 gitlab.project.protectedBranch 11.1.12
@@ -453,6 +477,7 @@ gitlab.project.protectedBranch.name 11.1.12
 gitlab.project.protectedBranch.pushAccessLevels 13.3.9
 gitlab.project.protectedBranch.unprotectAccessLevels 13.3.9
 gitlab.project.protectedBranches 11.1.12
+gitlab.project.publicJobs 13.3.9
 gitlab.project.pushRule 11.1.138
 gitlab.project.pushRule.authorEmailRegex 11.1.138
 gitlab.project.pushRule.branchNameRegex 11.1.138
@@ -479,6 +504,7 @@ gitlab.project.release.releasedAt 11.1.129
 gitlab.project.release.tagName 11.1.129
 gitlab.project.releases 11.1.129
 gitlab.project.removeSourceBranchAfterMerge 11.1.107
+gitlab.project.repositoryAccessLevel 13.3.9
 gitlab.project.requirementsEnabled 9.0.1
 gitlab.project.runner 11.1.130
 gitlab.project.runner.accessLevel 13.2.3
@@ -500,6 +526,8 @@ gitlab.project.runner.status 11.1.130
 gitlab.project.runner.tagList 13.2.3
 gitlab.project.runner.tokenExpiresAt 13.3.9
 gitlab.project.runners 11.1.130
+gitlab.project.securityAndComplianceAccessLevel 13.3.9
+gitlab.project.securityAndComplianceEnabled 13.3.9
 gitlab.project.securitySetting 11.1.138
 gitlab.project.securitySetting.autoFixContainerScanning 11.1.138
 gitlab.project.securitySetting.autoFixDAST 11.1.138
@@ -511,6 +539,8 @@ gitlab.project.securitySetting.secretPushProtectionEnabled 11.1.138
 gitlab.project.securitySettings 11.1.138
 gitlab.project.serviceDeskEnabled 9.0.1
 gitlab.project.sharedRunnersEnabled 11.1.36
+gitlab.project.sharedWithGroups 13.3.9
+gitlab.project.snippetsAccessLevel 13.3.9
 gitlab.project.snippetsEnabled 9.0.1
 gitlab.project.starCount 11.1.129
 gitlab.project.variable 11.1.129
@@ -585,6 +615,7 @@ gitlab.project.webhook.url 11.1.13
 gitlab.project.webhook.vulnerabilityEvents 13.0.8
 gitlab.project.webhook.wikiPageEvents 13.0.8
 gitlab.project.webhooks 11.1.13
+gitlab.project.wikiAccessLevel 13.3.9
 gitlab.project.wikiEnabled 9.0.1
 gitlab.protectedBranch.accessLevel 13.3.9
 gitlab.protectedBranch.accessLevel.accessLevel 13.3.9

@@ -89,7 +89,40 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"forksCount":                                llx.IntData(prj.ForksCount),
 		"starCount":                                 llx.IntData(prj.StarCount),
 		"lastActivityAt":                            llx.TimeDataPtr(prj.LastActivityAt),
+		"emailsEnabled":                             llx.BoolData(prj.EmailsEnabled),
+		"issuesAccessLevel":                         llx.StringData(string(prj.IssuesAccessLevel)),
+		"mergeRequestsAccessLevel":                  llx.StringData(string(prj.MergeRequestsAccessLevel)),
+		"wikiAccessLevel":                           llx.StringData(string(prj.WikiAccessLevel)),
+		"snippetsAccessLevel":                       llx.StringData(string(prj.SnippetsAccessLevel)),
+		"containerRegistryAccessLevel":              llx.StringData(string(prj.ContainerRegistryAccessLevel)),
+		"buildsAccessLevel":                         llx.StringData(string(prj.BuildsAccessLevel)),
+		"repositoryAccessLevel":                     llx.StringData(string(prj.RepositoryAccessLevel)),
+		"forkingAccessLevel":                        llx.StringData(string(prj.ForkingAccessLevel)),
+		"securityAndComplianceAccessLevel":          llx.StringData(string(prj.SecurityAndComplianceAccessLevel)),
+		"securityAndComplianceEnabled":              llx.BoolData(prj.SecurityAndComplianceEnabled),
+		"ciJobTokenScopeEnabled":                    llx.BoolData(prj.CIJobTokenScopeEnabled),
+		"publicJobs":                                llx.BoolData(prj.PublicJobs),
+		"preReceiveSecretDetectionEnabled":          llx.BoolData(prj.PreReceiveSecretDetectionEnabled),
+		"complianceFrameworks":                      llx.ArrayData(convert.SliceAnyToInterface(prj.ComplianceFrameworks), types.String),
+		"sharedWithGroups":                          llx.ArrayData(projectSharedGroupsToDicts(prj.SharedWithGroups), types.Dict),
+		"mirrorTriggerBuilds":                       llx.BoolData(prj.MirrorTriggerBuilds),
+		"onlyMirrorProtectedBranches":               llx.BoolData(prj.OnlyMirrorProtectedBranches),
 	}
+}
+
+// projectSharedGroupsToDicts flattens the groups a project is shared with into
+// queryable dicts (group identity + the access level granted to that group).
+func projectSharedGroupsToDicts(groups []gitlab.ProjectSharedWithGroup) []any {
+	out := make([]any, 0, len(groups))
+	for _, g := range groups {
+		out = append(out, map[string]any{
+			"groupId":          int64(g.GroupID),
+			"groupName":        g.GroupName,
+			"groupFullPath":    g.GroupFullPath,
+			"groupAccessLevel": int64(g.GroupAccessLevel),
+		})
+	}
+	return out
 }
 
 func (g *mqlGitlabProject) id() (string, error) {

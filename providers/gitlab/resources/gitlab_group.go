@@ -191,6 +191,77 @@ func populateGroupArgs(args map[string]*llx.RawData, grp *gitlab.Group) {
 	args["markedForDeletionOn"] = llx.TimeDataPtr(markedForDeletionOn)
 	args["allowedEmailDomainsList"] = llx.StringData(grp.AllowedEmailDomainsList)
 	args["lfsEnabled"] = llx.BoolData(grp.LFSEnabled)
+	args["emailsEnabled"] = llx.BoolData(grp.EmailsEnabled)
+	args["ipRestrictionRanges"] = llx.StringData(grp.IPRestrictionRanges)
+	args["shareWithGroupLock"] = llx.BoolData(grp.ShareWithGroupLock)
+	args["sharedRunnersSetting"] = llx.StringData(string(grp.SharedRunnersSetting))
+	args["projectCreationLevel"] = llx.StringData(string(grp.ProjectCreationLevel))
+	args["subGroupCreationLevel"] = llx.StringData(string(grp.SubGroupCreationLevel))
+	args["autoDevopsEnabled"] = llx.BoolData(grp.AutoDevopsEnabled)
+	args["wikiAccessLevel"] = llx.StringData(string(grp.WikiAccessLevel))
+	args["ldapCn"] = llx.StringData(grp.LDAPCN)
+	args["ldapAccess"] = llx.IntData(int64(grp.LDAPAccess))
+	args["sharedWithGroups"] = llx.ArrayData(groupSharedGroupsToDicts(grp.SharedWithGroups), types.Dict)
+	args["ldapGroupLinks"] = llx.ArrayData(ldapGroupLinksToDicts(grp.LDAPGroupLinks), types.Dict)
+	args["defaultBranchProtection"] = llx.DictData(branchProtectionDefaultsToDict(grp.DefaultBranchProtectionDefaults))
+}
+
+// groupSharedGroupsToDicts flattens the groups a group is shared with into
+// queryable dicts (group identity + the access level granted).
+func groupSharedGroupsToDicts(groups []gitlab.SharedWithGroup) []any {
+	out := make([]any, 0, len(groups))
+	for _, g := range groups {
+		out = append(out, map[string]any{
+			"groupId":          int64(g.GroupID),
+			"groupName":        g.GroupName,
+			"groupFullPath":    g.GroupFullPath,
+			"groupAccessLevel": int64(g.GroupAccessLevel),
+		})
+	}
+	return out
+}
+
+// ldapGroupLinksToDicts flattens LDAP group links into queryable dicts mapping
+// a directory group (cn/filter/provider) to the access level it grants.
+func ldapGroupLinksToDicts(links []*gitlab.LDAPGroupLink) []any {
+	out := make([]any, 0, len(links))
+	for _, l := range links {
+		if l == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"cn":          l.CN,
+			"filter":      l.Filter,
+			"provider":    l.Provider,
+			"groupAccess": int64(l.GroupAccess),
+		})
+	}
+	return out
+}
+
+// branchProtectionDefaultsToDict summarizes the group's default branch-
+// protection policy; returns nil (MQL null) when the group has none.
+func branchProtectionDefaultsToDict(d *gitlab.BranchProtectionDefaults) any {
+	if d == nil {
+		return nil
+	}
+	accessLevels := func(levels []*gitlab.GroupAccessLevel) []any {
+		out := make([]any, 0, len(levels))
+		for _, l := range levels {
+			if l == nil || l.AccessLevel == nil {
+				continue
+			}
+			out = append(out, int64(*l.AccessLevel))
+		}
+		return out
+	}
+	return map[string]any{
+		"allowForcePush":            d.AllowForcePush,
+		"developerCanInitialPush":   d.DeveloperCanInitialPush,
+		"codeOwnerApprovalRequired": d.CodeOwnerApprovalRequired,
+		"allowedToPush":             accessLevels(d.AllowedToPush),
+		"allowedToMerge":            accessLevels(d.AllowedToMerge),
+	}
 }
 
 // projects lists all projects that belong to a group
@@ -350,34 +421,10 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 
 	var mqlSubgroups []any
 	for _, subgroup := range allSubgroups {
-		// Convert ISOTime to time.Time for markedForDeletionOn
-		var markedForDeletionOn *time.Time
-		if subgroup.MarkedForDeletionOn != nil {
-			t := time.Time(*subgroup.MarkedForDeletionOn)
-			markedForDeletionOn = &t
-		}
-
-		subgroupArgs := map[string]*llx.RawData{
-			"id":                             llx.IntData(int64(subgroup.ID)),
-			"name":                           llx.StringData(subgroup.Name),
-			"path":                           llx.StringData(subgroup.Path),
-			"fullName":                       llx.StringData(subgroup.FullName),
-			"fullPath":                       llx.StringData(subgroup.FullPath),
-			"description":                    llx.StringData(subgroup.Description),
-			"createdAt":                      llx.TimeDataPtr(subgroup.CreatedAt),
-			"webURL":                         llx.StringData(string(subgroup.WebURL)),
-			"visibility":                     llx.StringData(string(subgroup.Visibility)),
-			"requireTwoFactorAuthentication": llx.BoolData(subgroup.RequireTwoFactorAuth),
-			"twoFactorGracePeriod":           llx.IntData(subgroup.TwoFactorGracePeriod),
-			"membershipLock":                 llx.BoolData(subgroup.MembershipLock),
-			"preventForkingOutsideGroup":     llx.BoolData(subgroup.PreventForkingOutsideGroup),
-			"mentionsDisabled":               llx.BoolData(subgroup.MentionsDisabled),
-			"emailsDisabled":                 llx.BoolData(!subgroup.EmailsEnabled),
-			"requestAccessEnabled":           llx.BoolData(subgroup.RequestAccessEnabled),
-			"markedForDeletionOn":            llx.TimeDataPtr(markedForDeletionOn),
-			"allowedEmailDomainsList":        llx.StringData(subgroup.AllowedEmailDomainsList),
-			"lfsEnabled":                     llx.BoolData(subgroup.LFSEnabled),
-		}
+		// Reuse populateGroupArgs so subgroups expose the same field set as
+		// top-level groups (and inherit new fields automatically).
+		subgroupArgs := map[string]*llx.RawData{}
+		populateGroupArgs(subgroupArgs, subgroup)
 
 		mqlSubgroup, err := CreateResource(g.MqlRuntime, "gitlab.group", subgroupArgs)
 		if err != nil {
