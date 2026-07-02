@@ -249,43 +249,84 @@ func (a *mqlAwsVpc) natGateways() ([]any, error) {
 				continue
 			}
 
-			addresses := []any{}
-			for _, address := range gw.NatGatewayAddresses {
-				mqlNatGatewayAddress, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
-					map[string]*llx.RawData{
-						"allocationId":       llx.StringDataPtr(address.AllocationId),
-						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
-						"privateIp":          llx.StringDataPtr(address.PrivateIp),
-						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
-					})
-				if err == nil {
-					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
-					mqlNatGatewayAddress.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
-					addresses = append(addresses, mqlNatGatewayAddress)
-				} else {
-					log.Error().Err(err).Msg("cannot create vpc natgateway address resource")
-				}
-			}
-
-			args := map[string]*llx.RawData{
-				"createdAt":    llx.TimeDataPtr(gw.CreateTime),
-				"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
-				"state":        llx.StringData(string(gw.State)),
-				"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
-				"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
-			}
-
-			mqlNatGat, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway, args)
+			mqlNatGat, err := newMqlAwsVpcNatgateway(a.MqlRuntime, a.Region.Data, gw)
 			if err != nil {
 				return nil, err
 			}
-			mqlNatGat.(*mqlAwsVpcNatgateway).natGatewayCache = gw
-			mqlNatGat.(*mqlAwsVpcNatgateway).region = a.Region.Data
-
 			endpoints = append(endpoints, mqlNatGat)
 		}
 	}
 	return endpoints, nil
+}
+
+// newMqlAwsVpcNatgateway builds an aws.vpc.natgateway resource (and its
+// address sub-resources) from a DescribeNatGateways result.
+func newMqlAwsVpcNatgateway(runtime *plugin.Runtime, region string, gw vpctypes.NatGateway) (*mqlAwsVpcNatgateway, error) {
+	addresses := []any{}
+	for _, address := range gw.NatGatewayAddresses {
+		mqlAddr, err := CreateResource(runtime, ResourceAwsVpcNatgatewayAddress,
+			map[string]*llx.RawData{
+				"allocationId":       llx.StringDataPtr(address.AllocationId),
+				"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
+				"privateIp":          llx.StringDataPtr(address.PrivateIp),
+				"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
+			})
+		if err != nil {
+			log.Error().Err(err).Msg("cannot create vpc natgateway address resource")
+			continue
+		}
+		mqlAddr.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
+		mqlAddr.(*mqlAwsVpcNatgatewayAddress).region = region
+		addresses = append(addresses, mqlAddr)
+	}
+
+	mqlNat, err := CreateResource(runtime, ResourceAwsVpcNatgateway,
+		map[string]*llx.RawData{
+			"createdAt":    llx.TimeDataPtr(gw.CreateTime),
+			"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
+			"state":        llx.StringData(string(gw.State)),
+			"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
+			"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlNat.(*mqlAwsVpcNatgateway).natGatewayCache = gw
+	mqlNat.(*mqlAwsVpcNatgateway).region = region
+	return mqlNat.(*mqlAwsVpcNatgateway), nil
+}
+
+func initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	// A targeted lookup needs both the NAT gateway id and its region (the id
+	// does not encode a region). Without them, hand back a bare resource.
+	if args["natGatewayId"] == nil || args["region"] == nil {
+		return args, nil, nil
+	}
+	natID, _ := args["natGatewayId"].Value.(string)
+	region, _ := args["region"].Value.(string)
+	if natID == "" || region == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeNatGateways(context.Background(), &ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: []string{natID},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(resp.NatGateways) == 0 {
+		return args, nil, nil
+	}
+	mqlNat, err := newMqlAwsVpcNatgateway(runtime, region, resp.NatGateways[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlNat, nil
 }
 
 func (a *mqlAwsVpcEndpoint) id() (string, error) {
@@ -822,6 +863,52 @@ func (a *mqlAwsVpcRoutetableRoute) networkInterface() (*mqlAwsEc2Networkinterfac
 		return nil, err
 	}
 	return res.(*mqlAwsEc2Networkinterface), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) natGateway() (*mqlAwsVpcNatgateway, error) {
+	natID := a.NatGatewayId.Data
+	if natID == "" {
+		a.NatGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcNatgateway,
+		map[string]*llx.RawData{"natGatewayId": llx.StringData(natID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcNatgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) instance() (*mqlAwsEc2Instance, error) {
+	instanceID := a.InstanceId.Data
+	if instanceID == "" {
+		a.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(ec2InstanceArnPattern, a.region, conn.AccountId(), instanceID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Instance,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Instance), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) managedPrefixList() (*mqlAwsEc2ManagedPrefixList, error) {
+	plID := a.DestinationPrefixListId.Data
+	if plID == "" {
+		a.ManagedPrefixList.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnStr := fmt.Sprintf(prefixListArnPattern, a.region, conn.AccountId(), plID)
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2ManagedPrefixList,
+		map[string]*llx.RawData{"arn": llx.StringData(arnStr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2ManagedPrefixList), nil
 }
 
 func (a *mqlAwsVpcRoutetable) routeEntries() ([]any, error) {
@@ -1888,35 +1975,7 @@ func (a *mqlAwsVpcSubnet) natGateway() (*mqlAwsVpcNatgateway, error) {
 	// Find an active NAT gateway
 	for _, gw := range resp.NatGateways {
 		if gw.State == vpctypes.NatGatewayStateAvailable || gw.State == vpctypes.NatGatewayStatePending {
-			addresses := []any{}
-			for _, address := range gw.NatGatewayAddresses {
-				mqlAddr, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
-					map[string]*llx.RawData{
-						"allocationId":       llx.StringDataPtr(address.AllocationId),
-						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
-						"privateIp":          llx.StringDataPtr(address.PrivateIp),
-						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
-					})
-				if err == nil {
-					mqlAddr.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
-					mqlAddr.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
-					addresses = append(addresses, mqlAddr)
-				}
-			}
-			mqlNatGw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway,
-				map[string]*llx.RawData{
-					"createdAt":    llx.TimeDataPtr(gw.CreateTime),
-					"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
-					"state":        llx.StringData(string(gw.State)),
-					"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
-					"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			mqlNatGw.(*mqlAwsVpcNatgateway).natGatewayCache = gw
-			mqlNatGw.(*mqlAwsVpcNatgateway).region = a.Region.Data
-			return mqlNatGw.(*mqlAwsVpcNatgateway), nil
+			return newMqlAwsVpcNatgateway(a.MqlRuntime, a.Region.Data, gw)
 		}
 	}
 	a.NatGateway.State = plugin.StateIsNull | plugin.StateIsSet

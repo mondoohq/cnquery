@@ -3083,7 +3083,7 @@ func init() {
 			Create: createAwsEc2Eip,
 		},
 		"aws.vpc.natgateway": {
-			// to override args, implement: initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsVpcNatgateway,
 			Create: createAwsVpcNatgateway,
 		},
 		"aws.vpc.natgateway.address": {
@@ -5025,11 +5025,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routetable.route.destinationPrefixListId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetDestinationPrefixListId()).ToDataRes(types.String)
 	},
+	"aws.vpc.routetable.route.managedPrefixList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetManagedPrefixList()).ToDataRes(types.Resource("aws.ec2.managedPrefixList"))
+	},
 	"aws.vpc.routetable.route.gatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetGatewayId()).ToDataRes(types.String)
 	},
 	"aws.vpc.routetable.route.instanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetInstanceId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.route.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetInstance()).ToDataRes(types.Resource("aws.ec2.instance"))
 	},
 	"aws.vpc.routetable.route.instanceOwnerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetInstanceOwnerId()).ToDataRes(types.String)
@@ -5042,6 +5048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.routetable.route.natGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetNatGatewayId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.route.natGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetNatGateway()).ToDataRes(types.Resource("aws.vpc.natgateway"))
 	},
 	"aws.vpc.routetable.route.transitGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetTransitGatewayId()).ToDataRes(types.String)
@@ -34427,12 +34436,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcRoutetableRoute).DestinationPrefixListId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.route.managedPrefixList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).ManagedPrefixList, ok = plugin.RawToTValue[*mqlAwsEc2ManagedPrefixList](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.route.gatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).GatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.route.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.route.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.route.instanceOwnerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34449,6 +34466,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.routetable.route.natGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).NatGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.route.natGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).NatGateway, ok = plugin.RawToTValue[*mqlAwsVpcNatgateway](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.route.transitGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78061,12 +78082,15 @@ type mqlAwsVpcRoutetableRoute struct {
 	DestinationCidrBlock        plugin.TValue[string]
 	DestinationIpv6CidrBlock    plugin.TValue[string]
 	DestinationPrefixListId     plugin.TValue[string]
+	ManagedPrefixList           plugin.TValue[*mqlAwsEc2ManagedPrefixList]
 	GatewayId                   plugin.TValue[string]
 	InstanceId                  plugin.TValue[string]
+	Instance                    plugin.TValue[*mqlAwsEc2Instance]
 	InstanceOwnerId             plugin.TValue[string]
 	NetworkInterfaceId          plugin.TValue[string]
 	NetworkInterface            plugin.TValue[*mqlAwsEc2Networkinterface]
 	NatGatewayId                plugin.TValue[string]
+	NatGateway                  plugin.TValue[*mqlAwsVpcNatgateway]
 	TransitGatewayId            plugin.TValue[string]
 	VpcPeeringConnectionId      plugin.TValue[string]
 	EgressOnlyInternetGatewayId plugin.TValue[string]
@@ -78130,12 +78154,44 @@ func (c *mqlAwsVpcRoutetableRoute) GetDestinationPrefixListId() *plugin.TValue[s
 	return &c.DestinationPrefixListId
 }
 
+func (c *mqlAwsVpcRoutetableRoute) GetManagedPrefixList() *plugin.TValue[*mqlAwsEc2ManagedPrefixList] {
+	return plugin.GetOrCompute[*mqlAwsEc2ManagedPrefixList](&c.ManagedPrefixList, func() (*mqlAwsEc2ManagedPrefixList, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "managedPrefixList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2ManagedPrefixList), nil
+			}
+		}
+
+		return c.managedPrefixList()
+	})
+}
+
 func (c *mqlAwsVpcRoutetableRoute) GetGatewayId() *plugin.TValue[string] {
 	return &c.GatewayId
 }
 
 func (c *mqlAwsVpcRoutetableRoute) GetInstanceId() *plugin.TValue[string] {
 	return &c.InstanceId
+}
+
+func (c *mqlAwsVpcRoutetableRoute) GetInstance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.instance()
+	})
 }
 
 func (c *mqlAwsVpcRoutetableRoute) GetInstanceOwnerId() *plugin.TValue[string] {
@@ -78164,6 +78220,22 @@ func (c *mqlAwsVpcRoutetableRoute) GetNetworkInterface() *plugin.TValue[*mqlAwsE
 
 func (c *mqlAwsVpcRoutetableRoute) GetNatGatewayId() *plugin.TValue[string] {
 	return &c.NatGatewayId
+}
+
+func (c *mqlAwsVpcRoutetableRoute) GetNatGateway() *plugin.TValue[*mqlAwsVpcNatgateway] {
+	return plugin.GetOrCompute[*mqlAwsVpcNatgateway](&c.NatGateway, func() (*mqlAwsVpcNatgateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "natGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcNatgateway), nil
+			}
+		}
+
+		return c.natGateway()
+	})
 }
 
 func (c *mqlAwsVpcRoutetableRoute) GetTransitGatewayId() *plugin.TValue[string] {

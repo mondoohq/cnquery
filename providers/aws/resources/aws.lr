@@ -412,11 +412,19 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // IPv6 CIDR block used for the destination match
   destinationIpv6CidrBlock string
   // Prefix list ID for the destination match
-  destinationPrefixListId string
+  //
+  // Deprecated in favor of `managedPrefixList`.
+  destinationPrefixListId @maturity("deprecated") string
+  // Managed prefix list used for the destination match
+  managedPrefixList() aws.ec2.managedPrefixList
   // ID of a gateway attached to the VPC
   gatewayId string
   // ID of a NAT instance in the VPC
-  instanceId string
+  //
+  // Deprecated in favor of `instance`.
+  instanceId @maturity("deprecated") string
+  // NAT instance the route sends traffic to
+  instance() aws.ec2.instance
   // ID of the Amazon Web Services account that owns the instance
   instanceOwnerId string
   // ID of the network interface
@@ -426,7 +434,11 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // Network interface a route sends traffic to
   networkInterface() aws.ec2.networkinterface
   // ID of a NAT gateway
-  natGatewayId string
+  //
+  // Deprecated in favor of `natGateway`.
+  natGatewayId @maturity("deprecated") string
+  // NAT gateway the route sends traffic to
+  natGateway() aws.vpc.natgateway
   // ID of a transit gateway
   transitGatewayId string
   // ID of a VPC peering connection

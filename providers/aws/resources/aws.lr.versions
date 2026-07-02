@@ -10070,9 +10070,12 @@ aws.vpc.routetable.route.destinationPrefixListId 11.15.2
 aws.vpc.routetable.route.egressOnlyInternetGatewayId 11.15.2
 aws.vpc.routetable.route.gatewayId 11.15.2
 aws.vpc.routetable.route.id 11.15.2
+aws.vpc.routetable.route.instance 13.41.1
 aws.vpc.routetable.route.instanceId 11.15.2
 aws.vpc.routetable.route.instanceOwnerId 11.15.2
 aws.vpc.routetable.route.localGatewayId 11.15.2
+aws.vpc.routetable.route.managedPrefixList 13.41.1
+aws.vpc.routetable.route.natGateway 13.41.1
 aws.vpc.routetable.route.natGatewayId 11.15.2
 aws.vpc.routetable.route.networkInterface 13.41.1
 aws.vpc.routetable.route.networkInterfaceId 11.15.2

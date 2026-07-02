@@ -55,6 +55,7 @@ const (
 	transitGatewayArnPattern      = "arn:aws:ec2:%s:%s:transit-gateway/%s"
 	efsFilesystemArnPattern       = "arn:aws:elasticfilesystem:%s:%s:file-system/%s"
 	fsxFilesystemArnPattern       = "arn:aws:fsx:%s:%s:file-system/%s"
+	prefixListArnPattern          = "arn:aws:ec2:%s:%s:prefix-list/%s"
 )
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {
