@@ -901,6 +901,10 @@ package @defaults("name version") {
   epoch string
 
   // Format of this package (e.g., rpm, deb)
+  //
+  // Empty for an abstract package synthesized from a tool install (see the
+  // `package` accessor on tool resources such as `cursor` or `claude.code`):
+  // it has no package-manager format and does not appear in `packages`.
   format string
   // Status of this package (e.g., if it is needed)
   status() string
@@ -912,6 +916,11 @@ package @defaults("name version") {
   cpes []core.cpe
 
   // Package origin, may include version if available (optional)
+  //
+  // Set to "unknown" for an abstract package synthesized from a tool install
+  // (see the `package` accessor on tool resources): the installing source
+  // could not be identified. A known origin means the package is
+  // manager-tracked and listed in `packages`.
   origin() string
 
   // Available version
@@ -9458,6 +9467,16 @@ claude.code @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Claude Code configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Account email
   email() string
   // Organization name
@@ -9548,6 +9567,16 @@ openai.codex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Codex configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Authentication mode (e.g. "chatgpt")
   authMode() string
   // Account ID
@@ -9636,6 +9665,16 @@ cursor @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Cursor configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // MCP servers
   mcpServers() []cursor.mcpServer
   // Cursor rules (global and project-scoped)
@@ -9694,6 +9733,16 @@ github.copilot @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the GitHub Copilot configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Authenticated GitHub accounts
   accounts() []github.copilot.account
   // MCP servers
@@ -9748,6 +9797,16 @@ goose @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Goose configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Active AI provider name
   provider() string
   // Active model name
@@ -9802,6 +9861,16 @@ gemini @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Gemini configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Authentication type
   authType() string
   // Settings dictionary
@@ -9850,6 +9919,16 @@ windsurf @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Windsurf configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Global rules / memories
   rules() []windsurf.rule
   // MCP servers
@@ -9906,6 +9985,16 @@ zed @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Zed configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Settings dictionary
   settings() dict
   // Extension names installed
@@ -9920,6 +10009,16 @@ roo @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Roo Code configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []roo.skill
 }
@@ -9950,6 +10049,16 @@ cline @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Cline configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []cline.skill
 }
@@ -9980,6 +10089,16 @@ kiro @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Kiro configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []kiro.skill
 }
@@ -10010,6 +10129,16 @@ continuedev @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Continue configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []continuedev.skill
 }
@@ -10040,6 +10169,16 @@ trae @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Trae configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []trae.skill
 }
@@ -10070,6 +10209,16 @@ opencode @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the OpenCode configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []opencode.skill
 }
@@ -10100,6 +10249,16 @@ pi @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Pi configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []pi.skill
 }
@@ -10130,6 +10289,16 @@ mistral.vibe @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Mistral Vibe configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []mistral.vibe.skill
 }
@@ -10160,6 +10329,16 @@ antigravity @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Antigravity configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []antigravity.skill
 }
@@ -10190,6 +10369,16 @@ ibm.bob @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Bob configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []ibm.bob.skill
 }
@@ -10220,6 +10409,16 @@ openclaw @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the OpenClaw configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []openclaw.skill
 }
@@ -10250,6 +10449,16 @@ snowflake.cortex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Cortex configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []snowflake.cortex.skill
 }
@@ -10280,6 +10489,16 @@ junie @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Junie configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []junie.skill
 }
@@ -10310,6 +10529,16 @@ augment @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Augment configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []augment.skill
 }
@@ -10340,6 +10569,16 @@ warp @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Warp configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []warp.skill
 }
@@ -10370,6 +10609,16 @@ kilocode @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Kilo Code configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []kilocode.skill
 }
@@ -10400,6 +10649,16 @@ openhands @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the OpenHands configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []openhands.skill
 }
@@ -10430,6 +10689,16 @@ qwen.code @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Qwen Code configuration directory
   configPath string
+
+  // Package that installed this tool
+  //
+  // Resolves to the system-package-manager entry that installed the tool
+  // when one can be identified; otherwise an abstract package (origin
+  // "unknown", empty format, absent from `packages`) that records the tool's
+  // presence and, where determinable, an inferred version. Read `.installed`
+  // for the install signal, or any package field (`version`, `purl`,
+  // `vendor`) for detail.
+  package() package
   // Installed skills
   skills() []qwen.code.skill
 }

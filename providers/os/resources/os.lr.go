@@ -10652,6 +10652,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetConfigPath()).ToDataRes(types.String)
 	},
+	"claude.code.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"claude.code.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCode).GetEmail()).ToDataRes(types.String)
 	},
@@ -10751,6 +10754,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openai.codex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetConfigPath()).ToDataRes(types.String)
 	},
+	"openai.codex.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"openai.codex.authMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodex).GetAuthMode()).ToDataRes(types.String)
 	},
@@ -10847,6 +10853,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cursor.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursor).GetConfigPath()).ToDataRes(types.String)
 	},
+	"cursor.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"cursor.mcpServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursor).GetMcpServers()).ToDataRes(types.Array(types.Resource("cursor.mcpServer")))
 	},
@@ -10904,6 +10913,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.copilot.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilot).GetConfigPath()).ToDataRes(types.String)
 	},
+	"github.copilot.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"github.copilot.accounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilot).GetAccounts()).ToDataRes(types.Array(types.Resource("github.copilot.account")))
 	},
@@ -10954,6 +10966,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"goose.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetConfigPath()).ToDataRes(types.String)
+	},
+	"goose.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"goose.provider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetProvider()).ToDataRes(types.String)
@@ -11012,6 +11027,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gemini.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetConfigPath()).ToDataRes(types.String)
 	},
+	"gemini.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"gemini.authType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetAuthType()).ToDataRes(types.String)
 	},
@@ -11059,6 +11077,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windsurf.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurf).GetConfigPath()).ToDataRes(types.String)
+	},
+	"windsurf.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"windsurf.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurf).GetRules()).ToDataRes(types.Array(types.Resource("windsurf.rule")))
@@ -11114,6 +11135,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"zed.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetConfigPath()).ToDataRes(types.String)
 	},
+	"zed.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"zed.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetSettings()).ToDataRes(types.Dict)
 	},
@@ -11122,6 +11146,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"roo.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRoo).GetConfigPath()).ToDataRes(types.String)
+	},
+	"roo.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRoo).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"roo.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRoo).GetSkills()).ToDataRes(types.Array(types.Resource("roo.skill")))
@@ -11150,6 +11177,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cline.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCline).GetConfigPath()).ToDataRes(types.String)
 	},
+	"cline.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCline).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"cline.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCline).GetSkills()).ToDataRes(types.Array(types.Resource("cline.skill")))
 	},
@@ -11176,6 +11206,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kiro.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKiro).GetConfigPath()).ToDataRes(types.String)
+	},
+	"kiro.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKiro).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"kiro.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKiro).GetSkills()).ToDataRes(types.Array(types.Resource("kiro.skill")))
@@ -11204,6 +11237,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"continuedev.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContinuedev).GetConfigPath()).ToDataRes(types.String)
 	},
+	"continuedev.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContinuedev).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"continuedev.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContinuedev).GetSkills()).ToDataRes(types.Array(types.Resource("continuedev.skill")))
 	},
@@ -11230,6 +11266,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"trae.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTrae).GetConfigPath()).ToDataRes(types.String)
+	},
+	"trae.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTrae).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"trae.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTrae).GetSkills()).ToDataRes(types.Array(types.Resource("trae.skill")))
@@ -11258,6 +11297,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"opencode.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencode).GetConfigPath()).ToDataRes(types.String)
 	},
+	"opencode.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencode).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"opencode.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencode).GetSkills()).ToDataRes(types.Array(types.Resource("opencode.skill")))
 	},
@@ -11284,6 +11326,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"pi.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPi).GetConfigPath()).ToDataRes(types.String)
+	},
+	"pi.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPi).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"pi.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPi).GetSkills()).ToDataRes(types.Array(types.Resource("pi.skill")))
@@ -11312,6 +11357,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mistral.vibe.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibe).GetConfigPath()).ToDataRes(types.String)
 	},
+	"mistral.vibe.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibe).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"mistral.vibe.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibe).GetSkills()).ToDataRes(types.Array(types.Resource("mistral.vibe.skill")))
 	},
@@ -11338,6 +11386,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"antigravity.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAntigravity).GetConfigPath()).ToDataRes(types.String)
+	},
+	"antigravity.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravity).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"antigravity.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAntigravity).GetSkills()).ToDataRes(types.Array(types.Resource("antigravity.skill")))
@@ -11366,6 +11417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ibm.bob.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmBob).GetConfigPath()).ToDataRes(types.String)
 	},
+	"ibm.bob.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBob).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"ibm.bob.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmBob).GetSkills()).ToDataRes(types.Array(types.Resource("ibm.bob.skill")))
 	},
@@ -11392,6 +11446,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openclaw.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenclaw).GetConfigPath()).ToDataRes(types.String)
+	},
+	"openclaw.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclaw).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"openclaw.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenclaw).GetSkills()).ToDataRes(types.Array(types.Resource("openclaw.skill")))
@@ -11420,6 +11477,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.cortex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeCortex).GetConfigPath()).ToDataRes(types.String)
 	},
+	"snowflake.cortex.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortex).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"snowflake.cortex.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeCortex).GetSkills()).ToDataRes(types.Array(types.Resource("snowflake.cortex.skill")))
 	},
@@ -11446,6 +11506,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"junie.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJunie).GetConfigPath()).ToDataRes(types.String)
+	},
+	"junie.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunie).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"junie.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJunie).GetSkills()).ToDataRes(types.Array(types.Resource("junie.skill")))
@@ -11474,6 +11537,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"augment.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugment).GetConfigPath()).ToDataRes(types.String)
 	},
+	"augment.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugment).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"augment.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugment).GetSkills()).ToDataRes(types.Array(types.Resource("augment.skill")))
 	},
@@ -11500,6 +11566,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"warp.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWarp).GetConfigPath()).ToDataRes(types.String)
+	},
+	"warp.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarp).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"warp.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWarp).GetSkills()).ToDataRes(types.Array(types.Resource("warp.skill")))
@@ -11528,6 +11597,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kilocode.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocode).GetConfigPath()).ToDataRes(types.String)
 	},
+	"kilocode.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocode).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"kilocode.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocode).GetSkills()).ToDataRes(types.Array(types.Resource("kilocode.skill")))
 	},
@@ -11555,6 +11627,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openhands.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhands).GetConfigPath()).ToDataRes(types.String)
 	},
+	"openhands.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhands).GetPackage()).ToDataRes(types.Resource("package"))
+	},
 	"openhands.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhands).GetSkills()).ToDataRes(types.Array(types.Resource("openhands.skill")))
 	},
@@ -11581,6 +11656,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"qwen.code.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCode).GetConfigPath()).ToDataRes(types.String)
+	},
+	"qwen.code.package": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCode).GetPackage()).ToDataRes(types.Resource("package"))
 	},
 	"qwen.code.skills": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCode).GetSkills()).ToDataRes(types.Array(types.Resource("qwen.code.skill")))
@@ -24166,6 +24244,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.code.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"claude.code.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCode).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24318,6 +24400,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenaiCodex).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openai.codex.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"openai.codex.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodex).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24466,6 +24552,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCursor).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"cursor.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"cursor.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursor).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -24558,6 +24648,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubCopilot).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.copilot.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"github.copilot.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilot).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -24640,6 +24734,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"goose.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoose).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"goose.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24730,6 +24828,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGemini).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gemini.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"gemini.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGemini).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24804,6 +24906,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windsurf.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindsurf).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"windsurf.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24894,6 +25000,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlZed).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"zed.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"zed.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZed).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -24908,6 +25018,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"roo.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRoo).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"roo.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRoo).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"roo.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24954,6 +25068,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCline).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"cline.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCline).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"cline.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCline).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -24996,6 +25114,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kiro.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKiro).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kiro.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKiro).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"kiro.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25042,6 +25164,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlContinuedev).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"continuedev.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContinuedev).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"continuedev.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContinuedev).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25084,6 +25210,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"trae.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTrae).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"trae.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTrae).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"trae.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25130,6 +25260,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpencode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"opencode.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencode).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"opencode.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpencode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25172,6 +25306,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"pi.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPi).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pi.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPi).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"pi.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25218,6 +25356,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMistralVibe).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"mistral.vibe.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibe).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"mistral.vibe.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMistralVibe).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25260,6 +25402,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"antigravity.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAntigravity).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravity).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"antigravity.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25306,6 +25452,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIbmBob).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"ibm.bob.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBob).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"ibm.bob.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmBob).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25348,6 +25498,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openclaw.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenclaw).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclaw).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"openclaw.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25394,6 +25548,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeCortex).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"snowflake.cortex.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortex).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"snowflake.cortex.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeCortex).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25436,6 +25594,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"junie.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJunie).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunie).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"junie.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25482,6 +25644,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAugment).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"augment.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugment).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"augment.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAugment).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25524,6 +25690,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"warp.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWarp).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarp).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"warp.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25570,6 +25740,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKilocode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"kilocode.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"kilocode.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKilocode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25614,6 +25788,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenhands).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openhands.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhands).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
+		return
+	},
 	"openhands.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenhands).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -25656,6 +25834,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"qwen.code.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.package": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).Package, ok = plugin.RawToTValue[*mqlPackage](v.Value, v.Error)
 		return
 	},
 	"qwen.code.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63530,6 +63712,7 @@ type mqlClaudeCode struct {
 	__id       string
 	mqlClaudeCodeInternal
 	ConfigPath     plugin.TValue[string]
+	Package        plugin.TValue[*mqlPackage]
 	Email          plugin.TValue[string]
 	Organization   plugin.TValue[string]
 	Role           plugin.TValue[string]
@@ -63583,6 +63766,22 @@ func (c *mqlClaudeCode) MqlID() string {
 
 func (c *mqlClaudeCode) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlClaudeCode) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlClaudeCode) GetEmail() *plugin.TValue[string] {
@@ -63981,6 +64180,7 @@ type mqlOpenaiCodex struct {
 	__id       string
 	// optional: if you define mqlOpenaiCodexInternal it will be used here
 	ConfigPath  plugin.TValue[string]
+	Package     plugin.TValue[*mqlPackage]
 	AuthMode    plugin.TValue[string]
 	AccountId   plugin.TValue[string]
 	Version     plugin.TValue[string]
@@ -64030,6 +64230,22 @@ func (c *mqlOpenaiCodex) MqlID() string {
 
 func (c *mqlOpenaiCodex) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlOpenaiCodex) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlOpenaiCodex) GetAuthMode() *plugin.TValue[string] {
@@ -64419,6 +64635,7 @@ type mqlCursor struct {
 	__id       string
 	// optional: if you define mqlCursorInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	McpServers plugin.TValue[[]any]
 	Rules      plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
@@ -64463,6 +64680,22 @@ func (c *mqlCursor) MqlID() string {
 
 func (c *mqlCursor) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlCursor) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cursor", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlCursor) GetMcpServers() *plugin.TValue[[]any] {
@@ -64728,6 +64961,7 @@ type mqlGithubCopilot struct {
 	__id       string
 	// optional: if you define mqlGithubCopilotInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Accounts   plugin.TValue[[]any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
@@ -64772,6 +65006,22 @@ func (c *mqlGithubCopilot) MqlID() string {
 
 func (c *mqlGithubCopilot) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlGithubCopilot) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlGithubCopilot) GetAccounts() *plugin.TValue[[]any] {
@@ -65027,6 +65277,7 @@ type mqlGoose struct {
 	__id       string
 	// optional: if you define mqlGooseInternal it will be used here
 	ConfigPath       plugin.TValue[string]
+	Package          plugin.TValue[*mqlPackage]
 	Provider         plugin.TValue[string]
 	Model            plugin.TValue[string]
 	TelemetryEnabled plugin.TValue[bool]
@@ -65073,6 +65324,22 @@ func (c *mqlGoose) MqlID() string {
 
 func (c *mqlGoose) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlGoose) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("goose", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlGoose) GetProvider() *plugin.TValue[string] {
@@ -65286,6 +65553,7 @@ type mqlGemini struct {
 	__id       string
 	// optional: if you define mqlGeminiInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	AuthType   plugin.TValue[string]
 	Settings   plugin.TValue[any]
 	McpServers plugin.TValue[[]any]
@@ -65331,6 +65599,22 @@ func (c *mqlGemini) MqlID() string {
 
 func (c *mqlGemini) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlGemini) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlGemini) GetAuthType() *plugin.TValue[string] {
@@ -65528,6 +65812,7 @@ type mqlWindsurf struct {
 	__id       string
 	// optional: if you define mqlWindsurfInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Rules      plugin.TValue[[]any]
 	McpServers plugin.TValue[[]any]
 	Skills     plugin.TValue[[]any]
@@ -65572,6 +65857,22 @@ func (c *mqlWindsurf) MqlID() string {
 
 func (c *mqlWindsurf) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlWindsurf) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windsurf", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlWindsurf) GetRules() *plugin.TValue[[]any] {
@@ -65832,6 +66133,7 @@ type mqlZed struct {
 	__id       string
 	// optional: if you define mqlZedInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Settings   plugin.TValue[any]
 	Extensions plugin.TValue[[]any]
 }
@@ -65877,6 +66179,22 @@ func (c *mqlZed) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
 }
 
+func (c *mqlZed) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zed", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
+}
+
 func (c *mqlZed) GetSettings() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
 		return c.settings()
@@ -65895,6 +66213,7 @@ type mqlRoo struct {
 	__id       string
 	// optional: if you define mqlRooInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -65937,6 +66256,22 @@ func (c *mqlRoo) MqlID() string {
 
 func (c *mqlRoo) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlRoo) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("roo", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlRoo) GetSkills() *plugin.TValue[[]any] {
@@ -66042,6 +66377,7 @@ type mqlCline struct {
 	__id       string
 	// optional: if you define mqlClineInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66084,6 +66420,22 @@ func (c *mqlCline) MqlID() string {
 
 func (c *mqlCline) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlCline) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cline", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlCline) GetSkills() *plugin.TValue[[]any] {
@@ -66189,6 +66541,7 @@ type mqlKiro struct {
 	__id       string
 	// optional: if you define mqlKiroInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66231,6 +66584,22 @@ func (c *mqlKiro) MqlID() string {
 
 func (c *mqlKiro) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlKiro) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kiro", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlKiro) GetSkills() *plugin.TValue[[]any] {
@@ -66336,6 +66705,7 @@ type mqlContinuedev struct {
 	__id       string
 	// optional: if you define mqlContinuedevInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66378,6 +66748,22 @@ func (c *mqlContinuedev) MqlID() string {
 
 func (c *mqlContinuedev) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlContinuedev) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("continuedev", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlContinuedev) GetSkills() *plugin.TValue[[]any] {
@@ -66483,6 +66869,7 @@ type mqlTrae struct {
 	__id       string
 	// optional: if you define mqlTraeInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66525,6 +66912,22 @@ func (c *mqlTrae) MqlID() string {
 
 func (c *mqlTrae) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlTrae) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("trae", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlTrae) GetSkills() *plugin.TValue[[]any] {
@@ -66630,6 +67033,7 @@ type mqlOpencode struct {
 	__id       string
 	// optional: if you define mqlOpencodeInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66672,6 +67076,22 @@ func (c *mqlOpencode) MqlID() string {
 
 func (c *mqlOpencode) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlOpencode) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("opencode", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlOpencode) GetSkills() *plugin.TValue[[]any] {
@@ -66777,6 +67197,7 @@ type mqlPi struct {
 	__id       string
 	// optional: if you define mqlPiInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66819,6 +67240,22 @@ func (c *mqlPi) MqlID() string {
 
 func (c *mqlPi) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlPi) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("pi", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlPi) GetSkills() *plugin.TValue[[]any] {
@@ -66924,6 +67361,7 @@ type mqlMistralVibe struct {
 	__id       string
 	// optional: if you define mqlMistralVibeInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -66966,6 +67404,22 @@ func (c *mqlMistralVibe) MqlID() string {
 
 func (c *mqlMistralVibe) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlMistralVibe) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mistral.vibe", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlMistralVibe) GetSkills() *plugin.TValue[[]any] {
@@ -67071,6 +67525,7 @@ type mqlAntigravity struct {
 	__id       string
 	// optional: if you define mqlAntigravityInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67113,6 +67568,22 @@ func (c *mqlAntigravity) MqlID() string {
 
 func (c *mqlAntigravity) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlAntigravity) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("antigravity", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlAntigravity) GetSkills() *plugin.TValue[[]any] {
@@ -67218,6 +67689,7 @@ type mqlIbmBob struct {
 	__id       string
 	// optional: if you define mqlIbmBobInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67260,6 +67732,22 @@ func (c *mqlIbmBob) MqlID() string {
 
 func (c *mqlIbmBob) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlIbmBob) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.bob", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlIbmBob) GetSkills() *plugin.TValue[[]any] {
@@ -67365,6 +67853,7 @@ type mqlOpenclaw struct {
 	__id       string
 	// optional: if you define mqlOpenclawInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67407,6 +67896,22 @@ func (c *mqlOpenclaw) MqlID() string {
 
 func (c *mqlOpenclaw) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlOpenclaw) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openclaw", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlOpenclaw) GetSkills() *plugin.TValue[[]any] {
@@ -67512,6 +68017,7 @@ type mqlSnowflakeCortex struct {
 	__id       string
 	// optional: if you define mqlSnowflakeCortexInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67554,6 +68060,22 @@ func (c *mqlSnowflakeCortex) MqlID() string {
 
 func (c *mqlSnowflakeCortex) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlSnowflakeCortex) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.cortex", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlSnowflakeCortex) GetSkills() *plugin.TValue[[]any] {
@@ -67659,6 +68181,7 @@ type mqlJunie struct {
 	__id       string
 	// optional: if you define mqlJunieInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67701,6 +68224,22 @@ func (c *mqlJunie) MqlID() string {
 
 func (c *mqlJunie) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlJunie) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("junie", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlJunie) GetSkills() *plugin.TValue[[]any] {
@@ -67806,6 +68345,7 @@ type mqlAugment struct {
 	__id       string
 	// optional: if you define mqlAugmentInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67848,6 +68388,22 @@ func (c *mqlAugment) MqlID() string {
 
 func (c *mqlAugment) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlAugment) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("augment", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlAugment) GetSkills() *plugin.TValue[[]any] {
@@ -67953,6 +68509,7 @@ type mqlWarp struct {
 	__id       string
 	// optional: if you define mqlWarpInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -67995,6 +68552,22 @@ func (c *mqlWarp) MqlID() string {
 
 func (c *mqlWarp) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlWarp) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("warp", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlWarp) GetSkills() *plugin.TValue[[]any] {
@@ -68100,6 +68673,7 @@ type mqlKilocode struct {
 	__id       string
 	// optional: if you define mqlKilocodeInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -68142,6 +68716,22 @@ func (c *mqlKilocode) MqlID() string {
 
 func (c *mqlKilocode) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlKilocode) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kilocode", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlKilocode) GetSkills() *plugin.TValue[[]any] {
@@ -68247,6 +68837,7 @@ type mqlOpenhands struct {
 	__id       string
 	// optional: if you define mqlOpenhandsInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -68289,6 +68880,22 @@ func (c *mqlOpenhands) MqlID() string {
 
 func (c *mqlOpenhands) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlOpenhands) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openhands", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlOpenhands) GetSkills() *plugin.TValue[[]any] {
@@ -68394,6 +69001,7 @@ type mqlQwenCode struct {
 	__id       string
 	// optional: if you define mqlQwenCodeInternal it will be used here
 	ConfigPath plugin.TValue[string]
+	Package    plugin.TValue[*mqlPackage]
 	Skills     plugin.TValue[[]any]
 }
 
@@ -68436,6 +69044,22 @@ func (c *mqlQwenCode) MqlID() string {
 
 func (c *mqlQwenCode) GetConfigPath() *plugin.TValue[string] {
 	return &c.ConfigPath
+}
+
+func (c *mqlQwenCode) GetPackage() *plugin.TValue[*mqlPackage] {
+	return plugin.GetOrCompute[*mqlPackage](&c.Package, func() (*mqlPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code", c.__id, "package")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPackage), nil
+			}
+		}
+
+		return c.compute_package()
+	})
 }
 
 func (c *mqlQwenCode) GetSkills() *plugin.TValue[[]any] {
