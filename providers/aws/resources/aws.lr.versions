@@ -124,6 +124,7 @@ aws.apigateway.stage.arn 11.15.2
 aws.apigateway.stage.cacheClusterEnabled 11.15.2
 aws.apigateway.stage.cacheClusterSize 11.15.2
 aws.apigateway.stage.cacheClusterStatus 11.15.2
+aws.apigateway.stage.cacheDataEncrypted 13.40.2
 aws.apigateway.stage.clientCertificateId 11.15.2
 aws.apigateway.stage.createdAt 11.15.2
 aws.apigateway.stage.deploymentId 11.15.2
@@ -709,13 +710,17 @@ aws.athena.workgroup.arn 11.16.1
 aws.athena.workgroup.bytesScannedCutoffPerQuery 11.16.1
 aws.athena.workgroup.createdAt 11.16.1
 aws.athena.workgroup.description 11.16.1
+aws.athena.workgroup.encrypted 13.40.2
 aws.athena.workgroup.enforceWorkGroupConfiguration 11.16.1
 aws.athena.workgroup.engineVersion 11.16.1
+aws.athena.workgroup.kmsKey 13.40.2
 aws.athena.workgroup.name 11.16.1
 aws.athena.workgroup.publishCloudWatchMetricsEnabled 11.16.1
 aws.athena.workgroup.region 11.16.1
 aws.athena.workgroup.requesterPaysEnabled 11.16.1
 aws.athena.workgroup.resultConfiguration 11.16.1
+aws.athena.workgroup.resultEncryptionOption 13.40.2
+aws.athena.workgroup.resultOutputLocation 13.40.2
 aws.athena.workgroup.state 11.16.1
 aws.athena.workgroup.tags 11.16.1
 aws.athena.workgroups 11.16.1
@@ -2838,6 +2843,7 @@ aws.dynamodb.dax.cluster.arn 13.3.0
 aws.dynamodb.dax.cluster.clusterEndpointEncryptionType 13.3.0
 aws.dynamodb.dax.cluster.clusterName 13.3.0
 aws.dynamodb.dax.cluster.description 13.3.0
+aws.dynamodb.dax.cluster.encrypted 13.40.2
 aws.dynamodb.dax.cluster.nodeType 13.3.0
 aws.dynamodb.dax.cluster.region 13.3.0
 aws.dynamodb.dax.cluster.sseStatus 13.3.0
@@ -8036,6 +8042,7 @@ aws.s3.bucket.corsrule.maxAgeSeconds 11.15.2
 aws.s3.bucket.corsrule.name 11.15.2
 aws.s3.bucket.createdAt 11.15.2
 aws.s3.bucket.defaultLock 11.15.2
+aws.s3.bucket.encrypted 13.40.2
 aws.s3.bucket.encryption 11.15.2
 aws.s3.bucket.encryptionRule 11.15.2
 aws.s3.bucket.encryptionRule.bucketKeyEnabled 11.15.2
@@ -8063,6 +8070,7 @@ aws.s3.bucket.grant.permission 11.15.2
 aws.s3.bucket.ignorePublicAcls 13.32.2
 aws.s3.bucket.intelligentTieringConfigurations 13.29.1
 aws.s3.bucket.inventoryConfigurations 13.29.1
+aws.s3.bucket.kmsKey 13.40.2
 aws.s3.bucket.lifecycleRule 13.6.3
 aws.s3.bucket.lifecycleRule.abortIncompleteMultipartUploadDays 13.6.3
 aws.s3.bucket.lifecycleRule.expiration 13.6.3

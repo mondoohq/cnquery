@@ -184,6 +184,12 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// CacheDataEncrypted is configured per method; the "*/*" key holds the
+		// stage-wide default that applies unless a specific method overrides it.
+		cacheDataEncrypted := false
+		if ms, ok := stage.MethodSettings["*/*"]; ok {
+			cacheDataEncrypted = ms.CacheDataEncrypted
+		}
 		mqlStage, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayStage,
 			map[string]*llx.RawData{
 				"arn":                  llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
@@ -195,6 +201,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 				"cacheClusterEnabled":  llx.BoolData(stage.CacheClusterEnabled),
 				"cacheClusterSize":     llx.StringData(string(stage.CacheClusterSize)),
 				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
+				"cacheDataEncrypted":   llx.BoolData(cacheDataEncrypted),
 				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
 				"webAclArn":            llx.StringData(convert.ToValue(stage.WebAclArn)),
 				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),

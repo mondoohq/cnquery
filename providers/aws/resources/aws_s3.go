@@ -1180,6 +1180,52 @@ func (a *mqlAwsS3BucketEncryptionRule) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsS3Bucket) encrypted() (bool, error) {
+	config, err := a.fetchEncryptionConfig()
+	if err != nil {
+		return false, err
+	}
+	if config == nil {
+		return false, nil
+	}
+	for _, rule := range config.Rules {
+		if rule.ApplyServerSideEncryptionByDefault != nil && rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm != "" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (a *mqlAwsS3Bucket) kmsKey() (*mqlAwsKmsKey, error) {
+	config, err := a.fetchEncryptionConfig()
+	if err != nil {
+		return nil, err
+	}
+	keyRef := ""
+	if config != nil {
+		for _, rule := range config.Rules {
+			d := rule.ApplyServerSideEncryptionByDefault
+			if d != nil && d.KMSMasterKeyID != nil && *d.KMSMasterKeyID != "" {
+				keyRef = *d.KMSMasterKeyID
+				break
+			}
+		}
+	}
+	if keyRef == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(keyRef),
+			"region": llx.StringData(a.Location.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
 	bucketArn := a.Arn.Data
 

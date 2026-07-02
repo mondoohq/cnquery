@@ -16098,6 +16098,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.encryptionRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetEncryptionRules()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.encryptionRule")))
 	},
+	"aws.s3.bucket.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.s3.bucket.replicationRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetReplicationRules()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.replicationRule")))
 	},
@@ -17177,6 +17183,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dynamodb.dax.cluster.sseStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbDaxCluster).GetSseStatus()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetEncrypted()).ToDataRes(types.Bool)
 	},
 	"aws.dynamodb.dax.cluster.clusterEndpointEncryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbDaxCluster).GetClusterEndpointEncryptionType()).ToDataRes(types.String)
@@ -20267,6 +20276,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigateway.stage.cacheClusterStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetCacheClusterStatus()).ToDataRes(types.String)
+	},
+	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetCacheDataEncrypted()).ToDataRes(types.Bool)
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetClientCertificateId()).ToDataRes(types.String)
@@ -26303,6 +26315,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaWorkgroup).GetResultConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.athena.workgroup.resultOutputLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultOutputLocation()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.resultEncryptionOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultEncryptionOption()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.athena.workgroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaWorkgroup).GetRegion()).ToDataRes(types.String)
@@ -50582,6 +50606,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).EncryptionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.replicationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).ReplicationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -52168,6 +52200,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dynamodb.dax.cluster.sseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbDaxCluster).SseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.dax.cluster.clusterEndpointEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56572,6 +56608,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.stage.cacheClusterStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayStage).CacheClusterStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).CacheDataEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65296,6 +65336,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaWorkgroup).ResultConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultOutputLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultOutputLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultEncryptionOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultEncryptionOption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.athena.workgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -121273,6 +121329,8 @@ type mqlAwsS3Bucket struct {
 	Replication                      plugin.TValue[any]
 	Encryption                       plugin.TValue[any]
 	EncryptionRules                  plugin.TValue[[]any]
+	Encrypted                        plugin.TValue[bool]
+	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
 	ReplicationRules                 plugin.TValue[[]any]
 	PublicAccessBlock                plugin.TValue[any]
 	BlockPublicAcls                  plugin.TValue[bool]
@@ -121503,6 +121561,28 @@ func (c *mqlAwsS3Bucket) GetEncryptionRules() *plugin.TValue[[]any] {
 		}
 
 		return c.encryptionRules()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetEncrypted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Encrypted, func() (bool, error) {
+		return c.encrypted()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 
@@ -125504,6 +125584,7 @@ type mqlAwsDynamodbDaxCluster struct {
 	ActiveNodes                   plugin.TValue[int64]
 	Region                        plugin.TValue[string]
 	SseStatus                     plugin.TValue[string]
+	Encrypted                     plugin.TValue[bool]
 	ClusterEndpointEncryptionType plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
 }
@@ -125579,6 +125660,10 @@ func (c *mqlAwsDynamodbDaxCluster) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsDynamodbDaxCluster) GetSseStatus() *plugin.TValue[string] {
 	return &c.SseStatus
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
 }
 
 func (c *mqlAwsDynamodbDaxCluster) GetClusterEndpointEncryptionType() *plugin.TValue[string] {
@@ -135993,6 +136078,7 @@ type mqlAwsApigatewayStage struct {
 	CacheClusterEnabled  plugin.TValue[bool]
 	CacheClusterSize     plugin.TValue[string]
 	CacheClusterStatus   plugin.TValue[string]
+	CacheDataEncrypted   plugin.TValue[bool]
 	ClientCertificateId  plugin.TValue[string]
 	WebAcl               plugin.TValue[*mqlAwsWafAcl]
 	WebAclArn            plugin.TValue[string]
@@ -136074,6 +136160,10 @@ func (c *mqlAwsApigatewayStage) GetCacheClusterSize() *plugin.TValue[string] {
 
 func (c *mqlAwsApigatewayStage) GetCacheClusterStatus() *plugin.TValue[string] {
 	return &c.CacheClusterStatus
+}
+
+func (c *mqlAwsApigatewayStage) GetCacheDataEncrypted() *plugin.TValue[bool] {
+	return &c.CacheDataEncrypted
 }
 
 func (c *mqlAwsApigatewayStage) GetClientCertificateId() *plugin.TValue[string] {
@@ -157448,6 +157538,10 @@ type mqlAwsAthenaWorkgroup struct {
 	RequesterPaysEnabled            plugin.TValue[bool]
 	EngineVersion                   plugin.TValue[any]
 	ResultConfiguration             plugin.TValue[any]
+	ResultOutputLocation            plugin.TValue[string]
+	Encrypted                       plugin.TValue[bool]
+	ResultEncryptionOption          plugin.TValue[string]
+	KmsKey                          plugin.TValue[*mqlAwsKmsKey]
 	Region                          plugin.TValue[string]
 	Tags                            plugin.TValue[map[string]any]
 }
@@ -157537,6 +157631,40 @@ func (c *mqlAwsAthenaWorkgroup) GetEngineVersion() *plugin.TValue[any] {
 func (c *mqlAwsAthenaWorkgroup) GetResultConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ResultConfiguration, func() (any, error) {
 		return c.resultConfiguration()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultOutputLocation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResultOutputLocation, func() (string, error) {
+		return c.resultOutputLocation()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetEncrypted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Encrypted, func() (bool, error) {
+		return c.encrypted()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultEncryptionOption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResultEncryptionOption, func() (string, error) {
+		return c.resultEncryptionOption()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.workgroup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 

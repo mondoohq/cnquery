@@ -10410,10 +10410,16 @@ private aws.s3.bucket @defaults("name location public") {
   defaultLock() string
   // Bucket cross-region replication configuration
   replication() dict
-  // Bucket encryption configuration
-  encryption() dict
+  // Bucket default encryption configuration
+  //
+  // Deprecated in favor of encryptionRules, encrypted, and kmsKey.
+  encryption() @maturity("deprecated") dict
   // Typed encryption rules for the bucket
   encryptionRules() []aws.s3.bucket.encryptionRule
+  // Whether default server-side encryption is configured on the bucket
+  encrypted() bool
+  // KMS key used for default server-side encryption when the SSE-KMS algorithm is configured
+  kmsKey() aws.kms.key
   // Typed replication rules for the bucket
   replicationRules() []aws.s3.bucket.replicationRule
   // Public access block configuration for the bucket
@@ -11421,6 +11427,8 @@ private aws.dynamodb.dax.cluster @defaults("arn clusterName") {
   region string
   // Whether server-side encryption (SSE) is enabled (ENABLING, ENABLED, DISABLING, DISABLED)
   sseStatus string
+  // Whether server-side encryption at rest is enabled
+  encrypted bool
   // Cluster endpoint encryption type (NONE or TLS)
   clusterEndpointEncryptionType string
   // Tags for the cluster
@@ -14145,6 +14153,8 @@ private aws.apigateway.stage @defaults("arn") {
   cacheClusterSize string
   // Status of the cache cluster
   cacheClusterStatus string
+  // Whether the stage response cache is encrypted, from the default method settings
+  cacheDataEncrypted bool
   // Client certificate ID for mutual TLS with backend
   clientCertificateId string
   // WAF web ACL associated with the stage
@@ -19425,8 +19435,22 @@ private aws.athena.workgroup @defaults("name state region") {
   requesterPaysEnabled() bool
   // Engine version information
   engineVersion() dict
-  // Result configuration (output location and encryption)
-  resultConfiguration() dict
+  // Query result configuration
+  //
+  // Deprecated in favor of resultOutputLocation, encrypted,
+  // resultEncryptionOption, and kmsKey.
+  resultConfiguration() @maturity("deprecated") dict
+  // Amazon S3 location where query and calculation results are stored
+  resultOutputLocation() string
+  // Whether query results are encrypted at rest in Amazon S3
+  encrypted() bool
+  // Query result encryption option
+  //
+  // One of SSE_S3, SSE_KMS, or CSE_KMS. Empty when query results are not
+  // encrypted.
+  resultEncryptionOption() string
+  // KMS key protecting query results when the SSE_KMS or CSE_KMS option is used
+  kmsKey() aws.kms.key
   // Region where the workgroup exists
   region string
   // Tags for the workgroup

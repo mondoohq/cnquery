@@ -110,6 +110,9 @@ type mqlAwsAthenaWorkgroupInternal struct {
 	cachedBytesCutoff int64
 	cachedEngineVer   any
 	cachedResultCfg   any
+	cachedEncOption   string
+	cachedKmsKeyRef   string
+	cachedOutputLoc   string
 	lock              sync.Mutex
 }
 
@@ -157,6 +160,17 @@ func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
 		if err2 != nil {
 			return err2
 		}
+		if rc := cfg.ResultConfiguration; rc != nil {
+			if rc.OutputLocation != nil {
+				a.cachedOutputLoc = *rc.OutputLocation
+			}
+			if rc.EncryptionConfiguration != nil {
+				a.cachedEncOption = string(rc.EncryptionConfiguration.EncryptionOption)
+				if rc.EncryptionConfiguration.KmsKey != nil {
+					a.cachedKmsKeyRef = *rc.EncryptionConfiguration.KmsKey
+				}
+			}
+		}
 	}
 	a.fetched = true
 	return nil
@@ -202,6 +216,46 @@ func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (any, error) {
 		return nil, err
 	}
 	return a.cachedResultCfg, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultOutputLocation() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedOutputLoc, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultEncryptionOption() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cachedEncOption, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) encrypted() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedEncOption != "", nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) kmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	if a.cachedKmsKeyRef == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(a.cachedKmsKeyRef),
+			"region": llx.StringData(a.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsAthena) dataCatalogs() ([]any, error) {
