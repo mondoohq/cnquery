@@ -172,6 +172,9 @@ azure.subscription.aksService.subscriptionId 9.0.1
 azure.subscription.apiManagement 13.10.2
 azure.subscription.apiManagementService 13.10.2
 azure.subscription.apiManagementService.service 13.10.2
+azure.subscription.apiManagementService.service.backendSsl30Enabled 13.24.1
+azure.subscription.apiManagementService.service.backendTls10Enabled 13.24.1
+azure.subscription.apiManagementService.service.backendTls11Enabled 13.24.1
 azure.subscription.apiManagementService.service.createdAt 13.10.2
 azure.subscription.apiManagementService.service.customProperties 13.10.2
 azure.subscription.apiManagementService.service.developerPortalStatus 13.10.2
@@ -180,6 +183,7 @@ azure.subscription.apiManagementService.service.disableGateway 13.10.2
 azure.subscription.apiManagementService.service.enableClientCertificate 13.10.2
 azure.subscription.apiManagementService.service.gatewayRegionalUrl 13.10.2
 azure.subscription.apiManagementService.service.gatewayUrl 13.10.2
+azure.subscription.apiManagementService.service.http2Enabled 13.24.1
 azure.subscription.apiManagementService.service.id 13.10.2
 azure.subscription.apiManagementService.service.identityType 13.10.2
 azure.subscription.apiManagementService.service.legacyPortalStatus 13.10.2
@@ -202,9 +206,13 @@ azure.subscription.apiManagementService.service.publisherName 13.10.2
 azure.subscription.apiManagementService.service.scmUrl 13.10.2
 azure.subscription.apiManagementService.service.skuCapacity 13.10.2
 azure.subscription.apiManagementService.service.skuName 13.10.2
+azure.subscription.apiManagementService.service.ssl30Enabled 13.24.1
 azure.subscription.apiManagementService.service.systemMetadata 13.22.1
 azure.subscription.apiManagementService.service.tags 13.10.2
 azure.subscription.apiManagementService.service.targetProvisioningState 13.10.2
+azure.subscription.apiManagementService.service.tls10Enabled 13.24.1
+azure.subscription.apiManagementService.service.tls11Enabled 13.24.1
+azure.subscription.apiManagementService.service.tripleDesEnabled 13.24.1
 azure.subscription.apiManagementService.service.virtualNetworkType 13.10.2
 azure.subscription.apiManagementService.service.zones 13.10.2
 azure.subscription.apiManagementService.services 13.10.2

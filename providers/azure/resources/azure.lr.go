@@ -14530,6 +14530,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.apiManagementService.service.customProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetCustomProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"azure.subscription.apiManagementService.service.tls10Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTls10Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.tls11Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTls11Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.ssl30Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSsl30Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.backendTls10Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetBackendTls10Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.backendTls11Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetBackendTls11Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.backendSsl30Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetBackendSsl30Enabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.tripleDesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTripleDesEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.http2Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetHttp2Enabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.apiManagementService.service.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetIdentityType()).ToDataRes(types.String)
 	},
@@ -34098,6 +34122,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.apiManagementService.service.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionApiManagementServiceService).CustomProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.tls10Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Tls10Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.tls11Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Tls11Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.ssl30Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Ssl30Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.backendTls10Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).BackendTls10Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.backendTls11Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).BackendTls11Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.backendSsl30Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).BackendSsl30Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.tripleDesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).TripleDesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.http2Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Http2Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.apiManagementService.service.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79601,6 +79657,14 @@ type mqlAzureSubscriptionApiManagementServiceService struct {
 	LegacyPortalStatus             plugin.TValue[string]
 	PlatformVersion                plugin.TValue[string]
 	CustomProperties               plugin.TValue[map[string]any]
+	Tls10Enabled                   plugin.TValue[bool]
+	Tls11Enabled                   plugin.TValue[bool]
+	Ssl30Enabled                   plugin.TValue[bool]
+	BackendTls10Enabled            plugin.TValue[bool]
+	BackendTls11Enabled            plugin.TValue[bool]
+	BackendSsl30Enabled            plugin.TValue[bool]
+	TripleDesEnabled               plugin.TValue[bool]
+	Http2Enabled                   plugin.TValue[bool]
 	IdentityType                   plugin.TValue[string]
 	PublicIpAddresses              plugin.TValue[[]any]
 	PrivateIpAddresses             plugin.TValue[[]any]
@@ -79751,6 +79815,38 @@ func (c *mqlAzureSubscriptionApiManagementServiceService) GetPlatformVersion() *
 
 func (c *mqlAzureSubscriptionApiManagementServiceService) GetCustomProperties() *plugin.TValue[map[string]any] {
 	return &c.CustomProperties
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetTls10Enabled() *plugin.TValue[bool] {
+	return &c.Tls10Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetTls11Enabled() *plugin.TValue[bool] {
+	return &c.Tls11Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetSsl30Enabled() *plugin.TValue[bool] {
+	return &c.Ssl30Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetBackendTls10Enabled() *plugin.TValue[bool] {
+	return &c.BackendTls10Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetBackendTls11Enabled() *plugin.TValue[bool] {
+	return &c.BackendTls11Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetBackendSsl30Enabled() *plugin.TValue[bool] {
+	return &c.BackendSsl30Enabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetTripleDesEnabled() *plugin.TValue[bool] {
+	return &c.TripleDesEnabled
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetHttp2Enabled() *plugin.TValue[bool] {
+	return &c.Http2Enabled
 }
 
 func (c *mqlAzureSubscriptionApiManagementServiceService) GetIdentityType() *plugin.TValue[string] {

@@ -11005,6 +11005,22 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   //
   // Keys like `Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10` map to "True"/"False" string values.
   customProperties map[string]string
+  // Whether TLS 1.0 is enabled for client connections to the gateway (null when the service does not report the setting)
+  tls10Enabled bool
+  // Whether TLS 1.1 is enabled for client connections to the gateway (null when the service does not report the setting)
+  tls11Enabled bool
+  // Whether SSL 3.0 is enabled for client connections to the gateway (null when the service does not report the setting)
+  ssl30Enabled bool
+  // Whether TLS 1.0 is enabled for gateway connections to backend services (null when the service does not report the setting)
+  backendTls10Enabled bool
+  // Whether TLS 1.1 is enabled for gateway connections to backend services (null when the service does not report the setting)
+  backendTls11Enabled bool
+  // Whether SSL 3.0 is enabled for gateway connections to backend services (null when the service does not report the setting)
+  backendSsl30Enabled bool
+  // Whether the 3DES (TLS_RSA_WITH_3DES_EDE_CBC_SHA) cipher is enabled on the gateway (null when the service does not report the setting)
+  tripleDesEnabled bool
+  // Whether HTTP/2 is enabled on the gateway (null when the service does not report the setting)
+  http2Enabled bool
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Public load-balanced IPv4 addresses of the service in its primary region (Basic / Standard / Premium / Isolated SKUs)
