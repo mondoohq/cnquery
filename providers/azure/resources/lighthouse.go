@@ -228,9 +228,16 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorizatio
 		return nil, err
 	}
 	mqlSub := r.(*mqlAzureSubscription)
-	roles := mqlSub.GetIam().Data.GetRoles().Data
-	for i := range roles {
-		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+	iam := mqlSub.GetIam()
+	if iam.Error != nil {
+		return nil, iam.Error
+	}
+	roles := iam.Data.GetRoles()
+	if roles.Error != nil {
+		return nil, roles.Error
+	}
+	for i := range roles.Data {
+		role := roles.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
 		if lastPathSegment(role.__id) == wantGuid {
 			return role, nil
 		}
@@ -336,9 +343,16 @@ func (a *mqlAzureSubscriptionLighthouseServiceRegistrationAssignment) registrati
 		return nil, err
 	}
 	mqlSub := r.(*mqlAzureSubscription)
-	definitions := mqlSub.GetLighthouse().Data.GetRegistrationDefinitions().Data
-	for i := range definitions {
-		def := definitions[i].(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition)
+	lighthouse := mqlSub.GetLighthouse()
+	if lighthouse.Error != nil {
+		return nil, lighthouse.Error
+	}
+	definitions := lighthouse.Data.GetRegistrationDefinitions()
+	if definitions.Error != nil {
+		return nil, definitions.Error
+	}
+	for i := range definitions.Data {
+		def := definitions.Data[i].(*mqlAzureSubscriptionLighthouseServiceRegistrationDefinition)
 		if def.__id == a.cacheRegistrationDefinitionId {
 			return def, nil
 		}
