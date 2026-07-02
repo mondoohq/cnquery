@@ -4,8 +4,11 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
 )
 
 // toolPackageSpec describes how a tool resource resolves its backing package
@@ -34,12 +37,17 @@ type toolPackageSpec struct {
 
 // toolPackageSpecs is keyed by MQL resource name.
 var toolPackageSpecs = map[string]toolPackageSpec{
-	"claude.code":      {packageName: "claude-code", vendor: "Anthropic"},
-	"openai.codex":     {packageName: "openai-codex", vendor: "OpenAI", inferVersion: inferCodexVersion},
-	"cursor":           {packageName: "cursor", managerCandidates: []string{"cursor"}, vendor: "Anysphere"},
-	"github.copilot":   {packageName: "github-copilot", vendor: "GitHub"},
-	"goose":            {packageName: "goose", vendor: "Block"},
-	"gemini":           {packageName: "gemini", vendor: "Google"},
+	"claude.code":    {packageName: "claude-code", vendor: "Anthropic", inferVersion: inferClaudeVersion},
+	"openai.codex":   {packageName: "openai-codex", vendor: "OpenAI", inferVersion: inferCodexVersion},
+	"cursor":         {packageName: "cursor", managerCandidates: []string{"cursor"}, vendor: "Anysphere"},
+	"github.copilot": {packageName: "github-copilot", vendor: "GitHub"},
+	// Distinctive names, not bare "goose"/"gemini": bare "goose" collides with
+	// the widely-packaged pressly/goose DB-migration tool (Homebrew core), and
+	// the Gemini CLI ships as npm `@google/gemini-cli`. These match only the
+	// real tool where it exists as an OS package; the binary-ownership
+	// follow-up will attribute the common npm/script installs.
+	"goose":            {packageName: "goose", managerCandidates: []string{"block-goose-cli"}, vendor: "Block"},
+	"gemini":           {packageName: "gemini", managerCandidates: []string{"gemini-cli"}, vendor: "Google"},
 	"windsurf":         {packageName: "windsurf", managerCandidates: []string{"windsurf"}},
 	"zed":              {packageName: "zed", managerCandidates: []string{"zed"}, vendor: "Zed Industries"},
 	"roo":              {packageName: "roo"},
@@ -158,6 +166,36 @@ func inferCodexVersion(runtime *plugin.Runtime, configPath string) (string, erro
 		return "", nil
 	}
 	return ver.LatestVersion, nil
+}
+
+// inferClaudeVersion runs `claude --version` through the command resource
+// (Claude Code writes no version file, so we probe the binary). The output is
+// e.g. "2.1.191 (Claude Code)"; we take the leading token and keep it only if
+// MQL's semver parser recognizes it. Best-effort: unknown when the binary is
+// absent or the output carries no recognizable version.
+func inferClaudeVersion(runtime *plugin.Runtime, configPath string) (string, error) {
+	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("claude --version"),
+	})
+	if err != nil {
+		return "", nil
+	}
+	cmd := o.(*mqlCommand)
+	if cmd.GetExitcode().Data != 0 {
+		return "", nil
+	}
+	fields := strings.Fields(cmd.GetStdout().Data)
+	if len(fields) == 0 {
+		return "", nil
+	}
+	version := fields[0]
+	// Validate with MQL's semver parser instead of a bespoke regex. The parser
+	// exposes only Compare, so we parse by self-compare: a valid version
+	// compares against itself without error; an invalid one returns an error.
+	if _, err := (semver.Parser{}).Compare(version, version); err != nil {
+		return "", nil
+	}
+	return version, nil
 }
 
 // compute_package accessors — one per tool resource. Each delegates to the
