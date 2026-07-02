@@ -15,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "13.40.1",
+	Version:         "13.41.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{
 		{
