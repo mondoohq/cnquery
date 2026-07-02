@@ -52,6 +52,10 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryEcsTaskDefinitions,
 		DiscoveryRoute53HostedZones,
 		DiscoveryEcrRepositories,
+		DiscoveryMemorydbClusters,
+		DiscoveryCodebuildProjects,
+		DiscoveryCognitoUserPools,
+		DiscoveryTransferServers,
 		DiscoveryInstances,
 		DiscoverySSMInstances,
 		DiscoveryECR,
@@ -99,6 +103,10 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoveryEcsTaskDefinitions,
 		DiscoveryRoute53HostedZones,
 		DiscoveryEcrRepositories,
+		DiscoveryMemorydbClusters,
+		DiscoveryCodebuildProjects,
+		DiscoveryCognitoUserPools,
+		DiscoveryTransferServers,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

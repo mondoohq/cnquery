@@ -98,7 +98,6 @@ Notes:
 				resources.DiscoveryResources,
 				resources.DiscoveryRoute53HostedZones,
 				resources.DiscoveryS3Buckets,
-				resources.DiscoveryTransferServers,
 				resources.DiscoverySagemakerNotebookInstances,
 				resources.DiscoverySagemakerProcessingJobs,
 				resources.DiscoverySagemakerTrainingJobs,
@@ -106,6 +105,7 @@ Notes:
 				resources.DiscoverySecurityGroups,
 				resources.DiscoverySSMInstances,
 				resources.DiscoverySSMInstanceAPI,
+				resources.DiscoveryTransferServers,
 				resources.DiscoveryVPCs,
 			},
 			Flags: []plugin.Flag{
