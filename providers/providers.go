@@ -76,10 +76,10 @@ func deleteProvider(provider *Provider) error {
 	if provider.Path == "" {
 		return errors.Newf("provider %q is builtin and cannot be removed", provider.Name)
 	}
-	log.Debug().Str("path", provider.Path).Msg("removing installed provider")
 	if err := os.RemoveAll(provider.Path); err != nil {
 		return errors.Wrapf(err, "failed to remove provider %q", provider.Name)
 	}
+	log.Info().Str("provider", provider.Name).Str("path", provider.Path).Msg("deleted installed provider")
 	return nil
 }
 
