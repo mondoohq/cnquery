@@ -881,11 +881,28 @@ func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
 
 	var mqlBranches []any
 	for _, branch := range allBranches {
+		prefix := "gitlab.group.protectedBranch/" + strconv.FormatInt(branch.ID, 10)
+		push, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/push", branch.PushAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		merge, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/merge", branch.MergeAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		unprotect, err := groupBranchAccessLevels(g.MqlRuntime, prefix+"/unprotect", branch.UnprotectAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+
 		branchInfo := map[string]*llx.RawData{
 			"id":                        llx.IntData(branch.ID),
 			"name":                      llx.StringData(branch.Name),
 			"allowForcePush":            llx.BoolData(branch.AllowForcePush),
 			"codeOwnerApprovalRequired": llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"pushAccessLevels":          llx.ArrayData(push, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"mergeAccessLevels":         llx.ArrayData(merge, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"unprotectAccessLevels":     llx.ArrayData(unprotect, types.Resource("gitlab.protectedBranch.accessLevel")),
 		}
 
 		mqlBranch, err := CreateResource(g.MqlRuntime, "gitlab.group.protectedBranch", branchInfo)
@@ -897,4 +914,19 @@ func (g *mqlGitlabGroup) protectedBranches() ([]any, error) {
 	}
 
 	return mqlBranches, nil
+}
+
+func groupBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.GroupBranchAccessDescription) ([]any, error) {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, al)
+	}
+	return out, nil
 }

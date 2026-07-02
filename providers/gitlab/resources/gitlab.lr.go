@@ -33,6 +33,7 @@ const (
 	ResourceGitlabProjectCodeownersRule                  string = "gitlab.project.codeowners.rule"
 	ResourceGitlabProjectApprovalSetting                 string = "gitlab.project.approvalSetting"
 	ResourceGitlabProjectProtectedBranch                 string = "gitlab.project.protectedBranch"
+	ResourceGitlabProtectedBranchAccessLevel             string = "gitlab.protectedBranch.accessLevel"
 	ResourceGitlabProjectFile                            string = "gitlab.project.file"
 	ResourceGitlabProjectWebhook                         string = "gitlab.project.webhook"
 	ResourceGitlabProjectMergeRequest                    string = "gitlab.project.mergeRequest"
@@ -135,6 +136,10 @@ func init() {
 		"gitlab.project.protectedBranch": {
 			// to override args, implement: initGitlabProjectProtectedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabProjectProtectedBranch,
+		},
+		"gitlab.protectedBranch.accessLevel": {
+			// to override args, implement: initGitlabProtectedBranchAccessLevel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGitlabProtectedBranchAccessLevel,
 		},
 		"gitlab.project.file": {
 			// to override args, implement: initGitlabProjectFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1148,6 +1153,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.protectedBranch.codeOwnerApproval": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectProtectedBranch).GetCodeOwnerApproval()).ToDataRes(types.Bool)
 	},
+	"gitlab.project.protectedBranch.pushAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetPushAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
+	},
+	"gitlab.project.protectedBranch.mergeAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetMergeAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
+	},
+	"gitlab.project.protectedBranch.unprotectAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectProtectedBranch).GetUnprotectAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
+	},
+	"gitlab.protectedBranch.accessLevel.accessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetAccessLevel()).ToDataRes(types.Int)
+	},
+	"gitlab.protectedBranch.accessLevel.accessLevelDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetAccessLevelDescription()).ToDataRes(types.String)
+	},
+	"gitlab.protectedBranch.accessLevel.deployKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetDeployKeyId()).ToDataRes(types.Int)
+	},
+	"gitlab.protectedBranch.accessLevel.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetUser()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.protectedBranch.accessLevel.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProtectedBranchAccessLevel).GetGroup()).ToDataRes(types.Resource("gitlab.group"))
+	},
 	"gitlab.project.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectFile).GetPath()).ToDataRes(types.String)
 	},
@@ -1837,6 +1866,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.group.protectedBranch.codeOwnerApprovalRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroupProtectedBranch).GetCodeOwnerApprovalRequired()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.protectedBranch.pushAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupProtectedBranch).GetPushAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
+	},
+	"gitlab.group.protectedBranch.mergeAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupProtectedBranch).GetMergeAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
+	},
+	"gitlab.group.protectedBranch.unprotectAccessLevels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupProtectedBranch).GetUnprotectAccessLevels()).ToDataRes(types.Array(types.Resource("gitlab.protectedBranch.accessLevel")))
 	},
 	"gitlab.project.securitySetting.autoFixContainerScanning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectSecuritySetting).GetAutoFixContainerScanning()).ToDataRes(types.Bool)
@@ -3273,6 +3311,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectProtectedBranch).CodeOwnerApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.protectedBranch.pushAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).PushAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedBranch.mergeAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).MergeAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.protectedBranch.unprotectAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectProtectedBranch).UnprotectAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.accessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).AccessLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.accessLevelDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).AccessLevelDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.deployKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).DeployKeyId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).User, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.protectedBranch.accessLevel.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProtectedBranchAccessLevel).Group, ok = plugin.RawToTValue[*mqlGitlabGroup](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectFile).__id, ok = v.Value.(string)
 		return
@@ -4267,6 +4341,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.protectedBranch.codeOwnerApprovalRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroupProtectedBranch).CodeOwnerApprovalRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.protectedBranch.pushAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupProtectedBranch).PushAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.protectedBranch.mergeAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupProtectedBranch).MergeAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.protectedBranch.unprotectAccessLevels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupProtectedBranch).UnprotectAccessLevels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.securitySetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7434,10 +7520,13 @@ type mqlGitlabProjectProtectedBranch struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGitlabProjectProtectedBranchInternal it will be used here
-	Name              plugin.TValue[string]
-	AllowForcePush    plugin.TValue[bool]
-	DefaultBranch     plugin.TValue[bool]
-	CodeOwnerApproval plugin.TValue[bool]
+	Name                  plugin.TValue[string]
+	AllowForcePush        plugin.TValue[bool]
+	DefaultBranch         plugin.TValue[bool]
+	CodeOwnerApproval     plugin.TValue[bool]
+	PushAccessLevels      plugin.TValue[[]any]
+	MergeAccessLevels     plugin.TValue[[]any]
+	UnprotectAccessLevels plugin.TValue[[]any]
 }
 
 // createGitlabProjectProtectedBranch creates a new instance of this resource
@@ -7491,6 +7580,106 @@ func (c *mqlGitlabProjectProtectedBranch) GetDefaultBranch() *plugin.TValue[bool
 
 func (c *mqlGitlabProjectProtectedBranch) GetCodeOwnerApproval() *plugin.TValue[bool] {
 	return &c.CodeOwnerApproval
+}
+
+func (c *mqlGitlabProjectProtectedBranch) GetPushAccessLevels() *plugin.TValue[[]any] {
+	return &c.PushAccessLevels
+}
+
+func (c *mqlGitlabProjectProtectedBranch) GetMergeAccessLevels() *plugin.TValue[[]any] {
+	return &c.MergeAccessLevels
+}
+
+func (c *mqlGitlabProjectProtectedBranch) GetUnprotectAccessLevels() *plugin.TValue[[]any] {
+	return &c.UnprotectAccessLevels
+}
+
+// mqlGitlabProtectedBranchAccessLevel for the gitlab.protectedBranch.accessLevel resource
+type mqlGitlabProtectedBranchAccessLevel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGitlabProtectedBranchAccessLevelInternal
+	AccessLevel            plugin.TValue[int64]
+	AccessLevelDescription plugin.TValue[string]
+	DeployKeyId            plugin.TValue[int64]
+	User                   plugin.TValue[*mqlGitlabUser]
+	Group                  plugin.TValue[*mqlGitlabGroup]
+}
+
+// createGitlabProtectedBranchAccessLevel creates a new instance of this resource
+func createGitlabProtectedBranchAccessLevel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabProtectedBranchAccessLevel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.protectedBranch.accessLevel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) MqlName() string {
+	return "gitlab.protectedBranch.accessLevel"
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetAccessLevel() *plugin.TValue[int64] {
+	return &c.AccessLevel
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetAccessLevelDescription() *plugin.TValue[string] {
+	return &c.AccessLevelDescription
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetDeployKeyId() *plugin.TValue[int64] {
+	return &c.DeployKeyId
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetUser() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.User, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.protectedBranch.accessLevel", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlGitlabProtectedBranchAccessLevel) GetGroup() *plugin.TValue[*mqlGitlabGroup] {
+	return plugin.GetOrCompute[*mqlGitlabGroup](&c.Group, func() (*mqlGitlabGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.protectedBranch.accessLevel", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabGroup), nil
+			}
+		}
+
+		return c.group()
+	})
 }
 
 // mqlGitlabProjectFile for the gitlab.project.file resource
@@ -9550,6 +9739,9 @@ type mqlGitlabGroupProtectedBranch struct {
 	Name                      plugin.TValue[string]
 	AllowForcePush            plugin.TValue[bool]
 	CodeOwnerApprovalRequired plugin.TValue[bool]
+	PushAccessLevels          plugin.TValue[[]any]
+	MergeAccessLevels         plugin.TValue[[]any]
+	UnprotectAccessLevels     plugin.TValue[[]any]
 }
 
 // createGitlabGroupProtectedBranch creates a new instance of this resource
@@ -9603,6 +9795,18 @@ func (c *mqlGitlabGroupProtectedBranch) GetAllowForcePush() *plugin.TValue[bool]
 
 func (c *mqlGitlabGroupProtectedBranch) GetCodeOwnerApprovalRequired() *plugin.TValue[bool] {
 	return &c.CodeOwnerApprovalRequired
+}
+
+func (c *mqlGitlabGroupProtectedBranch) GetPushAccessLevels() *plugin.TValue[[]any] {
+	return &c.PushAccessLevels
+}
+
+func (c *mqlGitlabGroupProtectedBranch) GetMergeAccessLevels() *plugin.TValue[[]any] {
+	return &c.MergeAccessLevels
+}
+
+func (c *mqlGitlabGroupProtectedBranch) GetUnprotectAccessLevels() *plugin.TValue[[]any] {
+	return &c.UnprotectAccessLevels
 }
 
 // mqlGitlabProjectSecuritySetting for the gitlab.project.securitySetting resource

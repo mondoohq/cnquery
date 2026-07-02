@@ -741,6 +741,32 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   defaultBranch bool
   // Whether code owner approval is required
   codeOwnerApproval bool
+  // Access levels permitted to push directly to the branch
+  pushAccessLevels []gitlab.protectedBranch.accessLevel
+  // Access levels permitted to merge into the branch
+  mergeAccessLevels []gitlab.protectedBranch.accessLevel
+  // Access levels permitted to remove protection from the branch
+  unprotectAccessLevels []gitlab.protectedBranch.accessLevel
+}
+
+// GitLab protected-branch access level
+//
+// A single access grant on a protected branch, describing who may perform the
+// push, merge, or unprotect action. Each entry grants access either to a role
+// (via `accessLevel`), a specific `user`, a specific `group`, or a deploy key
+// (via `deployKeyId`). Read these from a protected branch's `pushAccessLevels`,
+// `mergeAccessLevels`, or `unprotectAccessLevels`.
+private gitlab.protectedBranch.accessLevel @defaults("accessLevel accessLevelDescription") {
+  // Numeric access level (0 No access, 30 Developer, 40 Maintainer, 60 Admin)
+  accessLevel int
+  // Human-readable description of the access level
+  accessLevelDescription string
+  // ID of the deploy key granted access, or 0 when the grant does not target a deploy key
+  deployKeyId int
+  // User granted access, when the grant targets a specific user (null otherwise)
+  user() gitlab.user
+  // Group granted access, when the grant targets a specific group (null otherwise)
+  group() gitlab.group
 }
 
 // GitLab project file
@@ -1300,6 +1326,12 @@ private gitlab.group.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether code owner approval is required
   codeOwnerApprovalRequired bool
+  // Access levels permitted to push directly to the branch
+  pushAccessLevels []gitlab.protectedBranch.accessLevel
+  // Access levels permitted to merge into the branch
+  mergeAccessLevels []gitlab.protectedBranch.accessLevel
+  // Access levels permitted to remove protection from the branch
+  unprotectAccessLevels []gitlab.protectedBranch.accessLevel
 }
 
 // GitLab project security settings

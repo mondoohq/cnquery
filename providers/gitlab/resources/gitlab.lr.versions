@@ -83,7 +83,10 @@ gitlab.group.protectedBranch 11.1.138
 gitlab.group.protectedBranch.allowForcePush 11.1.138
 gitlab.group.protectedBranch.codeOwnerApprovalRequired 11.1.138
 gitlab.group.protectedBranch.id 11.1.138
+gitlab.group.protectedBranch.mergeAccessLevels 13.3.9
 gitlab.group.protectedBranch.name 11.1.138
+gitlab.group.protectedBranch.pushAccessLevels 13.3.9
+gitlab.group.protectedBranch.unprotectAccessLevels 13.3.9
 gitlab.group.protectedBranches 11.1.138
 gitlab.group.pushRule 11.1.138
 gitlab.group.pushRule.authorEmailRegex 11.1.138
@@ -445,7 +448,10 @@ gitlab.project.protectedBranch 11.1.12
 gitlab.project.protectedBranch.allowForcePush 11.1.12
 gitlab.project.protectedBranch.codeOwnerApproval 11.1.12
 gitlab.project.protectedBranch.defaultBranch 11.1.12
+gitlab.project.protectedBranch.mergeAccessLevels 13.3.9
 gitlab.project.protectedBranch.name 11.1.12
+gitlab.project.protectedBranch.pushAccessLevels 13.3.9
+gitlab.project.protectedBranch.unprotectAccessLevels 13.3.9
 gitlab.project.protectedBranches 11.1.12
 gitlab.project.pushRule 11.1.138
 gitlab.project.pushRule.authorEmailRegex 11.1.138
@@ -580,6 +586,12 @@ gitlab.project.webhook.vulnerabilityEvents 13.0.8
 gitlab.project.webhook.wikiPageEvents 13.0.8
 gitlab.project.webhooks 11.1.13
 gitlab.project.wikiEnabled 9.0.1
+gitlab.protectedBranch.accessLevel 13.3.9
+gitlab.protectedBranch.accessLevel.accessLevel 13.3.9
+gitlab.protectedBranch.accessLevel.accessLevelDescription 13.3.9
+gitlab.protectedBranch.accessLevel.deployKeyId 13.3.9
+gitlab.protectedBranch.accessLevel.group 13.3.9
+gitlab.protectedBranch.accessLevel.user 13.3.9
 gitlab.settings 13.0.3
 gitlab.settings.defaultGroupVisibility 13.0.3
 gitlab.settings.defaultProjectVisibility 13.0.3

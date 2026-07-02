@@ -384,11 +384,28 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	for _, branch := range protectedBranches {
 		isDefaultBranch := branch.Name == defaultBranch
 
+		prefix := "gitlab.project.protectedBranch/" + branch.Name
+		push, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/push", branch.PushAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		merge, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/merge", branch.MergeAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+		unprotect, err := projectBranchAccessLevels(p.MqlRuntime, prefix+"/unprotect", branch.UnprotectAccessLevels)
+		if err != nil {
+			return nil, err
+		}
+
 		branchSettings := map[string]*llx.RawData{
-			"name":              llx.StringData(branch.Name),
-			"allowForcePush":    llx.BoolData(branch.AllowForcePush),
-			"defaultBranch":     llx.BoolData(isDefaultBranch),
-			"codeOwnerApproval": llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"name":                  llx.StringData(branch.Name),
+			"allowForcePush":        llx.BoolData(branch.AllowForcePush),
+			"defaultBranch":         llx.BoolData(isDefaultBranch),
+			"codeOwnerApproval":     llx.BoolData(branch.CodeOwnerApprovalRequired),
+			"pushAccessLevels":      llx.ArrayData(push, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"mergeAccessLevels":     llx.ArrayData(merge, types.Resource("gitlab.protectedBranch.accessLevel")),
+			"unprotectAccessLevels": llx.ArrayData(unprotect, types.Resource("gitlab.protectedBranch.accessLevel")),
 		}
 
 		mqlProtectedBranch, err := CreateResource(p.MqlRuntime, "gitlab.project.protectedBranch", branchSettings)
@@ -400,6 +417,76 @@ func (p *mqlGitlabProject) protectedBranches() ([]any, error) {
 	}
 
 	return mqlProtectedBranches, nil
+}
+
+// mqlGitlabProtectedBranchAccessLevelInternal caches the user/group id so the
+// typed user()/group() accessors resolve lazily. Exactly one of accessLevel,
+// user, group, or deployKeyId is meaningful per row.
+type mqlGitlabProtectedBranchAccessLevelInternal struct {
+	cacheUserID  int64
+	cacheGroupID int64
+}
+
+func (a *mqlGitlabProtectedBranchAccessLevel) user() (*mqlGitlabUser, error) {
+	if a.cacheUserID <= 0 {
+		a.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(a.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
+}
+
+func (a *mqlGitlabProtectedBranchAccessLevel) group() (*mqlGitlabGroup, error) {
+	if a.cacheGroupID <= 0 {
+		a.Group.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(a.cacheGroupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+// newMqlProtectedBranchAccessLevel builds one access-level row. idPrefix
+// (parent protected-branch + action) namespaces the synthetic __id so rows
+// from different branches or scopes don't collide in the resource cache.
+func newMqlProtectedBranchAccessLevel(runtime *plugin.Runtime, idPrefix string, id, accessLevel, userID, groupID, deployKeyID int64, desc string) (*mqlGitlabProtectedBranchAccessLevel, error) {
+	res, err := CreateResource(runtime, "gitlab.protectedBranch.accessLevel", map[string]*llx.RawData{
+		"__id":                   llx.StringData(fmt.Sprintf("%s/%d", idPrefix, id)),
+		"accessLevel":            llx.IntData(accessLevel),
+		"accessLevelDescription": llx.StringData(desc),
+		"deployKeyId":            llx.IntData(deployKeyID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	al := res.(*mqlGitlabProtectedBranchAccessLevel)
+	al.cacheUserID = userID
+	al.cacheGroupID = groupID
+	return al, nil
+}
+
+func projectBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*gitlab.BranchAccessDescription) ([]any, error) {
+	out := make([]any, 0, len(descs))
+	for _, d := range descs {
+		if d == nil {
+			continue
+		}
+		al, err := newMqlProtectedBranchAccessLevel(runtime, idPrefix, d.ID, int64(d.AccessLevel), d.UserID, d.GroupID, d.DeployKeyID, d.AccessLevelDescription)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, al)
+	}
+	return out, nil
 }
 
 // projectMembers fetches the list of members in the project with their roles
