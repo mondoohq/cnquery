@@ -12360,6 +12360,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   region string
   // A list of VPC security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Security group ingress exposure breakdown (VPC-only service without a public endpoint, so it is not internet-reachable)
+  exposure() aws.network.exposure
   // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your shard.
@@ -12416,6 +12418,8 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   kmsKey() aws.kms.key
   // A list of VPC security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Security group ingress exposure breakdown (VPC-only service without a public endpoint, so it is not internet-reachable)
+  exposure() aws.network.exposure
   // Number of days ElastiCache retains automatic cluster snapshots before deleting them
   snapshotRetentionLimit int
   // Time each day that a cache snapshot is created
@@ -17561,6 +17565,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   networkType string
   // List of VPC security groups associated with the DB cluster
   securityGroups() []aws.ec2.securitygroup
+  // Security group ingress exposure breakdown (VPC-only service without a public endpoint, so it is not internet-reachable)
+  exposure() aws.network.exposure
   // IAM roles associated with the cluster
   iamRoles() []aws.iam.role
   // Tags for the cluster
@@ -18063,6 +18069,8 @@ private aws.documentdb.cluster @defaults("arn name status") {
   snapshots() []aws.documentdb.snapshot
   // List of VPC security groups associated with the DB cluster
   securityGroups() []aws.ec2.securitygroup
+  // Security group ingress exposure breakdown (VPC-only service without a public endpoint, so it is not internet-reachable)
+  exposure() aws.network.exposure
   // Network type for the cluster (IPV4 or DUAL)
   networkType string
   // Source DB cluster, when this cluster is a read replica (null otherwise)
@@ -20399,6 +20407,8 @@ private aws.memorydb.cluster @defaults("name status nodeType region") {
   tags() map[string]string
   // Security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Security group ingress exposure breakdown (VPC-only service without a public endpoint, so it is not internet-reachable)
+  exposure() aws.network.exposure
 }
 
 // Amazon MemoryDB access control list
