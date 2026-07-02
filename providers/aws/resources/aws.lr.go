@@ -10341,6 +10341,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.cognitoRoleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetCognitoRoleArn()).ToDataRes(types.String)
 	},
+	"aws.es.domain.cognitoRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCognitoRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.es.domain.autoTuneState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetAutoTuneState()).ToDataRes(types.String)
 	},
@@ -11453,6 +11456,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.codeartifact.domain.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodeartifactDomain).GetS3BucketArn()).ToDataRes(types.String)
+	},
+	"aws.codeartifact.domain.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodeartifactDomain).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.codeartifact.domain.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodeartifactDomain).GetPolicy()).ToDataRes(types.Dict)
@@ -16788,6 +16794,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.replicationConfiguration.stagingAreaSubnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsReplicationConfiguration).GetStagingAreaSubnetId()).ToDataRes(types.String)
 	},
+	"aws.drs.replicationConfiguration.stagingAreaSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetStagingAreaSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
 	"aws.drs.replicationConfiguration.stagingAreaTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsReplicationConfiguration).GetStagingAreaTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -19070,6 +19079,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.route53.record.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Record).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.record.hostedZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetHostedZone()).ToDataRes(types.Resource("aws.route53.hostedZone"))
 	},
 	"aws.route53.record.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Record).GetName()).ToDataRes(types.String)
@@ -22400,6 +22412,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetSnapshotId()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetSnapshot()).ToDataRes(types.Resource("aws.ec2.snapshot"))
 	},
 	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetVolumeSize()).ToDataRes(types.Int)
@@ -27167,6 +27182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.s3.bucketArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).GetBucketArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.destination.s3.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.s3.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
@@ -42184,6 +42202,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).CognitoRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.cognitoRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CognitoRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.autoTuneState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).AutoTuneState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -43754,6 +43776,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.codeartifact.domain.s3BucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodeartifactDomain).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codeartifact.domain.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodeartifactDomain).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.codeartifact.domain.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51688,6 +51714,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsReplicationConfiguration).StagingAreaSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.drs.replicationConfiguration.stagingAreaSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).StagingAreaSubnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
 	"aws.drs.replicationConfiguration.stagingAreaTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsReplicationConfiguration).StagingAreaTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -54934,6 +54964,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.record.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53Record).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.hostedZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).HostedZone, ok = plugin.RawToTValue[*mqlAwsRoute53HostedZone](v.Value, v.Error)
 		return
 	},
 	"aws.route53.record.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59758,6 +59792,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).Snapshot, ok = plugin.RawToTValue[*mqlAwsEc2Snapshot](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66650,6 +66688,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.s3.bucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.destination.s3.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamDestinationS3).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.s3.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -98757,6 +98799,7 @@ type mqlAwsEsDomain struct {
 	CognitoUserPoolId                  plugin.TValue[string]
 	CognitoIdentityPoolId              plugin.TValue[string]
 	CognitoRoleArn                     plugin.TValue[string]
+	CognitoRole                        plugin.TValue[*mqlAwsIamRole]
 	AutoTuneState                      plugin.TValue[string]
 	ServiceSoftwareCurrentVersion      plugin.TValue[string]
 	ServiceSoftwareNewVersion          plugin.TValue[string]
@@ -99142,6 +99185,22 @@ func (c *mqlAwsEsDomain) GetCognitoIdentityPoolId() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetCognitoRoleArn() *plugin.TValue[string] {
 	return &c.CognitoRoleArn
+}
+
+func (c *mqlAwsEsDomain) GetCognitoRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.CognitoRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "cognitoRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.cognitoRole()
+	})
 }
 
 func (c *mqlAwsEsDomain) GetAutoTuneState() *plugin.TValue[string] {
@@ -102456,6 +102515,7 @@ type mqlAwsCodeartifactDomain struct {
 	RepositoryCount plugin.TValue[int64]
 	AssetSizeBytes  plugin.TValue[int64]
 	S3BucketArn     plugin.TValue[string]
+	S3Bucket        plugin.TValue[*mqlAwsS3Bucket]
 	Policy          plugin.TValue[any]
 	Tags            plugin.TValue[map[string]any]
 }
@@ -102551,6 +102611,22 @@ func (c *mqlAwsCodeartifactDomain) GetAssetSizeBytes() *plugin.TValue[int64] {
 
 func (c *mqlAwsCodeartifactDomain) GetS3BucketArn() *plugin.TValue[string] {
 	return &c.S3BucketArn
+}
+
+func (c *mqlAwsCodeartifactDomain) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codeartifact.domain", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
 }
 
 func (c *mqlAwsCodeartifactDomain) GetPolicy() *plugin.TValue[any] {
@@ -124291,6 +124367,7 @@ type mqlAwsDrsReplicationConfiguration struct {
 	// optional: if you define mqlAwsDrsReplicationConfigurationInternal it will be used here
 	SourceServerID                plugin.TValue[string]
 	StagingAreaSubnetId           plugin.TValue[string]
+	StagingAreaSubnet             plugin.TValue[*mqlAwsVpcSubnet]
 	StagingAreaTags               plugin.TValue[map[string]any]
 	UseDedicatedReplicationServer plugin.TValue[bool]
 	ReplicationServerInstanceType plugin.TValue[string]
@@ -124349,6 +124426,22 @@ func (c *mqlAwsDrsReplicationConfiguration) GetSourceServerID() *plugin.TValue[s
 
 func (c *mqlAwsDrsReplicationConfiguration) GetStagingAreaSubnetId() *plugin.TValue[string] {
 	return &c.StagingAreaSubnetId
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetStagingAreaSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.StagingAreaSubnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.replicationConfiguration", c.__id, "stagingAreaSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.stagingAreaSubnet()
+	})
 }
 
 func (c *mqlAwsDrsReplicationConfiguration) GetStagingAreaTags() *plugin.TValue[map[string]any] {
@@ -132147,6 +132240,7 @@ type mqlAwsRoute53Record struct {
 	__id       string
 	mqlAwsRoute53RecordInternal
 	HostedZoneId              plugin.TValue[string]
+	HostedZone                plugin.TValue[*mqlAwsRoute53HostedZone]
 	Name                      plugin.TValue[string]
 	Type                      plugin.TValue[string]
 	Ttl                       plugin.TValue[int64]
@@ -132208,6 +132302,22 @@ func (c *mqlAwsRoute53Record) MqlID() string {
 
 func (c *mqlAwsRoute53Record) GetHostedZoneId() *plugin.TValue[string] {
 	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRoute53Record) GetHostedZone() *plugin.TValue[*mqlAwsRoute53HostedZone] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HostedZone](&c.HostedZone, func() (*mqlAwsRoute53HostedZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.record", c.__id, "hostedZone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HostedZone), nil
+			}
+		}
+
+		return c.hostedZone()
+	})
 }
 
 func (c *mqlAwsRoute53Record) GetName() *plugin.TValue[string] {
@@ -143967,6 +144077,7 @@ type mqlAwsEc2LaunchconfigurationEbsBlockDevice struct {
 	// optional: if you define mqlAwsEc2LaunchconfigurationEbsBlockDeviceInternal it will be used here
 	Encrypted           plugin.TValue[bool]
 	SnapshotId          plugin.TValue[string]
+	Snapshot            plugin.TValue[*mqlAwsEc2Snapshot]
 	VolumeSize          plugin.TValue[int64]
 	VolumeType          plugin.TValue[string]
 	Iops                plugin.TValue[int64]
@@ -144017,6 +144128,22 @@ func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetEncrypted() *plugin.TVal
 
 func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetSnapshotId() *plugin.TValue[string] {
 	return &c.SnapshotId
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetSnapshot() *plugin.TValue[*mqlAwsEc2Snapshot] {
+	return plugin.GetOrCompute[*mqlAwsEc2Snapshot](&c.Snapshot, func() (*mqlAwsEc2Snapshot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.launchconfiguration.ebsBlockDevice", c.__id, "snapshot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Snapshot), nil
+			}
+		}
+
+		return c.snapshot()
+	})
 }
 
 func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetVolumeSize() *plugin.TValue[int64] {
@@ -161240,6 +161367,7 @@ type mqlAwsKinesisFirehoseDeliveryStreamDestinationS3 struct {
 	__id       string
 	mqlAwsKinesisFirehoseDeliveryStreamDestinationS3Internal
 	BucketArn                  plugin.TValue[string]
+	Bucket                     plugin.TValue[*mqlAwsS3Bucket]
 	IamRole                    plugin.TValue[*mqlAwsIamRole]
 	CompressionFormat          plugin.TValue[string]
 	Prefix                     plugin.TValue[string]
@@ -161294,6 +161422,22 @@ func (c *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) MqlID() string {
 
 func (c *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) GetBucketArn() *plugin.TValue[string] {
 	return &c.BucketArn
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.firehoseDeliveryStream.destination.s3", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
 }
 
 func (c *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {

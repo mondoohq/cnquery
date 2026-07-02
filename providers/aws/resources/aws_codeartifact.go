@@ -173,6 +173,20 @@ func newMqlAwsCodeartifactDomain(runtime *plugin.Runtime, region, name, owner st
 	return mqlDomain, nil
 }
 
+func (a *mqlAwsCodeartifactDomain) s3Bucket() (*mqlAwsS3Bucket, error) {
+	arnVal := a.S3BucketArn.Data
+	if arnVal == "" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
 func (a *mqlAwsCodeartifactDomain) id() (string, error) {
 	return a.Arn.Data, nil
 }

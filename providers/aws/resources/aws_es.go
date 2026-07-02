@@ -524,6 +524,20 @@ func (a *mqlAwsEsDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, err
 	return res.(*mqlAwsAcmCertificate), nil
 }
 
+func (a *mqlAwsEsDomain) cognitoRole() (*mqlAwsIamRole, error) {
+	arnVal := a.CognitoRoleArn.Data
+	if arnVal == "" {
+		a.CognitoRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (a *mqlAwsEsDomain) subnets() ([]any, error) {
 	res := []any{}
 	for _, subnetId := range a.cacheSubnetIds {

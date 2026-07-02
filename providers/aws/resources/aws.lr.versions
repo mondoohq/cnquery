@@ -1923,6 +1923,7 @@ aws.codeartifact.domain.owner 13.26.3
 aws.codeartifact.domain.policy 13.26.3
 aws.codeartifact.domain.region 13.26.3
 aws.codeartifact.domain.repositoryCount 13.26.3
+aws.codeartifact.domain.s3Bucket 13.41.1
 aws.codeartifact.domain.s3BucketArn 13.26.3
 aws.codeartifact.domain.status 13.26.3
 aws.codeartifact.domain.tags 13.26.3
@@ -2747,6 +2748,7 @@ aws.drs.replicationConfiguration.internetProtocol 13.9.0
 aws.drs.replicationConfiguration.replicatedDisks 11.15.2
 aws.drs.replicationConfiguration.replicationServerInstanceType 11.15.2
 aws.drs.replicationConfiguration.sourceServerID 11.15.2
+aws.drs.replicationConfiguration.stagingAreaSubnet 13.41.1
 aws.drs.replicationConfiguration.stagingAreaSubnetId 11.15.2
 aws.drs.replicationConfiguration.stagingAreaTags 11.15.2
 aws.drs.replicationConfiguration.useDedicatedReplicationServer 11.15.2
@@ -3277,6 +3279,7 @@ aws.ec2.launchconfiguration.ebsBlockDevice 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.deleteOnTermination 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.encrypted 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.iops 13.6.0
+aws.ec2.launchconfiguration.ebsBlockDevice.snapshot 13.41.1
 aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.throughput 13.6.0
 aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize 13.6.0
@@ -4606,6 +4609,7 @@ aws.es.domain.availabilityZones 13.21.4
 aws.es.domain.cloudformationStack 13.39.2
 aws.es.domain.cognitoEnabled 13.21.4
 aws.es.domain.cognitoIdentityPoolId 13.21.4
+aws.es.domain.cognitoRole 13.41.1
 aws.es.domain.cognitoRoleArn 13.21.4
 aws.es.domain.cognitoUserPoolId 13.21.4
 aws.es.domain.coldStorageEnabled 13.21.4
@@ -5865,6 +5869,7 @@ aws.kinesis.firehoseDeliveryStream.destination.redshift.s3BackupMode 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.redshift.username 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.region 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3 13.0.2
+aws.kinesis.firehoseDeliveryStream.destination.s3.bucket 13.41.1
 aws.kinesis.firehoseDeliveryStream.destination.s3.bucketArn 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.bufferingIntervalInSeconds 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.s3.bufferingSizeInMBs 13.0.2
@@ -7846,6 +7851,7 @@ aws.route53.record.geoLocation 11.15.3
 aws.route53.record.geoProximityLocation 11.15.3
 aws.route53.record.healthCheck 11.15.3
 aws.route53.record.healthCheckId 11.15.3
+aws.route53.record.hostedZone 13.41.1
 aws.route53.record.hostedZoneId 11.15.3
 aws.route53.record.isAlias 11.15.3
 aws.route53.record.multiValueAnswer 11.15.3

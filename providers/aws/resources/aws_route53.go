@@ -493,6 +493,20 @@ func (a *mqlAwsRoute53Record) id() (string, error) {
 	return fmt.Sprintf("%s//%s//%s//%s", a.HostedZoneId.Data, a.Name.Data, a.Type.Data, a.SetIdentifier.Data), nil
 }
 
+func (a *mqlAwsRoute53Record) hostedZone() (*mqlAwsRoute53HostedZone, error) {
+	zoneId := a.HostedZoneId.Data
+	if zoneId == "" {
+		a.HostedZone.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.route53.hostedZone",
+		map[string]*llx.RawData{"id": llx.StringData(zoneId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsRoute53HostedZone), nil
+}
+
 func (a *mqlAwsRoute53Record) resourceRecords() ([]any, error) {
 	return a.resourceRecordsCache, nil
 }

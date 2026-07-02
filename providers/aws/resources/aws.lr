@@ -4987,7 +4987,11 @@ private aws.es.domain @defaults("arn name") {
   // Cognito identity pool ID for Kibana authentication
   cognitoIdentityPoolId string
   // ARN of the IAM role granting Elasticsearch access to Cognito resources
-  cognitoRoleArn string
+  //
+  // Deprecated in favor of `cognitoRole`.
+  cognitoRoleArn @maturity("deprecated") string
+  // IAM role granting Elasticsearch access to Cognito resources
+  cognitoRole() aws.iam.role
   // State of Auto-Tune for the domain
   autoTuneState string
   // Current service software version present on the domain
@@ -5936,7 +5940,11 @@ private aws.codeartifact.domain @defaults("arn name owner status region") {
   // Total size in bytes of all package assets in the domain
   assetSizeBytes int
   // ARN of the S3 bucket that stores package assets for the domain
-  s3BucketArn string
+  //
+  // Deprecated in favor of `s3Bucket`.
+  s3BucketArn @maturity("deprecated") string
+  // S3 bucket that stores package assets for the domain
+  s3Bucket() aws.s3.bucket
   // Resource policy attached to the domain
   //
   // Shape (when set): `{document: "<JSON policy>", resourceArn, revision}`. Null when no policy is attached or the caller is denied access.
@@ -11054,7 +11062,11 @@ private aws.drs.replicationConfiguration @defaults("sourceServerID") {
   // Associated source server ID
   sourceServerID string
   // Staging area subnet ID
-  stagingAreaSubnetId string
+  //
+  // Deprecated in favor of `stagingAreaSubnet`.
+  stagingAreaSubnetId @maturity("deprecated") string
+  // Subnet used for the replication staging area
+  stagingAreaSubnet() aws.vpc.subnet
   // Staging area tags
   stagingAreaTags map[string]string
   // Whether to use dedicated replication server
@@ -13029,7 +13041,11 @@ private aws.route53.hostedZone.dnssec @defaults("status") {
 // Route 53 DNS resource record set
 private aws.route53.record @defaults("name type") {
   // Hosted zone ID this record belongs to
-  hostedZoneId string
+  //
+  // Deprecated in favor of `hostedZone`.
+  hostedZoneId @maturity("deprecated") string
+  // Hosted zone this record belongs to
+  hostedZone() aws.route53.hostedZone
   // Fully qualified domain name (e.g., www.example.com.)
   name string
   // DNS record type (A, AAAA, CNAME, MX, TXT, SOA, NS, SRV, PTR, CAA, etc.)
@@ -16020,7 +16036,11 @@ private aws.ec2.launchconfiguration.ebsBlockDevice @defaults("volumeSize volumeT
   // Whether the volume is encrypted
   encrypted bool
   // ID of the snapshot used to create the volume
-  snapshotId string
+  //
+  // Deprecated in favor of `snapshot`.
+  snapshotId @maturity("deprecated") string
+  // Snapshot the volume is created from
+  snapshot() aws.ec2.snapshot
   // Size of the volume in GiB
   volumeSize int
   // Volume type (gp2, gp3, io1, io2, etc.)
@@ -20220,7 +20240,11 @@ private aws.kinesis.firehoseDeliveryStream.cloudWatchLogging @defaults("enabled 
 // Amazon Kinesis Firehose S3 (Extended) destination
 private aws.kinesis.firehoseDeliveryStream.destination.s3 @defaults("bucketArn compressionFormat") {
   // ARN of the S3 bucket
-  bucketArn string
+  //
+  // Deprecated in favor of `bucket`.
+  bucketArn @maturity("deprecated") string
+  // S3 bucket records are delivered to
+  bucket() aws.s3.bucket
   // IAM role for delivery
   iamRole() aws.iam.role
   // Compression format: UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY

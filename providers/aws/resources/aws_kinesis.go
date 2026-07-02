@@ -980,6 +980,20 @@ func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) id() (string, error) 
 	return a.BucketArn.Data + "/" + a.Region.Data, nil
 }
 
+func (a *mqlAwsKinesisFirehoseDeliveryStreamDestinationS3) bucket() (*mqlAwsS3Bucket, error) {
+	arnVal := a.BucketArn.Data
+	if arnVal == "" {
+		a.Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
 func (a *mqlAwsKinesisFirehoseDeliveryStreamDestination) redshift() (*mqlAwsKinesisFirehoseDeliveryStreamDestinationRedshift, error) {
 	if a.cacheDest == nil || a.cacheDest.RedshiftDestinationDescription == nil {
 		a.Redshift.State = plugin.StateIsNull | plugin.StateIsSet

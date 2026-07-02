@@ -37,6 +37,20 @@ func (a *mqlAwsEc2LaunchconfigurationEbsBlockDevice) id() (string, error) {
 	return a.__id, nil
 }
 
+func (a *mqlAwsEc2LaunchconfigurationEbsBlockDevice) snapshot() (*mqlAwsEc2Snapshot, error) {
+	snapshotId := a.SnapshotId.Data
+	if snapshotId == "" {
+		a.Snapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.snapshot",
+		map[string]*llx.RawData{"id": llx.StringData(snapshotId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Snapshot), nil
+}
+
 func (a *mqlAwsEc2LaunchconfigurationMetadataOptions) id() (string, error) {
 	return a.__id, nil
 }
