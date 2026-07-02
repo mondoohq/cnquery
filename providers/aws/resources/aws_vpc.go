@@ -297,17 +297,24 @@ func newMqlAwsVpcNatgateway(runtime *plugin.Runtime, region string, gw vpctypes.
 }
 
 func initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// region is a lookup hint, not a schema field on aws.vpc.natgateway. Pull it
+	// out of args before any fallthrough so SetAllData never tries to apply it.
+	var region string
+	if r := args["region"]; r != nil {
+		region, _ = r.Value.(string)
+		delete(args, "region")
+	}
+
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 	// A targeted lookup needs both the NAT gateway id and its region (the id
 	// does not encode a region). Without them, hand back a bare resource.
-	if args["natGatewayId"] == nil || args["region"] == nil {
+	if args["natGatewayId"] == nil || region == "" {
 		return args, nil, nil
 	}
 	natID, _ := args["natGatewayId"].Value.(string)
-	region, _ := args["region"].Value.(string)
-	if natID == "" || region == "" {
+	if natID == "" {
 		return args, nil, nil
 	}
 
