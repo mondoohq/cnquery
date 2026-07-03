@@ -9,6 +9,8 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/packages"
 )
 
 // toolPackageSpec describes how a tool resource resolves its backing package
@@ -20,12 +22,19 @@ type toolPackageSpec struct {
 	// clean tool identifier (the resource name with dots turned into hyphens),
 	// not a guess at an upstream package name.
 	packageName string
+	// binaryNames are the tool's executables on the target's PATH. They drive
+	// the primary attribution path: resolve the binary, ask the OS package
+	// manager which package owns it (pacman -Qo / dpkg -S / rpm -qf / apk
+	// who-owns), and return that real, manager-tracked package. This works
+	// regardless of how the package is named, so it is preferred over
+	// managerCandidates. Leave empty for tools whose binary name collides with
+	// an unrelated package (e.g. bare "goose"/"gemini") to avoid mis-attributing
+	// the wrong install; those rely on managerCandidates instead.
+	binaryNames []string
 	// managerCandidates are names tried against the system package managers via
-	// the name-based `package(name)` lookup. Curated conservatively: only
-	// distinctive, low-false-positive names are listed; ambiguous or
-	// common-word names are left empty (the tool then always resolves to an
-	// abstract package). Exact-name matching is a first cut — the robust
-	// replacement (which package owns the tool's binary) is an ADR follow-up.
+	// the name-based `package(name)` lookup, used as a fallback when binary
+	// ownership finds nothing. Curated conservatively: only distinctive,
+	// low-false-positive names are listed.
 	managerCandidates []string
 	// vendor is the producing vendor when confidently known; empty otherwise.
 	vendor string
@@ -37,25 +46,26 @@ type toolPackageSpec struct {
 
 // toolPackageSpecs is keyed by MQL resource name.
 var toolPackageSpecs = map[string]toolPackageSpec{
-	"claude.code":    {packageName: "claude-code", vendor: "Anthropic", inferVersion: inferClaudeVersion},
-	"openai.codex":   {packageName: "openai-codex", vendor: "OpenAI", inferVersion: inferCodexVersion},
-	"cursor":         {packageName: "cursor", managerCandidates: []string{"cursor"}, vendor: "Anysphere"},
+	"claude.code":    {packageName: "claude-code", binaryNames: []string{"claude"}, vendor: "Anthropic", inferVersion: inferClaudeVersion},
+	"openai.codex":   {packageName: "openai-codex", binaryNames: []string{"codex"}, vendor: "OpenAI", inferVersion: inferCodexVersion},
+	"cursor":         {packageName: "cursor", binaryNames: []string{"cursor"}, managerCandidates: []string{"cursor"}, vendor: "Anysphere"},
 	"github.copilot": {packageName: "github-copilot", vendor: "GitHub"},
-	// Distinctive names, not bare "goose"/"gemini": bare "goose" collides with
-	// the widely-packaged pressly/goose DB-migration tool (Homebrew core), and
-	// the Gemini CLI ships as npm `@google/gemini-cli`. These match only the
-	// real tool where it exists as an OS package; the binary-ownership
-	// follow-up will attribute the common npm/script installs.
+	// Bare "goose"/"gemini" are intentionally NOT used as binaryNames: "goose"
+	// collides with the widely-packaged pressly/goose DB-migration tool, and
+	// "gemini" is ambiguous — attributing either by binary name risks pointing
+	// at the wrong package. They fall back to distinctive candidate package
+	// names (the real Gemini CLI ships as npm `@google/gemini-cli`, which no OS
+	// manager owns, so it resolves to an abstract package).
 	"goose":            {packageName: "goose", managerCandidates: []string{"block-goose-cli"}, vendor: "Block"},
 	"gemini":           {packageName: "gemini", managerCandidates: []string{"gemini-cli"}, vendor: "Google"},
-	"windsurf":         {packageName: "windsurf", managerCandidates: []string{"windsurf"}},
-	"zed":              {packageName: "zed", managerCandidates: []string{"zed"}, vendor: "Zed Industries"},
+	"windsurf":         {packageName: "windsurf", binaryNames: []string{"windsurf"}, managerCandidates: []string{"windsurf"}},
+	"zed":              {packageName: "zed", binaryNames: []string{"zed"}, managerCandidates: []string{"zed"}, vendor: "Zed Industries"},
 	"roo":              {packageName: "roo"},
 	"cline":            {packageName: "cline"},
-	"kiro":             {packageName: "kiro", managerCandidates: []string{"kiro"}},
+	"kiro":             {packageName: "kiro", binaryNames: []string{"kiro"}, managerCandidates: []string{"kiro"}},
 	"continuedev":      {packageName: "continuedev"},
 	"trae":             {packageName: "trae", managerCandidates: []string{"trae"}},
-	"opencode":         {packageName: "opencode", managerCandidates: []string{"opencode"}},
+	"opencode":         {packageName: "opencode", binaryNames: []string{"opencode"}, managerCandidates: []string{"opencode"}},
 	"pi":               {packageName: "pi"},
 	"mistral.vibe":     {packageName: "mistral-vibe", vendor: "Mistral AI"},
 	"antigravity":      {packageName: "antigravity", managerCandidates: []string{"antigravity"}, vendor: "Google"},
@@ -66,31 +76,51 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	"augment":          {packageName: "augment"},
 	"warp":             {packageName: "warp", vendor: "Warp"},
 	"kilocode":         {packageName: "kilocode", managerCandidates: []string{"kilocode"}},
-	"openhands":        {packageName: "openhands", managerCandidates: []string{"openhands"}},
-	"qwen.code":        {packageName: "qwen-code", vendor: "Alibaba"},
+	"openhands":        {packageName: "openhands", binaryNames: []string{"openhands"}, managerCandidates: []string{"openhands"}},
+	"qwen.code":        {packageName: "qwen-code", binaryNames: []string{"qwen"}, vendor: "Alibaba"},
 }
 
 // resolveToolPackage returns the real system-package-manager entry that
 // installed the tool when it can be attributed to one, otherwise an abstract
 // package (origin "unknown", empty format, never inserted into `packages`).
 func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPackageSpec) (*mqlPackage, error) {
-	// (a) Try to attribute the tool to a real package via the name-based init
-	// lookup. NewResource runs initPackage; a managed hit is the same cached
-	// instance that appears in the `packages` collection.
+	// (a) Strongest signal: ask the OS package manager which installed package
+	// owns the tool's binary (pacman -Qo / dpkg -S / rpm -qf / apk who-owns),
+	// then resolve that name to the real, manager-tracked package already in
+	// the `packages` collection. This works regardless of the package's name.
+	if conn, ok := runtime.Connection.(shared.Connection); ok {
+		for _, bin := range spec.binaryNames {
+			ownerName, err := packages.FindPackageOwningBinary(conn, bin)
+			if err != nil {
+				return nil, err
+			}
+			if ownerName == "" {
+				continue
+			}
+			pkg, err := lookupInstalledPackage(runtime, ownerName)
+			if err != nil {
+				return nil, err
+			}
+			if pkg != nil {
+				return pkg, nil
+			}
+		}
+	}
+
+	// (b) Weaker signal: try curated candidate package names by name. Resolves
+	// to the same real, cached `packages` instance when one matches.
 	for _, name := range spec.managerCandidates {
-		raw, err := NewResource(runtime, "package", map[string]*llx.RawData{
-			"name": llx.StringData(name),
-		})
+		pkg, err := lookupInstalledPackage(runtime, name)
 		if err != nil {
 			return nil, err
 		}
-		if pkg, ok := raw.(*mqlPackage); ok && pkg.Installed.Data {
+		if pkg != nil {
 			return pkg, nil
 		}
 	}
 
-	// (b) Not attributable — detect presence and, where possible, a version,
-	// then synthesize an abstract package.
+	// (c) Not attributable to any manager — detect presence and, where
+	// possible, a version, then synthesize an abstract package.
 	installed := configDirPresent(runtime, configPath)
 	version := ""
 	if installed && spec.inferVersion != nil {
@@ -135,9 +165,26 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 	return pkg, nil
 }
 
-// configDirPresent is the v1 presence signal: the tool's configPath directory
-// exists on the target. Best-effort; a stronger binary-ownership signal is an
-// ADR follow-up.
+// lookupInstalledPackage resolves a package by name to the real, cached
+// instance from the `packages` collection (via initPackage — the same object
+// that appears in `packages`). Returns nil when no such package is installed,
+// so callers fall through to the next attribution signal.
+func lookupInstalledPackage(runtime *plugin.Runtime, name string) (*mqlPackage, error) {
+	raw, err := NewResource(runtime, "package", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if pkg, ok := raw.(*mqlPackage); ok && pkg.Installed.Data {
+		return pkg, nil
+	}
+	return nil, nil
+}
+
+// configDirPresent is the presence signal for the abstract-package fallback:
+// the tool's configPath directory exists on the target. Best-effort — used only
+// when binary ownership and name candidates both come up empty.
 func configDirPresent(runtime *plugin.Runtime, configPath string) bool {
 	if configPath == "" {
 		return false

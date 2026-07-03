@@ -258,6 +258,45 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 	return ParseDpkgUpdates(cmd.Stdout)
 }
 
+// FindFileOwner implements PkgFileOwnershipResolver via `dpkg -S`, which prints
+// "<name>[:<arch>]: <path>" (possibly across several lines, including diversion
+// notes) and exits non-zero when no package owns the path.
+func (dpm *DebPkgManager) FindFileOwner(path string) (string, error) {
+	if !dpm.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return "", nil
+	}
+	cmd, err := dpm.conn.RunCommand("dpkg -S " + shellQuote(path))
+	if err != nil {
+		return "", err
+	}
+	if cmd.ExitStatus != 0 {
+		return "", nil
+	}
+	return parseDpkgOwner(readCommandOutput(cmd.Stdout)), nil
+}
+
+// parseDpkgOwner extracts the package name from `dpkg -S` output. Lines look
+// like "<name>[:<arch>]: <path>"; the output may include diversion notes
+// ("diversion by X from: …") which are skipped because a package spec never
+// contains a space. The optional ":<arch>" multiarch qualifier is stripped to
+// match the names reported by List().
+func parseDpkgOwner(output string) string {
+	for _, line := range strings.Split(output, "\n") {
+		idx := strings.Index(line, ": ")
+		if idx <= 0 {
+			continue
+		}
+		spec := strings.TrimSpace(line[:idx])
+		if c := strings.IndexByte(spec, ':'); c >= 0 {
+			spec = spec[:c]
+		}
+		if spec != "" && !strings.ContainsRune(spec, ' ') {
+			return spec
+		}
+	}
+	return ""
+}
+
 func (dpm *DebPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	fs := dpm.conn.FileSystem()
 

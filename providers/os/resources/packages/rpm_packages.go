@@ -355,6 +355,36 @@ func (rpm *RpmPkgManager) staticAvailable() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
 
+// FindFileOwner implements PkgFileOwnershipResolver via `rpm -qf`, using a
+// queryformat so only the bare package name is printed. rpm exits non-zero with
+// "file <path> is not owned by any package" when the path is unowned. Requires
+// the rpm CLI (unavailable in static-analysis mode, in which case the query
+// just fails and falls through).
+func (rpm *RpmPkgManager) FindFileOwner(path string) (string, error) {
+	if !rpm.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return "", nil
+	}
+	cmd, err := rpm.conn.RunCommand("rpm -qf --queryformat '%{NAME}\\n' " + shellQuote(path))
+	if err != nil {
+		return "", err
+	}
+	if cmd.ExitStatus != 0 {
+		return "", nil
+	}
+	return parseRpmOwner(readCommandOutput(cmd.Stdout)), nil
+}
+
+// parseRpmOwner extracts the package name from `rpm -qf --queryformat '%{NAME}'`
+// output. It guards against builds that still print a "file … is not owned by
+// any package" notice on stdout (such lines contain spaces).
+func parseRpmOwner(output string) string {
+	name := strings.TrimSpace(firstLine(output))
+	if name == "" || strings.ContainsRune(name, ' ') {
+		return ""
+	}
+	return name
+}
+
 func (rpm *RpmPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
 	if rpm.isStaticAnalysis() {
 		// nothing to do since the data is already attached to the package

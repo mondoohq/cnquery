@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -84,21 +84,31 @@ indicator.
 
 ### Real package resolution
 
-`package()` first tries to attribute the tool to a real package. It reuses the existing
-name-based lookup (`initPackage`), trying one or more per-tool candidate package names
-against the asset's active package managers. If a candidate resolves to a package with
-`installed == true`, that instance is returned directly. Because `initPackage` returns
-the cached instance built by `packages.list()`, this is the *same* object that appears
-in the `packages` collection — `cursor.package` and
-`packages.where(name == "cursor")[0]` are one and the same, with a real `format`,
-`origin`, `version`, `purl`, and `cpes`.
+`package()` attributes the tool to a real package through two signals, strongest first.
+Whichever wins, the returned package is resolved by name through `initPackage`, so it is
+the *same* cached instance that `packages.list()` built — `cursor.package` and
+`packages.where(name == "cursor")[0]` are one and the same object, with a real `format`,
+`origin`, `version`, `purl`, and `cpes`. `package()` never synthesizes its own package
+when the system owns the tool.
 
-Name-based matching is a deliberately conservative first cut: it only attributes a tool
-whose package is *named like the tool*. Many tools ship under a package name that differs
-from the tool/binary name, so the robust attribution — resolving the tool's binary and
-asking the package manager which package owns that path — is a planned follow-up (see
-Follow-Ups). Until then, tools that do not match a candidate name fall back to an abstract
-package.
+1. **Binary ownership (primary).** Resolve the tool's binary on the target's `PATH` (via
+   `command -v`, following symlinks) and ask the active package manager which package owns
+   that path. This is a capability on the package-manager layer —
+   `PkgFileOwnershipResolver.FindFileOwner` in `providers/os/resources/packages`, the
+   inverse of the existing `Files()` — implemented for pacman (`pacman -Qo`), dpkg
+   (`dpkg -S`), rpm (`rpm -qf`), and apk (`apk info --who-owns`). Because it matches on the
+   *file*, it attributes a tool correctly no matter what its package is named. The owning
+   package name is then resolved to its real `packages` entry.
+
+2. **Candidate names (fallback).** When binary ownership finds no owner (the binary is not
+   on `PATH`, or no manager owns it — e.g. an npm-global install), fall back to the
+   name-based `initPackage` lookup against one or more per-tool candidate package names.
+   This is conservative: it only attributes a tool whose package is *named like the tool*.
+
+A tool's `binaryNames` are omitted when the binary name is ambiguous (bare `goose`
+collides with the pressly/goose DB-migration tool; `gemini` is not distinctive), so it is
+not mis-attributed to an unrelated package; such tools rely on candidate names only.
+Tools that match neither signal fall back to an abstract package.
 
 ### The abstract package
 
@@ -214,17 +224,15 @@ outdated-ness that the `package` reference delivers at no extra cost.
 - Roll the `package()` accessor out across the 26 AI tools with a shared resolver and a
   per-tool spec table. The step-by-step rollout lives in
   `docs/plans/2026-07-01-tool-install-indicator.md`.
-- **Binary-ownership detection.** Replace (or augment) exact-name matching with
-  ownership-based attribution: resolve the tool's binary path (via `PATH` or a known
-  install location) and ask the active package manager which package owns that path. Most
-  common distros support this reverse lookup — `dpkg -S <path>`, `rpm -qf <path>`,
-  `pacman -Qo <path>`, `apk info --who-owns <path>`, plus `flatpak`/`snap` ownership — so a
-  tool whose package name differs from its binary name still resolves to its real,
-  manager-tracked `package`. Likely shape: an owner-by-path method on the
-  `OperatingSystemPkgManager` interface (`providers/os/resources/packages/packages.go`), or
-  the reverse query run through the `command` resource, with a `binaryName`/`binaryPaths`
-  entry added to each tool's spec. Falls back to the abstract package when no owner is found.
-  This also gives a stronger install signal than "config directory exists."
+- **Extend binary-ownership to more package managers.** The `PkgFileOwnershipResolver`
+  capability is implemented for pacman, dpkg, rpm, and apk. Homebrew, snap, flatpak, and
+  the Windows managers do not yet implement it and fall back to candidate names / abstract
+  packages; add `FindFileOwner` for them as needed. apk's owner-name parsing strips the
+  `-<version>-r<rel>` suffix heuristically; revisit if a package name is ever mangled.
+- **Attribute npm-global / `curl | sh` installs.** Binary ownership covers OS-managed
+  installs; tools installed via npm-global or a vendored script still resolve to an
+  abstract package. A richer, still-not-manager `origin` for these could be added without
+  regressing the "unknown means unknown" contract.
 - Extend the same pattern to non-AI tools as they are modeled.
 - Revisit whether commonly-seen abstract packages (e.g. npm-global installs) deserve a
   richer, still-not-manager `origin` once patterns emerge — without regressing the

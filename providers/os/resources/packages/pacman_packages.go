@@ -180,3 +180,32 @@ func (ppm *PacmanPkgManager) Files(name string, version string, arch string) ([]
 	// not yet implemented
 	return nil, nil
 }
+
+var pacmanOwnerRegex = regexp.MustCompile(`is owned by (\S+)`)
+
+// FindFileOwner implements PkgFileOwnershipResolver via `pacman -Qo`, which
+// prints "<path> is owned by <name> <version>" and exits non-zero when no
+// package owns the path.
+func (ppm *PacmanPkgManager) FindFileOwner(path string) (string, error) {
+	if !ppm.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return "", nil
+	}
+	cmd, err := ppm.conn.RunCommand("pacman -Qo " + shellQuote(path))
+	if err != nil {
+		return "", err
+	}
+	if cmd.ExitStatus != 0 {
+		return "", nil
+	}
+	return parsePacmanOwner(readCommandOutput(cmd.Stdout)), nil
+}
+
+// parsePacmanOwner extracts the package name from `pacman -Qo` output of the
+// form "<path> is owned by <name> <version>".
+func parsePacmanOwner(output string) string {
+	m := pacmanOwnerRegex.FindStringSubmatch(output)
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
