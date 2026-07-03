@@ -1,0 +1,22 @@
+# Minimal pacman local database fixture for exercising PacmanPkgManager.Files().
+# Only the `files` manifests are needed — Files() just stats the manifest path.
+
+[files."/var/lib/pacman/local/glibc-2.39-1/files"]
+content="""
+%FILES%
+usr/
+usr/bin/
+usr/bin/gencat
+usr/lib/
+usr/lib/libc.so.6
+"""
+
+# Epoch package: the local-db directory keeps the epoch colon in its version
+# suffix, matching the version reported by `pacman -Q` and the desc file.
+[files."/var/lib/pacman/local/alsa-plugins-1:1.2.12-5/files"]
+content="""
+%FILES%
+usr/
+usr/lib/
+usr/lib/alsa-lib/
+"""

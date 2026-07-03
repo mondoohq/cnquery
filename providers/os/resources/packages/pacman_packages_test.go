@@ -38,26 +38,29 @@ zziplib 0.13.67-1`
 
 	assert.Equal(t, 8, len(m), "detected the right amount of packages")
 	p := packages.Package{
-		Name:    "qpdfview",
-		Version: "0.4.17beta1-4.1",
-		PUrl:    "pkg:alpm/arch/qpdfview@0.4.17beta1-4.1?arch=x86_64&distro=arch",
-		Format:  packages.PacmanPkgFormat,
+		Name:           "qpdfview",
+		Version:        "0.4.17beta1-4.1",
+		PUrl:           "pkg:alpm/arch/qpdfview@0.4.17beta1-4.1?arch=x86_64&distro=arch",
+		Format:         packages.PacmanPkgFormat,
+		FilesAvailable: packages.PkgFilesAsync,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
-		Name:    "vertex-maia-themes",
-		Version: "20171114-1",
-		PUrl:    "pkg:alpm/arch/vertex-maia-themes@20171114-1?arch=x86_64&distro=arch",
-		Format:  packages.PacmanPkgFormat,
+		Name:           "vertex-maia-themes",
+		Version:        "20171114-1",
+		PUrl:           "pkg:alpm/arch/vertex-maia-themes@20171114-1?arch=x86_64&distro=arch",
+		Format:         packages.PacmanPkgFormat,
+		FilesAvailable: packages.PkgFilesAsync,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
-		Name:    "xfce4-pulseaudio-plugin",
-		Version: "0.3.2.r13.g553691a-1",
-		PUrl:    "pkg:alpm/arch/xfce4-pulseaudio-plugin@0.3.2.r13.g553691a-1?arch=x86_64&distro=arch",
-		Format:  packages.PacmanPkgFormat,
+		Name:           "xfce4-pulseaudio-plugin",
+		Version:        "0.3.2.r13.g553691a-1",
+		PUrl:           "pkg:alpm/arch/xfce4-pulseaudio-plugin@0.3.2.r13.g553691a-1?arch=x86_64&distro=arch",
+		Format:         packages.PacmanPkgFormat,
+		FilesAvailable: packages.PkgFilesAsync,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
@@ -84,10 +87,11 @@ argon2 20190702-2`
 
 	assert.Equal(t, 3, len(m), "detected the right amount of packages")
 	p := packages.Package{
-		Name:    "acl",
-		Version: "2.2.53-2",
-		PUrl:    "pkg:alpm/arch/acl@2.2.53-2?arch=x86_64&distro=arch",
-		Format:  packages.PacmanPkgFormat,
+		Name:           "acl",
+		Version:        "2.2.53-2",
+		PUrl:           "pkg:alpm/arch/acl@2.2.53-2?arch=x86_64&distro=arch",
+		Format:         packages.PacmanPkgFormat,
+		FilesAvailable: packages.PkgFilesAsync,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
@@ -122,6 +126,7 @@ func TestParsePacmanDB(t *testing.T) {
 	assert.Equal(t, "pacman", zlib.Format)
 	assert.Contains(t, zlib.PUrl, "pkg:alpm/arch/zlib")
 	assert.Equal(t, "custom:Zlib", zlib.License)
+	assert.Equal(t, packages.PkgFilesAsync, zlib.FilesAvailable)
 
 	var openssl *packages.Package
 	for i := range pkgs {

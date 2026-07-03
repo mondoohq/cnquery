@@ -21,6 +21,12 @@ import (
 
 const (
 	PacmanPkgFormat = "pacman"
+	// PacmanLocalDB is the root of pacman's local package database. Each
+	// installed package has a directory named "<name>-<version>" that holds a
+	// `files` manifest listing everything the package put on disk. AUR
+	// packages installed through helpers like yay or paru register here too,
+	// so they're covered without any extra handling.
+	PacmanLocalDB = "/var/lib/pacman/local"
 )
 
 var PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
@@ -35,10 +41,11 @@ func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 			name := m[1]
 			version := m[2]
 			pkgs = append(pkgs, Package{
-				Name:    name,
-				Version: version,
-				Format:  PacmanPkgFormat,
-				PUrl:    purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
+				Name:           name,
+				Version:        version,
+				Format:         PacmanPkgFormat,
+				FilesAvailable: PkgFilesAsync,
+				PUrl:           purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
 			})
 		}
 	}
@@ -75,7 +82,7 @@ func (ppm *PacmanPkgManager) List() ([]Package, error) {
 
 func (ppm *PacmanPkgManager) listFromFS() ([]Package, error) {
 	afs := &afero.Afero{Fs: ppm.conn.FileSystem()}
-	return ParsePacmanDB(ppm.platform, afs, "/var/lib/pacman/local")
+	return ParsePacmanDB(ppm.platform, afs, PacmanLocalDB)
 }
 
 // ParsePacmanDB parses the pacman local database directory structure.
@@ -135,9 +142,10 @@ func parsePacmanDesc(pf *inventory.Platform, afs *afero.Afero, descPath string) 
 		// the first which is correct for most packages. The fast
 		// `pacman -Q` path doesn't surface license at all; that gap is
 		// expected and gets filled in only when the FS fallback runs.
-		License: fields["%LICENSE%"],
-		Format:  PacmanPkgFormat,
-		PUrl:    purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
+		License:        fields["%LICENSE%"],
+		Format:         PacmanPkgFormat,
+		FilesAvailable: PkgFilesAsync,
+		PUrl:           purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
 	}, nil
 }
 
@@ -176,7 +184,24 @@ func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {
 	return nil, errors.New("Available() not implemented for pacman")
 }
 
+// Files returns the file manifest for a pacman package. pacman records the
+// files each package owns in <PacmanLocalDB>/<name>-<version>/files. The
+// directory suffix is the full version including epoch (e.g. "1:1.6.7-1"),
+// which is exactly what both `pacman -Q` and the desc files report, so no
+// special epoch handling is needed. We return the path to that manifest,
+// matching the async convention used by the dpkg and rpm package managers.
 func (ppm *PacmanPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
-	// not yet implemented
-	return nil, nil
+	if name == "" || version == "" {
+		return nil, nil
+	}
+
+	fs := ppm.conn.FileSystem()
+	// path.Join (not filepath.Join) is intentional — these are always Linux
+	// filesystem paths, even when mql runs on a different OS.
+	filesDB := path.Join(PacmanLocalDB, name+"-"+version, "files")
+	if _, err := fs.Stat(filesDB); err != nil {
+		return nil, nil
+	}
+
+	return []FileRecord{{Path: filesDB}}, nil
 }
