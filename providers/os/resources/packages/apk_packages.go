@@ -210,13 +210,18 @@ func parseApkOwner(output string) string {
 	return apkStripVersion(m[1])
 }
 
+// apkReleaseSuffix matches the trailing "-r<digits>" apk release component,
+// anchored at the end so a stray "-r" inside a version segment (e.g. a
+// hypothetical "1.0-rc1") is not mistaken for the release separator.
+var apkReleaseSuffix = regexp.MustCompile(`-r\d+$`)
+
 // apkStripVersion turns an apk "name-version-rREL" token into the bare package
 // name. apk names can contain hyphens while versions cannot, so we strip the
 // trailing "-rREL" release and then the "-version" component rather than
 // splitting on the first hyphen.
 func apkStripVersion(s string) string {
-	if i := strings.LastIndex(s, "-r"); i >= 0 {
-		s = s[:i]
+	if loc := apkReleaseSuffix.FindStringIndex(s); loc != nil {
+		s = s[:loc[0]]
 	}
 	if i := strings.LastIndex(s, "-"); i >= 0 {
 		s = s[:i]

@@ -356,10 +356,13 @@ func (rpm *RpmPkgManager) staticAvailable() (map[string]PackageUpdate, error) {
 }
 
 // FindFileOwner implements PkgFileOwnershipResolver via `rpm -qf`, using a
-// queryformat so only the bare package name is printed. rpm exits non-zero with
-// "file <path> is not owned by any package" when the path is unowned. Requires
-// the rpm CLI (unavailable in static-analysis mode, in which case the query
-// just fails and falls through).
+// queryformat so only the bare package name is printed. The `\n` is an rpm
+// format escape (interpreted by rpm, not the shell — it stays literal inside
+// the single-quoted argument until rpm parses it); it delimits owners when a
+// path is owned by more than one package, so parseRpmOwner takes the first
+// line. rpm exits non-zero with "file <path> is not owned by any package" when
+// the path is unowned. Requires the rpm CLI (unavailable in static-analysis
+// mode, in which case the query just fails and falls through).
 func (rpm *RpmPkgManager) FindFileOwner(path string) (string, error) {
 	if !rpm.conn.Capabilities().Has(shared.Capability_RunCommand) {
 		return "", nil

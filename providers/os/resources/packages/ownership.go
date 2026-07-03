@@ -5,11 +5,20 @@ package packages
 
 import (
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
+
+// safeBinaryName matches a plain executable name — letters, digits, and the
+// punctuation real tool binaries use. A binary name never contains a slash,
+// whitespace, or shell metacharacters, so rejecting those keeps the `command -v`
+// call safe even if a caller ever passes untrusted input. This is defense in
+// depth: shellQuote already single-quotes the value, and POSIX shells perform
+// no expansion inside single quotes.
+var safeBinaryName = regexp.MustCompile(`^[A-Za-z0-9._+-]+$`)
 
 // PkgFileOwnershipResolver is an optional capability implemented by package
 // managers that can reverse-resolve a file path to the installed package that
@@ -44,6 +53,13 @@ func FindPackageOwningFile(conn shared.Connection, absPath string) (string, erro
 	if err != nil {
 		return "", err
 	}
+	return findFileOwner(pms, absPath), nil
+}
+
+// findFileOwner asks each manager that supports ownership lookup which package
+// owns absPath, returning the first owner found. Per-manager errors are logged
+// and skipped (an unowned path is an ordinary outcome, not a failure).
+func findFileOwner(pms []OperatingSystemPkgManager, absPath string) string {
 	for _, pm := range pms {
 		resolver, ok := pm.(PkgFileOwnershipResolver)
 		if !ok {
@@ -56,10 +72,10 @@ func FindPackageOwningFile(conn shared.Connection, absPath string) (string, erro
 			continue
 		}
 		if name != "" {
-			return name, nil
+			return name
 		}
 	}
-	return "", nil
+	return ""
 }
 
 // FindPackageOwningBinary resolves binaryName on the target's PATH (via
@@ -69,19 +85,26 @@ func FindPackageOwningFile(conn shared.Connection, absPath string) (string, erro
 // database records the canonical file. Returns "" when the binary is not on
 // PATH or no package owns it.
 func FindPackageOwningBinary(conn shared.Connection, binaryName string) (string, error) {
-	if binaryName == "" {
+	if binaryName == "" || !safeBinaryName.MatchString(binaryName) {
 		return "", nil
 	}
 	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
 		return "", nil
 	}
 
-	for _, path := range binaryCandidatePaths(conn, binaryName) {
-		name, err := FindPackageOwningFile(conn, path)
-		if err != nil {
-			return "", err
-		}
-		if name != "" {
+	paths := binaryCandidatePaths(conn, binaryName)
+	if len(paths) == 0 {
+		return "", nil
+	}
+
+	// Resolve the platform's package managers once and reuse them across every
+	// candidate path — platform detection + manager instantiation is not free.
+	pms, err := ResolveSystemPkgManagers(conn)
+	if err != nil {
+		return "", err
+	}
+	for _, path := range paths {
+		if name := findFileOwner(pms, path); name != "" {
 			return name, nil
 		}
 	}

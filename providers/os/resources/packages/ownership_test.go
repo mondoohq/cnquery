@@ -84,6 +84,16 @@ func TestApkStripVersion(t *testing.T) {
 	assert.Equal(t, "claude-code", apkStripVersion("claude-code-2.1.191-r0"))
 	assert.Equal(t, "busybox", apkStripVersion("busybox-1.36.1-r15"))
 	assert.Equal(t, "py3-setuptools", apkStripVersion("py3-setuptools-68.0.0-r0"))
+	// Package name ending in a digit-segment must not be confused with the
+	// version boundary.
+	assert.Equal(t, "gtk4", apkStripVersion("gtk4-4.14.0-r0"))
+	// apk uses "_" (not "-") for pre-release suffixes, so the real name is
+	// recovered even when the version carries an "_rc1"; the "-r" there must
+	// not be taken as the release separator.
+	assert.Equal(t, "foo", apkStripVersion("foo-1.0_rc1-r0"))
+	// A package name ending in "-r<word>" (not digits) with no release suffix
+	// must not be truncated at that "-r".
+	assert.Equal(t, "super-r2d2", apkStripVersion("super-r2d2-1.0"))
 }
 
 func TestFirstLine(t *testing.T) {
@@ -95,4 +105,15 @@ func TestFirstLine(t *testing.T) {
 func TestShellQuote(t *testing.T) {
 	assert.Equal(t, "'/usr/bin/claude'", shellQuote("/usr/bin/claude"))
 	assert.Equal(t, `'/tmp/a'\''b'`, shellQuote("/tmp/a'b"))
+}
+
+func TestSafeBinaryName(t *testing.T) {
+	// real tool binaries
+	for _, ok := range []string{"claude", "codex", "qwen", "gemini-cli", "py3.11", "g++"} {
+		assert.True(t, safeBinaryName.MatchString(ok), ok)
+	}
+	// anything with a slash, whitespace, or shell metacharacter is rejected
+	for _, bad := range []string{"", "a/b", "a b", "$(rm -rf /)", "a;b", "a`b`", "a|b", "a&b", "a\nb"} {
+		assert.False(t, safeBinaryName.MatchString(bad), bad)
+	}
 }
