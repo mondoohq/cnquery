@@ -61,7 +61,7 @@ func writeLargeHclFixture(t *testing.T, resources, variables, outputs int) strin
 // Run with -race: on the unfixed code the detector flags the concurrent
 // (re-)initialization of registry-shared terraform.block instances
 // (newMqlHclBlock), refreshCache reading blocks another goroutine is still
-// writing, and the unsynchronized read of mqlTerraformInternal.resources in
+// writing, and the unsynchronized read of the internal resource list in
 // initTerraformResources.
 //
 // The accessor phase runs after the build fan-out completed: the very first
