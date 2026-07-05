@@ -11,6 +11,25 @@ import (
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/packages"
+	"go.mondoo.com/mql/v13/providers/os/resources/purl"
+)
+
+// runtimeKind selects how the runtime() accessor resolves an agent's host — the
+// software the agent runs *inside* (docs/adr/058-ai-security-ard.md). The host is
+// returned as a package resource, mirroring package() (the installer).
+type runtimeKind int
+
+const (
+	// runtimeOS: a standalone agent (a CLI, or a standalone editor such as Cursor
+	// or Zed) runs directly on the operating system — runtime() is the OS as a
+	// package (purl pkg:platform/...).
+	runtimeOS runtimeKind = iota
+	// runtimeIDE: an editor plugin runs inside an IDE — runtime() is the editor
+	// package (VS Code, a fork, or a JetBrains IDE).
+	runtimeIDE
+	// runtimeBrowser: a browser extension runs inside a browser — runtime() is
+	// the browser package.
+	runtimeBrowser
 )
 
 // toolPackageSpec describes how a tool resource resolves its backing package
@@ -42,6 +61,18 @@ type toolPackageSpec struct {
 	// package. Best-effort: it returns "" (unknown) rather than an error when
 	// the source is missing or unreadable.
 	inferVersion func(runtime *plugin.Runtime, configPath string) (string, error)
+
+	// runtime selects the host the tool runs in (see runtimeKind). The zero value
+	// (runtimeOS) means a standalone agent hosted by the OS.
+	runtime runtimeKind
+	// runtimeHostName is the display name of the host (editor/browser) used for
+	// the abstract fallback when no real host package can be resolved. Only
+	// consulted for runtimeIDE / runtimeBrowser.
+	runtimeHostName string
+	// runtimeHostCandidates are package-manager names tried (by name) to resolve
+	// the real host editor/browser package. Only consulted for runtimeIDE /
+	// runtimeBrowser; falls back to an abstract host package named runtimeHostName.
+	runtimeHostCandidates []string
 }
 
 // toolPackageSpecs is keyed by MQL resource name.
@@ -49,7 +80,7 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	"claude.code":    {packageName: "claude-code", binaryNames: []string{"claude"}, vendor: "Anthropic", inferVersion: inferClaudeVersion},
 	"openai.codex":   {packageName: "openai-codex", binaryNames: []string{"codex"}, vendor: "OpenAI", inferVersion: inferCodexVersion},
 	"cursor":         {packageName: "cursor", binaryNames: []string{"cursor"}, managerCandidates: []string{"cursor"}, vendor: "Anysphere"},
-	"github.copilot": {packageName: "github-copilot", vendor: "GitHub"},
+	"github.copilot": {packageName: "github-copilot", vendor: "GitHub", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
 	// Bare "goose"/"gemini" are intentionally NOT used as binaryNames: "goose"
 	// collides with the widely-packaged pressly/goose DB-migration tool, and
 	// "gemini" is ambiguous — attributing either by binary name risks pointing
@@ -60,10 +91,10 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	"gemini":           {packageName: "gemini", managerCandidates: []string{"gemini-cli"}, vendor: "Google"},
 	"windsurf":         {packageName: "windsurf", binaryNames: []string{"windsurf"}, managerCandidates: []string{"windsurf"}},
 	"zed":              {packageName: "zed", binaryNames: []string{"zed"}, managerCandidates: []string{"zed"}, vendor: "Zed Industries"},
-	"roo":              {packageName: "roo"},
-	"cline":            {packageName: "cline"},
+	"roo":              {packageName: "roo", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
+	"cline":            {packageName: "cline", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
 	"kiro":             {packageName: "kiro", binaryNames: []string{"kiro"}, managerCandidates: []string{"kiro"}},
-	"continuedev":      {packageName: "continuedev"},
+	"continuedev":      {packageName: "continuedev", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
 	"trae":             {packageName: "trae", managerCandidates: []string{"trae"}},
 	"opencode":         {packageName: "opencode", binaryNames: []string{"opencode"}, managerCandidates: []string{"opencode"}},
 	"pi":               {packageName: "pi"},
@@ -72,10 +103,10 @@ var toolPackageSpecs = map[string]toolPackageSpec{
 	"ibm.bob":          {packageName: "ibm-bob", vendor: "IBM"},
 	"openclaw":         {packageName: "openclaw"},
 	"snowflake.cortex": {packageName: "snowflake-cortex", vendor: "Snowflake"},
-	"junie":            {packageName: "junie", managerCandidates: []string{"junie"}, vendor: "JetBrains"},
-	"augment":          {packageName: "augment"},
+	"junie":            {packageName: "junie", managerCandidates: []string{"junie"}, vendor: "JetBrains", runtime: runtimeIDE, runtimeHostName: "JetBrains IDE"},
+	"augment":          {packageName: "augment", runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
 	"warp":             {packageName: "warp", vendor: "Warp"},
-	"kilocode":         {packageName: "kilocode", managerCandidates: []string{"kilocode"}},
+	"kilocode":         {packageName: "kilocode", managerCandidates: []string{"kilocode"}, runtime: runtimeIDE, runtimeHostName: "Visual Studio Code", runtimeHostCandidates: vscodeHostCandidates},
 	"openhands":        {packageName: "openhands", binaryNames: []string{"openhands"}, managerCandidates: []string{"openhands"}},
 	"qwen.code":        {packageName: "qwen-code", binaryNames: []string{"qwen"}, vendor: "Alibaba"},
 }
@@ -131,11 +162,21 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 		version = v
 	}
 
+	// synthetic id; distinct from the real "format://name/version/arch" scheme
+	// and hidden (no `id` field on package).
+	return newSyntheticPackage(runtime, "tool://"+spec.packageName, spec.packageName, version, spec.vendor, "", installed)
+}
+
+// newSyntheticPackage creates an abstract package resource (origin "unknown", no
+// package-manager format, never inserted into `packages`) with the given
+// identity. Every remaining field is given a resolved state (null unless
+// meaningful) so any field queries cleanly, mirroring the initPackage not-found
+// stub. Shared by the tool package() accessor and the runtime() host accessor;
+// pass purlStr for a host whose package URL is known (e.g. the OS), "" otherwise.
+func newSyntheticPackage(runtime *plugin.Runtime, id, name, version, vendor, purlStr string, installed bool) (*mqlPackage, error) {
 	raw, err := CreateResource(runtime, "package", map[string]*llx.RawData{
-		// synthetic id; distinct from the real "format://name/version/arch"
-		// scheme and hidden (no `id` field on package).
-		"__id":      llx.StringData("tool://" + spec.packageName),
-		"name":      llx.StringData(spec.packageName),
+		"__id":      llx.StringData(id),
+		"name":      llx.StringData(name),
 		"installed": llx.BoolData(installed),
 		"origin":    llx.StringData("unknown"), // abstract discriminator (seeds origin())
 		"format":    llx.StringData(""),        // no package-manager format
@@ -146,15 +187,13 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 	pkg := raw.(*mqlPackage)
 
 	setStrOrNull(&pkg.Version, version)
-	setStrOrNull(&pkg.Vendor, spec.vendor)
+	setStrOrNull(&pkg.Vendor, vendor)
+	setStrOrNull(&pkg.Purl, purlStr)
 
-	// Mirror the initPackage not-found stub: give every remaining field a
-	// resolved state (null unless meaningful) so any field queries cleanly.
 	pkg.Outdated = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	pkg.Epoch.State = plugin.StateIsSet | plugin.StateIsNull
 	pkg.Available.State = plugin.StateIsSet | plugin.StateIsNull
 	pkg.Description.State = plugin.StateIsSet | plugin.StateIsNull
-	pkg.Purl.State = plugin.StateIsSet | plugin.StateIsNull
 	pkg.Cpes.State = plugin.StateIsSet | plugin.StateIsNull
 	pkg.Arch.State = plugin.StateIsSet | plugin.StateIsNull
 	pkg.Status.State = plugin.StateIsSet | plugin.StateIsNull
@@ -163,6 +202,94 @@ func resolveToolPackage(runtime *plugin.Runtime, configPath string, spec toolPac
 	pkg.InstallDate.State = plugin.StateIsSet | plugin.StateIsNull
 
 	return pkg, nil
+}
+
+// vscodeHostCandidates are the package-manager names of VS Code and its common
+// forks, tried when resolving the real host editor package for an IDE-plugin
+// agent (mirrors vsCodeEditors in vscode.go). Falls back to an abstract editor
+// package when none is manager-tracked (the common case for user-space installs).
+var vscodeHostCandidates = []string{"code", "code-insiders", "vscodium", "cursor", "windsurf"}
+
+// resolveRuntimePackage returns the host the tool runs inside — the OS for a
+// standalone agent, the editor for an IDE plugin, the browser for a browser
+// extension — as a package resource (docs/adr/058-ai-security-ard.md). runtime()
+// is optional: it returns (nil, nil) when the host cannot be determined.
+func resolveRuntimePackage(runtime *plugin.Runtime, spec toolPackageSpec) (*mqlPackage, error) {
+	switch spec.runtime {
+	case runtimeIDE, runtimeBrowser:
+		return resolveHostRuntimePackage(runtime, spec)
+	default:
+		return resolveOSRuntimePackage(runtime)
+	}
+}
+
+// resolveOSRuntimePackage synthesizes the operating system as a package, carrying
+// the platform purl (pkg:platform/...) so the server can look the OS up in its
+// vulnerability data exactly as it does for the agent's own installer package.
+func resolveOSRuntimePackage(runtime *plugin.Runtime) (*mqlPackage, error) {
+	conn, ok := runtime.Connection.(shared.Connection)
+	if !ok || conn.Asset() == nil || conn.Asset().Platform == nil {
+		return nil, nil // host undeterminable; runtime is optional
+	}
+	pf := conn.Asset().Platform
+	purlStr, err := purl.NewPlatformPurl(pf)
+	if err != nil {
+		purlStr = ""
+	}
+	name := pf.Title
+	if name == "" {
+		name = pf.Name
+	}
+	return newSyntheticPackage(runtime, "runtime://os/"+pf.Name+"@"+pf.Version, name, pf.Version, "", purlStr, true)
+}
+
+// resolveHostRuntimePackage resolves an IDE/browser host. It first tries the real
+// manager-tracked editor/browser package by name (which carries a purl the server
+// can score); when none is found — the usual case for user-space editor/browser
+// installs — it synthesizes an abstract host package named for the host so the
+// runtime is still identified (name, no version/purl).
+func resolveHostRuntimePackage(runtime *plugin.Runtime, spec toolPackageSpec) (*mqlPackage, error) {
+	for _, name := range spec.runtimeHostCandidates {
+		pkg, err := lookupInstalledPackage(runtime, name)
+		if err != nil {
+			return nil, err
+		}
+		if pkg != nil {
+			return pkg, nil
+		}
+	}
+	if spec.runtimeHostName == "" {
+		return nil, nil // host undeterminable; runtime is optional
+	}
+	return newSyntheticPackage(runtime, "runtime://host/"+spec.packageName, spec.runtimeHostName, "", "", "", true)
+}
+
+// resolveRuntime resolves the host the tool runs inside (OS / IDE / browser) and
+// wraps it as an extensionRuntime resource whose `package` carries the host's
+// software identity for vulnerability lookup. runtime is optional: when the host
+// cannot be determined it marks field explicitly null and returns (nil, nil).
+// Setting the null state is required — GetOrCompute records only StateIsSet (not
+// StateIsNull) for a nil result, and a singular resource accessor that returns
+// nil without a null state makes the runtime panic or re-fetch (CLAUDE.md §3).
+func resolveRuntime(field *plugin.TValue[*mqlExtensionRuntime], runtime *plugin.Runtime, spec toolPackageSpec) (*mqlExtensionRuntime, error) {
+	pkg, err := resolveRuntimePackage(runtime, spec)
+	if err != nil {
+		return nil, err
+	}
+	if pkg == nil {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil // host undeterminable; runtime is optional
+	}
+	// One extensionRuntime per distinct host package: keying by the package id
+	// lets agents that share a host (e.g. all VS Code plugins) share the wrapper.
+	raw, err := CreateResource(runtime, "extensionRuntime", map[string]*llx.RawData{
+		"__id":    llx.StringData(pkg.MqlID()),
+		"package": llx.ResourceData(pkg, "package"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return raw.(*mqlExtensionRuntime), nil
 }
 
 // lookupInstalledPackage resolves a package by name to the real, cached
@@ -352,4 +479,113 @@ func (r *mqlOpenhands) compute_package() (*mqlPackage, error) {
 
 func (r *mqlQwenCode) compute_package() (*mqlPackage, error) {
 	return resolveToolPackage(r.MqlRuntime, r.ConfigPath.Data, toolPackageSpecs["qwen.code"])
+}
+
+// runtime() accessors — one per tool resource — return the host the agent runs
+// inside (OS / IDE / browser) as an extensionRuntime, per each tool's spec.
+// `runtime` is not a Go keyword, so the generator emits a plain runtime()
+// method (unlike compute_package).
+
+func (r *mqlClaudeCode) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["claude.code"])
+}
+
+func (r *mqlOpenaiCodex) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["openai.codex"])
+}
+
+func (r *mqlCursor) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["cursor"])
+}
+
+func (r *mqlGithubCopilot) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["github.copilot"])
+}
+
+func (r *mqlGoose) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["goose"])
+}
+
+func (r *mqlGemini) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["gemini"])
+}
+
+func (r *mqlWindsurf) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["windsurf"])
+}
+
+func (r *mqlZed) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["zed"])
+}
+
+func (r *mqlRoo) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["roo"])
+}
+
+func (r *mqlCline) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["cline"])
+}
+
+func (r *mqlKiro) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["kiro"])
+}
+
+func (r *mqlContinuedev) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["continuedev"])
+}
+
+func (r *mqlTrae) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["trae"])
+}
+
+func (r *mqlOpencode) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["opencode"])
+}
+
+func (r *mqlPi) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["pi"])
+}
+
+func (r *mqlMistralVibe) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["mistral.vibe"])
+}
+
+func (r *mqlAntigravity) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["antigravity"])
+}
+
+func (r *mqlIbmBob) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["ibm.bob"])
+}
+
+func (r *mqlOpenclaw) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["openclaw"])
+}
+
+func (r *mqlSnowflakeCortex) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["snowflake.cortex"])
+}
+
+func (r *mqlJunie) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["junie"])
+}
+
+func (r *mqlAugment) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["augment"])
+}
+
+func (r *mqlWarp) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["warp"])
+}
+
+func (r *mqlKilocode) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["kilocode"])
+}
+
+func (r *mqlOpenhands) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["openhands"])
+}
+
+func (r *mqlQwenCode) runtime() (*mqlExtensionRuntime, error) {
+	return resolveRuntime(&r.Runtime, r.MqlRuntime, toolPackageSpecs["qwen.code"])
 }

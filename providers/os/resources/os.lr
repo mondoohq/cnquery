@@ -28,6 +28,23 @@ extend asset {
   purl() string
 }
 
+// Host environment for an AI agent or editor extension
+//
+// Examine the runtime that hosts an AI coding agent or editor extension: the
+// operating system for a standalone agent, the IDE/editor for an editor
+// plugin, or the browser for a browser extension. The `package` field carries
+// the host's software identity — version and package URL (purl) where known —
+// so the host itself can be assessed for vulnerabilities like any other
+// installed software.
+private extensionRuntime @defaults("package") {
+  // Host software package
+  //
+  // The host application or operating system represented as a package, carrying
+  // its version and package URL (purl) where known so it can be looked up in
+  // vulnerability data like any other installed software.
+  package package
+}
+
 // Operating system end-of-life status
 //
 // Examine the End-of-Life metadata Mondoo publishes for the asset's
@@ -9483,6 +9500,16 @@ claude.code @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Account email
   email() string
   // Organization name
@@ -9583,6 +9610,16 @@ openai.codex @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Authentication mode (e.g. "chatgpt")
   authMode() string
   // Account ID
@@ -9681,6 +9718,16 @@ cursor @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // MCP servers
   mcpServers() []cursor.mcpServer
   // Cursor rules (global and project-scoped)
@@ -9749,6 +9796,16 @@ github.copilot @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Authenticated GitHub accounts
   accounts() []github.copilot.account
   // MCP servers
@@ -9813,6 +9870,16 @@ goose @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Active AI provider name
   provider() string
   // Active model name
@@ -9877,6 +9944,16 @@ gemini @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Authentication type
   authType() string
   // Settings dictionary
@@ -9935,6 +10012,16 @@ windsurf @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Global rules / memories
   rules() []windsurf.rule
   // MCP servers
@@ -10001,6 +10088,16 @@ zed @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Settings dictionary
   settings() dict
   // Extension names installed
@@ -10025,6 +10122,16 @@ roo @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []roo.skill
 }
@@ -10065,6 +10172,16 @@ cline @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []cline.skill
 }
@@ -10105,6 +10222,16 @@ kiro @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []kiro.skill
 }
@@ -10145,6 +10272,16 @@ continuedev @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []continuedev.skill
 }
@@ -10185,6 +10322,16 @@ trae @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []trae.skill
 }
@@ -10225,6 +10372,16 @@ opencode @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []opencode.skill
 }
@@ -10265,6 +10422,16 @@ pi @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []pi.skill
 }
@@ -10305,6 +10472,16 @@ mistral.vibe @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []mistral.vibe.skill
 }
@@ -10345,6 +10522,16 @@ antigravity @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []antigravity.skill
 }
@@ -10385,6 +10572,16 @@ ibm.bob @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []ibm.bob.skill
 }
@@ -10425,6 +10622,16 @@ openclaw @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []openclaw.skill
 }
@@ -10465,6 +10672,16 @@ snowflake.cortex @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []snowflake.cortex.skill
 }
@@ -10505,6 +10722,16 @@ junie @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []junie.skill
 }
@@ -10545,6 +10772,16 @@ augment @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []augment.skill
 }
@@ -10585,6 +10822,16 @@ warp @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []warp.skill
 }
@@ -10625,6 +10872,16 @@ kilocode @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []kilocode.skill
 }
@@ -10665,6 +10922,16 @@ openhands @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []openhands.skill
 }
@@ -10705,6 +10972,16 @@ qwen.code @defaults("configPath") @maturity("preview") {
   // for the install signal, or any package field (`version`, `purl`,
   // `vendor`) for detail.
   package() package
+
+  // Host the agent runs in
+  //
+  // The environment the agent runs inside: the operating system for a standalone
+  // agent, the IDE/editor for an editor plugin, or the browser for a browser
+  // extension. The runtime's `package` carries the host's software identity
+  // (version and purl where known) so its own version and vulnerabilities can be
+  // looked up like any other software. Optional — null when the host cannot be
+  // determined.
+  runtime() extensionRuntime
   // Installed skills
   skills() []qwen.code.skill
 }
