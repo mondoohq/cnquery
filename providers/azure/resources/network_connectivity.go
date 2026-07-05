@@ -329,14 +329,7 @@ func azureExpressRouteGatewayToMql(runtime *plugin.Runtime, gw *network.ExpressR
 			provisioningState = string(*p.ProvisioningState)
 		}
 		allowNonVwan = convert.ToValue(p.AllowNonVirtualWanTraffic)
-		if p.AutoScaleConfiguration != nil && p.AutoScaleConfiguration.Bounds != nil {
-			if p.AutoScaleConfiguration.Bounds.Min != nil {
-				minScaleUnits = int64(*p.AutoScaleConfiguration.Bounds.Min)
-			}
-			if p.AutoScaleConfiguration.Bounds.Max != nil {
-				maxScaleUnits = int64(*p.AutoScaleConfiguration.Bounds.Max)
-			}
-		}
+		minScaleUnits, maxScaleUnits = expressRouteGatewayScaleBounds(p.AutoScaleConfiguration)
 	}
 	mqlGw, err := CreateResource(runtime, "azure.subscription.networkService.expressRouteGateway",
 		map[string]*llx.RawData{
@@ -362,6 +355,22 @@ func azureExpressRouteGatewayToMql(runtime *plugin.Runtime, gw *network.ExpressR
 		res.cacheConnections = p.ExpressRouteConnections
 	}
 	return res, nil
+}
+
+// expressRouteGatewayScaleBounds extracts the min/max auto-scale units from an
+// ExpressRoute gateway's auto-scale configuration, tolerating a nil config, nil
+// bounds, or nil min/max (each yields 0).
+func expressRouteGatewayScaleBounds(cfg *network.ExpressRouteGatewayPropertiesAutoScaleConfiguration) (min, max int64) {
+	if cfg == nil || cfg.Bounds == nil {
+		return 0, 0
+	}
+	if cfg.Bounds.Min != nil {
+		min = int64(*cfg.Bounds.Min)
+	}
+	if cfg.Bounds.Max != nil {
+		max = int64(*cfg.Bounds.Max)
+	}
+	return min, max
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceExpressRouteGateway) id() (string, error) {

@@ -46,3 +46,37 @@ func TestExpressRoutePortLinksDict(t *testing.T) {
 	assert.Equal(t, "PP-42", props["patchPanelId"])
 	assert.Equal(t, "RACK-7", props["rackId"])
 }
+
+func TestExpressRouteGatewayScaleBounds(t *testing.T) {
+	i32 := func(i int32) *int32 { return &i }
+
+	t.Run("nil config yields zero bounds", func(t *testing.T) {
+		min, max := expressRouteGatewayScaleBounds(nil)
+		assert.Equal(t, int64(0), min)
+		assert.Equal(t, int64(0), max)
+	})
+
+	t.Run("nil bounds yields zero bounds", func(t *testing.T) {
+		min, max := expressRouteGatewayScaleBounds(&network.ExpressRouteGatewayPropertiesAutoScaleConfiguration{})
+		assert.Equal(t, int64(0), min)
+		assert.Equal(t, int64(0), max)
+	})
+
+	t.Run("nil min or max defaults that side to zero", func(t *testing.T) {
+		cfg := &network.ExpressRouteGatewayPropertiesAutoScaleConfiguration{
+			Bounds: &network.ExpressRouteGatewayPropertiesAutoScaleConfigurationBounds{Max: i32(10)},
+		}
+		min, max := expressRouteGatewayScaleBounds(cfg)
+		assert.Equal(t, int64(0), min)
+		assert.Equal(t, int64(10), max)
+	})
+
+	t.Run("populated bounds", func(t *testing.T) {
+		cfg := &network.ExpressRouteGatewayPropertiesAutoScaleConfiguration{
+			Bounds: &network.ExpressRouteGatewayPropertiesAutoScaleConfigurationBounds{Min: i32(1), Max: i32(4)},
+		}
+		min, max := expressRouteGatewayScaleBounds(cfg)
+		assert.Equal(t, int64(1), min)
+		assert.Equal(t, int64(4), max)
+	})
+}
