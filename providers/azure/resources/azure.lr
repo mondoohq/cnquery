@@ -1646,6 +1646,8 @@ azure.subscription.networkService.firewall @defaults("id name location") {
   skuTier string
   // Firewall threat intel mode
   threatIntelMode string
+  // Endpoint URL of the Azure Firewall control plane (AFC), empty when not configured
+  afcServiceEndpoint string
   // Policy associated with this firewall
   policy() azure.subscription.networkService.firewallPolicy
   // List of IP configurations for the firewall
@@ -1931,6 +1933,8 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
   dpdTimeoutSeconds int
   // Routing weight applied to this connection
   routingWeight int
+  // Associated and propagated route tables governing routing for this connection
+  routingConfiguration dict
   // Total ingress bytes transferred over this connection
   ingressBytesTransferred int
   // Total egress bytes transferred over this connection
@@ -2065,6 +2069,8 @@ azure.subscription.networkService.natGateway @defaults("id name location") {
   properties dict
   // NAT Gateway availability zones
   zones []string
+  // Whether NAT64 translation is enabled for the NAT Gateway
+  nat64Enabled bool
   // List of public IP addresses the NAT Gateway is associated with
   publicIpAddresses() []azure.subscription.networkService.ipAddress
   // List of subnets the NAT Gateway is associated with
@@ -2369,6 +2375,8 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   publicIpAddressId string
   // Private IP address (empty if public)
   privateIpAddress string
+  // Resource ID of the DDoS custom policy bound to this frontend IP configuration (empty when none)
+  ddosCustomPolicyId string
 }
 
 // Azure Load Balancer rule
@@ -2924,15 +2932,22 @@ private azure.subscription.networkService.applicationGateway.listener @defaults(
 // a Key Vault secret (the recommended path); when empty, the
 // certificate data was uploaded directly to the gateway. `publicCertData`
 // holds the base64-encoded public certificate (no private key).
-private azure.subscription.networkService.applicationGateway.sslCertificate @defaults("name keyVaultSecretId") {
+private azure.subscription.networkService.applicationGateway.sslCertificate @defaults("name") {
   // ARM resource ID
   id string
   // Certificate name
   name string
-  // Key Vault secret URI when the certificate is referenced from Key Vault; empty when the cert was uploaded directly
-  keyVaultSecretId string
+  // Key Vault secret URI backing the certificate
+  //
+  // Deprecated in favor of keyVaultSecret, which resolves the typed Key
+  // Vault secret. Empty when the certificate was uploaded directly.
+  keyVaultSecretId @maturity("deprecated") string
+  // Key Vault secret backing the certificate (null when the cert was uploaded directly)
+  keyVaultSecret() azure.subscription.keyVaultService.secret
   // Base64-encoded public certificate data
   publicCertData string
+  // Managed HSM key backing this certificate (null when Key Vault- or PFX-backed)
+  hsmKey() azure.subscription.keyVaultService.key
   // Provisioning state of the certificate resource
   provisioningState string
 }
@@ -2983,8 +2998,12 @@ azure.subscription.networkService.applicationFirewallPolicy @defaults("id name l
   properties dict
   // Policy enforcement mode ("Prevention" blocks matching requests; "Detection" only logs them)
   mode string
-  // Whether the policy is enabled ("Enabled" or "Disabled")
-  enabledState string
+  // Policy enabled state
+  //
+  // Deprecated in favor of enabled, which exposes this as a boolean.
+  enabledState @maturity("deprecated") string
+  // Whether the policy is enabled
+  enabled bool
   // Whether the request body is inspected by the WAF
   requestBodyCheck bool
   // Maximum inspected request body size, in kilobytes
@@ -3022,6 +3041,8 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   subnetId string
   // Custom name of the network interface attached to the private endpoint
   customNetworkInterfaceName string
+  // Billing SKU of the private endpoint ("Fixed" or "PayAsYouGo")
+  billingSku string
   // Private link service connections
   privateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
   // Manually approved private link service connections
@@ -3154,6 +3175,8 @@ private azure.subscription.networkService.route @defaults("name addressPrefix ne
   nextHopType string
   // IP address packets should be forwarded to (only for VirtualAppliance)
   nextHopIpAddress string
+  // ECMP next-hop IP addresses (set only when nextHopType is "VirtualApplianceEcmp")
+  ecmpNextHopIpAddresses []string
   // Whether this route overrides overlapping BGP routes
   hasBgpOverride bool
   // Provisioning state of the route
@@ -3166,13 +3189,13 @@ private azure.subscription.networkService.route @defaults("name addressPrefix ne
 // balancer that resolves a single hostname to one of many backends
 // based on a routing method. Surfaces the `trafficRoutingMethod`
 // (Performance, Weighted, Priority, Geographic, MultiValue, Subnet),
-// the `profileStatus` (Enabled/Disabled), the `dnsConfig`
+// the `status` of the profile, the `dnsConfig`
 // (relativeName, ttl, fqdn) that controls the resolver-facing record,
 // the `monitorConfig` (protocol, port, path, intervals, expected
 // status codes, custom headers) that governs endpoint probing, and
 // the per-endpoint configuration through
 // [[azure.subscription.networkService.trafficManagerProfile.endpoint]].
-azure.subscription.networkService.trafficManagerProfile @defaults("id name location trafficRoutingMethod profileStatus") {
+azure.subscription.networkService.trafficManagerProfile @defaults("id name location trafficRoutingMethod status") {
   // Traffic Manager profile ID
   id string
   // Traffic Manager profile name
@@ -3185,8 +3208,12 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
   type string
   // Traffic Manager profile properties
   properties dict
-  // Profile status ("Enabled" or "Disabled")
-  profileStatus string
+  // Profile status
+  //
+  // Deprecated in favor of status, which exposes this as a boolean.
+  profileStatus @maturity("deprecated") string
+  // Whether the profile is enabled
+  status bool
   // Traffic routing method ("Performance", "Weighted", "Priority", "Geographic", "MultiValue", "Subnet")
   trafficRoutingMethod string
   // Traffic View enrollment status ("Enabled" or "Disabled")
@@ -3208,8 +3235,8 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
 // Examine a single endpoint inside a Traffic Manager profile —
 // either an Azure resource (`AzureEndpoints`), an external FQDN/IP
 // (`ExternalEndpoints`), or a child profile (`NestedEndpoints`).
-// Surfaces the `target` or `targetResourceId`, `endpointStatus`
-// (Enabled/Disabled), `endpointMonitorStatus` (the most recent probe
+// Surfaces the `target` or `targetResourceId`, the `status` of the
+// endpoint, `endpointMonitorStatus` (the most recent probe
 // result), `weight` (for Weighted routing), `priority` (for Priority
 // routing), `geoMapping` (for Geographic routing), `subnets` (for
 // Subnet routing), `customHeaders` overrides, `endpointLocation`
@@ -3218,7 +3245,7 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
 // `minChildEndpointsIPv6`). The `alwaysServe` flag indicates that
 // the endpoint should remain in the routing decision even when
 // probes fail.
-private azure.subscription.networkService.trafficManagerProfile.endpoint @defaults("name type endpointStatus") {
+private azure.subscription.networkService.trafficManagerProfile.endpoint @defaults("name type status") {
   // Endpoint ID
   id string
   // Endpoint name
@@ -3227,8 +3254,12 @@ private azure.subscription.networkService.trafficManagerProfile.endpoint @defaul
   type string
   // Endpoint properties
   properties dict
-  // Endpoint status ("Enabled" or "Disabled")
-  endpointStatus string
+  // Endpoint status
+  //
+  // Deprecated in favor of status, which exposes this as a boolean.
+  endpointStatus @maturity("deprecated") string
+  // Whether the endpoint is enabled
+  status bool
   // Most recent monitor probe result ("CheckingEndpoint", "Online", "Degraded", "Disabled", "Inactive", "Stopped")
   endpointMonitorStatus string
   // "Enabled" keeps the endpoint in the routing decision even when probes fail

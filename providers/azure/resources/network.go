@@ -26,7 +26,7 @@ import (
 	"go.mondoo.com/mql/v13/utils/stringx"
 	"golang.org/x/sync/errgroup"
 
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
 )
 
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
@@ -337,9 +337,11 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 		return nil, err
 	}
 
-	// armnetwork v9 misshapes EffectiveNetworkSecurityGroup.TagMap (declared *string,
-	// API returns object), so SDK unmarshalling fails. Use REST directly and pluck
-	// the effectiveSecurityRules out as raw JSON.
+	// armnetwork v9 misshaped EffectiveNetworkSecurityGroup.TagMap (declared *string
+	// while the API returns an object), so SDK unmarshalling failed and we fetch via
+	// REST, plucking effectiveSecurityRules out as raw JSON. armnetwork v10 corrected
+	// TagMap to map[string][]*string, so this could be switched back to the SDK client
+	// (BeginGetEffectiveNetworkSecurityGroups) in a follow-up once verified live.
 	tok, err := conn.Token().GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{"https://management.azure.com/.default"},
 	})
@@ -672,6 +674,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		isPublic := false
 		var publicIpAddressId string
 		var privateIpAddress string
+		var ddosCustomPolicyId string
 		if ipConfig.Properties != nil {
 			if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
 				isPublic = true
@@ -680,19 +683,23 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 			if ipConfig.Properties.PrivateIPAddress != nil {
 				privateIpAddress = *ipConfig.Properties.PrivateIPAddress
 			}
+			if ds := ipConfig.Properties.DdosSettings; ds != nil && ds.DdosCustomPolicy != nil {
+				ddosCustomPolicyId = convert.ToValue(ds.DdosCustomPolicy.ID)
+			}
 		}
 
 		mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.frontendIpConfig",
 			map[string]*llx.RawData{
-				"id":                llx.StringDataPtr(ipConfig.ID),
-				"type":              llx.StringDataPtr(ipConfig.Type),
-				"name":              llx.StringDataPtr(ipConfig.Name),
-				"etag":              llx.StringDataPtr(ipConfig.Etag),
-				"zones":             llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
-				"properties":        llx.DictData(props),
-				"isPublic":          llx.BoolData(isPublic),
-				"publicIpAddressId": llx.StringData(publicIpAddressId),
-				"privateIpAddress":  llx.StringData(privateIpAddress),
+				"id":                 llx.StringDataPtr(ipConfig.ID),
+				"type":               llx.StringDataPtr(ipConfig.Type),
+				"name":               llx.StringDataPtr(ipConfig.Name),
+				"etag":               llx.StringDataPtr(ipConfig.Etag),
+				"zones":              llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
+				"properties":         llx.DictData(props),
+				"isPublic":           llx.BoolData(isPublic),
+				"publicIpAddressId":  llx.StringData(publicIpAddressId),
+				"privateIpAddress":   llx.StringData(privateIpAddress),
+				"ddosCustomPolicyId": llx.StringData(ddosCustomPolicyId),
 			})
 		if err != nil {
 			return nil, err
@@ -1840,7 +1847,7 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 		return nil, nil
 	}
 
-	var provisioningState, subnetId, customNicName string
+	var provisioningState, subnetId, customNicName, billingSku string
 	var plsConns, manualPlsConns []any
 
 	if pe.Properties != nil {
@@ -1851,6 +1858,9 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 			subnetId = convert.ToValue(pe.Properties.Subnet.ID)
 		}
 		customNicName = convert.ToValue(pe.Properties.CustomNetworkInterfaceName)
+		if pe.Properties.BillingSKU != nil {
+			billingSku = string(*pe.Properties.BillingSKU)
+		}
 
 		for _, c := range pe.Properties.PrivateLinkServiceConnections {
 			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c)
@@ -1878,6 +1888,7 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 			"provisioningState":                   llx.StringData(provisioningState),
 			"subnetId":                            llx.StringData(subnetId),
 			"customNetworkInterfaceName":          llx.StringData(customNicName),
+			"billingSku":                          llx.StringData(billingSku),
 			"privateLinkServiceConnections":       llx.ArrayData(plsConns, types.ResourceLike),
 			"manualPrivateLinkServiceConnections": llx.ArrayData(manualPlsConns, types.ResourceLike),
 		})
@@ -2422,6 +2433,7 @@ func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {
 func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSubscriptionNetworkServiceRoute, error) {
 	var addressPrefix, nextHopType, nextHopIpAddress, provisioningState string
 	var hasBgpOverride bool
+	ecmpNextHopIpAddresses := []any{}
 
 	if route.Properties != nil {
 		addressPrefix = convert.ToValue(route.Properties.AddressPrefix)
@@ -2433,17 +2445,21 @@ func azureRouteToMql(runtime *plugin.Runtime, route *network.Route) (*mqlAzureSu
 		if route.Properties.ProvisioningState != nil {
 			provisioningState = string(*route.Properties.ProvisioningState)
 		}
+		if route.Properties.NextHop != nil {
+			ecmpNextHopIpAddresses = convert.SliceStrPtrToInterface(route.Properties.NextHop.NextHopIPAddresses)
+		}
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.route",
 		map[string]*llx.RawData{
-			"id":                llx.StringDataPtr(route.ID),
-			"name":              llx.StringDataPtr(route.Name),
-			"addressPrefix":     llx.StringData(addressPrefix),
-			"nextHopType":       llx.StringData(nextHopType),
-			"nextHopIpAddress":  llx.StringData(nextHopIpAddress),
-			"hasBgpOverride":    llx.BoolData(hasBgpOverride),
-			"provisioningState": llx.StringData(provisioningState),
+			"id":                     llx.StringDataPtr(route.ID),
+			"name":                   llx.StringDataPtr(route.Name),
+			"addressPrefix":          llx.StringData(addressPrefix),
+			"nextHopType":            llx.StringData(nextHopType),
+			"nextHopIpAddress":       llx.StringData(nextHopIpAddress),
+			"ecmpNextHopIpAddresses": llx.ArrayData(ecmpNextHopIpAddresses, types.String),
+			"hasBgpOverride":         llx.BoolData(hasBgpOverride),
+			"provisioningState":      llx.StringData(provisioningState),
 		})
 	if err != nil {
 		return nil, err
@@ -2713,6 +2729,11 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 				args["routingWeight"] = llx.IntDataDefault(cn.Properties.RoutingWeight, 0)
 				args["ingressBytesTransferred"] = llx.IntDataDefault(cn.Properties.IngressBytesTransferred, 0)
 				args["egressBytesTransferred"] = llx.IntDataDefault(cn.Properties.EgressBytesTransferred, 0)
+				routingConfig, err := convert.JsonToDict(cn.Properties.RoutingConfiguration)
+				if err != nil {
+					return nil, err
+				}
+				args["routingConfiguration"] = llx.DictData(routingConfig)
 			}
 			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection", args)
 			if err != nil {
@@ -3138,17 +3159,27 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) id() (stri
 	return a.Id.Data, nil
 }
 
+// wafPolicyEnabled reports whether the WAF policy is enabled. The SDK models
+// this as an Enabled/Disabled enum; we collapse it to a bool where only the
+// explicit Enabled state (and, matching Azure's default for an unset value)
+// is true.
+func wafPolicyEnabled(ps *network.PolicySettings) bool {
+	return ps == nil || ps.State == nil || *ps.State == network.WebApplicationFirewallEnabledStateEnabled
+}
+
 func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplicationFirewallPolicy) (*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy, error) {
 	props, err := convert.JsonToDict(waf.Properties)
 	if err != nil {
 		return nil, err
 	}
 	var mode, enabledState string
+	enabled := true
 	var requestBodyCheck *bool
 	var maxRequestBodySizeInKb, fileUploadLimitInMb *int64
 	customRulesCount := int64(0)
 	managedRuleSets := []any{}
 	if p := waf.Properties; p != nil {
+		enabled = wafPolicyEnabled(p.PolicySettings)
 		if ps := p.PolicySettings; ps != nil {
 			if ps.Mode != nil {
 				mode = string(*ps.Mode)
@@ -3193,6 +3224,7 @@ func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplica
 		"properties":             llx.DictData(props),
 		"mode":                   llx.StringData(mode),
 		"enabledState":           llx.StringData(enabledState),
+		"enabled":                llx.BoolData(enabled),
 		"requestBodyCheck":       llx.BoolDataPtr(requestBodyCheck),
 		"maxRequestBodySizeInKb": llx.IntDataPtr(maxRequestBodySizeInKb),
 		"fileUploadLimitInMb":    llx.IntDataPtr(fileUploadLimitInMb),
@@ -3481,6 +3513,7 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 	keyVaultSecretId := ""
 	publicCertData := ""
 	provisioningState := ""
+	hsmKeyId := ""
 	if c.Properties != nil {
 		if c.Properties.KeyVaultSecretID != nil {
 			keyVaultSecretId = *c.Properties.KeyVaultSecretID
@@ -3490,6 +3523,9 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 		}
 		if c.Properties.ProvisioningState != nil {
 			provisioningState = string(*c.Properties.ProvisioningState)
+		}
+		if c.Properties.Hsm != nil {
+			hsmKeyId = convert.ToValue(c.Properties.Hsm.KeyID)
 		}
 	}
 	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.sslCertificate", map[string]*llx.RawData{
@@ -3502,7 +3538,33 @@ func azureAppGatewaySSLCertToMql(runtime *plugin.Runtime, c *network.Application
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate), nil
+	sslCert := res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate)
+	sslCert.cacheHsmKeyId = hsmKeyId
+	return sslCert, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificateInternal struct {
+	cacheHsmKeyId string
+}
+
+// keyVaultSecret resolves the typed Key Vault secret backing this certificate
+// from its secret URI. Returns null for certificates uploaded directly.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) keyVaultSecret() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+	if a.KeyVaultSecretId.Data == "" {
+		a.KeyVaultSecret.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newKeyVaultSecretResource(a.MqlRuntime, a.KeyVaultSecretId.Data)
+}
+
+// hsmKey resolves the typed Managed HSM key backing this certificate from its
+// key identifier. Returns null for Key Vault- or PFX-backed certificates.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) hsmKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheHsmKeyId == "" {
+		a.HsmKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheHsmKeyId)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) id() (string, error) {
@@ -3620,7 +3682,7 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 	if err != nil {
 		return nil, err
 	}
-	var fwSkuTier, fwSkuName, fwProvisioningState, fwThreatIntelMode *string
+	var fwSkuTier, fwSkuName, fwProvisioningState, fwThreatIntelMode, fwAfcServiceEndpoint *string
 	if fw.Properties != nil {
 		fwProvisioningState = (*string)(fw.Properties.ProvisioningState)
 		fwThreatIntelMode = (*string)(fw.Properties.ThreatIntelMode)
@@ -3628,19 +3690,23 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 			fwSkuTier = (*string)(fw.Properties.SKU.Tier)
 			fwSkuName = (*string)(fw.Properties.SKU.Name)
 		}
+		if fw.Properties.AfcConfiguration != nil {
+			fwAfcServiceEndpoint = fw.Properties.AfcConfiguration.ServiceEndpoint
+		}
 	}
 	args := map[string]*llx.RawData{
-		"id":                llx.StringDataPtr(fw.ID),
-		"name":              llx.StringDataPtr(fw.Name),
-		"type":              llx.StringDataPtr(fw.Type),
-		"location":          llx.StringDataPtr(fw.Location),
-		"tags":              llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
-		"etag":              llx.StringDataPtr(fw.Etag),
-		"properties":        llx.DictData(props),
-		"skuTier":           llx.StringDataPtr(fwSkuTier),
-		"skuName":           llx.StringDataPtr(fwSkuName),
-		"provisioningState": llx.StringDataPtr(fwProvisioningState),
-		"threatIntelMode":   llx.StringDataPtr(fwThreatIntelMode),
+		"id":                 llx.StringDataPtr(fw.ID),
+		"name":               llx.StringDataPtr(fw.Name),
+		"type":               llx.StringDataPtr(fw.Type),
+		"location":           llx.StringDataPtr(fw.Location),
+		"tags":               llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
+		"etag":               llx.StringDataPtr(fw.Etag),
+		"properties":         llx.DictData(props),
+		"skuTier":            llx.StringDataPtr(fwSkuTier),
+		"skuName":            llx.StringDataPtr(fwSkuName),
+		"provisioningState":  llx.StringDataPtr(fwProvisioningState),
+		"threatIntelMode":    llx.StringDataPtr(fwThreatIntelMode),
+		"afcServiceEndpoint": llx.StringDataPtr(fwAfcServiceEndpoint),
 	}
 	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewall", args)
 	if err != nil {
@@ -3913,21 +3979,31 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 	return mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
 }
 
+// natGatewayNat64Enabled reports whether NAT64 translation is switched on for
+// the NAT gateway. The SDK models this as a tri-state (Enabled/Disabled/None);
+// we collapse it to a bool where only the explicit Enabled state is true, so an
+// unset ("None") or nil value reads as "not enabled".
+func natGatewayNat64Enabled(props *network.NatGatewayPropertiesFormat) bool {
+	return props != nil && props.Nat64 != nil && *props.Nat64 == network.Nat64StateEnabled
+}
+
 func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
 	props, err := convert.JsonToDict(ng.Properties)
 	if err != nil {
 		return nil, err
 	}
+	nat64Enabled := natGatewayNat64Enabled(ng.Properties)
 	mqlNg, err := CreateResource(runtime, "azure.subscription.networkService.natGateway",
 		map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(ng.ID),
-			"name":       llx.StringDataPtr(ng.Name),
-			"type":       llx.StringDataPtr(ng.Type),
-			"location":   llx.StringDataPtr(ng.Location),
-			"tags":       llx.MapData(convert.PtrMapStrToInterface(ng.Tags), types.String),
-			"etag":       llx.StringDataPtr(ng.Etag),
-			"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ng.Zones), types.String),
-			"properties": llx.DictData(props),
+			"id":           llx.StringDataPtr(ng.ID),
+			"name":         llx.StringDataPtr(ng.Name),
+			"type":         llx.StringDataPtr(ng.Type),
+			"location":     llx.StringDataPtr(ng.Location),
+			"tags":         llx.MapData(convert.PtrMapStrToInterface(ng.Tags), types.String),
+			"etag":         llx.StringDataPtr(ng.Etag),
+			"zones":        llx.ArrayData(convert.SliceStrPtrToInterface(ng.Zones), types.String),
+			"nat64Enabled": llx.BoolData(nat64Enabled),
+			"properties":   llx.DictData(props),
 		})
 	if err != nil {
 		return nil, err

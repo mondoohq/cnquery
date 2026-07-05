@@ -3997,6 +3997,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.firewall.threatIntelMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetThreatIntelMode()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.firewall.afcServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetAfcServiceEndpoint()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.firewall.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetPolicy()).ToDataRes(types.Resource("azure.subscription.networkService.firewallPolicy"))
 	},
@@ -4321,6 +4324,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.connection.routingWeight": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetRoutingWeight()).ToDataRes(types.Int)
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.routingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetRoutingConfiguration()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.ingressBytesTransferred": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetIngressBytesTransferred()).ToDataRes(types.Int)
 	},
@@ -4452,6 +4458,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.natGateway.zones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNatGateway).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.natGateway.nat64Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNatGateway).GetNat64Enabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.natGateway.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNatGateway).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAddress")))
@@ -4764,6 +4773,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.frontendIpConfig.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetPrivateIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.frontendIpConfig.ddosCustomPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetDdosCustomPolicyId()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.loadBalancerRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetId()).ToDataRes(types.String)
@@ -5362,8 +5374,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecretId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetKeyVaultSecretId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetKeyVaultSecret()).ToDataRes(types.Resource("azure.subscription.keyVaultService.secret"))
+	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.publicCertData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetPublicCertData()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslCertificate.hsmKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetHsmKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetProvisioningState()).ToDataRes(types.String)
@@ -5410,6 +5428,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationFirewallPolicy.enabledState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetEnabledState()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.applicationFirewallPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.requestBodyCheck": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetRequestBodyCheck()).ToDataRes(types.Bool)
 	},
@@ -5451,6 +5472,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.privateEndpoint.customNetworkInterfaceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetCustomNetworkInterfaceName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateEndpoint.billingSku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetBillingSku()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.privateEndpoint.privateLinkServiceConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetPrivateLinkServiceConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.privateEndpoint.serviceconnection")))
@@ -5614,6 +5638,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.route.nextHopIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceRoute).GetNextHopIpAddress()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.route.ecmpNextHopIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceRoute).GetEcmpNextHopIpAddresses()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.networkService.route.hasBgpOverride": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceRoute).GetHasBgpOverride()).ToDataRes(types.Bool)
 	},
@@ -5640,6 +5667,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.trafficManagerProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetProfileStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetStatus()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.trafficManagerProfile.trafficRoutingMethod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetTrafficRoutingMethod()).ToDataRes(types.String)
@@ -5676,6 +5706,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetEndpointStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetStatus()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointMonitorStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetEndpointMonitorStatus()).ToDataRes(types.String)
@@ -18842,6 +18875,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceFirewall).ThreatIntelMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.firewall.afcServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).AfcServiceEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.firewall.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Policy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy](v.Value, v.Error)
 		return
@@ -19318,6 +19355,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).RoutingWeight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.routingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).RoutingConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.ingressBytesTransferred": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).IngressBytesTransferred, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -19512,6 +19553,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.natGateway.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceNatGateway).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.natGateway.nat64Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNatGateway).Nat64Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.natGateway.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19976,6 +20021,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.frontendIpConfig.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.frontendIpConfig.ddosCustomPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).DdosCustomPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.loadBalancerRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20842,8 +20891,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).KeyVaultSecretId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).KeyVaultSecret, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceSecret](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.publicCertData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).PublicCertData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslCertificate.hsmKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).HsmKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20914,6 +20971,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).EnabledState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationFirewallPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.requestBodyCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).RequestBodyCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -20972,6 +21033,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.privateEndpoint.customNetworkInterfaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).CustomNetworkInterfaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateEndpoint.billingSku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).BillingSku, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.privateEndpoint.privateLinkServiceConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21210,6 +21275,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceRoute).NextHopIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.route.ecmpNextHopIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceRoute).EcmpNextHopIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.route.hasBgpOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceRoute).HasBgpOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -21248,6 +21317,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.trafficManagerProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).ProfileStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Status, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.trafficManagerProfile.trafficRoutingMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21300,6 +21373,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).EndpointStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).Status, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.endpointMonitorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42748,6 +42825,7 @@ type mqlAzureSubscriptionNetworkServiceFirewall struct {
 	SkuName                   plugin.TValue[string]
 	SkuTier                   plugin.TValue[string]
 	ThreatIntelMode           plugin.TValue[string]
+	AfcServiceEndpoint        plugin.TValue[string]
 	Policy                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy]
 	IpConfigurations          plugin.TValue[[]any]
 	ManagementIpConfiguration plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig]
@@ -42835,6 +42913,10 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetSkuTier() *plugin.TValue
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetThreatIntelMode() *plugin.TValue[string] {
 	return &c.ThreatIntelMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetAfcServiceEndpoint() *plugin.TValue[string] {
+	return &c.AfcServiceEndpoint
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetPolicy() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy] {
@@ -43950,6 +44032,7 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection struct {
 	UseLocalAzureIpAddress         plugin.TValue[bool]
 	DpdTimeoutSeconds              plugin.TValue[int64]
 	RoutingWeight                  plugin.TValue[int64]
+	RoutingConfiguration           plugin.TValue[any]
 	IngressBytesTransferred        plugin.TValue[int64]
 	EgressBytesTransferred         plugin.TValue[int64]
 	LocalNetworkGateway2           plugin.TValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway]
@@ -44056,6 +44139,10 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetD
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetRoutingWeight() *plugin.TValue[int64] {
 	return &c.RoutingWeight
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetRoutingConfiguration() *plugin.TValue[any] {
+	return &c.RoutingConfiguration
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetIngressBytesTransferred() *plugin.TValue[int64] {
@@ -44470,6 +44557,7 @@ type mqlAzureSubscriptionNetworkServiceNatGateway struct {
 	Etag              plugin.TValue[string]
 	Properties        plugin.TValue[any]
 	Zones             plugin.TValue[[]any]
+	Nat64Enabled      plugin.TValue[bool]
 	PublicIpAddresses plugin.TValue[[]any]
 	Subnets           plugin.TValue[[]any]
 }
@@ -44541,6 +44629,10 @@ func (c *mqlAzureSubscriptionNetworkServiceNatGateway) GetProperties() *plugin.T
 
 func (c *mqlAzureSubscriptionNetworkServiceNatGateway) GetZones() *plugin.TValue[[]any] {
 	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNatGateway) GetNat64Enabled() *plugin.TValue[bool] {
+	return &c.Nat64Enabled
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceNatGateway) GetPublicIpAddresses() *plugin.TValue[[]any] {
@@ -45699,15 +45791,16 @@ type mqlAzureSubscriptionNetworkServiceFrontendIpConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionNetworkServiceFrontendIpConfigInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Type              plugin.TValue[string]
-	Etag              plugin.TValue[string]
-	Properties        plugin.TValue[any]
-	Zones             plugin.TValue[[]any]
-	IsPublic          plugin.TValue[bool]
-	PublicIpAddressId plugin.TValue[string]
-	PrivateIpAddress  plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Etag               plugin.TValue[string]
+	Properties         plugin.TValue[any]
+	Zones              plugin.TValue[[]any]
+	IsPublic           plugin.TValue[bool]
+	PublicIpAddressId  plugin.TValue[string]
+	PrivateIpAddress   plugin.TValue[string]
+	DdosCustomPolicyId plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServiceFrontendIpConfig creates a new instance of this resource
@@ -45781,6 +45874,10 @@ func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPublicIpAddressI
 
 func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPrivateIpAddress() *plugin.TValue[string] {
 	return &c.PrivateIpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetDdosCustomPolicyId() *plugin.TValue[string] {
+	return &c.DdosCustomPolicyId
 }
 
 // mqlAzureSubscriptionNetworkServiceLoadBalancerRule for the azure.subscription.networkService.loadBalancerRule resource
@@ -47686,11 +47783,13 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetProvis
 type mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificateInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificateInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	KeyVaultSecretId  plugin.TValue[string]
+	KeyVaultSecret    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret]
 	PublicCertData    plugin.TValue[string]
+	HsmKey            plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 	ProvisioningState plugin.TValue[string]
 }
 
@@ -47743,8 +47842,40 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) Get
 	return &c.KeyVaultSecretId
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) GetKeyVaultSecret() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceSecret](&c.KeyVaultSecret, func() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway.sslCertificate", c.__id, "keyVaultSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
+			}
+		}
+
+		return c.keyVaultSecret()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) GetPublicCertData() *plugin.TValue[string] {
 	return &c.PublicCertData
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) GetHsmKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.HsmKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway.sslCertificate", c.__id, "hsmKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.hsmKey()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) GetProvisioningState() *plugin.TValue[string] {
@@ -47834,6 +47965,7 @@ type mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy struct {
 	Properties             plugin.TValue[any]
 	Mode                   plugin.TValue[string]
 	EnabledState           plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
 	RequestBodyCheck       plugin.TValue[bool]
 	MaxRequestBodySizeInKb plugin.TValue[int64]
 	FileUploadLimitInMb    plugin.TValue[int64]
@@ -47915,6 +48047,10 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetEnabled
 	return &c.EnabledState
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) GetRequestBodyCheck() *plugin.TValue[bool] {
 	return &c.RequestBodyCheck
 }
@@ -47964,6 +48100,7 @@ type mqlAzureSubscriptionNetworkServicePrivateEndpoint struct {
 	ProvisioningState                   plugin.TValue[string]
 	SubnetId                            plugin.TValue[string]
 	CustomNetworkInterfaceName          plugin.TValue[string]
+	BillingSku                          plugin.TValue[string]
 	PrivateLinkServiceConnections       plugin.TValue[[]any]
 	ManualPrivateLinkServiceConnections plugin.TValue[[]any]
 	PrivateDnsZoneGroups                plugin.TValue[[]any]
@@ -48031,6 +48168,10 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetSubnetId() *plugi
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetCustomNetworkInterfaceName() *plugin.TValue[string] {
 	return &c.CustomNetworkInterfaceName
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetBillingSku() *plugin.TValue[string] {
+	return &c.BillingSku
 }
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetPrivateLinkServiceConnections() *plugin.TValue[[]any] {
@@ -48484,13 +48625,14 @@ type mqlAzureSubscriptionNetworkServiceRoute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionNetworkServiceRouteInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	AddressPrefix     plugin.TValue[string]
-	NextHopType       plugin.TValue[string]
-	NextHopIpAddress  plugin.TValue[string]
-	HasBgpOverride    plugin.TValue[bool]
-	ProvisioningState plugin.TValue[string]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	AddressPrefix          plugin.TValue[string]
+	NextHopType            plugin.TValue[string]
+	NextHopIpAddress       plugin.TValue[string]
+	EcmpNextHopIpAddresses plugin.TValue[[]any]
+	HasBgpOverride         plugin.TValue[bool]
+	ProvisioningState      plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServiceRoute creates a new instance of this resource
@@ -48545,6 +48687,10 @@ func (c *mqlAzureSubscriptionNetworkServiceRoute) GetNextHopIpAddress() *plugin.
 	return &c.NextHopIpAddress
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceRoute) GetEcmpNextHopIpAddresses() *plugin.TValue[[]any] {
+	return &c.EcmpNextHopIpAddresses
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceRoute) GetHasBgpOverride() *plugin.TValue[bool] {
 	return &c.HasBgpOverride
 }
@@ -48565,6 +48711,7 @@ type mqlAzureSubscriptionNetworkServiceTrafficManagerProfile struct {
 	Type                        plugin.TValue[string]
 	Properties                  plugin.TValue[any]
 	ProfileStatus               plugin.TValue[string]
+	Status                      plugin.TValue[bool]
 	TrafficRoutingMethod        plugin.TValue[string]
 	TrafficViewEnrollmentStatus plugin.TValue[string]
 	MaxReturn                   plugin.TValue[int64]
@@ -48639,6 +48786,10 @@ func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetProfileStat
 	return &c.ProfileStatus
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetStatus() *plugin.TValue[bool] {
+	return &c.Status
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetTrafficRoutingMethod() *plugin.TValue[string] {
 	return &c.TrafficRoutingMethod
 }
@@ -48677,6 +48828,7 @@ type mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint struct {
 	Type                  plugin.TValue[string]
 	Properties            plugin.TValue[any]
 	EndpointStatus        plugin.TValue[string]
+	Status                plugin.TValue[bool]
 	EndpointMonitorStatus plugin.TValue[string]
 	AlwaysServe           plugin.TValue[string]
 	Target                plugin.TValue[string]
@@ -48747,6 +48899,10 @@ func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetPro
 
 func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetEndpointStatus() *plugin.TValue[string] {
 	return &c.EndpointStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetStatus() *plugin.TValue[bool] {
+	return &c.Status
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint) GetEndpointMonitorStatus() *plugin.TValue[string] {

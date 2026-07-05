@@ -2922,6 +2922,7 @@ azure.subscription.networkService.appSecurityGroup.type 9.0.8
 azure.subscription.networkService.applicationFirewallPolicies 9.0.1
 azure.subscription.networkService.applicationFirewallPolicy 9.0.13
 azure.subscription.networkService.applicationFirewallPolicy.customRulesCount 13.16.2
+azure.subscription.networkService.applicationFirewallPolicy.enabled 13.25.1
 azure.subscription.networkService.applicationFirewallPolicy.enabledState 13.16.2
 azure.subscription.networkService.applicationFirewallPolicy.etag 9.0.13
 azure.subscription.networkService.applicationFirewallPolicy.fileUploadLimitInMb 13.16.2
@@ -2974,7 +2975,9 @@ azure.subscription.networkService.applicationGateway.policy 9.0.13
 azure.subscription.networkService.applicationGateway.principalId 13.23.1
 azure.subscription.networkService.applicationGateway.properties 9.0.13
 azure.subscription.networkService.applicationGateway.sslCertificate 13.12.2
+azure.subscription.networkService.applicationGateway.sslCertificate.hsmKey 13.25.1
 azure.subscription.networkService.applicationGateway.sslCertificate.id 13.12.2
+azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecret 13.25.1
 azure.subscription.networkService.applicationGateway.sslCertificate.keyVaultSecretId 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.name 13.12.2
 azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState 13.12.2
@@ -3101,6 +3104,7 @@ azure.subscription.networkService.expressRouteCircuit.tags 13.12.2
 azure.subscription.networkService.expressRouteCircuit.type 13.12.2
 azure.subscription.networkService.expressRouteCircuits 13.12.2
 azure.subscription.networkService.firewall 9.0.8
+azure.subscription.networkService.firewall.afcServiceEndpoint 13.25.1
 azure.subscription.networkService.firewall.applicationRule 9.0.8
 azure.subscription.networkService.firewall.applicationRule.action 13.16.2
 azure.subscription.networkService.firewall.applicationRule.etag 9.0.8
@@ -3179,6 +3183,7 @@ azure.subscription.networkService.firewallPolicy.tags 9.0.8
 azure.subscription.networkService.firewallPolicy.type 9.0.8
 azure.subscription.networkService.firewalls 9.0.8
 azure.subscription.networkService.frontendIpConfig 9.0.8
+azure.subscription.networkService.frontendIpConfig.ddosCustomPolicyId 13.25.1
 azure.subscription.networkService.frontendIpConfig.etag 9.0.8
 azure.subscription.networkService.frontendIpConfig.id 9.0.8
 azure.subscription.networkService.frontendIpConfig.isPublic 9.0.8
@@ -3275,6 +3280,7 @@ azure.subscription.networkService.natGateway.etag 9.0.8
 azure.subscription.networkService.natGateway.id 9.0.8
 azure.subscription.networkService.natGateway.location 9.0.8
 azure.subscription.networkService.natGateway.name 9.0.8
+azure.subscription.networkService.natGateway.nat64Enabled 13.25.1
 azure.subscription.networkService.natGateway.properties 9.0.8
 azure.subscription.networkService.natGateway.publicIpAddresses 9.0.8
 azure.subscription.networkService.natGateway.subnets 9.0.8
@@ -3289,6 +3295,7 @@ azure.subscription.networkService.outboundRule.name 9.0.8
 azure.subscription.networkService.outboundRule.properties 9.0.8
 azure.subscription.networkService.outboundRule.type 9.0.8
 azure.subscription.networkService.privateEndpoint 11.4.28
+azure.subscription.networkService.privateEndpoint.billingSku 13.25.1
 azure.subscription.networkService.privateEndpoint.customNetworkInterfaceName 11.4.28
 azure.subscription.networkService.privateEndpoint.id 11.4.28
 azure.subscription.networkService.privateEndpoint.location 11.4.28
@@ -3351,6 +3358,7 @@ azure.subscription.networkService.probe.type 9.0.8
 azure.subscription.networkService.publicIpAddresses 9.0.1
 azure.subscription.networkService.route 11.4.28
 azure.subscription.networkService.route.addressPrefix 11.4.28
+azure.subscription.networkService.route.ecmpNextHopIpAddresses 13.25.1
 azure.subscription.networkService.route.hasBgpOverride 11.4.28
 azure.subscription.networkService.route.id 11.4.28
 azure.subscription.networkService.route.name 11.4.28
@@ -3469,6 +3477,7 @@ azure.subscription.networkService.trafficManagerProfile.endpoint.minChildEndpoin
 azure.subscription.networkService.trafficManagerProfile.endpoint.name 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.priority 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.properties 13.12.2
+azure.subscription.networkService.trafficManagerProfile.endpoint.status 13.25.1
 azure.subscription.networkService.trafficManagerProfile.endpoint.subnets 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.target 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.targetResourceId 13.12.2
@@ -3482,6 +3491,7 @@ azure.subscription.networkService.trafficManagerProfile.monitorConfig 13.12.2
 azure.subscription.networkService.trafficManagerProfile.name 13.12.2
 azure.subscription.networkService.trafficManagerProfile.profileStatus 13.12.2
 azure.subscription.networkService.trafficManagerProfile.properties 13.12.2
+azure.subscription.networkService.trafficManagerProfile.status 13.25.1
 azure.subscription.networkService.trafficManagerProfile.tags 13.12.2
 azure.subscription.networkService.trafficManagerProfile.trafficRoutingMethod 13.12.2
 azure.subscription.networkService.trafficManagerProfile.trafficViewEnrollmentStatus 13.12.2
@@ -3599,6 +3609,7 @@ azure.subscription.networkService.virtualNetworkGateway.connection.location 13.1
 azure.subscription.networkService.virtualNetworkGateway.connection.name 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.connection.properties 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.connection.provisioningState 13.10.2
+azure.subscription.networkService.virtualNetworkGateway.connection.routingConfiguration 13.25.1
 azure.subscription.networkService.virtualNetworkGateway.connection.routingWeight 13.10.2
 azure.subscription.networkService.virtualNetworkGateway.connection.type 9.0.8
 azure.subscription.networkService.virtualNetworkGateway.connection.useLocalAzureIpAddress 13.10.2
