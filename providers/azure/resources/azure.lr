@@ -2740,12 +2740,51 @@ azure.subscription.networkService.interface @defaults("name location properties.
   appliedDnsServers []string
   // Internal DNS name label assigned to the NIC; empty when unset
   internalDnsNameLabel string
-  // IP configurations for the network interface
-  ipConfigurations []dict
+  // Raw IP configuration dicts
+  //
+  // Deprecated in favor of ipConfigs, which exposes each IP configuration as a
+  // resource with typed subnet, public IP, and application security group
+  // references.
+  ipConfigurations @maturity("deprecated") []dict
+  // IP configurations bound to the network interface
+  ipConfigs() []azure.subscription.networkService.interface.ipConfiguration
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
   // Effective NSG rules merged across NSG-on-NIC, ASGs, and NSG-on-subnet (computed via BeginGetEffectiveNetworkSecurityGroup)
   effectiveSecurityRules() []dict
+}
+
+// Azure network interface IP configuration
+//
+// A single IP configuration bound to a network interface. It ties the
+// interface's private IP address to a subnet, and optionally to a public IP
+// address, application security groups, and load-balancer membership. Surfaces
+// the private IP address and allocation method, whether it is the primary
+// configuration, and typed references to the subnet, public IP address, and
+// application security groups. Select by the configuration's Azure resource ID.
+private azure.subscription.networkService.interface.ipConfiguration @defaults("name privateIpAddress primary") {
+  // IP configuration ID
+  id string
+  // IP configuration name
+  name string
+  // IP configuration etag
+  etag string
+  // Provisioning state of the IP configuration
+  provisioningState string
+  // Whether this is the primary IP configuration on the interface
+  primary bool
+  // Private IP address (single address or CIDR block)
+  privateIpAddress string
+  // Private IP address allocation method (Static, Dynamic)
+  privateIpAllocationMethod string
+  // Private IP address version (IPv4, IPv6)
+  privateIpAddressVersion string
+  // Subnet the IP configuration is bound to
+  subnet() azure.subscription.networkService.subnet
+  // Public IP address bound to the IP configuration; null when the configuration has no public IP
+  publicIpAddress() azure.subscription.networkService.ipAddress
+  // Application security groups the IP configuration is a member of
+  applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
 }
 
 // Azure network IP address

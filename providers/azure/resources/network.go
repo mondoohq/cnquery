@@ -4350,11 +4350,15 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	}
 	mqlIface := res.(*mqlAzureSubscriptionNetworkServiceInterface)
 	mqlIface.cacheNetworkSecurityGroupID = networkSecurityGroupId
+	if iface.Properties != nil {
+		mqlIface.cacheIPConfigurations = iface.Properties.IPConfigurations
+	}
 	return mqlIface, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	cacheNetworkSecurityGroupID string
+	cacheIPConfigurations       []*network.InterfaceIPConfiguration
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {

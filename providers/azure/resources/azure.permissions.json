@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T09:29:34-07:00",
+  "generated_at": "2026-07-05T09:42:16-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1051,6 +1051,12 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/applicationSecurityGroups/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_nic_ipconfig.go"
+    },
+    {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
       "action": "Get",
@@ -1283,6 +1289,12 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/publicIPAddresses/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_nic_ipconfig.go"
     },
     {
       "permission": "Microsoft.Network/publicIPPrefixes/read",
