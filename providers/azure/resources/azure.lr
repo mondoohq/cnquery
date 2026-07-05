@@ -8566,6 +8566,83 @@ private azure.subscription.authorizationService {
   denyAssignments() []azure.subscription.authorizationService.denyAssignment
   // Classic (ASM) co-administrators — legacy admin grants that should normally be zero
   classicAdministrators() []azure.subscription.authorizationService.classicAdministrator
+  // PIM role eligibility schedules — who is eligible to activate which privileged role
+  roleEligibilitySchedules() []azure.subscription.authorizationService.roleEligibilitySchedule
+  // PIM role assignment schedules — currently active (including time-bound) privileged role assignments
+  roleAssignmentSchedules() []azure.subscription.authorizationService.roleAssignmentSchedule
+}
+
+// Azure PIM role eligibility schedule
+//
+// A Privileged Identity Management eligibility: a principal that can activate a
+// role at a scope, rather than holding it permanently. Surfaces the eligible
+// principal, the role, the scope, the eligibility window, and the activation
+// membership type. Select by the schedule's Azure resource ID.
+private azure.subscription.authorizationService.roleEligibilitySchedule @defaults("principalDisplayName roleDefinitionName status") {
+  // Eligibility schedule ID
+  id string
+  // Eligibility schedule name
+  name string
+  // Principal ID (user, group, or service principal) eligible for the role
+  principalId string
+  // Type of the eligible principal (User, Group, ServicePrincipal)
+  principalType string
+  // Display name of the eligible principal
+  principalDisplayName string
+  // Scope the eligibility applies to
+  scope string
+  // Status of the eligibility schedule
+  status string
+  // Membership type of the eligibility (Inherited, Direct, Group)
+  memberType string
+  // When the eligibility window starts
+  startDateTime time
+  // When the eligibility window ends; null for permanent eligibility
+  endDateTime time
+  // ABAC condition limiting the eligibility, if any
+  condition string
+  // Display name of the role the principal is eligible for
+  roleDefinitionName string
+  // Role the principal is eligible to activate
+  roleDefinition() azure.subscription.authorizationService.roleDefinition
+}
+
+// Azure PIM role assignment schedule
+//
+// A Privileged Identity Management active assignment: a role currently granted
+// to a principal at a scope, whether permanent, time-bound, or activated from
+// an eligibility. Surfaces the principal, role, scope, assignment window, and
+// whether the grant is assigned or activated. Select by the schedule's Azure
+// resource ID.
+private azure.subscription.authorizationService.roleAssignmentSchedule @defaults("principalDisplayName roleDefinitionName assignmentType status") {
+  // Assignment schedule ID
+  id string
+  // Assignment schedule name
+  name string
+  // Principal ID (user, group, or service principal) holding the role
+  principalId string
+  // Type of the assigned principal (User, Group, ServicePrincipal)
+  principalType string
+  // Display name of the assigned principal
+  principalDisplayName string
+  // Scope the assignment applies to
+  scope string
+  // How the role was granted (Assigned for a standing assignment, Activated from an eligibility)
+  assignmentType string
+  // Status of the assignment schedule
+  status string
+  // Membership type of the assignment (Inherited, Direct, Group)
+  memberType string
+  // When the assignment window starts
+  startDateTime time
+  // When the assignment window ends; null for a permanent assignment
+  endDateTime time
+  // ABAC condition limiting the assignment, if any
+  condition string
+  // Display name of the assigned role
+  roleDefinitionName string
+  // Role granted to the principal
+  roleDefinition() azure.subscription.authorizationService.roleDefinition
 }
 
 // Deny assignment in an Azure subscription

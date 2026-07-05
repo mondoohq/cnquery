@@ -279,6 +279,8 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                       string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                      string = "azure.subscription.cloudDefenderService.securityContact"
 	ResourceAzureSubscriptionAuthorizationService                                                     string = "azure.subscription.authorizationService"
+	ResourceAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule                              string = "azure.subscription.authorizationService.roleEligibilitySchedule"
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule                               string = "azure.subscription.authorizationService.roleAssignmentSchedule"
 	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                       string = "azure.subscription.authorizationService.denyAssignment"
 	ResourceAzureSubscriptionAuthorizationServiceClassicAdministrator                                 string = "azure.subscription.authorizationService.classicAdministrator"
 	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                       string = "azure.subscription.authorizationService.roleDefinition"
@@ -1511,6 +1513,14 @@ func init() {
 		"azure.subscription.authorizationService": {
 			Init:   initAzureSubscriptionAuthorizationService,
 			Create: createAzureSubscriptionAuthorizationService,
+		},
+		"azure.subscription.authorizationService.roleEligibilitySchedule": {
+			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule,
+		},
+		"azure.subscription.authorizationService.roleAssignmentSchedule": {
+			// to override args, implement: initAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule,
 		},
 		"azure.subscription.authorizationService.denyAssignment": {
 			// to override args, implement: initAzureSubscriptionAuthorizationServiceDenyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11873,6 +11883,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.classicAdministrators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationService).GetClassicAdministrators()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.classicAdministrator")))
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleEligibilitySchedules()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleEligibilitySchedule")))
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationService).GetRoleAssignmentSchedules()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignmentSchedule")))
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetPrincipalDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.memberType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetMemberType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.startDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetStartDateTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.endDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetEndDateTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetCondition()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.roleDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetRoleDefinitionName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.roleDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).GetRoleDefinition()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetPrincipalDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.assignmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetAssignmentType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.memberType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetMemberType()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.startDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetStartDateTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.endDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetEndDateTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetCondition()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.roleDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetRoleDefinitionName()).ToDataRes(types.String)
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.roleDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).GetRoleDefinition()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
 	},
 	"azure.subscription.authorizationService.denyAssignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceDenyAssignment).GetId()).ToDataRes(types.String)
@@ -31244,6 +31341,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.authorizationService.classicAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationService).ClassicAdministrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).RoleEligibilitySchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationService).RoleAssignmentSchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.principalDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).PrincipalDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.memberType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).MemberType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.startDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).StartDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.endDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).EndDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.roleDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).RoleDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleEligibilitySchedule.roleDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule).RoleDefinition, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.principalDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).PrincipalDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.assignmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).AssignmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.memberType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).MemberType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.startDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).StartDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.endDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).EndDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.roleDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).RoleDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignmentSchedule.roleDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule).RoleDefinition, ok = plugin.RawToTValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.denyAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72257,12 +72478,14 @@ type mqlAzureSubscriptionAuthorizationService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionAuthorizationServiceInternal it will be used here
-	SubscriptionId        plugin.TValue[string]
-	Roles                 plugin.TValue[[]any]
-	RoleAssignments       plugin.TValue[[]any]
-	ManagedIdentities     plugin.TValue[[]any]
-	DenyAssignments       plugin.TValue[[]any]
-	ClassicAdministrators plugin.TValue[[]any]
+	SubscriptionId           plugin.TValue[string]
+	Roles                    plugin.TValue[[]any]
+	RoleAssignments          plugin.TValue[[]any]
+	ManagedIdentities        plugin.TValue[[]any]
+	DenyAssignments          plugin.TValue[[]any]
+	ClassicAdministrators    plugin.TValue[[]any]
+	RoleEligibilitySchedules plugin.TValue[[]any]
+	RoleAssignmentSchedules  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionAuthorizationService creates a new instance of this resource
@@ -72383,6 +72606,285 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetClassicAdministrators() *p
 		}
 
 		return c.classicAdministrators()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationService) GetRoleEligibilitySchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleEligibilitySchedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roleEligibilitySchedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleEligibilitySchedules()
+	})
+}
+
+func (c *mqlAzureSubscriptionAuthorizationService) GetRoleAssignmentSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignmentSchedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService", c.__id, "roleAssignmentSchedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignmentSchedules()
+	})
+}
+
+// mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule for the azure.subscription.authorizationService.roleEligibilitySchedule resource
+type mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionAuthorizationServiceRoleEligibilityScheduleInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	PrincipalId          plugin.TValue[string]
+	PrincipalType        plugin.TValue[string]
+	PrincipalDisplayName plugin.TValue[string]
+	Scope                plugin.TValue[string]
+	Status               plugin.TValue[string]
+	MemberType           plugin.TValue[string]
+	StartDateTime        plugin.TValue[*time.Time]
+	EndDateTime          plugin.TValue[*time.Time]
+	Condition            plugin.TValue[string]
+	RoleDefinitionName   plugin.TValue[string]
+	RoleDefinition       plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+}
+
+// createAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule creates a new instance of this resource
+func createAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleEligibilitySchedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) MqlName() string {
+	return "azure.subscription.authorizationService.roleEligibilitySchedule"
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetPrincipalDisplayName() *plugin.TValue[string] {
+	return &c.PrincipalDisplayName
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetMemberType() *plugin.TValue[string] {
+	return &c.MemberType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetStartDateTime() *plugin.TValue[*time.Time] {
+	return &c.StartDateTime
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetEndDateTime() *plugin.TValue[*time.Time] {
+	return &c.EndDateTime
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetRoleDefinitionName() *plugin.TValue[string] {
+	return &c.RoleDefinitionName
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleEligibilitySchedule) GetRoleDefinition() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](&c.RoleDefinition, func() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleEligibilitySchedule", c.__id, "roleDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition), nil
+			}
+		}
+
+		return c.roleDefinition()
+	})
+}
+
+// mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule for the azure.subscription.authorizationService.roleAssignmentSchedule resource
+type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionAuthorizationServiceRoleAssignmentScheduleInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	PrincipalId          plugin.TValue[string]
+	PrincipalType        plugin.TValue[string]
+	PrincipalDisplayName plugin.TValue[string]
+	Scope                plugin.TValue[string]
+	AssignmentType       plugin.TValue[string]
+	Status               plugin.TValue[string]
+	MemberType           plugin.TValue[string]
+	StartDateTime        plugin.TValue[*time.Time]
+	EndDateTime          plugin.TValue[*time.Time]
+	Condition            plugin.TValue[string]
+	RoleDefinitionName   plugin.TValue[string]
+	RoleDefinition       plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+}
+
+// createAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule creates a new instance of this resource
+func createAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.authorizationService.roleAssignmentSchedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) MqlName() string {
+	return "azure.subscription.authorizationService.roleAssignmentSchedule"
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetPrincipalDisplayName() *plugin.TValue[string] {
+	return &c.PrincipalDisplayName
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetAssignmentType() *plugin.TValue[string] {
+	return &c.AssignmentType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetMemberType() *plugin.TValue[string] {
+	return &c.MemberType
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetStartDateTime() *plugin.TValue[*time.Time] {
+	return &c.StartDateTime
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetEndDateTime() *plugin.TValue[*time.Time] {
+	return &c.EndDateTime
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetRoleDefinitionName() *plugin.TValue[string] {
+	return &c.RoleDefinitionName
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignmentSchedule) GetRoleDefinition() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition](&c.RoleDefinition, func() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleAssignmentSchedule", c.__id, "roleDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition), nil
+			}
+		}
+
+		return c.roleDefinition()
 	})
 }
 

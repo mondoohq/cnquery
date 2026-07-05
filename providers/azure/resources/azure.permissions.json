@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T09:55:15-07:00",
+  "generated_at": "2026-07-05T11:39:56-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -18,8 +18,10 @@
     "Microsoft.Appconfiguration/configurationStores/read",
     "Microsoft.Authorization/classicAdministrators/read",
     "Microsoft.Authorization/denyAssignments/read",
+    "Microsoft.Authorization/roleAssignmentSchedules/read",
     "Microsoft.Authorization/roleAssignments/read",
     "Microsoft.Authorization/roleDefinitions/read",
+    "Microsoft.Authorization/roleEligibilitySchedules/read",
     "Microsoft.Automation/account/read",
     "Microsoft.Automation/certificate/read",
     "Microsoft.Automation/credential/read",
@@ -361,6 +363,12 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "Microsoft.Authorization/roleAssignmentSchedules/read",
+      "service": "Microsoft.Authorization",
+      "action": "NewListForScopePager",
+      "source_file": "iam_pim.go"
+    },
+    {
       "permission": "Microsoft.Authorization/roleAssignments/read",
       "service": "Microsoft.Authorization",
       "action": "NewListForSubscriptionPager",
@@ -371,6 +379,12 @@
       "service": "Microsoft.Authorization",
       "action": "NewListPager",
       "source_file": "iam.go"
+    },
+    {
+      "permission": "Microsoft.Authorization/roleEligibilitySchedules/read",
+      "service": "Microsoft.Authorization",
+      "action": "NewListForScopePager",
+      "source_file": "iam_pim.go"
     },
     {
       "permission": "Microsoft.Automation/account/read",
