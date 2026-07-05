@@ -5313,6 +5313,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.interface.effectiveSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetEffectiveSecurityRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.networkService.interface.effectiveRouteTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetEffectiveRouteTable()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.networkService.interface.ipConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -21718,6 +21721,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.interface.effectiveSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceInterface).EffectiveSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.interface.effectiveRouteTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInterface).EffectiveRouteTable, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.interface.ipConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49812,6 +49819,7 @@ type mqlAzureSubscriptionNetworkServiceInterface struct {
 	IpConfigs                   plugin.TValue[[]any]
 	Vm                          plugin.TValue[*mqlAzureSubscriptionComputeServiceVm]
 	EffectiveSecurityRules      plugin.TValue[[]any]
+	EffectiveRouteTable         plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceInterface creates a new instance of this resource
@@ -49962,6 +49970,12 @@ func (c *mqlAzureSubscriptionNetworkServiceInterface) GetVm() *plugin.TValue[*mq
 func (c *mqlAzureSubscriptionNetworkServiceInterface) GetEffectiveSecurityRules() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EffectiveSecurityRules, func() ([]any, error) {
 		return c.effectiveSecurityRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInterface) GetEffectiveRouteTable() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveRouteTable, func() ([]any, error) {
+		return c.effectiveRouteTable()
 	})
 }
 

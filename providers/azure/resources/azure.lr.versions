@@ -3291,6 +3291,7 @@ azure.subscription.networkService.inboundNatRule.type 9.0.8
 azure.subscription.networkService.interface 9.0.1
 azure.subscription.networkService.interface.appliedDnsServers 13.12.2
 azure.subscription.networkService.interface.dnsServers 13.12.2
+azure.subscription.networkService.interface.effectiveRouteTable 13.25.1
 azure.subscription.networkService.interface.effectiveSecurityRules 13.5.1
 azure.subscription.networkService.interface.enableAcceleratedNetworking 11.4.28
 azure.subscription.networkService.interface.enableIPForwarding 11.4.28

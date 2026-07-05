@@ -2763,6 +2763,12 @@ azure.subscription.networkService.interface @defaults("name location properties.
   vm() azure.subscription.computeService.vm
   // Effective NSG rules merged across NSG-on-NIC, ASGs, and NSG-on-subnet (computed via BeginGetEffectiveNetworkSecurityGroup)
   effectiveSecurityRules() []dict
+  // Effective routes applied to the NIC
+  //
+  // Merges system, user-defined, and BGP-learned routes into the route table
+  // actually applied to the interface. Each entry carries name, source, state,
+  // addressPrefix, nextHopType, and nextHopIpAddress.
+  effectiveRouteTable() []dict
 }
 
 // Azure network interface IP configuration
