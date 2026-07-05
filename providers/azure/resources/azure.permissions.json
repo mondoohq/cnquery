@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T09:03:15-07:00",
+  "generated_at": "2026-07-05T09:12:53-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -129,11 +129,14 @@
     "Microsoft.Managedservices/registrationAssignments/read",
     "Microsoft.Managedservices/registrationDefinitions/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
+    "Microsoft.Network/adminRuleCollections/read",
+    "Microsoft.Network/adminRules/read",
     "Microsoft.Network/applicationGateways/read",
     "Microsoft.Network/applicationSecurityGroups/read",
     "Microsoft.Network/azureFirewalls/read",
     "Microsoft.Network/bastionHosts/read",
     "Microsoft.Network/connections/read",
+    "Microsoft.Network/connectivityConfigurations/read",
     "Microsoft.Network/customIPPrefixes/read",
     "Microsoft.Network/ddosProtectionPlans/read",
     "Microsoft.Network/dnszones/read",
@@ -145,10 +148,12 @@
     "Microsoft.Network/expressRoutePorts/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
+    "Microsoft.Network/groups/read",
     "Microsoft.Network/iPAllocations/read",
     "Microsoft.Network/iPGroups/read",
     "Microsoft.Network/loadBalancers/read",
     "Microsoft.Network/localNetworkGateways/read",
+    "Microsoft.Network/managers/read",
     "Microsoft.Network/natGateways/read",
     "Microsoft.Network/networkInterfaces/read",
     "Microsoft.Network/networkSecurityGroups/read",
@@ -165,6 +170,7 @@
     "Microsoft.Network/publicIPPrefixes/read",
     "Microsoft.Network/routeFilters/read",
     "Microsoft.Network/routeTables/read",
+    "Microsoft.Network/securityAdminConfigurations/read",
     "Microsoft.Network/securityPerimeterAccessRules/read",
     "Microsoft.Network/securityPerimeterAssociations/read",
     "Microsoft.Network/securityPerimeterProfiles/read",
@@ -1021,6 +1027,18 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/adminRuleCollections/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
+    },
+    {
+      "permission": "Microsoft.Network/adminRules/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
+    },
+    {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
       "action": "Get",
@@ -1055,6 +1073,12 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/connectivityConfigurations/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
     },
     {
       "permission": "Microsoft.Network/customIPPrefixes/read",
@@ -1129,6 +1153,12 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/groups/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
+    },
+    {
       "permission": "Microsoft.Network/iPAllocations/read",
       "service": "Microsoft.Network",
       "action": "NewListPager",
@@ -1151,6 +1181,12 @@
       "service": "Microsoft.Network",
       "action": "Get",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/managers/read",
+      "service": "Microsoft.Network",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "network_avnm.go"
     },
     {
       "permission": "Microsoft.Network/natGateways/read",
@@ -1265,6 +1301,12 @@
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/securityAdminConfigurations/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_avnm.go"
     },
     {
       "permission": "Microsoft.Network/securityPerimeterAccessRules/read",

@@ -16,436 +16,442 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAzure                                                                                string = "azure"
-	ResourceAzureSubscription                                                                    string = "azure.subscription"
-	ResourceAzureSubscriptionWebServiceFunction                                                  string = "azure.subscription.webService.function"
-	ResourceAzureSubscriptionResourcegroup                                                       string = "azure.subscription.resourcegroup"
-	ResourceAzureSubscriptionResource                                                            string = "azure.subscription.resource"
-	ResourceAzureSubscriptionSystemData                                                          string = "azure.subscription.systemData"
-	ResourceAzureSubscriptionDeployment                                                          string = "azure.subscription.deployment"
-	ResourceAzureSubscriptionComputeService                                                      string = "azure.subscription.computeService"
-	ResourceAzureSubscriptionComputeServiceVm                                                    string = "azure.subscription.computeService.vm"
-	ResourceAzureSubscriptionComputeServiceVmImageReference                                      string = "azure.subscription.computeService.vm.imageReference"
-	ResourceAzureSubscriptionComputeServiceHybridMachine                                         string = "azure.subscription.computeService.hybridMachine"
-	ResourceAzureSubscriptionComputeServiceHybridMachineExtension                                string = "azure.subscription.computeService.hybridMachine.extension"
-	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
-	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                     string = "azure.subscription.computeService.diskEncryptionSet"
-	ResourceAzureSubscriptionComputeServiceDiskAccess                                            string = "azure.subscription.computeService.diskAccess"
-	ResourceAzureSubscriptionComputeServiceSnapshot                                              string = "azure.subscription.computeService.snapshot"
-	ResourceAzureSubscriptionComputeServiceVmScaleSet                                            string = "azure.subscription.computeService.vmScaleSet"
-	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                    string = "azure.subscription.computeService.vmScaleSet.instance"
-	ResourceAzureSubscriptionComputeServiceDedicatedHostGroup                                    string = "azure.subscription.computeService.dedicatedHostGroup"
-	ResourceAzureSubscriptionComputeServiceDedicatedHost                                         string = "azure.subscription.computeService.dedicatedHost"
-	ResourceAzureSubscriptionComputeServiceProximityPlacementGroup                               string = "azure.subscription.computeService.proximityPlacementGroup"
-	ResourceAzureSubscriptionComputeServiceImage                                                 string = "azure.subscription.computeService.image"
-	ResourceAzureSubscriptionComputeServiceGallery                                               string = "azure.subscription.computeService.gallery"
-	ResourceAzureSubscriptionComputeServiceGalleryImage                                          string = "azure.subscription.computeService.gallery.image"
-	ResourceAzureSubscriptionComputeServiceGalleryImageVersion                                   string = "azure.subscription.computeService.gallery.image.version"
-	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
-	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
-	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
-	ResourceAzureSubscriptionDatabricksService                                                   string = "azure.subscription.databricksService"
-	ResourceAzureSubscriptionDatabricksServiceWorkspace                                          string = "azure.subscription.databricksService.workspace"
-	ResourceAzureSubscriptionNetworkService                                                      string = "azure.subscription.networkService"
-	ResourceAzureSubscriptionNetworkServiceIpGroup                                               string = "azure.subscription.networkService.ipGroup"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                 string = "azure.subscription.networkService.virtualNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                      string = "azure.subscription.networkService.appSecurityGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewall                                              string = "azure.subscription.networkService.firewall"
-	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                                      string = "azure.subscription.networkService.firewall.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                                   string = "azure.subscription.networkService.firewall.networkRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                               string = "azure.subscription.networkService.firewall.applicationRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                       string = "azure.subscription.networkService.firewall.natRule"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                        string = "azure.subscription.networkService.firewallPolicy"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                     string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
-	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                          string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
-	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                    string = "azure.subscription.networkService.ddosProtectionPlan"
-	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                 string = "azure.subscription.networkService.serviceEndpointPolicy"
-	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                       string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                         string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                       string = "azure.subscription.networkService.virtualNetworkGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy            string = "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy"
-	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                   string = "azure.subscription.networkService.localNetworkGateway"
-	ResourceAzureSubscriptionNetworkServiceBgpSettings                                           string = "azure.subscription.networkService.bgpSettings"
-	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress           string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
-	ResourceAzureSubscriptionNetworkServiceNatGateway                                            string = "azure.subscription.networkService.natGateway"
-	ResourceAzureSubscriptionNetworkServiceSubnet                                                string = "azure.subscription.networkService.subnet"
-	ResourceAzureSubscriptionNetworkServiceSubnetServiceEndpoint                                 string = "azure.subscription.networkService.subnet.serviceEndpoint"
-	ResourceAzureSubscriptionNetworkServiceSubnetDelegation                                      string = "azure.subscription.networkService.subnet.delegation"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                        string = "azure.subscription.networkService.virtualNetwork"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkPeering                                 string = "azure.subscription.networkService.virtualNetwork.peering"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                             string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                          string = "azure.subscription.networkService.loadBalancer"
-	ResourceAzureSubscriptionNetworkServiceProbe                                                 string = "azure.subscription.networkService.probe"
-	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                                    string = "azure.subscription.networkService.backendAddressPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatPool                                        string = "azure.subscription.networkService.inboundNatPool"
-	ResourceAzureSubscriptionNetworkServiceInboundNatRule                                        string = "azure.subscription.networkService.inboundNatRule"
-	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                                      string = "azure.subscription.networkService.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                      string = "azure.subscription.networkService.loadBalancerRule"
-	ResourceAzureSubscriptionNetworkServiceOutboundRule                                          string = "azure.subscription.networkService.outboundRule"
-	ResourceAzureSubscriptionNetworkServiceInterface                                             string = "azure.subscription.networkService.interface"
-	ResourceAzureSubscriptionNetworkServiceIpAddress                                             string = "azure.subscription.networkService.ipAddress"
-	ResourceAzureSubscriptionNetworkServiceBastionHost                                           string = "azure.subscription.networkService.bastionHost"
-	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                         string = "azure.subscription.networkService.securityGroup"
-	ResourceAzureSubscriptionNetworkServiceSecurityrule                                          string = "azure.subscription.networkService.securityrule"
-	ResourceAzureSubscriptionNetworkServiceExposure                                              string = "azure.subscription.networkService.exposure"
-	ResourceAzureSubscriptionNetworkServiceWatcher                                               string = "azure.subscription.networkService.watcher"
-	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                        string = "azure.subscription.networkService.watcher.flowlog"
-	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                  string = "azure.subscription.networkService.watcher.packetCapture"
-	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                              string = "azure.subscription.networkService.watcher.connectionMonitor"
-	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                    string = "azure.subscription.networkService.applicationGateway"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig                     string = "azure.subscription.networkService.applicationGateway.gatewayIpConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                    string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                            string = "azure.subscription.networkService.applicationGateway.listener"
-	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                      string = "azure.subscription.networkService.applicationGateway.sslCertificate"
-	ResourceAzureSubscriptionNetworkServiceWafConfig                                             string = "azure.subscription.networkService.wafConfig"
-	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                             string = "azure.subscription.networkService.applicationFirewallPolicy"
-	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                       string = "azure.subscription.networkService.privateEndpoint"
-	ResourceAzureSubscriptionNetworkServicePrivateEndpointServiceconnection                      string = "azure.subscription.networkService.privateEndpoint.serviceconnection"
-	ResourceAzureSubscriptionNetworkServicePrivateLinkService                                    string = "azure.subscription.networkService.privateLinkService"
-	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection           string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
-	ResourceAzureSubscriptionNetworkServiceRouteTable                                            string = "azure.subscription.networkService.routeTable"
-	ResourceAzureSubscriptionNetworkServiceRoute                                                 string = "azure.subscription.networkService.route"
-	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                 string = "azure.subscription.networkService.trafficManagerProfile"
-	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                         string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
-	ResourceAzureSubscriptionNetworkServiceVirtualWan                                            string = "azure.subscription.networkService.virtualWan"
-	ResourceAzureSubscriptionNetworkServiceVirtualHub                                            string = "azure.subscription.networkService.virtualHub"
-	ResourceAzureSubscriptionNetworkServiceVirtualHubRouteTable                                  string = "azure.subscription.networkService.virtualHub.routeTable"
-	ResourceAzureSubscriptionNetworkServiceVirtualHubVnetConnection                              string = "azure.subscription.networkService.virtualHub.vnetConnection"
-	ResourceAzureSubscriptionNetworkServiceVpnSite                                               string = "azure.subscription.networkService.vpnSite"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                   string = "azure.subscription.networkService.expressRouteCircuit"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                            string = "azure.subscription.networkService.expressRouteCircuit.peering"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                      string = "azure.subscription.networkService.expressRouteCircuit.authorization"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeter                                     string = "azure.subscription.networkService.securityPerimeter"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterProfile                              string = "azure.subscription.networkService.securityPerimeter.profile"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule                           string = "azure.subscription.networkService.securityPerimeter.accessRule"
-	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAssociation                          string = "azure.subscription.networkService.securityPerimeter.association"
-	ResourceAzureSubscriptionNetworkServiceVpnGateway                                            string = "azure.subscription.networkService.vpnGateway"
-	ResourceAzureSubscriptionNetworkServiceVpnGatewayConnection                                  string = "azure.subscription.networkService.vpnGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceVpnServerConfiguration                                string = "azure.subscription.networkService.vpnServerConfiguration"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteGateway                                   string = "azure.subscription.networkService.expressRouteGateway"
-	ResourceAzureSubscriptionNetworkServiceExpressRouteGatewayConnection                         string = "azure.subscription.networkService.expressRouteGateway.connection"
-	ResourceAzureSubscriptionNetworkServiceExpressRoutePort                                      string = "azure.subscription.networkService.expressRoutePort"
-	ResourceAzureSubscriptionNetworkServiceRouteFilter                                           string = "azure.subscription.networkService.routeFilter"
-	ResourceAzureSubscriptionNetworkServiceRouteFilterRule                                       string = "azure.subscription.networkService.routeFilter.rule"
-	ResourceAzureSubscriptionNetworkServiceVirtualAppliance                                      string = "azure.subscription.networkService.virtualAppliance"
-	ResourceAzureSubscriptionNetworkServiceVirtualRouter                                         string = "azure.subscription.networkService.virtualRouter"
-	ResourceAzureSubscriptionNetworkServicePublicIpPrefix                                        string = "azure.subscription.networkService.publicIpPrefix"
-	ResourceAzureSubscriptionNetworkServiceCustomIpPrefix                                        string = "azure.subscription.networkService.customIpPrefix"
-	ResourceAzureSubscriptionNetworkServiceVirtualNetworkTap                                     string = "azure.subscription.networkService.virtualNetworkTap"
-	ResourceAzureSubscriptionNetworkServiceIpAllocation                                          string = "azure.subscription.networkService.ipAllocation"
-	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
-	ResourceAzureSubscriptionStorageServiceAccount                                               string = "azure.subscription.storageService.account"
-	ResourceAzureSubscriptionStorageServiceAccountQueue                                          string = "azure.subscription.storageService.account.queue"
-	ResourceAzureSubscriptionStorageServiceAccountTable                                          string = "azure.subscription.storageService.account.table"
-	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                      string = "azure.subscription.storageService.account.localUser"
-	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                 string = "azure.subscription.storageService.account.dataProtection"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                           string = "azure.subscription.storageService.account.filePropertiesConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig           string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
-	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig        string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
-	ResourceAzureSubscriptionStorageServiceAccountEncryptionScope                                string = "azure.subscription.storageService.account.encryptionScope"
-	ResourceAzureSubscriptionStorageServiceAccountManagementPolicy                               string = "azure.subscription.storageService.account.managementPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                           string = "azure.subscription.storageService.account.managementPolicy.rule"
-	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                              string = "azure.subscription.storageService.account.service.properties"
-	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                          string = "azure.subscription.storageService.account.service.blobProperties"
-	ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig                            string = "azure.subscription.storageService.account.staticWebsiteConfig"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                       string = "azure.subscription.storageService.account.service.properties.metrics"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy               string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                       string = "azure.subscription.storageService.account.service.properties.logging"
-	ResourceAzureSubscriptionStorageServiceAccountContainer                                      string = "azure.subscription.storageService.account.container"
-	ResourceAzureSubscriptionStorageServiceAccountFileShare                                      string = "azure.subscription.storageService.account.fileShare"
-	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                      string = "azure.subscription.storageService.account.privateEndpointConnection"
-	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                        string = "azure.subscription.storageService.account.objectReplicationPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration          string = "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
-	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                            string = "azure.subscription.storageService.account.blobInventoryPolicy"
-	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                      string = "azure.subscription.storageService.account.defenderForStorageSetting"
-	ResourceAzureSubscriptionWebService                                                          string = "azure.subscription.webService"
-	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                           string = "azure.subscription.webService.appRuntimeStack"
-	ResourceAzureSubscriptionWebServiceAppsite                                                   string = "azure.subscription.webService.appsite"
-	ResourceAzureSubscriptionWebServiceAppsiteOutboundVnetRouting                                string = "azure.subscription.webService.appsite.outboundVnetRouting"
-	ResourceAzureSubscriptionPrivateEndpointConnection                                           string = "azure.subscription.privateEndpointConnection"
-	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                            string = "azure.subscription.privateEndpointConnection.connectionState"
-	ResourceAzureSubscriptionWebServiceAppslot                                                   string = "azure.subscription.webService.appslot"
-	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                 string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
-	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                       string = "azure.subscription.webService.appsiteauthsettings"
-	ResourceAzureSubscriptionWebServiceAppsiteconfig                                             string = "azure.subscription.webService.appsiteconfig"
-	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                        string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
-	ResourceAzureSubscriptionWebServiceHostingEnvironment                                        string = "azure.subscription.webService.hostingEnvironment"
-	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                          string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
-	ResourceAzureSubscriptionWebServiceAppServicePlan                                            string = "azure.subscription.webService.appServicePlan"
-	ResourceAzureSubscriptionWebServiceCertificate                                               string = "azure.subscription.webService.certificate"
-	ResourceAzureSubscriptionWebServiceStaticSite                                                string = "azure.subscription.webService.staticSite"
-	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                    string = "azure.subscription.webService.appsite.hostNameBinding"
-	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                           string = "azure.subscription.webService.appsite.virtualNetworkConnection"
-	ResourceAzureSubscriptionSqlService                                                          string = "azure.subscription.sqlService"
-	ResourceAzureSubscriptionSqlServiceServer                                                    string = "azure.subscription.sqlService.server"
-	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                     string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
-	ResourceAzureSubscriptionSqlServiceServerAdministrator                                       string = "azure.subscription.sqlService.server.administrator"
-	ResourceAzureSubscriptionSqlServiceDatabase                                                  string = "azure.subscription.sqlService.database"
-	ResourceAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection                          string = "azure.subscription.sqlService.database.advancedthreatprotection"
-	ResourceAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy                    string = "azure.subscription.sqlService.database.backupshorttermretentionpolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy                           string = "azure.subscription.sqlService.database.longtermretentionpolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseusage                                             string = "azure.subscription.sqlService.databaseusage"
-	ResourceAzureSubscriptionSqlServiceServerBlobAuditingPolicy                                  string = "azure.subscription.sqlService.server.blobAuditingPolicy"
-	ResourceAzureSubscriptionSqlServiceServerEncryptionProtectorConfig                           string = "azure.subscription.sqlService.server.encryptionProtectorConfig"
-	ResourceAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig                           string = "azure.subscription.sqlService.server.securityAlertPolicyConfig"
-	ResourceAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting                     string = "azure.subscription.sqlService.server.advancedThreatProtectionSetting"
-	ResourceAzureSubscriptionSqlServiceServerDevOpsAuditingSetting                               string = "azure.subscription.sqlService.server.devOpsAuditingSetting"
-	ResourceAzureSubscriptionSqlServiceServerKey                                                 string = "azure.subscription.sqlService.server.key"
-	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                string = "azure.subscription.sqlService.server.outboundFirewallRule"
-	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                       string = "azure.subscription.sqlService.server.failoverGroup"
-	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                     string = "azure.subscription.sqlService.server.replicationLink"
-	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                               string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
-	ResourceAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy                                string = "azure.subscription.sqlService.database.blobAuditingPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy                               string = "azure.subscription.sqlService.database.securityAlertPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment                           string = "azure.subscription.sqlService.database.vulnerabilityAssessment"
-	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingPolicy                                 string = "azure.subscription.sqlService.database.dataMaskingPolicy"
-	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingRule                                   string = "azure.subscription.sqlService.database.dataMaskingRule"
-	ResourceAzureSubscriptionSqlServiceDatabaseLedgerDigestUpload                                string = "azure.subscription.sqlService.database.ledgerDigestUpload"
-	ResourceAzureSubscriptionSqlServiceDatabaseGeoBackupPolicy                                   string = "azure.subscription.sqlService.database.geoBackupPolicy"
-	ResourceAzureSubscriptionPostgreSqlService                                                   string = "azure.subscription.postgreSqlService"
-	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                                     string = "azure.subscription.postgreSqlService.flexibleServer"
-	ResourceAzureSubscriptionPostgreSqlServiceServer                                             string = "azure.subscription.postgreSqlService.server"
-	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                           string = "azure.subscription.postgreSqlService.database"
-	ResourceAzureSubscriptionSqlServiceConfiguration                                             string = "azure.subscription.sqlService.configuration"
-	ResourceAzureSubscriptionSqlServiceFirewallrule                                              string = "azure.subscription.sqlService.firewallrule"
-	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                        string = "azure.subscription.sqlService.virtualNetworkRule"
-	ResourceAzureSubscriptionSqlServiceManagedInstance                                           string = "azure.subscription.sqlService.managedInstance"
-	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                   string = "azure.subscription.sqlService.managedInstance.database"
-	ResourceAzureSubscriptionMySqlService                                                        string = "azure.subscription.mySqlService"
-	ResourceAzureSubscriptionMySqlServiceServer                                                  string = "azure.subscription.mySqlService.server"
-	ResourceAzureSubscriptionMySqlServiceDatabase                                                string = "azure.subscription.mySqlService.database"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                          string = "azure.subscription.mySqlService.flexibleServer"
-	ResourceAzureSubscriptionMySqlServiceFlexibleServerAdministrator                             string = "azure.subscription.mySqlService.flexibleServer.administrator"
-	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
-	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
-	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
-	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                         string = "azure.subscription.cosmosDbService.mongoCluster"
-	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                    string = "azure.subscription.cosmosDbService.postgresqlCluster"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                             string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                             string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                   string = "azure.subscription.cosmosDbService.account.sqlDatabase"
-	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                          string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
-	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
-	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                           string = "azure.subscription.keyVaultService.managedHsm"
-	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
-	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                    string = "azure.subscription.keyVaultService.vault.accessPolicy"
-	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                     string = "azure.subscription.keyVaultService.vault.networkAcls"
-	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                      string = "azure.subscription.keyVaultService.key.autorotation"
-	ResourceAzureSubscriptionKeyVaultServiceKey                                                  string = "azure.subscription.keyVaultService.key"
-	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                              string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
-	ResourceAzureSubscriptionKeyVaultServiceCertificate                                          string = "azure.subscription.keyVaultService.certificate"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                                    string = "azure.subscription.keyVaultService.certificate.policy"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties                       string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters                    string = "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
-	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties           string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
-	ResourceAzureSubscriptionKeyVaultServiceSecret                                               string = "azure.subscription.keyVaultService.secret"
-	ResourceAzureSubscriptionMonitorService                                                      string = "azure.subscription.monitorService"
-	ResourceAzureSubscriptionMonitorServiceActivityLog                                           string = "azure.subscription.monitorService.activityLog"
-	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                    string = "azure.subscription.monitorService.applicationInsight"
-	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                      string = "azure.subscription.monitorService.activityLog.alert"
-	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                      string = "azure.subscription.monitorService.activityLog.entry"
-	ResourceAzureSubscriptionMonitorServiceLogprofile                                            string = "azure.subscription.monitorService.logprofile"
-	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                     string = "azure.subscription.monitorService.diagnosticsetting"
-	ResourceAzureSubscriptionCloudDefenderService                                                string = "azure.subscription.cloudDefenderService"
-	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                     string = "azure.subscription.cloudDefenderService.secureScore"
-	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                              string = "azure.subscription.cloudDefenderService.secureScoreControl"
-	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                    string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
-	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                     string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
-	ResourceAzureSubscriptionCloudDefenderServiceAssessment                                      string = "azure.subscription.cloudDefenderService.assessment"
-	ResourceAzureSubscriptionCloudDefenderServiceAlert                                           string = "azure.subscription.cloudDefenderService.alert"
-	ResourceAzureSubscriptionCloudDefenderServiceSettings                                        string = "azure.subscription.cloudDefenderService.settings"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                 string = "azure.subscription.cloudDefenderService.defenderForApis"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                    string = "azure.subscription.cloudDefenderService.defenderCSPM"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                           string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                              string = "azure.subscription.cloudDefenderService.defenderForServers"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                          string = "azure.subscription.cloudDefenderService.defenderForAppServices"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                 string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                         string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases                  string = "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb                             string = "azure.subscription.cloudDefenderService.defenderForCosmosDb"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts                      string = "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults                            string = "azure.subscription.cloudDefenderService.defenderForKeyVaults"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                      string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                           string = "azure.subscription.cloudDefenderService.defenderForContainers"
-	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                  string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
-	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                 string = "azure.subscription.cloudDefenderService.securityContact"
-	ResourceAzureSubscriptionAuthorizationService                                                string = "azure.subscription.authorizationService"
-	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                  string = "azure.subscription.authorizationService.denyAssignment"
-	ResourceAzureSubscriptionAuthorizationServiceClassicAdministrator                            string = "azure.subscription.authorizationService.classicAdministrator"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                  string = "azure.subscription.authorizationService.roleDefinition"
-	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission                        string = "azure.subscription.authorizationService.roleDefinition.permission"
-	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                                  string = "azure.subscription.authorizationService.roleAssignment"
-	ResourceAzureSubscriptionManagedIdentity                                                     string = "azure.subscription.managedIdentity"
-	ResourceAzureSubscriptionAksService                                                          string = "azure.subscription.aksService"
-	ResourceAzureSubscriptionAksServiceCluster                                                   string = "azure.subscription.aksService.cluster"
-	ResourceAzureSubscriptionAksServiceClusterAadProfile                                         string = "azure.subscription.aksService.cluster.aadProfile"
-	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                 string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
-	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                 string = "azure.subscription.aksService.cluster.advancedNetworking"
-	ResourceAzureSubscriptionAksServiceClusterIdentityBinding                                    string = "azure.subscription.aksService.cluster.identityBinding"
-	ResourceAzureSubscriptionAksServiceClusterNodePool                                           string = "azure.subscription.aksService.cluster.nodePool"
-	ResourceAzureSubscriptionAdvisorService                                                      string = "azure.subscription.advisorService"
-	ResourceAzureSubscriptionAdvisorServiceRecommendation                                        string = "azure.subscription.advisorService.recommendation"
-	ResourceAzureSubscriptionAdvisorServiceScore                                                 string = "azure.subscription.advisorService.score"
-	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                            string = "azure.subscription.advisorService.timeSeries"
-	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                         string = "azure.subscription.advisorService.securityScore"
-	ResourceAzureSubscriptionPolicy                                                              string = "azure.subscription.policy"
-	ResourceAzureSubscriptionPolicyAssignment                                                    string = "azure.subscription.policy.assignment"
-	ResourceAzureSubscriptionPolicyDefinition                                                    string = "azure.subscription.policy.definition"
-	ResourceAzureSubscriptionPolicySetDefinition                                                 string = "azure.subscription.policy.setDefinition"
-	ResourceAzureSubscriptionPolicyExemption                                                     string = "azure.subscription.policy.exemption"
-	ResourceAzureSubscriptionPolicyComplianceSummary                                             string = "azure.subscription.policy.complianceSummary"
-	ResourceAzureSubscriptionIotService                                                          string = "azure.subscription.iotService"
-	ResourceAzureSubscriptionIotServiceIotHub                                                    string = "azure.subscription.iotService.iotHub"
-	ResourceAzureSubscriptionCacheService                                                        string = "azure.subscription.cacheService"
-	ResourceAzureSubscriptionCacheServiceRedisInstance                                           string = "azure.subscription.cacheService.redisInstance"
-	ResourceAzureSubscriptionCacheServiceRedisInstanceFirewallRule                               string = "azure.subscription.cacheService.redisInstance.firewallRule"
-	ResourceAzureSubscriptionCacheServiceRedisInstancePatchSchedule                              string = "azure.subscription.cacheService.redisInstance.patchSchedule"
-	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                  string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
-	ResourceAzureSubscriptionDataFactoryService                                                  string = "azure.subscription.dataFactoryService"
-	ResourceAzureSubscriptionDataFactoryServiceFactory                                           string = "azure.subscription.dataFactoryService.factory"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryLinkedService                              string = "azure.subscription.dataFactoryService.factory.linkedService"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime                         string = "azure.subscription.dataFactoryService.factory.integrationRuntime"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork                      string = "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
-	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint                     string = "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
-	ResourceAzureSubscriptionSynapseService                                                      string = "azure.subscription.synapseService"
-	ResourceAzureSubscriptionSynapseServiceWorkspace                                             string = "azure.subscription.synapseService.workspace"
-	ResourceAzureSubscriptionContainerRegistryService                                            string = "azure.subscription.containerRegistryService"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistry                                    string = "azure.subscription.containerRegistryService.registry"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSet                      string = "azure.subscription.containerRegistryService.registry.networkRuleSet"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSetIpRule                string = "azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies                            string = "azure.subscription.containerRegistryService.registry.policies"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryEncryption                          string = "azure.subscription.containerRegistryService.registry.encryption"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryWebhook                             string = "azure.subscription.containerRegistryService.registry.webhook"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryReplication                         string = "azure.subscription.containerRegistryService.registry.replication"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryScopeMap                            string = "azure.subscription.containerRegistryService.registry.scopeMap"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryToken                               string = "azure.subscription.containerRegistryService.registry.token"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryCacheRule                           string = "azure.subscription.containerRegistryService.registry.cacheRule"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet                       string = "azure.subscription.containerRegistryService.registry.credentialSet"
-	ResourceAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry                   string = "azure.subscription.containerRegistryService.registry.connectedRegistry"
-	ResourceAzureSubscriptionMonitorServiceWorkspace                                             string = "azure.subscription.monitorService.workspace"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceCapping                                      string = "azure.subscription.monitorService.workspace.capping"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures                                     string = "azure.subscription.monitorService.workspace.features"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceDataExport                                   string = "azure.subscription.monitorService.workspace.dataExport"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceLinkedService                                string = "azure.subscription.monitorService.workspace.linkedService"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceReplication                                  string = "azure.subscription.monitorService.workspace.replication"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceFailover                                     string = "azure.subscription.monitorService.workspace.failover"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceTable                                        string = "azure.subscription.monitorService.workspace.table"
-	ResourceAzureSubscriptionMonitorServiceWorkspaceNspConfiguration                             string = "azure.subscription.monitorService.workspace.nspConfiguration"
-	ResourceAzureSubscriptionMonitorServiceQueryPack                                             string = "azure.subscription.monitorService.queryPack"
-	ResourceAzureSubscriptionMonitorServiceQueryPackQuery                                        string = "azure.subscription.monitorService.queryPack.query"
-	ResourceAzureSubscriptionRecoveryServicesService                                             string = "azure.subscription.recoveryServicesService"
-	ResourceAzureSubscriptionRecoveryServicesServiceVault                                        string = "azure.subscription.recoveryServicesService.vault"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                        string = "azure.subscription.recoveryServicesService.vault.securitySettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                              string = "azure.subscription.recoveryServicesService.vault.encryption"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                      string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings                      string = "azure.subscription.recoveryServicesService.vault.redundancySettings"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupConfig                            string = "azure.subscription.recoveryServicesService.vault.backupConfig"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy                            string = "azure.subscription.recoveryServicesService.vault.backupPolicy"
-	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                           string = "azure.subscription.recoveryServicesService.vault.protectedItem"
-	ResourceAzureSubscriptionFunctionsService                                                    string = "azure.subscription.functionsService"
-	ResourceAzureSubscriptionFunctionsServiceFunctionApp                                         string = "azure.subscription.functionsService.functionApp"
-	ResourceAzureSubscriptionFunctionsServiceFunctionAppAppSetting                               string = "azure.subscription.functionsService.functionApp.appSetting"
-	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                 string = "azure.subscription.functionsService.functionApp.function"
-	ResourceAzureSubscriptionServiceBusService                                                   string = "azure.subscription.serviceBusService"
-	ResourceAzureSubscriptionServiceBusServiceNamespace                                          string = "azure.subscription.serviceBusService.namespace"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRules                              string = "azure.subscription.serviceBusService.namespace.networkRules"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule            string = "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                     string = "azure.subscription.serviceBusService.namespace.queue"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                     string = "azure.subscription.serviceBusService.namespace.topic"
-	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                         string = "azure.subscription.serviceBusService.namespace.topic.subscription"
-	ResourceAzureSubscriptionEventHubService                                                     string = "azure.subscription.eventHubService"
-	ResourceAzureSubscriptionEventHubServiceNamespace                                            string = "azure.subscription.eventHubService.namespace"
-	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                string = "azure.subscription.eventHubService.namespace.networkRules"
-	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule              string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
-	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                    string = "azure.subscription.eventHubService.namespace.eventHub"
-	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                       string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
-	ResourceAzureSubscriptionEventGridService                                                    string = "azure.subscription.eventGridService"
-	ResourceAzureSubscriptionEventGridServiceTopic                                               string = "azure.subscription.eventGridService.topic"
-	ResourceAzureSubscriptionEventGridServiceSystemTopic                                         string = "azure.subscription.eventGridService.systemTopic"
-	ResourceAzureSubscriptionEventGridServiceDomain                                              string = "azure.subscription.eventGridService.domain"
-	ResourceAzureSubscriptionDnsService                                                          string = "azure.subscription.dnsService"
-	ResourceAzureSubscriptionDnsServiceZone                                                      string = "azure.subscription.dnsService.zone"
-	ResourceAzureSubscriptionDnsServiceZoneRecordSet                                             string = "azure.subscription.dnsService.zone.recordSet"
-	ResourceAzureSubscriptionDnsServicePrivateZone                                               string = "azure.subscription.dnsService.privateZone"
-	ResourceAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink                             string = "azure.subscription.dnsService.privateZone.virtualNetworkLink"
-	ResourceAzureSubscriptionFrontDoorService                                                    string = "azure.subscription.frontDoorService"
-	ResourceAzureSubscriptionFrontDoorServiceProfile                                             string = "azure.subscription.frontDoorService.profile"
-	ResourceAzureSubscriptionFrontDoorServiceProfileSecurityPolicy                               string = "azure.subscription.frontDoorService.profile.securityPolicy"
-	ResourceAzureSubscriptionFrontDoorServiceProfileEndpoint                                     string = "azure.subscription.frontDoorService.profile.endpoint"
-	ResourceAzureSubscriptionFrontDoorServiceProfileEndpointRoute                                string = "azure.subscription.frontDoorService.profile.endpoint.route"
-	ResourceAzureSubscriptionFrontDoorServiceProfileCustomDomain                                 string = "azure.subscription.frontDoorService.profile.customDomain"
-	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroup                                  string = "azure.subscription.frontDoorService.profile.originGroup"
-	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin                            string = "azure.subscription.frontDoorService.profile.originGroup.origin"
-	ResourceAzureSubscriptionContainerAppService                                                 string = "azure.subscription.containerAppService"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironment                               string = "azure.subscription.containerAppService.managedEnvironment"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection      string = "azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig                string = "azure.subscription.containerAppService.managedEnvironment.httpRouteConfig"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration       string = "azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent                  string = "azure.subscription.containerAppService.managedEnvironment.daprComponent"
-	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate                    string = "azure.subscription.containerAppService.managedEnvironment.certificate"
-	ResourceAzureSubscriptionContainerAppServiceContainerApp                                     string = "azure.subscription.containerAppService.containerApp"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppContainer                            string = "azure.subscription.containerAppService.containerApp.container"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppRevision                             string = "azure.subscription.containerAppService.containerApp.revision"
-	ResourceAzureSubscriptionContainerAppServiceContainerAppAuthConfig                           string = "azure.subscription.containerAppService.containerApp.authConfig"
-	ResourceAzureSubscriptionContainerAppServiceJob                                              string = "azure.subscription.containerAppService.job"
-	ResourceAzureSubscriptionContainerInstanceService                                            string = "azure.subscription.containerInstanceService"
-	ResourceAzureSubscriptionContainerInstanceServiceContainerGroup                              string = "azure.subscription.containerInstanceService.containerGroup"
-	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                     string = "azure.subscription.containerInstanceService.containerGroup.container"
-	ResourceAzureSubscriptionLogicService                                                        string = "azure.subscription.logicService"
-	ResourceAzureSubscriptionLogicServiceWorkflow                                                string = "azure.subscription.logicService.workflow"
-	ResourceAzureSubscriptionApiManagementService                                                string = "azure.subscription.apiManagementService"
-	ResourceAzureSubscriptionApiManagementServiceService                                         string = "azure.subscription.apiManagementService.service"
-	ResourceAzureSubscriptionPurviewService                                                      string = "azure.subscription.purviewService"
-	ResourceAzureSubscriptionPurviewServiceAccount                                               string = "azure.subscription.purviewService.account"
-	ResourceAzureSubscriptionSearchService                                                       string = "azure.subscription.searchService"
-	ResourceAzureSubscriptionSearchServiceService                                                string = "azure.subscription.searchService.service"
-	ResourceAzureSubscriptionLighthouseService                                                   string = "azure.subscription.lighthouseService"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinition                             string = "azure.subscription.lighthouseService.registrationDefinition"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization                string = "azure.subscription.lighthouseService.registrationDefinition.authorization"
-	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                             string = "azure.subscription.lighthouseService.registrationAssignment"
-	ResourceAzureSubscriptionMachineLearningService                                              string = "azure.subscription.machineLearningService"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                     string = "azure.subscription.machineLearningService.workspace"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                       string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment             string = "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                   string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceCompute                              string = "azure.subscription.machineLearningService.workspace.compute"
-	ResourceAzureSubscriptionMachineLearningServiceWorkspaceModel                                string = "azure.subscription.machineLearningService.workspace.model"
-	ResourceAzureSubscriptionAppConfigurationService                                             string = "azure.subscription.appConfigurationService"
-	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                           string = "azure.subscription.appConfigurationService.configurationStore"
-	ResourceAzureSubscriptionCognitiveServicesService                                            string = "azure.subscription.cognitiveServicesService"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                     string = "azure.subscription.cognitiveServicesService.account"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                           string = "azure.subscription.cognitiveServicesService.account.deployment"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                              string = "azure.subscription.cognitiveServicesService.account.project"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                    string = "azure.subscription.cognitiveServicesService.account.project.connection"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountConnection                           string = "azure.subscription.cognitiveServicesService.account.connection"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                            string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter               string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
-	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                             string = "azure.subscription.cognitiveServicesService.account.raiTopic"
-	ResourceAzureSubscriptionSentinelService                                                     string = "azure.subscription.sentinelService"
-	ResourceAzureSubscriptionSentinelServiceWorkspace                                            string = "azure.subscription.sentinelService.workspace"
-	ResourceAzureSubscriptionSentinelServiceAlertRule                                            string = "azure.subscription.sentinelService.alertRule"
-	ResourceAzureSubscriptionSignalRService                                                      string = "azure.subscription.signalRService"
-	ResourceAzureSubscriptionSignalRServiceSignalR                                               string = "azure.subscription.signalRService.signalR"
-	ResourceAzureSubscriptionWebPubSubService                                                    string = "azure.subscription.webPubSubService"
-	ResourceAzureSubscriptionWebPubSubServiceWebPubSub                                           string = "azure.subscription.webPubSubService.webPubSub"
-	ResourceAzureSubscriptionKustoService                                                        string = "azure.subscription.kustoService"
-	ResourceAzureSubscriptionKustoServiceCluster                                                 string = "azure.subscription.kustoService.cluster"
-	ResourceAzureSubscriptionKustoServiceClusterDatabase                                         string = "azure.subscription.kustoService.cluster.database"
-	ResourceAzureSubscriptionKustoServiceClusterPrincipalAssignment                              string = "azure.subscription.kustoService.cluster.principalAssignment"
-	ResourceAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment                      string = "azure.subscription.kustoService.cluster.database.principalAssignment"
-	ResourceAzureSubscriptionKustoServiceClusterCalloutPolicy                                    string = "azure.subscription.kustoService.cluster.calloutPolicy"
-	ResourceAzureSubscriptionKustoServiceClusterPrivateEndpointConnection                        string = "azure.subscription.kustoService.cluster.privateEndpointConnection"
-	ResourceAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint                           string = "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
-	ResourceAzureSubscriptionKustoServiceClusterDatabaseDataConnection                           string = "azure.subscription.kustoService.cluster.database.dataConnection"
-	ResourceAzureSubscriptionAutomationService                                                   string = "azure.subscription.automationService"
-	ResourceAzureSubscriptionAutomationServiceAccount                                            string = "azure.subscription.automationService.account"
-	ResourceAzureSubscriptionAutomationServiceAccountVariable                                    string = "azure.subscription.automationService.account.variable"
-	ResourceAzureSubscriptionAutomationServiceAccountCredential                                  string = "azure.subscription.automationService.account.credential"
-	ResourceAzureSubscriptionAutomationServiceAccountCertificate                                 string = "azure.subscription.automationService.account.certificate"
-	ResourceAzureSubscriptionDesktopVirtualizationService                                        string = "azure.subscription.desktopVirtualizationService"
-	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                string = "azure.subscription.desktopVirtualizationService.hostPool"
+	ResourceAzure                                                                                     string = "azure"
+	ResourceAzureSubscription                                                                         string = "azure.subscription"
+	ResourceAzureSubscriptionWebServiceFunction                                                       string = "azure.subscription.webService.function"
+	ResourceAzureSubscriptionResourcegroup                                                            string = "azure.subscription.resourcegroup"
+	ResourceAzureSubscriptionResource                                                                 string = "azure.subscription.resource"
+	ResourceAzureSubscriptionSystemData                                                               string = "azure.subscription.systemData"
+	ResourceAzureSubscriptionDeployment                                                               string = "azure.subscription.deployment"
+	ResourceAzureSubscriptionComputeService                                                           string = "azure.subscription.computeService"
+	ResourceAzureSubscriptionComputeServiceVm                                                         string = "azure.subscription.computeService.vm"
+	ResourceAzureSubscriptionComputeServiceVmImageReference                                           string = "azure.subscription.computeService.vm.imageReference"
+	ResourceAzureSubscriptionComputeServiceHybridMachine                                              string = "azure.subscription.computeService.hybridMachine"
+	ResourceAzureSubscriptionComputeServiceHybridMachineExtension                                     string = "azure.subscription.computeService.hybridMachine.extension"
+	ResourceAzureSubscriptionComputeServiceDisk                                                       string = "azure.subscription.computeService.disk"
+	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                          string = "azure.subscription.computeService.diskEncryptionSet"
+	ResourceAzureSubscriptionComputeServiceDiskAccess                                                 string = "azure.subscription.computeService.diskAccess"
+	ResourceAzureSubscriptionComputeServiceSnapshot                                                   string = "azure.subscription.computeService.snapshot"
+	ResourceAzureSubscriptionComputeServiceVmScaleSet                                                 string = "azure.subscription.computeService.vmScaleSet"
+	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                         string = "azure.subscription.computeService.vmScaleSet.instance"
+	ResourceAzureSubscriptionComputeServiceDedicatedHostGroup                                         string = "azure.subscription.computeService.dedicatedHostGroup"
+	ResourceAzureSubscriptionComputeServiceDedicatedHost                                              string = "azure.subscription.computeService.dedicatedHost"
+	ResourceAzureSubscriptionComputeServiceProximityPlacementGroup                                    string = "azure.subscription.computeService.proximityPlacementGroup"
+	ResourceAzureSubscriptionComputeServiceImage                                                      string = "azure.subscription.computeService.image"
+	ResourceAzureSubscriptionComputeServiceGallery                                                    string = "azure.subscription.computeService.gallery"
+	ResourceAzureSubscriptionComputeServiceGalleryImage                                               string = "azure.subscription.computeService.gallery.image"
+	ResourceAzureSubscriptionComputeServiceGalleryImageVersion                                        string = "azure.subscription.computeService.gallery.image.version"
+	ResourceAzureSubscriptionBatchService                                                             string = "azure.subscription.batchService"
+	ResourceAzureSubscriptionBatchServiceAccount                                                      string = "azure.subscription.batchService.account"
+	ResourceAzureSubscriptionBatchServiceAccountPool                                                  string = "azure.subscription.batchService.account.pool"
+	ResourceAzureSubscriptionDatabricksService                                                        string = "azure.subscription.databricksService"
+	ResourceAzureSubscriptionDatabricksServiceWorkspace                                               string = "azure.subscription.databricksService.workspace"
+	ResourceAzureSubscriptionNetworkService                                                           string = "azure.subscription.networkService"
+	ResourceAzureSubscriptionNetworkServiceNetworkManager                                             string = "azure.subscription.networkService.networkManager"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup                                 string = "azure.subscription.networkService.networkManager.networkGroup"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration                   string = "azure.subscription.networkService.networkManager.securityAdminConfiguration"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection     string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule string = "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule"
+	ResourceAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration                    string = "azure.subscription.networkService.networkManager.connectivityConfiguration"
+	ResourceAzureSubscriptionNetworkServiceIpGroup                                                    string = "azure.subscription.networkService.ipGroup"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                      string = "azure.subscription.networkService.virtualNetworkGateway"
+	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                           string = "azure.subscription.networkService.appSecurityGroup"
+	ResourceAzureSubscriptionNetworkServiceFirewall                                                   string = "azure.subscription.networkService.firewall"
+	ResourceAzureSubscriptionNetworkServiceFirewallIpConfig                                           string = "azure.subscription.networkService.firewall.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceFirewallNetworkRule                                        string = "azure.subscription.networkService.firewall.networkRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                                    string = "azure.subscription.networkService.firewall.applicationRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                            string = "azure.subscription.networkService.firewall.natRule"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                             string = "azure.subscription.networkService.firewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                          string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                               string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
+	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                         string = "azure.subscription.networkService.ddosProtectionPlan"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                      string = "azure.subscription.networkService.serviceEndpointPolicy"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                            string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                              string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                            string = "azure.subscription.networkService.virtualNetworkGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy                 string = "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy"
+	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                        string = "azure.subscription.networkService.localNetworkGateway"
+	ResourceAzureSubscriptionNetworkServiceBgpSettings                                                string = "azure.subscription.networkService.bgpSettings"
+	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress                string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
+	ResourceAzureSubscriptionNetworkServiceNatGateway                                                 string = "azure.subscription.networkService.natGateway"
+	ResourceAzureSubscriptionNetworkServiceSubnet                                                     string = "azure.subscription.networkService.subnet"
+	ResourceAzureSubscriptionNetworkServiceSubnetServiceEndpoint                                      string = "azure.subscription.networkService.subnet.serviceEndpoint"
+	ResourceAzureSubscriptionNetworkServiceSubnetDelegation                                           string = "azure.subscription.networkService.subnet.delegation"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                             string = "azure.subscription.networkService.virtualNetwork"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkPeering                                      string = "azure.subscription.networkService.virtualNetwork.peering"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                                  string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancer                                               string = "azure.subscription.networkService.loadBalancer"
+	ResourceAzureSubscriptionNetworkServiceProbe                                                      string = "azure.subscription.networkService.probe"
+	ResourceAzureSubscriptionNetworkServiceBackendAddressPool                                         string = "azure.subscription.networkService.backendAddressPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatPool                                             string = "azure.subscription.networkService.inboundNatPool"
+	ResourceAzureSubscriptionNetworkServiceInboundNatRule                                             string = "azure.subscription.networkService.inboundNatRule"
+	ResourceAzureSubscriptionNetworkServiceFrontendIpConfig                                           string = "azure.subscription.networkService.frontendIpConfig"
+	ResourceAzureSubscriptionNetworkServiceLoadBalancerRule                                           string = "azure.subscription.networkService.loadBalancerRule"
+	ResourceAzureSubscriptionNetworkServiceOutboundRule                                               string = "azure.subscription.networkService.outboundRule"
+	ResourceAzureSubscriptionNetworkServiceInterface                                                  string = "azure.subscription.networkService.interface"
+	ResourceAzureSubscriptionNetworkServiceIpAddress                                                  string = "azure.subscription.networkService.ipAddress"
+	ResourceAzureSubscriptionNetworkServiceBastionHost                                                string = "azure.subscription.networkService.bastionHost"
+	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                              string = "azure.subscription.networkService.securityGroup"
+	ResourceAzureSubscriptionNetworkServiceSecurityrule                                               string = "azure.subscription.networkService.securityrule"
+	ResourceAzureSubscriptionNetworkServiceExposure                                                   string = "azure.subscription.networkService.exposure"
+	ResourceAzureSubscriptionNetworkServiceWatcher                                                    string = "azure.subscription.networkService.watcher"
+	ResourceAzureSubscriptionNetworkServiceWatcherFlowlog                                             string = "azure.subscription.networkService.watcher.flowlog"
+	ResourceAzureSubscriptionNetworkServiceWatcherPacketCapture                                       string = "azure.subscription.networkService.watcher.packetCapture"
+	ResourceAzureSubscriptionNetworkServiceWatcherConnectionMonitor                                   string = "azure.subscription.networkService.watcher.connectionMonitor"
+	ResourceAzureSubscriptionNetworkServiceApplicationGateway                                         string = "azure.subscription.networkService.applicationGateway"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig                          string = "azure.subscription.networkService.applicationGateway.gatewayIpConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                         string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                                 string = "azure.subscription.networkService.applicationGateway.listener"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                           string = "azure.subscription.networkService.applicationGateway.sslCertificate"
+	ResourceAzureSubscriptionNetworkServiceWafConfig                                                  string = "azure.subscription.networkService.wafConfig"
+	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                                  string = "azure.subscription.networkService.applicationFirewallPolicy"
+	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                            string = "azure.subscription.networkService.privateEndpoint"
+	ResourceAzureSubscriptionNetworkServicePrivateEndpointServiceconnection                           string = "azure.subscription.networkService.privateEndpoint.serviceconnection"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkService                                         string = "azure.subscription.networkService.privateLinkService"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection                string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
+	ResourceAzureSubscriptionNetworkServiceRouteTable                                                 string = "azure.subscription.networkService.routeTable"
+	ResourceAzureSubscriptionNetworkServiceRoute                                                      string = "azure.subscription.networkService.route"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                      string = "azure.subscription.networkService.trafficManagerProfile"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                              string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
+	ResourceAzureSubscriptionNetworkServiceVirtualWan                                                 string = "azure.subscription.networkService.virtualWan"
+	ResourceAzureSubscriptionNetworkServiceVirtualHub                                                 string = "azure.subscription.networkService.virtualHub"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubRouteTable                                       string = "azure.subscription.networkService.virtualHub.routeTable"
+	ResourceAzureSubscriptionNetworkServiceVirtualHubVnetConnection                                   string = "azure.subscription.networkService.virtualHub.vnetConnection"
+	ResourceAzureSubscriptionNetworkServiceVpnSite                                                    string = "azure.subscription.networkService.vpnSite"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                        string = "azure.subscription.networkService.expressRouteCircuit"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                                 string = "azure.subscription.networkService.expressRouteCircuit.peering"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                           string = "azure.subscription.networkService.expressRouteCircuit.authorization"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeter                                          string = "azure.subscription.networkService.securityPerimeter"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterProfile                                   string = "azure.subscription.networkService.securityPerimeter.profile"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule                                string = "azure.subscription.networkService.securityPerimeter.accessRule"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAssociation                               string = "azure.subscription.networkService.securityPerimeter.association"
+	ResourceAzureSubscriptionNetworkServiceVpnGateway                                                 string = "azure.subscription.networkService.vpnGateway"
+	ResourceAzureSubscriptionNetworkServiceVpnGatewayConnection                                       string = "azure.subscription.networkService.vpnGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceVpnServerConfiguration                                     string = "azure.subscription.networkService.vpnServerConfiguration"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteGateway                                        string = "azure.subscription.networkService.expressRouteGateway"
+	ResourceAzureSubscriptionNetworkServiceExpressRouteGatewayConnection                              string = "azure.subscription.networkService.expressRouteGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceExpressRoutePort                                           string = "azure.subscription.networkService.expressRoutePort"
+	ResourceAzureSubscriptionNetworkServiceRouteFilter                                                string = "azure.subscription.networkService.routeFilter"
+	ResourceAzureSubscriptionNetworkServiceRouteFilterRule                                            string = "azure.subscription.networkService.routeFilter.rule"
+	ResourceAzureSubscriptionNetworkServiceVirtualAppliance                                           string = "azure.subscription.networkService.virtualAppliance"
+	ResourceAzureSubscriptionNetworkServiceVirtualRouter                                              string = "azure.subscription.networkService.virtualRouter"
+	ResourceAzureSubscriptionNetworkServicePublicIpPrefix                                             string = "azure.subscription.networkService.publicIpPrefix"
+	ResourceAzureSubscriptionNetworkServiceCustomIpPrefix                                             string = "azure.subscription.networkService.customIpPrefix"
+	ResourceAzureSubscriptionNetworkServiceVirtualNetworkTap                                          string = "azure.subscription.networkService.virtualNetworkTap"
+	ResourceAzureSubscriptionNetworkServiceIpAllocation                                               string = "azure.subscription.networkService.ipAllocation"
+	ResourceAzureSubscriptionStorageService                                                           string = "azure.subscription.storageService"
+	ResourceAzureSubscriptionStorageServiceAccount                                                    string = "azure.subscription.storageService.account"
+	ResourceAzureSubscriptionStorageServiceAccountQueue                                               string = "azure.subscription.storageService.account.queue"
+	ResourceAzureSubscriptionStorageServiceAccountTable                                               string = "azure.subscription.storageService.account.table"
+	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                           string = "azure.subscription.storageService.account.localUser"
+	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                      string = "azure.subscription.storageService.account.dataProtection"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                                string = "azure.subscription.storageService.account.filePropertiesConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig      string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig                string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
+	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig             string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
+	ResourceAzureSubscriptionStorageServiceAccountEncryptionScope                                     string = "azure.subscription.storageService.account.encryptionScope"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicy                                    string = "azure.subscription.storageService.account.managementPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                                string = "azure.subscription.storageService.account.managementPolicy.rule"
+	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                                   string = "azure.subscription.storageService.account.service.properties"
+	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                               string = "azure.subscription.storageService.account.service.blobProperties"
+	ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig                                 string = "azure.subscription.storageService.account.staticWebsiteConfig"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                            string = "azure.subscription.storageService.account.service.properties.metrics"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy                    string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                            string = "azure.subscription.storageService.account.service.properties.logging"
+	ResourceAzureSubscriptionStorageServiceAccountContainer                                           string = "azure.subscription.storageService.account.container"
+	ResourceAzureSubscriptionStorageServiceAccountFileShare                                           string = "azure.subscription.storageService.account.fileShare"
+	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                           string = "azure.subscription.storageService.account.privateEndpointConnection"
+	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                             string = "azure.subscription.storageService.account.objectReplicationPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration               string = "azure.subscription.storageService.account.networkSecurityPerimeterConfiguration"
+	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                                 string = "azure.subscription.storageService.account.blobInventoryPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                           string = "azure.subscription.storageService.account.defenderForStorageSetting"
+	ResourceAzureSubscriptionWebService                                                               string = "azure.subscription.webService"
+	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                                string = "azure.subscription.webService.appRuntimeStack"
+	ResourceAzureSubscriptionWebServiceAppsite                                                        string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionWebServiceAppsiteOutboundVnetRouting                                     string = "azure.subscription.webService.appsite.outboundVnetRouting"
+	ResourceAzureSubscriptionPrivateEndpointConnection                                                string = "azure.subscription.privateEndpointConnection"
+	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                                 string = "azure.subscription.privateEndpointConnection.connectionState"
+	ResourceAzureSubscriptionWebServiceAppslot                                                        string = "azure.subscription.webService.appslot"
+	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                      string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
+	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                            string = "azure.subscription.webService.appsiteauthsettings"
+	ResourceAzureSubscriptionWebServiceAppsiteconfig                                                  string = "azure.subscription.webService.appsiteconfig"
+	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                             string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
+	ResourceAzureSubscriptionWebServiceHostingEnvironment                                             string = "azure.subscription.webService.hostingEnvironment"
+	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                               string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
+	ResourceAzureSubscriptionWebServiceAppServicePlan                                                 string = "azure.subscription.webService.appServicePlan"
+	ResourceAzureSubscriptionWebServiceCertificate                                                    string = "azure.subscription.webService.certificate"
+	ResourceAzureSubscriptionWebServiceStaticSite                                                     string = "azure.subscription.webService.staticSite"
+	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                         string = "azure.subscription.webService.appsite.hostNameBinding"
+	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                                string = "azure.subscription.webService.appsite.virtualNetworkConnection"
+	ResourceAzureSubscriptionSqlService                                                               string = "azure.subscription.sqlService"
+	ResourceAzureSubscriptionSqlServiceServer                                                         string = "azure.subscription.sqlService.server"
+	ResourceAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings                          string = "azure.subscription.sqlService.server.vulnerabilityassessmentsettings"
+	ResourceAzureSubscriptionSqlServiceServerAdministrator                                            string = "azure.subscription.sqlService.server.administrator"
+	ResourceAzureSubscriptionSqlServiceDatabase                                                       string = "azure.subscription.sqlService.database"
+	ResourceAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection                               string = "azure.subscription.sqlService.database.advancedthreatprotection"
+	ResourceAzureSubscriptionSqlServiceDatabaseBackupshorttermretentionpolicy                         string = "azure.subscription.sqlService.database.backupshorttermretentionpolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseLongtermretentionpolicy                                string = "azure.subscription.sqlService.database.longtermretentionpolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseusage                                                  string = "azure.subscription.sqlService.databaseusage"
+	ResourceAzureSubscriptionSqlServiceServerBlobAuditingPolicy                                       string = "azure.subscription.sqlService.server.blobAuditingPolicy"
+	ResourceAzureSubscriptionSqlServiceServerEncryptionProtectorConfig                                string = "azure.subscription.sqlService.server.encryptionProtectorConfig"
+	ResourceAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig                                string = "azure.subscription.sqlService.server.securityAlertPolicyConfig"
+	ResourceAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting                          string = "azure.subscription.sqlService.server.advancedThreatProtectionSetting"
+	ResourceAzureSubscriptionSqlServiceServerDevOpsAuditingSetting                                    string = "azure.subscription.sqlService.server.devOpsAuditingSetting"
+	ResourceAzureSubscriptionSqlServiceServerKey                                                      string = "azure.subscription.sqlService.server.key"
+	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                     string = "azure.subscription.sqlService.server.outboundFirewallRule"
+	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                            string = "azure.subscription.sqlService.server.failoverGroup"
+	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                          string = "azure.subscription.sqlService.server.replicationLink"
+	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                                    string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
+	ResourceAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy                                     string = "azure.subscription.sqlService.database.blobAuditingPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy                                    string = "azure.subscription.sqlService.database.securityAlertPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment                                string = "azure.subscription.sqlService.database.vulnerabilityAssessment"
+	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingPolicy                                      string = "azure.subscription.sqlService.database.dataMaskingPolicy"
+	ResourceAzureSubscriptionSqlServiceDatabaseDataMaskingRule                                        string = "azure.subscription.sqlService.database.dataMaskingRule"
+	ResourceAzureSubscriptionSqlServiceDatabaseLedgerDigestUpload                                     string = "azure.subscription.sqlService.database.ledgerDigestUpload"
+	ResourceAzureSubscriptionSqlServiceDatabaseGeoBackupPolicy                                        string = "azure.subscription.sqlService.database.geoBackupPolicy"
+	ResourceAzureSubscriptionPostgreSqlService                                                        string = "azure.subscription.postgreSqlService"
+	ResourceAzureSubscriptionPostgreSqlServiceFlexibleServer                                          string = "azure.subscription.postgreSqlService.flexibleServer"
+	ResourceAzureSubscriptionPostgreSqlServiceServer                                                  string = "azure.subscription.postgreSqlService.server"
+	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                                string = "azure.subscription.postgreSqlService.database"
+	ResourceAzureSubscriptionSqlServiceConfiguration                                                  string = "azure.subscription.sqlService.configuration"
+	ResourceAzureSubscriptionSqlServiceFirewallrule                                                   string = "azure.subscription.sqlService.firewallrule"
+	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                             string = "azure.subscription.sqlService.virtualNetworkRule"
+	ResourceAzureSubscriptionSqlServiceManagedInstance                                                string = "azure.subscription.sqlService.managedInstance"
+	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                        string = "azure.subscription.sqlService.managedInstance.database"
+	ResourceAzureSubscriptionMySqlService                                                             string = "azure.subscription.mySqlService"
+	ResourceAzureSubscriptionMySqlServiceServer                                                       string = "azure.subscription.mySqlService.server"
+	ResourceAzureSubscriptionMySqlServiceDatabase                                                     string = "azure.subscription.mySqlService.database"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                               string = "azure.subscription.mySqlService.flexibleServer"
+	ResourceAzureSubscriptionMySqlServiceFlexibleServerAdministrator                                  string = "azure.subscription.mySqlService.flexibleServer.administrator"
+	ResourceAzureSubscriptionCosmosDbService                                                          string = "azure.subscription.cosmosDbService"
+	ResourceAzureSubscriptionCosmosDbServiceAccount                                                   string = "azure.subscription.cosmosDbService.account"
+	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                                 string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
+	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                              string = "azure.subscription.cosmosDbService.mongoCluster"
+	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                         string = "azure.subscription.cosmosDbService.postgresqlCluster"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                                  string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                                  string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                        string = "azure.subscription.cosmosDbService.account.sqlDatabase"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                               string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
+	ResourceAzureSubscriptionKeyVaultService                                                          string = "azure.subscription.keyVaultService"
+	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                                string = "azure.subscription.keyVaultService.managedHsm"
+	ResourceAzureSubscriptionKeyVaultServiceVault                                                     string = "azure.subscription.keyVaultService.vault"
+	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                         string = "azure.subscription.keyVaultService.vault.accessPolicy"
+	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                          string = "azure.subscription.keyVaultService.vault.networkAcls"
+	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                           string = "azure.subscription.keyVaultService.key.autorotation"
+	ResourceAzureSubscriptionKeyVaultServiceKey                                                       string = "azure.subscription.keyVaultService.key"
+	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                                   string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
+	ResourceAzureSubscriptionKeyVaultServiceCertificate                                               string = "azure.subscription.keyVaultService.certificate"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                                         string = "azure.subscription.keyVaultService.certificate.policy"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties                            string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters                         string = "azure.subscription.keyVaultService.certificate.policy.issuerParameters"
+	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties                string = "azure.subscription.keyVaultService.certificate.policy.x509CertificateProperties"
+	ResourceAzureSubscriptionKeyVaultServiceSecret                                                    string = "azure.subscription.keyVaultService.secret"
+	ResourceAzureSubscriptionMonitorService                                                           string = "azure.subscription.monitorService"
+	ResourceAzureSubscriptionMonitorServiceActivityLog                                                string = "azure.subscription.monitorService.activityLog"
+	ResourceAzureSubscriptionMonitorServiceApplicationInsight                                         string = "azure.subscription.monitorService.applicationInsight"
+	ResourceAzureSubscriptionMonitorServiceActivityLogAlert                                           string = "azure.subscription.monitorService.activityLog.alert"
+	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                           string = "azure.subscription.monitorService.activityLog.entry"
+	ResourceAzureSubscriptionMonitorServiceLogprofile                                                 string = "azure.subscription.monitorService.logprofile"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
+	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                          string = "azure.subscription.cloudDefenderService.secureScore"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                                   string = "azure.subscription.cloudDefenderService.secureScoreControl"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                         string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                          string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
+	ResourceAzureSubscriptionCloudDefenderServiceAssessment                                           string = "azure.subscription.cloudDefenderService.assessment"
+	ResourceAzureSubscriptionCloudDefenderServiceAlert                                                string = "azure.subscription.cloudDefenderService.alert"
+	ResourceAzureSubscriptionCloudDefenderServiceSettings                                             string = "azure.subscription.cloudDefenderService.settings"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                      string = "azure.subscription.cloudDefenderService.defenderForApis"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                         string = "azure.subscription.cloudDefenderService.defenderCSPM"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                                string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                                   string = "azure.subscription.cloudDefenderService.defenderForServers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                               string = "azure.subscription.cloudDefenderService.defenderForAppServices"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                      string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                              string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForOpenSourceDatabases                       string = "azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForCosmosDb                                  string = "azure.subscription.cloudDefenderService.defenderForCosmosDb"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForStorageAccounts                           string = "azure.subscription.cloudDefenderService.defenderForStorageAccounts"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForKeyVaults                                 string = "azure.subscription.cloudDefenderService.defenderForKeyVaults"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                           string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                                string = "azure.subscription.cloudDefenderService.defenderForContainers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                       string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                      string = "azure.subscription.cloudDefenderService.securityContact"
+	ResourceAzureSubscriptionAuthorizationService                                                     string = "azure.subscription.authorizationService"
+	ResourceAzureSubscriptionAuthorizationServiceDenyAssignment                                       string = "azure.subscription.authorizationService.denyAssignment"
+	ResourceAzureSubscriptionAuthorizationServiceClassicAdministrator                                 string = "azure.subscription.authorizationService.classicAdministrator"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinition                                       string = "azure.subscription.authorizationService.roleDefinition"
+	ResourceAzureSubscriptionAuthorizationServiceRoleDefinitionPermission                             string = "azure.subscription.authorizationService.roleDefinition.permission"
+	ResourceAzureSubscriptionAuthorizationServiceRoleAssignment                                       string = "azure.subscription.authorizationService.roleAssignment"
+	ResourceAzureSubscriptionManagedIdentity                                                          string = "azure.subscription.managedIdentity"
+	ResourceAzureSubscriptionAksService                                                               string = "azure.subscription.aksService"
+	ResourceAzureSubscriptionAksServiceCluster                                                        string = "azure.subscription.aksService.cluster"
+	ResourceAzureSubscriptionAksServiceClusterAadProfile                                              string = "azure.subscription.aksService.cluster.aadProfile"
+	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                      string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
+	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                      string = "azure.subscription.aksService.cluster.advancedNetworking"
+	ResourceAzureSubscriptionAksServiceClusterIdentityBinding                                         string = "azure.subscription.aksService.cluster.identityBinding"
+	ResourceAzureSubscriptionAksServiceClusterNodePool                                                string = "azure.subscription.aksService.cluster.nodePool"
+	ResourceAzureSubscriptionAdvisorService                                                           string = "azure.subscription.advisorService"
+	ResourceAzureSubscriptionAdvisorServiceRecommendation                                             string = "azure.subscription.advisorService.recommendation"
+	ResourceAzureSubscriptionAdvisorServiceScore                                                      string = "azure.subscription.advisorService.score"
+	ResourceAzureSubscriptionAdvisorServiceTimeSeries                                                 string = "azure.subscription.advisorService.timeSeries"
+	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                              string = "azure.subscription.advisorService.securityScore"
+	ResourceAzureSubscriptionPolicy                                                                   string = "azure.subscription.policy"
+	ResourceAzureSubscriptionPolicyAssignment                                                         string = "azure.subscription.policy.assignment"
+	ResourceAzureSubscriptionPolicyDefinition                                                         string = "azure.subscription.policy.definition"
+	ResourceAzureSubscriptionPolicySetDefinition                                                      string = "azure.subscription.policy.setDefinition"
+	ResourceAzureSubscriptionPolicyExemption                                                          string = "azure.subscription.policy.exemption"
+	ResourceAzureSubscriptionPolicyComplianceSummary                                                  string = "azure.subscription.policy.complianceSummary"
+	ResourceAzureSubscriptionIotService                                                               string = "azure.subscription.iotService"
+	ResourceAzureSubscriptionIotServiceIotHub                                                         string = "azure.subscription.iotService.iotHub"
+	ResourceAzureSubscriptionCacheService                                                             string = "azure.subscription.cacheService"
+	ResourceAzureSubscriptionCacheServiceRedisInstance                                                string = "azure.subscription.cacheService.redisInstance"
+	ResourceAzureSubscriptionCacheServiceRedisInstanceFirewallRule                                    string = "azure.subscription.cacheService.redisInstance.firewallRule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePatchSchedule                                   string = "azure.subscription.cacheService.redisInstance.patchSchedule"
+	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                       string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
+	ResourceAzureSubscriptionDataFactoryService                                                       string = "azure.subscription.dataFactoryService"
+	ResourceAzureSubscriptionDataFactoryServiceFactory                                                string = "azure.subscription.dataFactoryService.factory"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryLinkedService                                   string = "azure.subscription.dataFactoryService.factory.linkedService"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime                              string = "azure.subscription.dataFactoryService.factory.integrationRuntime"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork                           string = "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint                          string = "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
+	ResourceAzureSubscriptionSynapseService                                                           string = "azure.subscription.synapseService"
+	ResourceAzureSubscriptionSynapseServiceWorkspace                                                  string = "azure.subscription.synapseService.workspace"
+	ResourceAzureSubscriptionContainerRegistryService                                                 string = "azure.subscription.containerRegistryService"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistry                                         string = "azure.subscription.containerRegistryService.registry"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSet                           string = "azure.subscription.containerRegistryService.registry.networkRuleSet"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryNetworkRuleSetIpRule                     string = "azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies                                 string = "azure.subscription.containerRegistryService.registry.policies"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryEncryption                               string = "azure.subscription.containerRegistryService.registry.encryption"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryWebhook                                  string = "azure.subscription.containerRegistryService.registry.webhook"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryReplication                              string = "azure.subscription.containerRegistryService.registry.replication"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryScopeMap                                 string = "azure.subscription.containerRegistryService.registry.scopeMap"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryToken                                    string = "azure.subscription.containerRegistryService.registry.token"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryCacheRule                                string = "azure.subscription.containerRegistryService.registry.cacheRule"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet                            string = "azure.subscription.containerRegistryService.registry.credentialSet"
+	ResourceAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry                        string = "azure.subscription.containerRegistryService.registry.connectedRegistry"
+	ResourceAzureSubscriptionMonitorServiceWorkspace                                                  string = "azure.subscription.monitorService.workspace"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceCapping                                           string = "azure.subscription.monitorService.workspace.capping"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures                                          string = "azure.subscription.monitorService.workspace.features"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceDataExport                                        string = "azure.subscription.monitorService.workspace.dataExport"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceLinkedService                                     string = "azure.subscription.monitorService.workspace.linkedService"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceReplication                                       string = "azure.subscription.monitorService.workspace.replication"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceFailover                                          string = "azure.subscription.monitorService.workspace.failover"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceTable                                             string = "azure.subscription.monitorService.workspace.table"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceNspConfiguration                                  string = "azure.subscription.monitorService.workspace.nspConfiguration"
+	ResourceAzureSubscriptionMonitorServiceQueryPack                                                  string = "azure.subscription.monitorService.queryPack"
+	ResourceAzureSubscriptionMonitorServiceQueryPackQuery                                             string = "azure.subscription.monitorService.queryPack.query"
+	ResourceAzureSubscriptionRecoveryServicesService                                                  string = "azure.subscription.recoveryServicesService"
+	ResourceAzureSubscriptionRecoveryServicesServiceVault                                             string = "azure.subscription.recoveryServicesService.vault"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                             string = "azure.subscription.recoveryServicesService.vault.securitySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                                   string = "azure.subscription.recoveryServicesService.vault.encryption"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                           string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings                           string = "azure.subscription.recoveryServicesService.vault.redundancySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupConfig                                 string = "azure.subscription.recoveryServicesService.vault.backupConfig"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy                                 string = "azure.subscription.recoveryServicesService.vault.backupPolicy"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                                string = "azure.subscription.recoveryServicesService.vault.protectedItem"
+	ResourceAzureSubscriptionFunctionsService                                                         string = "azure.subscription.functionsService"
+	ResourceAzureSubscriptionFunctionsServiceFunctionApp                                              string = "azure.subscription.functionsService.functionApp"
+	ResourceAzureSubscriptionFunctionsServiceFunctionAppAppSetting                                    string = "azure.subscription.functionsService.functionApp.appSetting"
+	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                      string = "azure.subscription.functionsService.functionApp.function"
+	ResourceAzureSubscriptionServiceBusService                                                        string = "azure.subscription.serviceBusService"
+	ResourceAzureSubscriptionServiceBusServiceNamespace                                               string = "azure.subscription.serviceBusService.namespace"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRules                                   string = "azure.subscription.serviceBusService.namespace.networkRules"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule                 string = "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                          string = "azure.subscription.serviceBusService.namespace.queue"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                          string = "azure.subscription.serviceBusService.namespace.topic"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                              string = "azure.subscription.serviceBusService.namespace.topic.subscription"
+	ResourceAzureSubscriptionEventHubService                                                          string = "azure.subscription.eventHubService"
+	ResourceAzureSubscriptionEventHubServiceNamespace                                                 string = "azure.subscription.eventHubService.namespace"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                     string = "azure.subscription.eventHubService.namespace.networkRules"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule                   string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
+	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                         string = "azure.subscription.eventHubService.namespace.eventHub"
+	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                            string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
+	ResourceAzureSubscriptionEventGridService                                                         string = "azure.subscription.eventGridService"
+	ResourceAzureSubscriptionEventGridServiceTopic                                                    string = "azure.subscription.eventGridService.topic"
+	ResourceAzureSubscriptionEventGridServiceSystemTopic                                              string = "azure.subscription.eventGridService.systemTopic"
+	ResourceAzureSubscriptionEventGridServiceDomain                                                   string = "azure.subscription.eventGridService.domain"
+	ResourceAzureSubscriptionDnsService                                                               string = "azure.subscription.dnsService"
+	ResourceAzureSubscriptionDnsServiceZone                                                           string = "azure.subscription.dnsService.zone"
+	ResourceAzureSubscriptionDnsServiceZoneRecordSet                                                  string = "azure.subscription.dnsService.zone.recordSet"
+	ResourceAzureSubscriptionDnsServicePrivateZone                                                    string = "azure.subscription.dnsService.privateZone"
+	ResourceAzureSubscriptionDnsServicePrivateZoneVirtualNetworkLink                                  string = "azure.subscription.dnsService.privateZone.virtualNetworkLink"
+	ResourceAzureSubscriptionFrontDoorService                                                         string = "azure.subscription.frontDoorService"
+	ResourceAzureSubscriptionFrontDoorServiceProfile                                                  string = "azure.subscription.frontDoorService.profile"
+	ResourceAzureSubscriptionFrontDoorServiceProfileSecurityPolicy                                    string = "azure.subscription.frontDoorService.profile.securityPolicy"
+	ResourceAzureSubscriptionFrontDoorServiceProfileEndpoint                                          string = "azure.subscription.frontDoorService.profile.endpoint"
+	ResourceAzureSubscriptionFrontDoorServiceProfileEndpointRoute                                     string = "azure.subscription.frontDoorService.profile.endpoint.route"
+	ResourceAzureSubscriptionFrontDoorServiceProfileCustomDomain                                      string = "azure.subscription.frontDoorService.profile.customDomain"
+	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroup                                       string = "azure.subscription.frontDoorService.profile.originGroup"
+	ResourceAzureSubscriptionFrontDoorServiceProfileOriginGroupOrigin                                 string = "azure.subscription.frontDoorService.profile.originGroup.origin"
+	ResourceAzureSubscriptionContainerAppService                                                      string = "azure.subscription.containerAppService"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironment                                    string = "azure.subscription.containerAppService.managedEnvironment"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection           string = "azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig                     string = "azure.subscription.containerAppService.managedEnvironment.httpRouteConfig"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration            string = "azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent                       string = "azure.subscription.containerAppService.managedEnvironment.daprComponent"
+	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate                         string = "azure.subscription.containerAppService.managedEnvironment.certificate"
+	ResourceAzureSubscriptionContainerAppServiceContainerApp                                          string = "azure.subscription.containerAppService.containerApp"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppContainer                                 string = "azure.subscription.containerAppService.containerApp.container"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppRevision                                  string = "azure.subscription.containerAppService.containerApp.revision"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppAuthConfig                                string = "azure.subscription.containerAppService.containerApp.authConfig"
+	ResourceAzureSubscriptionContainerAppServiceJob                                                   string = "azure.subscription.containerAppService.job"
+	ResourceAzureSubscriptionContainerInstanceService                                                 string = "azure.subscription.containerInstanceService"
+	ResourceAzureSubscriptionContainerInstanceServiceContainerGroup                                   string = "azure.subscription.containerInstanceService.containerGroup"
+	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                          string = "azure.subscription.containerInstanceService.containerGroup.container"
+	ResourceAzureSubscriptionLogicService                                                             string = "azure.subscription.logicService"
+	ResourceAzureSubscriptionLogicServiceWorkflow                                                     string = "azure.subscription.logicService.workflow"
+	ResourceAzureSubscriptionApiManagementService                                                     string = "azure.subscription.apiManagementService"
+	ResourceAzureSubscriptionApiManagementServiceService                                              string = "azure.subscription.apiManagementService.service"
+	ResourceAzureSubscriptionPurviewService                                                           string = "azure.subscription.purviewService"
+	ResourceAzureSubscriptionPurviewServiceAccount                                                    string = "azure.subscription.purviewService.account"
+	ResourceAzureSubscriptionSearchService                                                            string = "azure.subscription.searchService"
+	ResourceAzureSubscriptionSearchServiceService                                                     string = "azure.subscription.searchService.service"
+	ResourceAzureSubscriptionLighthouseService                                                        string = "azure.subscription.lighthouseService"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinition                                  string = "azure.subscription.lighthouseService.registrationDefinition"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationDefinitionAuthorization                     string = "azure.subscription.lighthouseService.registrationDefinition.authorization"
+	ResourceAzureSubscriptionLighthouseServiceRegistrationAssignment                                  string = "azure.subscription.lighthouseService.registrationAssignment"
+	ResourceAzureSubscriptionMachineLearningService                                                   string = "azure.subscription.machineLearningService"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspace                                          string = "azure.subscription.machineLearningService.workspace"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint                            string = "azure.subscription.machineLearningService.workspace.onlineEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment                  string = "azure.subscription.machineLearningService.workspace.onlineEndpoint.deployment"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint                        string = "azure.subscription.machineLearningService.workspace.serverlessEndpoint"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceCompute                                   string = "azure.subscription.machineLearningService.workspace.compute"
+	ResourceAzureSubscriptionMachineLearningServiceWorkspaceModel                                     string = "azure.subscription.machineLearningService.workspace.model"
+	ResourceAzureSubscriptionAppConfigurationService                                                  string = "azure.subscription.appConfigurationService"
+	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                                string = "azure.subscription.appConfigurationService.configurationStore"
+	ResourceAzureSubscriptionCognitiveServicesService                                                 string = "azure.subscription.cognitiveServicesService"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                          string = "azure.subscription.cognitiveServicesService.account"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountDeployment                                string = "azure.subscription.cognitiveServicesService.account.deployment"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProject                                   string = "azure.subscription.cognitiveServicesService.account.project"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountProjectConnection                         string = "azure.subscription.cognitiveServicesService.account.project.connection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountConnection                                string = "azure.subscription.cognitiveServicesService.account.connection"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                                 string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                         string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                                  string = "azure.subscription.cognitiveServicesService.account.raiTopic"
+	ResourceAzureSubscriptionSentinelService                                                          string = "azure.subscription.sentinelService"
+	ResourceAzureSubscriptionSentinelServiceWorkspace                                                 string = "azure.subscription.sentinelService.workspace"
+	ResourceAzureSubscriptionSentinelServiceAlertRule                                                 string = "azure.subscription.sentinelService.alertRule"
+	ResourceAzureSubscriptionSignalRService                                                           string = "azure.subscription.signalRService"
+	ResourceAzureSubscriptionSignalRServiceSignalR                                                    string = "azure.subscription.signalRService.signalR"
+	ResourceAzureSubscriptionWebPubSubService                                                         string = "azure.subscription.webPubSubService"
+	ResourceAzureSubscriptionWebPubSubServiceWebPubSub                                                string = "azure.subscription.webPubSubService.webPubSub"
+	ResourceAzureSubscriptionKustoService                                                             string = "azure.subscription.kustoService"
+	ResourceAzureSubscriptionKustoServiceCluster                                                      string = "azure.subscription.kustoService.cluster"
+	ResourceAzureSubscriptionKustoServiceClusterDatabase                                              string = "azure.subscription.kustoService.cluster.database"
+	ResourceAzureSubscriptionKustoServiceClusterPrincipalAssignment                                   string = "azure.subscription.kustoService.cluster.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterDatabasePrincipalAssignment                           string = "azure.subscription.kustoService.cluster.database.principalAssignment"
+	ResourceAzureSubscriptionKustoServiceClusterCalloutPolicy                                         string = "azure.subscription.kustoService.cluster.calloutPolicy"
+	ResourceAzureSubscriptionKustoServiceClusterPrivateEndpointConnection                             string = "azure.subscription.kustoService.cluster.privateEndpointConnection"
+	ResourceAzureSubscriptionKustoServiceClusterManagedPrivateEndpoint                                string = "azure.subscription.kustoService.cluster.managedPrivateEndpoint"
+	ResourceAzureSubscriptionKustoServiceClusterDatabaseDataConnection                                string = "azure.subscription.kustoService.cluster.database.dataConnection"
+	ResourceAzureSubscriptionAutomationService                                                        string = "azure.subscription.automationService"
+	ResourceAzureSubscriptionAutomationServiceAccount                                                 string = "azure.subscription.automationService.account"
+	ResourceAzureSubscriptionAutomationServiceAccountVariable                                         string = "azure.subscription.automationService.account.variable"
+	ResourceAzureSubscriptionAutomationServiceAccountCredential                                       string = "azure.subscription.automationService.account.credential"
+	ResourceAzureSubscriptionAutomationServiceAccountCertificate                                      string = "azure.subscription.automationService.account.certificate"
+	ResourceAzureSubscriptionDesktopVirtualizationService                                             string = "azure.subscription.desktopVirtualizationService"
+	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                     string = "azure.subscription.desktopVirtualizationService.hostPool"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -575,6 +581,30 @@ func init() {
 		"azure.subscription.networkService": {
 			Init:   initAzureSubscriptionNetworkService,
 			Create: createAzureSubscriptionNetworkService,
+		},
+		"azure.subscription.networkService.networkManager": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManager,
+		},
+		"azure.subscription.networkService.networkManager.networkGroup": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup,
+		},
+		"azure.subscription.networkService.networkManager.securityAdminConfiguration": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration,
+		},
+		"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection,
+		},
+		"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule,
+		},
+		"azure.subscription.networkService.networkManager.connectivityConfiguration": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration,
 		},
 		"azure.subscription.networkService.ipGroup": {
 			Init:   initAzureSubscriptionNetworkServiceIpGroup,
@@ -3982,6 +4012,207 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.ipAllocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetIpAllocations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAllocation")))
+	},
+	"azure.subscription.networkService.networkManagers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetNetworkManagers()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager")))
+	},
+	"azure.subscription.networkService.networkManager.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.networkManager.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.resourceGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetResourceGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.scopeAccesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetScopeAccesses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.scopeSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetScopeSubscriptions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.scopeManagementGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetScopeManagementGroups()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.networkService.networkManager.networkGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetNetworkGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.networkGroup")))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetSecurityAdminConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.securityAdminConfiguration")))
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).GetConnectivityConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.connectivityConfiguration")))
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.memberType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetMemberType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.resourceGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).GetResourceGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.applyOnNetworkIntentPolicyBasedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetApplyOnNetworkIntentPolicyBasedServices()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).GetRuleCollections()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection")))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetAppliesToGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule")))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDirection()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.sourcePortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetSourcePortRanges()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.destinationPortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDestinationPortRanges()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetSources()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.destinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDestinations()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.connectivityTopology": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetConnectivityTopology()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.isGlobal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetIsGlobal()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.deleteExistingPeering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetDeleteExistingPeering()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetAppliesToGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.hubs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetHubs()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.ipGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetId()).ToDataRes(types.String)
@@ -19511,6 +19742,298 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.ipAllocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkService).IpAllocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManagers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).NetworkManagers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.resourceGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ResourceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.scopeAccesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ScopeAccesses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.scopeSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ScopeSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.scopeManagementGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ScopeManagementGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).NetworkGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).SecurityAdminConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManager).ConnectivityConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.memberType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).MemberType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.networkGroup.resourceGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).ResourceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.applyOnNetworkIntentPolicyBasedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).ApplyOnNetworkIntentPolicyBasedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).RuleCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).AppliesToGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.sourcePortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).SourcePortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.destinationPortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).DestinationPortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.connectivityTopology": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).ConnectivityTopology, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.isGlobal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).IsGlobal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.deleteExistingPeering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).DeleteExistingPeering, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).AppliesToGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.hubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).Hubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.ipGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43849,6 +44372,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	CustomIpPrefixes            plugin.TValue[[]any]
 	VirtualNetworkTaps          plugin.TValue[[]any]
 	IpAllocations               plugin.TValue[[]any]
+	NetworkManagers             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -44498,6 +45022,688 @@ func (c *mqlAzureSubscriptionNetworkService) GetIpAllocations() *plugin.TValue[[
 
 		return c.ipAllocations()
 	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetNetworkManagers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkManagers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "networkManagers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkManagers()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManager for the azure.subscription.networkService.networkManager resource
+type mqlAzureSubscriptionNetworkServiceNetworkManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceNetworkManagerInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Type                        plugin.TValue[string]
+	Etag                        plugin.TValue[string]
+	ProvisioningState           plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	ResourceGuid                plugin.TValue[string]
+	ScopeAccesses               plugin.TValue[[]any]
+	ScopeSubscriptions          plugin.TValue[[]any]
+	ScopeManagementGroups       plugin.TValue[[]any]
+	SystemMetadata              plugin.TValue[*mqlAzureSubscriptionSystemData]
+	NetworkGroups               plugin.TValue[[]any]
+	SecurityAdminConfigurations plugin.TValue[[]any]
+	ConnectivityConfigurations  plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManager creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) MqlName() string {
+	return "azure.subscription.networkService.networkManager"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetResourceGuid() *plugin.TValue[string] {
+	return &c.ResourceGuid
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetScopeAccesses() *plugin.TValue[[]any] {
+	return &c.ScopeAccesses
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetScopeSubscriptions() *plugin.TValue[[]any] {
+	return &c.ScopeSubscriptions
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetScopeManagementGroups() *plugin.TValue[[]any] {
+	return &c.ScopeManagementGroups
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetNetworkGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager", c.__id, "networkGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetSecurityAdminConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityAdminConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager", c.__id, "securityAdminConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityAdminConfigurations()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManager) GetConnectivityConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectivityConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager", c.__id, "connectivityConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectivityConfigurations()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup for the azure.subscription.networkService.networkManager.networkGroup resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	Description       plugin.TValue[string]
+	MemberType        plugin.TValue[string]
+	ResourceGuid      plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.networkGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) MqlName() string {
+	return "azure.subscription.networkService.networkManager.networkGroup"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetMemberType() *plugin.TValue[string] {
+	return &c.MemberType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) GetResourceGuid() *plugin.TValue[string] {
+	return &c.ResourceGuid
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration for the azure.subscription.networkService.networkManager.securityAdminConfiguration resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationInternal it will be used here
+	Id                                      plugin.TValue[string]
+	Name                                    plugin.TValue[string]
+	Type                                    plugin.TValue[string]
+	Etag                                    plugin.TValue[string]
+	ProvisioningState                       plugin.TValue[string]
+	Description                             plugin.TValue[string]
+	ApplyOnNetworkIntentPolicyBasedServices plugin.TValue[[]any]
+	RuleCollections                         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) MqlName() string {
+	return "azure.subscription.networkService.networkManager.securityAdminConfiguration"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetApplyOnNetworkIntentPolicyBasedServices() *plugin.TValue[[]any] {
+	return &c.ApplyOnNetworkIntentPolicyBasedServices
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) GetRuleCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleCollections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration", c.__id, "ruleCollections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleCollections()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection for the azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	Description       plugin.TValue[string]
+	AppliesToGroupIds plugin.TValue[[]any]
+	Rules             plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) MqlName() string {
+	return "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetAppliesToGroupIds() *plugin.TValue[[]any] {
+	return &c.AppliesToGroupIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule for the azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRuleInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Etag                  plugin.TValue[string]
+	ProvisioningState     plugin.TValue[string]
+	Kind                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Access                plugin.TValue[string]
+	Direction             plugin.TValue[string]
+	Priority              plugin.TValue[int64]
+	Protocol              plugin.TValue[string]
+	SourcePortRanges      plugin.TValue[[]any]
+	DestinationPortRanges plugin.TValue[[]any]
+	Sources               plugin.TValue[[]any]
+	Destinations          plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) MqlName() string {
+	return "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetSourcePortRanges() *plugin.TValue[[]any] {
+	return &c.SourcePortRanges
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetDestinationPortRanges() *plugin.TValue[[]any] {
+	return &c.DestinationPortRanges
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetSources() *plugin.TValue[[]any] {
+	return &c.Sources
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule) GetDestinations() *plugin.TValue[[]any] {
+	return &c.Destinations
+}
+
+// mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration for the azure.subscription.networkService.networkManager.connectivityConfiguration resource
+type mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurationInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Etag                  plugin.TValue[string]
+	ProvisioningState     plugin.TValue[string]
+	Description           plugin.TValue[string]
+	ConnectivityTopology  plugin.TValue[string]
+	IsGlobal              plugin.TValue[bool]
+	DeleteExistingPeering plugin.TValue[bool]
+	AppliesToGroupIds     plugin.TValue[[]any]
+	Hubs                  plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.networkManager.connectivityConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) MqlName() string {
+	return "azure.subscription.networkService.networkManager.connectivityConfiguration"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetConnectivityTopology() *plugin.TValue[string] {
+	return &c.ConnectivityTopology
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetIsGlobal() *plugin.TValue[bool] {
+	return &c.IsGlobal
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetDeleteExistingPeering() *plugin.TValue[bool] {
+	return &c.DeleteExistingPeering
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetAppliesToGroupIds() *plugin.TValue[[]any] {
+	return &c.AppliesToGroupIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetHubs() *plugin.TValue[[]any] {
+	return &c.Hubs
 }
 
 // mqlAzureSubscriptionNetworkServiceIpGroup for the azure.subscription.networkService.ipGroup resource

@@ -1533,6 +1533,199 @@ private azure.subscription.networkService {
   virtualNetworkTaps() []azure.subscription.networkService.virtualNetworkTap
   // List of IP allocations
   ipAllocations() []azure.subscription.networkService.ipAllocation
+  // List of Azure Virtual Network Managers
+  networkManagers() []azure.subscription.networkService.networkManager
+}
+
+// Azure Virtual Network Manager
+//
+// A management scope that applies security admin rules and connectivity
+// configurations across many virtual networks at once. Its security admin
+// rules take precedence over network security group rules, so this is where a
+// tenant's enforced network posture is defined. Surfaces the manager's scope
+// (subscriptions and management groups), the configuration types it is allowed
+// to apply, the network groups it targets, and its security-admin and
+// connectivity configurations. Select by the manager's Azure resource ID.
+azure.subscription.networkService.networkManager @defaults("id name location") {
+  // Network manager ID
+  id string
+  // Network manager name
+  name string
+  // Network manager location
+  location string
+  // Network manager tags
+  tags map[string]string
+  // Network manager resource type
+  type string
+  // Network manager etag
+  etag string
+  // Provisioning state of the manager
+  provisioningState string
+  // Description of the manager
+  description string
+  // Resource GUID of the manager
+  resourceGuid string
+  // Configuration types the manager may apply (SecurityAdmin, Connectivity, Routing)
+  scopeAccesses []string
+  // Subscriptions in the manager's scope
+  scopeSubscriptions []string
+  // Management groups in the manager's scope
+  scopeManagementGroups []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+  // Network groups defined in the manager
+  networkGroups() []azure.subscription.networkService.networkManager.networkGroup
+  // Security admin configurations defined in the manager
+  securityAdminConfigurations() []azure.subscription.networkService.networkManager.securityAdminConfiguration
+  // Connectivity configurations defined in the manager
+  connectivityConfigurations() []azure.subscription.networkService.networkManager.connectivityConfiguration
+}
+
+// Network manager network group
+//
+// A named collection of virtual networks or subnets that network manager
+// configurations target as a unit. Surfaces the group's member type and
+// description. Select by the group's Azure resource ID.
+private azure.subscription.networkService.networkManager.networkGroup @defaults("id name memberType") {
+  // Network group ID
+  id string
+  // Network group name
+  name string
+  // Network group resource type
+  type string
+  // Network group etag
+  etag string
+  // Provisioning state of the group
+  provisioningState string
+  // Description of the group
+  description string
+  // Type of member the group contains (VirtualNetwork, Subnet)
+  memberType string
+  // Resource GUID of the group
+  resourceGuid string
+}
+
+// Network manager security admin configuration
+//
+// A configuration that groups the security admin rule collections a network
+// manager enforces. Its rules override network security group rules on the
+// virtual networks in the targeted network groups. Surfaces the intent-policy
+// services the configuration applies on and its rule collections. Select by
+// the configuration's Azure resource ID.
+private azure.subscription.networkService.networkManager.securityAdminConfiguration @defaults("id name") {
+  // Security admin configuration ID
+  id string
+  // Security admin configuration name
+  name string
+  // Security admin configuration resource type
+  type string
+  // Security admin configuration etag
+  etag string
+  // Provisioning state of the configuration
+  provisioningState string
+  // Description of the configuration
+  description string
+  // Network intent policy based services the configuration applies on (for example All, None)
+  applyOnNetworkIntentPolicyBasedServices []string
+  // Rule collections in the configuration
+  ruleCollections() []azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection
+}
+
+// Network manager admin rule collection
+//
+// A priority-ordered set of security admin rules within a security admin
+// configuration, applied to one or more network groups. Surfaces the network
+// groups the collection applies to and the admin rules it holds. Select by the
+// collection's Azure resource ID.
+private azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection @defaults("id name") {
+  // Rule collection ID
+  id string
+  // Rule collection name
+  name string
+  // Rule collection resource type
+  type string
+  // Rule collection etag
+  etag string
+  // Provisioning state of the collection
+  provisioningState string
+  // Description of the collection
+  description string
+  // ARM IDs of the network groups the collection applies to
+  appliesToGroupIds []string
+  // Admin rules in the collection
+  rules() []azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule
+}
+
+// Network manager security admin rule
+//
+// A single security admin rule that allows or denies traffic, taking
+// precedence over network security group rules. Surfaces the access
+// (Allow, Deny, AlwaysAllow), direction, priority, protocol, and the source
+// and destination address prefixes and port ranges. Select by the rule's Azure
+// resource ID.
+private azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule @defaults("name access direction priority") {
+  // Rule ID
+  id string
+  // Rule name
+  name string
+  // Rule resource type
+  type string
+  // Rule etag
+  etag string
+  // Provisioning state of the rule
+  provisioningState string
+  // Whether the rule is Custom or Default
+  kind string
+  // Description of the rule
+  description string
+  // Access applied to matching traffic (Allow, Deny, AlwaysAllow)
+  access string
+  // Direction the rule matches (Inbound, Outbound)
+  direction string
+  // Evaluation priority of the rule; lower numbers are evaluated first
+  priority int
+  // Network protocol the rule applies to (Tcp, Udp, Icmp, Esp, Ah, Any)
+  protocol string
+  // Source port ranges the rule matches
+  sourcePortRanges []string
+  // Destination port ranges the rule matches
+  destinationPortRanges []string
+  // Source address prefixes (CIDR, IP range, service tag)
+  sources []string
+  // Destination address prefixes (CIDR, IP range, service tag)
+  destinations []string
+}
+
+// Network manager connectivity configuration
+//
+// A configuration that builds hub-and-spoke or mesh connectivity across the
+// virtual networks in the targeted network groups. Surfaces the connectivity
+// topology, whether the mesh is global, whether existing peerings are removed,
+// the hub resources, and the network groups it applies to. Select by the
+// configuration's Azure resource ID.
+private azure.subscription.networkService.networkManager.connectivityConfiguration @defaults("id name") {
+  // Connectivity configuration ID
+  id string
+  // Connectivity configuration name
+  name string
+  // Connectivity configuration resource type
+  type string
+  // Connectivity configuration etag
+  etag string
+  // Provisioning state of the configuration
+  provisioningState string
+  // Description of the configuration
+  description string
+  // Connectivity topology (HubAndSpoke, Mesh)
+  connectivityTopology string
+  // Whether the mesh connectivity is global across regions
+  isGlobal bool
+  // Whether existing peerings are removed when the configuration is applied
+  deleteExistingPeering bool
+  // ARM IDs of the network groups the configuration applies to
+  appliesToGroupIds []string
+  // Hub resources in the topology; each entry carries resourceId and resourceType
+  hubs []dict
 }
 
 // Azure IP group
