@@ -1521,6 +1521,18 @@ private azure.subscription.networkService {
   expressRoutePorts() []azure.subscription.networkService.expressRoutePort
   // List of route filters
   routeFilters() []azure.subscription.networkService.routeFilter
+  // List of network virtual appliances
+  virtualAppliances() []azure.subscription.networkService.virtualAppliance
+  // List of virtual routers
+  virtualRouters() []azure.subscription.networkService.virtualRouter
+  // List of public IP prefixes
+  publicIpPrefixes() []azure.subscription.networkService.publicIpPrefix
+  // List of custom IP prefixes
+  customIpPrefixes() []azure.subscription.networkService.customIpPrefix
+  // List of virtual network taps
+  virtualNetworkTaps() []azure.subscription.networkService.virtualNetworkTap
+  // List of IP allocations
+  ipAllocations() []azure.subscription.networkService.ipAllocation
 }
 
 // Azure IP group
@@ -4117,6 +4129,224 @@ private azure.subscription.networkService.routeFilter.rule @defaults("name acces
   ruleType string
   // BGP community values the rule matches, for example 12076:5010
   communities []string
+}
+
+// Azure network virtual appliance
+//
+// A third-party network virtual appliance (NVA) deployed into a Virtual WAN
+// hub, such as a partner firewall or SD-WAN device. Surfaces the appliance
+// vendor, version and scale unit, its BGP ASN, deployment type, and the
+// virtual hub it runs in. Select by the appliance's Azure resource ID.
+azure.subscription.networkService.virtualAppliance @defaults("id name location") {
+  // Virtual appliance ID
+  id string
+  // Virtual appliance name
+  name string
+  // Virtual appliance location
+  location string
+  // Virtual appliance tags
+  tags map[string]string
+  // Virtual appliance resource type
+  type string
+  // Virtual appliance etag
+  etag string
+  // Provisioning state of the appliance
+  provisioningState string
+  // BGP ASN of the appliance
+  asn int
+  // Appliance vendor
+  vendor string
+  // Bundled scale unit sizing the appliance
+  bundledScaleUnit string
+  // Marketplace version of the appliance image
+  marketplaceVersion string
+  // Address prefix assigned to the appliance
+  addressPrefix string
+  // Deployment type (for example PartnerManaged for SaaS appliances)
+  deploymentType string
+  // Public key used for SSH login to the appliance
+  sshPublicKey string
+  // Virtual hub the appliance is deployed in
+  virtualHub() azure.subscription.networkService.virtualHub
+}
+
+// Azure virtual router
+//
+// A BGP-capable virtual router hosted on a subnet or gateway that exchanges
+// routes with peered network virtual appliances. Surfaces the router ASN, its
+// router IPs, and the subnet it is hosted on. Select by the router's Azure
+// resource ID.
+azure.subscription.networkService.virtualRouter @defaults("id name location") {
+  // Virtual router ID
+  id string
+  // Virtual router name
+  name string
+  // Virtual router location
+  location string
+  // Virtual router tags
+  tags map[string]string
+  // Virtual router resource type
+  type string
+  // Virtual router etag
+  etag string
+  // Provisioning state of the router
+  provisioningState string
+  // BGP ASN of the router
+  asn int
+  // Router IP addresses
+  ips []string
+  // Subnet the router is hosted on
+  hostedSubnet() azure.subscription.networkService.subnet
+}
+
+// Azure public IP prefix
+//
+// A reserved contiguous range of static public IP addresses that individual
+// public IPs are allocated from. Surfaces the prefix length and allocated
+// prefix, the IP version, the SKU, IP tags, and the custom IP prefix (BYOIP)
+// the range is drawn from. Select by the prefix's Azure resource ID.
+azure.subscription.networkService.publicIpPrefix @defaults("id name location") {
+  // Public IP prefix ID
+  id string
+  // Public IP prefix name
+  name string
+  // Public IP prefix location
+  location string
+  // Public IP prefix tags
+  tags map[string]string
+  // Public IP prefix resource type
+  type string
+  // Public IP prefix etag
+  etag string
+  // Provisioning state of the prefix
+  provisioningState string
+  // Availability zones the prefix is allocated in
+  zones []string
+  // Length of the prefix (for example 28 for a /28)
+  prefixLength int
+  // Allocated address prefix in CIDR notation
+  ipPrefix string
+  // IP version of the prefix (IPv4, IPv6)
+  ipVersion string
+  // SKU name of the prefix
+  skuName string
+  // SKU tier of the prefix (Regional, Global)
+  skuTier string
+  // Resource GUID of the prefix
+  resourceGuid string
+  // IP tags applied to the prefix; each entry carries ipTagType and tag
+  ipTags []dict
+  // Custom IP prefix (BYOIP) the range is drawn from
+  customIpPrefix() azure.subscription.networkService.customIpPrefix
+}
+
+// Azure custom IP prefix
+//
+// A customer-owned public IP range brought to Azure (BYOIP) and advertised
+// from Microsoft's network. Surfaces the CIDR range, advertising ASN and geo,
+// the commissioned state, the advertise flags, and the WAN-validation
+// messages. Select by the prefix's Azure resource ID.
+azure.subscription.networkService.customIpPrefix @defaults("id name location") {
+  // Custom IP prefix ID
+  id string
+  // Custom IP prefix name
+  name string
+  // Custom IP prefix location
+  location string
+  // Custom IP prefix tags
+  tags map[string]string
+  // Custom IP prefix resource type
+  type string
+  // Custom IP prefix etag
+  etag string
+  // Provisioning state of the prefix
+  provisioningState string
+  // Availability zones the prefix is allocated in
+  zones []string
+  // Address range in CIDR notation
+  cidr string
+  // ASN used for CIDR advertising
+  asn string
+  // Commissioned state of the prefix
+  commissionedState string
+  // Prefix type (Singular, Parent, Child)
+  prefixType string
+  // Geo code the prefix advertises from
+  geo string
+  // Whether the range is advertised over ExpressRoute
+  expressRouteAdvertise bool
+  // Whether the range is withheld from internet advertising
+  noInternetAdvertise bool
+  // Authorization message for WAN validation
+  authorizationMessage string
+  // Signed message for WAN validation
+  signedMessage string
+  // Reason the prefix is in a failed state, when applicable
+  failedReason string
+  // Resource GUID of the prefix
+  resourceGuid string
+}
+
+// Azure virtual network tap
+//
+// A traffic-mirroring configuration that copies the traffic of tapped network
+// interface IP configurations to a collector destination. Surfaces the VXLAN
+// destination port and provisioning state. Select by the tap's Azure resource
+// ID.
+azure.subscription.networkService.virtualNetworkTap @defaults("id name location") {
+  // Virtual network tap ID
+  id string
+  // Virtual network tap name
+  name string
+  // Virtual network tap location
+  location string
+  // Virtual network tap tags
+  tags map[string]string
+  // Virtual network tap resource type
+  type string
+  // Virtual network tap etag
+  etag string
+  // Provisioning state of the tap
+  provisioningState string
+  // VXLAN destination port that receives the tapped traffic
+  destinationPort int
+  // Resource GUID of the tap
+  resourceGuid string
+}
+
+// Azure IP allocation
+//
+// A reserved address prefix managed outside of a virtual network that a subnet
+// or virtual network can later consume. Surfaces the allocation type, the
+// address prefix and length, allocation tags, and the subnet and virtual
+// network consuming the prefix. Select by the allocation's Azure resource ID.
+azure.subscription.networkService.ipAllocation @defaults("id name location") {
+  // IP allocation ID
+  id string
+  // IP allocation name
+  name string
+  // IP allocation location
+  location string
+  // IP allocation tags
+  tags map[string]string
+  // IP allocation resource type
+  type string
+  // IP allocation etag
+  etag string
+  // Allocation type (Undefined, Hypernet)
+  ipAllocationType string
+  // Address prefix reserved by the allocation
+  prefix string
+  // Length of the reserved prefix
+  prefixLength int
+  // IP version of the prefix (IPv4, IPv6)
+  prefixType string
+  // Tags recorded on the allocation
+  allocationTags map[string]string
+  // Subnet consuming the allocation
+  subnet() azure.subscription.networkService.subnet
+  // Virtual network consuming the allocation
+  virtualNetwork() azure.subscription.networkService.virtualNetwork
 }
 
 // Azure Storage
