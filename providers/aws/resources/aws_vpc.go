@@ -28,6 +28,70 @@ func (a *mqlAwsVpc) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsVpc) encryptionControl() (*mqlAwsVpcEncryptionControl, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeVpcEncryptionControls(ctx, &ec2.DescribeVpcEncryptionControlsInput{
+		VpcIds: []string{a.Id.Data},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.EncryptionControl.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp == nil || len(resp.VpcEncryptionControls) == 0 {
+		a.EncryptionControl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	return newMqlAwsVpcEncryptionControl(a.MqlRuntime, resp.VpcEncryptionControls[0])
+}
+
+func newMqlAwsVpcEncryptionControl(runtime *plugin.Runtime, ec vpctypes.VpcEncryptionControl) (*mqlAwsVpcEncryptionControl, error) {
+	res, err := CreateResource(runtime, ResourceAwsVpcEncryptionControl,
+		map[string]*llx.RawData{
+			"__id":               llx.StringData(convert.ToValue(ec.VpcEncryptionControlId)),
+			"id":                 llx.StringDataPtr(ec.VpcEncryptionControlId),
+			"mode":               llx.StringData(string(ec.Mode)),
+			"state":              llx.StringData(string(ec.State)),
+			"stateMessage":       llx.StringDataPtr(ec.StateMessage),
+			"resourceExclusions": llx.MapData(vpcEncryptionControlExclusionsToMap(ec.ResourceExclusions), types.String),
+			"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(ec.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcEncryptionControl), nil
+}
+
+// vpcEncryptionControlExclusionsToMap flattens the per-traffic-type exclusion
+// configuration into a map of traffic type to exclusion state. Traffic types
+// that carry no exclusion configuration are omitted.
+func vpcEncryptionControlExclusionsToMap(ex *vpctypes.VpcEncryptionControlExclusions) map[string]any {
+	m := map[string]any{}
+	if ex == nil {
+		return m
+	}
+	add := func(key string, e *vpctypes.VpcEncryptionControlExclusion) {
+		if e != nil {
+			m[key] = string(e.State)
+		}
+	}
+	add("internetGateway", ex.InternetGateway)
+	add("egressOnlyInternetGateway", ex.EgressOnlyInternetGateway)
+	add("natGateway", ex.NatGateway)
+	add("lambda", ex.Lambda)
+	add("elasticFileSystem", ex.ElasticFileSystem)
+	add("virtualPrivateGateway", ex.VirtualPrivateGateway)
+	add("vpcLattice", ex.VpcLattice)
+	add("vpcPeering", ex.VpcPeering)
+	return m
+}
+
 func buildVpcResource(runtime *plugin.Runtime, region, accountID string, vpc vpctypes.Vpc) (*mqlAwsVpc, error) {
 	tagsMap := ec2TagsToMap(vpc.Tags)
 	name := tagsMap["Name"]

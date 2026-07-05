@@ -9964,6 +9964,13 @@ aws.vpc.dhcpOptions 13.6.3
 aws.vpc.dhcpOptionsId 11.15.2
 aws.vpc.enableDnsHostnames 13.6.3
 aws.vpc.enableDnsSupport 13.6.3
+aws.vpc.encryptionControl 13.42.1
+aws.vpc.encryptionControl.id 13.42.1
+aws.vpc.encryptionControl.mode 13.42.1
+aws.vpc.encryptionControl.resourceExclusions 13.42.1
+aws.vpc.encryptionControl.state 13.42.1
+aws.vpc.encryptionControl.stateMessage 13.42.1
+aws.vpc.encryptionControl.tags 13.42.1
 aws.vpc.endpoint 11.15.2
 aws.vpc.endpoint.createdAt 11.15.2
 aws.vpc.endpoint.dnsEntries 13.6.3

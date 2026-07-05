@@ -381,6 +381,43 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   //
   // Inferred from the provenance tags AWS injects on managed resources (for example cloudformation, elasticbeanstalk, eks). Empty when the VPC is unmanaged or managed by a tool that leaves no recognizable tag.
   managedBy() string
+  // Encryption-in-transit control configuration for the VPC, or null when none is configured
+  encryptionControl() aws.vpc.encryptionControl
+}
+
+// VPC encryption-in-transit control configuration
+//
+// Whether encryption in transit is monitored or enforced for traffic inside
+// the VPC, the current rollout state, and which traffic types are exempted
+// from enforcement. The `mode` field reports `monitor` or `enforce`, `state`
+// reports the rollout progress, and `resourceExclusions` maps each traffic
+// type (for example internetGateway, natGateway, lambda, elasticFileSystem,
+// vpcPeering, vpcLattice, virtualPrivateGateway, egressOnlyInternetGateway) to
+// its exclusion state. See the AWS guide "Enforce VPC encryption in transit".
+private aws.vpc.encryptionControl @defaults("id mode state") {
+  // ID of the VPC Encryption Control configuration
+  id string
+  // Encryption enforcement mode
+  //
+  // One of `monitor` or `enforce`.
+  mode string
+  // Rollout state of the configuration
+  //
+  // One of creating, available, enforce-in-progress, monitor-in-progress,
+  // enforce-failed, monitor-failed, deleting, deleted, or delete-failed.
+  state string
+  // Additional detail about the current state
+  stateMessage string
+  // Exclusion state per traffic type
+  //
+  // Keys are traffic types (internetGateway, egressOnlyInternetGateway,
+  // natGateway, lambda, elasticFileSystem, virtualPrivateGateway, vpcLattice,
+  // vpcPeering); values are the exclusion state (enabled, disabled, enabling,
+  // or disabling). A traffic type is absent when it carries no exclusion
+  // configuration.
+  resourceExclusions map[string]string
+  // Tags on the VPC Encryption Control configuration
+  tags map[string]string
 }
 
 // Amazon Virtual Private Cloud (VPC) route table

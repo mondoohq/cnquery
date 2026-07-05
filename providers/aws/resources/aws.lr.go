@@ -27,6 +27,7 @@ const (
 	ResourceAwsOrganizationDelegatedService                                     string = "aws.organization.delegatedService"
 	ResourceAwsOrganizationOrganizationalUnit                                   string = "aws.organization.organizationalUnit"
 	ResourceAwsVpc                                                              string = "aws.vpc"
+	ResourceAwsVpcEncryptionControl                                             string = "aws.vpc.encryptionControl"
 	ResourceAwsVpcRoutetable                                                    string = "aws.vpc.routetable"
 	ResourceAwsVpcRoutetableRoute                                               string = "aws.vpc.routetable.route"
 	ResourceAwsVpcRoutetableAssociation                                         string = "aws.vpc.routetable.association"
@@ -977,6 +978,10 @@ func init() {
 		"aws.vpc": {
 			Init:   initAwsVpc,
 			Create: createAwsVpc,
+		},
+		"aws.vpc.encryptionControl": {
+			// to override args, implement: initAwsVpcEncryptionControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcEncryptionControl,
 		},
 		"aws.vpc.routetable": {
 			// to override args, implement: initAwsVpcRoutetable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4991,6 +4996,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetManagedBy()).ToDataRes(types.String)
+	},
+	"aws.vpc.encryptionControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetEncryptionControl()).ToDataRes(types.Resource("aws.vpc.encryptionControl"))
+	},
+	"aws.vpc.encryptionControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.encryptionControl.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetMode()).ToDataRes(types.String)
+	},
+	"aws.vpc.encryptionControl.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetState()).ToDataRes(types.String)
+	},
+	"aws.vpc.encryptionControl.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.vpc.encryptionControl.resourceExclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetResourceExclusions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.encryptionControl.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEncryptionControl).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.vpc.routetable.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetArn()).ToDataRes(types.String)
@@ -34382,6 +34408,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).EncryptionControl, ok = plugin.RawToTValue[*mqlAwsVpcEncryptionControl](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.vpc.encryptionControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.resourceExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).ResourceExclusions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.encryptionControl.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEncryptionControl).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -77607,6 +77665,7 @@ type mqlAwsVpc struct {
 	Ipv6CidrBlockAssociations plugin.TValue[[]any]
 	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                 plugin.TValue[string]
+	EncryptionControl         plugin.TValue[*mqlAwsVpcEncryptionControl]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -77968,6 +78027,91 @@ func (c *mqlAwsVpc) GetManagedBy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
 		return c.managedBy()
 	})
+}
+
+func (c *mqlAwsVpc) GetEncryptionControl() *plugin.TValue[*mqlAwsVpcEncryptionControl] {
+	return plugin.GetOrCompute[*mqlAwsVpcEncryptionControl](&c.EncryptionControl, func() (*mqlAwsVpcEncryptionControl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "encryptionControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcEncryptionControl), nil
+			}
+		}
+
+		return c.encryptionControl()
+	})
+}
+
+// mqlAwsVpcEncryptionControl for the aws.vpc.encryptionControl resource
+type mqlAwsVpcEncryptionControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVpcEncryptionControlInternal it will be used here
+	Id                 plugin.TValue[string]
+	Mode               plugin.TValue[string]
+	State              plugin.TValue[string]
+	StateMessage       plugin.TValue[string]
+	ResourceExclusions plugin.TValue[map[string]any]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsVpcEncryptionControl creates a new instance of this resource
+func createAwsVpcEncryptionControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcEncryptionControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.encryptionControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcEncryptionControl) MqlName() string {
+	return "aws.vpc.encryptionControl"
+}
+
+func (c *mqlAwsVpcEncryptionControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetResourceExclusions() *plugin.TValue[map[string]any] {
+	return &c.ResourceExclusions
+}
+
+func (c *mqlAwsVpcEncryptionControl) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsVpcRoutetable for the aws.vpc.routetable resource
