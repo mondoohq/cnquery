@@ -218,7 +218,10 @@ func resolveRuntimePackage(runtime *plugin.Runtime, spec toolPackageSpec) (*mqlP
 	switch spec.runtime {
 	case runtimeIDE, runtimeBrowser:
 		return resolveHostRuntimePackage(runtime, spec)
+	case runtimeOS:
+		return resolveOSRuntimePackage(runtime)
 	default:
+		// any future/unset kind: treat as a standalone OS-hosted agent
 		return resolveOSRuntimePackage(runtime)
 	}
 }
