@@ -1511,6 +1511,16 @@ private azure.subscription.networkService {
   securityPerimeters() []azure.subscription.networkService.securityPerimeter
   // List of IP groups
   ipGroups() []azure.subscription.networkService.ipGroup
+  // List of Virtual WAN site-to-site VPN gateways
+  vpnGateways() []azure.subscription.networkService.vpnGateway
+  // List of point-to-site VPN server configurations
+  vpnServerConfigurations() []azure.subscription.networkService.vpnServerConfiguration
+  // List of Virtual WAN ExpressRoute gateways
+  expressRouteGateways() []azure.subscription.networkService.expressRouteGateway
+  // List of ExpressRoute Direct ports
+  expressRoutePorts() []azure.subscription.networkService.expressRoutePort
+  // List of route filters
+  routeFilters() []azure.subscription.networkService.routeFilter
 }
 
 // Azure IP group
@@ -3855,6 +3865,258 @@ private azure.subscription.networkService.securityPerimeter.association @default
   resourceId string
   // Profile the associated resource is bound to
   profile() azure.subscription.networkService.securityPerimeter.profile
+}
+
+// Azure Virtual WAN VPN gateway
+//
+// A site-to-site VPN gateway deployed inside a Virtual WAN hub that terminates
+// IPsec tunnels from on-premises VPN sites. Surfaces the scale unit, BGP and
+// NAT settings, the virtual hub it belongs to, and the individual VPN
+// connections it terminates. Select by the gateway's Azure resource ID.
+azure.subscription.networkService.vpnGateway @defaults("id name location") {
+  // VPN gateway ID
+  id string
+  // VPN gateway name
+  name string
+  // VPN gateway location
+  location string
+  // VPN gateway tags
+  tags map[string]string
+  // VPN gateway resource type
+  type string
+  // VPN gateway etag
+  etag string
+  // Provisioning state of the gateway
+  provisioningState string
+  // Scale unit (throughput/capacity) of the gateway
+  scaleUnit int
+  // Whether BGP route translation for NAT is enabled
+  bgpRouteTranslationForNatEnabled bool
+  // Whether the public IP interface uses the internet routing preference
+  routingPreferenceInternet bool
+  // Virtual hub the gateway is deployed in
+  virtualHub() azure.subscription.networkService.virtualHub
+  // BGP speaker settings for the gateway
+  bgpSettings() azure.subscription.networkService.bgpSettings
+  // VPN connections terminated by the gateway
+  connections() []azure.subscription.networkService.vpnGateway.connection
+}
+
+// Virtual WAN VPN gateway connection
+//
+// A single site-to-site connection between a Virtual WAN VPN gateway and an
+// on-premises VPN site. Surfaces the connection status, negotiated bandwidth
+// and byte counters, BGP and internet-security flags, and the VPN site it
+// connects to. Select by the connection's Azure resource ID.
+private azure.subscription.networkService.vpnGateway.connection @defaults("name connectionStatus") {
+  // Connection ID
+  id string
+  // Connection name
+  name string
+  // Connection etag
+  etag string
+  // Connection status (Connected, Connecting, NotConnected, Unknown)
+  connectionStatus string
+  // Expected bandwidth in Mbps
+  bandwidthMbps int
+  // Whether BGP is enabled on the connection
+  bgpEnabled bool
+  // Whether internet security is enabled
+  internetSecurityEnabled bool
+  // Routing weight of the connection
+  routingWeight int
+  // Tunnel protocol used by the connection (IKEv1, IKEv2)
+  protocol string
+  // Total ingress bytes transferred over the connection
+  ingressBytesTransferred int
+  // Total egress bytes transferred over the connection
+  egressBytesTransferred int
+  // On-premises VPN site the connection terminates
+  remoteVpnSite() azure.subscription.networkService.vpnSite
+}
+
+// Azure point-to-site VPN server configuration
+//
+// A reusable point-to-site VPN server configuration that P2S gateways
+// reference to authenticate and tunnel remote client connections. Surfaces the
+// enabled tunneling protocols, the accepted authentication types, and the
+// RADIUS server address used for client authentication. Select by the
+// configuration's Azure resource ID.
+azure.subscription.networkService.vpnServerConfiguration @defaults("id name location") {
+  // VPN server configuration ID
+  id string
+  // VPN server configuration name
+  name string
+  // VPN server configuration location
+  location string
+  // VPN server configuration tags
+  tags map[string]string
+  // VPN server configuration resource type
+  type string
+  // VPN server configuration etag
+  etag string
+  // Provisioning state of the configuration
+  provisioningState string
+  // Tunneling protocols offered to clients (IkeV2, OpenVPN)
+  vpnProtocols []string
+  // Accepted client authentication types (Certificate, Radius, AAD)
+  authenticationTypes []string
+  // RADIUS server address used for point-to-site client authentication
+  radiusServerAddress string
+}
+
+// Azure Virtual WAN ExpressRoute gateway
+//
+// An ExpressRoute gateway deployed inside a Virtual WAN hub that connects the
+// hub to ExpressRoute circuits. Surfaces the auto-scale bounds, whether
+// non-Virtual-WAN traffic is allowed, the virtual hub it belongs to, and the
+// ExpressRoute connections it terminates. Select by the gateway's Azure
+// resource ID.
+azure.subscription.networkService.expressRouteGateway @defaults("id name location") {
+  // ExpressRoute gateway ID
+  id string
+  // ExpressRoute gateway name
+  name string
+  // ExpressRoute gateway location
+  location string
+  // ExpressRoute gateway tags
+  tags map[string]string
+  // ExpressRoute gateway resource type
+  type string
+  // ExpressRoute gateway etag
+  etag string
+  // Provisioning state of the gateway
+  provisioningState string
+  // Whether traffic from non-Virtual-WAN networks is allowed
+  allowNonVirtualWanTraffic bool
+  // Minimum number of scale units for auto-scaling
+  minScaleUnits int
+  // Maximum number of scale units for auto-scaling
+  maxScaleUnits int
+  // Virtual hub the gateway is deployed in
+  virtualHub() azure.subscription.networkService.virtualHub
+  // ExpressRoute connections terminated by the gateway
+  connections() []azure.subscription.networkService.expressRouteGateway.connection
+}
+
+// Virtual WAN ExpressRoute gateway connection
+//
+// A single connection between a Virtual WAN ExpressRoute gateway and an
+// ExpressRoute circuit peering. Surfaces the routing weight, internet-security
+// and FastPath (gateway bypass) flags, and the ID of the circuit peering it
+// binds to. Select by the connection's Azure resource ID.
+private azure.subscription.networkService.expressRouteGateway.connection @defaults("name") {
+  // Connection ID
+  id string
+  // Connection name
+  name string
+  // Provisioning state of the connection
+  provisioningState string
+  // Routing weight of the connection
+  routingWeight int
+  // Whether internet security is enabled
+  internetSecurityEnabled bool
+  // Whether ExpressRoute gateway bypass (FastPath) is enabled
+  expressRouteGatewayBypass bool
+  // ARM ID of the ExpressRoute circuit peering the connection binds to
+  //
+  // A circuit peering is only reachable through its parent circuit and has no
+  // standalone lookup, so it is exposed as the raw ARM ID rather than a typed
+  // accessor.
+  expressRouteCircuitPeeringId string
+}
+
+// Azure ExpressRoute Direct port
+//
+// A physical ExpressRoute Direct port pair procured at a peering location.
+// Surfaces the procured and provisioned bandwidth, the encapsulation and
+// billing model, the peering location, the physical link details, and the
+// ExpressRoute circuits provisioned on the port. Select by the port's Azure
+// resource ID.
+azure.subscription.networkService.expressRoutePort @defaults("id name location") {
+  // ExpressRoute port ID
+  id string
+  // ExpressRoute port name
+  name string
+  // ExpressRoute port location
+  location string
+  // ExpressRoute port tags
+  tags map[string]string
+  // ExpressRoute port resource type
+  type string
+  // ExpressRoute port etag
+  etag string
+  // Provisioning state of the port
+  provisioningState string
+  // Bandwidth of the procured ports in Gbps
+  bandwidthInGbps int
+  // Aggregate provisioned bandwidth of associated circuits in Gbps
+  provisionedBandwidthInGbps float
+  // Encapsulation method on the physical ports (Dot1Q, QinQ)
+  encapsulation string
+  // Billing model of the port (MeteredData, UnlimitedData)
+  billingType string
+  // Peering location the port is physically mapped to
+  peeringLocation string
+  // Maximum transmission unit of the physical port pair
+  mtu string
+  // Ether type of the physical port
+  etherType string
+  // Resource GUID of the port
+  resourceGuid string
+  // Physical links of the port; each entry carries the link name, admin state, connector type, interface name, and rack ID
+  links []dict
+  // ExpressRoute circuits provisioned on the port
+  circuits() []azure.subscription.networkService.expressRouteCircuit
+}
+
+// Azure route filter
+//
+// A filter that controls which ExpressRoute BGP community route advertisements
+// are accepted, used with Microsoft peering. Surfaces the filter rules that
+// allow or deny specific BGP community values. Select by the filter's Azure
+// resource ID.
+azure.subscription.networkService.routeFilter @defaults("id name location") {
+  // Route filter ID
+  id string
+  // Route filter name
+  name string
+  // Route filter location
+  location string
+  // Route filter tags
+  tags map[string]string
+  // Route filter resource type
+  type string
+  // Route filter etag
+  etag string
+  // Provisioning state of the filter
+  provisioningState string
+  // Rules that allow or deny BGP community values
+  rules() []azure.subscription.networkService.routeFilter.rule
+}
+
+// Route filter rule
+//
+// A single rule within a route filter that allows or denies a set of BGP
+// community values on ExpressRoute Microsoft peering. Select by the rule's
+// Azure resource ID.
+private azure.subscription.networkService.routeFilter.rule @defaults("name access") {
+  // Rule ID
+  id string
+  // Rule name
+  name string
+  // Rule location
+  location string
+  // Rule etag
+  etag string
+  // Provisioning state of the rule
+  provisioningState string
+  // Access type applied to matching routes (Allow, Deny)
+  access string
+  // Rule type (Community)
+  ruleType string
+  // BGP community values the rule matches, for example 12076:5010
+  communities []string
 }
 
 // Azure Storage

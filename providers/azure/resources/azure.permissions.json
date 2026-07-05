@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-04T22:54:26-07:00",
+  "generated_at": "2026-07-05T08:37:52-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -140,6 +140,8 @@
     "Microsoft.Network/expressRouteCircuits/authorizations/read",
     "Microsoft.Network/expressRouteCircuits/peerings/read",
     "Microsoft.Network/expressRouteCircuits/read",
+    "Microsoft.Network/expressRouteGateways/read",
+    "Microsoft.Network/expressRoutePorts/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
     "Microsoft.Network/iPGroups/read",
@@ -158,6 +160,7 @@
     "Microsoft.Network/privateEndpoints/read",
     "Microsoft.Network/privateLinkServices/read",
     "Microsoft.Network/publicIPAddresses/read",
+    "Microsoft.Network/routeFilters/read",
     "Microsoft.Network/routeTables/read",
     "Microsoft.Network/securityPerimeterAccessRules/read",
     "Microsoft.Network/securityPerimeterAssociations/read",
@@ -165,6 +168,8 @@
     "Microsoft.Network/securityPerimeters/read",
     "Microsoft.Network/serviceEndpointPolicies/read",
     "Microsoft.Network/trafficManagerProfiles/read",
+    "Microsoft.Network/vPNGateways/read",
+    "Microsoft.Network/vPNServerConfigurations/read",
     "Microsoft.Network/vPNSites/read",
     "Microsoft.Network/virtualHubs/hubRouteTables/read",
     "Microsoft.Network/virtualHubs/hubVirtualNetworkConnections/read",
@@ -1078,8 +1083,20 @@
     {
       "permission": "Microsoft.Network/expressRouteCircuits/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network_expansion.go"
+    },
+    {
+      "permission": "Microsoft.Network/expressRouteGateways/read",
+      "service": "Microsoft.Network",
+      "action": "ListBySubscription",
+      "source_file": "network_connectivity.go"
+    },
+    {
+      "permission": "Microsoft.Network/expressRoutePorts/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_connectivity.go"
     },
     {
       "permission": "Microsoft.Network/firewallPolicies/read",
@@ -1214,6 +1231,12 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/routeFilters/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_connectivity.go"
+    },
+    {
       "permission": "Microsoft.Network/routeTables/read",
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
@@ -1254,6 +1277,18 @@
       "service": "Microsoft.Trafficmanager",
       "action": "NewListBySubscriptionPager",
       "source_file": "network_expansion.go"
+    },
+    {
+      "permission": "Microsoft.Network/vPNGateways/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_connectivity.go"
+    },
+    {
+      "permission": "Microsoft.Network/vPNServerConfigurations/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_connectivity.go"
     },
     {
       "permission": "Microsoft.Network/vPNSites/read",
