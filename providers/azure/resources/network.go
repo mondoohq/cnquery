@@ -3912,6 +3912,12 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 	if err != nil {
 		return nil, err
 	}
+	// Properties can be nil on a minimal API response (e.g. a by-ID Get from
+	// the firewallPolicy init), so guard before dereferencing.
+	var provisioningState *string
+	if fwp.Properties != nil {
+		provisioningState = (*string)(fwp.Properties.ProvisioningState)
+	}
 	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewallPolicy",
 		map[string]*llx.RawData{
 			"id":                llx.StringDataPtr(fwp.ID),
@@ -3921,7 +3927,7 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 			"tags":              llx.MapData(convert.PtrMapStrToInterface(fwp.Tags), types.String),
 			"etag":              llx.StringDataPtr(fwp.Etag),
 			"properties":        llx.DictData(props),
-			"provisioningState": llx.StringDataPtr((*string)(fwp.Properties.ProvisioningState)),
+			"provisioningState": llx.StringDataPtr(provisioningState),
 		})
 	if err != nil {
 		return nil, err
@@ -5230,8 +5236,8 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionByp
 			return nil, err
 		}
 		mqlBypassRule := mqlRule.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule)
-		mqlBypassRule.cacheSourceIpGroupIds = convert.SliceStrPtrToStr(rule.SourceIPGroups)
-		mqlBypassRule.cacheDestinationIpGroupIds = convert.SliceStrPtrToStr(rule.DestinationIPGroups)
+		mqlBypassRule.cacheSourceIpGroupIds = azureStrPtrsToStr(rule.SourceIPGroups)
+		mqlBypassRule.cacheDestinationIpGroupIds = azureStrPtrsToStr(rule.DestinationIPGroups)
 		res = append(res, mqlRule)
 	}
 	return res, nil

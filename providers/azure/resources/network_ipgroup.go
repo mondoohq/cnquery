@@ -122,6 +122,19 @@ func azureNetworkSubResourceIDs(subs []*network.SubResource) []string {
 	return ids
 }
 
+// azureStrPtrsToStr dereferences a slice of *string into []string, skipping nil
+// entries. Unlike convert.SliceStrPtrToStr it does not panic when the Azure API
+// returns a nil pointer inside the slice.
+func azureStrPtrsToStr(s []*string) []string {
+	var res []string
+	for _, v := range s {
+		if v != nil {
+			res = append(res, *v)
+		}
+	}
+	return res
+}
+
 // azureResourceRefsByID turns a list of ARM resource IDs into typed MQL
 // resource references, letting each resolve lazily through its init function.
 func azureResourceRefsByID(runtime *plugin.Runtime, resourceName string, ids []string) ([]any, error) {
