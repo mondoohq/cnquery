@@ -239,7 +239,12 @@ func (a *mqlAzureSubscriptionNetworkService) vpnServerConfigurations() ([]any, e
 			authTypes := []any{}
 			var radiusServerAddress, provisioningState string
 			if p := cfg.Properties; p != nil {
-				provisioningState = convert.ToValue(p.ProvisioningState)
+				// ProvisioningState is *string here (unlike the *ProvisioningState
+				// enum on the other resources), but use the same nil-check + deref
+				// shape for consistency.
+				if p.ProvisioningState != nil {
+					provisioningState = *p.ProvisioningState
+				}
 				radiusServerAddress = convert.ToValue(p.RadiusServerAddress)
 				for _, proto := range p.VPNProtocols {
 					if proto != nil {
