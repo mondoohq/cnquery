@@ -1509,6 +1509,38 @@ private azure.subscription.networkService {
   expressRouteCircuits() []azure.subscription.networkService.expressRouteCircuit
   // List of network security perimeters
   securityPerimeters() []azure.subscription.networkService.securityPerimeter
+  // List of IP groups
+  ipGroups() []azure.subscription.networkService.ipGroup
+}
+
+// Azure IP group
+//
+// A reusable, named collection of IP addresses and CIDR prefixes that firewall
+// and firewall-policy rules reference in bulk instead of listing individual
+// addresses. Surfaces the contained addresses and prefixes along with the
+// firewalls and firewall policies that consume the group. Select by the IP
+// group's Azure resource ID.
+azure.subscription.networkService.ipGroup @defaults("id name location") {
+  // IP group ID
+  id string
+  // IP group name
+  name string
+  // IP group location
+  location string
+  // IP group tags
+  tags map[string]string
+  // IP group resource type
+  type string
+  // IP group etag
+  etag string
+  // Provisioning state of the IP group
+  provisioningState string
+  // IP addresses and CIDR prefixes contained in the group
+  ipAddresses []string
+  // Firewalls that reference this IP group
+  firewalls() []azure.subscription.networkService.firewall
+  // Firewall policies that reference this IP group
+  firewallPolicies() []azure.subscription.networkService.firewallPolicy
 }
 
 // Azure VPN/ExpressRoute gateway
@@ -1827,12 +1859,22 @@ private azure.subscription.networkService.firewallPolicy.idpsBypassRule @default
   protocol string
   // Source IP addresses or ranges
   sourceAddresses []string
-  // Source IP groups
-  sourceIpGroups []string
+  // Source IP group IDs
+  //
+  // Deprecated in favor of sourceIpGroupRefs, which resolves each IP group to
+  // its typed resource.
+  sourceIpGroups @maturity("deprecated") []string
+  // Source IP groups referenced by the bypass rule
+  sourceIpGroupRefs() []azure.subscription.networkService.ipGroup
   // Destination IP addresses or ranges
   destinationAddresses []string
-  // Destination IP groups
-  destinationIpGroups []string
+  // Destination IP group IDs
+  //
+  // Deprecated in favor of destinationIpGroupRefs, which resolves each IP
+  // group to its typed resource.
+  destinationIpGroups @maturity("deprecated") []string
+  // Destination IP groups referenced by the bypass rule
+  destinationIpGroupRefs() []azure.subscription.networkService.ipGroup
   // Destination ports or ranges
   destinationPorts []string
 }

@@ -47,6 +47,7 @@ const (
 	ResourceAzureSubscriptionDatabricksService                                                   string = "azure.subscription.databricksService"
 	ResourceAzureSubscriptionDatabricksServiceWorkspace                                          string = "azure.subscription.databricksService.workspace"
 	ResourceAzureSubscriptionNetworkService                                                      string = "azure.subscription.networkService"
+	ResourceAzureSubscriptionNetworkServiceIpGroup                                               string = "azure.subscription.networkService.ipGroup"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGateway                                 string = "azure.subscription.networkService.virtualNetworkGateway"
 	ResourceAzureSubscriptionNetworkServiceAppSecurityGroup                                      string = "azure.subscription.networkService.appSecurityGroup"
 	ResourceAzureSubscriptionNetworkServiceFirewall                                              string = "azure.subscription.networkService.firewall"
@@ -561,6 +562,10 @@ func init() {
 			Init:   initAzureSubscriptionNetworkService,
 			Create: createAzureSubscriptionNetworkService,
 		},
+		"azure.subscription.networkService.ipGroup": {
+			Init:   initAzureSubscriptionNetworkServiceIpGroup,
+			Create: createAzureSubscriptionNetworkServiceIpGroup,
+		},
 		"azure.subscription.networkService.virtualNetworkGateway": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGateway,
@@ -590,7 +595,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceFirewallNatRule,
 		},
 		"azure.subscription.networkService.firewallPolicy": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceFirewallPolicy,
 			Create: createAzureSubscriptionNetworkServiceFirewallPolicy,
 		},
 		"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup": {
@@ -3872,6 +3877,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityPerimeters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetSecurityPerimeters()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityPerimeter")))
 	},
+	"azure.subscription.networkService.ipGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetIpGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipGroup")))
+	},
+	"azure.subscription.networkService.ipGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.ipGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipGroup.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.ipGroup.firewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetFirewalls()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall")))
+	},
+	"azure.subscription.networkService.ipGroup.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpGroup).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetId()).ToDataRes(types.String)
 	},
@@ -4214,11 +4252,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetSourceIpGroups()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroupRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetSourceIpGroupRefs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipGroup")))
+	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationIpGroups()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroupRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationIpGroupRefs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipGroup")))
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationPorts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationPorts()).ToDataRes(types.Array(types.String))
@@ -18811,6 +18855,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).SecurityPerimeters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.ipGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).IpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipGroup.firewallPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpGroup).FirewallPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).__id, ok = v.Value.(string)
 		return
@@ -19307,12 +19399,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).SourceIpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroupRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).SourceIpGroupRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationIpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroupRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationIpGroupRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42351,6 +42451,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	VpnSites                    plugin.TValue[[]any]
 	ExpressRouteCircuits        plugin.TValue[[]any]
 	SecurityPerimeters          plugin.TValue[[]any]
+	IpGroups                    plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -42807,6 +42908,140 @@ func (c *mqlAzureSubscriptionNetworkService) GetSecurityPerimeters() *plugin.TVa
 		}
 
 		return c.securityPerimeters()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetIpGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "ipGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipGroups()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceIpGroup for the azure.subscription.networkService.ipGroup resource
+type mqlAzureSubscriptionNetworkServiceIpGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceIpGroupInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	IpAddresses       plugin.TValue[[]any]
+	Firewalls         plugin.TValue[[]any]
+	FirewallPolicies  plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceIpGroup creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceIpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceIpGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.ipGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) MqlName() string {
+	return "azure.subscription.networkService.ipGroup"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetFirewalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Firewalls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ipGroup", c.__id, "firewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewalls()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpGroup) GetFirewallPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ipGroup", c.__id, "firewallPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallPolicies()
 	})
 }
 
@@ -43972,16 +44207,18 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) Ge
 type mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRuleInternal it will be used here
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Description          plugin.TValue[string]
-	Protocol             plugin.TValue[string]
-	SourceAddresses      plugin.TValue[[]any]
-	SourceIpGroups       plugin.TValue[[]any]
-	DestinationAddresses plugin.TValue[[]any]
-	DestinationIpGroups  plugin.TValue[[]any]
-	DestinationPorts     plugin.TValue[[]any]
+	mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRuleInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Protocol               plugin.TValue[string]
+	SourceAddresses        plugin.TValue[[]any]
+	SourceIpGroups         plugin.TValue[[]any]
+	SourceIpGroupRefs      plugin.TValue[[]any]
+	DestinationAddresses   plugin.TValue[[]any]
+	DestinationIpGroups    plugin.TValue[[]any]
+	DestinationIpGroupRefs plugin.TValue[[]any]
+	DestinationPorts       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule creates a new instance of this resource
@@ -44045,12 +44282,44 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetSour
 	return &c.SourceIpGroups
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetSourceIpGroupRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceIpGroupRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy.idpsBypassRule", c.__id, "sourceIpGroupRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceIpGroupRefs()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationAddresses() *plugin.TValue[[]any] {
 	return &c.DestinationAddresses
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationIpGroups() *plugin.TValue[[]any] {
 	return &c.DestinationIpGroups
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationIpGroupRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DestinationIpGroupRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy.idpsBypassRule", c.__id, "destinationIpGroupRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinationIpGroupRefs()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationPorts() *plugin.TValue[[]any] {

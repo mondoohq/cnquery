@@ -832,6 +832,49 @@ func initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args m
 	return args, mql, nil
 }
 
+// initAzureSubscriptionNetworkServiceFirewallPolicy resolves a firewall policy
+// by its ARM ID so typed references to it (e.g. from an IP group's
+// firewallPolicies backreference) populate fully rather than staying a husk.
+func initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("firewallPolicies")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureFirewallPolicyToMql(runtime, resp.FirewallPolicy)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
+}
+
 // -----------------------------------------------------------------------------
 // ExpressRoute
 // -----------------------------------------------------------------------------

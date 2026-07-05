@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-04T21:43:45-07:00",
+  "generated_at": "2026-07-04T22:54:26-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -142,6 +142,7 @@
     "Microsoft.Network/expressRouteCircuits/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
+    "Microsoft.Network/iPGroups/read",
     "Microsoft.Network/loadBalancers/read",
     "Microsoft.Network/localNetworkGateways/read",
     "Microsoft.Network/natGateways/read",
@@ -1087,10 +1088,22 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/firewallPolicies/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_expansion.go"
+    },
+    {
       "permission": "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
       "service": "Microsoft.Network",
       "action": "NewListPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/iPGroups/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_ipgroup.go"
     },
     {
       "permission": "Microsoft.Network/loadBalancers/read",
