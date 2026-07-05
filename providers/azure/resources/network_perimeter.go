@@ -252,29 +252,7 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) accessRules
 			if rule == nil {
 				continue
 			}
-			var direction, provisioningState string
-			addressPrefixes := []any{}
-			fqdns := []any{}
-			subscriptions := []any{}
-			serviceTags := []any{}
-			emailAddresses := []any{}
-			if rule.Properties != nil {
-				if rule.Properties.Direction != nil {
-					direction = string(*rule.Properties.Direction)
-				}
-				if rule.Properties.ProvisioningState != nil {
-					provisioningState = string(*rule.Properties.ProvisioningState)
-				}
-				addressPrefixes = convert.SliceStrPtrToInterface(rule.Properties.AddressPrefixes)
-				fqdns = convert.SliceStrPtrToInterface(rule.Properties.FullyQualifiedDomainNames)
-				serviceTags = convert.SliceStrPtrToInterface(rule.Properties.ServiceTags)
-				emailAddresses = convert.SliceStrPtrToInterface(rule.Properties.EmailAddresses)
-				for _, sub := range rule.Properties.Subscriptions {
-					if sub != nil && sub.ID != nil {
-						subscriptions = append(subscriptions, *sub.ID)
-					}
-				}
-			}
+			direction, provisioningState, addressPrefixes, fqdns, subscriptions, serviceTags, emailAddresses := nspAccessRuleFields(rule.Properties)
 			mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule,
 				map[string]*llx.RawData{
 					"id":                        llx.StringDataPtr(rule.ID),
@@ -299,6 +277,38 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) accessRules
 
 func (a *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// nspAccessRuleFields flattens the scalar and list fields of a perimeter access
+// rule from its SDK properties. The SDK models subscriptions as a slice of
+// {ID} structs, so we surface only their ARM IDs. A nil props (or any nil
+// pointer within it) yields empty values so a sparsely populated rule still
+// maps cleanly.
+func nspAccessRuleFields(props *network.NspAccessRuleProperties) (direction, provisioningState string, addressPrefixes, fqdns, subscriptions, serviceTags, emailAddresses []any) {
+	addressPrefixes = []any{}
+	fqdns = []any{}
+	subscriptions = []any{}
+	serviceTags = []any{}
+	emailAddresses = []any{}
+	if props == nil {
+		return
+	}
+	if props.Direction != nil {
+		direction = string(*props.Direction)
+	}
+	if props.ProvisioningState != nil {
+		provisioningState = string(*props.ProvisioningState)
+	}
+	addressPrefixes = convert.SliceStrPtrToInterface(props.AddressPrefixes)
+	fqdns = convert.SliceStrPtrToInterface(props.FullyQualifiedDomainNames)
+	serviceTags = convert.SliceStrPtrToInterface(props.ServiceTags)
+	emailAddresses = convert.SliceStrPtrToInterface(props.EmailAddresses)
+	for _, sub := range props.Subscriptions {
+		if sub != nil && sub.ID != nil {
+			subscriptions = append(subscriptions, *sub.ID)
+		}
+	}
+	return
 }
 
 type mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociationInternal struct {
