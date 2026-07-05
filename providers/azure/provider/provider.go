@@ -32,45 +32,56 @@ func Init() *Service {
 	}
 }
 
+// flagBytes safely reads a flag's raw value. Unset flags (including keys the
+// CLI never registers, such as the legacy singular "subscription") are absent
+// from the map and therefore nil pointers, so a direct .Value dereference
+// panics. Returning an empty slice for those keeps ParseCLI robust.
+func flagBytes(flags map[string]*llx.Primitive, key string) []byte {
+	if p, ok := flags[key]; ok && p != nil {
+		return p.Value
+	}
+	return nil
+}
+
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	flags := req.GetFlags()
 
-	tenantId := flags["tenant-id"]
-	clientId := flags["client-id"]
-	clientSecret := flags["client-secret"]
-	subscriptionId := flags["subscription"]
-	subscriptions := flags["subscriptions"]
-	subscriptionsToExclude := flags["subscriptions-exclude"]
-	certificatePath := flags["certificate-path"]
-	certificateSecret := flags["certificate-secret"]
-	federatedTokenFile := flags["federated-token-file"]
+	tenantId := flagBytes(flags, "tenant-id")
+	clientId := flagBytes(flags, "client-id")
+	clientSecret := flagBytes(flags, "client-secret")
+	subscriptionId := flagBytes(flags, "subscription")
+	subscriptions := flagBytes(flags, "subscriptions")
+	subscriptionsToExclude := flagBytes(flags, "subscriptions-exclude")
+	certificatePath := flagBytes(flags, "certificate-path")
+	certificateSecret := flagBytes(flags, "certificate-secret")
+	federatedTokenFile := flagBytes(flags, "federated-token-file")
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
-	opts["tenant-id"] = string(tenantId.Value)
-	opts["client-id"] = string(clientId.Value)
-	if len(subscriptionId.Value) > 0 {
-		opts["subscriptions"] = string(subscriptionId.Value)
+	opts["tenant-id"] = string(tenantId)
+	opts["client-id"] = string(clientId)
+	if len(subscriptionId) > 0 {
+		opts["subscriptions"] = string(subscriptionId)
 	}
-	if len(subscriptions.Value) > 0 {
-		opts["subscriptions"] = string(subscriptions.Value)
+	if len(subscriptions) > 0 {
+		opts["subscriptions"] = string(subscriptions)
 	}
-	if len(subscriptionsToExclude.Value) > 0 {
-		opts["subscriptions-exclude"] = string(subscriptionsToExclude.Value)
+	if len(subscriptionsToExclude) > 0 {
+		opts["subscriptions-exclude"] = string(subscriptionsToExclude)
 	}
-	if len(federatedTokenFile.Value) > 0 {
-		opts[connection.OptionFederatedTokenFile] = string(federatedTokenFile.Value)
+	if len(federatedTokenFile) > 0 {
+		opts[connection.OptionFederatedTokenFile] = string(federatedTokenFile)
 	}
-	if len(clientSecret.Value) > 0 {
+	if len(clientSecret) > 0 {
 		creds = append(creds, &vault.Credential{
 			Type:   vault.CredentialType_password,
-			Secret: clientSecret.Value,
+			Secret: clientSecret,
 		})
-	} else if len(certificatePath.Value) > 0 {
+	} else if len(certificatePath) > 0 {
 		creds = append(creds, &vault.Credential{
 			Type:           vault.CredentialType_pkcs12,
-			PrivateKeyPath: string(certificatePath.Value),
-			Password:       string(certificateSecret.Value),
+			PrivateKeyPath: string(certificatePath),
+			Password:       string(certificateSecret),
 		})
 	}
 	config := &inventory.Config{

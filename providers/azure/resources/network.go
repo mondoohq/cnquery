@@ -5238,6 +5238,78 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) id() (s
 	return a.Id.Data, nil
 }
 
+// ruleCollectionGroups resolves the priority-ordered rule collection groups
+// that hold the firewall policy's network, NAT, and application rules. The
+// list API is scoped to the policy, so we parse the resource group and policy
+// name out of the policy's own resource ID.
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) ruleCollectionGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	policyName, err := resourceID.Component("firewallPolicies")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewFirewallPolicyRuleCollectionGroupsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(resourceID.ResourceGroup, policyName, &network.FirewallPolicyRuleCollectionGroupsClientListOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, rcg := range page.Value {
+			if rcg == nil {
+				continue
+			}
+			var priority int64
+			var provisioningState string
+			ruleCollections := []any{}
+			if rcg.Properties != nil {
+				if rcg.Properties.Priority != nil {
+					priority = int64(*rcg.Properties.Priority)
+				}
+				if rcg.Properties.ProvisioningState != nil {
+					provisioningState = string(*rcg.Properties.ProvisioningState)
+				}
+				ruleCollections, err = convert.JsonToDictSlice(rcg.Properties.RuleCollections)
+				if err != nil {
+					return nil, err
+				}
+			}
+			mqlRcg, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup,
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(rcg.ID),
+					"name":              llx.StringDataPtr(rcg.Name),
+					"etag":              llx.StringDataPtr(rcg.Etag),
+					"priority":          llx.IntData(priority),
+					"provisioningState": llx.StringData(provisioningState),
+					"ruleCollections":   llx.ArrayData(ruleCollections, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRcg)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 // --- Local Network Gateway / VNet Gateway Connection enhancements ---
 
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionInternal struct {

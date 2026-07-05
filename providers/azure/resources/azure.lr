@@ -1507,6 +1507,8 @@ private azure.subscription.networkService {
   vpnSites() []azure.subscription.networkService.vpnSite
   // List of ExpressRoute circuits
   expressRouteCircuits() []azure.subscription.networkService.expressRouteCircuit
+  // List of network security perimeters
+  securityPerimeters() []azure.subscription.networkService.securityPerimeter
 }
 
 // Azure VPN/ExpressRoute gateway
@@ -1779,6 +1781,38 @@ azure.subscription.networkService.firewallPolicy @defaults("id name location") {
   intrusionDetectionSignatureOverrides() []dict
   // IDPS bypass traffic rules
   intrusionDetectionBypassRules() []azure.subscription.networkService.firewallPolicy.idpsBypassRule
+  // Rule collection groups that hold the policy's network, NAT, and application rules
+  ruleCollectionGroups() []azure.subscription.networkService.firewallPolicy.ruleCollectionGroup
+}
+
+// Azure Firewall policy rule collection group
+//
+// A named, priority-ordered group of rule collections within a firewall
+// policy. Each rule collection applies an allow or deny action (filter
+// collections) or a DNAT or SNAT translation (NAT collections) to the
+// network, application, and NAT rules it holds, so this is where a
+// policy's effective traffic rules live. Select by the group's Azure
+// resource ID.
+private azure.subscription.networkService.firewallPolicy.ruleCollectionGroup @defaults("name priority") {
+  // Rule collection group ID
+  id string
+  // Rule collection group name
+  name string
+  // Rule collection group etag
+  etag string
+  // Evaluation priority of the group; lower numbers are evaluated first
+  priority int
+  // Provisioning state of the rule collection group
+  provisioningState string
+  // Rule collections in the group
+  //
+  // Each entry carries ruleCollectionType (FirewallPolicyFilterRuleCollection
+  // or FirewallPolicyNatRuleCollection), name, priority, and action, plus a
+  // rules list whose shape varies by ruleType: network rules carry
+  // ipProtocols, source/destination addresses, and destination ports;
+  // application rules carry protocols, source addresses, target FQDNs, and
+  // web categories; NAT rules carry the translated address and port.
+  ruleCollections []dict
 }
 
 // Azure Firewall Policy IDPS bypass traffic rule
@@ -3668,6 +3702,113 @@ private azure.subscription.networkService.expressRouteCircuit.authorization @def
   authorizationUseStatus string
   // Provisioning state of the authorization
   provisioningState string
+}
+
+// Azure Network Security Perimeter
+//
+// A logical isolation boundary that lets PaaS resources such as storage
+// accounts and key vaults communicate inside an explicit perimeter while
+// controlling traffic that crosses it. Surfaces the perimeter GUID and
+// provisioning state, the profiles that group inbound and outbound access
+// rules, and the resource associations that place PaaS resources inside the
+// perimeter along with the access mode enforced on each. Select by the
+// perimeter's Azure resource ID.
+azure.subscription.networkService.securityPerimeter @defaults("id name location") {
+  // Network security perimeter ID
+  id string
+  // Network security perimeter name
+  name string
+  // Network security perimeter location
+  location string
+  // Network security perimeter tags
+  tags map[string]string
+  // Network security perimeter resource type
+  type string
+  // Globally unique identifier assigned to the perimeter
+  perimeterGuid string
+  // Provisioning state of the perimeter
+  provisioningState string
+  // Profiles that group the access rules applied to associated resources
+  profiles() []azure.subscription.networkService.securityPerimeter.profile
+  // Resource associations placing PaaS resources inside the perimeter
+  associations() []azure.subscription.networkService.securityPerimeter.association
+}
+
+// Network security perimeter profile
+//
+// A named set of access rules within a network security perimeter. Resources
+// are associated with a profile to inherit its inbound and outbound rules.
+// Surfaces the access-rule and diagnostic-settings version counters and the
+// inbound and outbound access rules the profile enforces.
+private azure.subscription.networkService.securityPerimeter.profile @defaults("name") {
+  // Profile ID
+  id string
+  // Profile name
+  name string
+  // Profile resource type
+  type string
+  // Version counter that increases with every access-rule change in the profile
+  accessRulesVersion string
+  // Version counter that increases with every diagnostic-settings change in the profile
+  diagnosticSettingsVersion string
+  // Inbound and outbound access rules the profile enforces
+  accessRules() []azure.subscription.networkService.securityPerimeter.accessRule
+}
+
+// Network security perimeter access rule
+//
+// A single inbound or outbound rule within a perimeter profile. Inbound rules
+// admit traffic by source address prefix, service tag, or subscription;
+// outbound rules permit traffic to fully qualified domain names. The
+// direction selects which fields apply. Select by the rule's Azure resource
+// ID.
+private azure.subscription.networkService.securityPerimeter.accessRule @defaults("name direction") {
+  // Access rule ID
+  id string
+  // Access rule name
+  name string
+  // Access rule resource type
+  type string
+  // Direction the rule governs: Inbound or Outbound
+  direction string
+  // Provisioning state of the access rule
+  provisioningState string
+  // Inbound source address prefixes in IPv4 or IPv6 CIDR notation
+  addressPrefixes []string
+  // Outbound destination fully qualified domain names
+  fullyQualifiedDomainNames []string
+  // Inbound subscription IDs admitted through the perimeter
+  subscriptions []string
+  // Inbound service tags admitted through the perimeter
+  serviceTags []string
+  // Outbound email addresses (currently unavailable for use by Azure)
+  emailAddresses []string
+}
+
+// Network security perimeter resource association
+//
+// The binding that places a single PaaS resource inside a network security
+// perimeter under a chosen profile. Surfaces the access mode enforced on the
+// resource, whether the association has provisioning issues, the profile the
+// resource is bound to, and the ID of the associated PaaS resource. Select by
+// the association's Azure resource ID.
+private azure.subscription.networkService.securityPerimeter.association @defaults("name accessMode") {
+  // Association ID
+  id string
+  // Association name
+  name string
+  // Association resource type
+  type string
+  // Access mode enforced on the associated resource: Learning, Enforced, or Audit
+  accessMode string
+  // Whether the association currently reports provisioning issues
+  hasProvisioningIssues string
+  // Provisioning state of the association
+  provisioningState string
+  // ARM ID of the PaaS resource placed inside the perimeter
+  resourceId string
+  // Profile the associated resource is bound to
+  profile() azure.subscription.networkService.securityPerimeter.profile
 }
 
 // Azure Storage

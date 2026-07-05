@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.24.0",
-  "generated_at": "2026-07-01T17:26:26-07:00",
+  "version": "13.25.0",
+  "generated_at": "2026-07-04T21:43:45-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -141,6 +141,7 @@
     "Microsoft.Network/expressRouteCircuits/peerings/read",
     "Microsoft.Network/expressRouteCircuits/read",
     "Microsoft.Network/firewallPolicies/read",
+    "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
     "Microsoft.Network/loadBalancers/read",
     "Microsoft.Network/localNetworkGateways/read",
     "Microsoft.Network/natGateways/read",
@@ -157,6 +158,10 @@
     "Microsoft.Network/privateLinkServices/read",
     "Microsoft.Network/publicIPAddresses/read",
     "Microsoft.Network/routeTables/read",
+    "Microsoft.Network/securityPerimeterAccessRules/read",
+    "Microsoft.Network/securityPerimeterAssociations/read",
+    "Microsoft.Network/securityPerimeterProfiles/read",
+    "Microsoft.Network/securityPerimeters/read",
     "Microsoft.Network/serviceEndpointPolicies/read",
     "Microsoft.Network/trafficManagerProfiles/read",
     "Microsoft.Network/vPNSites/read",
@@ -1082,6 +1087,12 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/firewallPolicyRuleCollectionGroups/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network.go"
+    },
+    {
       "permission": "Microsoft.Network/loadBalancers/read",
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
@@ -1194,6 +1205,30 @@
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/securityPerimeterAccessRules/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_perimeter.go"
+    },
+    {
+      "permission": "Microsoft.Network/securityPerimeterAssociations/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network_perimeter.go"
+    },
+    {
+      "permission": "Microsoft.Network/securityPerimeterProfiles/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "network_perimeter.go"
+    },
+    {
+      "permission": "Microsoft.Network/securityPerimeters/read",
+      "service": "Microsoft.Network",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "network_perimeter.go"
     },
     {
       "permission": "Microsoft.Network/serviceEndpointPolicies/read",

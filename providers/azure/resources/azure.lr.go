@@ -55,6 +55,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                               string = "azure.subscription.networkService.firewall.applicationRule"
 	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                       string = "azure.subscription.networkService.firewall.natRule"
 	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                        string = "azure.subscription.networkService.firewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup                     string = "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
 	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                          string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
 	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                    string = "azure.subscription.networkService.ddosProtectionPlan"
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                 string = "azure.subscription.networkService.serviceEndpointPolicy"
@@ -113,6 +114,10 @@ const (
 	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuit                                   string = "azure.subscription.networkService.expressRouteCircuit"
 	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitPeering                            string = "azure.subscription.networkService.expressRouteCircuit.peering"
 	ResourceAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization                      string = "azure.subscription.networkService.expressRouteCircuit.authorization"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeter                                     string = "azure.subscription.networkService.securityPerimeter"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterProfile                              string = "azure.subscription.networkService.securityPerimeter.profile"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule                           string = "azure.subscription.networkService.securityPerimeter.accessRule"
+	ResourceAzureSubscriptionNetworkServiceSecurityPerimeterAssociation                          string = "azure.subscription.networkService.securityPerimeter.association"
 	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
 	ResourceAzureSubscriptionStorageServiceAccount                                               string = "azure.subscription.storageService.account"
 	ResourceAzureSubscriptionStorageServiceAccountQueue                                          string = "azure.subscription.storageService.account.queue"
@@ -588,6 +593,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceFirewallPolicy,
 		},
+		"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup,
+		},
 		"azure.subscription.networkService.firewallPolicy.idpsBypassRule": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule,
@@ -819,6 +828,22 @@ func init() {
 		"azure.subscription.networkService.expressRouteCircuit.authorization": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization,
+		},
+		"azure.subscription.networkService.securityPerimeter": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityPerimeter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSecurityPerimeter,
+		},
+		"azure.subscription.networkService.securityPerimeter.profile": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityPerimeterProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSecurityPerimeterProfile,
+		},
+		"azure.subscription.networkService.securityPerimeter.accessRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule,
+		},
+		"azure.subscription.networkService.securityPerimeter.association": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSecurityPerimeterAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSecurityPerimeterAssociation,
 		},
 		"azure.subscription.storageService": {
 			Init:   initAzureSubscriptionStorageService,
@@ -3844,6 +3869,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.expressRouteCircuits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetExpressRouteCircuits()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.expressRouteCircuit")))
 	},
+	"azure.subscription.networkService.securityPerimeters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetSecurityPerimeters()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityPerimeter")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetId()).ToDataRes(types.String)
 	},
@@ -4146,6 +4174,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.firewallPolicy.intrusionDetectionBypassRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetIntrusionDetectionBypassRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy.idpsBypassRule")))
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetRuleCollectionGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy.ruleCollectionGroup")))
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.ruleCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).GetRuleCollections()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetId()).ToDataRes(types.String)
@@ -6126,6 +6175,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.expressRouteCircuit.authorization.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.perimeterGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetPerimeterGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetProfiles()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityPerimeter.profile")))
+	},
+	"azure.subscription.networkService.securityPerimeter.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).GetAssociations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityPerimeter.association")))
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.accessRulesVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetAccessRulesVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.diagnosticSettingsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetDiagnosticSettingsVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).GetAccessRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityPerimeter.accessRule")))
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetDirection()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.addressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetAddressPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.fullyQualifiedDomainNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetFullyQualifiedDomainNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetSubscriptions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.serviceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetServiceTags()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.emailAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).GetEmailAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.securityPerimeter.association.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.accessMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetAccessMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.hasProvisioningIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetHasProvisioningIssues()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityPerimeter.association.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).GetProfile()).ToDataRes(types.Resource("azure.subscription.networkService.securityPerimeter.profile"))
 	},
 	"azure.subscription.storageService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageService).GetSubscriptionId()).ToDataRes(types.String)
@@ -18659,6 +18807,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).ExpressRouteCircuits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.securityPerimeters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).SecurityPerimeters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).__id, ok = v.Value.(string)
 		return
@@ -19093,6 +19245,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.firewallPolicy.intrusionDetectionBypassRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).IntrusionDetectionBypassRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).RuleCollectionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.ruleCollectionGroup.ruleCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup).RuleCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21965,6 +22149,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.expressRouteCircuit.authorization.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.perimeterGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).PerimeterGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.accessRulesVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).AccessRulesVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.diagnosticSettingsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).DiagnosticSettingsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.profile.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.addressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).AddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.fullyQualifiedDomainNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).FullyQualifiedDomainNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).Subscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.serviceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).ServiceTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.accessRule.emailAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule).EmailAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.accessMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).AccessMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.hasProvisioningIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).HasProvisioningIssues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityPerimeter.association.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation).Profile, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42018,6 +42350,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	VirtualHubs                 plugin.TValue[[]any]
 	VpnSites                    plugin.TValue[[]any]
 	ExpressRouteCircuits        plugin.TValue[[]any]
+	SecurityPerimeters          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -42458,6 +42791,22 @@ func (c *mqlAzureSubscriptionNetworkService) GetExpressRouteCircuits() *plugin.T
 		}
 
 		return c.expressRouteCircuits()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetSecurityPerimeters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityPerimeters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "securityPerimeters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityPerimeters()
 	})
 }
 
@@ -43375,6 +43724,7 @@ type mqlAzureSubscriptionNetworkServiceFirewallPolicy struct {
 	IntrusionDetectionProfile            plugin.TValue[string]
 	IntrusionDetectionSignatureOverrides plugin.TValue[[]any]
 	IntrusionDetectionBypassRules        plugin.TValue[[]any]
+	RuleCollectionGroups                 plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceFirewallPolicy creates a new instance of this resource
@@ -43526,6 +43876,96 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetIntrusionDetection
 
 		return c.intrusionDetectionBypassRules()
 	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetRuleCollectionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleCollectionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy", c.__id, "ruleCollectionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleCollectionGroups()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup for the azure.subscription.networkService.firewallPolicy.ruleCollectionGroup resource
+type mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroupInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	Priority          plugin.TValue[int64]
+	ProvisioningState plugin.TValue[string]
+	RuleCollections   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewallPolicy.ruleCollectionGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) MqlName() string {
+	return "azure.subscription.networkService.firewallPolicy.ruleCollectionGroup"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyRuleCollectionGroup) GetRuleCollections() *plugin.TValue[[]any] {
+	return &c.RuleCollections
 }
 
 // mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule for the azure.subscription.networkService.firewallPolicy.idpsBypassRule resource
@@ -50057,6 +50497,395 @@ func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) Get
 
 func (c *mqlAzureSubscriptionNetworkServiceExpressRouteCircuitAuthorization) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceSecurityPerimeter for the azure.subscription.networkService.securityPerimeter resource
+type mqlAzureSubscriptionNetworkServiceSecurityPerimeter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceSecurityPerimeterInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	PerimeterGuid     plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	Profiles          plugin.TValue[[]any]
+	Associations      plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceSecurityPerimeter creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSecurityPerimeter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSecurityPerimeter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.securityPerimeter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) MqlName() string {
+	return "azure.subscription.networkService.securityPerimeter"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetPerimeterGuid() *plugin.TValue[string] {
+	return &c.PerimeterGuid
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Profiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityPerimeter", c.__id, "profiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.profiles()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) GetAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Associations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityPerimeter", c.__id, "associations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associations()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile for the azure.subscription.networkService.securityPerimeter.profile resource
+type mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfileInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	AccessRulesVersion        plugin.TValue[string]
+	DiagnosticSettingsVersion plugin.TValue[string]
+	AccessRules               plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceSecurityPerimeterProfile creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSecurityPerimeterProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.securityPerimeter.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) MqlName() string {
+	return "azure.subscription.networkService.securityPerimeter.profile"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetAccessRulesVersion() *plugin.TValue[string] {
+	return &c.AccessRulesVersion
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetDiagnosticSettingsVersion() *plugin.TValue[string] {
+	return &c.DiagnosticSettingsVersion
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile) GetAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityPerimeter.profile", c.__id, "accessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessRules()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule for the azure.subscription.networkService.securityPerimeter.accessRule resource
+type mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRuleInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Direction                 plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	AddressPrefixes           plugin.TValue[[]any]
+	FullyQualifiedDomainNames plugin.TValue[[]any]
+	Subscriptions             plugin.TValue[[]any]
+	ServiceTags               plugin.TValue[[]any]
+	EmailAddresses            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.securityPerimeter.accessRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) MqlName() string {
+	return "azure.subscription.networkService.securityPerimeter.accessRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.AddressPrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetFullyQualifiedDomainNames() *plugin.TValue[[]any] {
+	return &c.FullyQualifiedDomainNames
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetSubscriptions() *plugin.TValue[[]any] {
+	return &c.Subscriptions
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetServiceTags() *plugin.TValue[[]any] {
+	return &c.ServiceTags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAccessRule) GetEmailAddresses() *plugin.TValue[[]any] {
+	return &c.EmailAddresses
+}
+
+// mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation for the azure.subscription.networkService.securityPerimeter.association resource
+type mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociationInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	AccessMode            plugin.TValue[string]
+	HasProvisioningIssues plugin.TValue[string]
+	ProvisioningState     plugin.TValue[string]
+	ResourceId            plugin.TValue[string]
+	Profile               plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile]
+}
+
+// createAzureSubscriptionNetworkServiceSecurityPerimeterAssociation creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSecurityPerimeterAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.securityPerimeter.association", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) MqlName() string {
+	return "azure.subscription.networkService.securityPerimeter.association"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetAccessMode() *plugin.TValue[string] {
+	return &c.AccessMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetHasProvisioningIssues() *plugin.TValue[string] {
+	return &c.HasProvisioningIssues
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityPerimeterAssociation) GetProfile() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile](&c.Profile, func() (*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityPerimeter.association", c.__id, "profile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeterProfile), nil
+			}
+		}
+
+		return c.profile()
+	})
 }
 
 // mqlAzureSubscriptionStorageService for the azure.subscription.storageService resource
