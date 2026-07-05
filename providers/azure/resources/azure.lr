@@ -2407,6 +2407,10 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   delegations []azure.subscription.networkService.subnet.delegation
   // The NAT gateway this subnet is associated with, if any
   natGateway() azure.subscription.networkService.natGateway
+  // Private endpoints deployed in the subnet
+  privateEndpoints() []azure.subscription.networkService.privateEndpoint
+  // IP allocations reserving address space in the subnet
+  ipAllocations() []azure.subscription.networkService.ipAllocation
   // List of IP configurations for the subnet
   ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
 }
@@ -2785,6 +2789,8 @@ private azure.subscription.networkService.interface.ipConfiguration @defaults("n
   publicIpAddress() azure.subscription.networkService.ipAddress
   // Application security groups the IP configuration is a member of
   applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
+  // Virtual network taps mirroring this IP configuration's traffic
+  virtualNetworkTaps() []azure.subscription.networkService.virtualNetworkTap
 }
 
 // Azure network IP address
@@ -2815,6 +2821,8 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   // or firewall that uses this address. Empty when the address is not
   // associated with any resource (an unused / orphaned public IP).
   associatedResourceId string
+  // Public IP prefix this address was allocated from; null when the address is not drawn from a prefix
+  publicIpPrefix() azure.subscription.networkService.publicIpPrefix
 }
 
 // Azure Network Bastion host

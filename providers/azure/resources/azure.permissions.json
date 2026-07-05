@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T09:42:16-07:00",
+  "generated_at": "2026-07-05T09:55:15-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1090,7 +1090,7 @@
       "permission": "Microsoft.Network/customIPPrefixes/read",
       "service": "Microsoft.Network",
       "action": "Get",
-      "source_file": "network_tier3.go"
+      "source_file": "network_ip_prefixes.go"
     },
     {
       "permission": "Microsoft.Network/ddosProtectionPlans/read",
@@ -1167,8 +1167,8 @@
     {
       "permission": "Microsoft.Network/iPAllocations/read",
       "service": "Microsoft.Network",
-      "action": "NewListPager",
-      "source_file": "network_tier3.go"
+      "action": "Get",
+      "source_file": "network_ip_prefixes.go"
     },
     {
       "permission": "Microsoft.Network/iPGroups/read",
@@ -1299,8 +1299,8 @@
     {
       "permission": "Microsoft.Network/publicIPPrefixes/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
-      "source_file": "network_tier3.go"
+      "action": "Get",
+      "source_file": "network_ip_prefixes.go"
     },
     {
       "permission": "Microsoft.Network/routeFilters/read",
@@ -1378,7 +1378,7 @@
       "permission": "Microsoft.Network/virtualAppliances/read",
       "service": "Microsoft.Network",
       "action": "NewListPager",
-      "source_file": "network_tier3.go"
+      "source_file": "network_virtual_appliances.go"
     },
     {
       "permission": "Microsoft.Network/virtualHubs/hubRouteTables/read",
@@ -1407,8 +1407,8 @@
     {
       "permission": "Microsoft.Network/virtualNetworkTaps/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
-      "source_file": "network_tier3.go"
+      "action": "Get",
+      "source_file": "network_virtual_appliances.go"
     },
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
@@ -1432,7 +1432,7 @@
       "permission": "Microsoft.Network/virtualRouters/read",
       "service": "Microsoft.Network",
       "action": "NewListPager",
-      "source_file": "network_tier3.go"
+      "source_file": "network_virtual_appliances.go"
     },
     {
       "permission": "Microsoft.Network/virtualWans/read",

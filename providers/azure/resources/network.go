@@ -3943,7 +3943,7 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	var ipAllocationMethod, ipVersion, ddosProtectionMode, associatedResourceId string
-	var ipAddr *string
+	var ipAddr, publicIpPrefixId *string
 	if ip.Properties != nil {
 		ipAddr = ip.Properties.IPAddress
 		if ip.Properties.PublicIPAllocationMethod != nil {
@@ -3957,6 +3957,9 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 		}
 		if ip.Properties.IPConfiguration != nil && ip.Properties.IPConfiguration.ID != nil {
 			associatedResourceId = *ip.Properties.IPConfiguration.ID
+		}
+		if ip.Properties.PublicIPPrefix != nil {
+			publicIpPrefixId = ip.Properties.PublicIPPrefix.ID
 		}
 	}
 	zones := []any{}
@@ -3982,7 +3985,27 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 	if err != nil {
 		return nil, err
 	}
-	return mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+	mqlIp := mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress)
+	mqlIp.cachePublicIpPrefixID = publicIpPrefixId
+	return mqlIp, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceIpAddressInternal struct {
+	cachePublicIpPrefixID *string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceIpAddress) publicIpPrefix() (*mqlAzureSubscriptionNetworkServicePublicIpPrefix, error) {
+	if a.cachePublicIpPrefixID == nil || *a.cachePublicIpPrefixID == "" {
+		a.PublicIpPrefix.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.publicIpPrefix", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(a.cachePublicIpPrefixID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionNetworkServicePublicIpPrefix), nil
 }
 
 // natGatewayNat64Enabled reports whether NAT64 translation is switched on for
@@ -4154,12 +4177,30 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 	mqlSubnet := mqlAzure.(*mqlAzureSubscriptionNetworkServiceSubnet)
 	mqlSubnet.cacheNetworkSecurityGroupID = nsgID
 	mqlSubnet.cacheRouteTableID = routeTableID
+	if subnet.Properties != nil {
+		for _, pe := range subnet.Properties.PrivateEndpoints {
+			if pe != nil && pe.ID != nil {
+				mqlSubnet.cachePrivateEndpointIDs = append(mqlSubnet.cachePrivateEndpointIDs, *pe.ID)
+			}
+		}
+		mqlSubnet.cacheIPAllocationIDs = azureNetworkSubResourceIDs(subnet.Properties.IPAllocations)
+	}
 	return mqlSubnet, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceSubnetInternal struct {
 	cacheNetworkSecurityGroupID string
 	cacheRouteTableID           string
+	cachePrivateEndpointIDs     []string
+	cacheIPAllocationIDs        []string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) privateEndpoints() ([]any, error) {
+	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint", a.cachePrivateEndpointIDs)
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipAllocations() ([]any, error) {
+	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.ipAllocation", a.cacheIPAllocationIDs)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSubnet) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {

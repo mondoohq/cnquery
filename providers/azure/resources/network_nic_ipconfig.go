@@ -16,9 +16,10 @@ import (
 )
 
 type mqlAzureSubscriptionNetworkServiceInterfaceIpConfigurationInternal struct {
-	cacheSubnetId            *string
-	cachePublicIpAddressId   *string
-	cacheAppSecurityGroupIds []string
+	cacheSubnetId             *string
+	cachePublicIpAddressId    *string
+	cacheAppSecurityGroupIds  []string
+	cacheVirtualNetworkTapIds []string
 }
 
 // ipConfigs builds the network interface's IP configurations as typed
@@ -33,7 +34,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) ipConfigs() ([]any, error)
 		var provisioningState, privateIpAddress, privateIpAllocationMethod, privateIpAddressVersion string
 		var primary bool
 		var subnetId, publicIpAddressId *string
-		var appSecurityGroupIds []string
+		var appSecurityGroupIds, virtualNetworkTapIds []string
 		if p := ipConfig.Properties; p != nil {
 			primary = convert.ToValue(p.Primary)
 			privateIpAddress = convert.ToValue(p.PrivateIPAddress)
@@ -53,6 +54,11 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) ipConfigs() ([]any, error)
 				publicIpAddressId = p.PublicIPAddress.ID
 			}
 			appSecurityGroupIds = appSecurityGroupIDs(p.ApplicationSecurityGroups)
+			for _, tap := range p.VirtualNetworkTaps {
+				if tap != nil && tap.ID != nil {
+					virtualNetworkTapIds = append(virtualNetworkTapIds, *tap.ID)
+				}
+			}
 		}
 		mqlConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.interface.ipConfiguration",
 			map[string]*llx.RawData{
@@ -72,6 +78,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) ipConfigs() ([]any, error)
 		c.cacheSubnetId = subnetId
 		c.cachePublicIpAddressId = publicIpAddressId
 		c.cacheAppSecurityGroupIds = appSecurityGroupIds
+		c.cacheVirtualNetworkTapIds = virtualNetworkTapIds
 		res = append(res, mqlConfig)
 	}
 	return res, nil
@@ -123,6 +130,10 @@ func (a *mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration) publicIpAdd
 
 func (a *mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration) applicationSecurityGroups() ([]any, error) {
 	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.appSecurityGroup", a.cacheAppSecurityGroupIds)
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration) virtualNetworkTaps() ([]any, error) {
+	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkTap", a.cacheVirtualNetworkTapIds)
 }
 
 // initAzureSubscriptionNetworkServiceIpAddress resolves a public IP address by

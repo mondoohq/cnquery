@@ -3299,6 +3299,7 @@ azure.subscription.networkService.interface.ipConfiguration.privateIpAllocationM
 azure.subscription.networkService.interface.ipConfiguration.provisioningState 13.25.1
 azure.subscription.networkService.interface.ipConfiguration.publicIpAddress 13.25.1
 azure.subscription.networkService.interface.ipConfiguration.subnet 13.25.1
+azure.subscription.networkService.interface.ipConfiguration.virtualNetworkTaps 13.25.1
 azure.subscription.networkService.interface.ipConfigurations 13.1.8
 azure.subscription.networkService.interface.location 9.0.1
 azure.subscription.networkService.interface.name 9.0.1
@@ -3319,6 +3320,7 @@ azure.subscription.networkService.ipAddress.ipAllocationMethod 11.6.1
 azure.subscription.networkService.ipAddress.ipVersion 11.6.1
 azure.subscription.networkService.ipAddress.location 9.0.1
 azure.subscription.networkService.ipAddress.name 9.0.1
+azure.subscription.networkService.ipAddress.publicIpPrefix 13.25.1
 azure.subscription.networkService.ipAddress.tags 9.0.1
 azure.subscription.networkService.ipAddress.type 9.0.1
 azure.subscription.networkService.ipAddress.zones 13.1.8
@@ -3705,11 +3707,13 @@ azure.subscription.networkService.subnet.delegation.serviceName 13.12.2
 azure.subscription.networkService.subnet.delegations 13.12.2
 azure.subscription.networkService.subnet.etag 9.0.8
 azure.subscription.networkService.subnet.id 9.0.8
+azure.subscription.networkService.subnet.ipAllocations 13.25.1
 azure.subscription.networkService.subnet.ipConfigurations 9.0.10
 azure.subscription.networkService.subnet.name 9.0.8
 azure.subscription.networkService.subnet.natGateway 9.0.8
 azure.subscription.networkService.subnet.networkSecurityGroup 13.12.2
 azure.subscription.networkService.subnet.privateEndpointNetworkPolicies 9.0.8
+azure.subscription.networkService.subnet.privateEndpoints 13.25.1
 azure.subscription.networkService.subnet.privateLinkServiceNetworkPolicies 9.0.8
 azure.subscription.networkService.subnet.properties 9.0.8
 azure.subscription.networkService.subnet.routeTable 13.12.2
