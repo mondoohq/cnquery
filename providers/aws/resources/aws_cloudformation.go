@@ -42,18 +42,7 @@ func (a *mqlAwsCloudformation) stacks() ([]any, error) {
 }
 
 func cfnTagsToMap(in []cf_types.Tag) map[string]any {
-	tags := make(map[string]any, len(in))
-	for _, t := range in {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		tags[*t.Key] = val
-	}
-	return tags
+	return tagsToMap(in, func(t cf_types.Tag) *string { return t.Key }, func(t cf_types.Tag) *string { return t.Value })
 }
 
 // stackParameterToDict converts an SDK Parameter to a dict with lowercase

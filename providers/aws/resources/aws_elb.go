@@ -752,19 +752,11 @@ func isV1LoadBalancerArn(a string) bool {
 }
 
 func elbv2TagsToMap(tags []elbtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t elbtypes.Tag) *string { return t.Key }, func(t elbtypes.Tag) *string { return t.Value })
 }
 
 func elbv1TagsToMap(tags []elbv1types.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t elbv1types.Tag) *string { return t.Key }, func(t elbv1types.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {

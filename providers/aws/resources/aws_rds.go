@@ -1035,11 +1035,7 @@ func masterUserSecretToDict(secret *rds_types.MasterUserSecret) any {
 }
 
 func rdsTagsToMap(tags []rds_types.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t rds_types.Tag) *string { return t.Key }, func(t rds_types.Tag) *string { return t.Value })
 }
 
 // clusters returns all RDS clusters

@@ -302,11 +302,7 @@ func (a *mqlAwsTransferServer) structuredLogDestinations() ([]any, error) {
 }
 
 func transferTagsToMap(tags []transfertypes.Tag) map[string]any {
-	out := make(map[string]any, len(tags))
-	for _, t := range tags {
-		out[convert.ToValue(t.Key)] = convert.ToValue(t.Value)
-	}
-	return out
+	return tagsToMap(tags, func(t transfertypes.Tag) *string { return t.Key }, func(t transfertypes.Tag) *string { return t.Value })
 }
 
 // Connectors

@@ -592,11 +592,5 @@ func (a *mqlAwsSfnActivity) id() (string, error) {
 }
 
 func sfnTagsToMap(tags []sfntypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			tagsMap[*tag.Key] = *tag.Value
-		}
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t sfntypes.Tag) *string { return t.Key }, func(t sfntypes.Tag) *string { return t.Value })
 }

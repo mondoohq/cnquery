@@ -312,16 +312,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 }
 
 func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t ec2types.TagDescription) *string { return t.Key }, func(t ec2types.TagDescription) *string { return t.Value })
 }
 
 func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescription, groupArn string) ([]any, error) {

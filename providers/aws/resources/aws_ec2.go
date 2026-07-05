@@ -3900,13 +3900,7 @@ func shouldExcludeInstance(instance ec2types.Instance, filters connection.Discov
 
 // tags in AWS are guaranteed to have a unique key, so we can convert the slice to a map for easier processing
 func ec2TagsToMap(tags []ec2types.Tag) map[string]string {
-	result := make(map[string]string)
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			result[*tag.Key] = *tag.Value
-		}
-	}
-	return result
+	return tagsToStringMap(tags, func(t ec2types.Tag) *string { return t.Key }, func(t ec2types.Tag) *string { return t.Value })
 }
 
 const launchTemplateArnPattern = "arn:aws:ec2:%s:%s:launch-template/%s"

@@ -435,16 +435,7 @@ func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
 }
 
 func efsTagsToMap(tags []efstypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t efstypes.Tag) *string { return t.Key }, func(t efstypes.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsEfsFilesystem) mountTargets() ([]any, error) {

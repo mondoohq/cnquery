@@ -471,14 +471,5 @@ func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error
 }
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t secretstypes.Tag) *string { return t.Key }, func(t secretstypes.Tag) *string { return t.Value })
 }

@@ -144,13 +144,7 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 }
 
 func CertTagsToMapTags(tags []acmtypes.Tag) map[string]any {
-	mapTags := make(map[string]any)
-	for i := range tags {
-		if tags[i].Key != nil && tags[i].Value != nil {
-			mapTags[*tags[i].Key] = *tags[i].Value
-		}
-	}
-	return mapTags
+	return tagsToMap(tags, func(t acmtypes.Tag) *string { return t.Key }, func(t acmtypes.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsAcmCertificate) certificate() (plugin.Resource, error) {

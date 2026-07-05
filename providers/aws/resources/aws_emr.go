@@ -1384,13 +1384,7 @@ func newMqlAwsEmrStudio(runtime *plugin.Runtime, region string, studio *emrtypes
 }
 
 func emrTagsToMap(tags []emrtypes.Tag) map[string]string {
-	out := make(map[string]string, len(tags))
-	for _, t := range tags {
-		if t.Key != nil && t.Value != nil {
-			out[*t.Key] = *t.Value
-		}
-	}
-	return out
+	return tagsToStringMap(tags, func(t emrtypes.Tag) *string { return t.Key }, func(t emrtypes.Tag) *string { return t.Value })
 }
 
 func (a *mqlAwsEmrStudio) vpc() (*mqlAwsVpc, error) {

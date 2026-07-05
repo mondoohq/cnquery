@@ -227,11 +227,7 @@ func redshiftHsmStatusToDict(hsm *redshifttypes.HsmStatus) map[string]any {
 }
 
 func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t redshifttypes.Tag) *string { return t.Key }, func(t redshifttypes.Tag) *string { return t.Value })
 }
 
 type mqlAwsRedshiftClusterInternal struct {

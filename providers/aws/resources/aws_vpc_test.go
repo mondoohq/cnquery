@@ -27,15 +27,17 @@ func TestEc2TagsToMap(t *testing.T) {
 		assert.Len(t, result, 2)
 	})
 
-	t.Run("skips tags with nil key or value", func(t *testing.T) {
+	t.Run("skips nil keys and represents a nil value as empty string", func(t *testing.T) {
+		// Unified tag-conversion policy (see tagsToStringMap): a nil key is
+		// dropped (a tag key is never legitimately empty), but a present key
+		// with a nil value is kept as "" so the tag remains visible.
 		tags := []ec2types.Tag{
 			{Key: aws.String("good"), Value: aws.String("val")},
 			{Key: nil, Value: aws.String("orphan-val")},
 			{Key: aws.String("orphan-key"), Value: nil},
 		}
 		result := ec2TagsToMap(tags)
-		assert.Equal(t, "val", result["good"])
-		assert.Len(t, result, 1)
+		assert.Equal(t, map[string]string{"good": "val", "orphan-key": ""}, result)
 	})
 
 	t.Run("returns empty map for nil slice", func(t *testing.T) {

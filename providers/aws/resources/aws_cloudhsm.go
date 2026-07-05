@@ -26,18 +26,7 @@ func (a *mqlAwsCloudhsm) id() (string, error) {
 }
 
 func cloudHsmTagsToMap(tags []cloudhsmv2_types.Tag) map[string]any {
-	res := map[string]any{}
-	for _, t := range tags {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		res[*t.Key] = val
-	}
-	return res
+	return tagsToMap(tags, func(t cloudhsmv2_types.Tag) *string { return t.Key }, func(t cloudhsmv2_types.Tag) *string { return t.Value })
 }
 
 // ---- aws.cloudhsm.cluster ----

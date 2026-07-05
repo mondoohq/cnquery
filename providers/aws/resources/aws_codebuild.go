@@ -600,16 +600,7 @@ func (a *mqlAwsCodebuildReportGroup) id() (string, error) {
 // ===== helpers =====
 
 func cbTagsToMap(tags []cbtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-
-	if len(tags) > 0 {
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-
-	return tagsMap
+	return tagsToMap(tags, func(t cbtypes.Tag) *string { return t.Key }, func(t cbtypes.Tag) *string { return t.Value })
 }
 
 func cbArtifactsToDicts(arts []cbtypes.ProjectArtifacts) ([]any, error) {

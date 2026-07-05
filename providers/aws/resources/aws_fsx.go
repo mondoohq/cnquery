@@ -756,11 +756,5 @@ func (a *mqlAwsFsx) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 // ========================
 
 func fsxTagsToMap(tags []fsxtypes.Tag) map[string]any {
-	tagsMap := make(map[string]any)
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			tagsMap[*tag.Key] = *tag.Value
-		}
-	}
-	return tagsMap
+	return tagsToMap(tags, func(t fsxtypes.Tag) *string { return t.Key }, func(t fsxtypes.Tag) *string { return t.Value })
 }

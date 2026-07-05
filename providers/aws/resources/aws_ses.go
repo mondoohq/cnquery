@@ -23,18 +23,7 @@ func (a *mqlAwsSes) id() (string, error) {
 }
 
 func sesTagsToMap(tags []sesv2_types.Tag) map[string]any {
-	res := map[string]any{}
-	for _, t := range tags {
-		if t.Key == nil {
-			continue
-		}
-		val := ""
-		if t.Value != nil {
-			val = *t.Value
-		}
-		res[*t.Key] = val
-	}
-	return res
+	return tagsToMap(tags, func(t sesv2_types.Tag) *string { return t.Key }, func(t sesv2_types.Tag) *string { return t.Value })
 }
 
 // ---- aws.ses.identity ----

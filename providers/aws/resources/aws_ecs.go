@@ -766,13 +766,7 @@ func (s *mqlAwsEcsContainer) id() (string, error) {
 }
 
 func ecsTagsToMap(tags []ecstypes.Tag) map[string]any {
-	res := map[string]any{}
-	for _, tag := range tags {
-		if tag.Key != nil && tag.Value != nil {
-			res[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
-	}
-	return res
+	return tagsToMap(tags, func(t ecstypes.Tag) *string { return t.Key }, func(t ecstypes.Tag) *string { return t.Value })
 }
 
 // validateAndParseARN validates that the given string is a valid ECS ARN
