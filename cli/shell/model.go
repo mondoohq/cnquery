@@ -539,7 +539,9 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 	m.query += " " + input
 
 	// Try to compile
-	code, err := mqlc.Compile(m.query, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	cfg := mqlc.NewConfig(m.runtime.Schema(), m.features)
+	cfg.EditorMode = true
+	code, err := mqlc.Compile(m.query, nil, cfg)
 	if err != nil {
 		if e, ok := err.(*parser.ErrIncomplete); ok {
 			// Incomplete query - enter multiline mode
@@ -802,7 +804,9 @@ func (m *shellModel) updateCompletions() {
 
 	// Check for compile errors (for inline feedback)
 	fullQuery := m.query + " " + input
-	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	cfg := mqlc.NewConfig(m.runtime.Schema(), m.features)
+	cfg.EditorMode = true
+	_, err := mqlc.Compile(fullQuery, nil, cfg)
 	if err != nil {
 		// Ignore incomplete errors - those are expected for multi-line
 		if _, ok := err.(*parser.ErrIncomplete); !ok {
@@ -867,7 +871,9 @@ func (m *shellModel) recompileForErrors() {
 
 	// Check for compile errors
 	fullQuery := m.query + " " + input
-	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	cfg := mqlc.NewConfig(m.runtime.Schema(), m.features)
+	cfg.EditorMode = true
+	_, err := mqlc.Compile(fullQuery, nil, cfg)
 	if err != nil {
 		// Ignore incomplete errors - those are expected for multi-line
 		if _, ok := err.(*parser.ErrIncomplete); !ok {
