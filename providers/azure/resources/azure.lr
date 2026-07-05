@@ -3806,6 +3806,10 @@ private azure.subscription.networkService.securityPerimeter.association @default
   // Provisioning state of the association
   provisioningState string
   // ARM ID of the PaaS resource placed inside the perimeter
+  //
+  // The associated resource can be any PaaS type (storage account, key
+  // vault, SQL server, and others), so it is kept as the raw ARM ID
+  // rather than a single typed accessor.
   resourceId string
   // Profile the associated resource is bound to
   profile() azure.subscription.networkService.securityPerimeter.profile
