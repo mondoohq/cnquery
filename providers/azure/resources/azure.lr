@@ -2836,6 +2836,16 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   associatedResourceId string
   // Public IP prefix this address was allocated from; null when the address is not drawn from a prefix
   publicIpPrefix() azure.subscription.networkService.publicIpPrefix
+  // Public IP SKU name (Basic, Standard)
+  skuName string
+  // Public IP SKU tier (Regional, Global)
+  skuTier string
+  // Idle timeout in minutes for the public IP
+  idleTimeoutInMinutes int
+  // IP tags applied to the address; each entry carries ipTagType and tag
+  ipTags []dict
+  // NAT gateway using this public IP; null when the address is not used by a NAT gateway
+  natGateway() azure.subscription.networkService.natGateway
 }
 
 // Azure Network Bastion host

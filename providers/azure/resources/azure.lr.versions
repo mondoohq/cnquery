@@ -3327,12 +3327,17 @@ azure.subscription.networkService.ipAddress 9.0.1
 azure.subscription.networkService.ipAddress.associatedResourceId 13.16.2
 azure.subscription.networkService.ipAddress.ddosProtectionMode 13.1.8
 azure.subscription.networkService.ipAddress.id 9.0.1
+azure.subscription.networkService.ipAddress.idleTimeoutInMinutes 13.25.1
 azure.subscription.networkService.ipAddress.ipAddress 9.0.1
 azure.subscription.networkService.ipAddress.ipAllocationMethod 11.6.1
+azure.subscription.networkService.ipAddress.ipTags 13.25.1
 azure.subscription.networkService.ipAddress.ipVersion 11.6.1
 azure.subscription.networkService.ipAddress.location 9.0.1
 azure.subscription.networkService.ipAddress.name 9.0.1
+azure.subscription.networkService.ipAddress.natGateway 13.25.1
 azure.subscription.networkService.ipAddress.publicIpPrefix 13.25.1
+azure.subscription.networkService.ipAddress.skuName 13.25.1
+azure.subscription.networkService.ipAddress.skuTier 13.25.1
 azure.subscription.networkService.ipAddress.tags 9.0.1
 azure.subscription.networkService.ipAddress.type 9.0.1
 azure.subscription.networkService.ipAddress.zones 13.1.8

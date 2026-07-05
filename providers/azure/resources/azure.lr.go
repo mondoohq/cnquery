@@ -689,7 +689,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress,
 		},
 		"azure.subscription.networkService.natGateway": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceNatGateway,
 			Create: createAzureSubscriptionNetworkServiceNatGateway,
 		},
 		"azure.subscription.networkService.subnet": {
@@ -5387,6 +5387,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.ipAddress.publicIpPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetPublicIpPrefix()).ToDataRes(types.Resource("azure.subscription.networkService.publicIpPrefix"))
+	},
+	"azure.subscription.networkService.ipAddress.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipAddress.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ipAddress.idleTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetIdleTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.ipAddress.ipTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetIpTags()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.ipAddress.natGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceIpAddress).GetNatGateway()).ToDataRes(types.Resource("azure.subscription.networkService.natGateway"))
 	},
 	"azure.subscription.networkService.bastionHost.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetId()).ToDataRes(types.String)
@@ -21829,6 +21844,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.ipAddress.publicIpPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).PublicIpPrefix, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePublicIpPrefix](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.idleTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).IdleTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.ipTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).IpTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ipAddress.natGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceIpAddress).NatGateway, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceNatGateway](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.bastionHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50148,6 +50183,11 @@ type mqlAzureSubscriptionNetworkServiceIpAddress struct {
 	DdosProtectionMode   plugin.TValue[string]
 	AssociatedResourceId plugin.TValue[string]
 	PublicIpPrefix       plugin.TValue[*mqlAzureSubscriptionNetworkServicePublicIpPrefix]
+	SkuName              plugin.TValue[string]
+	SkuTier              plugin.TValue[string]
+	IdleTimeoutInMinutes plugin.TValue[int64]
+	IpTags               plugin.TValue[[]any]
+	NatGateway           plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway]
 }
 
 // createAzureSubscriptionNetworkServiceIpAddress creates a new instance of this resource
@@ -50244,6 +50284,38 @@ func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetPublicIpPrefix() *plugi
 		}
 
 		return c.publicIpPrefix()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetIdleTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.IdleTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetIpTags() *plugin.TValue[[]any] {
+	return &c.IpTags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetNatGateway() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceNatGateway](&c.NatGateway, func() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ipAddress", c.__id, "natGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
+			}
+		}
+
+		return c.natGateway()
 	})
 }
 

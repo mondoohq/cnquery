@@ -3954,7 +3954,9 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	var ipAllocationMethod, ipVersion, ddosProtectionMode, associatedResourceId string
-	var ipAddr, publicIpPrefixId *string
+	var ipAddr, publicIpPrefixId, natGatewayId *string
+	var idleTimeoutInMinutes int64
+	ipTags := []any{}
 	if ip.Properties != nil {
 		ipAddr = ip.Properties.IPAddress
 		if ip.Properties.PublicIPAllocationMethod != nil {
@@ -3971,6 +3973,26 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 		}
 		if ip.Properties.PublicIPPrefix != nil {
 			publicIpPrefixId = ip.Properties.PublicIPPrefix.ID
+		}
+		if ip.Properties.NatGateway != nil {
+			natGatewayId = ip.Properties.NatGateway.ID
+		}
+		if ip.Properties.IdleTimeoutInMinutes != nil {
+			idleTimeoutInMinutes = int64(*ip.Properties.IdleTimeoutInMinutes)
+		}
+		tags, err := convert.JsonToDictSlice(ip.Properties.IPTags)
+		if err != nil {
+			return nil, err
+		}
+		ipTags = tags
+	}
+	var skuName, skuTier string
+	if ip.SKU != nil {
+		if ip.SKU.Name != nil {
+			skuName = string(*ip.SKU.Name)
+		}
+		if ip.SKU.Tier != nil {
+			skuTier = string(*ip.SKU.Tier)
 		}
 	}
 	zones := []any{}
@@ -3992,17 +4014,37 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 			"zones":                llx.ArrayData(zones, types.String),
 			"ddosProtectionMode":   llx.StringData(ddosProtectionMode),
 			"associatedResourceId": llx.StringData(associatedResourceId),
+			"skuName":              llx.StringData(skuName),
+			"skuTier":              llx.StringData(skuTier),
+			"idleTimeoutInMinutes": llx.IntData(idleTimeoutInMinutes),
+			"ipTags":               llx.ArrayData(ipTags, types.Dict),
 		})
 	if err != nil {
 		return nil, err
 	}
 	mqlIp := mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress)
 	mqlIp.cachePublicIpPrefixID = publicIpPrefixId
+	mqlIp.cacheNatGatewayID = natGatewayId
 	return mqlIp, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceIpAddressInternal struct {
 	cachePublicIpPrefixID *string
+	cacheNatGatewayID     *string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceIpAddress) natGateway() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
+	if a.cacheNatGatewayID == nil || *a.cacheNatGatewayID == "" {
+		a.NatGateway.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.natGateway", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(a.cacheNatGatewayID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceIpAddress) publicIpPrefix() (*mqlAzureSubscriptionNetworkServicePublicIpPrefix, error) {
@@ -4025,6 +4067,49 @@ func (a *mqlAzureSubscriptionNetworkServiceIpAddress) publicIpPrefix() (*mqlAzur
 // unset ("None") or nil value reads as "not enabled".
 func natGatewayNat64Enabled(props *network.NatGatewayPropertiesFormat) bool {
 	return props != nil && props.Nat64 != nil && *props.Nat64 == network.Nat64StateEnabled
+}
+
+// initAzureSubscriptionNetworkServiceNatGateway resolves a NAT gateway by its
+// ARM ID so typed references to it (e.g. from a public IP address) populate
+// fully.
+func initAzureSubscriptionNetworkServiceNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("natGateways")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureNatGatewayToMql(runtime, resp.NatGateway)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
 }
 
 func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
