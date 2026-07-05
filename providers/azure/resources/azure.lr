@@ -1650,8 +1650,8 @@ private azure.subscription.networkService.networkManager.securityAdminConfigurat
   provisioningState string
   // Description of the collection
   description string
-  // ARM IDs of the network groups the collection applies to
-  appliesToGroupIds []string
+  // Network groups the collection applies to
+  appliesToGroups() []azure.subscription.networkService.networkManager.networkGroup
   // Admin rules in the collection
   rules() []azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule
 }
@@ -1690,10 +1690,10 @@ private azure.subscription.networkService.networkManager.securityAdminConfigurat
   sourcePortRanges []string
   // Destination port ranges the rule matches
   destinationPortRanges []string
-  // Source address prefixes (CIDR, IP range, service tag)
-  sources []string
-  // Destination address prefixes (CIDR, IP range, service tag)
-  destinations []string
+  // Source address prefixes; each entry carries addressPrefix and addressPrefixType (IPPrefix, ServiceTag, NetworkGroup)
+  sources []dict
+  // Destination address prefixes; each entry carries addressPrefix and addressPrefixType (IPPrefix, ServiceTag, NetworkGroup)
+  destinations []dict
 }
 
 // Network manager connectivity configuration
@@ -1722,8 +1722,8 @@ private azure.subscription.networkService.networkManager.connectivityConfigurati
   isGlobal bool
   // Whether existing peerings are removed when the configuration is applied
   deleteExistingPeering bool
-  // ARM IDs of the network groups the configuration applies to
-  appliesToGroupIds []string
+  // Network groups the configuration applies to
+  appliesToGroups() []azure.subscription.networkService.networkManager.networkGroup
   // Hub resources in the topology; each entry carries resourceId and resourceType
   hubs []dict
 }

@@ -587,7 +587,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceNetworkManager,
 		},
 		"azure.subscription.networkService.networkManager.networkGroup": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup,
 			Create: createAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup,
 		},
 		"azure.subscription.networkService.networkManager.securityAdminConfiguration": {
@@ -4130,8 +4130,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetDescription()).ToDataRes(types.String)
 	},
-	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetAppliesToGroupIds()).ToDataRes(types.Array(types.String))
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetAppliesToGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.networkGroup")))
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule")))
@@ -4176,10 +4176,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDestinationPortRanges()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.sources": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetSources()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetSources()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule.destinations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDestinations()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule).GetDestinations()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.networkManager.connectivityConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetId()).ToDataRes(types.String)
@@ -4208,8 +4208,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.networkManager.connectivityConfiguration.deleteExistingPeering": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetDeleteExistingPeering()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetAppliesToGroupIds()).ToDataRes(types.Array(types.String))
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetAppliesToGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.networkManager.networkGroup")))
 	},
 	"azure.subscription.networkService.networkManager.connectivityConfiguration.hubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).GetHubs()).ToDataRes(types.Array(types.Dict))
@@ -19916,8 +19916,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).AppliesToGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).AppliesToGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20028,8 +20028,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).DeleteExistingPeering, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).AppliesToGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).AppliesToGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.networkManager.connectivityConfiguration.hubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45396,14 +45396,14 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
 	Etag              plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
 	Description       plugin.TValue[string]
-	AppliesToGroupIds plugin.TValue[[]any]
+	AppliesToGroups   plugin.TValue[[]any]
 	Rules             plugin.TValue[[]any]
 }
 
@@ -45468,8 +45468,20 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 	return &c.Description
 }
 
-func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetAppliesToGroupIds() *plugin.TValue[[]any] {
-	return &c.AppliesToGroupIds
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetAppliesToGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppliesToGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection", c.__id, "appliesToGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appliesToGroups()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) GetRules() *plugin.TValue[[]any] {
@@ -45611,7 +45623,7 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 type mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurationInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurationInternal
 	Id                    plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	Type                  plugin.TValue[string]
@@ -45621,7 +45633,7 @@ type mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration s
 	ConnectivityTopology  plugin.TValue[string]
 	IsGlobal              plugin.TValue[bool]
 	DeleteExistingPeering plugin.TValue[bool]
-	AppliesToGroupIds     plugin.TValue[[]any]
+	AppliesToGroups       plugin.TValue[[]any]
 	Hubs                  plugin.TValue[[]any]
 }
 
@@ -45698,8 +45710,20 @@ func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurati
 	return &c.DeleteExistingPeering
 }
 
-func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetAppliesToGroupIds() *plugin.TValue[[]any] {
-	return &c.AppliesToGroupIds
+func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetAppliesToGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppliesToGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.networkManager.connectivityConfiguration", c.__id, "appliesToGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appliesToGroups()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) GetHubs() *plugin.TValue[[]any] {

@@ -3389,7 +3389,7 @@ azure.subscription.networkService.natGateway.zones 9.0.8
 azure.subscription.networkService.natGateways 9.0.8
 azure.subscription.networkService.networkManager 13.25.1
 azure.subscription.networkService.networkManager.connectivityConfiguration 13.25.1
-azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroupIds 13.25.1
+azure.subscription.networkService.networkManager.connectivityConfiguration.appliesToGroups 13.25.1
 azure.subscription.networkService.networkManager.connectivityConfiguration.connectivityTopology 13.25.1
 azure.subscription.networkService.networkManager.connectivityConfiguration.deleteExistingPeering 13.25.1
 azure.subscription.networkService.networkManager.connectivityConfiguration.description 13.25.1
@@ -3429,7 +3429,7 @@ azure.subscription.networkService.networkManager.securityAdminConfiguration.id 1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.name 13.25.1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.provisioningState 13.25.1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection 13.25.1
-azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroupIds 13.25.1
+azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.appliesToGroups 13.25.1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.description 13.25.1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.etag 13.25.1
 azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.id 13.25.1

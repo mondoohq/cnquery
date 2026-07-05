@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T09:12:53-07:00",
+  "generated_at": "2026-07-05T09:29:34-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1155,7 +1155,7 @@
     {
       "permission": "Microsoft.Network/groups/read",
       "service": "Microsoft.Network",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "network_avnm.go"
     },
     {

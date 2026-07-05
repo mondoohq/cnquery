@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
@@ -140,28 +141,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) networkGroups() ([]an
 			if g == nil {
 				continue
 			}
-			var provisioningState, description, memberType, resourceGuid string
-			if p := g.Properties; p != nil {
-				if p.ProvisioningState != nil {
-					provisioningState = string(*p.ProvisioningState)
-				}
-				description = convert.ToValue(p.Description)
-				resourceGuid = convert.ToValue(p.ResourceGUID)
-				if p.MemberType != nil {
-					memberType = string(*p.MemberType)
-				}
-			}
-			mqlGroup, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.networkManager.networkGroup",
-				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(g.ID),
-					"name":              llx.StringDataPtr(g.Name),
-					"type":              llx.StringDataPtr(g.Type),
-					"etag":              llx.StringDataPtr(g.Etag),
-					"provisioningState": llx.StringData(provisioningState),
-					"description":       llx.StringData(description),
-					"memberType":        llx.StringData(memberType),
-					"resourceGuid":      llx.StringData(resourceGuid),
-				})
+			mqlGroup, err := azureNetworkGroupToMql(a.MqlRuntime, g)
 			if err != nil {
 				return nil, err
 			}
@@ -171,8 +151,87 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) networkGroups() ([]an
 	return res, nil
 }
 
+// azureNetworkGroupToMql maps a network manager network group into its MQL
+// resource. Shared by the manager's networkGroups listing and the by-ID init
+// so both paths produce identical resources.
+func azureNetworkGroupToMql(runtime *plugin.Runtime, g *network.Group) (*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup, error) {
+	var provisioningState, description, memberType, resourceGuid string
+	if p := g.Properties; p != nil {
+		if p.ProvisioningState != nil {
+			provisioningState = string(*p.ProvisioningState)
+		}
+		description = convert.ToValue(p.Description)
+		resourceGuid = convert.ToValue(p.ResourceGUID)
+		if p.MemberType != nil {
+			memberType = string(*p.MemberType)
+		}
+	}
+	mqlGroup, err := CreateResource(runtime, "azure.subscription.networkService.networkManager.networkGroup",
+		map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(g.ID),
+			"name":              llx.StringDataPtr(g.Name),
+			"type":              llx.StringDataPtr(g.Type),
+			"etag":              llx.StringDataPtr(g.Etag),
+			"provisioningState": llx.StringData(provisioningState),
+			"description":       llx.StringData(description),
+			"memberType":        llx.StringData(memberType),
+			"resourceGuid":      llx.StringData(resourceGuid),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlGroup.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup), nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup resolves a
+// network group by its ARM ID so typed references to it (from admin rule
+// collections and connectivity configurations) populate fully.
+func initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	managerName, err := azureId.Component("networkManagers")
+	if err != nil {
+		return nil, nil, err
+	}
+	groupName, err := azureId.Component("networkGroups")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewGroupsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, managerName, groupName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mql, err := azureNetworkGroupToMql(runtime, &resp.Group)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mql, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) securityAdminConfigurations() ([]any, error) {
@@ -272,17 +331,13 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 				continue
 			}
 			var provisioningState, description string
-			appliesTo := []any{}
+			var appliesToGroupIds []string
 			if p := rc.Properties; p != nil {
 				if p.ProvisioningState != nil {
 					provisioningState = string(*p.ProvisioningState)
 				}
 				description = convert.ToValue(p.Description)
-				for _, grp := range p.AppliesToGroups {
-					if grp != nil && grp.NetworkGroupID != nil {
-						appliesTo = append(appliesTo, *grp.NetworkGroupID)
-					}
-				}
+				appliesToGroupIds = managerSecurityGroupIDs(p.AppliesToGroups)
 			}
 			mqlRc, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection",
 				map[string]*llx.RawData{
@@ -292,19 +347,39 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 					"etag":              llx.StringDataPtr(rc.Etag),
 					"provisioningState": llx.StringData(provisioningState),
 					"description":       llx.StringData(description),
-					"appliesToGroupIds": llx.ArrayData(appliesTo, types.String),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlRc.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection).cacheAppliesToGroupIds = appliesToGroupIds
 			res = append(res, mqlRc)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionInternal struct {
+	cacheAppliesToGroupIds []string
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) appliesToGroups() ([]any, error) {
+	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.networkManager.networkGroup", a.cacheAppliesToGroupIds)
+}
+
+// managerSecurityGroupIDs flattens the network group references on an admin
+// rule collection into their ARM IDs, skipping nil entries and nil IDs.
+func managerSecurityGroupIDs(items []*network.ManagerSecurityGroupItem) []string {
+	var ids []string
+	for _, item := range items {
+		if item != nil && item.NetworkGroupID != nil {
+			ids = append(ids, *item.NetworkGroupID)
+		}
+	}
+	return ids
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollection) rules() ([]any, error) {
@@ -358,108 +433,101 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurat
 // as read-only values derived from a built-in flag. Both are flattened to the
 // same typed fields so a query does not have to care which kind it is.
 func azureAdminRuleToMql(runtime *plugin.Runtime, rule network.BaseAdminRuleClassification) (*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule, error) {
-	var id, name, typ, etag, kind, provisioningState string
-	var access, direction, protocol, description string
-	var priority int64
-	sourcePortRanges := []any{}
-	destinationPortRanges := []any{}
-	sources := []any{}
-	destinations := []any{}
-
+	var args map[string]*llx.RawData
+	// Custom (AdminRule) and default (DefaultAdminRule) rules carry the same
+	// match fields on distinct property structs; adminRuleArgs unifies them.
 	switch r := rule.(type) {
 	case *network.AdminRule:
-		id = convert.ToValue(r.ID)
-		name = convert.ToValue(r.Name)
-		typ = convert.ToValue(r.Type)
-		etag = convert.ToValue(r.Etag)
-		kind = string(network.AdminRuleKindCustom)
 		if p := r.Properties; p != nil {
-			if p.Access != nil {
-				access = string(*p.Access)
-			}
-			if p.Direction != nil {
-				direction = string(*p.Direction)
-			}
-			if p.Protocol != nil {
-				protocol = string(*p.Protocol)
-			}
-			if p.Priority != nil {
-				priority = int64(*p.Priority)
-			}
-			if p.ProvisioningState != nil {
-				provisioningState = string(*p.ProvisioningState)
-			}
-			description = convert.ToValue(p.Description)
-			sourcePortRanges = strPtrsToAny(p.SourcePortRanges)
-			destinationPortRanges = strPtrsToAny(p.DestinationPortRanges)
-			sources = addressPrefixItemsToAny(p.Sources)
-			destinations = addressPrefixItemsToAny(p.Destinations)
+			args = adminRuleArgs(r.ID, r.Name, r.Type, r.Etag, network.AdminRuleKindCustom,
+				p.Access, p.Direction, p.Protocol, p.Priority, p.ProvisioningState, p.Description,
+				p.SourcePortRanges, p.DestinationPortRanges, p.Sources, p.Destinations)
+		} else {
+			args = adminRuleArgs(r.ID, r.Name, r.Type, r.Etag, network.AdminRuleKindCustom,
+				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 		}
 	case *network.DefaultAdminRule:
-		id = convert.ToValue(r.ID)
-		name = convert.ToValue(r.Name)
-		typ = convert.ToValue(r.Type)
-		etag = convert.ToValue(r.Etag)
-		kind = string(network.AdminRuleKindDefault)
 		if p := r.Properties; p != nil {
-			if p.Access != nil {
-				access = string(*p.Access)
-			}
-			if p.Direction != nil {
-				direction = string(*p.Direction)
-			}
-			if p.Protocol != nil {
-				protocol = string(*p.Protocol)
-			}
-			if p.Priority != nil {
-				priority = int64(*p.Priority)
-			}
-			if p.ProvisioningState != nil {
-				provisioningState = string(*p.ProvisioningState)
-			}
-			description = convert.ToValue(p.Description)
-			sourcePortRanges = strPtrsToAny(p.SourcePortRanges)
-			destinationPortRanges = strPtrsToAny(p.DestinationPortRanges)
-			sources = addressPrefixItemsToAny(p.Sources)
-			destinations = addressPrefixItemsToAny(p.Destinations)
+			args = adminRuleArgs(r.ID, r.Name, r.Type, r.Etag, network.AdminRuleKindDefault,
+				p.Access, p.Direction, p.Protocol, p.Priority, p.ProvisioningState, p.Description,
+				p.SourcePortRanges, p.DestinationPortRanges, p.Sources, p.Destinations)
+		} else {
+			args = adminRuleArgs(r.ID, r.Name, r.Type, r.Etag, network.AdminRuleKindDefault,
+				nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 		}
 	default:
 		// Unknown rule kind; skip rather than emit a malformed resource.
 		return nil, nil
 	}
 
-	mqlRule, err := CreateResource(runtime, "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule",
-		map[string]*llx.RawData{
-			"id":                    llx.StringData(id),
-			"name":                  llx.StringData(name),
-			"type":                  llx.StringData(typ),
-			"etag":                  llx.StringData(etag),
-			"provisioningState":     llx.StringData(provisioningState),
-			"kind":                  llx.StringData(kind),
-			"description":           llx.StringData(description),
-			"access":                llx.StringData(access),
-			"direction":             llx.StringData(direction),
-			"priority":              llx.IntData(priority),
-			"protocol":              llx.StringData(protocol),
-			"sourcePortRanges":      llx.ArrayData(sourcePortRanges, types.String),
-			"destinationPortRanges": llx.ArrayData(destinationPortRanges, types.String),
-			"sources":               llx.ArrayData(sources, types.String),
-			"destinations":          llx.ArrayData(destinations, types.String),
-		})
+	mqlRule, err := CreateResource(runtime, "azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection.rule", args)
 	if err != nil {
 		return nil, err
 	}
 	return mqlRule.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationRuleCollectionRule), nil
 }
 
-// addressPrefixItemsToAny flattens a slice of *AddressPrefixItem into their
-// address prefixes, skipping nil entries and nil prefixes.
-func addressPrefixItemsToAny(items []*network.AddressPrefixItem) []any {
+// adminRuleArgs builds the MQL args for an admin rule from its identity fields
+// and the match fields shared by custom and default rules, so both polymorphic
+// kinds map through a single path.
+func adminRuleArgs(id, name, typ, etag *string, kind network.AdminRuleKind,
+	access *network.SecurityConfigurationRuleAccess, direction *network.SecurityConfigurationRuleDirection,
+	protocol *network.SecurityConfigurationRuleProtocol, priority *int32, provState *network.ProvisioningState,
+	description *string, srcPorts, dstPorts []*string, sources, destinations []*network.AddressPrefixItem,
+) map[string]*llx.RawData {
+	var accessStr, directionStr, protocolStr, provStateStr string
+	var priorityVal int64
+	if access != nil {
+		accessStr = string(*access)
+	}
+	if direction != nil {
+		directionStr = string(*direction)
+	}
+	if protocol != nil {
+		protocolStr = string(*protocol)
+	}
+	if provState != nil {
+		provStateStr = string(*provState)
+	}
+	if priority != nil {
+		priorityVal = int64(*priority)
+	}
+	return map[string]*llx.RawData{
+		"id":                    llx.StringDataPtr(id),
+		"name":                  llx.StringDataPtr(name),
+		"type":                  llx.StringDataPtr(typ),
+		"etag":                  llx.StringDataPtr(etag),
+		"kind":                  llx.StringData(string(kind)),
+		"provisioningState":     llx.StringData(provStateStr),
+		"description":           llx.StringData(convert.ToValue(description)),
+		"access":                llx.StringData(accessStr),
+		"direction":             llx.StringData(directionStr),
+		"priority":              llx.IntData(priorityVal),
+		"protocol":              llx.StringData(protocolStr),
+		"sourcePortRanges":      llx.ArrayData(strPtrsToAny(srcPorts), types.String),
+		"destinationPortRanges": llx.ArrayData(strPtrsToAny(dstPorts), types.String),
+		"sources":               llx.ArrayData(addressPrefixItemsToDict(sources), types.Dict),
+		"destinations":          llx.ArrayData(addressPrefixItemsToDict(destinations), types.Dict),
+	}
+}
+
+// addressPrefixItemsToDict flattens a slice of *AddressPrefixItem into dicts of
+// addressPrefix and addressPrefixType, so an auditor can tell a service tag
+// (for example "Internet") from a raw CIDR. Skips nil entries.
+func addressPrefixItemsToDict(items []*network.AddressPrefixItem) []any {
 	res := []any{}
 	for _, item := range items {
-		if item != nil && item.AddressPrefix != nil {
-			res = append(res, *item.AddressPrefix)
+		if item == nil {
+			continue
 		}
+		entry := map[string]any{}
+		if item.AddressPrefix != nil {
+			entry["addressPrefix"] = *item.AddressPrefix
+		}
+		if item.AddressPrefixType != nil {
+			entry["addressPrefixType"] = string(*item.AddressPrefixType)
+		}
+		res = append(res, entry)
 	}
 	return res
 }
@@ -498,7 +566,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) connectivityConfigura
 			}
 			var provisioningState, description, topology string
 			var isGlobal, deleteExistingPeering bool
-			appliesTo := []any{}
+			var appliesToGroupIds []string
 			hubs := []any{}
 			if p := cfg.Properties; p != nil {
 				if p.ProvisioningState != nil {
@@ -516,7 +584,7 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) connectivityConfigura
 				}
 				for _, grp := range p.AppliesToGroups {
 					if grp != nil && grp.NetworkGroupID != nil {
-						appliesTo = append(appliesTo, *grp.NetworkGroupID)
+						appliesToGroupIds = append(appliesToGroupIds, *grp.NetworkGroupID)
 					}
 				}
 				hubDicts, err := convert.JsonToDictSlice(p.Hubs)
@@ -536,18 +604,26 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) connectivityConfigura
 					"connectivityTopology":  llx.StringData(topology),
 					"isGlobal":              llx.BoolData(isGlobal),
 					"deleteExistingPeering": llx.BoolData(deleteExistingPeering),
-					"appliesToGroupIds":     llx.ArrayData(appliesTo, types.String),
 					"hubs":                  llx.ArrayData(hubs, types.Dict),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlCfg.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).cacheAppliesToGroupIds = appliesToGroupIds
 			res = append(res, mqlCfg)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurationInternal struct {
+	cacheAppliesToGroupIds []string
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) appliesToGroups() ([]any, error) {
+	return azureResourceRefsByID(a.MqlRuntime, "azure.subscription.networkService.networkManager.networkGroup", a.cacheAppliesToGroupIds)
 }
