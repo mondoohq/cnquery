@@ -273,6 +273,9 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			if bh.Properties != nil {
+				mqlAzure.(*mqlAzureSubscriptionNetworkServiceBastionHost).cacheIPConfigurations = bh.Properties.IPConfigurations
+			}
 			res = append(res, mqlAzure)
 		}
 	}
@@ -675,10 +678,15 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		var publicIpAddressId string
 		var privateIpAddress string
 		var ddosCustomPolicyId string
+		var publicIpAddressIDPtr, subnetIDPtr *string
 		if ipConfig.Properties != nil {
 			if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
 				isPublic = true
 				publicIpAddressId = *ipConfig.Properties.PublicIPAddress.ID
+				publicIpAddressIDPtr = ipConfig.Properties.PublicIPAddress.ID
+			}
+			if ipConfig.Properties.Subnet != nil {
+				subnetIDPtr = ipConfig.Properties.Subnet.ID
 			}
 			if ipConfig.Properties.PrivateIPAddress != nil {
 				privateIpAddress = *ipConfig.Properties.PrivateIPAddress
@@ -704,6 +712,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		if err != nil {
 			return nil, err
 		}
+		fic := mqlIpConfig.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig)
+		fic.cachePublicIpAddressID = publicIpAddressIDPtr
+		fic.cacheSubnetID = subnetIDPtr
 		res = append(res, mqlIpConfig)
 	}
 	return res, nil

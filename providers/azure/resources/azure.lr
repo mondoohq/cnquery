@@ -2666,8 +2666,15 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   zones []string
   // Whether this frontend IP configuration uses a public IP address
   isPublic bool
-  // Resource ID of the associated public IP address (empty if private)
-  publicIpAddressId string
+  // Resource ID of the associated public IP address
+  //
+  // Deprecated in favor of publicIpAddress, which resolves to the typed public
+  // IP address resource.
+  publicIpAddressId @maturity("deprecated") string
+  // Public IP address bound to this frontend (internet-facing); null for an internal frontend
+  publicIpAddress() azure.subscription.networkService.ipAddress
+  // Subnet the frontend is bound to (internal load balancer); null for a public frontend
+  subnet() azure.subscription.networkService.subnet
   // Private IP address (empty if public)
   privateIpAddress string
   // Resource ID of the DDoS custom policy bound to this frontend IP configuration (empty when none)
@@ -2863,6 +2870,31 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   scaleUnits int
   // Source IP address ranges (CIDRs) permitted to reach the Bastion host; empty means no IP restriction is applied
   allowedIpRules []string
+  // IP configurations binding the Bastion host to its subnet and public IP
+  ipConfigurations() []azure.subscription.networkService.bastionHost.ipConfiguration
+}
+
+// Azure Bastion host IP configuration
+//
+// An IP configuration binding a Bastion host to the AzureBastionSubnet it runs
+// in and, for a public Bastion, to its public IP address. Surfaces the private
+// IP allocation method and typed references to the subnet and public IP.
+// Select by the configuration's Azure resource ID.
+private azure.subscription.networkService.bastionHost.ipConfiguration @defaults("id name") {
+  // IP configuration ID
+  id string
+  // IP configuration name
+  name string
+  // IP configuration etag
+  etag string
+  // Provisioning state of the IP configuration
+  provisioningState string
+  // Private IP allocation method (Static, Dynamic)
+  privateIpAllocationMethod string
+  // Subnet the Bastion host runs in (AzureBastionSubnet)
+  subnet() azure.subscription.networkService.subnet
+  // Public IP address of the Bastion host; null for a private-only Bastion
+  publicIpAddress() azure.subscription.networkService.ipAddress
 }
 
 // Azure network security group

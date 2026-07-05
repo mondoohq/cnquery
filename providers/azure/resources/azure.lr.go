@@ -92,6 +92,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceInterfaceIpConfiguration                                   string = "azure.subscription.networkService.interface.ipConfiguration"
 	ResourceAzureSubscriptionNetworkServiceIpAddress                                                  string = "azure.subscription.networkService.ipAddress"
 	ResourceAzureSubscriptionNetworkServiceBastionHost                                                string = "azure.subscription.networkService.bastionHost"
+	ResourceAzureSubscriptionNetworkServiceBastionHostIpConfiguration                                 string = "azure.subscription.networkService.bastionHost.ipConfiguration"
 	ResourceAzureSubscriptionNetworkServiceSecurityGroup                                              string = "azure.subscription.networkService.securityGroup"
 	ResourceAzureSubscriptionNetworkServiceSecurityrule                                               string = "azure.subscription.networkService.securityrule"
 	ResourceAzureSubscriptionNetworkServiceExposure                                                   string = "azure.subscription.networkService.exposure"
@@ -762,6 +763,10 @@ func init() {
 		"azure.subscription.networkService.bastionHost": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceBastionHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceBastionHost,
+		},
+		"azure.subscription.networkService.bastionHost.ipConfiguration": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceBastionHostIpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceBastionHostIpConfiguration,
 		},
 		"azure.subscription.networkService.securityGroup": {
 			Init:   initAzureSubscriptionNetworkServiceSecurityGroup,
@@ -5209,6 +5214,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.frontendIpConfig.publicIpAddressId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetPublicIpAddressId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.frontendIpConfig.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
+	},
+	"azure.subscription.networkService.frontendIpConfig.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
 	"azure.subscription.networkService.frontendIpConfig.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetPrivateIpAddress()).ToDataRes(types.String)
 	},
@@ -5427,6 +5438,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.bastionHost.allowedIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetAllowedIpRules()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.bastionHost.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.bastionHost.ipConfiguration")))
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.privateIpAllocationMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetPrivateIpAllocationMethod()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
 	},
 	"azure.subscription.networkService.securityGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetId()).ToDataRes(types.String)
@@ -21541,6 +21576,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).PublicIpAddressId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.frontendIpConfig.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.frontendIpConfig.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.frontendIpConfig.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -21855,6 +21898,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.bastionHost.allowedIpRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceBastionHost).AllowedIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHost).IpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.privateIpAllocationMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).PrivateIpAllocationMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.bastionHost.ipConfiguration.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.securityGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49457,7 +49536,7 @@ func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetProperties() *plug
 type mqlAzureSubscriptionNetworkServiceFrontendIpConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceFrontendIpConfigInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceFrontendIpConfigInternal
 	Id                 plugin.TValue[string]
 	Name               plugin.TValue[string]
 	Type               plugin.TValue[string]
@@ -49466,6 +49545,8 @@ type mqlAzureSubscriptionNetworkServiceFrontendIpConfig struct {
 	Zones              plugin.TValue[[]any]
 	IsPublic           plugin.TValue[bool]
 	PublicIpAddressId  plugin.TValue[string]
+	PublicIpAddress    plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
+	Subnet             plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	PrivateIpAddress   plugin.TValue[string]
 	DdosCustomPolicyId plugin.TValue[string]
 }
@@ -49537,6 +49618,38 @@ func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetIsPublic() *plug
 
 func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPublicIpAddressId() *plugin.TValue[string] {
 	return &c.PublicIpAddressId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.frontendIpConfig", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.frontendIpConfig", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetPrivateIpAddress() *plugin.TValue[string] {
@@ -50124,7 +50237,7 @@ func (c *mqlAzureSubscriptionNetworkServiceIpAddress) GetPublicIpPrefix() *plugi
 type mqlAzureSubscriptionNetworkServiceBastionHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceBastionHostInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceBastionHostInternal
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Location                 plugin.TValue[string]
@@ -50143,6 +50256,7 @@ type mqlAzureSubscriptionNetworkServiceBastionHost struct {
 	EnableTunneling          plugin.TValue[bool]
 	ScaleUnits               plugin.TValue[int64]
 	AllowedIpRules           plugin.TValue[[]any]
+	IpConfigurations         plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceBastionHost creates a new instance of this resource
@@ -50252,6 +50366,125 @@ func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetScaleUnits() *plugin.
 
 func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetAllowedIpRules() *plugin.TValue[[]any] {
 	return &c.AllowedIpRules
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetIpConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.bastionHost", c.__id, "ipConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipConfigurations()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration for the azure.subscription.networkService.bastionHost.ipConfiguration resource
+type mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceBastionHostIpConfigurationInternal
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Etag                      plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	PrivateIpAllocationMethod plugin.TValue[string]
+	Subnet                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	PublicIpAddress           plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
+}
+
+// createAzureSubscriptionNetworkServiceBastionHostIpConfiguration creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceBastionHostIpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.bastionHost.ipConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) MqlName() string {
+	return "azure.subscription.networkService.bastionHost.ipConfiguration"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetPrivateIpAllocationMethod() *plugin.TValue[string] {
+	return &c.PrivateIpAllocationMethod
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.bastionHost.ipConfiguration", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.bastionHost.ipConfiguration", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceSecurityGroup for the azure.subscription.networkService.securityGroup resource

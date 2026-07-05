@@ -3010,6 +3010,15 @@ azure.subscription.networkService.bastionHost.enableSessionRecording 13.16.2
 azure.subscription.networkService.bastionHost.enableShareableLink 13.16.2
 azure.subscription.networkService.bastionHost.enableTunneling 13.16.2
 azure.subscription.networkService.bastionHost.id 9.0.1
+azure.subscription.networkService.bastionHost.ipConfiguration 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.etag 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.id 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.name 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.privateIpAllocationMethod 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.provisioningState 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.publicIpAddress 13.25.1
+azure.subscription.networkService.bastionHost.ipConfiguration.subnet 13.25.1
+azure.subscription.networkService.bastionHost.ipConfigurations 13.25.1
 azure.subscription.networkService.bastionHost.location 9.0.1
 azure.subscription.networkService.bastionHost.name 9.0.1
 azure.subscription.networkService.bastionHost.properties 9.0.1
@@ -3262,7 +3271,9 @@ azure.subscription.networkService.frontendIpConfig.isPublic 9.0.8
 azure.subscription.networkService.frontendIpConfig.name 9.0.8
 azure.subscription.networkService.frontendIpConfig.privateIpAddress 9.0.8
 azure.subscription.networkService.frontendIpConfig.properties 9.0.8
+azure.subscription.networkService.frontendIpConfig.publicIpAddress 13.25.1
 azure.subscription.networkService.frontendIpConfig.publicIpAddressId 9.0.8
+azure.subscription.networkService.frontendIpConfig.subnet 13.25.1
 azure.subscription.networkService.frontendIpConfig.type 9.0.8
 azure.subscription.networkService.frontendIpConfig.zones 9.0.8
 azure.subscription.networkService.inboundNatPool 9.0.8
