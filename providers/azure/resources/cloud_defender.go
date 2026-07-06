@@ -1721,3 +1721,107 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) subAssessments() ([
 func (a *mqlAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment) id() (string, error) {
 	return a.Id.Data, nil
 }
+
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyInternal struct {
+	cacheVirtualMachines []*armsecurity.JitNetworkAccessPolicyVirtualMachine
+}
+
+// jitNetworkAccessPolicies lists the subscription's just-in-time VM access
+// policies — the on-demand, time-bound alternative to leaving management ports
+// open.
+func (a *mqlAzureSubscriptionCloudDefenderService) jitNetworkAccessPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	clientFactory, err := armsecurity.NewClientFactory(conn.SubId(), conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	client := clientFactory.NewJitNetworkAccessPoliciesClient()
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pol := range page.Value {
+			if pol == nil {
+				continue
+			}
+			var provisioningState string
+			if p := pol.Properties; p != nil {
+				provisioningState = convert.ToValue(p.ProvisioningState)
+			}
+			mqlPol, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(pol.ID),
+					"name":              llx.StringDataPtr(pol.Name),
+					"location":          llx.StringDataPtr(pol.Location),
+					"kind":              llx.StringDataPtr(pol.Kind),
+					"type":              llx.StringDataPtr(pol.Type),
+					"provisioningState": llx.StringData(provisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			if p := pol.Properties; p != nil {
+				mqlPol.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).cacheVirtualMachines = p.VirtualMachines
+			}
+			res = append(res, mqlPol)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) virtualMachines() ([]any, error) {
+	res := []any{}
+	for _, vm := range a.cacheVirtualMachines {
+		if vm == nil {
+			continue
+		}
+		vmId := convert.ToValue(vm.ID)
+		ports, err := convert.JsonToDictSlice(vm.Ports)
+		if err != nil {
+			return nil, err
+		}
+		mqlVM, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine",
+			map[string]*llx.RawData{
+				// synthetic cache key: a VM can appear in only one policy, but
+				// key by policy+VM so it stays unique across policies.
+				"__id":            llx.StringData(a.Id.Data + "/" + vmId),
+				"publicIpAddress": llx.StringData(convert.ToValue(vm.PublicIPAddress)),
+				"ports":           llx.ArrayData(ports, types.Dict),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlVM.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).cacheVmId = vmId
+		res = append(res, mqlVM)
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachineInternal struct {
+	cacheVmId string
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
+	if a.cacheVmId == "" {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
+		"id": llx.StringData(a.cacheVmId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionComputeServiceVm), nil
+}

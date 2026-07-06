@@ -256,6 +256,8 @@ const (
 	ResourceAzureSubscriptionMonitorServiceLogprofile                                                 string = "azure.subscription.monitorService.logprofile"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
 	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                               string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
+	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine                 string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                          string = "azure.subscription.cloudDefenderService.secureScore"
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                                   string = "azure.subscription.cloudDefenderService.secureScoreControl"
 	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                         string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
@@ -1422,6 +1424,14 @@ func init() {
 		"azure.subscription.cloudDefenderService": {
 			Init:   initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
+		},
+		"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy,
+		},
+		"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine,
 		},
 		"azure.subscription.cloudDefenderService.secureScore": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecureScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11138,6 +11148,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.alerts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetAlerts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.alert")))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetJitNetworkAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy")))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetVirtualMachines()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine")))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.vm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).GetVm()).ToDataRes(types.Resource("azure.subscription.computeService.vm"))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).GetPublicIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).GetPorts()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.cloudDefenderService.secureScore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetId()).ToDataRes(types.String)
@@ -30302,6 +30345,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).JitNetworkAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).VirtualMachines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.vm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).Vm, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVm](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).PublicIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.secureScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69925,6 +70020,7 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	RegulatoryComplianceStandards   plugin.TValue[[]any]
 	Assessments                     plugin.TValue[[]any]
 	Alerts                          plugin.TValue[[]any]
+	JitNetworkAccessPolicies        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -70368,6 +70464,179 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetAlerts() *plugin.TValue[[]
 
 		return c.alerts()
 	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetJitNetworkAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.JitNetworkAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "jitNetworkAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jitNetworkAccessPolicies()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy for the azure.subscription.cloudDefenderService.jitNetworkAccessPolicy resource
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	VirtualMachines   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) MqlName() string {
+	return "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) GetVirtualMachines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualMachines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy", c.__id, "virtualMachines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualMachines()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine for the azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine resource
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachineInternal
+	Vm              plugin.TValue[*mqlAzureSubscriptionComputeServiceVm]
+	PublicIpAddress plugin.TValue[string]
+	Ports           plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) MqlName() string {
+	return "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) GetVm() *plugin.TValue[*mqlAzureSubscriptionComputeServiceVm] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceVm](&c.Vm, func() (*mqlAzureSubscriptionComputeServiceVm, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine", c.__id, "vm")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionComputeServiceVm), nil
+			}
+		}
+
+		return c.vm()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) GetPublicIpAddress() *plugin.TValue[string] {
+	return &c.PublicIpAddress
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) GetPorts() *plugin.TValue[[]any] {
+	return &c.Ports
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecureScore for the azure.subscription.cloudDefenderService.secureScore resource

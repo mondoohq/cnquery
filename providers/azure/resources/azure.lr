@@ -7947,6 +7947,49 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   assessments() []azure.subscription.cloudDefenderService.assessment
   // Active security alerts raised by Microsoft Defender for Cloud
   alerts() []azure.subscription.cloudDefenderService.alert
+  // Just-in-time network access policies (on-demand, time-bound VM port access)
+  jitNetworkAccessPolicies() []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy
+}
+
+// Microsoft Defender for Cloud just-in-time network access policy
+//
+// A just-in-time (JIT) VM access policy: instead of leaving management ports
+// open, access is requested on demand and granted for a limited time. Surfaces
+// the governed virtual machines and, per VM, the ports the policy controls and
+// their maximum access duration. Select by the policy's Azure resource ID.
+private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy @defaults("name provisioningState") {
+  // JIT policy ID
+  id string
+  // JIT policy name
+  name string
+  // JIT policy location
+  location string
+  // JIT policy kind
+  kind string
+  // JIT policy resource type
+  type string
+  // Provisioning state of the policy
+  provisioningState string
+  // Virtual machines governed by the policy
+  virtualMachines() []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine
+}
+
+// Just-in-time network access VM configuration
+//
+// The just-in-time access rules for a single virtual machine within a JIT
+// policy: the VM, the Azure Firewall public IP fronting it (if any), and the
+// per-port rules controlling which ports can be opened on demand and for how
+// long.
+private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine @defaults("publicIpAddress") {
+  // Virtual machine the just-in-time rules apply to
+  vm() azure.subscription.computeService.vm
+  // Public IP of the Azure Firewall linked to the policy for this VM; empty when none
+  publicIpAddress string
+  // Per-port just-in-time rules
+  //
+  // Each entry carries number, protocol, maxRequestAccessDuration, and either
+  // allowedSourceAddressPrefix or allowedSourceAddressPrefixes.
+  ports []dict
 }
 
 // Microsoft Defender secure score
