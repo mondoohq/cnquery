@@ -2783,6 +2783,7 @@ aws.dynamodb.limit.tableMaxWrite 11.15.2
 aws.dynamodb.limits 11.15.2
 aws.dynamodb.table 11.15.2
 aws.dynamodb.table.arn 11.15.2
+aws.dynamodb.table.autoScalingEnabled 13.37.1
 aws.dynamodb.table.backups 11.15.2
 aws.dynamodb.table.billingMode 11.16.1
 aws.dynamodb.table.continuousBackups 11.15.2

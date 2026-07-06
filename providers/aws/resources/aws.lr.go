@@ -16927,6 +16927,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.globalSecondaryIndexes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetGlobalSecondaryIndexes()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.dynamodb.table.autoScalingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetAutoScalingEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.sqs.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqs).GetQueues()).ToDataRes(types.Array(types.Resource("aws.sqs.queue")))
 	},
@@ -50922,6 +50925,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dynamodb.table.globalSecondaryIndexes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).GlobalSecondaryIndexes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.autoScalingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).AutoScalingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -122519,6 +122526,7 @@ type mqlAwsDynamodbTable struct {
 	ReplicaRegions            plugin.TValue[[]any]
 	TtlDescription            plugin.TValue[any]
 	GlobalSecondaryIndexes    plugin.TValue[[]any]
+	AutoScalingEnabled        plugin.TValue[bool]
 }
 
 // createAwsDynamodbTable creates a new instance of this resource
@@ -122719,6 +122727,12 @@ func (c *mqlAwsDynamodbTable) GetTtlDescription() *plugin.TValue[any] {
 func (c *mqlAwsDynamodbTable) GetGlobalSecondaryIndexes() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.GlobalSecondaryIndexes, func() ([]any, error) {
 		return c.globalSecondaryIndexes()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetAutoScalingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoScalingEnabled, func() (bool, error) {
+		return c.autoScalingEnabled()
 	})
 }
 

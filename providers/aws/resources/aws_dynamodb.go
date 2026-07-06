@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	aastypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ddtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
@@ -667,6 +669,29 @@ func (a *mqlAwsDynamodbTable) kmsMasterKeyId() (string, error) {
 
 func (a *mqlAwsDynamodbTable) provisionedThroughput() (any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) autoScalingEnabled() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.ApplicationAutoscaling(region)
+	ctx := context.Background()
+
+	paginator := applicationautoscaling.NewDescribeScalableTargetsPaginator(svc, &applicationautoscaling.DescribeScalableTargetsInput{
+		ServiceNamespace: aastypes.ServiceNamespaceDynamodb,
+		ResourceIds:      []string{"table/" + a.Name.Data},
+	})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return false, errors.Wrap(err, "could not describe dynamodb scalable targets")
+		}
+		if len(resp.ScalableTargets) > 0 {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (a *mqlAwsDynamodbTable) createdAt() (*time.Time, error) {

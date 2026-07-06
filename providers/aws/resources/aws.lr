@@ -11236,6 +11236,8 @@ private aws.dynamodb.table @defaults("name region") {
   ttlDescription() dict
   // Global secondary indexes on the table
   globalSecondaryIndexes() []dict
+  // Whether Application Auto Scaling is configured for the table's read or write capacity
+  autoScalingEnabled() bool
 }
 
 // Amazon Simple Queue Service (SQS)
