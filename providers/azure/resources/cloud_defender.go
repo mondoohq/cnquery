@@ -1640,13 +1640,9 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) subAssessments() ([
 	if scope == "" || assessmentName == "" {
 		return []any{}, nil
 	}
-	subId, err := extractSubscriptionID(a.Id.Data)
-	if err != nil {
-		return nil, err
-	}
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
-	clientFactory, err := armsecurity.NewClientFactory(subId, conn.Token(), &arm.ClientOptions{
+	clientFactory, err := armsecurity.NewClientFactory(conn.SubId(), conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
