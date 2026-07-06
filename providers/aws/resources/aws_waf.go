@@ -1128,3 +1128,105 @@ func (a *mqlAwsWafAcl) associatedResources() ([]any, error) {
 
 	return allArns, nil
 }
+
+// associatedLoadBalancers resolves the Application Load Balancers this regional
+// web ACL protects to typed resources. CloudFront-scoped ACLs attach through
+// distributions rather than this API and so return an empty list.
+func (a *mqlAwsWafAcl) associatedLoadBalancers() ([]any, error) {
+	if a.Scope.Data == "CLOUDFRONT" {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	arnVal := a.Arn.Data
+
+	resp, err := svc.ListResourcesForWebACL(context.Background(), &wafv2.ListResourcesForWebACLInput{
+		WebACLArn:    &arnVal,
+		ResourceType: waftypes.ResourceTypeApplicationLoadBalancer,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, lbArn := range resp.ResourceArns {
+		mqlLb, err := NewResource(a.MqlRuntime, ResourceAwsElbLoadbalancer,
+			map[string]*llx.RawData{"arn": llx.StringData(lbArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlLb)
+	}
+	return res, nil
+}
+
+// webAcl resolves the WAFv2 web ACL protecting an Application Load Balancer.
+// Only Application Load Balancers can carry a WAFv2 web ACL, so other load
+// balancer types short-circuit to null.
+func (a *mqlAwsElbLoadbalancer) webAcl() (*mqlAwsWafAcl, error) {
+	elbType := a.GetElbType()
+	if elbType.Error != nil {
+		return nil, elbType.Error
+	}
+	if elbType.Data != "application" {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	arnVal := a.Arn.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(a.Region.Data)
+	resp, err := svc.GetWebACLForResource(context.Background(), &wafv2.GetWebACLForResourceInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp.WebACL == nil || resp.WebACL.ARN == nil {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	// Resolve the associated web ACL ARN to the typed resource from the account
+	// web ACL list.
+	obj, err := CreateResource(a.MqlRuntime, ResourceAwsWaf, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	acl, err := obj.(*mqlAwsWaf).wafAclByArn(*resp.WebACL.ARN)
+	if err != nil {
+		return nil, err
+	}
+	if acl == nil {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return acl, nil
+}
+
+// wafAclByArn returns the web ACL with the given ARN from the account's web ACLs,
+// or nil when none matches.
+func (a *mqlAwsWaf) wafAclByArn(arnVal string) (*mqlAwsWafAcl, error) {
+	acls := a.GetAcls()
+	if acls.Error != nil {
+		return nil, acls.Error
+	}
+	for _, x := range acls.Data {
+		acl, ok := x.(*mqlAwsWafAcl)
+		if !ok {
+			continue
+		}
+		if acl.Arn.Data == arnVal {
+			return acl, nil
+		}
+	}
+	return nil, nil
+}

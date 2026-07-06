@@ -5372,6 +5372,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.associatedResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetAssociatedResources()).ToDataRes(types.Array(types.String))
 	},
+	"aws.waf.acl.associatedLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetAssociatedLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
+	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
 	},
@@ -11041,6 +11044,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.loadbalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetExposure()).ToDataRes(types.Resource("aws.network.exposure"))
+	},
+	"aws.elb.loadbalancer.webAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetWebAcl()).ToDataRes(types.Resource("aws.waf.acl"))
 	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetHostedZoneId()).ToDataRes(types.String)
@@ -34965,6 +34971,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAcl).AssociatedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.waf.acl.associatedLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).AssociatedLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRulegroup).__id, ok = v.Value.(string)
 		return
@@ -43259,6 +43269,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.loadbalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Exposure, ok = plugin.RawToTValue[*mqlAwsNetworkExposure](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.webAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).WebAcl, ok = plugin.RawToTValue[*mqlAwsWafAcl](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79410,6 +79424,7 @@ type mqlAwsWafAcl struct {
 	Scope                    plugin.TValue[string]
 	LoggingConfiguration     plugin.TValue[*mqlAwsWafAclLoggingConfiguration]
 	AssociatedResources      plugin.TValue[[]any]
+	AssociatedLoadBalancers  plugin.TValue[[]any]
 }
 
 // createAwsWafAcl creates a new instance of this resource
@@ -79510,6 +79525,22 @@ func (c *mqlAwsWafAcl) GetLoggingConfiguration() *plugin.TValue[*mqlAwsWafAclLog
 func (c *mqlAwsWafAcl) GetAssociatedResources() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AssociatedResources, func() ([]any, error) {
 		return c.associatedResources()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetAssociatedLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedLoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "associatedLoadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedLoadBalancers()
 	})
 }
 
@@ -101468,6 +101499,7 @@ type mqlAwsElbLoadbalancer struct {
 	State                plugin.TValue[string]
 	SecurityGroups       plugin.TValue[[]any]
 	Exposure             plugin.TValue[*mqlAwsNetworkExposure]
+	WebAcl               plugin.TValue[*mqlAwsWafAcl]
 	HostedZoneId         plugin.TValue[string]
 	Region               plugin.TValue[string]
 	ElbType              plugin.TValue[string]
@@ -101594,6 +101626,22 @@ func (c *mqlAwsElbLoadbalancer) GetExposure() *plugin.TValue[*mqlAwsNetworkExpos
 		}
 
 		return c.exposure()
+	})
+}
+
+func (c *mqlAwsElbLoadbalancer) GetWebAcl() *plugin.TValue[*mqlAwsWafAcl] {
+	return plugin.GetOrCompute[*mqlAwsWafAcl](&c.WebAcl, func() (*mqlAwsWafAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.loadbalancer", c.__id, "webAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafAcl), nil
+			}
+		}
+
+		return c.webAcl()
 	})
 }
 

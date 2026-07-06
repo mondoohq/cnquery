@@ -736,6 +736,13 @@ private aws.waf.acl @defaults("name") {
   loggingConfiguration() aws.waf.acl.loggingConfiguration
   // ARNs of resources associated with this web ACL
   associatedResources() []string
+  // Application Load Balancers protected by this web ACL
+  //
+  // The load balancers this regional web ACL is associated with, resolved to
+  // typed resources. Empty for CloudFront-scoped web ACLs (those attach through
+  // CloudFront distributions) and for regional web ACLs with no load balancer
+  // association.
+  associatedLoadBalancers() []aws.elb.loadbalancer
 }
 
 // Amazon WAF v2 RuleGroup
@@ -5602,6 +5609,14 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   securityGroups []aws.ec2.securitygroup
   // Internet-exposure breakdown (internet-facing scheme combined with security group ingress)
   exposure() aws.network.exposure
+  // WAFv2 web ACL protecting the load balancer
+  //
+  // The regional web ACL associated with an Application Load Balancer, or null
+  // when none is attached or the load balancer is not an Application Load
+  // Balancer (Network, Gateway, and Classic load balancers cannot have a WAFv2
+  // web ACL). Shows whether internet traffic reaching the load balancer passes
+  // through a web application firewall.
+  webAcl() aws.waf.acl
   // ID of the Amazon Route 53 hosted zone associated with the load balancer
   hostedZoneId string
   // Region where the load balancer exists

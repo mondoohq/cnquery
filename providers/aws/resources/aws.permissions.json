@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.43.0",
-  "generated_at": "2026-07-06T12:03:49-07:00",
+  "generated_at": "2026-07-06T13:52:17-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -910,6 +910,7 @@
     "wafv2:GetRegexPatternSet",
     "wafv2:GetRuleGroup",
     "wafv2:GetWebACL",
+    "wafv2:GetWebACLForResource",
     "wafv2:ListIPSets",
     "wafv2:ListRegexPatternSets",
     "wafv2:ListResourcesForWebACL",
@@ -6574,6 +6575,12 @@
       "permission": "wafv2:GetWebACL",
       "service": "wafv2",
       "action": "GetWebACL",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetWebACLForResource",
+      "service": "wafv2",
+      "action": "GetWebACLForResource",
       "source_file": "aws_waf.go"
     },
     {

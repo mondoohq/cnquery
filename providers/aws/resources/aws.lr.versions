@@ -4448,6 +4448,7 @@ aws.elb.loadbalancer.subnets 13.39.2
 aws.elb.loadbalancer.tags 11.15.2
 aws.elb.loadbalancer.targetGroups 11.15.2
 aws.elb.loadbalancer.vpc 11.15.2
+aws.elb.loadbalancer.webAcl 13.43.1
 aws.elb.targetgroup 11.15.2
 aws.elb.targetgroup.arn 11.15.2
 aws.elb.targetgroup.attributes 11.15.2
@@ -10155,6 +10156,7 @@ aws.vpcs 11.15.2
 aws.waf 11.15.2
 aws.waf.acl 11.15.2
 aws.waf.acl.arn 11.15.2
+aws.waf.acl.associatedLoadBalancers 13.43.1
 aws.waf.acl.associatedResources 11.16.1
 aws.waf.acl.description 11.15.2
 aws.waf.acl.id 11.15.2
