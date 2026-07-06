@@ -19184,6 +19184,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.record.aliasTargetHostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Record).GetAliasTargetHostedZoneId()).ToDataRes(types.String)
 	},
+	"aws.route53.record.aliasLoadBalancer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasLoadBalancer()).ToDataRes(types.Resource("aws.elb.loadbalancer"))
+	},
+	"aws.route53.record.aliasCloudFrontDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Record).GetAliasCloudFrontDistribution()).ToDataRes(types.Resource("aws.cloudfront.distribution"))
+	},
 	"aws.route53.record.aliasEvaluateTargetHealth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Record).GetAliasEvaluateTargetHealth()).ToDataRes(types.Bool)
 	},
@@ -55183,6 +55189,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.record.aliasTargetHostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53Record).AliasTargetHostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasLoadBalancer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasLoadBalancer, ok = plugin.RawToTValue[*mqlAwsElbLoadbalancer](v.Value, v.Error)
+		return
+	},
+	"aws.route53.record.aliasCloudFrontDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Record).AliasCloudFrontDistribution, ok = plugin.RawToTValue[*mqlAwsCloudfrontDistribution](v.Value, v.Error)
 		return
 	},
 	"aws.route53.record.aliasEvaluateTargetHealth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -101066,7 +101080,7 @@ func (c *mqlAwsAutoscalingGroupTag) GetResourceType() *plugin.TValue[string] {
 type mqlAwsElb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElbInternal it will be used here
+	mqlAwsElbInternal
 	ClassicLoadBalancers plugin.TValue[[]any]
 	LoadBalancers        plugin.TValue[[]any]
 }
@@ -118787,7 +118801,7 @@ func (c *mqlAwsCloudwatchLogAnomalyDetector) GetRegion() *plugin.TValue[string] 
 type mqlAwsCloudfront struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsCloudfrontInternal it will be used here
+	mqlAwsCloudfrontInternal
 	Distributions                plugin.TValue[[]any]
 	Functions                    plugin.TValue[[]any]
 	AnycastIpLists               plugin.TValue[[]any]
@@ -132805,28 +132819,30 @@ type mqlAwsRoute53Record struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRoute53RecordInternal
-	HostedZoneId              plugin.TValue[string]
-	HostedZone                plugin.TValue[*mqlAwsRoute53HostedZone]
-	Name                      plugin.TValue[string]
-	Type                      plugin.TValue[string]
-	Ttl                       plugin.TValue[int64]
-	ResourceRecords           plugin.TValue[[]any]
-	AliasTarget               plugin.TValue[any]
-	IsAlias                   plugin.TValue[bool]
-	AliasTargetDnsName        plugin.TValue[string]
-	AliasTargetHostedZoneId   plugin.TValue[string]
-	AliasEvaluateTargetHealth plugin.TValue[bool]
-	SetIdentifier             plugin.TValue[string]
-	Weight                    plugin.TValue[int64]
-	Region                    plugin.TValue[string]
-	Failover                  plugin.TValue[string]
-	GeoLocation               plugin.TValue[any]
-	GeoProximityLocation      plugin.TValue[any]
-	MultiValueAnswer          plugin.TValue[bool]
-	HealthCheckId             plugin.TValue[string]
-	HealthCheck               plugin.TValue[*mqlAwsRoute53HealthCheck]
-	CidrRoutingConfig         plugin.TValue[any]
-	TrafficPolicyInstanceId   plugin.TValue[string]
+	HostedZoneId                plugin.TValue[string]
+	HostedZone                  plugin.TValue[*mqlAwsRoute53HostedZone]
+	Name                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Ttl                         plugin.TValue[int64]
+	ResourceRecords             plugin.TValue[[]any]
+	AliasTarget                 plugin.TValue[any]
+	IsAlias                     plugin.TValue[bool]
+	AliasTargetDnsName          plugin.TValue[string]
+	AliasTargetHostedZoneId     plugin.TValue[string]
+	AliasLoadBalancer           plugin.TValue[*mqlAwsElbLoadbalancer]
+	AliasCloudFrontDistribution plugin.TValue[*mqlAwsCloudfrontDistribution]
+	AliasEvaluateTargetHealth   plugin.TValue[bool]
+	SetIdentifier               plugin.TValue[string]
+	Weight                      plugin.TValue[int64]
+	Region                      plugin.TValue[string]
+	Failover                    plugin.TValue[string]
+	GeoLocation                 plugin.TValue[any]
+	GeoProximityLocation        plugin.TValue[any]
+	MultiValueAnswer            plugin.TValue[bool]
+	HealthCheckId               plugin.TValue[string]
+	HealthCheck                 plugin.TValue[*mqlAwsRoute53HealthCheck]
+	CidrRoutingConfig           plugin.TValue[any]
+	TrafficPolicyInstanceId     plugin.TValue[string]
 }
 
 // createAwsRoute53Record creates a new instance of this resource
@@ -132920,6 +132936,38 @@ func (c *mqlAwsRoute53Record) GetAliasTargetDnsName() *plugin.TValue[string] {
 
 func (c *mqlAwsRoute53Record) GetAliasTargetHostedZoneId() *plugin.TValue[string] {
 	return &c.AliasTargetHostedZoneId
+}
+
+func (c *mqlAwsRoute53Record) GetAliasLoadBalancer() *plugin.TValue[*mqlAwsElbLoadbalancer] {
+	return plugin.GetOrCompute[*mqlAwsElbLoadbalancer](&c.AliasLoadBalancer, func() (*mqlAwsElbLoadbalancer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.record", c.__id, "aliasLoadBalancer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsElbLoadbalancer), nil
+			}
+		}
+
+		return c.aliasLoadBalancer()
+	})
+}
+
+func (c *mqlAwsRoute53Record) GetAliasCloudFrontDistribution() *plugin.TValue[*mqlAwsCloudfrontDistribution] {
+	return plugin.GetOrCompute[*mqlAwsCloudfrontDistribution](&c.AliasCloudFrontDistribution, func() (*mqlAwsCloudfrontDistribution, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.record", c.__id, "aliasCloudFrontDistribution")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudfrontDistribution), nil
+			}
+		}
+
+		return c.aliasCloudFrontDistribution()
+	})
 }
 
 func (c *mqlAwsRoute53Record) GetAliasEvaluateTargetHealth() *plugin.TValue[bool] {

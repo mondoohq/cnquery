@@ -29,6 +29,47 @@ func (a *mqlAwsElb) id() (string, error) {
 	return ResourceAwsElb, nil
 }
 
+type mqlAwsElbInternal struct {
+	dnsIndexMu    sync.Mutex
+	dnsIndexBuilt bool
+	dnsIndex      map[string]*mqlAwsElbLoadbalancer
+}
+
+// loadBalancerByDNSName returns the load balancer whose DNS name matches the
+// given already-normalized DNS name, or nil when none matches. It builds a
+// normalized-DNS-name index across all load balancers on first call and reuses
+// it afterwards. The index lives on the aws.elb list resource, which the runtime
+// caches, so many callers (for example every Route 53 alias record resolving its
+// target) share one index instead of each rescanning every load balancer.
+func (a *mqlAwsElb) loadBalancerByDNSName(normalized string) (*mqlAwsElbLoadbalancer, error) {
+	a.dnsIndexMu.Lock()
+	defer a.dnsIndexMu.Unlock()
+
+	if !a.dnsIndexBuilt {
+		lbs := a.GetLoadBalancers()
+		if lbs.Error != nil {
+			return nil, lbs.Error
+		}
+		idx := make(map[string]*mqlAwsElbLoadbalancer, len(lbs.Data))
+		for _, l := range lbs.Data {
+			lb, ok := l.(*mqlAwsElbLoadbalancer)
+			if !ok {
+				continue
+			}
+			dnsName := lb.GetDnsName()
+			if dnsName.Error != nil {
+				return nil, dnsName.Error
+			}
+			if dnsName.Data != "" {
+				idx[normalizeAliasDNSName(dnsName.Data)] = lb
+			}
+		}
+		a.dnsIndex = idx
+		a.dnsIndexBuilt = true
+	}
+	return a.dnsIndex[normalized], nil
+}
+
 func (a *mqlAwsElb) classicLoadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 

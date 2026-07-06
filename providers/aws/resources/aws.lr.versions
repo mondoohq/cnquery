@@ -7851,7 +7851,9 @@ aws.route53.queryLoggingConfig.id 11.15.3
 aws.route53.queryLoggingConfig.logGroup 13.12.1
 aws.route53.queryLoggingConfigs 11.15.3
 aws.route53.record 11.15.3
+aws.route53.record.aliasCloudFrontDistribution 13.43.1
 aws.route53.record.aliasEvaluateTargetHealth 11.15.3
+aws.route53.record.aliasLoadBalancer 13.43.1
 aws.route53.record.aliasTarget 11.15.3
 aws.route53.record.aliasTargetDnsName 11.15.3
 aws.route53.record.aliasTargetHostedZoneId 11.15.3

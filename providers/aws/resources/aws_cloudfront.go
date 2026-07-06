@@ -25,6 +25,47 @@ func (a *mqlAwsCloudfront) id() (string, error) {
 	return "aws.cloudfront", nil
 }
 
+type mqlAwsCloudfrontInternal struct {
+	domainIndexMu    sync.Mutex
+	domainIndexBuilt bool
+	domainIndex      map[string]*mqlAwsCloudfrontDistribution
+}
+
+// distributionByDomainName returns the distribution whose domain name matches
+// the given already-normalized DNS name, or nil when none matches. It builds a
+// normalized-domain-name index on first call and reuses it afterwards. The index
+// lives on the aws.cloudfront list resource, which the runtime caches, so many
+// callers (for example Route 53 alias records) share one index instead of each
+// rescanning every distribution.
+func (a *mqlAwsCloudfront) distributionByDomainName(normalized string) (*mqlAwsCloudfrontDistribution, error) {
+	a.domainIndexMu.Lock()
+	defer a.domainIndexMu.Unlock()
+
+	if !a.domainIndexBuilt {
+		dists := a.GetDistributions()
+		if dists.Error != nil {
+			return nil, dists.Error
+		}
+		idx := make(map[string]*mqlAwsCloudfrontDistribution, len(dists.Data))
+		for _, d := range dists.Data {
+			dist, ok := d.(*mqlAwsCloudfrontDistribution)
+			if !ok {
+				continue
+			}
+			domainName := dist.GetDomainName()
+			if domainName.Error != nil {
+				return nil, domainName.Error
+			}
+			if domainName.Data != "" {
+				idx[normalizeAliasDNSName(domainName.Data)] = dist
+			}
+		}
+		a.domainIndex = idx
+		a.domainIndexBuilt = true
+	}
+	return a.domainIndex[normalized], nil
+}
+
 func (a *mqlAwsCloudfrontDistribution) id() (string, error) {
 	return a.Arn.Data, nil
 }

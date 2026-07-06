@@ -13181,6 +13181,20 @@ private aws.route53.record @defaults("name type") {
   aliasTargetDnsName string
   // Hosted zone ID of the alias target
   aliasTargetHostedZoneId string
+  // Load balancer this record's alias points to
+  //
+  // Resolves an A or AAAA alias record whose target is an Application, Network,
+  // or Classic Load Balancer, matched on the alias target DNS name. Null when
+  // the record is not an alias to a load balancer. Follows the DNS front door of
+  // an ingress path to the load balancer that fronts the workload.
+  aliasLoadBalancer() aws.elb.loadbalancer
+  // CloudFront distribution this record's alias points to
+  //
+  // Resolves an A or AAAA alias record whose target is a CloudFront distribution
+  // (identified by the fixed alias hosted zone Z2FDTNDATAQYW2), matched on the
+  // distribution domain name. Null when the record is not an alias to a
+  // distribution.
+  aliasCloudFrontDistribution() aws.cloudfront.distribution
   // Whether to evaluate target health for alias records
   aliasEvaluateTargetHealth bool
   // Routing policy identifier (for weighted, latency, failover, geolocation routing)

@@ -402,3 +402,56 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 		assert.Empty(t, mqlHc.childHealthChecksCache)
 	})
 }
+
+func TestNormalizeAliasDNSName(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"my-alb-123.us-east-1.elb.amazonaws.com.", "my-alb-123.us-east-1.elb.amazonaws.com"},
+		{"dualstack.my-alb-123.us-east-1.elb.amazonaws.com.", "my-alb-123.us-east-1.elb.amazonaws.com"},
+		{"MY-ALB-123.US-EAST-1.ELB.AMAZONAWS.COM", "my-alb-123.us-east-1.elb.amazonaws.com"},
+		{"d111111abcdef8.cloudfront.net", "d111111abcdef8.cloudfront.net"},
+		{"", ""},
+	}
+	for _, c := range cases {
+		assert.Equal(t, c.want, normalizeAliasDNSName(c.in), "normalizeAliasDNSName(%q)", c.in)
+	}
+}
+
+// TestRecordAliasTargetNullState covers the branches of the alias-target
+// resolvers that return before any resource enumeration: an empty alias target,
+// and a CloudFront resolver short-circuiting when the alias hosted zone is not
+// the fixed CloudFront zone. These are the branches reachable without a live
+// connection.
+func TestRecordAliasTargetNullState(t *testing.T) {
+	t.Run("aliasLoadBalancer is null when alias target DNS name is empty", func(t *testing.T) {
+		record := &mqlAwsRoute53Record{}
+		result, err := record.aliasLoadBalancer()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, record.AliasLoadBalancer.IsNull())
+		assert.True(t, record.AliasLoadBalancer.IsSet())
+	})
+
+	t.Run("aliasCloudFrontDistribution is null when alias hosted zone is not CloudFront", func(t *testing.T) {
+		record := &mqlAwsRoute53Record{}
+		record.AliasTargetHostedZoneId = plugin.TValue[string]{Data: "Z35SXDOTRQ7X7K", State: plugin.StateIsSet}
+		record.AliasTargetDnsName = plugin.TValue[string]{Data: "dualstack.my-alb.us-east-1.elb.amazonaws.com", State: plugin.StateIsSet}
+		result, err := record.aliasCloudFrontDistribution()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, record.AliasCloudFrontDistribution.IsNull())
+		assert.True(t, record.AliasCloudFrontDistribution.IsSet())
+	})
+
+	t.Run("aliasCloudFrontDistribution is null when CloudFront zone but no DNS name", func(t *testing.T) {
+		record := &mqlAwsRoute53Record{}
+		record.AliasTargetHostedZoneId = plugin.TValue[string]{Data: cloudFrontAliasHostedZoneID, State: plugin.StateIsSet}
+		result, err := record.aliasCloudFrontDistribution()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, record.AliasCloudFrontDistribution.IsNull())
+		assert.True(t, record.AliasCloudFrontDistribution.IsSet())
+	})
+}
