@@ -75,6 +75,41 @@ func TestOciNsgIngressVerdict(t *testing.T) {
 	}
 }
 
+func TestOciSecurityListRuleOpensIngress(t *testing.T) {
+	cases := []struct {
+		name string
+		rule map[string]any
+		want bool
+	}{
+		{"any cidr", map[string]any{"source_type": "CIDR_BLOCK", "source": "0.0.0.0/0"}, true},
+		{"any cidr v6", map[string]any{"source_type": "CIDR_BLOCK", "source": "::/0"}, true},
+		{"specific cidr", map[string]any{"source_type": "CIDR_BLOCK", "source": "1.2.3.4/32"}, false},
+		{"service source", map[string]any{"source_type": "SERVICE_CIDR_BLOCK", "source": "all-services"}, false},
+		{"missing source_type but any cidr", map[string]any{"source": "0.0.0.0/0"}, true},
+		{"empty", map[string]any{}, false},
+	}
+	for _, c := range cases {
+		if got := ociSecurityListRuleOpensIngress(c.rule); got != c.want {
+			t.Errorf("ociSecurityListRuleOpensIngress(%s) = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestOciCollectOpenSecurityListRulesEmptyIsOpen(t *testing.T) {
+	// No security list resolvable falls back to OCI's default open posture,
+	// mirroring the network security group "no firewall == open" convention.
+	openRules, allows, err := ociCollectOpenSecurityListRules(nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !allows {
+		t.Errorf("empty security list set should admit ingress (absent == open)")
+	}
+	if len(openRules) != 0 {
+		t.Errorf("empty security list set should surface no open rules, got %d", len(openRules))
+	}
+}
+
 func TestOciWhitelistOpensInternet(t *testing.T) {
 	cases := []struct {
 		name   string

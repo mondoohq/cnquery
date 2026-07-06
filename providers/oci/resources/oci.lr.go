@@ -1400,6 +1400,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
 	},
+	"oci.network.exposure.securityListAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetSecurityListAllowsIngress()).ToDataRes(types.Bool)
+	},
+	"oci.network.exposure.hasRouteToInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkExposure).GetHasRouteToInternet()).ToDataRes(types.Bool)
+	},
 	"oci.network.exposure.openIngressRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkExposure).GetOpenIngressRules()).ToDataRes(types.Array(types.Dict))
 	},
@@ -7128,6 +7134,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkExposure).SecurityGroupAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.exposure.securityListAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).SecurityListAllowsIngress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.exposure.hasRouteToInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkExposure).HasRouteToInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.network.exposure.openIngressRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16428,6 +16442,8 @@ type mqlOciNetworkExposure struct {
 	InternetReachable          plugin.TValue[bool]
 	HasPublicIp                plugin.TValue[bool]
 	SecurityGroupAllowsIngress plugin.TValue[bool]
+	SecurityListAllowsIngress  plugin.TValue[bool]
+	HasRouteToInternet         plugin.TValue[bool]
 	OpenIngressRules           plugin.TValue[[]any]
 }
 
@@ -16473,6 +16489,14 @@ func (c *mqlOciNetworkExposure) GetHasPublicIp() *plugin.TValue[bool] {
 
 func (c *mqlOciNetworkExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
 	return &c.SecurityGroupAllowsIngress
+}
+
+func (c *mqlOciNetworkExposure) GetSecurityListAllowsIngress() *plugin.TValue[bool] {
+	return &c.SecurityListAllowsIngress
+}
+
+func (c *mqlOciNetworkExposure) GetHasRouteToInternet() *plugin.TValue[bool] {
+	return &c.HasRouteToInternet
 }
 
 func (c *mqlOciNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {

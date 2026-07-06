@@ -452,7 +452,12 @@ oci.compute {
 // compute, the subnet's internet-ingress policy) that admit traffic from any
 // address. Shared by compute instances and load balancers.
 private oci.network.exposure @defaults("internetReachable hasPublicIp") {
-  // Whether the resource is reachable from the internet (a public IP and ingress that admits any address)
+  // Whether the resource is reachable from the internet
+  //
+  // True when the resource has a public IP, sits on a subnet that permits
+  // internet ingress and routes a default route to an enabled internet gateway,
+  // and an ingress rule (in an attached network security group or the subnet's
+  // security list) admits traffic from any address.
   internetReachable bool
   // Whether the resource has a public IP
   hasPublicIp bool
@@ -462,7 +467,23 @@ private oci.network.exposure @defaults("internetReachable hasPublicIp") {
   // the subnet's internet-ingress policy is applied only to internetReachable,
   // not here.
   securityGroupAllowsIngress bool
-  // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0); for a load balancer, the listeners reachable from the internet
+  // Whether the subnet's security list admits inbound traffic from any address
+  //
+  // True also when no security list is resolvable, matching the network
+  // security group default. OCI evaluates the union of security list and NSG
+  // rules, so either layer admitting any address opens ingress.
+  securityListAllowsIngress bool
+  // Whether the subnet routes a default route (0.0.0.0/0 or ::/0) to an enabled internet gateway
+  //
+  // A public IP alone does not make a resource internet-reachable in OCI; the
+  // subnet's route table must also forward internet-bound traffic to an internet
+  // gateway. False when the only default route targets a NAT gateway, a DRG, or
+  // nothing.
+  hasRouteToInternet bool
+  // Ingress rules that admit traffic from any address (0.0.0.0/0 or ::/0)
+  //
+  // Combines the matching network security group rules and subnet security list
+  // rules. For a load balancer, the listeners reachable from the internet.
   openIngressRules []dict
 }
 

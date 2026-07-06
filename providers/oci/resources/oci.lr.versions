@@ -1350,9 +1350,11 @@ oci.network.drgAttachment.virtualCircuit 13.13.1
 oci.network.drgs 13.13.1
 oci.network.exposure 13.12.0
 oci.network.exposure.hasPublicIp 13.12.0
+oci.network.exposure.hasRouteToInternet 13.13.1
 oci.network.exposure.internetReachable 13.12.0
 oci.network.exposure.openIngressRules 13.12.0
 oci.network.exposure.securityGroupAllowsIngress 13.12.0
+oci.network.exposure.securityListAllowsIngress 13.13.1
 oci.network.internetGateway 13.1.1
 oci.network.internetGateway.compartment 13.12.2
 oci.network.internetGateway.compartmentID 13.1.1
