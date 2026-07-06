@@ -1830,3 +1830,148 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMa
 	}
 	return r.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
+
+// alertSuppressionRules lists the subscription's alert suppression rules — the
+// rules that auto-dismiss matching security alerts. A broad or non-expiring
+// rule is a detection blind spot worth auditing.
+func (a *mqlAzureSubscriptionCloudDefenderService) alertSuppressionRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := security.NewAlertsSuppressionRulesClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list alert suppression rules due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
+			var alertType, state, reason, comment string
+			var expirationDate, lastModified *time.Time
+			suppressionScope := []any{}
+			if p := rule.Properties; p != nil {
+				alertType = convert.ToValue(p.AlertType)
+				reason = convert.ToValue(p.Reason)
+				comment = convert.ToValue(p.Comment)
+				if p.State != nil {
+					state = string(*p.State)
+				}
+				expirationDate = p.ExpirationDateUTC
+				lastModified = p.LastModifiedUTC
+				if p.SuppressionAlertsScope != nil {
+					scope, err := convert.JsonToDictSlice(p.SuppressionAlertsScope.AllOf)
+					if err != nil {
+						return nil, err
+					}
+					suppressionScope = scope
+				}
+			}
+			mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.alertSuppressionRule",
+				map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(rule.ID),
+					"name":             llx.StringDataPtr(rule.Name),
+					"alertType":        llx.StringData(alertType),
+					"state":            llx.StringData(state),
+					"reason":           llx.StringData(reason),
+					"comment":          llx.StringData(comment),
+					"expirationDate":   llx.TimeDataPtr(expirationDate),
+					"lastModified":     llx.TimeDataPtr(lastModified),
+					"suppressionScope": llx.ArrayData(suppressionScope, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceWorkspaceSettingInternal struct {
+	cacheWorkspaceId string
+}
+
+// workspaceSettings lists the subscription's Defender workspace settings — the
+// Log Analytics workspace each scope's security data is routed to.
+func (a *mqlAzureSubscriptionCloudDefenderService) workspaceSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := security.NewWorkspaceSettingsClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list workspace settings due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ws := range page.Value {
+			if ws == nil {
+				continue
+			}
+			var scope, workspaceId string
+			if p := ws.Properties; p != nil {
+				scope = convert.ToValue(p.Scope)
+				workspaceId = convert.ToValue(p.WorkspaceID)
+			}
+			mqlWs, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.workspaceSetting",
+				map[string]*llx.RawData{
+					"id":    llx.StringDataPtr(ws.ID),
+					"name":  llx.StringDataPtr(ws.Name),
+					"scope": llx.StringData(scope),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlWs.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).cacheWorkspaceId = workspaceId
+			res = append(res, mqlWs)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) workspace() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+	if a.cacheWorkspaceId == "" {
+		a.Workspace.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(a.MqlRuntime, "azure.subscription.monitorService.workspace", map[string]*llx.RawData{
+		"id": llx.StringData(a.cacheWorkspaceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
+}

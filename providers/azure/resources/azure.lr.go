@@ -256,6 +256,8 @@ const (
 	ResourceAzureSubscriptionMonitorServiceLogprofile                                                 string = "azure.subscription.monitorService.logprofile"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
 	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceAlertSuppressionRule                                 string = "azure.subscription.cloudDefenderService.alertSuppressionRule"
+	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                     string = "azure.subscription.cloudDefenderService.workspaceSetting"
 	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                               string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
 	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine                 string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                          string = "azure.subscription.cloudDefenderService.secureScore"
@@ -1424,6 +1426,14 @@ func init() {
 		"azure.subscription.cloudDefenderService": {
 			Init:   initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
+		},
+		"azure.subscription.cloudDefenderService.alertSuppressionRule": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceAlertSuppressionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceAlertSuppressionRule,
+		},
+		"azure.subscription.cloudDefenderService.workspaceSetting": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceWorkspaceSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceWorkspaceSetting,
 		},
 		"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11151,6 +11161,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetJitNetworkAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy")))
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetAlertSuppressionRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.alertSuppressionRule")))
+	},
+	"azure.subscription.cloudDefenderService.workspaceSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetWorkspaceSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.workspaceSetting")))
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.alertType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetAlertType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetReason()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetComment()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.expirationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetExpirationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetLastModified()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.suppressionScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).GetSuppressionScope()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.workspace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).GetWorkspace()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace"))
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).GetId()).ToDataRes(types.String)
@@ -30349,6 +30404,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).JitNetworkAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).AlertSuppressionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).WorkspaceSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.alertType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).AlertType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.expirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).ExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alertSuppressionRule.suppressionScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule).SuppressionScope, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.workspaceSetting.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting).Workspace, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspace](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70021,6 +70144,8 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	Assessments                     plugin.TValue[[]any]
 	Alerts                          plugin.TValue[[]any]
 	JitNetworkAccessPolicies        plugin.TValue[[]any]
+	AlertSuppressionRules           plugin.TValue[[]any]
+	WorkspaceSettings               plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -70479,6 +70604,203 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetJitNetworkAccessPolicies()
 		}
 
 		return c.jitNetworkAccessPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetAlertSuppressionRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlertSuppressionRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "alertSuppressionRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alertSuppressionRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetWorkspaceSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WorkspaceSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "workspaceSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaceSettings()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule for the azure.subscription.cloudDefenderService.alertSuppressionRule resource
+type mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRuleInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	AlertType        plugin.TValue[string]
+	State            plugin.TValue[string]
+	Reason           plugin.TValue[string]
+	Comment          plugin.TValue[string]
+	ExpirationDate   plugin.TValue[*time.Time]
+	LastModified     plugin.TValue[*time.Time]
+	SuppressionScope plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceAlertSuppressionRule creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceAlertSuppressionRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.alertSuppressionRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) MqlName() string {
+	return "azure.subscription.cloudDefenderService.alertSuppressionRule"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetAlertType() *plugin.TValue[string] {
+	return &c.AlertType
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetExpirationDate() *plugin.TValue[*time.Time] {
+	return &c.ExpirationDate
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlertSuppressionRule) GetSuppressionScope() *plugin.TValue[[]any] {
+	return &c.SuppressionScope
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting for the azure.subscription.cloudDefenderService.workspaceSetting resource
+type mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCloudDefenderServiceWorkspaceSettingInternal
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Scope     plugin.TValue[string]
+	Workspace plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
+}
+
+// createAzureSubscriptionCloudDefenderServiceWorkspaceSetting creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceWorkspaceSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.workspaceSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) MqlName() string {
+	return "azure.subscription.cloudDefenderService.workspaceSetting"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceWorkspaceSetting) GetWorkspace() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceWorkspace](&c.Workspace, func() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.workspaceSetting", c.__id, "workspace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
+			}
+		}
+
+		return c.workspace()
 	})
 }
 

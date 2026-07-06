@@ -7949,6 +7949,57 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   alerts() []azure.subscription.cloudDefenderService.alert
   // Just-in-time network access policies (on-demand, time-bound VM port access)
   jitNetworkAccessPolicies() []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy
+  // Alert suppression rules (which alerts are auto-dismissed — potential detection blind spots)
+  alertSuppressionRules() []azure.subscription.cloudDefenderService.alertSuppressionRule
+  // Workspace settings (where the subscription's security data is stored)
+  workspaceSettings() []azure.subscription.cloudDefenderService.workspaceSetting
+}
+
+// Microsoft Defender for Cloud alert suppression rule
+//
+// A rule that automatically dismisses matching security alerts. Useful for
+// auditing detection blind spots: a broad or non-expiring suppression rule can
+// hide real alerts. Surfaces the suppressed alert type, the rule state and
+// reason, its expiration, and the conditions narrowing which alerts it matches.
+// Select by the rule's Azure resource ID.
+private azure.subscription.cloudDefenderService.alertSuppressionRule @defaults("name alertType state") {
+  // Suppression rule ID
+  id string
+  // Suppression rule name
+  name string
+  // Alert type the rule suppresses; "*" suppresses all types
+  alertType string
+  // State of the rule (Enabled, Disabled, Expired)
+  state string
+  // Reason the alert is dismissed
+  reason string
+  // Free-text comment on the rule
+  comment string
+  // When the rule expires; null for no expiration
+  expirationDate time
+  // When the rule was last modified
+  lastModified time
+  // Conditions narrowing which alerts are suppressed
+  //
+  // Each entry carries the alert entity field and its match values; all
+  // conditions must hold for an alert to be suppressed.
+  suppressionScope []dict
+}
+
+// Microsoft Defender for Cloud workspace setting
+//
+// The Log Analytics workspace that a scope's security data is sent to. Surfaces
+// the scope the setting applies to and the target workspace. Select by the
+// setting's Azure resource ID.
+private azure.subscription.cloudDefenderService.workspaceSetting @defaults("name scope") {
+  // Workspace setting ID
+  id string
+  // Workspace setting name
+  name string
+  // Scope the setting applies to; resources under it send security data to the workspace
+  scope string
+  // Log Analytics workspace the security data is stored in
+  workspace() azure.subscription.monitorService.workspace
 }
 
 // Microsoft Defender for Cloud just-in-time network access policy

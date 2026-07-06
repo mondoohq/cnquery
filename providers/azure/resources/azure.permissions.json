@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T21:49:40-07:00",
+  "generated_at": "2026-07-05T22:13:17-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -212,6 +212,7 @@
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Search/searchServices/read",
     "Microsoft.Security/alerts/read",
+    "Microsoft.Security/alertsSuppressionRules/read",
     "Microsoft.Security/assessments/read",
     "Microsoft.Security/autoProvisioningSettings/read",
     "Microsoft.Security/contacts/read",
@@ -224,6 +225,7 @@
     "Microsoft.Security/secureScores/read",
     "Microsoft.Security/settings/read",
     "Microsoft.Security/subAssessments/read",
+    "Microsoft.Security/workspaceSettings/read",
     "Microsoft.Securityinsights/alertRules/read",
     "Microsoft.Securityinsights/dataConnectors/read",
     "Microsoft.ServiceBus/namespaces/queues/read",
@@ -1600,6 +1602,12 @@
       "source_file": "cloud_defender.go"
     },
     {
+      "permission": "Microsoft.Security/alertsSuppressionRules/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
       "permission": "Microsoft.Security/assessments/read",
       "service": "Microsoft.Security",
       "action": "NewListPager",
@@ -1667,6 +1675,12 @@
     },
     {
       "permission": "Microsoft.Security/subAssessments/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/workspaceSettings/read",
       "service": "Microsoft.Security",
       "action": "NewListPager",
       "source_file": "cloud_defender.go"
