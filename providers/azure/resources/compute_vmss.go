@@ -253,14 +253,7 @@ func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) systemAssignedIdentity() 
 			tenantID = t
 		}
 	}
-	identity, err := newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, principalID, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	if identity == nil {
-		a.SystemAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
-	}
-	return identity, nil
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, principalID, tenantID)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) instances() ([]any, error) {
