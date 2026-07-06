@@ -235,12 +235,23 @@ func resolveRoleDefinition(runtime *plugin.Runtime, roleDefinitionId string, fie
 	if err != nil {
 		return nil, err
 	}
-	roles := r.(*mqlAzureSubscription).GetIam().Data.GetRoles().Data
-	for i := range roles {
-		role := roles[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+	iam := r.(*mqlAzureSubscription).GetIam()
+	if iam.Error != nil {
+		return nil, iam.Error
+	}
+	rolesVal := iam.Data.GetRoles()
+	if rolesVal.Error != nil {
+		return nil, rolesVal.Error
+	}
+	for i := range rolesVal.Data {
+		role := rolesVal.Data[i].(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
 		if role.__id == roleDefinitionId {
 			return role, nil
 		}
 	}
-	return nil, errors.New("role definition not found")
+	// The role definition isn't in the subscription's cached list (e.g. a custom
+	// role scoped elsewhere, or eventual consistency). Don't fail the schedule
+	// query over it — surface the schedule with a null role reference.
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
