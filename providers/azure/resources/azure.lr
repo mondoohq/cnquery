@@ -8110,6 +8110,48 @@ private azure.subscription.cloudDefenderService.assessment @defaults("displayNam
   preview bool
   // Description of what the assessment evaluates
   description string
+  // Detailed sub-findings underlying the assessment (per-CVE, per-misconfiguration)
+  subAssessments() []azure.subscription.cloudDefenderService.assessment.subAssessment
+}
+
+// Microsoft Defender for Cloud sub-assessment
+//
+// A detailed finding underlying a security assessment, such as a single CVE
+// from a vulnerability scan or one failed configuration check. Surfaces the
+// finding's status and severity, its category and remediation guidance, the
+// assessed resource details, and finding-specific additional data. Select by
+// the sub-assessment's Azure resource ID.
+private azure.subscription.cloudDefenderService.assessment.subAssessment @defaults("displayName status severity") {
+  // Sub-assessment resource ID
+  id string
+  // Sub-assessment name
+  name string
+  // Human-readable name of the finding
+  displayName string
+  // Finding identifier, such as a CVE, when applicable
+  vulnerabilityId string
+  // Status code of the finding (Healthy, Unhealthy, NotApplicable)
+  status string
+  // Severity of the finding (Low, Medium, High)
+  severity string
+  // Programmatic code for the cause of the status
+  statusCause string
+  // Human-readable description of the status
+  statusDescription string
+  // Category of the finding
+  category string
+  // Description of the finding
+  description string
+  // Description of the impact of the finding
+  impact string
+  // Guidance on how to remediate the finding
+  remediation string
+  // When the finding was generated
+  timeGenerated time
+  // Details of the assessed resource; shape varies by source (Azure, OnPremise, container registry)
+  resourceDetails dict
+  // Finding-specific details; shape varies by type (SQL, container image, server vulnerability)
+  additionalData dict
 }
 
 // Microsoft Defender for Cloud security alert

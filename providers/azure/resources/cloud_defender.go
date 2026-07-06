@@ -1629,3 +1629,99 @@ func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
 	}
 	return res, nil
 }
+
+// subAssessments resolves the detailed findings underlying a security
+// assessment (per-CVE, per-misconfiguration). Sub-assessments are keyed by the
+// assessed resource scope plus the assessment name, both of which the parent
+// assessment already carries.
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) subAssessments() ([]any, error) {
+	scope := a.ResourceId.Data
+	assessmentName := a.Name.Data
+	if scope == "" || assessmentName == "" {
+		return []any{}, nil
+	}
+	subId, err := extractSubscriptionID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	clientFactory, err := armsecurity.NewClientFactory(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	client := clientFactory.NewSubAssessmentsClient()
+	pager := client.NewListPager(scope, assessmentName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, sub := range page.Value {
+			if sub == nil {
+				continue
+			}
+			var displayName, vulnerabilityId, status, severity, statusCause, statusDescription string
+			var category, description, impact, remediation string
+			var timeGenerated *time.Time
+			resourceDetails := map[string]any{}
+			additionalData := map[string]any{}
+			if p := sub.Properties; p != nil {
+				displayName = convert.ToValue(p.DisplayName)
+				vulnerabilityId = convert.ToValue(p.ID)
+				category = convert.ToValue(p.Category)
+				description = convert.ToValue(p.Description)
+				impact = convert.ToValue(p.Impact)
+				remediation = convert.ToValue(p.Remediation)
+				timeGenerated = p.TimeGenerated
+				if s := p.Status; s != nil {
+					if s.Code != nil {
+						status = string(*s.Code)
+					}
+					if s.Severity != nil {
+						severity = string(*s.Severity)
+					}
+					statusCause = convert.ToValue(s.Cause)
+					statusDescription = convert.ToValue(s.Description)
+				}
+				if rd, err := convert.JsonToDict(p.ResourceDetails); err == nil {
+					resourceDetails = rd
+				}
+				if ad, err := convert.JsonToDict(p.AdditionalData); err == nil {
+					additionalData = ad
+				}
+			}
+			mqlSub, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.assessment.subAssessment",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(sub.ID),
+					"name":              llx.StringDataPtr(sub.Name),
+					"displayName":       llx.StringData(displayName),
+					"vulnerabilityId":   llx.StringData(vulnerabilityId),
+					"status":            llx.StringData(status),
+					"severity":          llx.StringData(severity),
+					"statusCause":       llx.StringData(statusCause),
+					"statusDescription": llx.StringData(statusDescription),
+					"category":          llx.StringData(category),
+					"description":       llx.StringData(description),
+					"impact":            llx.StringData(impact),
+					"remediation":       llx.StringData(remediation),
+					"timeGenerated":     llx.TimeDataPtr(timeGenerated),
+					"resourceDetails":   llx.DictData(resourceDetails),
+					"additionalData":    llx.DictData(additionalData),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSub)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment) id() (string, error) {
+	return a.Id.Data, nil
+}
