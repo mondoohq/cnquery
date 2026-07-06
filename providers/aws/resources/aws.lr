@@ -455,7 +455,21 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // Managed prefix list used for the destination match
   managedPrefixList() aws.ec2.managedPrefixList
   // ID of a gateway attached to the VPC
+  //
+  // Covers internet gateways (igw-), virtual private gateways (vgw-), VPC
+  // endpoints (vpce-), and the special `local` route. Use `internetGateway`
+  // or `vpnGateway` for the typed next-hop resource.
   gatewayId string
+  // Internet gateway the route sends traffic to
+  //
+  // Resolves the next hop when `gatewayId` names an internet gateway (igw-),
+  // the route that makes a subnet public. Null for any other gateway kind.
+  internetGateway() aws.ec2.internetgateway
+  // Virtual private gateway the route sends traffic to
+  //
+  // Resolves the next hop when `gatewayId` names a virtual private gateway
+  // (vgw-), the on-ramp for a Site-to-Site VPN. Null for any other gateway kind.
+  vpnGateway() aws.vpc.vpnGateway
   // ID of a NAT instance in the VPC
   //
   // Deprecated in favor of `instance`.
@@ -477,11 +491,33 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // NAT gateway the route sends traffic to
   natGateway() aws.vpc.natgateway
   // ID of a transit gateway
-  transitGatewayId string
+  //
+  // Deprecated in favor of `transitGateway`.
+  transitGatewayId @maturity("deprecated") string
+  // Transit gateway the route sends traffic to
+  //
+  // Resolves the next hop for traffic leaving the VPC across a transit gateway,
+  // the path to other VPCs, on-premises networks, and peered regions. Null when
+  // the route does not target a transit gateway.
+  transitGateway() aws.ec2.transitgateway
   // ID of a VPC peering connection
-  vpcPeeringConnectionId string
+  //
+  // Deprecated in favor of `peeringConnection`.
+  vpcPeeringConnectionId @maturity("deprecated") string
+  // VPC peering connection the route sends traffic to
+  //
+  // Resolves the next hop for traffic crossing into a peered VPC. Null when the
+  // route does not target a peering connection.
+  peeringConnection() aws.vpc.peeringConnection
   // ID of the egress-only internet gateway
-  egressOnlyInternetGatewayId string
+  //
+  // Deprecated in favor of `egressOnlyInternetGateway`.
+  egressOnlyInternetGatewayId @maturity("deprecated") string
+  // Egress-only internet gateway the route sends traffic to
+  //
+  // Resolves the next hop for IPv6 outbound-only internet access. Null when the
+  // route does not target an egress-only internet gateway.
+  egressOnlyInternetGateway() aws.ec2.egressOnlyInternetGateway
   // ID of the local gateway
   localGatewayId string
   // ID of the carrier gateway

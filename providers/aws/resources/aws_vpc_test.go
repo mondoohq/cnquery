@@ -12,6 +12,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
 func TestEc2TagsToMap(t *testing.T) {
@@ -383,5 +384,77 @@ func TestVpnGatewayNullState(t *testing.T) {
 		require.Nil(t, result)
 		assert.True(t, vpn.CustomerGateway.IsNull())
 		assert.True(t, vpn.CustomerGateway.IsSet())
+	})
+}
+
+// TestRouteNextHopNullState covers how a route table route resolves its
+// polymorphic gatewayId into the correct typed next-hop. gatewayId can name an
+// internet gateway (igw-), a virtual private gateway (vgw-), a VPC endpoint, or
+// the local route, so internetGateway() and vpnGateway() must each resolve only
+// their own prefix and return a set-null value otherwise (never cross-resolve).
+func TestRouteNextHopNullState(t *testing.T) {
+	t.Run("internetGateway is null when gatewayId is empty", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		result, err := route.internetGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.InternetGateway.IsNull())
+		assert.True(t, route.InternetGateway.IsSet())
+	})
+
+	t.Run("internetGateway is null when gatewayId is a virtual private gateway", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		route.GatewayId = plugin.TValue[string]{Data: "vgw-0123456789abcdef0", State: plugin.StateIsSet}
+		result, err := route.internetGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.InternetGateway.IsNull())
+		assert.True(t, route.InternetGateway.IsSet())
+	})
+
+	t.Run("vpnGateway is null when gatewayId is empty", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		result, err := route.vpnGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.VpnGateway.IsNull())
+		assert.True(t, route.VpnGateway.IsSet())
+	})
+
+	t.Run("vpnGateway is null when gatewayId is an internet gateway", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		route.GatewayId = plugin.TValue[string]{Data: "igw-0123456789abcdef0", State: plugin.StateIsSet}
+		result, err := route.vpnGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.VpnGateway.IsNull())
+		assert.True(t, route.VpnGateway.IsSet())
+	})
+
+	t.Run("egressOnlyInternetGateway is null when id is empty", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		result, err := route.egressOnlyInternetGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.EgressOnlyInternetGateway.IsNull())
+		assert.True(t, route.EgressOnlyInternetGateway.IsSet())
+	})
+
+	t.Run("transitGateway is null when transitGatewayId is empty", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		result, err := route.transitGateway()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.TransitGateway.IsNull())
+		assert.True(t, route.TransitGateway.IsSet())
+	})
+
+	t.Run("peeringConnection is null when vpcPeeringConnectionId is empty", func(t *testing.T) {
+		route := &mqlAwsVpcRoutetableRoute{}
+		result, err := route.peeringConnection()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, route.PeeringConnection.IsNull())
+		assert.True(t, route.PeeringConnection.IsSet())
 	})
 }

@@ -3022,18 +3022,7 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 						log.Debug().Interface("igw", gateway.InternetGatewayId).Msg("excluding internet gateway due to filters")
 						continue
 					}
-					jsonAttachments, err := convert.JsonToDictSlice(gateway.Attachments)
-					if err != nil {
-						return nil, err
-					}
-					mqlInternetGw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
-						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, conn.AccountId(), convert.ToValue(gateway.InternetGatewayId))),
-							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
-							"region":      llx.StringData(region),
-							"attachments": llx.ArrayData(jsonAttachments, types.Any),
-							"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(gateway.Tags)), types.String),
-						})
+					mqlInternetGw, err := newMqlAwsEc2Internetgateway(a.MqlRuntime, region, conn, gateway)
 					if err != nil {
 						return nil, err
 					}
@@ -3051,8 +3040,200 @@ func (a *mqlAwsEc2Internetgateway) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+// newMqlAwsEc2Internetgateway builds an aws.ec2.internetgateway resource from an
+// SDK InternetGateway. Shared by the account-level list and the by-id init so
+// both paths produce an identically shaped resource.
+func newMqlAwsEc2Internetgateway(runtime *plugin.Runtime, region string, conn *connection.AwsConnection, gateway ec2types.InternetGateway) (plugin.Resource, error) {
+	jsonAttachments, err := convert.JsonToDictSlice(gateway.Attachments)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, ResourceAwsEc2Internetgateway,
+		map[string]*llx.RawData{
+			"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, conn.AccountId(), convert.ToValue(gateway.InternetGatewayId))),
+			"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
+			"region":      llx.StringData(region),
+			"attachments": llx.ArrayData(jsonAttachments, types.Any),
+			"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(gateway.Tags)), types.String),
+		})
+}
+
+func initAwsEc2Internetgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil && args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	var igwID, region string
+	if args["id"] != nil {
+		igwID, _ = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		region, _ = args["region"].Value.(string)
+	}
+	if args["arn"] != nil {
+		if parsed, err := arn.Parse(args["arn"].Value.(string)); err == nil {
+			region = parsed.Region
+			parts := strings.Split(parsed.Resource, "/")
+			if len(parts) == 2 {
+				igwID = parts[1]
+			}
+		}
+	}
+	// Without both id and region a targeted lookup is not possible; hand back a
+	// bare resource.
+	if igwID == "" || region == "" {
+		return args, nil, nil
+	}
+
+	// Reuse the internet gateway already materialized by aws.ec2.internetGateways()
+	// (routes commonly share one gateway) before spending a DescribeInternetGateways call.
+	cacheID := ResourceAwsEc2Internetgateway + "\x00" + fmt.Sprintf(internetGwArnPattern, region, conn.AccountId(), igwID)
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
+	}
+
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeInternetGateways(context.Background(), &ec2.DescribeInternetGatewaysInput{
+		InternetGatewayIds: []string{igwID},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.InternetGateways) == 0 {
+		return args, nil, nil
+	}
+	res, err := newMqlAwsEc2Internetgateway(runtime, region, conn, resp.InternetGateways[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (a *mqlAwsEc2Transitgateway) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// newMqlAwsEc2Transitgateway builds an aws.ec2.transitgateway from an SDK
+// TransitGateway, flattening its Options block. Shared by the account-level list
+// and the by-id init.
+func newMqlAwsEc2Transitgateway(runtime *plugin.Runtime, region string, tgw ec2types.TransitGateway) (plugin.Resource, error) {
+	tgwArn := convert.ToValue(tgw.TransitGatewayArn)
+	if tgwArn == "" {
+		tgwArn = fmt.Sprintf(transitGatewayArnPattern, region, convert.ToValue(tgw.OwnerId), convert.ToValue(tgw.TransitGatewayId))
+	}
+
+	// Flatten Options
+	var amazonSideAsn int64
+	var autoAcceptSharedAttachments, defaultRouteTableAssociation, defaultRouteTablePropagation bool
+	var dnsSupport, multicastSupport, vpnEcmpSupport bool
+	var transitGatewayCidrBlocks []string
+	var associationDefaultRouteTableId, propagationDefaultRouteTableId string
+	if opts := tgw.Options; opts != nil {
+		if opts.AmazonSideAsn != nil {
+			amazonSideAsn = *opts.AmazonSideAsn
+		}
+		autoAcceptSharedAttachments = string(opts.AutoAcceptSharedAttachments) == "enable"
+		defaultRouteTableAssociation = string(opts.DefaultRouteTableAssociation) == "enable"
+		defaultRouteTablePropagation = string(opts.DefaultRouteTablePropagation) == "enable"
+		dnsSupport = string(opts.DnsSupport) == "enable"
+		multicastSupport = string(opts.MulticastSupport) == "enable"
+		vpnEcmpSupport = string(opts.VpnEcmpSupport) == "enable"
+		transitGatewayCidrBlocks = opts.TransitGatewayCidrBlocks
+		associationDefaultRouteTableId = convert.ToValue(opts.AssociationDefaultRouteTableId)
+		propagationDefaultRouteTableId = convert.ToValue(opts.PropagationDefaultRouteTableId)
+	}
+
+	mqlTgw, err := CreateResource(runtime, ResourceAwsEc2Transitgateway,
+		map[string]*llx.RawData{
+			"__id":                           llx.StringData(tgwArn),
+			"arn":                            llx.StringData(tgwArn),
+			"id":                             llx.StringData(convert.ToValue(tgw.TransitGatewayId)),
+			"ownerId":                        llx.StringData(convert.ToValue(tgw.OwnerId)),
+			"state":                          llx.StringData(string(tgw.State)),
+			"description":                    llx.StringData(convert.ToValue(tgw.Description)),
+			"region":                         llx.StringData(region),
+			"createdAt":                      llx.TimeDataPtr(tgw.CreationTime),
+			"tags":                           llx.MapData(toInterfaceMap(ec2TagsToMap(tgw.Tags)), types.String),
+			"amazonSideAsn":                  llx.IntData(amazonSideAsn),
+			"autoAcceptSharedAttachments":    llx.BoolData(autoAcceptSharedAttachments),
+			"defaultRouteTableAssociation":   llx.BoolData(defaultRouteTableAssociation),
+			"defaultRouteTablePropagation":   llx.BoolData(defaultRouteTablePropagation),
+			"dnsSupport":                     llx.BoolData(dnsSupport),
+			"multicastSupport":               llx.BoolData(multicastSupport),
+			"vpnEcmpSupport":                 llx.BoolData(vpnEcmpSupport),
+			"transitGatewayCidrBlocks":       llx.ArrayData(convert.SliceAnyToInterface(transitGatewayCidrBlocks), types.String),
+			"associationDefaultRouteTableId": llx.StringData(associationDefaultRouteTableId),
+			"propagationDefaultRouteTableId": llx.StringData(propagationDefaultRouteTableId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlTgw.(*mqlAwsEc2Transitgateway).region = region
+	return mqlTgw, nil
+}
+
+func initAwsEc2Transitgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil && args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	var tgwID, region string
+	if args["id"] != nil {
+		tgwID, _ = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		region, _ = args["region"].Value.(string)
+	}
+	if args["arn"] != nil {
+		if parsed, err := arn.Parse(args["arn"].Value.(string)); err == nil {
+			region = parsed.Region
+			parts := strings.Split(parsed.Resource, "/")
+			if len(parts) == 2 {
+				tgwID = parts[1]
+			}
+		}
+	}
+	if tgwID == "" || region == "" {
+		return args, nil, nil
+	}
+
+	// Reuse a transit gateway already listed before spending an API call. The
+	// cache key uses the caller's account; a cross-account shared gateway misses
+	// here and is fetched below (still correct).
+	cacheID := ResourceAwsEc2Transitgateway + "\x00" + fmt.Sprintf(transitGatewayArnPattern, region, conn.AccountId(), tgwID)
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
+	}
+
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeTransitGateways(context.Background(), &ec2.DescribeTransitGatewaysInput{
+		TransitGatewayIds: []string{tgwID},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.TransitGateways) == 0 {
+		return args, nil, nil
+	}
+	res, err := newMqlAwsEc2Transitgateway(runtime, region, resp.TransitGateways[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (a *mqlAwsEc2) transitGateways() ([]any, error) {
@@ -3098,59 +3279,10 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 						log.Debug().Interface("tgw", tgw.TransitGatewayId).Msg("excluding transit gateway due to filters")
 						continue
 					}
-
-					tgwArn := convert.ToValue(tgw.TransitGatewayArn)
-					if tgwArn == "" {
-						tgwArn = fmt.Sprintf(transitGatewayArnPattern, region, convert.ToValue(tgw.OwnerId), convert.ToValue(tgw.TransitGatewayId))
-					}
-
-					// Flatten Options
-					var amazonSideAsn int64
-					var autoAcceptSharedAttachments, defaultRouteTableAssociation, defaultRouteTablePropagation bool
-					var dnsSupport, multicastSupport, vpnEcmpSupport bool
-					var transitGatewayCidrBlocks []string
-					var associationDefaultRouteTableId, propagationDefaultRouteTableId string
-					if opts := tgw.Options; opts != nil {
-						if opts.AmazonSideAsn != nil {
-							amazonSideAsn = *opts.AmazonSideAsn
-						}
-						autoAcceptSharedAttachments = string(opts.AutoAcceptSharedAttachments) == "enable"
-						defaultRouteTableAssociation = string(opts.DefaultRouteTableAssociation) == "enable"
-						defaultRouteTablePropagation = string(opts.DefaultRouteTablePropagation) == "enable"
-						dnsSupport = string(opts.DnsSupport) == "enable"
-						multicastSupport = string(opts.MulticastSupport) == "enable"
-						vpnEcmpSupport = string(opts.VpnEcmpSupport) == "enable"
-						transitGatewayCidrBlocks = opts.TransitGatewayCidrBlocks
-						associationDefaultRouteTableId = convert.ToValue(opts.AssociationDefaultRouteTableId)
-						propagationDefaultRouteTableId = convert.ToValue(opts.PropagationDefaultRouteTableId)
-					}
-
-					mqlTgw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
-						map[string]*llx.RawData{
-							"__id":                           llx.StringData(tgwArn),
-							"arn":                            llx.StringData(tgwArn),
-							"id":                             llx.StringData(convert.ToValue(tgw.TransitGatewayId)),
-							"ownerId":                        llx.StringData(convert.ToValue(tgw.OwnerId)),
-							"state":                          llx.StringData(string(tgw.State)),
-							"description":                    llx.StringData(convert.ToValue(tgw.Description)),
-							"region":                         llx.StringData(region),
-							"createdAt":                      llx.TimeDataPtr(tgw.CreationTime),
-							"tags":                           llx.MapData(toInterfaceMap(ec2TagsToMap(tgw.Tags)), types.String),
-							"amazonSideAsn":                  llx.IntData(amazonSideAsn),
-							"autoAcceptSharedAttachments":    llx.BoolData(autoAcceptSharedAttachments),
-							"defaultRouteTableAssociation":   llx.BoolData(defaultRouteTableAssociation),
-							"defaultRouteTablePropagation":   llx.BoolData(defaultRouteTablePropagation),
-							"dnsSupport":                     llx.BoolData(dnsSupport),
-							"multicastSupport":               llx.BoolData(multicastSupport),
-							"vpnEcmpSupport":                 llx.BoolData(vpnEcmpSupport),
-							"transitGatewayCidrBlocks":       llx.ArrayData(convert.SliceAnyToInterface(transitGatewayCidrBlocks), types.String),
-							"associationDefaultRouteTableId": llx.StringData(associationDefaultRouteTableId),
-							"propagationDefaultRouteTableId": llx.StringData(propagationDefaultRouteTableId),
-						})
+					mqlTgw, err := newMqlAwsEc2Transitgateway(a.MqlRuntime, region, tgw)
 					if err != nil {
 						return nil, err
 					}
-					mqlTgw.(*mqlAwsEc2Transitgateway).region = region
 					res = append(res, mqlTgw)
 				}
 			}
@@ -3526,6 +3658,79 @@ func (a *mqlAwsEc2EgressOnlyInternetGateway) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+// newMqlAwsEc2EgressOnlyInternetGateway builds an aws.ec2.egressOnlyInternetGateway
+// from an SDK EgressOnlyInternetGateway. Shared by the account-level list and the
+// by-id init.
+func newMqlAwsEc2EgressOnlyInternetGateway(runtime *plugin.Runtime, region string, conn *connection.AwsConnection, eigw ec2types.EgressOnlyInternetGateway) (plugin.Resource, error) {
+	attachments, err := convert.JsonToDictSlice(eigw.Attachments)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, ResourceAwsEc2EgressOnlyInternetGateway,
+		map[string]*llx.RawData{
+			"id":          llx.StringData(convert.ToValue(eigw.EgressOnlyInternetGatewayId)),
+			"arn":         llx.StringData(fmt.Sprintf(egressOnlyIgwArnPattern, region, conn.AccountId(), convert.ToValue(eigw.EgressOnlyInternetGatewayId))),
+			"region":      llx.StringData(region),
+			"attachments": llx.ArrayData(attachments, types.Any),
+			"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(eigw.Tags)), types.String),
+		})
+}
+
+func initAwsEc2EgressOnlyInternetGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil && args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	var eigwID, region string
+	if args["id"] != nil {
+		eigwID, _ = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		region, _ = args["region"].Value.(string)
+	}
+	if args["arn"] != nil {
+		if parsed, err := arn.Parse(args["arn"].Value.(string)); err == nil {
+			region = parsed.Region
+			parts := strings.Split(parsed.Resource, "/")
+			if len(parts) == 2 {
+				eigwID = parts[1]
+			}
+		}
+	}
+	if eigwID == "" || region == "" {
+		return args, nil, nil
+	}
+
+	// Reuse an egress-only gateway already listed before spending an API call.
+	cacheID := ResourceAwsEc2EgressOnlyInternetGateway + "\x00" + fmt.Sprintf(egressOnlyIgwArnPattern, region, conn.AccountId(), eigwID)
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
+	}
+
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeEgressOnlyInternetGateways(context.Background(), &ec2.DescribeEgressOnlyInternetGatewaysInput{
+		EgressOnlyInternetGatewayIds: []string{eigwID},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.EgressOnlyInternetGateways) == 0 {
+		return args, nil, nil
+	}
+	res, err := newMqlAwsEc2EgressOnlyInternetGateway(runtime, region, conn, resp.EgressOnlyInternetGateways[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
 func (a *mqlAwsEc2) egressOnlyInternetGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -3568,15 +3773,7 @@ func (a *mqlAwsEc2) getEgressOnlyIGWs(conn *connection.AwsConnection) []*jobpool
 					if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(eigw.Tags)) {
 						continue
 					}
-					attachments, _ := convert.JsonToDictSlice(eigw.Attachments)
-					mqlEigw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2EgressOnlyInternetGateway,
-						map[string]*llx.RawData{
-							"id":          llx.StringData(convert.ToValue(eigw.EgressOnlyInternetGatewayId)),
-							"arn":         llx.StringData(fmt.Sprintf(egressOnlyIgwArnPattern, region, conn.AccountId(), convert.ToValue(eigw.EgressOnlyInternetGatewayId))),
-							"region":      llx.StringData(region),
-							"attachments": llx.ArrayData(attachments, types.Any),
-							"tags":        llx.MapData(toInterfaceMap(ec2TagsToMap(eigw.Tags)), types.String),
-						})
+					mqlEigw, err := newMqlAwsEc2EgressOnlyInternetGateway(a.MqlRuntime, region, conn, eigw)
 					if err != nil {
 						return nil, err
 					}

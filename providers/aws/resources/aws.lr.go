@@ -3100,7 +3100,7 @@ func init() {
 			Create: createAwsVpcServiceEndpoint,
 		},
 		"aws.vpc.peeringConnection": {
-			// to override args, implement: initAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsVpcPeeringConnection,
 			Create: createAwsVpcPeeringConnection,
 		},
 		"aws.vpc.peeringConnection.peeringVpc": {
@@ -3132,11 +3132,11 @@ func init() {
 			Create: createAwsEc2Vgwtelemetry,
 		},
 		"aws.ec2.internetgateway": {
-			// to override args, implement: initAwsEc2Internetgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2Internetgateway,
 			Create: createAwsEc2Internetgateway,
 		},
 		"aws.ec2.transitgateway": {
-			// to override args, implement: initAwsEc2Transitgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2Transitgateway,
 			Create: createAwsEc2Transitgateway,
 		},
 		"aws.ec2.transitgateway.attachment": {
@@ -3172,7 +3172,7 @@ func init() {
 			Create: createAwsEc2CustomerGateway,
 		},
 		"aws.ec2.egressOnlyInternetGateway": {
-			// to override args, implement: initAwsEc2EgressOnlyInternetGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2EgressOnlyInternetGateway,
 			Create: createAwsEc2EgressOnlyInternetGateway,
 		},
 		"aws.ec2.placementGroup": {
@@ -5057,6 +5057,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routetable.route.gatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetGatewayId()).ToDataRes(types.String)
 	},
+	"aws.vpc.routetable.route.internetGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetInternetGateway()).ToDataRes(types.Resource("aws.ec2.internetgateway"))
+	},
+	"aws.vpc.routetable.route.vpnGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetVpnGateway()).ToDataRes(types.Resource("aws.vpc.vpnGateway"))
+	},
 	"aws.vpc.routetable.route.instanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetInstanceId()).ToDataRes(types.String)
 	},
@@ -5081,11 +5087,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routetable.route.transitGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetTransitGatewayId()).ToDataRes(types.String)
 	},
+	"aws.vpc.routetable.route.transitGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetTransitGateway()).ToDataRes(types.Resource("aws.ec2.transitgateway"))
+	},
 	"aws.vpc.routetable.route.vpcPeeringConnectionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetVpcPeeringConnectionId()).ToDataRes(types.String)
 	},
+	"aws.vpc.routetable.route.peeringConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetPeeringConnection()).ToDataRes(types.Resource("aws.vpc.peeringConnection"))
+	},
 	"aws.vpc.routetable.route.egressOnlyInternetGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetEgressOnlyInternetGatewayId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.route.egressOnlyInternetGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetableRoute).GetEgressOnlyInternetGateway()).ToDataRes(types.Resource("aws.ec2.egressOnlyInternetGateway"))
 	},
 	"aws.vpc.routetable.route.localGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetableRoute).GetLocalGatewayId()).ToDataRes(types.String)
@@ -34502,6 +34517,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcRoutetableRoute).GatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.route.internetGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).InternetGateway, ok = plugin.RawToTValue[*mqlAwsEc2Internetgateway](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.route.vpnGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).VpnGateway, ok = plugin.RawToTValue[*mqlAwsVpcVpnGateway](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.route.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34534,12 +34557,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcRoutetableRoute).TransitGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.route.transitGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).TransitGateway, ok = plugin.RawToTValue[*mqlAwsEc2Transitgateway](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.route.vpcPeeringConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).VpcPeeringConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.route.peeringConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).PeeringConnection, ok = plugin.RawToTValue[*mqlAwsVpcPeeringConnection](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.routetable.route.egressOnlyInternetGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetableRoute).EgressOnlyInternetGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.route.egressOnlyInternetGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetableRoute).EgressOnlyInternetGateway, ok = plugin.RawToTValue[*mqlAwsEc2EgressOnlyInternetGateway](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.route.localGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78228,6 +78263,8 @@ type mqlAwsVpcRoutetableRoute struct {
 	DestinationPrefixListId     plugin.TValue[string]
 	ManagedPrefixList           plugin.TValue[*mqlAwsEc2ManagedPrefixList]
 	GatewayId                   plugin.TValue[string]
+	InternetGateway             plugin.TValue[*mqlAwsEc2Internetgateway]
+	VpnGateway                  plugin.TValue[*mqlAwsVpcVpnGateway]
 	InstanceId                  plugin.TValue[string]
 	Instance                    plugin.TValue[*mqlAwsEc2Instance]
 	InstanceOwnerId             plugin.TValue[string]
@@ -78236,8 +78273,11 @@ type mqlAwsVpcRoutetableRoute struct {
 	NatGatewayId                plugin.TValue[string]
 	NatGateway                  plugin.TValue[*mqlAwsVpcNatgateway]
 	TransitGatewayId            plugin.TValue[string]
+	TransitGateway              plugin.TValue[*mqlAwsEc2Transitgateway]
 	VpcPeeringConnectionId      plugin.TValue[string]
+	PeeringConnection           plugin.TValue[*mqlAwsVpcPeeringConnection]
 	EgressOnlyInternetGatewayId plugin.TValue[string]
+	EgressOnlyInternetGateway   plugin.TValue[*mqlAwsEc2EgressOnlyInternetGateway]
 	LocalGatewayId              plugin.TValue[string]
 	CarrierGatewayId            plugin.TValue[string]
 	CoreNetworkArn              plugin.TValue[string]
@@ -78318,6 +78358,38 @@ func (c *mqlAwsVpcRoutetableRoute) GetGatewayId() *plugin.TValue[string] {
 	return &c.GatewayId
 }
 
+func (c *mqlAwsVpcRoutetableRoute) GetInternetGateway() *plugin.TValue[*mqlAwsEc2Internetgateway] {
+	return plugin.GetOrCompute[*mqlAwsEc2Internetgateway](&c.InternetGateway, func() (*mqlAwsEc2Internetgateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "internetGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Internetgateway), nil
+			}
+		}
+
+		return c.internetGateway()
+	})
+}
+
+func (c *mqlAwsVpcRoutetableRoute) GetVpnGateway() *plugin.TValue[*mqlAwsVpcVpnGateway] {
+	return plugin.GetOrCompute[*mqlAwsVpcVpnGateway](&c.VpnGateway, func() (*mqlAwsVpcVpnGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "vpnGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcVpnGateway), nil
+			}
+		}
+
+		return c.vpnGateway()
+	})
+}
+
 func (c *mqlAwsVpcRoutetableRoute) GetInstanceId() *plugin.TValue[string] {
 	return &c.InstanceId
 }
@@ -78386,12 +78458,60 @@ func (c *mqlAwsVpcRoutetableRoute) GetTransitGatewayId() *plugin.TValue[string] 
 	return &c.TransitGatewayId
 }
 
+func (c *mqlAwsVpcRoutetableRoute) GetTransitGateway() *plugin.TValue[*mqlAwsEc2Transitgateway] {
+	return plugin.GetOrCompute[*mqlAwsEc2Transitgateway](&c.TransitGateway, func() (*mqlAwsEc2Transitgateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "transitGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Transitgateway), nil
+			}
+		}
+
+		return c.transitGateway()
+	})
+}
+
 func (c *mqlAwsVpcRoutetableRoute) GetVpcPeeringConnectionId() *plugin.TValue[string] {
 	return &c.VpcPeeringConnectionId
 }
 
+func (c *mqlAwsVpcRoutetableRoute) GetPeeringConnection() *plugin.TValue[*mqlAwsVpcPeeringConnection] {
+	return plugin.GetOrCompute[*mqlAwsVpcPeeringConnection](&c.PeeringConnection, func() (*mqlAwsVpcPeeringConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "peeringConnection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcPeeringConnection), nil
+			}
+		}
+
+		return c.peeringConnection()
+	})
+}
+
 func (c *mqlAwsVpcRoutetableRoute) GetEgressOnlyInternetGatewayId() *plugin.TValue[string] {
 	return &c.EgressOnlyInternetGatewayId
+}
+
+func (c *mqlAwsVpcRoutetableRoute) GetEgressOnlyInternetGateway() *plugin.TValue[*mqlAwsEc2EgressOnlyInternetGateway] {
+	return plugin.GetOrCompute[*mqlAwsEc2EgressOnlyInternetGateway](&c.EgressOnlyInternetGateway, func() (*mqlAwsEc2EgressOnlyInternetGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.routetable.route", c.__id, "egressOnlyInternetGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2EgressOnlyInternetGateway), nil
+			}
+		}
+
+		return c.egressOnlyInternetGateway()
+	})
 }
 
 func (c *mqlAwsVpcRoutetableRoute) GetLocalGatewayId() *plugin.TValue[string] {

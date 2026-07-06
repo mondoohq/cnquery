@@ -676,45 +676,10 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 				}
 				seen[id] = struct{}{}
 
-				status := ""
-				if peerconn.Status != nil {
-					status = convert.ToValue(peerconn.Status.Message)
-				}
-				// Determine DNS resolution status from peering options
-				dnsResolution := false
-				if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
-					peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-					dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-				}
-				if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
-					peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
-					dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
-				}
-
-				var requesterAccountId, accepterAccountId string
-				if peerconn.RequesterVpcInfo != nil {
-					requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
-				}
-				if peerconn.AccepterVpcInfo != nil {
-					accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
-				}
-
-				mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
-					map[string]*llx.RawData{
-						"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
-						"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
-						"status":               llx.StringData(status),
-						"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
-						"requesterAccountId":   llx.StringData(requesterAccountId),
-						"accepterAccountId":    llx.StringData(accepterAccountId),
-						"dnsResolutionEnabled": llx.BoolData(dnsResolution),
-					},
-				)
+				mqlPeerConn, err := newMqlAwsVpcPeeringConnection(a.MqlRuntime, a.Region.Data, peerconn)
 				if err != nil {
 					return nil, err
 				}
-				mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
-				mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = a.Region.Data
 				pcs = append(pcs, mqlPeerConn)
 			}
 		}
@@ -729,6 +694,99 @@ func (a *mqlAwsVpcPeeringConnectionPeeringVpc) id() (string, error) {
 type mqlAwsVpcPeeringConnectionInternal struct {
 	peeringConnectionCache vpctypes.VpcPeeringConnection
 	region                 string
+}
+
+// newMqlAwsVpcPeeringConnection builds an aws.vpc.peeringConnection from an SDK
+// VpcPeeringConnection. Shared by the per-VPC list and the by-id init. The
+// acceptor/requestor VPC sub-resources are resolved lazily from the cached SDK
+// struct by their own accessors, so only the scalar fields are set here.
+func newMqlAwsVpcPeeringConnection(runtime *plugin.Runtime, region string, peerconn vpctypes.VpcPeeringConnection) (plugin.Resource, error) {
+	status := ""
+	if peerconn.Status != nil {
+		status = convert.ToValue(peerconn.Status.Message)
+	}
+	// Determine DNS resolution status from peering options
+	dnsResolution := false
+	if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
+		peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+		dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+	}
+	if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
+		peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+		dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+	}
+
+	var requesterAccountId, accepterAccountId string
+	if peerconn.RequesterVpcInfo != nil {
+		requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
+	}
+	if peerconn.AccepterVpcInfo != nil {
+		accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
+	}
+
+	mqlPeerConn, err := CreateResource(runtime, ResourceAwsVpcPeeringConnection,
+		map[string]*llx.RawData{
+			"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
+			"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
+			"status":               llx.StringData(status),
+			"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
+			"requesterAccountId":   llx.StringData(requesterAccountId),
+			"accepterAccountId":    llx.StringData(accepterAccountId),
+			"dnsResolutionEnabled": llx.BoolData(dnsResolution),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	mqlPeerConn.(*mqlAwsVpcPeeringConnection).peeringConnectionCache = peerconn
+	mqlPeerConn.(*mqlAwsVpcPeeringConnection).region = region
+	return mqlPeerConn, nil
+}
+
+func initAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// region is a lookup hint, not a schema field on aws.vpc.peeringConnection.
+	var region string
+	if r := args["region"]; r != nil {
+		region, _ = r.Value.(string)
+		delete(args, "region")
+	}
+
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil || region == "" {
+		return args, nil, nil
+	}
+	pcxID, _ := args["id"].Value.(string)
+	if pcxID == "" {
+		return args, nil, nil
+	}
+
+	// Reuse a peering connection already listed before spending an API call.
+	cacheID := ResourceAwsVpcPeeringConnection + "\x00" + pcxID
+	if cached, ok := runtime.Resources.Get(cacheID); ok {
+		return args, cached, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeVpcPeeringConnections(context.Background(), &ec2.DescribeVpcPeeringConnectionsInput{
+		VpcPeeringConnectionIds: []string{pcxID},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.VpcPeeringConnections) == 0 {
+		return args, nil, nil
+	}
+	res, err := newMqlAwsVpcPeeringConnection(runtime, region, resp.VpcPeeringConnections[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
@@ -964,6 +1022,76 @@ func (a *mqlAwsVpcRoutetableRoute) instance() (*mqlAwsEc2Instance, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsEc2Instance), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) internetGateway() (*mqlAwsEc2Internetgateway, error) {
+	gwID := a.GatewayId.Data
+	if !strings.HasPrefix(gwID, "igw-") {
+		a.InternetGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
+		map[string]*llx.RawData{"id": llx.StringData(gwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Internetgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) vpnGateway() (*mqlAwsVpcVpnGateway, error) {
+	gwID := a.GatewayId.Data
+	if !strings.HasPrefix(gwID, "vgw-") {
+		a.VpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcVpnGateway,
+		map[string]*llx.RawData{"id": llx.StringData(gwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcVpnGateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) transitGateway() (*mqlAwsEc2Transitgateway, error) {
+	tgwID := a.TransitGatewayId.Data
+	if tgwID == "" {
+		a.TransitGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
+		map[string]*llx.RawData{"id": llx.StringData(tgwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Transitgateway), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) peeringConnection() (*mqlAwsVpcPeeringConnection, error) {
+	pcxID := a.VpcPeeringConnectionId.Data
+	if pcxID == "" {
+		a.PeeringConnection.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
+		map[string]*llx.RawData{"id": llx.StringData(pcxID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcPeeringConnection), nil
+}
+
+func (a *mqlAwsVpcRoutetableRoute) egressOnlyInternetGateway() (*mqlAwsEc2EgressOnlyInternetGateway, error) {
+	eigwID := a.EgressOnlyInternetGatewayId.Data
+	if eigwID == "" {
+		a.EgressOnlyInternetGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsEc2EgressOnlyInternetGateway,
+		map[string]*llx.RawData{"id": llx.StringData(eigwID), "region": llx.StringData(a.region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2EgressOnlyInternetGateway), nil
 }
 
 func (a *mqlAwsVpcRoutetableRoute) managedPrefixList() (*mqlAwsEc2ManagedPrefixList, error) {
