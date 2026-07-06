@@ -317,14 +317,49 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptio
 	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
+// effectiveNsgGroup is one network security group in a NIC's effective-NSG
+// chain, paired with the effective rules Azure computed for it. Inbound traffic
+// must be admitted by every group in the chain (subnet-level NSG then NIC-level
+// NSG) to reach the interface, so exposure evaluation is per-group rather than
+// over a flattened rule set.
+type effectiveNsgGroup struct {
+	nsgID string
+	rules []map[string]any
+}
+
+// effectiveNsgGroupsCached fetches the NIC's effective NSGs at most once,
+// caching the result (and any error) for reuse by both the effectiveSecurityRules
+// field and the VM exposure computation.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveNsgGroupsCached() ([]effectiveNsgGroup, error) {
+	a.effNsgOnce.Do(func() {
+		a.effNsgGroups, a.effNsgErr = a.fetchEffectiveNsgGroups()
+	})
+	return a.effNsgGroups, a.effNsgErr
+}
+
 // effectiveSecurityRules computes the merged NSG rules effective on this NIC
-// (NSG attached to NIC + ASG + NSG attached to subnet). Lazily called per NIC.
-//
-// Azure only computes effective rules for NICs attached to a running VM; for
-// detached or stopped NICs the API returns NicNotAssociatedWithVm or similar
-// 400/404 errors. We treat those as "no effective rules" rather than failing
-// the whole interfaces query.
+// (NSG attached to NIC + ASG + NSG attached to subnet), flattened across the
+// effective-NSG chain. Lazily called per NIC.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() ([]any, error) {
+	groups, err := a.effectiveNsgGroupsCached()
+	if err != nil {
+		return nil, err
+	}
+	var res []any
+	for _, g := range groups {
+		for _, rule := range g.rules {
+			res = append(res, rule)
+		}
+	}
+	return res, nil
+}
+
+// fetchEffectiveNsgGroups computes the effective NSGs on this NIC, one group per
+// NSG in the effective chain. Azure only computes effective rules for NICs
+// attached to a running VM; for detached or stopped NICs the API returns
+// NicNotAssociatedWithVm or similar 400/404 errors. We treat those as "no
+// effective NSGs" rather than failing the whole interfaces query.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() ([]effectiveNsgGroup, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	// Bound the long-poll so a stuck operation doesn't hang the interfaces query.
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -404,7 +439,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 		httpResp.StatusCode == http.StatusNotFound ||
 		httpResp.StatusCode == http.StatusForbidden {
 		log.Warn().Str("nic", nicName).Int("status", httpResp.StatusCode).Msg("effective security rules unavailable for NIC")
-		return []any{}, nil
+		return []effectiveNsgGroup{}, nil
 	}
 	if httpResp.StatusCode >= 400 {
 		body, _ := io.ReadAll(httpResp.Body)
@@ -413,23 +448,28 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 
 	var payload struct {
 		Value []struct {
-			EffectiveSecurityRules []any `json:"effectiveSecurityRules"`
+			NetworkSecurityGroup struct {
+				ID string `json:"id"`
+			} `json:"networkSecurityGroup"`
+			EffectiveSecurityRules []map[string]any `json:"effectiveSecurityRules"`
 		} `json:"value"`
 	}
 	if err := json.NewDecoder(httpResp.Body).Decode(&payload); err != nil {
 		return nil, err
 	}
 
-	var res []any
+	groups := make([]effectiveNsgGroup, 0, len(payload.Value))
 	for _, ensg := range payload.Value {
+		rules := make([]map[string]any, 0, len(ensg.EffectiveSecurityRules))
 		for _, rule := range ensg.EffectiveSecurityRules {
 			if rule == nil {
 				continue
 			}
-			res = append(res, rule)
+			rules = append(rules, rule)
 		}
+		groups = append(groups, effectiveNsgGroup{nsgID: ensg.NetworkSecurityGroup.ID, rules: rules})
 	}
-	return res, nil
+	return groups, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
@@ -4496,6 +4536,13 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	cacheNetworkSecurityGroupID string
 	cacheIPConfigurations       []*network.InterfaceIPConfiguration
+
+	// effNsgOnce guards a single fetch of the NIC's effective NSGs, shared by
+	// the effectiveSecurityRules field and the VM exposure computation so the
+	// live Azure call is paid at most once per interface.
+	effNsgOnce   sync.Once
+	effNsgGroups []effectiveNsgGroup
+	effNsgErr    error
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {

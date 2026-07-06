@@ -458,8 +458,11 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   // Internet-exposure summary combining public IPs and NSG ingress rules
   //
   // Reports whether the VM is reachable from the public internet by checking for
-  // an assigned public IP and an attached network security group rule that
-  // allows inbound traffic from any source.
+  // an assigned public IP and whether the effective network security group
+  // chain admits inbound traffic from any source. Inbound traffic must be
+  // admitted by every NSG in the chain (subnet-level and NIC-level), and rule
+  // priority is honored so a higher-priority Deny that shadows an Allow closes
+  // the exposure.
   exposure() azure.subscription.networkService.exposure
 }
 
@@ -2994,25 +2997,31 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
 //
 // Combines whether the resource has a public IP with whether its effective
 // network security rules permit inbound traffic from the internet. A resource
-// is considered internet-reachable only when it has a public IP AND an
-// effective rule allows ingress from any source (0.0.0.0/0, ::/0, *, or the
-// "Internet" service tag). The effective rules merge the NSG on the NIC, the
-// NSG on its subnet, and application security groups.
+// is considered internet-reachable only when it has a public IP AND its
+// effective network security group chain admits ingress from any source
+// (0.0.0.0/0, ::/0, *, or the "Internet" service tag). The effective rules
+// merge the NSG on the NIC, the NSG on its subnet, and application security
+// groups. Inbound traffic must be admitted by every NSG in the chain, and rule
+// priority is honored so a higher-priority Deny that shadows an Allow closes
+// the exposure.
 private azure.subscription.networkService.exposure {
   // Whether the resource is reachable from the public internet
   //
-  // True when the resource has a public IP AND an attached security group
-  // allows inbound traffic from any source. False when either signal is absent.
+  // True when the resource has a public IP AND the effective NSG chain admits
+  // inbound traffic from any source. False when either signal is absent.
   internetReachable bool
   // Whether the resource has at least one public IP address assigned
   hasPublicIp bool
-  // Whether an effective NSG rule (NIC, subnet, or ASG) has an inbound Allow rule open to any source
+  // Whether the effective NSG chain (NIC and subnet NSGs, resolved by priority) admits inbound traffic from any internet source
   securityGroupAllowsIngress bool
-  // Effective inbound security rules that allow traffic from any internet source
+  // Effective inbound rules that admit traffic from any internet source
   //
-  // Sourced from the NIC's effective security rules, which merge the NSG
-  // attached to the NIC, the NSG attached to its subnet, and any application
-  // security group rules. Each entry is the raw Azure effective-rule object.
+  // The priority-resolved inbound Allow rules that survive shadowing by any
+  // higher-priority Deny and are admitted by every NSG in the chain. Sourced
+  // from the effective rules on the resource's NICs, which merge the NSG on the
+  // NIC, the NSG on its subnet, and any application security group rules. Each
+  // entry is the raw Azure effective-rule object. Empty when a higher-priority
+  // Deny or another NSG in the chain blocks the traffic.
   openIngressRules []dict
 }
 
