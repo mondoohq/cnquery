@@ -385,7 +385,7 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	if subnets.Error != nil {
 		return nil, subnets.Error
 	}
-	subnetPermitsIngress := false
+	subnetReachable := false
 	hasRouteToInternet := false
 	allSecurityLists := []any{}
 	for _, s := range subnets.Data {
@@ -397,15 +397,19 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 		if prohibit.Error != nil {
 			return nil, prohibit.Error
 		}
-		if !prohibit.Data {
-			subnetPermitsIngress = true
-		}
 		reaches, err := ociSubnetReachesInternet(subnet)
 		if err != nil {
 			return nil, err
 		}
 		if reaches {
 			hasRouteToInternet = true
+		}
+		// A load balancer is reachable only via a subnet that both permits
+		// internet ingress and routes to an internet gateway. Tracking the two
+		// conditions per subnet avoids falsely combining one subnet's ingress with
+		// another subnet's route.
+		if !prohibit.Data && reaches {
+			subnetReachable = true
 		}
 		sls := subnet.GetSecurityLists()
 		if sls.Error != nil {
@@ -421,10 +425,10 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	openRules = append(openRules, slOpenRules...)
 
 	// Union of NSG and security-list rules admits ingress; reachability also
-	// requires a public IP, a listener, a subnet permitting ingress, and a route
-	// to an internet gateway.
+	// requires a public IP, a listener, and a single subnet that both permits
+	// internet ingress and routes to an internet gateway.
 	ingressOpen := len(nsgOpenRules) > 0 || securityListAllowsIngress
-	internetReachable := hasPublicIp && hasListener && ingressOpen && subnetPermitsIngress && hasRouteToInternet
+	internetReachable := hasPublicIp && hasListener && ingressOpen && subnetReachable
 
 	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("oci.loadBalancer.loadBalancer/" + id.Data + "/exposure"),
