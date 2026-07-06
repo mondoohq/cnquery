@@ -227,6 +227,13 @@ func TestDestCovers(t *testing.T) {
 	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
 	assert.True(t, destCovers(map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4"}}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
 	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.5"}, map[string]any{"destinationAddressPrefix": "10.0.0.4"}))
+	// allow rule using the plural destination form is read on the allow side too
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4"}}))
+	// every allow destination must be covered; a deny covering only one is not enough
+	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4", "10.0.0.5"}}))
+	assert.True(t, destCovers(map[string]any{"destinationAddressPrefix": "*"}, map[string]any{"destinationAddressPrefixes": []any{"10.0.0.4", "10.0.0.5"}}))
+	// a narrow deny cannot cover an allow that targets all addresses
+	assert.False(t, destCovers(map[string]any{"destinationAddressPrefix": "10.0.0.4"}, map[string]any{"destinationAddressPrefix": "*"}))
 }
 
 func TestDenyDominatesAllow(t *testing.T) {

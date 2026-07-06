@@ -327,14 +327,24 @@ type effectiveNsgGroup struct {
 	rules []map[string]any
 }
 
-// effectiveNsgGroupsCached fetches the NIC's effective NSGs at most once,
-// caching the result (and any error) for reuse by both the effectiveSecurityRules
-// field and the VM exposure computation.
+// effectiveNsgGroupsCached fetches the NIC's effective NSGs, memoizing the
+// result for reuse by both the effectiveSecurityRules field and the VM exposure
+// computation. Only successful fetches are cached: the effective-NSG call is a
+// bounded Azure long-poll that can fail transiently (timeout), so an error is
+// returned without being memoized, letting a later caller retry.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveNsgGroupsCached() ([]effectiveNsgGroup, error) {
-	a.effNsgOnce.Do(func() {
-		a.effNsgGroups, a.effNsgErr = a.fetchEffectiveNsgGroups()
-	})
-	return a.effNsgGroups, a.effNsgErr
+	a.effNsgMu.Lock()
+	defer a.effNsgMu.Unlock()
+	if a.effNsgLoaded {
+		return a.effNsgGroups, nil
+	}
+	groups, err := a.fetchEffectiveNsgGroups()
+	if err != nil {
+		return nil, err
+	}
+	a.effNsgGroups = groups
+	a.effNsgLoaded = true
+	return a.effNsgGroups, nil
 }
 
 // effectiveSecurityRules computes the merged NSG rules effective on this NIC
@@ -4537,12 +4547,13 @@ type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	cacheNetworkSecurityGroupID string
 	cacheIPConfigurations       []*network.InterfaceIPConfiguration
 
-	// effNsgOnce guards a single fetch of the NIC's effective NSGs, shared by
+	// effNsgMu guards a memoized fetch of the NIC's effective NSGs, shared by
 	// the effectiveSecurityRules field and the VM exposure computation so the
-	// live Azure call is paid at most once per interface.
-	effNsgOnce   sync.Once
+	// live Azure call is paid at most once per interface. Only a successful
+	// fetch is memoized (effNsgLoaded), so a transient error can be retried.
+	effNsgMu     sync.Mutex
+	effNsgLoaded bool
 	effNsgGroups []effectiveNsgGroup
-	effNsgErr    error
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {

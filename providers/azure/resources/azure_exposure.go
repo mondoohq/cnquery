@@ -240,27 +240,50 @@ func destAddressIsBroad(s string) bool {
 	return s == "*" || s == "0.0.0.0/0" || s == "::/0"
 }
 
-// destCovers reports whether a deny rule's destination covers an allow rule's
-// destination: the deny destination is all-addresses, or it equals the allow
-// destination. When neither holds we conservatively report false, leaving the
-// allow rule un-shadowed (a security audit should err toward reporting exposure
-// rather than hiding it).
-func destCovers(deny, allow map[string]any) bool {
-	allowDest, _ := allow["destinationAddressPrefix"].(string)
-	check := func(s string) bool {
-		return destAddressIsBroad(s) || (allowDest != "" && strings.EqualFold(s, allowDest))
+// ruleDestPrefixes reads a rule's destination address prefix(es), reading both
+// the single destinationAddressPrefix and the destinationAddressPrefixes list.
+// An absent/empty destination means all addresses, represented as "*".
+func ruleDestPrefixes(rule map[string]any) []string {
+	var out []string
+	if s, ok := rule["destinationAddressPrefix"].(string); ok && strings.TrimSpace(s) != "" {
+		out = append(out, s)
 	}
-	if dp, ok := deny["destinationAddressPrefix"].(string); ok && check(dp) {
-		return true
-	}
-	if arr, ok := deny["destinationAddressPrefixes"].([]any); ok {
+	if arr, ok := rule["destinationAddressPrefixes"].([]any); ok {
 		for _, p := range arr {
-			if s, ok := p.(string); ok && check(s) {
-				return true
+			if s, ok := p.(string); ok && strings.TrimSpace(s) != "" {
+				out = append(out, s)
 			}
 		}
 	}
-	return false
+	if len(out) == 0 {
+		out = []string{"*"}
+	}
+	return out
+}
+
+// destCovers reports whether a deny rule's destination covers an allow rule's
+// destination: every one of the allow rule's destinations must be an
+// all-addresses prefix on the deny side or equal to one of the deny rule's
+// destinations. Both the single and plural forms are read on each side. When a
+// destination is not covered we conservatively report false, leaving the allow
+// rule un-shadowed (a security audit should err toward reporting exposure
+// rather than hiding it).
+func destCovers(deny, allow map[string]any) bool {
+	denyDests := ruleDestPrefixes(deny)
+	covers := func(target string) bool {
+		for _, d := range denyDests {
+			if destAddressIsBroad(d) || strings.EqualFold(d, target) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, a := range ruleDestPrefixes(allow) {
+		if !covers(a) {
+			return false
+		}
+	}
+	return true
 }
 
 // denyDominatesAllow reports whether a higher-priority Deny rule fully shadows
@@ -285,6 +308,11 @@ func denyDominatesAllow(deny, allow map[string]any) bool {
 // it (same protocol, destination ports, and destination). When no internet
 // source rule allows ingress the group admits nothing (Azure's default
 // DenyAllInbound applies).
+//
+// Only rules whose source covers the internet are considered — for both Allow
+// and Deny. A Deny whose source is a non-internet tag (VirtualNetwork,
+// AzureLoadBalancer, a private CIDR) does not block internet-sourced traffic,
+// so it correctly never shadows an internet Allow here.
 func nsgAllowsInternetIngress(rules []map[string]any) (bool, []map[string]any) {
 	type prioritized struct {
 		rule  map[string]any
