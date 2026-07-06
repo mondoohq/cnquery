@@ -94,7 +94,7 @@ const (
 
 	// Resolve var.* and local.* references in Terraform HCL block arguments to their effective values (variable defaults overridden by .tfvars, locals evaluated from those). Unresolvable references fall back to their reference string; the unresolved view stays available via terraform.block.argumentReferences.
 	// start:  v13.x
-	// status: new
+	// status: default
 	TerraformResolveVars Feature = 17
 
 	// Placeholder to indicate how many feature flags exist. This number
@@ -128,6 +128,7 @@ var DefaultFeatures = Features{
 	byte(SerialNumberAsID),
 	byte(ForceShellCompletion),
 	byte(ResourceContext),
+	byte(TerraformResolveVars),
 }
 
 // AvailableFeatures are a set of flags that can be activated
@@ -137,5 +138,4 @@ var AvailableFeatures = Features{
 	byte(AutoUpdateEngine),
 	byte(BiosUUIDAsID),
 	byte(ExchangeTokenForToken),
-	byte(TerraformResolveVars),
 }
