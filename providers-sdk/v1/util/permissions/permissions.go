@@ -1649,6 +1649,10 @@ func extractAzurePermissions(root string) []PermissionDetail {
 						return true
 					}
 					resourceType := strings.TrimSuffix(strings.TrimPrefix(ctor, "New"), "Client")
+					// A generic NewClient() on a factory has no resource type in
+					// its name and no package to derive one from (the receiver is
+					// a factory var, not an import), so skip it — same as the
+					// stored-variable path, which also can't map a factory generic.
 					if resourceType != "" {
 						emitReadPerm(prov, resourceType, methodName)
 					}
