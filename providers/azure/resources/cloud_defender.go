@@ -1745,6 +1745,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) jitNetworkAccessPolicies() ([
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list JIT network access policies due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, pol := range page.Value {

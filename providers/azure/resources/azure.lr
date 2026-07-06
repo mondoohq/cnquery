@@ -7980,7 +7980,7 @@ private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy @defaults
 // policy: the VM, the Azure Firewall public IP fronting it (if any), and the
 // per-port rules controlling which ports can be opened on demand and for how
 // long.
-private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine @defaults("publicIpAddress") {
+private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine @defaults("vm.name publicIpAddress") {
   // Virtual machine the just-in-time rules apply to
   vm() azure.subscription.computeService.vm
   // Public IP of the Azure Firewall linked to the policy for this VM; empty when none
