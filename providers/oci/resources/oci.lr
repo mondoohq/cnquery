@@ -734,6 +734,12 @@ oci.network {
   routeTables() []oci.network.routeTable
   // Reserved and regional public IP addresses in the tenancy
   publicIps() []oci.network.publicIp
+  // Dynamic routing gateways (DRGs)
+  drgs() []oci.network.drg
+  // Local peering gateways (LPGs)
+  localPeeringGateways() []oci.network.localPeeringGateway
+  // Service gateways
+  serviceGateways() []oci.network.serviceGateway
 }
 
 // Oracle Cloud Infrastructure (OCI) public IP address
@@ -1003,6 +1009,8 @@ private oci.network.routeTable @defaults("name") {
   vcn() oci.network.vcn
   // Route rules defining traffic destinations and targets
   routeRules []dict
+  // Route rules resolved to their destination and target network entity
+  routes() []oci.network.routeTable.route
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Creation time
@@ -1011,6 +1019,205 @@ private oci.network.routeTable @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) route rule
+private oci.network.routeTable.route @defaults("destination targetType") {
+  // Destination CIDR block or Oracle service CIDR label
+  destination string
+  // Type of destination (CIDR_BLOCK, SERVICE_CIDR_BLOCK)
+  destinationType string
+  // Route type (STATIC, LOCAL)
+  routeType string
+  // Description of the route rule
+  description string
+  // Kind of network entity matching traffic is forwarded to
+  //
+  // One of INTERNET_GATEWAY, NAT_GATEWAY, SERVICE_GATEWAY, DRG,
+  // LOCAL_PEERING_GATEWAY, PRIVATE_IP, or the raw OCID resource type when the
+  // entity is a kind not resolved to a dedicated accessor.
+  targetType string
+  // OCID of the network entity matching traffic is forwarded to
+  targetId string
+  // Internet gateway matching traffic is forwarded to, when targetType is INTERNET_GATEWAY
+  internetGateway() oci.network.internetGateway
+  // NAT gateway matching traffic is forwarded to, when targetType is NAT_GATEWAY
+  natGateway() oci.network.natGateway
+  // Service gateway matching traffic is forwarded to, when targetType is SERVICE_GATEWAY
+  serviceGateway() oci.network.serviceGateway
+  // Dynamic routing gateway matching traffic is forwarded to, when targetType is DRG
+  drg() oci.network.drg
+  // Local peering gateway matching traffic is forwarded to, when targetType is LOCAL_PEERING_GATEWAY
+  localPeeringGateway() oci.network.localPeeringGateway
+}
+
+// Oracle Cloud Infrastructure (OCI) dynamic routing gateway (DRG)
+private oci.network.drg @defaults("name state") {
+  // DRG OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the DRG
+  compartment() oci.compartment
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Attachments connecting VCNs, IPSec tunnels, virtual circuits, and remote peering connections to the DRG
+  attachments() []oci.network.drgAttachment
+  // Remote peering connections hosted on the DRG
+  remotePeeringConnections() []oci.network.remotePeeringConnection
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) DRG attachment
+private oci.network.drgAttachment @defaults("name networkType state") {
+  // DRG attachment OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the DRG attachment
+  compartment() oci.compartment
+  // DRG the attachment belongs to
+  drg() oci.network.drg
+  // Kind of network attached to the DRG (VCN, IPSEC_TUNNEL, VIRTUAL_CIRCUIT, REMOTE_PEERING_CONNECTION, LOOPBACK)
+  networkType string
+  // OCID of the attached network entity
+  networkId string
+  // VCN attached to the DRG, when networkType is VCN
+  vcn() oci.network.vcn
+  // Whether the attachment and attached network live in a different tenancy than the DRG
+  isCrossTenancy bool
+  // Lifecycle state (e.g., ATTACHING, ATTACHED, DETACHING, DETACHED)
+  state string
+  // Creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) local peering gateway (LPG)
+private oci.network.localPeeringGateway @defaults("name peeringStatus") {
+  // LPG OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the LPG
+  compartment() oci.compartment
+  // VCN that uses the LPG
+  vcn() oci.network.vcn
+  // Peer LPG at the other end of the peering
+  peer() oci.network.localPeeringGateway
+  // Whether the VCN at the other end of the peering is in a different tenancy
+  isCrossTenancyPeering bool
+  // Peering status (NEW, PENDING, PEERED, REVOKED, INVALID)
+  peeringStatus string
+  // Smallest aggregate CIDR containing all routes advertised by the peered VCN
+  peerAdvertisedCidr string
+  // Route table used by the LPG for traffic destined to the peered VCN
+  routeTable() oci.network.routeTable
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) remote peering connection (RPC)
+private oci.network.remotePeeringConnection @defaults("name peeringStatus") {
+  // RPC OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the RPC
+  compartment() oci.compartment
+  // DRG that hosts the RPC
+  drg() oci.network.drg
+  // Whether the VCN at the other end of the peering is in a different tenancy
+  isCrossTenancyPeering bool
+  // Peering status (NEW, PENDING, PEERED, REVOKED, INVALID)
+  peeringStatus string
+  // OCID of the peer RPC at the other end of the peering
+  peerId string
+  // Region containing the peer RPC
+  peerRegionName string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) service gateway
+private oci.network.serviceGateway @defaults("name state") {
+  // Service gateway OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the service gateway
+  compartment() oci.compartment
+  // VCN the service gateway belongs to
+  vcn() oci.network.vcn
+  // Route table used by the service gateway
+  routeTable() oci.network.routeTable
+  // Whether the gateway blocks all traffic regardless of route rules
+  blockTraffic bool
+  // Oracle Services Network services the gateway opens private egress to
+  services() []oci.network.service
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Oracle Services Network service
+//
+// A range of Oracle service public IP addresses reachable privately through a
+// service gateway. The `cidrBlock` is the service CIDR label (for example
+// `oci-phx-objectstorage`) used as the destination in the route and security
+// rules that direct traffic to the gateway, and `name` and `description`
+// identify the covered service, such as regional Object Storage or the
+// all-services label.
+private oci.network.service @defaults("name cidrBlock") {
+  // Service OCID
+  id string
+  // Service name (e.g., OCI PHX Object Storage)
+  name string
+  // Service CIDR label representing the covered Oracle service IP ranges (e.g., oci-phx-objectstorage)
+  cidrBlock string
+  // Description of the covered Oracle service or services
+  description string
 }
 
 // Oracle Cloud Infrastructure (OCI) Logging

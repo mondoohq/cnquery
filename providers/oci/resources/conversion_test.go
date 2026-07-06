@@ -67,3 +67,46 @@ func TestIntValue(t *testing.T) {
 		assert.Equal(t, int64(42), intValue(&i))
 	})
 }
+
+func TestOciResourceTypeFromOCID(t *testing.T) {
+	tests := []struct {
+		name string
+		ocid string
+		want string
+	}{
+		{"internet gateway", "ocid1.internetgateway.oc1.iad.aaaaaaaaexample", "internetgateway"},
+		{"drg", "ocid1.drg.oc1.phx.aaaaaaaaexample", "drg"},
+		{"private ip", "ocid1.privateip.oc1.iad.aaaaaaaaexample", "privateip"},
+		{"empty string", "", ""},
+		{"no dots", "ocid1", ""},
+		{"only ocid1 prefix", "ocid1.", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, ociResourceTypeFromOCID(tt.ocid))
+		})
+	}
+}
+
+func TestOciRouteTargetType(t *testing.T) {
+	tests := []struct {
+		name string
+		ocid string
+		want string
+	}{
+		{"internet gateway", "ocid1.internetgateway.oc1.iad.aaaa", "INTERNET_GATEWAY"},
+		{"nat gateway", "ocid1.natgateway.oc1.iad.aaaa", "NAT_GATEWAY"},
+		{"service gateway", "ocid1.servicegateway.oc1.iad.aaaa", "SERVICE_GATEWAY"},
+		{"drg", "ocid1.drg.oc1.iad.aaaa", "DRG"},
+		{"local peering gateway", "ocid1.localpeeringgateway.oc1.iad.aaaa", "LOCAL_PEERING_GATEWAY"},
+		{"private ip", "ocid1.privateip.oc1.iad.aaaa", "PRIVATE_IP"},
+		{"unknown type falls back to uppercased raw type", "ocid1.dynamicroutingentity.oc1.iad.aaaa", "DYNAMICROUTINGENTITY"},
+		{"malformed OCID", "not-an-ocid", ""},
+		{"empty string", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, ociRouteTargetType(tt.ocid))
+		})
+	}
+}

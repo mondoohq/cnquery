@@ -59,6 +59,43 @@ func ociRegionFromOCID(ocid string) string {
 	return parts[3]
 }
 
+// ociResourceTypeFromOCID extracts the resource-type segment from an OCI OCID.
+// OCIDs have the shape ocid1.<resourceType>.<realm>.<region>.<uniqueID>, so the
+// type is the second dot-separated segment (e.g. "internetgateway", "drg",
+// "natgateway"). Returns "" when the OCID is malformed.
+func ociResourceTypeFromOCID(ocid string) string {
+	parts := strings.Split(ocid, ".")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[1]
+}
+
+// ociRouteTargetType maps a route rule's target OCID to the kind of network
+// entity it forwards traffic to. Returns the uppercased raw OCID resource type
+// for entity kinds without a dedicated route accessor, or "" for a malformed
+// OCID.
+func ociRouteTargetType(ocid string) string {
+	switch ociResourceTypeFromOCID(ocid) {
+	case "":
+		return ""
+	case "internetgateway":
+		return "INTERNET_GATEWAY"
+	case "natgateway":
+		return "NAT_GATEWAY"
+	case "servicegateway":
+		return "SERVICE_GATEWAY"
+	case "drg":
+		return "DRG"
+	case "localpeeringgateway":
+		return "LOCAL_PEERING_GATEWAY"
+	case "privateip":
+		return "PRIVATE_IP"
+	default:
+		return strings.ToUpper(ociResourceTypeFromOCID(ocid))
+	}
+}
+
 func jobErr(err error) []*jobpool.Job {
 	return []*jobpool.Job{{Err: err}}
 }
