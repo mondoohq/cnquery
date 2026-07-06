@@ -110,6 +110,62 @@ func TestOciCollectOpenSecurityListRulesEmptyIsOpen(t *testing.T) {
 	}
 }
 
+func TestOciIngressOpen(t *testing.T) {
+	cases := []struct {
+		name           string
+		nsgOpenRules   int
+		securityListOK bool
+		want           bool
+	}{
+		{"nsg opens", 2, false, true},
+		{"security list opens", 0, true, true},
+		{"both open", 1, true, true},
+		{"neither opens", 0, false, false},
+	}
+	for _, c := range cases {
+		if got := ociIngressOpen(c.nsgOpenRules, c.securityListOK); got != c.want {
+			t.Errorf("ociIngressOpen(%s) = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestOciAnySubnetReachable(t *testing.T) {
+	cases := []struct {
+		name  string
+		gates []ociSubnetGate
+		want  bool
+	}{
+		{"no subnets", nil, false},
+		{"single subnet permits and routes", []ociSubnetGate{{prohibitsIngress: false, routesToInternet: true}}, true},
+		{"single subnet permits but no route", []ociSubnetGate{{prohibitsIngress: false, routesToInternet: false}}, false},
+		{"single subnet routes but prohibits", []ociSubnetGate{{prohibitsIngress: true, routesToInternet: true}}, false},
+		// Regression: independent aggregation would have combined subnet A's
+		// ingress with subnet B's route into a false positive. The conjunction is
+		// per subnet, so neither subnet alone makes the resource reachable.
+		{
+			"permit-only subnet plus route-only subnet is not reachable",
+			[]ociSubnetGate{
+				{prohibitsIngress: false, routesToInternet: false},
+				{prohibitsIngress: true, routesToInternet: true},
+			},
+			false,
+		},
+		{
+			"one fully reachable subnet among others is reachable",
+			[]ociSubnetGate{
+				{prohibitsIngress: true, routesToInternet: true},
+				{prohibitsIngress: false, routesToInternet: true},
+			},
+			true,
+		},
+	}
+	for _, c := range cases {
+		if got := ociAnySubnetReachable(c.gates); got != c.want {
+			t.Errorf("ociAnySubnetReachable(%s) = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
 func TestOciWhitelistOpensInternet(t *testing.T) {
 	cases := []struct {
 		name   string

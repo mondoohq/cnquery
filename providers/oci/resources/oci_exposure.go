@@ -187,6 +187,36 @@ func ociSubnetReachesInternet(subnet *mqlOciNetworkSubnet) (bool, error) {
 	return ociRouteTableReachesInternet(rt.Data)
 }
 
+// ociIngressOpen reports whether ingress from any address is admitted. OCI
+// evaluates the union of network security group and security-list rules, so the
+// path is open when either an actual NSG rule admits any address or the
+// security-list layer admits ingress.
+func ociIngressOpen(nsgOpenRuleCount int, securityListAllows bool) bool {
+	return nsgOpenRuleCount > 0 || securityListAllows
+}
+
+// ociSubnetGate captures the two subnet conditions that gate internet
+// reachability: whether the subnet prohibits internet ingress, and whether it
+// routes a default route to an enabled internet gateway.
+type ociSubnetGate struct {
+	prohibitsIngress bool
+	routesToInternet bool
+}
+
+// ociAnySubnetReachable reports whether any single subnet both permits internet
+// ingress and routes to an internet gateway. The conjunction is evaluated per
+// subnet: a subnet that permits ingress but has no internet route, combined with
+// a different subnet that routes out but prohibits ingress, does not make a
+// resource reachable.
+func ociAnySubnetReachable(gates []ociSubnetGate) bool {
+	for _, g := range gates {
+		if !g.prohibitsIngress && g.routesToInternet {
+			return true
+		}
+	}
+	return false
+}
+
 // ociWhitelistOpensInternet reports whether an Autonomous Database access-control
 // allow-list admits any address. Unlike a security-group rule set, an *empty*
 // ADB allow-list with access control enabled denies everyone, so only an entry
@@ -309,7 +339,7 @@ func (i *mqlOciComputeInstance) exposure() (*mqlOciNetworkExposure, error) {
 		// any address. Reachability additionally requires a public IP, a subnet
 		// that permits internet ingress, and a default route to an internet
 		// gateway.
-		ingressOpen := len(nsgOpenRules) > 0 || slAllows
+		ingressOpen := ociIngressOpen(len(nsgOpenRules), slAllows)
 		if vnicHasPublicIp && !subnetProhibits && vnicRoutesToInternet && ingressOpen {
 			internetReachable = true
 		}
@@ -385,7 +415,10 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	if subnets.Error != nil {
 		return nil, subnets.Error
 	}
-	subnetReachable := false
+	// A load balancer is reachable only via a subnet that both permits internet
+	// ingress and routes to an internet gateway, so the two conditions are
+	// captured per subnet rather than aggregated independently.
+	gates := make([]ociSubnetGate, 0, len(subnets.Data))
 	hasRouteToInternet := false
 	allSecurityLists := []any{}
 	for _, s := range subnets.Data {
@@ -404,13 +437,8 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 		if reaches {
 			hasRouteToInternet = true
 		}
-		// A load balancer is reachable only via a subnet that both permits
-		// internet ingress and routes to an internet gateway. Tracking the two
-		// conditions per subnet avoids falsely combining one subnet's ingress with
-		// another subnet's route.
-		if !prohibit.Data && reaches {
-			subnetReachable = true
-		}
+		gates = append(gates, ociSubnetGate{prohibitsIngress: prohibit.Data, routesToInternet: reaches})
+
 		sls := subnet.GetSecurityLists()
 		if sls.Error != nil {
 			return nil, sls.Error
@@ -427,8 +455,8 @@ func (l *mqlOciLoadBalancerLoadBalancer) exposure() (*mqlOciNetworkExposure, err
 	// Union of NSG and security-list rules admits ingress; reachability also
 	// requires a public IP, a listener, and a single subnet that both permits
 	// internet ingress and routes to an internet gateway.
-	ingressOpen := len(nsgOpenRules) > 0 || securityListAllowsIngress
-	internetReachable := hasPublicIp && hasListener && ingressOpen && subnetReachable
+	ingressOpen := ociIngressOpen(len(nsgOpenRules), securityListAllowsIngress)
+	internetReachable := hasPublicIp && hasListener && ingressOpen && ociAnySubnetReachable(gates)
 
 	res, err := CreateResource(l.MqlRuntime, "oci.network.exposure", map[string]*llx.RawData{
 		"__id":                       llx.StringData("oci.loadBalancer.loadBalancer/" + id.Data + "/exposure"),
