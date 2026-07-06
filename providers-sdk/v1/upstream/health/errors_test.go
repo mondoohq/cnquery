@@ -5,6 +5,7 @@ package health
 
 import (
 	"runtime"
+	"runtime/debug"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -66,7 +67,7 @@ func TestReportRecoveredPanicSkipsWithoutBuild(t *testing.T) {
 	}()
 	defer func() {
 		if r := recover(); r != nil {
-			ReportRecoveredPanic("mql", "12.0.0", "", r, nil, reporter)
+			ReportRecoveredPanic("mql", "12.0.0", "", r, debug.Stack(), nil, reporter)
 		}
 	}()
 	panic("boom")

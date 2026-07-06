@@ -77,9 +77,10 @@ func (em *executionManager) Start() {
 			if current != nil {
 				tags = health.QueryPanicTags(current.CodeV2.GetId(), current.Source)
 			}
-			health.ReportRecoveredPanic("mql", mql.Version, mql.Build, r, tags)
+			stack := debug.Stack()
+			health.ReportRecoveredPanic("mql", mql.Version, mql.Build, r, stack, tags)
 			log.Error().
-				Str("stacktrace", string(debug.Stack())).
+				Str("stacktrace", string(stack)).
 				Msgf("recovered from panic during query execution: %v", r)
 			select {
 			case em.errChan <- fmt.Errorf("panic during query execution: %v", r):
