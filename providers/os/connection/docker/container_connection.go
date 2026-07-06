@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/moby/moby/client"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/cli/tmp"
@@ -63,10 +63,11 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 	}
 
 	// check if we are having a container
-	data, err := dockerClient.ContainerInspect(context.Background(), conf.Host)
+	inspectRes, err := dockerClient.ContainerInspect(context.Background(), conf.Host, client.ContainerInspectOptions{})
 	if err != nil {
 		return nil, errors.New("cannot find container " + conf.Host)
 	}
+	data := inspectRes.Container
 
 	if !data.State.Running {
 		return nil, errors.New("container " + data.ID + " is not running")
@@ -82,12 +83,12 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 	}
 
 	// this can later be used for containers build from scratch
-	serverVersion, err := dockerClient.ServerVersion(context.Background())
+	serverVersionRes, err := dockerClient.ServerVersion(context.Background(), client.ServerVersionOptions{})
 	if err != nil {
 		log.Debug().Err(err).Msg("docker> cannot get server version")
 	} else {
-		log.Debug().Interface("serverVersion", serverVersion).Msg("docker> server version")
-		conn.PlatformArchitecture = serverVersion.Arch
+		log.Debug().Interface("serverVersion", serverVersionRes).Msg("docker> server version")
+		conn.PlatformArchitecture = serverVersionRes.Arch
 	}
 
 	conn.Fs = &FS{
@@ -100,12 +101,11 @@ func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.
 }
 
 func GetDockerClient() (*client.Client, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, err
-	}
-	cli.NegotiateAPIVersion(context.Background())
-	return cli, nil
+	// No explicit NegotiateAPIVersion call: the method was removed from *Client in
+	// moby/moby's v29 client rewrite. API version negotiation now happens
+	// automatically on the first request (WithAPIVersionNegotiation is a
+	// documented no-op kept only for backward compatibility).
+	return client.New(client.FromEnv)
 }
 
 func (c *ContainerConnection) Name() string {
@@ -359,19 +359,19 @@ func fillAssetFromRegistry(asset *inventory.Asset, conf *inventory.Config) error
 }
 
 func getImageStoreKind() string {
-	client, err := GetDockerClient()
+	cli, err := GetDockerClient()
 	if err != nil {
 		log.Warn().Err(err).Msg("docker> cannot create docker client")
 		return "unknown"
 	}
 
-	info, err := client.Info(context.Background())
+	infoRes, err := cli.Info(context.Background(), client.InfoOptions{})
 	if err != nil {
 		log.Warn().Err(err).Msg("docker> cannot get docker info")
 		return "unknown"
 	}
 
-	return info.Driver
+	return infoRes.Info.Driver
 }
 
 // FindDockerObjectConnectionType tries to find out what kind of connection we are dealing with, this can be either a

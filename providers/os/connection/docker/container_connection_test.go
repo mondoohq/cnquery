@@ -10,12 +10,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/network"
 	"github.com/google/uuid"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -102,14 +101,14 @@ func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
 	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662")
 }
 
-func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, img string) container.CreateResponse {
+func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, img string) client.ContainerCreateResult {
 	// If docker is not available, then skip the test.
-	_, err := dClient.ServerVersion(ctx)
+	_, err := dClient.ServerVersion(ctx, client.ServerVersionOptions{})
 	if err != nil {
 		t.SkipNow()
 	}
 
-	responseBody, err := dClient.ImagePull(ctx, img, image.PullOptions{})
+	responseBody, err := dClient.ImagePull(ctx, img, client.ImagePullOptions{})
 	defer func() {
 		err = responseBody.Close()
 		if err != nil {
@@ -123,7 +122,7 @@ func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Clie
 
 	// Make sure the docker image is cleaned up
 	defer func() {
-		_, err := dClient.ImageRemove(ctx, img, image.RemoveOptions{Force: true})
+		_, err := dClient.ImageRemove(ctx, img, client.ImageRemoveOptions{Force: true})
 		// ignore error, worst case is that the image is not removed but parallel tests may fail otherwise
 		fmt.Printf("failed to cleanup pre-pulled docker image: %v", err)
 	}()
@@ -137,10 +136,17 @@ func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Clie
 	}
 
 	uuidVal := uuid.New()
-	created, err := dClient.ContainerCreate(ctx, cfg, &container.HostConfig{}, &network.NetworkingConfig{}, &specs.Platform{}, uuidVal.String())
+	created, err := dClient.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config:           cfg,
+		HostConfig:       &container.HostConfig{},
+		NetworkingConfig: &network.NetworkingConfig{},
+		Platform:         &specs.Platform{},
+		Name:             uuidVal.String(),
+	})
 	require.NoError(t, err)
 
-	require.NoError(t, dClient.ContainerStart(ctx, created.ID, container.StartOptions{}))
+	_, err = dClient.ContainerStart(ctx, created.ID, client.ContainerStartOptions{})
+	require.NoError(t, err)
 
 	return created
 }
@@ -155,7 +161,7 @@ func TestDockerContainerConnection(t *testing.T) {
 
 	// Make sure the container is cleaned up
 	defer func() {
-		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{Force: true})
+		_, err := dClient.ContainerRemove(ctx, created.ID, client.ContainerRemoveOptions{Force: true})
 		require.NoError(t, err)
 	}()
 

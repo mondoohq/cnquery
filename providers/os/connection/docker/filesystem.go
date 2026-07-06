@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 )

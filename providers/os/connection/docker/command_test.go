@@ -12,9 +12,8 @@ import (
 	"os"
 	"testing"
 
-	docker_types "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,34 +23,37 @@ func startContainer() (*client.Client, string, error) {
 	// Start new docker container
 	ctx := context.Background()
 	var err error
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, "", err
 	}
 
 	// ensure we kill container if something went wrong during assertion
 	// we can ignore errors here
-	dockerClient.ContainerKill(ctx, "motor-docker-test", "SIGKILL")
-	dockerClient.ContainerRemove(ctx, "motor-docker-test", docker_types.ContainerRemoveOptions{Force: true})
+	dockerClient.ContainerKill(ctx, "motor-docker-test", client.ContainerKillOptions{Signal: "SIGKILL"})
+	dockerClient.ContainerRemove(ctx, "motor-docker-test", client.ContainerRemoveOptions{Force: true})
 
 	imageName := "ubuntu"
 
-	out, err := dockerClient.ImagePull(ctx, imageName, docker_types.ImagePullOptions{})
+	out, err := dockerClient.ImagePull(ctx, imageName, client.ImagePullOptions{})
 	if err != nil {
 		return nil, "", err
 	}
 	io.Copy(os.Stdout, out)
 
-	resp, err := dockerClient.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-		Cmd:   []string{"/bin/bash"},
-		Tty:   true,
-	}, nil, nil, "motor-docker-test")
+	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config: &container.Config{
+			Image: imageName,
+			Cmd:   []string{"/bin/bash"},
+			Tty:   true,
+		},
+		Name: "motor-docker-test",
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	if err := dockerClient.ContainerStart(ctx, resp.ID, docker_types.ContainerStartOptions{}); err != nil {
+	if _, err := dockerClient.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return nil, "", err
 	}
 	return dockerClient, resp.ID, nil
@@ -59,7 +61,8 @@ func startContainer() (*client.Client, string, error) {
 
 func tearDownContainer(dockerClient *client.Client, containerID string) error {
 	// Stop Container
-	return dockerClient.ContainerKill(context.Background(), containerID, "SIGKILL")
+	_, err := dockerClient.ContainerKill(context.Background(), containerID, client.ContainerKillOptions{Signal: "SIGKILL"})
+	return err
 }
 
 func TestDockerCommand(t *testing.T) {
@@ -69,7 +72,7 @@ func TestDockerCommand(t *testing.T) {
 
 	// Execute tests
 	t.Run("echo", func(t *testing.T) {
-		c := &Command{dockerClient: dockerClient, Container: containerID}
+		c := &Command{Client: dockerClient, Container: containerID}
 		cmd, err := c.Exec("echo 'test'")
 		require.NoError(t, err)
 		assert.Equal(t, "echo 'test'", cmd.Command, "they should be equal")
@@ -82,7 +85,7 @@ func TestDockerCommand(t *testing.T) {
 	})
 
 	t.Run("echo pipe", func(t *testing.T) {
-		cErr := &Command{dockerClient: dockerClient, Container: containerID}
+		cErr := &Command{Client: dockerClient, Container: containerID}
 
 		cmd, err := cErr.Exec("echo 'This message goes to stderr' >&2")
 		require.NoError(t, err)

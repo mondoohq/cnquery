@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/moby/moby/client"
 	"go.mondoo.com/mql/v13/cli/tmp"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -62,7 +63,7 @@ func exportSnapshot(containerid string, f *os.File) error {
 		return err
 	}
 
-	rc, err := dc.ContainerExport(context.Background(), containerid)
+	rc, err := dc.ContainerExport(context.Background(), containerid, client.ContainerExportOptions{})
 	if err != nil {
 		return err
 	}

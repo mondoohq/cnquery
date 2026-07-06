@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
@@ -133,14 +133,14 @@ func (f *File) WriteString(s string) (ret int, err error) {
 }
 
 func (f *File) getFileDockerReader(path string) (io.ReadCloser, container.PathStat, error) {
-	r, stat, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, path)
+	res, err := f.dockerClient.CopyFromContainer(context.Background(), f.container, client.CopyFromContainerOptions{SourcePath: path})
 
 	// follow symlink if stat.LinkTarget is set
-	if len(stat.LinkTarget) > 0 {
-		return f.getFileDockerReader(stat.LinkTarget)
+	if len(res.Stat.LinkTarget) > 0 {
+		return f.getFileDockerReader(res.Stat.LinkTarget)
 	}
 
-	return r, stat, err
+	return res.Content, res.Stat, err
 }
 
 // returns a TarReader stream the caller is responsible for closing the stream

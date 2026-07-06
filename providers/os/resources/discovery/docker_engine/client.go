@@ -4,52 +4,52 @@
 package docker_engine
 
 import (
-	"context"
 	"os"
-	"strings"
 
 	"github.com/cockroachdb/errors"
 	dopts "github.com/docker/cli/opts"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 )
 
-// parseDockerCLI is doing a small part from client.FromEnv(c)
-// but it parses the DOCKER_HOST like the docker cli and not the docker go lib
-// DO NOT ASK why docker maintains two implementations
-func parseDockerCLIHost(c *client.Client) error {
-	if host := os.Getenv("DOCKER_HOST"); host != "" {
+// FromDockerEnv builds client options from the environment, like [client.FromEnv],
+// but it parses the DOCKER_HOST like the docker cli and not the docker go lib.
+// DO NOT ASK why docker maintains two implementations.
+//
+// client.Opt can no longer be re-applied to an already-constructed *client.Client
+// (it now closes over an unexported clientConfig used only during construction), so
+// unlike the old client.FromEnv-then-override dance, the CLI-compatible host parsing
+// is folded in as its own Opt in the returned slice instead. This intentionally
+// composes the same pieces client.FromEnv does (minus its host parsing, which we
+// replace below) rather than calling client.FromEnv directly: if a future moby/moby
+// release adds a new env-derived option to FromEnv, this list won't pick it up
+// automatically and will need a manual update.
+func FromDockerEnv() ([]client.Opt, error) {
+	opts := []client.Opt{
+		client.WithTLSClientConfigFromEnv(),
+		client.WithAPIVersionFromEnv(),
+	}
+
+	if host := os.Getenv(client.EnvOverrideHost); host != "" {
 		parsedHost, err := dopts.ParseHost(false, host)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		if err := client.WithHost(parsedHost)(c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func FromDockerEnv(c *client.Client) error {
-	err := client.FromEnv(c)
-
-	// we ignore the parse error since we are going to re-parse it anyway
-	if err != nil && !strings.Contains(err.Error(), "unable to parse docker host") {
-		return err
+		opts = append(opts, client.WithHost(parsedHost))
 	}
 
-	// The docker go client works different than the docker cli
-	// therefore we mimic the approach from the docker cli to make it easier for users
-	return parseDockerCLIHost(c)
+	return opts, nil
 }
 
 func dockerClient() (*client.Client, error) {
-	cli, err := client.NewClientWithOpts(FromDockerEnv)
+	opts, err := FromDockerEnv()
 	if err != nil {
 		return nil, err
 	}
-	cli.NegotiateAPIVersion(context.Background())
-	return cli, nil
+	// No explicit NegotiateAPIVersion call: the method was removed from *Client in
+	// moby/moby's v29 client rewrite. API version negotiation now happens
+	// automatically on the first request (WithAPIVersionNegotiation is a
+	// documented no-op kept only for backward compatibility).
+	return client.New(opts...)
 }
 
 // TODO: this implementation needs to be merged with motorcloud/docker
