@@ -1508,6 +1508,12 @@ func extractAzurePermissions(root string) []PermissionDetail {
 
 			// Track client variables: varName -> (ARM provider, resource type)
 			clientVars := map[string]*azureClientInfo{}
+			// Track client-factory variables: varName -> ARM provider. Many azure
+			// SDKs (e.g. armsecurity) create clients via
+			// `f := pkg.NewClientFactory(...)` then `f.NewXxxClient()` rather than
+			// a package-qualified `pkg.NewXxxClient(...)`, so we resolve the ARM
+			// provider through the factory var.
+			factoryVars := map[string]string{}
 
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				assignStmt, ok := n.(*ast.AssignStmt)
@@ -1526,22 +1532,38 @@ func extractAzurePermissions(root string) []PermissionDetail {
 					}
 					methodName := sel.Sel.Name
 
-					// Pattern: pkg.NewXxxClient(...)
+					pkgIdent, isIdentReceiver := sel.X.(*ast.Ident)
+
+					// Pattern: f := pkg.NewClientFactory(...) — remember the
+					// factory var so its clients resolve to this ARM provider.
+					if methodName == "NewClientFactory" {
+						if isIdentReceiver {
+							if imp, isAzureImport := azureImports[pkgIdent.Name]; isAzureImport && i < len(assignStmt.Lhs) {
+								if ident, ok := assignStmt.Lhs[i].(*ast.Ident); ok {
+									factoryVars[ident.Name] = imp.armProvider
+								}
+							}
+						}
+						continue
+					}
+
+					// Pattern: pkg.NewXxxClient(...) or factoryVar.NewXxxClient(...)
 					if !strings.HasPrefix(methodName, "New") || !strings.HasSuffix(methodName, "Client") {
 						continue
 					}
-					// Skip NewClientFactory
-					if methodName == "NewClientFactory" {
+					if !isIdentReceiver {
 						continue
 					}
 
-					pkgIdent, ok := sel.X.(*ast.Ident)
-					if !ok {
-						continue
-					}
-
+					// Resolve the ARM provider: either the receiver is a tracked
+					// azure package import, or a tracked client-factory var.
 					imp, isAzureImport := azureImports[pkgIdent.Name]
-					if !isAzureImport {
+					armProvider := ""
+					if isAzureImport {
+						armProvider = imp.armProvider
+					} else if prov, isFactory := factoryVars[pkgIdent.Name]; isFactory {
+						armProvider = prov
+					} else {
 						continue
 					}
 
@@ -1551,15 +1573,19 @@ func extractAzurePermissions(root string) []PermissionDetail {
 					resourceType := strings.TrimPrefix(methodName, "New")
 					resourceType = strings.TrimSuffix(resourceType, "Client")
 
-					// For generic NewClient (no resource type), use package info
+					// A generic NewClient carries no resource type; only a
+					// package import can map it via its package name.
 					if resourceType == "" {
+						if !isAzureImport {
+							continue
+						}
 						resourceType = azureResourceFromPackage(imp.pkgName)
 					}
 
 					if i < len(assignStmt.Lhs) {
 						if ident, ok := assignStmt.Lhs[i].(*ast.Ident); ok {
 							clientVars[ident.Name] = &azureClientInfo{
-								armProvider:  imp.armProvider,
+								armProvider:  armProvider,
 								resourceType: resourceType,
 							}
 						}
@@ -1567,6 +1593,21 @@ func extractAzurePermissions(root string) []PermissionDetail {
 				}
 				return true
 			})
+
+			emitReadPerm := func(armProvider, resourceType, methodName string) {
+				perm := azurePermission(armProvider, resourceType)
+				// A client serving multiple read methods may need per-method
+				// permissions that the client-level derivation can't express.
+				if o, ok := azureMethodPermissionOverrides[resourceType+"."+methodName]; ok {
+					perm = o
+				}
+				details = append(details, PermissionDetail{
+					Permission: perm,
+					Service:    armProvider,
+					Action:     methodName,
+					SourceFile: fileName,
+				})
+			}
 
 			// Find pager/method calls on client variables
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
@@ -1579,31 +1620,38 @@ func extractAzurePermissions(root string) []PermissionDetail {
 					return true
 				}
 				methodName := sel.Sel.Name
-
-				ident, ok := sel.X.(*ast.Ident)
-				if !ok {
+				if !isAzureReadMethod(methodName) {
 					return true
 				}
 
-				info, ok := clientVars[ident.Name]
-				if !ok {
-					return true
-				}
-
-				// Only care about read operations
-				if isAzureReadMethod(methodName) {
-					perm := azurePermission(info.armProvider, info.resourceType)
-					// A client serving multiple read methods may need per-method
-					// permissions that the client-level derivation can't express.
-					if o, ok := azureMethodPermissionOverrides[info.resourceType+"."+methodName]; ok {
-						perm = o
+				switch recv := sel.X.(type) {
+				case *ast.Ident:
+					// Read method on a tracked client var: client.NewListPager(...)
+					if info, ok := clientVars[recv.Name]; ok {
+						emitReadPerm(info.armProvider, info.resourceType, methodName)
 					}
-					details = append(details, PermissionDetail{
-						Permission: perm,
-						Service:    info.armProvider,
-						Action:     methodName,
-						SourceFile: fileName,
-					})
+				case *ast.CallExpr:
+					// Inline factory chain: factoryVar.NewXxxClient().NewListPager(...)
+					innerSel, ok := recv.Fun.(*ast.SelectorExpr)
+					if !ok {
+						return true
+					}
+					facIdent, ok := innerSel.X.(*ast.Ident)
+					if !ok {
+						return true
+					}
+					prov, isFactory := factoryVars[facIdent.Name]
+					if !isFactory {
+						return true
+					}
+					ctor := innerSel.Sel.Name
+					if !strings.HasPrefix(ctor, "New") || !strings.HasSuffix(ctor, "Client") {
+						return true
+					}
+					resourceType := strings.TrimSuffix(strings.TrimPrefix(ctor, "New"), "Client")
+					if resourceType != "" {
+						emitReadPerm(prov, resourceType, methodName)
+					}
 				}
 
 				return true

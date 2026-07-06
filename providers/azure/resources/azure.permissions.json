@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.25.0",
-  "generated_at": "2026-07-05T11:39:56-07:00",
+  "generated_at": "2026-07-05T21:49:40-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -64,6 +64,7 @@
     "Microsoft.ContainerRegistry/registries/cacheRules/read",
     "Microsoft.ContainerRegistry/registries/connectedRegistries/read",
     "Microsoft.ContainerRegistry/registries/credentialSets/read",
+    "Microsoft.ContainerRegistry/registries/read",
     "Microsoft.ContainerRegistry/registries/replications/read",
     "Microsoft.ContainerRegistry/registries/scopeMaps/read",
     "Microsoft.ContainerRegistry/registries/tokens/read",
@@ -92,6 +93,7 @@
     "Microsoft.DataFactory/factories/read",
     "Microsoft.Databricks/workspaces/read",
     "Microsoft.DesktopVirtualization/hostPools/read",
+    "Microsoft.Devices/resource/read",
     "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
     "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/read",
@@ -209,8 +211,19 @@
     "Microsoft.Resources/subscriptions/read",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Search/searchServices/read",
+    "Microsoft.Security/alerts/read",
+    "Microsoft.Security/assessments/read",
     "Microsoft.Security/autoProvisioningSettings/read",
+    "Microsoft.Security/contacts/read",
     "Microsoft.Security/defenderForStorageSettings/read",
+    "Microsoft.Security/jitNetworkAccessPolicies/read",
+    "Microsoft.Security/pricings/read",
+    "Microsoft.Security/regulatoryComplianceControls/read",
+    "Microsoft.Security/regulatoryComplianceStandards/read",
+    "Microsoft.Security/secureScoreControls/read",
+    "Microsoft.Security/secureScores/read",
+    "Microsoft.Security/settings/read",
+    "Microsoft.Security/subAssessments/read",
     "Microsoft.Securityinsights/alertRules/read",
     "Microsoft.Securityinsights/dataConnectors/read",
     "Microsoft.ServiceBus/namespaces/queues/read",
@@ -639,6 +652,12 @@
       "source_file": "containerregistry.go"
     },
     {
+      "permission": "Microsoft.ContainerRegistry/registries/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
       "permission": "Microsoft.ContainerRegistry/registries/replications/read",
       "service": "Microsoft.ContainerRegistry",
       "action": "NewListPager",
@@ -805,6 +824,12 @@
       "service": "Microsoft.DesktopVirtualization",
       "action": "NewListPager",
       "source_file": "desktopvirtualization.go"
+    },
+    {
+      "permission": "Microsoft.Devices/resource/read",
+      "service": "Microsoft.Devices",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "iot.go"
     },
     {
       "permission": "Microsoft.DocumentDB/databaseAccounts/privateEndpointConnections/read",
@@ -1569,9 +1594,27 @@
       "source_file": "search.go"
     },
     {
+      "permission": "Microsoft.Security/alerts/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/assessments/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
       "permission": "Microsoft.Security/autoProvisioningSettings/read",
       "service": "Microsoft.Security",
       "action": "Get",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/contacts/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
       "source_file": "cloud_defender.go"
     },
     {
@@ -1579,6 +1622,54 @@
       "service": "Microsoft.Security",
       "action": "Get",
       "source_file": "storage_extras.go"
+    },
+    {
+      "permission": "Microsoft.Security/jitNetworkAccessPolicies/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/pricings/read",
+      "service": "Microsoft.Security",
+      "action": "Get",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/regulatoryComplianceControls/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/regulatoryComplianceStandards/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/secureScoreControls/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/secureScores/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/settings/read",
+      "service": "Microsoft.Security",
+      "action": "Get",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/subAssessments/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
+      "source_file": "cloud_defender.go"
     },
     {
       "permission": "Microsoft.Securityinsights/alertRules/read",
