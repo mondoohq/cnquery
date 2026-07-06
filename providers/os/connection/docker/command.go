@@ -28,6 +28,7 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	ctx := context.Background()
 	res, err := c.Client.ExecCreate(ctx, c.Container, client.ExecCreateOptions{
 		Cmd:          []string{"/bin/sh", "-c", c.Command.Command},
+		TTY:          false,
 		AttachStdin:  false,
 		AttachStderr: true,
 		AttachStdout: true,
@@ -36,7 +37,9 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 		return nil, err
 	}
 
-	resp, err := c.Client.ExecAttach(ctx, res.ID, client.ExecAttachOptions{})
+	resp, err := c.Client.ExecAttach(ctx, res.ID, client.ExecAttachOptions{
+		TTY: false,
+	})
 	if err != nil {
 		return nil, err
 	}
