@@ -76,9 +76,14 @@ func resolveUserAssignedIdentities(runtime *plugin.Runtime, ids []string) ([]any
 // Unlike a user-assigned identity it has no standalone ARM resource, so it is
 // synthesized from the owning resource's ID and the identity's principal (and
 // tenant) so the same roleAssignments -> role -> permissions chain can be
-// traversed. Returns nil when no principal is set.
-func newSystemAssignedManagedIdentity(runtime *plugin.Runtime, ownerID, principalID, tenantID string) (*mqlAzureSubscriptionManagedIdentity, error) {
+// traversed.
+//
+// When principalID is empty (no system-assigned identity) it marks the caller's
+// field null and returns nil, so callers pass their field pointer and do not
+// guard separately. This mirrors resolveRoleDefinition.
+func newSystemAssignedManagedIdentity(runtime *plugin.Runtime, ownerID, principalID, tenantID string, field *plugin.TValue[*mqlAzureSubscriptionManagedIdentity]) (*mqlAzureSubscriptionManagedIdentity, error) {
 	if principalID == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	r, err := CreateResource(runtime, "azure.subscription.managedIdentity",
