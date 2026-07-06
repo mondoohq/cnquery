@@ -1260,6 +1260,7 @@ azure.subscription.computeService.vm.secureBootEnabled 11.4.28
 azure.subscription.computeService.vm.securityType 11.4.28
 azure.subscription.computeService.vm.sshPublicKeys 13.5.1
 azure.subscription.computeService.vm.state 9.0.1
+azure.subscription.computeService.vm.systemAssignedIdentity 13.26.1
 azure.subscription.computeService.vm.systemData 13.8.2
 azure.subscription.computeService.vm.systemMetadata 13.19.2
 azure.subscription.computeService.vm.tags 9.0.1
@@ -1311,6 +1312,7 @@ azure.subscription.computeService.vmScaleSet.singlePlacementGroup 13.7.1
 azure.subscription.computeService.vmScaleSet.sku 13.7.1
 azure.subscription.computeService.vmScaleSet.skuProfile 13.8.2
 azure.subscription.computeService.vmScaleSet.spotRestorePolicy 13.8.2
+azure.subscription.computeService.vmScaleSet.systemAssignedIdentity 13.26.1
 azure.subscription.computeService.vmScaleSet.systemData 13.8.2
 azure.subscription.computeService.vmScaleSet.systemMetadata 13.19.2
 azure.subscription.computeService.vmScaleSet.tags 13.7.1

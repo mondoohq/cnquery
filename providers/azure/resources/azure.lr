@@ -453,6 +453,13 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   identity dict
   // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
+  // System-assigned managed identity of the VM; null when no system-assigned identity is enabled
+  //
+  // Exposes the system-assigned identity as a managed identity so its role
+  // assignments, and their role definitions and permissions, can be traversed.
+  // This completes the resource-to-privilege leg of an attack path from an
+  // internet-reachable VM to what its identity is authorized to do.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the VM
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Internet-exposure summary combining public IPs and NSG ingress rules
@@ -929,6 +936,13 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   identity dict
   // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
+  // System-assigned managed identity of the scale set; null when no system-assigned identity is enabled
+  //
+  // Exposes the system-assigned identity as a managed identity so its role
+  // assignments, and their role definitions and permissions, can be traversed.
+  // This completes the resource-to-privilege leg of an attack path from an
+  // internet-reachable scale set to what its identity is authorized to do.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the scale set
   userAssignedIdentities() []azure.subscription.managedIdentity
 }
