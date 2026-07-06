@@ -14,16 +14,16 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.12.2
 	github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.14.0
-	github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/logme v1.0.1
 	github.com/stackitcloud/stackit-sdk-go/services/mariadb v1.0.1
 	github.com/stackitcloud/stackit-sdk-go/services/modelserving v0.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/mongodbflex v1.12.0
 	github.com/stackitcloud/stackit-sdk-go/services/objectstorage v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/observability v0.24.0
-	github.com/stackitcloud/stackit-sdk-go/services/opensearch v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/opensearch v1.0.1
 	github.com/stackitcloud/stackit-sdk-go/services/postgresflex v1.10.0
-	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.1.0
-	github.com/stackitcloud/stackit-sdk-go/services/redis v1.0.0
+	github.com/stackitcloud/stackit-sdk-go/services/rabbitmq v1.1.1
+	github.com/stackitcloud/stackit-sdk-go/services/redis v1.1.1
 	github.com/stackitcloud/stackit-sdk-go/services/resourcemanager v0.24.0
 	github.com/stackitcloud/stackit-sdk-go/services/secretsmanager v0.18.1
 	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.0
@@ -33,7 +33,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.3.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.26.0
+	go.mondoo.com/mql/v13 v13.27.4
 )
 
 require (
@@ -41,19 +41,19 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.42.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.32.26 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.25 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.2.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.31.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.43.4 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.42.1 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.32.27 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.26 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.2.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.31.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.43.5 // indirect
 	github.com/aws/smithy-go v1.27.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
