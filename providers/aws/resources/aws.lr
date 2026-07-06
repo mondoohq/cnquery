@@ -5538,6 +5538,14 @@ private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   ec2Targets() []aws.ec2.instance
   // Lambda targets for the load balancer target group
   lambdaTargets() []aws.lambda.function
+  // IP addresses registered as targets
+  //
+  // The registered IP targets of an ip-type target group (for example
+  // containers, Kubernetes pods, or on-premises hosts reachable over a
+  // Direct Connect or VPN link). Empty for instance-type and lambda-type
+  // target groups, whose backends are exposed through ec2Targets and
+  // lambdaTargets.
+  ipTargets() []string
   // Region where the target group exists
   region string
 }
@@ -5670,6 +5678,13 @@ private aws.elb.listener @defaults("arn port protocol") {
   sslPolicy string
   // Default actions for the listener
   defaultActions []dict
+  // Target groups this listener forwards to by default
+  //
+  // The target groups named by the listener's default forward action,
+  // resolved to typed resources. This is the internet-to-backend hop for
+  // requests that match no listener rule. Empty for listeners whose default
+  // action does not forward (for example a redirect or fixed-response action).
+  forwardTargetGroups() []aws.elb.targetgroup
   // Server certificates for the listener
   certificates []dict
   // ALPN policy for TLS listeners

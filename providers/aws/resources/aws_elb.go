@@ -618,7 +618,61 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlListener.(*mqlAwsElbListener).defaultActionsCache = l.DefaultActions
 			res = append(res, mqlListener)
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsElbListenerInternal struct {
+	defaultActionsCache []elbtypes.Action
+}
+
+// forwardTargetGroups resolves the target groups named by the listener's default
+// forward action to typed resources, matched against the parent load balancer's
+// target groups. It completes the internet -> load balancer -> listener ->
+// target group hop of the ingress path.
+func (a *mqlAwsElbListener) forwardTargetGroups() ([]any, error) {
+	// Collect the target group ARNs referenced by forward actions, both the
+	// single-target shorthand and the weighted ForwardConfig form.
+	wanted := map[string]struct{}{}
+	for _, act := range a.defaultActionsCache {
+		if act.TargetGroupArn != nil && *act.TargetGroupArn != "" {
+			wanted[*act.TargetGroupArn] = struct{}{}
+		}
+		if act.ForwardConfig != nil {
+			for _, tg := range act.ForwardConfig.TargetGroups {
+				if tg.TargetGroupArn != nil && *tg.TargetGroupArn != "" {
+					wanted[*tg.TargetGroupArn] = struct{}{}
+				}
+			}
+		}
+	}
+	if len(wanted) == 0 {
+		return []any{}, nil
+	}
+
+	lb := a.GetLoadBalancer()
+	if lb.Error != nil {
+		return nil, lb.Error
+	}
+	if lb.Data == nil {
+		return []any{}, nil
+	}
+	tgs := lb.Data.GetTargetGroups()
+	if tgs.Error != nil {
+		return nil, tgs.Error
+	}
+
+	res := []any{}
+	for _, t := range tgs.Data {
+		tg, ok := t.(*mqlAwsElbTargetgroup)
+		if !ok {
+			continue
+		}
+		if _, found := wanted[tg.Arn.Data]; found {
+			res = append(res, tg)
 		}
 	}
 	return res, nil
@@ -1002,8 +1056,67 @@ func (a *mqlAwsElbTargetgroup) ec2Targets() ([]any, error) {
 }
 
 func (a *mqlAwsElbTargetgroup) lambdaTargets() ([]any, error) {
-	// TODO
-	return nil, nil
+	// Only lambda-type target groups register Lambda functions.
+	if a.targetGroup.TargetType != elbtypes.TargetTypeEnumLambda {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(a.region)
+	resp, err := svc.DescribeTargetHealth(context.Background(), &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		// lambda-type targets register the function ARN as the target id.
+		mqlFn, err := NewResource(a.MqlRuntime, ResourceAwsLambdaFunction,
+			map[string]*llx.RawData{"arn": llx.StringData(*desc.Target.Id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFn)
+	}
+	return res, nil
+}
+
+// ipTargets returns the IP addresses registered with an ip-type target group.
+// These backends (containers, Kubernetes pods, on-premises hosts) are not EC2
+// instances, so they do not appear in ec2Targets.
+func (a *mqlAwsElbTargetgroup) ipTargets() ([]any, error) {
+	if a.targetGroup.TargetType != elbtypes.TargetTypeEnumIp {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elbv2(a.region)
+	resp, err := svc.DescribeTargetHealth(context.Background(), &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, desc := range resp.TargetHealthDescriptions {
+		if desc.Target == nil || desc.Target.Id == nil {
+			continue
+		}
+		res = append(res, *desc.Target.Id)
+	}
+	return res, nil
 }
 
 // enforcesTls reports whether every listener terminates an encrypted protocol —

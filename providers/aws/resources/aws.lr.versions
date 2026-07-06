@@ -4400,6 +4400,7 @@ aws.elb.listener.alpnPolicy 11.15.2
 aws.elb.listener.arn 11.15.2
 aws.elb.listener.certificates 11.15.2
 aws.elb.listener.defaultActions 11.15.2
+aws.elb.listener.forwardTargetGroups 13.43.1
 aws.elb.listener.loadBalancer 13.12.1
 aws.elb.listener.loadBalancerArn 11.15.2
 aws.elb.listener.port 11.15.2
@@ -4475,6 +4476,7 @@ aws.elb.targetgroup.healthCheckProtocol 11.15.2
 aws.elb.targetgroup.healthCheckTimeoutSeconds 11.15.2
 aws.elb.targetgroup.healthyThresholdCount 11.15.2
 aws.elb.targetgroup.ipAddressType 11.15.2
+aws.elb.targetgroup.ipTargets 13.43.1
 aws.elb.targetgroup.lambdaTargets 11.15.2
 aws.elb.targetgroup.name 11.15.2
 aws.elb.targetgroup.port 11.15.2

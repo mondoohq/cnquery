@@ -10958,6 +10958,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTargetgroup).GetLambdaTargets()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
 	},
+	"aws.elb.targetgroup.ipTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetIpTargets()).ToDataRes(types.Array(types.String))
+	},
 	"aws.elb.targetgroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTargetgroup).GetRegion()).ToDataRes(types.String)
 	},
@@ -11116,6 +11119,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.listener.defaultActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetDefaultActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elb.listener.forwardTargetGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetForwardTargetGroups()).ToDataRes(types.Array(types.Resource("aws.elb.targetgroup")))
 	},
 	"aws.elb.listener.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetCertificates()).ToDataRes(types.Array(types.Dict))
@@ -43141,6 +43147,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbTargetgroup).LambdaTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.targetgroup.ipTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).IpTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.elb.targetgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbTargetgroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -43367,6 +43377,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.listener.defaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbListener).DefaultActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.forwardTargetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).ForwardTargetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -101164,6 +101178,7 @@ type mqlAwsElbTargetgroup struct {
 	Vpc                        plugin.TValue[*mqlAwsVpc]
 	Ec2Targets                 plugin.TValue[[]any]
 	LambdaTargets              plugin.TValue[[]any]
+	IpTargets                  plugin.TValue[[]any]
 	Region                     plugin.TValue[string]
 }
 
@@ -101325,6 +101340,12 @@ func (c *mqlAwsElbTargetgroup) GetLambdaTargets() *plugin.TValue[[]any] {
 		}
 
 		return c.lambdaTargets()
+	})
+}
+
+func (c *mqlAwsElbTargetgroup) GetIpTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpTargets, func() ([]any, error) {
+		return c.ipTargets()
 	})
 }
 
@@ -101782,16 +101803,17 @@ func (c *mqlAwsNetworkExposure) GetOpenIngressRules() *plugin.TValue[[]any] {
 type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElbListenerInternal it will be used here
-	Arn             plugin.TValue[string]
-	LoadBalancer    plugin.TValue[*mqlAwsElbLoadbalancer]
-	LoadBalancerArn plugin.TValue[string]
-	Port            plugin.TValue[int64]
-	Protocol        plugin.TValue[string]
-	SslPolicy       plugin.TValue[string]
-	DefaultActions  plugin.TValue[[]any]
-	Certificates    plugin.TValue[[]any]
-	AlpnPolicy      plugin.TValue[[]any]
+	mqlAwsElbListenerInternal
+	Arn                 plugin.TValue[string]
+	LoadBalancer        plugin.TValue[*mqlAwsElbLoadbalancer]
+	LoadBalancerArn     plugin.TValue[string]
+	Port                plugin.TValue[int64]
+	Protocol            plugin.TValue[string]
+	SslPolicy           plugin.TValue[string]
+	DefaultActions      plugin.TValue[[]any]
+	ForwardTargetGroups plugin.TValue[[]any]
+	Certificates        plugin.TValue[[]any]
+	AlpnPolicy          plugin.TValue[[]any]
 }
 
 // createAwsElbListener creates a new instance of this resource
@@ -101869,6 +101891,22 @@ func (c *mqlAwsElbListener) GetSslPolicy() *plugin.TValue[string] {
 
 func (c *mqlAwsElbListener) GetDefaultActions() *plugin.TValue[[]any] {
 	return &c.DefaultActions
+}
+
+func (c *mqlAwsElbListener) GetForwardTargetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ForwardTargetGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener", c.__id, "forwardTargetGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.forwardTargetGroups()
+	})
 }
 
 func (c *mqlAwsElbListener) GetCertificates() *plugin.TValue[[]any] {
