@@ -1155,6 +1155,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"compute": {
 		"NetworkFirewallPolicies.Get":  "compute.firewallPolicies.get",
 		"NetworkFirewallPolicies.List": "compute.firewallPolicies.list",
+		// Reading the members of a zonal or regional instance group is governed
+		// by compute.instanceGroups.list; there is no distinct listInstances or
+		// regionInstanceGroups permission namespace in GCP IAM.
+		"InstanceGroups.ListInstances":       "compute.instanceGroups.list",
+		"RegionInstanceGroups.ListInstances": "compute.instanceGroups.list",
 	},
 	"recommender": {
 		// recommender.recommendations.list is not a real permission; the Recommender

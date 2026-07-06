@@ -1217,8 +1217,12 @@ private gcp.project.computeService.forwardingRule {
   allPorts bool
   // Whether to allow access to the load balancer from all regions
   allowGlobalAccess bool
+  // Raw backend-service self-link URL
+  //
+  // Deprecated in favor of `backendService`.
+  backendServiceUrl @maturity("deprecated") string
   // Backend service to which the forwarding rule sends traffic
-  backendService string
+  backendService() gcp.project.computeService.backendService
   // Creation timestamp
   created time
   // Optional resource description
@@ -1271,6 +1275,16 @@ private gcp.project.computeService.forwardingRule {
   subnetwork() gcp.project.computeService.subnetwork
   // URL of the target resource to receive the matched traffic
   targetUrl string
+  // Target pool receiving traffic (empty unless the rule targets a target pool)
+  targetPool() gcp.project.computeService.targetPool
+  // Target HTTP proxy receiving traffic (empty unless the rule targets a target HTTP proxy)
+  targetHttpProxy() gcp.project.computeService.targetHttpProxy
+  // Target HTTPS proxy receiving traffic (empty unless the rule targets a target HTTPS proxy)
+  targetHttpsProxy() gcp.project.computeService.targetHttpsProxy
+  // Target TCP proxy receiving traffic (empty unless the rule targets a target TCP proxy)
+  targetTcpProxy() gcp.project.computeService.targetTcpProxy
+  // Target SSL proxy receiving traffic (empty unless the rule targets a target SSL proxy)
+  targetSslProxy() gcp.project.computeService.targetSslProxy
   // Whether PSC global access is allowed for the forwarding rule
   allowPscGlobalAccess bool
   // The PSC connection status of this forwarding rule (ACCEPTED, CLOSED, NEEDS_ATTENTION, PENDING, REJECTED, STATUS_UNSPECIFIED)
@@ -1281,6 +1295,8 @@ private gcp.project.computeService.forwardingRule {
   fingerprint string
   // IP address collection resource
   ipCollection string
+  // Server-defined self-link URL for the forwarding rule
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute Engine region
@@ -1400,6 +1416,8 @@ gcp.project.computeService.instance @defaults("name id") {
   guestAccelerators []dict
   // Instance fingerprint
   fingerprint string
+  // Server-defined self-link URL for the instance
+  selfLink string
   // Hostname of the instance
   hostname string
   // KeyRevocationActionType of the instance
@@ -1416,8 +1434,12 @@ gcp.project.computeService.instance @defaults("name id") {
   metadata map[string]string
   // Minimum CPU platform for the VM instance
   minCpuPlatform string
-  // Network configurations for the instance
-  networkInterfaces []dict
+  // Raw network interface dicts
+  //
+  // Deprecated in favor of `nics`.
+  networkInterfaces @maturity("deprecated") []dict
+  // Network interfaces attached to the instance
+  nics []gcp.project.computeService.instance.networkInterface
   // Distinct network interface stack types across all interfaces (IPV4_ONLY, IPV4_IPV6)
   networkStackTypes []string
   // Whether the instance has at least one external IP attached via a network interface accessConfig
@@ -1562,6 +1584,38 @@ private gcp.project.computeService.instance.exposure @defaults("internetReachabl
   firewallAllowsIngress bool
   // Firewall rules that apply to the instance and admit ingress from any address
   openIngressFirewalls []gcp.project.computeService.firewall
+}
+
+// Compute instance network interface
+//
+// Examine a single network interface (NIC) attached to a Compute Engine
+// instance. Surfaces the internal `networkIP`, the `network` and `subnetwork`
+// the interface is attached to, the `accessConfigs` that assign external
+// (public) IPs, the `aliasIpRanges` used for alias IP / GKE Pod ranges, and the
+// IP `stackType` and `nicType`.
+private gcp.project.computeService.instance.networkInterface @defaults("name networkIP") {
+  // Name of the network interface (nic0, nic1, ...)
+  name string
+  // Internal IPv4 address assigned to the interface
+  networkIP string
+  // Internal IPv6 address assigned to the interface
+  ipv6Address string
+  // IP stack type of the interface (IPV4_ONLY, IPV4_IPV6, IPV6_ONLY)
+  stackType string
+  // Interface type (VIRTIO_NET, GVNIC)
+  nicType string
+  // Number of transmit and receive queues on the interface
+  queueCount int
+  // VPC network the interface is attached to
+  network() gcp.project.computeService.network
+  // Subnetwork the interface is attached to
+  subnetwork() gcp.project.computeService.subnetwork
+  // External IP configurations for the interface; each entry carries name, natIP, type, networkTier, and public-PTR settings
+  accessConfigs []dict
+  // External IPv6 configurations for the interface
+  ipv6AccessConfigs []dict
+  // Alias IP ranges assigned to the interface; each entry carries ipCidrRange and subnetworkRangeName
+  aliasIpRanges []dict
 }
 
 // VM Manager OS inventory for a Compute Engine instance
@@ -2336,14 +2390,20 @@ private gcp.project.computeService.backendService @defaults("name") {
   customResponseHeaders []string
   // Backend service description
   description string
-  // Resource URL for the edge security policy associated with this backend service
-  edgeSecurityPolicy string
+  // Raw edge security policy self-link URL
+  //
+  // Deprecated in favor of `edgeSecurityPolicy`.
+  edgeSecurityPolicyUrl @maturity("deprecated") string
+  // Cloud Armor edge security policy associated with this backend service
+  edgeSecurityPolicy() gcp.project.computeService.securityPolicy
   // Whether to enable Cloud CDN
   enableCDN bool
   // Failover policy
   failoverPolicy dict
   // List of URLs to the health checks
   healthChecks []string
+  // Health checks that probe this backend service
+  healthCheckRefs() []gcp.project.computeService.healthCheck
   // Identity-aware proxy configuration
   iap dict
   // Load balancer type
@@ -2406,6 +2466,8 @@ private gcp.project.computeService.backendService @defaults("name") {
   ipAddressSelectionPolicy string
   // Fingerprint for optimistic locking
   fingerprint string
+  // Server-defined self-link URL for the backend service
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute backend service backend
@@ -2421,7 +2483,13 @@ private gcp.project.computeService.backendService.backend @defaults("description
   // Whether this is a failover backend
   failover bool
   // Fully-qualified URL of an instance group or network endpoint group determining what types of backends a load balancer supports
-  groupUrl string
+  //
+  // Deprecated in favor of `instanceGroup` and `networkEndpointGroup`.
+  groupUrl @maturity("deprecated") string
+  // Instance group backing this backend (empty when the backend is a network endpoint group)
+  instanceGroup() gcp.project.computeService.instanceGroup
+  // Network endpoint group backing this backend (empty when the backend is an instance group)
+  networkEndpointGroup() gcp.project.computeService.networkEndpointGroup
   // Maximum number of simultaneous connections
   maxConnections int
   // Maximum number of simultaneous connections per endpoint
@@ -8652,6 +8720,8 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   vpnGatewayInterface int
   // Resource manager tags bound to this VPN tunnel
   resourceManagerTags map[string]string
+  // Server-defined self-link URL for the VPN tunnel
+  selfLink string
 }
 
 // Google Cloud (GCP) Compute storage pool
@@ -9309,6 +9379,8 @@ private gcp.project.computeService.instanceGroup @defaults("name size") {
   subnetwork() gcp.project.computeService.subnetwork
   // Number of instances in the group
   size int
+  // Member instances belonging to this group
+  instances() []gcp.project.computeService.instance
   // Named ports configured for the instance group
   namedPorts []dict
   // Creation timestamp
@@ -10234,8 +10306,12 @@ private gcp.project.computeService.urlMap @defaults("name") {
   name string
   // Human-readable description of the resource
   description string
-  // Default backend service URL
-  defaultService string
+  // Raw default backend-service self-link URL
+  //
+  // Deprecated in favor of `defaultService`.
+  defaultServiceUrl @maturity("deprecated") string
+  // Default backend service traffic is routed to when no host or path rule matches
+  defaultService() gcp.project.computeService.backendService
   // Host rules for the URL map
   hostRules []dict
   // Path matchers for the URL map
@@ -10400,16 +10476,24 @@ private gcp.project.computeService.route @defaults("name destRange") {
   nextHopGateway string
   // Next hop instance URL
   nextHopInstance string
+  // Instance this route forwards matching traffic to
+  nextHopInstanceRef() gcp.project.computeService.instance
   // Next hop IP address
   nextHopIp string
   // Next hop VPN tunnel URL
   nextHopVpnTunnel string
+  // VPN tunnel this route forwards matching traffic to
+  nextHopVpnTunnelRef() gcp.project.computeService.vpnTunnel
   // Next hop network URL
   nextHopNetwork string
+  // Network this route forwards matching traffic to
+  nextHopNetworkRef() gcp.project.computeService.network
   // Next hop peering name
   nextHopPeering string
   // Next hop ILB forwarding rule URL
   nextHopIlb string
+  // Internal load-balancer forwarding rule this route forwards matching traffic to
+  nextHopIlbRef() gcp.project.computeService.forwardingRule
   // Next hop Network Connectivity Center hub URL
   nextHopHub string
   // Route type (STATIC, BGP, SUBNET, TRANSIT); empty for custom static routes
@@ -10715,8 +10799,12 @@ private gcp.project.computeService.targetTcpProxy @defaults("name") {
   proxyHeader string
   // Whether proxy bind is enabled
   proxyBind bool
-  // Backend service URL
-  serviceUrl string
+  // Raw backend-service self-link URL
+  //
+  // Deprecated in favor of `service`.
+  serviceUrl @maturity("deprecated") string
+  // Backend service this proxy forwards traffic to
+  service() gcp.project.computeService.backendService
   // Raw region self-link URL
   //
   // Deprecated in favor of `region`.
@@ -10744,8 +10832,12 @@ private gcp.project.computeService.targetSslProxy @defaults("name") {
   description string
   // Proxy header mode (NONE, PROXY_V1)
   proxyHeader string
-  // Backend service URL
-  serviceUrl string
+  // Raw backend-service self-link URL
+  //
+  // Deprecated in favor of `service`.
+  serviceUrl @maturity("deprecated") string
+  // Backend service this proxy forwards traffic to
+  service() gcp.project.computeService.backendService
   // SSL certificate URLs
   sslCertificateUrls []string
   // SSL certificate resources presented by this proxy
@@ -10849,14 +10941,26 @@ private gcp.project.computeService.targetPool @defaults("name") {
   sessionAffinity string
   // Failover ratio
   failoverRatio float
-  // Backup pool URL
-  backupPool string
+  // Raw backup target-pool self-link URL
+  //
+  // Deprecated in favor of `backupPool`.
+  backupPoolUrl @maturity("deprecated") string
+  // Backup target pool used when this pool's backends are unhealthy
+  backupPool() gcp.project.computeService.targetPool
   // Health check URLs
   healthCheckUrls []string
+  // Health checks that probe the instances in this pool
+  healthCheckRefs() []gcp.project.computeService.healthCheck
   // Instance URLs
   instanceUrls []string
-  // Security policy URL
-  securityPolicy string
+  // Instances that receive traffic from this pool
+  instanceRefs() []gcp.project.computeService.instance
+  // Raw security policy self-link URL
+  //
+  // Deprecated in favor of `securityPolicy`.
+  securityPolicyUrl @maturity("deprecated") string
+  // Cloud Armor security policy attached to this target pool
+  securityPolicy() gcp.project.computeService.securityPolicy
   // Raw region self-link URL
   //
   // Deprecated in favor of `region`.

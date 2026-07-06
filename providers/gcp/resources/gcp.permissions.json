@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.28.0",
-  "generated_at": "2026-07-01T17:26:26-07:00",
+  "version": "13.29.0",
+  "generated_at": "2026-07-06T12:03:49-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -858,6 +858,12 @@
       "service": "compute",
       "action": "InstanceGroups.AggregatedList",
       "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.instanceGroups.list",
+      "service": "compute",
+      "action": "InstanceGroups.ListInstances",
+      "source_file": "compute_network_edges.go"
     },
     {
       "permission": "compute.instanceTemplates.list",

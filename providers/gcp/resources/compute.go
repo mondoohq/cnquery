@@ -716,6 +716,18 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		return nil, err
 	}
 
+	mqlNics := make([]any, 0, len(instance.NetworkInterfaces))
+	for _, ni := range instance.NetworkInterfaces {
+		if ni == nil {
+			continue
+		}
+		nic, err := newMqlComputeNetworkInterface(runtime, instance.Id, ni)
+		if err != nil {
+			return nil, err
+		}
+		mqlNics = append(mqlNics, nic)
+	}
+
 	stackTypeSet := map[string]struct{}{}
 	networkStackTypes := []any{}
 	var networkUrls, subnetworkUrls []string
@@ -840,6 +852,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"enableDisplay":                   llx.BoolData(enableDisplay),
 		"guestAccelerators":               llx.ArrayData(guestAccelerators, types.Dict),
 		"fingerprint":                     llx.StringData(instance.Fingerprint),
+		"selfLink":                        llx.StringData(instance.SelfLink),
 		"hostname":                        llx.StringData(instance.Hostname),
 		"keyRevocationActionType":         llx.StringData(instance.KeyRevocationActionType),
 		"labels":                          llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
@@ -849,6 +862,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"metadata":                        llx.MapData(convert.MapToInterfaceMap(metadata), types.String),
 		"minCpuPlatform":                  llx.StringData(instance.MinCpuPlatform),
 		"networkInterfaces":               llx.ArrayData(networkInterfaces, types.Dict),
+		"nics":                            llx.ArrayData(mqlNics, types.Resource("gcp.project.computeService.instance.networkInterface")),
 		"networkStackTypes":               llx.ArrayData(networkStackTypes, types.String),
 		"privateIpv6GoogleAccess":         llx.StringData(instance.PrivateIpv6GoogleAccess),
 		"reservationAffinity":             llx.DictData(reservationAffinity),
@@ -2809,7 +2823,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 					"customRequestHeaders":            llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
 					"customResponseHeaders":           llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
 					"description":                     llx.StringData(b.Description),
-					"edgeSecurityPolicy":              llx.StringData(b.EdgeSecurityPolicy),
+					"edgeSecurityPolicyUrl":           llx.StringData(b.EdgeSecurityPolicy),
 					"enableCDN":                       llx.BoolData(b.EnableCDN),
 					"failoverPolicy":                  llx.DictData(mqlFailoverPolicy),
 					"healthChecks":                    llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
@@ -2835,6 +2849,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 					"serviceLbPolicy":                 llx.StringData(b.ServiceLbPolicy),
 					"ipAddressSelectionPolicy":        llx.StringData(b.IpAddressSelectionPolicy),
 					"fingerprint":                     llx.StringData(b.Fingerprint),
+					"selfLink":                        llx.StringData(b.SelfLink),
 				})
 				if err != nil {
 					return err
@@ -3029,7 +3044,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				"ipProtocol":                    llx.StringData(fwr.GetIPProtocol()),
 				"allPorts":                      llx.BoolData(fwr.GetAllPorts()),
 				"allowGlobalAccess":             llx.BoolData(fwr.GetAllowGlobalAccess()),
-				"backendService":                llx.StringData(fwr.GetBackendService()),
+				"backendServiceUrl":             llx.StringData(fwr.GetBackendService()),
 				"created":                       llx.TimeDataPtr(parseTime(fwr.GetCreationTimestamp())),
 				"description":                   llx.StringData(fwr.GetDescription()),
 				"ipVersion":                     llx.StringData(fwr.GetIpVersion()),
@@ -3054,6 +3069,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				"sourceIpRanges":                llx.ArrayData(convert.SliceAnyToInterface(fwr.GetSourceIpRanges()), types.String),
 				"fingerprint":                   llx.StringData(fwr.GetFingerprint()),
 				"ipCollection":                  llx.StringData(fwr.GetIpCollection()),
+				"selfLink":                      llx.StringData(fwr.GetSelfLink()),
 			})
 			if err != nil {
 				return nil, err
@@ -3608,6 +3624,7 @@ func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
 					"vpnGatewayUrl":                llx.StringData(t.VpnGateway),
 					"vpnGatewayInterface":          llx.IntData(int64(t.VpnGatewayInterface)),
 					"resourceManagerTags":          llx.MapData(tunnelResourceManagerTags, types.String),
+					"selfLink":                     llx.StringData(t.SelfLink),
 				})
 				if err != nil {
 					return err
