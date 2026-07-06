@@ -58,6 +58,11 @@ const (
 	ResourceOciNetworkRemotePeeringConnection                        string = "oci.network.remotePeeringConnection"
 	ResourceOciNetworkServiceGateway                                 string = "oci.network.serviceGateway"
 	ResourceOciNetworkService                                        string = "oci.network.service"
+	ResourceOciNetworkCpe                                            string = "oci.network.cpe"
+	ResourceOciNetworkIpsecConnection                                string = "oci.network.ipsecConnection"
+	ResourceOciNetworkIpsecConnectionTunnel                          string = "oci.network.ipsecConnectionTunnel"
+	ResourceOciNetworkVirtualCircuit                                 string = "oci.network.virtualCircuit"
+	ResourceOciNetworkCrossConnect                                   string = "oci.network.crossConnect"
 	ResourceOciLogging                                               string = "oci.logging"
 	ResourceOciLoggingLogGroup                                       string = "oci.logging.logGroup"
 	ResourceOciLoggingLog                                            string = "oci.logging.log"
@@ -350,6 +355,26 @@ func init() {
 		"oci.network.service": {
 			// to override args, implement: initOciNetworkService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetworkService,
+		},
+		"oci.network.cpe": {
+			Init:   initOciNetworkCpe,
+			Create: createOciNetworkCpe,
+		},
+		"oci.network.ipsecConnection": {
+			Init:   initOciNetworkIpsecConnection,
+			Create: createOciNetworkIpsecConnection,
+		},
+		"oci.network.ipsecConnectionTunnel": {
+			// to override args, implement: initOciNetworkIpsecConnectionTunnel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkIpsecConnectionTunnel,
+		},
+		"oci.network.virtualCircuit": {
+			Init:   initOciNetworkVirtualCircuit,
+			Create: createOciNetworkVirtualCircuit,
+		},
+		"oci.network.crossConnect": {
+			// to override args, implement: initOciNetworkCrossConnect(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkCrossConnect,
 		},
 		"oci.logging": {
 			// to override args, implement: initOciLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1687,6 +1712,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.serviceGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetwork).GetServiceGateways()).ToDataRes(types.Array(types.Resource("oci.network.serviceGateway")))
 	},
+	"oci.network.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetCpes()).ToDataRes(types.Array(types.Resource("oci.network.cpe")))
+	},
+	"oci.network.ipsecConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetIpsecConnections()).ToDataRes(types.Array(types.Resource("oci.network.ipsecConnection")))
+	},
+	"oci.network.virtualCircuits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetVirtualCircuits()).ToDataRes(types.Array(types.Resource("oci.network.virtualCircuit")))
+	},
+	"oci.network.crossConnects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetwork).GetCrossConnects()).ToDataRes(types.Array(types.Resource("oci.network.crossConnect")))
+	},
 	"oci.network.publicIp.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkPublicIp).GetId()).ToDataRes(types.String)
 	},
@@ -2086,6 +2123,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.drgAttachment.vcn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrgAttachment).GetVcn()).ToDataRes(types.Resource("oci.network.vcn"))
 	},
+	"oci.network.drgAttachment.ipsecConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkDrgAttachment).GetIpsecConnection()).ToDataRes(types.Resource("oci.network.ipsecConnection"))
+	},
+	"oci.network.drgAttachment.virtualCircuit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkDrgAttachment).GetVirtualCircuit()).ToDataRes(types.Resource("oci.network.virtualCircuit"))
+	},
 	"oci.network.drgAttachment.isCrossTenancy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkDrgAttachment).GetIsCrossTenancy()).ToDataRes(types.Bool)
 	},
@@ -2223,6 +2266,219 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.service.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkService).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.network.cpe.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetIpAddress()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.cpeDeviceShapeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetCpeDeviceShapeId()).ToDataRes(types.String)
+	},
+	"oci.network.cpe.isPrivate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetIsPrivate()).ToDataRes(types.Bool)
+	},
+	"oci.network.cpe.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.cpe.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.network.cpe.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCpe).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.network.ipsecConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.network.ipsecConnection.cpe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCpe()).ToDataRes(types.Resource("oci.network.cpe"))
+	},
+	"oci.network.ipsecConnection.drg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetDrg()).ToDataRes(types.Resource("oci.network.drg"))
+	},
+	"oci.network.ipsecConnection.staticRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetStaticRoutes()).ToDataRes(types.Array(types.String))
+	},
+	"oci.network.ipsecConnection.cpeLocalIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCpeLocalIdentifier()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.cpeLocalIdentifierType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCpeLocalIdentifierType()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.transportType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetTransportType()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.tunnels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetTunnels()).ToDataRes(types.Array(types.Resource("oci.network.ipsecConnectionTunnel")))
+	},
+	"oci.network.ipsecConnection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnection.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.ipsecConnection.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.network.ipsecConnection.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnection).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.network.ipsecConnectionTunnel.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.network.ipsecConnectionTunnel.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetStatus()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.ikeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetIkeVersion()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.routing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetRouting()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.oracleCanInitiate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetOracleCanInitiate()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.natTranslationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetNatTranslationEnabled()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.dpdMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetDpdMode()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.vpnIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetVpnIp()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.cpeIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCpeIp()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.bgpState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetBgpState()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.virtualCircuit.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.network.virtualCircuit.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetType()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.serviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetServiceType()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.bandwidthShapeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetBandwidthShapeName()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.bgpManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetBgpManagement()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.bgpSessionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetBgpSessionState()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.bgpAdminState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetBgpAdminState()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.drg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetDrg()).ToDataRes(types.Resource("oci.network.drg"))
+	},
+	"oci.network.virtualCircuit.providerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetProviderName()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.providerServiceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetProviderServiceName()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.publicPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetPublicPrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"oci.network.virtualCircuit.crossConnectMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetCrossConnectMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.network.virtualCircuit.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.virtualCircuit.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.virtualCircuit.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.network.virtualCircuit.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkVirtualCircuit).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.network.crossConnect.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetId()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetName()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.compartmentID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetCompartmentID()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
+	"oci.network.crossConnect.locationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetLocationName()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.portName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetPortName()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.portSpeedShapeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetPortSpeedShapeName()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.crossConnectGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetCrossConnectGroupId()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetState()).ToDataRes(types.String)
+	},
+	"oci.network.crossConnect.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.network.crossConnect.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.network.crossConnect.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkCrossConnect).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 	"oci.logging.logGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLogging).GetLogGroups()).ToDataRes(types.Array(types.Resource("oci.logging.logGroup")))
@@ -7314,6 +7570,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetwork).ServiceGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"oci.network.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).IpsecConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).VirtualCircuits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetwork).CrossConnects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.network.publicIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkPublicIp).__id, ok = v.Value.(string)
 		return
@@ -7890,6 +8162,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkDrgAttachment).Vcn, ok = plugin.RawToTValue[*mqlOciNetworkVcn](v.Value, v.Error)
 		return
 	},
+	"oci.network.drgAttachment.ipsecConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkDrgAttachment).IpsecConnection, ok = plugin.RawToTValue[*mqlOciNetworkIpsecConnection](v.Value, v.Error)
+		return
+	},
+	"oci.network.drgAttachment.virtualCircuit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkDrgAttachment).VirtualCircuit, ok = plugin.RawToTValue[*mqlOciNetworkVirtualCircuit](v.Value, v.Error)
+		return
+	},
 	"oci.network.drgAttachment.isCrossTenancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkDrgAttachment).IsCrossTenancy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -8088,6 +8368,310 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.service.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.cpe.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.cpeDeviceShapeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).CpeDeviceShapeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.isPrivate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).IsPrivate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.cpe.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCpe).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.ipsecConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.cpe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Cpe, ok = plugin.RawToTValue[*mqlOciNetworkCpe](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.drg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Drg, ok = plugin.RawToTValue[*mqlOciNetworkDrg](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.staticRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).StaticRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.cpeLocalIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).CpeLocalIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.cpeLocalIdentifierType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).CpeLocalIdentifierType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.transportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).TransportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.tunnels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Tunnels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnection.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnection).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.ikeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).IkeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.routing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Routing, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.oracleCanInitiate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).OracleCanInitiate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.natTranslationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).NatTranslationEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.dpdMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).DpdMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.vpnIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).VpnIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.cpeIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).CpeIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.bgpState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).BgpState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.virtualCircuit.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.serviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).ServiceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.bandwidthShapeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).BandwidthShapeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.bgpManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).BgpManagement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.bgpSessionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).BgpSessionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.bgpAdminState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).BgpAdminState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.drg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Drg, ok = plugin.RawToTValue[*mqlOciNetworkDrg](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.providerServiceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).ProviderServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.publicPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).PublicPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.crossConnectMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).CrossConnectMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.virtualCircuit.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkVirtualCircuit).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.network.crossConnect.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.compartmentID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.locationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).LocationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.portName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).PortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.portSpeedShapeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).PortSpeedShapeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.crossConnectGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).CrossConnectGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.crossConnect.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkCrossConnect).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"oci.logging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16819,6 +17403,10 @@ type mqlOciNetwork struct {
 	Drgs                  plugin.TValue[[]any]
 	LocalPeeringGateways  plugin.TValue[[]any]
 	ServiceGateways       plugin.TValue[[]any]
+	Cpes                  plugin.TValue[[]any]
+	IpsecConnections      plugin.TValue[[]any]
+	VirtualCircuits       plugin.TValue[[]any]
+	CrossConnects         plugin.TValue[[]any]
 }
 
 // createOciNetwork creates a new instance of this resource
@@ -17031,6 +17619,70 @@ func (c *mqlOciNetwork) GetServiceGateways() *plugin.TValue[[]any] {
 		}
 
 		return c.serviceGateways()
+	})
+}
+
+func (c *mqlOciNetwork) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlOciNetwork) GetIpsecConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpsecConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "ipsecConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipsecConnections()
+	})
+}
+
+func (c *mqlOciNetwork) GetVirtualCircuits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualCircuits, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "virtualCircuits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualCircuits()
+	})
+}
+
+func (c *mqlOciNetwork) GetCrossConnects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CrossConnects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network", c.__id, "crossConnects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.crossConnects()
 	})
 }
 
@@ -18443,17 +19095,19 @@ type mqlOciNetworkDrgAttachment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciNetworkDrgAttachmentInternal
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	CompartmentID  plugin.TValue[string]
-	Compartment    plugin.TValue[*mqlOciCompartment]
-	Drg            plugin.TValue[*mqlOciNetworkDrg]
-	NetworkType    plugin.TValue[string]
-	NetworkId      plugin.TValue[string]
-	Vcn            plugin.TValue[*mqlOciNetworkVcn]
-	IsCrossTenancy plugin.TValue[bool]
-	State          plugin.TValue[string]
-	Created        plugin.TValue[*time.Time]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	CompartmentID   plugin.TValue[string]
+	Compartment     plugin.TValue[*mqlOciCompartment]
+	Drg             plugin.TValue[*mqlOciNetworkDrg]
+	NetworkType     plugin.TValue[string]
+	NetworkId       plugin.TValue[string]
+	Vcn             plugin.TValue[*mqlOciNetworkVcn]
+	IpsecConnection plugin.TValue[*mqlOciNetworkIpsecConnection]
+	VirtualCircuit  plugin.TValue[*mqlOciNetworkVirtualCircuit]
+	IsCrossTenancy  plugin.TValue[bool]
+	State           plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
 }
 
 // createOciNetworkDrgAttachment creates a new instance of this resource
@@ -18558,6 +19212,38 @@ func (c *mqlOciNetworkDrgAttachment) GetVcn() *plugin.TValue[*mqlOciNetworkVcn] 
 		}
 
 		return c.vcn()
+	})
+}
+
+func (c *mqlOciNetworkDrgAttachment) GetIpsecConnection() *plugin.TValue[*mqlOciNetworkIpsecConnection] {
+	return plugin.GetOrCompute[*mqlOciNetworkIpsecConnection](&c.IpsecConnection, func() (*mqlOciNetworkIpsecConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.drgAttachment", c.__id, "ipsecConnection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkIpsecConnection), nil
+			}
+		}
+
+		return c.ipsecConnection()
+	})
+}
+
+func (c *mqlOciNetworkDrgAttachment) GetVirtualCircuit() *plugin.TValue[*mqlOciNetworkVirtualCircuit] {
+	return plugin.GetOrCompute[*mqlOciNetworkVirtualCircuit](&c.VirtualCircuit, func() (*mqlOciNetworkVirtualCircuit, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.drgAttachment", c.__id, "virtualCircuit")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkVirtualCircuit), nil
+			}
+		}
+
+		return c.virtualCircuit()
 	})
 }
 
@@ -19082,6 +19768,689 @@ func (c *mqlOciNetworkService) GetCidrBlock() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkService) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlOciNetworkCpe for the oci.network.cpe resource
+type mqlOciNetworkCpe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkCpeInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	CompartmentID    plugin.TValue[string]
+	Compartment      plugin.TValue[*mqlOciCompartment]
+	IpAddress        plugin.TValue[string]
+	CpeDeviceShapeId plugin.TValue[string]
+	IsPrivate        plugin.TValue[bool]
+	Created          plugin.TValue[*time.Time]
+	FreeformTags     plugin.TValue[map[string]any]
+	DefinedTags      plugin.TValue[map[string]any]
+}
+
+// createOciNetworkCpe creates a new instance of this resource
+func createOciNetworkCpe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkCpe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.cpe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkCpe) MqlName() string {
+	return "oci.network.cpe"
+}
+
+func (c *mqlOciNetworkCpe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkCpe) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkCpe) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkCpe) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkCpe) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.cpe", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkCpe) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlOciNetworkCpe) GetCpeDeviceShapeId() *plugin.TValue[string] {
+	return &c.CpeDeviceShapeId
+}
+
+func (c *mqlOciNetworkCpe) GetIsPrivate() *plugin.TValue[bool] {
+	return &c.IsPrivate
+}
+
+func (c *mqlOciNetworkCpe) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkCpe) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkCpe) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciNetworkIpsecConnection for the oci.network.ipsecConnection resource
+type mqlOciNetworkIpsecConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkIpsecConnectionInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	CompartmentID          plugin.TValue[string]
+	Compartment            plugin.TValue[*mqlOciCompartment]
+	Cpe                    plugin.TValue[*mqlOciNetworkCpe]
+	Drg                    plugin.TValue[*mqlOciNetworkDrg]
+	StaticRoutes           plugin.TValue[[]any]
+	CpeLocalIdentifier     plugin.TValue[string]
+	CpeLocalIdentifierType plugin.TValue[string]
+	TransportType          plugin.TValue[string]
+	Tunnels                plugin.TValue[[]any]
+	State                  plugin.TValue[string]
+	Created                plugin.TValue[*time.Time]
+	FreeformTags           plugin.TValue[map[string]any]
+	DefinedTags            plugin.TValue[map[string]any]
+}
+
+// createOciNetworkIpsecConnection creates a new instance of this resource
+func createOciNetworkIpsecConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkIpsecConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.ipsecConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkIpsecConnection) MqlName() string {
+	return "oci.network.ipsecConnection"
+}
+
+func (c *mqlOciNetworkIpsecConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.ipsecConnection", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCpe() *plugin.TValue[*mqlOciNetworkCpe] {
+	return plugin.GetOrCompute[*mqlOciNetworkCpe](&c.Cpe, func() (*mqlOciNetworkCpe, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.ipsecConnection", c.__id, "cpe")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkCpe), nil
+			}
+		}
+
+		return c.cpe()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetDrg() *plugin.TValue[*mqlOciNetworkDrg] {
+	return plugin.GetOrCompute[*mqlOciNetworkDrg](&c.Drg, func() (*mqlOciNetworkDrg, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.ipsecConnection", c.__id, "drg")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkDrg), nil
+			}
+		}
+
+		return c.drg()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetStaticRoutes() *plugin.TValue[[]any] {
+	return &c.StaticRoutes
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCpeLocalIdentifier() *plugin.TValue[string] {
+	return &c.CpeLocalIdentifier
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCpeLocalIdentifierType() *plugin.TValue[string] {
+	return &c.CpeLocalIdentifierType
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetTransportType() *plugin.TValue[string] {
+	return &c.TransportType
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetTunnels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tunnels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.ipsecConnection", c.__id, "tunnels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tunnels()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkIpsecConnection) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciNetworkIpsecConnectionTunnel for the oci.network.ipsecConnectionTunnel resource
+type mqlOciNetworkIpsecConnectionTunnel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkIpsecConnectionTunnelInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	CompartmentID         plugin.TValue[string]
+	Compartment           plugin.TValue[*mqlOciCompartment]
+	Status                plugin.TValue[string]
+	IkeVersion            plugin.TValue[string]
+	Routing               plugin.TValue[string]
+	OracleCanInitiate     plugin.TValue[string]
+	NatTranslationEnabled plugin.TValue[string]
+	DpdMode               plugin.TValue[string]
+	VpnIp                 plugin.TValue[string]
+	CpeIp                 plugin.TValue[string]
+	BgpState              plugin.TValue[string]
+	State                 plugin.TValue[string]
+	Created               plugin.TValue[*time.Time]
+}
+
+// createOciNetworkIpsecConnectionTunnel creates a new instance of this resource
+func createOciNetworkIpsecConnectionTunnel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkIpsecConnectionTunnel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.ipsecConnectionTunnel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) MqlName() string {
+	return "oci.network.ipsecConnectionTunnel"
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.ipsecConnectionTunnel", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetIkeVersion() *plugin.TValue[string] {
+	return &c.IkeVersion
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetRouting() *plugin.TValue[string] {
+	return &c.Routing
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetOracleCanInitiate() *plugin.TValue[string] {
+	return &c.OracleCanInitiate
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetNatTranslationEnabled() *plugin.TValue[string] {
+	return &c.NatTranslationEnabled
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetDpdMode() *plugin.TValue[string] {
+	return &c.DpdMode
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetVpnIp() *plugin.TValue[string] {
+	return &c.VpnIp
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetCpeIp() *plugin.TValue[string] {
+	return &c.CpeIp
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetBgpState() *plugin.TValue[string] {
+	return &c.BgpState
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlOciNetworkVirtualCircuit for the oci.network.virtualCircuit resource
+type mqlOciNetworkVirtualCircuit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkVirtualCircuitInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	CompartmentID        plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
+	Type                 plugin.TValue[string]
+	ServiceType          plugin.TValue[string]
+	BandwidthShapeName   plugin.TValue[string]
+	BgpManagement        plugin.TValue[string]
+	BgpSessionState      plugin.TValue[string]
+	BgpAdminState        plugin.TValue[string]
+	Drg                  plugin.TValue[*mqlOciNetworkDrg]
+	ProviderName         plugin.TValue[string]
+	ProviderServiceName  plugin.TValue[string]
+	PublicPrefixes       plugin.TValue[[]any]
+	CrossConnectMappings plugin.TValue[[]any]
+	State                plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	FreeformTags         plugin.TValue[map[string]any]
+	DefinedTags          plugin.TValue[map[string]any]
+}
+
+// createOciNetworkVirtualCircuit creates a new instance of this resource
+func createOciNetworkVirtualCircuit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkVirtualCircuit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.virtualCircuit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkVirtualCircuit) MqlName() string {
+	return "oci.network.virtualCircuit"
+}
+
+func (c *mqlOciNetworkVirtualCircuit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.virtualCircuit", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetServiceType() *plugin.TValue[string] {
+	return &c.ServiceType
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetBandwidthShapeName() *plugin.TValue[string] {
+	return &c.BandwidthShapeName
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetBgpManagement() *plugin.TValue[string] {
+	return &c.BgpManagement
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetBgpSessionState() *plugin.TValue[string] {
+	return &c.BgpSessionState
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetBgpAdminState() *plugin.TValue[string] {
+	return &c.BgpAdminState
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetDrg() *plugin.TValue[*mqlOciNetworkDrg] {
+	return plugin.GetOrCompute[*mqlOciNetworkDrg](&c.Drg, func() (*mqlOciNetworkDrg, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.virtualCircuit", c.__id, "drg")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkDrg), nil
+			}
+		}
+
+		return c.drg()
+	})
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetProviderName() *plugin.TValue[string] {
+	return &c.ProviderName
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetProviderServiceName() *plugin.TValue[string] {
+	return &c.ProviderServiceName
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetPublicPrefixes() *plugin.TValue[[]any] {
+	return &c.PublicPrefixes
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetCrossConnectMappings() *plugin.TValue[[]any] {
+	return &c.CrossConnectMappings
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkVirtualCircuit) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciNetworkCrossConnect for the oci.network.crossConnect resource
+type mqlOciNetworkCrossConnect struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkCrossConnectInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	CompartmentID       plugin.TValue[string]
+	Compartment         plugin.TValue[*mqlOciCompartment]
+	LocationName        plugin.TValue[string]
+	PortName            plugin.TValue[string]
+	PortSpeedShapeName  plugin.TValue[string]
+	CrossConnectGroupId plugin.TValue[string]
+	State               plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	FreeformTags        plugin.TValue[map[string]any]
+	DefinedTags         plugin.TValue[map[string]any]
+}
+
+// createOciNetworkCrossConnect creates a new instance of this resource
+func createOciNetworkCrossConnect(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkCrossConnect{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.network.crossConnect", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkCrossConnect) MqlName() string {
+	return "oci.network.crossConnect"
+}
+
+func (c *mqlOciNetworkCrossConnect) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkCrossConnect) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciNetworkCrossConnect) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkCrossConnect) GetCompartmentID() *plugin.TValue[string] {
+	return &c.CompartmentID
+}
+
+func (c *mqlOciNetworkCrossConnect) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.crossConnect", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
+func (c *mqlOciNetworkCrossConnect) GetLocationName() *plugin.TValue[string] {
+	return &c.LocationName
+}
+
+func (c *mqlOciNetworkCrossConnect) GetPortName() *plugin.TValue[string] {
+	return &c.PortName
+}
+
+func (c *mqlOciNetworkCrossConnect) GetPortSpeedShapeName() *plugin.TValue[string] {
+	return &c.PortSpeedShapeName
+}
+
+func (c *mqlOciNetworkCrossConnect) GetCrossConnectGroupId() *plugin.TValue[string] {
+	return &c.CrossConnectGroupId
+}
+
+func (c *mqlOciNetworkCrossConnect) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlOciNetworkCrossConnect) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciNetworkCrossConnect) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciNetworkCrossConnect) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
 }
 
 // mqlOciLogging for the oci.logging resource

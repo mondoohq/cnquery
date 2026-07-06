@@ -740,6 +740,14 @@ oci.network {
   localPeeringGateways() []oci.network.localPeeringGateway
   // Service gateways
   serviceGateways() []oci.network.serviceGateway
+  // Customer-premises equipment (CPE) devices
+  cpes() []oci.network.cpe
+  // Site-to-site VPN IPSec connections
+  ipsecConnections() []oci.network.ipsecConnection
+  // FastConnect virtual circuits
+  virtualCircuits() []oci.network.virtualCircuit
+  // FastConnect physical cross-connects
+  crossConnects() []oci.network.crossConnect
 }
 
 // Oracle Cloud Infrastructure (OCI) public IP address
@@ -1097,6 +1105,10 @@ private oci.network.drgAttachment @defaults("name networkType state") {
   networkId string
   // VCN attached to the DRG, when networkType is VCN
   vcn() oci.network.vcn
+  // IPSec connection attached to the DRG, when networkType is IPSEC_TUNNEL
+  ipsecConnection() oci.network.ipsecConnection
+  // Virtual circuit attached to the DRG, when networkType is VIRTUAL_CIRCUIT
+  virtualCircuit() oci.network.virtualCircuit
   // Whether the attachment and attached network live in a different tenancy than the DRG
   isCrossTenancy bool
   // Lifecycle state (e.g., ATTACHING, ATTACHED, DETACHING, DETACHED)
@@ -1218,6 +1230,184 @@ private oci.network.service @defaults("name cidrBlock") {
   cidrBlock string
   // Description of the covered Oracle service or services
   description string
+}
+
+// Oracle Cloud Infrastructure (OCI) customer-premises equipment (CPE)
+private oci.network.cpe @defaults("name ipAddress") {
+  // CPE OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the CPE
+  compartment() oci.compartment
+  // Public IP address of the on-premises router terminating the VPN
+  ipAddress string
+  // OCID of the CPE device shape describing the on-premises router model
+  cpeDeviceShapeId string
+  // Whether the CPE is reachable only over a private network rather than the public internet
+  isPrivate bool
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) site-to-site VPN IPSec connection
+private oci.network.ipsecConnection @defaults("name state") {
+  // IPSec connection OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the IPSec connection
+  compartment() oci.compartment
+  // Customer-premises equipment terminating the on-premises end of the connection
+  cpe() oci.network.cpe
+  // Dynamic routing gateway terminating the OCI end of the connection
+  drg() oci.network.drg
+  // Static routes advertised to the CPE, as CIDR blocks
+  staticRoutes []string
+  // Identifier the CPE presents during IKE negotiation
+  cpeLocalIdentifier string
+  // Type of the CPE local identifier (IP_ADDRESS, HOSTNAME)
+  cpeLocalIdentifierType string
+  // Transport the tunnels traverse (INTERNET routes over the public internet; PRIVATE routes over FastConnect)
+  transportType string
+  // Tunnels carrying the connection's encrypted traffic
+  tunnels() []oci.network.ipsecConnectionTunnel
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) IPSec tunnel
+private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
+  // Tunnel OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the tunnel
+  compartment() oci.compartment
+  // Tunnel connection status (UP, DOWN, DOWN_FOR_MAINTENANCE, PARTIAL_UP)
+  status string
+  // IKE protocol version negotiated (V1, V2)
+  //
+  // IKEv1 is weaker than IKEv2; audits that require modern key exchange expect
+  // V2.
+  ikeVersion string
+  // Routing type (BGP, STATIC, POLICY)
+  routing string
+  // Whether Oracle can initiate the tunnel (INITIATOR_OR_RESPONDER, RESPONDER_ONLY)
+  oracleCanInitiate string
+  // Whether NAT-T is enabled (ENABLED, DISABLED, AUTO)
+  natTranslationEnabled string
+  // Dead peer detection mode (INITIATE_AND_RESPOND, RESPOND_ONLY)
+  dpdMode string
+  // Oracle VPN headend IP address for the tunnel
+  vpnIp string
+  // CPE IP address for the tunnel
+  cpeIp string
+  // BGP session state, when routing is BGP (UP, DOWN)
+  bgpState string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+}
+
+// Oracle Cloud Infrastructure (OCI) FastConnect virtual circuit
+private oci.network.virtualCircuit @defaults("name type state") {
+  // Virtual circuit OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the virtual circuit
+  compartment() oci.compartment
+  // Circuit type (PUBLIC exposes Oracle public services; PRIVATE reaches a VCN through a DRG)
+  type string
+  // Provisioning model (COLOCATED for a direct cross-connect; LAYER2 or LAYER3 for a provider-mediated circuit)
+  serviceType string
+  // Bandwidth shape name (e.g., 10 Gbps)
+  bandwidthShapeName string
+  // Whether Oracle or the customer manages BGP (CUSTOMER_MANAGED, ORACLE_MANAGED, PROVIDER_MANAGED)
+  bgpManagement string
+  // BGP session state (UP, DOWN)
+  bgpSessionState string
+  // BGP administrative state (ENABLED, DISABLED)
+  bgpAdminState string
+  // Dynamic routing gateway the circuit reaches, for a private virtual circuit
+  drg() oci.network.drg
+  // FastConnect partner name, for a provider-mediated circuit
+  providerName string
+  // FastConnect partner service name, for a provider-mediated circuit
+  providerServiceName string
+  // Public IP prefixes advertised over a public virtual circuit
+  publicPrefixes []string
+  // BGP peering mappings to the underlying cross-connects
+  //
+  // Each entry: {crossConnectOrCrossConnectGroupId, vlan, customerBgpPeeringIp,
+  // oracleBgpPeeringIp, customerBgpPeeringIpv6, oracleBgpPeeringIpv6}.
+  crossConnectMappings []dict
+  // Lifecycle state (e.g., PENDING_PROVIDER, PROVISIONING, PROVISIONED, FAILED, INACTIVE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) FastConnect cross-connect
+private oci.network.crossConnect @defaults("name state") {
+  // Cross-connect OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  //
+  // Deprecated in favor of `compartment()`.
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the cross-connect
+  compartment() oci.compartment
+  // Name of the FastConnect location housing the physical port
+  locationName string
+  // Name of the physical port at the FastConnect location
+  portName string
+  // Port speed shape name (e.g., 10 Gbps)
+  portSpeedShapeName string
+  // OCID of the cross-connect group this cross-connect belongs to, when grouped for link aggregation
+  crossConnectGroupId string
+  // Lifecycle state (e.g., PENDING_CUSTOMER, PROVISIONING, PROVISIONED, INACTIVE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Logging

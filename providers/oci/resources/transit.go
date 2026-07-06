@@ -217,15 +217,20 @@ func (o *mqlOciNetworkDrg) newDrgAttachment(att core.DrgAttachment) (*mqlOciNetw
 
 	networkType := ""
 	networkID := ""
+	ipsecConnID := ""
+	virtualCircuitID := ""
 	if att.NetworkDetails != nil {
 		networkID = stringValue(att.NetworkDetails.GetId())
-		switch att.NetworkDetails.(type) {
+		switch nd := att.NetworkDetails.(type) {
 		case core.VcnDrgAttachmentNetworkDetails:
 			networkType = "VCN"
 		case core.IpsecTunnelDrgAttachmentNetworkDetails:
 			networkType = "IPSEC_TUNNEL"
+			// networkID is the tunnel OCID; the connection is the queryable parent.
+			ipsecConnID = stringValue(nd.IpsecConnectionId)
 		case core.VirtualCircuitDrgAttachmentNetworkDetails:
 			networkType = "VIRTUAL_CIRCUIT"
+			virtualCircuitID = networkID
 		case core.RemotePeeringConnectionDrgAttachmentNetworkDetails:
 			networkType = "REMOTE_PEERING_CONNECTION"
 		case core.LoopBackDrgAttachmentNetworkDetails:
@@ -256,6 +261,8 @@ func (o *mqlOciNetworkDrg) newDrgAttachment(att core.DrgAttachment) (*mqlOciNetw
 	if networkType == "VCN" {
 		mqlAtt.cacheVcnId = networkID
 	}
+	mqlAtt.cacheIpsecConnectionId = ipsecConnID
+	mqlAtt.cacheVirtualCircuitId = virtualCircuitID
 	return mqlAtt, nil
 }
 
@@ -320,8 +327,10 @@ func (o *mqlOciNetworkDrg) remotePeeringConnections() ([]any, error) {
 // DRG attachments
 
 type mqlOciNetworkDrgAttachmentInternal struct {
-	cacheDrgId string
-	cacheVcnId string
+	cacheDrgId             string
+	cacheVcnId             string
+	cacheIpsecConnectionId string
+	cacheVirtualCircuitId  string
 }
 
 func (o *mqlOciNetworkDrgAttachment) id() (string, error) {
@@ -358,6 +367,34 @@ func (o *mqlOciNetworkDrgAttachment) vcn() (*mqlOciNetworkVcn, error) {
 		return nil, err
 	}
 	return r.(*mqlOciNetworkVcn), nil
+}
+
+func (o *mqlOciNetworkDrgAttachment) ipsecConnection() (*mqlOciNetworkIpsecConnection, error) {
+	if !isOcid(o.cacheIpsecConnectionId) {
+		o.IpsecConnection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.network.ipsecConnection", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheIpsecConnectionId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciNetworkIpsecConnection), nil
+}
+
+func (o *mqlOciNetworkDrgAttachment) virtualCircuit() (*mqlOciNetworkVirtualCircuit, error) {
+	if !isOcid(o.cacheVirtualCircuitId) {
+		o.VirtualCircuit.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.network.virtualCircuit", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVirtualCircuitId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciNetworkVirtualCircuit), nil
 }
 
 // Remote peering connections
