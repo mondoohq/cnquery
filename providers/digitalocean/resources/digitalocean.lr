@@ -66,6 +66,8 @@ digitalocean {
   sshKeys() []digitalocean.sshKey
   // TLS certificates
   certificates() []digitalocean.certificate
+  // Container registry attached to the account
+  registry() digitalocean.registry
   // Container registry repositories
   registryRepositories() []digitalocean.registry.repository
   // Reserved IPs
@@ -773,6 +775,8 @@ digitalocean.vpc @defaults("id name region") {
   createdAt time
   // Whether this is the default VPC
   default bool
+  // Uniform resource name (URN) identifying the VPC across DigitalOcean APIs
+  urn string
 }
 
 // DigitalOcean VPC peering
@@ -872,6 +876,14 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   rdmaSharedDevicePluginEnabled bool
   // Whether the CoreDNS cluster-proportional autoscaler add-on is enabled; null when unset
   corednsAutoscalerEnabled bool
+  // UUID of the VPC subnet the cluster's worker nodes are placed in
+  workerSubnetUuid string
+  // Cluster autoscaler tuning
+  //
+  // Keys: scaleDownUtilizationThreshold (fraction), scaleDownUnneededTime (duration string), expanders (list). Empty when the cluster uses platform defaults.
+  clusterAutoscaler dict
+  // Kubernetes versions this cluster can currently upgrade to; empty when the cluster is already on the newest available version
+  availableUpgradeVersions() []string
   // Node pools
   nodePools() []digitalocean.kubernetes.nodePool
 }
@@ -960,6 +972,8 @@ digitalocean.project @defaults("id name environment") {
   updatedAt time
   // Whether this is the default project
   isDefault bool
+  // UUID of the account that owns the project
+  ownerUuid string
 }
 
 // DigitalOcean SSH key
@@ -1017,6 +1031,8 @@ digitalocean.registry @defaults("name region") {
   name string
   // Storage usage in bytes
   storageUsageBytes int
+  // Time storageUsageBytes was last recomputed (DigitalOcean updates it asynchronously); null when never computed
+  storageUsageBytesUpdatedAt time
   // Region slug
   region string
   // Time the resource was created
@@ -1320,6 +1336,12 @@ digitalocean.alertPolicy @defaults("uuid type enabled") {
   entities []string
   // Droplets monitored by this policy, resolved from entity IDs; empty for policies that target non-droplet entities
   droplets() []digitalocean.droplet
+  // Managed databases monitored by this policy, resolved from entity IDs; empty for policies that target other entity types
+  databases() []digitalocean.database
+  // Load balancers monitored by this policy, resolved from entity IDs; empty for policies that target other entity types
+  loadBalancers() []digitalocean.loadBalancer
+  // Kubernetes clusters monitored by this policy, resolved from entity IDs; empty for policies that target other entity types
+  kubernetesClusters() []digitalocean.kubernetes.cluster
   // Tags
   tags []string
   // Email notification targets
@@ -1565,6 +1587,31 @@ digitalocean.function.namespace @defaults("uuid label region") {
   triggers() []digitalocean.function.trigger
   // Functions (actions) deployed in the namespace
   functions() []digitalocean.function.action
+  // Access keys issued for the namespace's Functions API (secret values are never exposed)
+  accessKeys() []digitalocean.function.accessKey
+}
+
+// DigitalOcean Functions access key
+//
+// An access key issued for a Functions namespace's API. The secret value
+// is never exposed; only metadata is surfaced: the key id and name, the
+// creation and last-used times, and the expiry. Use `lastUsedAt` and
+// `expiresAt` to audit for stale or never-expiring namespace credentials.
+private digitalocean.function.accessKey @defaults("name lastUsedAt") {
+  // UUID of the parent namespace
+  namespaceUuid string
+  // Access key ID
+  id string
+  // Key name
+  name string
+  // Time the key was created
+  createdAt time
+  // Time the key was last updated
+  updatedAt time
+  // Time the key was last used; null when the key has never been used
+  lastUsedAt time
+  // Time the key expires; null when the key does not expire
+  expiresAt time
 }
 
 // DigitalOcean Functions action
@@ -2642,8 +2689,12 @@ digitalocean.partnerAttachment @defaults("id name state") {
   bgp dict
   // UUID of the parent attachment, if this is a child
   parentUuid string
+  // Parent attachment, when this attachment is a child; null otherwise
+  parentAttachment() digitalocean.partnerAttachment
   // UUIDs of child attachments, if any
   children []string
+  // Child attachments connected beneath this one
+  childAttachments() []digitalocean.partnerAttachment
   // Time the resource was created
   createdAt time
 }

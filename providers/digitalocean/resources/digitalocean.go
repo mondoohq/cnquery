@@ -544,6 +544,7 @@ func (r *mqlDigitalocean) vpcs() ([]interface{}, error) {
 				"region":      llx.StringData(v.RegionSlug),
 				"createdAt":   llx.TimeData(v.CreatedAt),
 				"default":     llx.BoolData(v.Default),
+				"urn":         llx.StringData(v.URN),
 			})
 			if err != nil {
 				return nil, err
@@ -621,6 +622,7 @@ func (r *mqlDigitalocean) projects() ([]interface{}, error) {
 				"createdAt":   llx.TimeDataPtr(parseDoTime(p.CreatedAt)),
 				"updatedAt":   llx.TimeDataPtr(parseDoTime(p.UpdatedAt)),
 				"isDefault":   llx.BoolData(p.IsDefault),
+				"ownerUuid":   llx.StringData(p.OwnerUUID),
 			})
 			if err != nil {
 				return nil, err

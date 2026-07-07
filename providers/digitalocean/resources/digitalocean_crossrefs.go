@@ -7,8 +7,23 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// doURNId strips a DigitalOcean URN prefix ("do:<type>:") from s and
+// returns the trailing identifier, or s unchanged when it is not a URN.
+// Monitoring alert entities arrive either as a bare id or as a URN
+// depending on the resource type, so callers normalize before matching.
+func doURNId(s string) string {
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "do:") {
+		if i := strings.LastIndexByte(s, ':'); i >= 0 {
+			return s[i+1:]
+		}
+	}
+	return s
+}
 
 // parseDropletID extracts a droplet id from either a bare numeric id
 // ("12345") or a DigitalOcean droplet URN ("do:droplet:12345"). The
@@ -116,6 +131,129 @@ func (r *mqlDigitaloceanByoipPrefixResource) droplet() (*mqlDigitaloceanDroplet,
 		return nil, nil
 	}
 	return dropletRef(r.MqlRuntime, id, &r.Droplet)
+}
+
+// ----- Alert policy non-droplet targets -----
+//
+// Alert entities carry a resource id (bare or as a do:<type>: URN) whose
+// kind depends on the alert type. Each accessor resolves the entities
+// against one resource index and returns the matches, so a policy that
+// targets a different kind simply resolves to an empty list.
+
+func (r *mqlDigitaloceanAlertPolicy) databases() ([]any, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, e := range r.Entities.Data {
+		s, ok := e.(string)
+		if !ok {
+			continue
+		}
+		db, err := parent.databaseByID(doURNId(s))
+		if err != nil {
+			return nil, err
+		}
+		if db != nil {
+			out = append(out, db)
+		}
+	}
+	return out, nil
+}
+
+func (r *mqlDigitaloceanAlertPolicy) loadBalancers() ([]any, error) {
+	ids := make([]any, 0, len(r.Entities.Data))
+	for _, e := range r.Entities.Data {
+		if s, ok := e.(string); ok {
+			ids = append(ids, doURNId(s))
+		}
+	}
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.loadBalancerByUIDs(ids)
+}
+
+func (r *mqlDigitaloceanAlertPolicy) kubernetesClusters() ([]any, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, e := range r.Entities.Data {
+		s, ok := e.(string)
+		if !ok {
+			continue
+		}
+		cluster, err := parent.kubernetesClusterByID(doURNId(s))
+		if err != nil {
+			return nil, err
+		}
+		if cluster != nil {
+			out = append(out, cluster)
+		}
+	}
+	return out, nil
+}
+
+// ----- Partner attachment parent / children -----
+
+func (r *mqlDigitaloceanPartnerAttachment) parentAttachment() (*mqlDigitaloceanPartnerAttachment, error) {
+	if r.ParentUuid.Data == "" {
+		r.ParentAttachment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	pa, err := parent.partnerAttachmentByID(r.ParentUuid.Data)
+	if err != nil {
+		return nil, err
+	}
+	if pa == nil {
+		r.ParentAttachment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return pa, nil
+}
+
+func (r *mqlDigitaloceanPartnerAttachment) childAttachments() ([]any, error) {
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(r.Children.Data))
+	for _, c := range r.Children.Data {
+		s, ok := c.(string)
+		if !ok {
+			continue
+		}
+		pa, err := parent.partnerAttachmentByID(s)
+		if err != nil {
+			return nil, err
+		}
+		if pa != nil {
+			out = append(out, pa)
+		}
+	}
+	return out, nil
+}
+
+// ----- Container registry singleton -----
+
+// registry exposes the account's container registry from the namespace so
+// registry-level metadata (usage, subscription, garbage collection) is
+// reachable by walking the digitalocean tree. NewResource runs the
+// registry's init, which returns an empty sentinel when no registry exists.
+func (r *mqlDigitalocean) registry() (*mqlDigitaloceanRegistry, error) {
+	res, err := NewResource(r.MqlRuntime, "digitalocean.registry", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlDigitaloceanRegistry), nil
 }
 
 // ----- VPC peering -----

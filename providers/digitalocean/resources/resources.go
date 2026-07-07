@@ -316,6 +316,7 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 		}
 		args["name"] = llx.StringData("")
 		args["storageUsageBytes"] = llx.IntData(0)
+		args["storageUsageBytesUpdatedAt"] = llx.TimeDataPtr(nil)
 		args["region"] = llx.StringData("")
 		args["createdAt"] = llx.TimeData(time.Time{})
 		args["subscriptionTier"] = llx.StringData("")
@@ -324,6 +325,7 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 	args["name"] = llx.StringData(reg.Name)
 	args["storageUsageBytes"] = llx.IntData(int64(reg.StorageUsageBytes))
+	args["storageUsageBytesUpdatedAt"] = llx.TimeDataPtr(timePtr(reg.StorageUsageBytesUpdatedAt))
 	args["region"] = llx.StringData(reg.Region)
 	args["createdAt"] = llx.TimeData(reg.CreatedAt)
 

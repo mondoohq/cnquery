@@ -18,10 +18,13 @@ digitalocean.alertPolicy 13.0.1
 digitalocean.alertPolicy.alertEmails 13.0.1
 digitalocean.alertPolicy.alertSlack 13.0.1
 digitalocean.alertPolicy.compare 13.0.1
+digitalocean.alertPolicy.databases 13.10.2
 digitalocean.alertPolicy.description 13.0.1
 digitalocean.alertPolicy.droplets 13.10.2
 digitalocean.alertPolicy.enabled 13.0.1
 digitalocean.alertPolicy.entities 13.0.1
+digitalocean.alertPolicy.kubernetesClusters 13.10.2
+digitalocean.alertPolicy.loadBalancers 13.10.2
 digitalocean.alertPolicy.tags 13.0.1
 digitalocean.alertPolicy.type 13.0.1
 digitalocean.alertPolicy.uuid 13.0.1
@@ -295,6 +298,14 @@ digitalocean.firewall.outboundRules 13.0.1
 digitalocean.firewall.status 13.0.1
 digitalocean.firewall.tags 13.0.1
 digitalocean.firewalls 13.0.1
+digitalocean.function.accessKey 13.10.2
+digitalocean.function.accessKey.createdAt 13.10.2
+digitalocean.function.accessKey.expiresAt 13.10.2
+digitalocean.function.accessKey.id 13.10.2
+digitalocean.function.accessKey.lastUsedAt 13.10.2
+digitalocean.function.accessKey.name 13.10.2
+digitalocean.function.accessKey.namespaceUuid 13.10.2
+digitalocean.function.accessKey.updatedAt 13.10.2
 digitalocean.function.action 13.10.2
 digitalocean.function.action.concurrency 13.10.2
 digitalocean.function.action.logSizeMb 13.10.2
@@ -309,6 +320,7 @@ digitalocean.function.action.updatedAt 13.10.2
 digitalocean.function.action.version 13.10.2
 digitalocean.function.action.webExported 13.10.2
 digitalocean.function.namespace 13.1.7
+digitalocean.function.namespace.accessKeys 13.10.2
 digitalocean.function.namespace.apiHost 13.1.7
 digitalocean.function.namespace.createdAt 13.1.7
 digitalocean.function.namespace.functions 13.10.2
@@ -596,6 +608,8 @@ digitalocean.kubernetes.cluster 13.0.1
 digitalocean.kubernetes.cluster.amdGpuDeviceMetricsExporterPluginEnabled 13.6.2
 digitalocean.kubernetes.cluster.amdGpuDevicePluginEnabled 13.6.2
 digitalocean.kubernetes.cluster.autoUpgrade 13.0.1
+digitalocean.kubernetes.cluster.availableUpgradeVersions 13.10.2
+digitalocean.kubernetes.cluster.clusterAutoscaler 13.10.2
 digitalocean.kubernetes.cluster.clusterSubnet 13.0.1
 digitalocean.kubernetes.cluster.controlPlaneFirewallAllowedAddresses 13.6.2
 digitalocean.kubernetes.cluster.controlPlaneFirewallEnabled 13.6.2
@@ -626,6 +640,7 @@ digitalocean.kubernetes.cluster.updatedAt 13.0.1
 digitalocean.kubernetes.cluster.version 13.0.1
 digitalocean.kubernetes.cluster.vpc 13.0.2
 digitalocean.kubernetes.cluster.vpcUuid 13.0.1
+digitalocean.kubernetes.cluster.workerSubnetUuid 13.10.2
 digitalocean.kubernetes.node 13.6.2
 digitalocean.kubernetes.node.createdAt 13.6.2
 digitalocean.kubernetes.node.droplet 13.6.2
@@ -723,12 +738,14 @@ digitalocean.nfs.vpcs 13.4.2
 digitalocean.nfsShares 13.4.2
 digitalocean.partnerAttachment 13.8.2
 digitalocean.partnerAttachment.bgp 13.8.2
+digitalocean.partnerAttachment.childAttachments 13.10.2
 digitalocean.partnerAttachment.children 13.8.2
 digitalocean.partnerAttachment.connectionBandwidthInMbps 13.8.2
 digitalocean.partnerAttachment.createdAt 13.8.2
 digitalocean.partnerAttachment.id 13.8.2
 digitalocean.partnerAttachment.naasProvider 13.8.2
 digitalocean.partnerAttachment.name 13.8.2
+digitalocean.partnerAttachment.parentAttachment 13.10.2
 digitalocean.partnerAttachment.parentUuid 13.8.2
 digitalocean.partnerAttachment.redundancyZone 13.8.2
 digitalocean.partnerAttachment.region 13.8.2
@@ -743,6 +760,7 @@ digitalocean.project.environment 13.0.1
 digitalocean.project.id 13.0.1
 digitalocean.project.isDefault 13.0.1
 digitalocean.project.name 13.0.1
+digitalocean.project.ownerUuid 13.10.2
 digitalocean.project.purpose 13.0.1
 digitalocean.project.updatedAt 13.0.1
 digitalocean.projects 13.0.1
@@ -787,6 +805,7 @@ digitalocean.registry.repository.tag.updatedAt 13.3.1
 digitalocean.registry.repository.tagCount 13.0.1
 digitalocean.registry.repository.tags 13.3.1
 digitalocean.registry.storageUsageBytes 13.0.1
+digitalocean.registry.storageUsageBytesUpdatedAt 13.10.2
 digitalocean.registry.subscription 13.3.1
 digitalocean.registry.subscriptionTier 13.0.1
 digitalocean.registryRepositories 13.0.1
@@ -932,6 +951,7 @@ digitalocean.vpc.id 13.0.1
 digitalocean.vpc.ipRange 13.0.1
 digitalocean.vpc.name 13.0.1
 digitalocean.vpc.region 13.0.1
+digitalocean.vpc.urn 13.10.2
 digitalocean.vpcNatGateway 13.4.2
 digitalocean.vpcNatGateway.createdAt 13.4.2
 digitalocean.vpcNatGateway.egressPublicGatewayIps 13.4.2

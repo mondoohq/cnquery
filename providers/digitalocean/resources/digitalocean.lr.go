@@ -60,6 +60,7 @@ const (
 	ResourceDigitaloceanImage                                           string = "digitalocean.image"
 	ResourceDigitaloceanSnapshot                                        string = "digitalocean.snapshot"
 	ResourceDigitaloceanFunctionNamespace                               string = "digitalocean.function.namespace"
+	ResourceDigitaloceanFunctionAccessKey                               string = "digitalocean.function.accessKey"
 	ResourceDigitaloceanFunctionAction                                  string = "digitalocean.function.action"
 	ResourceDigitaloceanFunctionTrigger                                 string = "digitalocean.function.trigger"
 	ResourceDigitaloceanVpcNatGateway                                   string = "digitalocean.vpcNatGateway"
@@ -272,6 +273,10 @@ func init() {
 		"digitalocean.function.namespace": {
 			// to override args, implement: initDigitaloceanFunctionNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanFunctionNamespace,
+		},
+		"digitalocean.function.accessKey": {
+			// to override args, implement: initDigitaloceanFunctionAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanFunctionAccessKey,
 		},
 		"digitalocean.function.action": {
 			// to override args, implement: initDigitaloceanFunctionAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -536,6 +541,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetCertificates()).ToDataRes(types.Array(types.Resource("digitalocean.certificate")))
+	},
+	"digitalocean.registry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetRegistry()).ToDataRes(types.Resource("digitalocean.registry"))
 	},
 	"digitalocean.registryRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetRegistryRepositories()).ToDataRes(types.Array(types.Resource("digitalocean.registry.repository")))
@@ -1245,6 +1253,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.vpc.default": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpc).GetDefault()).ToDataRes(types.Bool)
 	},
+	"digitalocean.vpc.urn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetUrn()).ToDataRes(types.String)
+	},
 	"digitalocean.vpcPeering.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcPeering).GetId()).ToDataRes(types.String)
 	},
@@ -1359,6 +1370,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.kubernetes.cluster.corednsAutoscalerEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetCorednsAutoscalerEnabled()).ToDataRes(types.Bool)
 	},
+	"digitalocean.kubernetes.cluster.workerSubnetUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetWorkerSubnetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.kubernetes.cluster.clusterAutoscaler": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetClusterAutoscaler()).ToDataRes(types.Dict)
+	},
+	"digitalocean.kubernetes.cluster.availableUpgradeVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetAvailableUpgradeVersions()).ToDataRes(types.Array(types.String))
+	},
 	"digitalocean.kubernetes.cluster.nodePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetNodePools()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.nodePool")))
 	},
@@ -1446,6 +1466,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.project.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanProject).GetIsDefault()).ToDataRes(types.Bool)
 	},
+	"digitalocean.project.ownerUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanProject).GetOwnerUuid()).ToDataRes(types.String)
+	},
 	"digitalocean.sshKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanSshKey).GetId()).ToDataRes(types.Int)
 	},
@@ -1487,6 +1510,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.registry.storageUsageBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanRegistry).GetStorageUsageBytes()).ToDataRes(types.Int)
+	},
+	"digitalocean.registry.storageUsageBytesUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanRegistry).GetStorageUsageBytesUpdatedAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.registry.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanRegistry).GetRegion()).ToDataRes(types.String)
@@ -1794,6 +1820,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.alertPolicy.droplets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAlertPolicy).GetDroplets()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
 	},
+	"digitalocean.alertPolicy.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAlertPolicy).GetDatabases()).ToDataRes(types.Array(types.Resource("digitalocean.database")))
+	},
+	"digitalocean.alertPolicy.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAlertPolicy).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("digitalocean.loadBalancer")))
+	},
+	"digitalocean.alertPolicy.kubernetesClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAlertPolicy).GetKubernetesClusters()).ToDataRes(types.Array(types.Resource("digitalocean.kubernetes.cluster")))
+	},
 	"digitalocean.alertPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAlertPolicy).GetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -2012,6 +2047,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.function.namespace.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFunctionNamespace).GetFunctions()).ToDataRes(types.Array(types.Resource("digitalocean.function.action")))
+	},
+	"digitalocean.function.namespace.accessKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionNamespace).GetAccessKeys()).ToDataRes(types.Array(types.Resource("digitalocean.function.accessKey")))
+	},
+	"digitalocean.function.accessKey.namespaceUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetNamespaceUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.function.accessKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.function.accessKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.function.accessKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.function.accessKey.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.function.accessKey.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetLastUsedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.function.accessKey.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanFunctionAccessKey).GetExpiresAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.function.action.namespaceUuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFunctionAction).GetNamespaceUuid()).ToDataRes(types.String)
@@ -3105,8 +3164,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.partnerAttachment.parentUuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanPartnerAttachment).GetParentUuid()).ToDataRes(types.String)
 	},
+	"digitalocean.partnerAttachment.parentAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetParentAttachment()).ToDataRes(types.Resource("digitalocean.partnerAttachment"))
+	},
 	"digitalocean.partnerAttachment.children": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanPartnerAttachment).GetChildren()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.partnerAttachment.childAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanPartnerAttachment).GetChildAttachments()).ToDataRes(types.Array(types.Resource("digitalocean.partnerAttachment")))
 	},
 	"digitalocean.partnerAttachment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanPartnerAttachment).GetCreatedAt()).ToDataRes(types.Time)
@@ -3229,6 +3294,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).Registry, ok = plugin.RawToTValue[*mqlDigitaloceanRegistry](v.Value, v.Error)
 		return
 	},
 	"digitalocean.registryRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4247,6 +4316,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanVpc).Default, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"digitalocean.vpc.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"digitalocean.vpcPeering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVpcPeering).__id, ok = v.Value.(string)
 		return
@@ -4407,6 +4480,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanKubernetesCluster).CorednsAutoscalerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"digitalocean.kubernetes.cluster.workerSubnetUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).WorkerSubnetUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.clusterAutoscaler": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).ClusterAutoscaler, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.availableUpgradeVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).AvailableUpgradeVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.kubernetes.cluster.nodePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanKubernetesCluster).NodePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4535,6 +4620,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanProject).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"digitalocean.project.ownerUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanProject).OwnerUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"digitalocean.sshKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanSshKey).__id, ok = v.Value.(string)
 		return
@@ -4601,6 +4690,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.registry.storageUsageBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanRegistry).StorageUsageBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.registry.storageUsageBytesUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanRegistry).StorageUsageBytesUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"digitalocean.registry.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5047,6 +5140,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanAlertPolicy).Droplets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.alertPolicy.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAlertPolicy).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.alertPolicy.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAlertPolicy).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.alertPolicy.kubernetesClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAlertPolicy).KubernetesClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.alertPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanAlertPolicy).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -5369,6 +5474,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.function.namespace.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanFunctionNamespace).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.namespace.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionNamespace).AccessKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.function.accessKey.namespaceUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).NamespaceUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.function.accessKey.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanFunctionAccessKey).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"digitalocean.function.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6947,8 +7088,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanPartnerAttachment).ParentUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"digitalocean.partnerAttachment.parentAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).ParentAttachment, ok = plugin.RawToTValue[*mqlDigitaloceanPartnerAttachment](v.Value, v.Error)
+		return
+	},
 	"digitalocean.partnerAttachment.children": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanPartnerAttachment).Children, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.partnerAttachment.childAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanPartnerAttachment).ChildAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.partnerAttachment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7027,6 +7176,7 @@ type mqlDigitalocean struct {
 	Projects              plugin.TValue[[]any]
 	SshKeys               plugin.TValue[[]any]
 	Certificates          plugin.TValue[[]any]
+	Registry              plugin.TValue[*mqlDigitaloceanRegistry]
 	RegistryRepositories  plugin.TValue[[]any]
 	ReservedIPs           plugin.TValue[[]any]
 	Apps                  plugin.TValue[[]any]
@@ -7444,6 +7594,22 @@ func (c *mqlDigitalocean) GetCertificates() *plugin.TValue[[]any] {
 		}
 
 		return c.certificates()
+	})
+}
+
+func (c *mqlDigitalocean) GetRegistry() *plugin.TValue[*mqlDigitaloceanRegistry] {
+	return plugin.GetOrCompute[*mqlDigitaloceanRegistry](&c.Registry, func() (*mqlDigitaloceanRegistry, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "registry")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanRegistry), nil
+			}
+		}
+
+		return c.registry()
 	})
 }
 
@@ -9911,6 +10077,7 @@ type mqlDigitaloceanVpc struct {
 	Region      plugin.TValue[string]
 	CreatedAt   plugin.TValue[*time.Time]
 	Default     plugin.TValue[bool]
+	Urn         plugin.TValue[string]
 }
 
 // createDigitaloceanVpc creates a new instance of this resource
@@ -9976,6 +10143,10 @@ func (c *mqlDigitaloceanVpc) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlDigitaloceanVpc) GetDefault() *plugin.TValue[bool] {
 	return &c.Default
+}
+
+func (c *mqlDigitaloceanVpc) GetUrn() *plugin.TValue[string] {
+	return &c.Urn
 }
 
 // mqlDigitaloceanVpcPeering for the digitalocean.vpcPeering resource
@@ -10101,6 +10272,9 @@ type mqlDigitaloceanKubernetesCluster struct {
 	NvidiaGpuDevicePluginEnabled             plugin.TValue[bool]
 	RdmaSharedDevicePluginEnabled            plugin.TValue[bool]
 	CorednsAutoscalerEnabled                 plugin.TValue[bool]
+	WorkerSubnetUuid                         plugin.TValue[string]
+	ClusterAutoscaler                        plugin.TValue[any]
+	AvailableUpgradeVersions                 plugin.TValue[[]any]
 	NodePools                                plugin.TValue[[]any]
 }
 
@@ -10279,6 +10453,20 @@ func (c *mqlDigitaloceanKubernetesCluster) GetRdmaSharedDevicePluginEnabled() *p
 
 func (c *mqlDigitaloceanKubernetesCluster) GetCorednsAutoscalerEnabled() *plugin.TValue[bool] {
 	return &c.CorednsAutoscalerEnabled
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetWorkerSubnetUuid() *plugin.TValue[string] {
+	return &c.WorkerSubnetUuid
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetClusterAutoscaler() *plugin.TValue[any] {
+	return &c.ClusterAutoscaler
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetAvailableUpgradeVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailableUpgradeVersions, func() ([]any, error) {
+		return c.availableUpgradeVersions()
+	})
 }
 
 func (c *mqlDigitaloceanKubernetesCluster) GetNodePools() *plugin.TValue[[]any] {
@@ -10534,6 +10722,7 @@ type mqlDigitaloceanProject struct {
 	CreatedAt   plugin.TValue[*time.Time]
 	UpdatedAt   plugin.TValue[*time.Time]
 	IsDefault   plugin.TValue[bool]
+	OwnerUuid   plugin.TValue[string]
 }
 
 // createDigitaloceanProject creates a new instance of this resource
@@ -10603,6 +10792,10 @@ func (c *mqlDigitaloceanProject) GetUpdatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlDigitaloceanProject) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
+}
+
+func (c *mqlDigitaloceanProject) GetOwnerUuid() *plugin.TValue[string] {
+	return &c.OwnerUuid
 }
 
 // mqlDigitaloceanSshKey for the digitalocean.sshKey resource
@@ -10758,14 +10951,15 @@ type mqlDigitaloceanRegistry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanRegistryInternal it will be used here
-	Name               plugin.TValue[string]
-	StorageUsageBytes  plugin.TValue[int64]
-	Region             plugin.TValue[string]
-	CreatedAt          plugin.TValue[*time.Time]
-	SubscriptionTier   plugin.TValue[string]
-	Repositories       plugin.TValue[[]any]
-	GarbageCollections plugin.TValue[[]any]
-	Subscription       plugin.TValue[any]
+	Name                       plugin.TValue[string]
+	StorageUsageBytes          plugin.TValue[int64]
+	StorageUsageBytesUpdatedAt plugin.TValue[*time.Time]
+	Region                     plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	SubscriptionTier           plugin.TValue[string]
+	Repositories               plugin.TValue[[]any]
+	GarbageCollections         plugin.TValue[[]any]
+	Subscription               plugin.TValue[any]
 }
 
 // createDigitaloceanRegistry creates a new instance of this resource
@@ -10811,6 +11005,10 @@ func (c *mqlDigitaloceanRegistry) GetName() *plugin.TValue[string] {
 
 func (c *mqlDigitaloceanRegistry) GetStorageUsageBytes() *plugin.TValue[int64] {
 	return &c.StorageUsageBytes
+}
+
+func (c *mqlDigitaloceanRegistry) GetStorageUsageBytesUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.StorageUsageBytesUpdatedAt
 }
 
 func (c *mqlDigitaloceanRegistry) GetRegion() *plugin.TValue[string] {
@@ -11777,18 +11975,21 @@ type mqlDigitaloceanAlertPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanAlertPolicyInternal it will be used here
-	Uuid        plugin.TValue[string]
-	Type        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Compare     plugin.TValue[string]
-	Value       plugin.TValue[float64]
-	Window      plugin.TValue[string]
-	Enabled     plugin.TValue[bool]
-	Entities    plugin.TValue[[]any]
-	Droplets    plugin.TValue[[]any]
-	Tags        plugin.TValue[[]any]
-	AlertEmails plugin.TValue[[]any]
-	AlertSlack  plugin.TValue[[]any]
+	Uuid               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Compare            plugin.TValue[string]
+	Value              plugin.TValue[float64]
+	Window             plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Entities           plugin.TValue[[]any]
+	Droplets           plugin.TValue[[]any]
+	Databases          plugin.TValue[[]any]
+	LoadBalancers      plugin.TValue[[]any]
+	KubernetesClusters plugin.TValue[[]any]
+	Tags               plugin.TValue[[]any]
+	AlertEmails        plugin.TValue[[]any]
+	AlertSlack         plugin.TValue[[]any]
 }
 
 // createDigitaloceanAlertPolicy creates a new instance of this resource
@@ -11873,6 +12074,54 @@ func (c *mqlDigitaloceanAlertPolicy) GetDroplets() *plugin.TValue[[]any] {
 		}
 
 		return c.droplets()
+	})
+}
+
+func (c *mqlDigitaloceanAlertPolicy) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.alertPolicy", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlDigitaloceanAlertPolicy) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.alertPolicy", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+func (c *mqlDigitaloceanAlertPolicy) GetKubernetesClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KubernetesClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.alertPolicy", c.__id, "kubernetesClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kubernetesClusters()
 	})
 }
 
@@ -12542,15 +12791,16 @@ type mqlDigitaloceanFunctionNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDigitaloceanFunctionNamespaceInternal it will be used here
-	Uuid      plugin.TValue[string]
-	Namespace plugin.TValue[string]
-	Label     plugin.TValue[string]
-	Region    plugin.TValue[string]
-	ApiHost   plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Triggers  plugin.TValue[[]any]
-	Functions plugin.TValue[[]any]
+	Uuid       plugin.TValue[string]
+	Namespace  plugin.TValue[string]
+	Label      plugin.TValue[string]
+	Region     plugin.TValue[string]
+	ApiHost    plugin.TValue[string]
+	CreatedAt  plugin.TValue[*time.Time]
+	UpdatedAt  plugin.TValue[*time.Time]
+	Triggers   plugin.TValue[[]any]
+	Functions  plugin.TValue[[]any]
+	AccessKeys plugin.TValue[[]any]
 }
 
 // createDigitaloceanFunctionNamespace creates a new instance of this resource
@@ -12648,6 +12898,96 @@ func (c *mqlDigitaloceanFunctionNamespace) GetFunctions() *plugin.TValue[[]any] 
 
 		return c.functions()
 	})
+}
+
+func (c *mqlDigitaloceanFunctionNamespace) GetAccessKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.function.namespace", c.__id, "accessKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessKeys()
+	})
+}
+
+// mqlDigitaloceanFunctionAccessKey for the digitalocean.function.accessKey resource
+type mqlDigitaloceanFunctionAccessKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanFunctionAccessKeyInternal it will be used here
+	NamespaceUuid plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	LastUsedAt    plugin.TValue[*time.Time]
+	ExpiresAt     plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanFunctionAccessKey creates a new instance of this resource
+func createDigitaloceanFunctionAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanFunctionAccessKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.function.accessKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) MqlName() string {
+	return "digitalocean.function.accessKey"
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetNamespaceUuid() *plugin.TValue[string] {
+	return &c.NamespaceUuid
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUsedAt
+}
+
+func (c *mqlDigitaloceanFunctionAccessKey) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
 // mqlDigitaloceanFunctionAction for the digitalocean.function.action resource
@@ -16136,7 +16476,9 @@ type mqlDigitaloceanPartnerAttachment struct {
 	Vpcs                      plugin.TValue[[]any]
 	Bgp                       plugin.TValue[any]
 	ParentUuid                plugin.TValue[string]
+	ParentAttachment          plugin.TValue[*mqlDigitaloceanPartnerAttachment]
 	Children                  plugin.TValue[[]any]
+	ChildAttachments          plugin.TValue[[]any]
 	CreatedAt                 plugin.TValue[*time.Time]
 }
 
@@ -16233,8 +16575,40 @@ func (c *mqlDigitaloceanPartnerAttachment) GetParentUuid() *plugin.TValue[string
 	return &c.ParentUuid
 }
 
+func (c *mqlDigitaloceanPartnerAttachment) GetParentAttachment() *plugin.TValue[*mqlDigitaloceanPartnerAttachment] {
+	return plugin.GetOrCompute[*mqlDigitaloceanPartnerAttachment](&c.ParentAttachment, func() (*mqlDigitaloceanPartnerAttachment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.partnerAttachment", c.__id, "parentAttachment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanPartnerAttachment), nil
+			}
+		}
+
+		return c.parentAttachment()
+	})
+}
+
 func (c *mqlDigitaloceanPartnerAttachment) GetChildren() *plugin.TValue[[]any] {
 	return &c.Children
+}
+
+func (c *mqlDigitaloceanPartnerAttachment) GetChildAttachments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ChildAttachments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.partnerAttachment", c.__id, "childAttachments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.childAttachments()
+	})
 }
 
 func (c *mqlDigitaloceanPartnerAttachment) GetCreatedAt() *plugin.TValue[*time.Time] {

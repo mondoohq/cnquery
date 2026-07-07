@@ -414,6 +414,20 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		corednsAutoscalerEnabled = c.CorednsAutoscaler.Enabled
 	}
 
+	autoscaler := map[string]interface{}{}
+	if c.ClusterAutoscalerConfiguration != nil {
+		ca := c.ClusterAutoscalerConfiguration
+		if ca.ScaleDownUtilizationThreshold != nil {
+			autoscaler["scaleDownUtilizationThreshold"] = *ca.ScaleDownUtilizationThreshold
+		}
+		if ca.ScaleDownUnneededTime != nil {
+			autoscaler["scaleDownUnneededTime"] = *ca.ScaleDownUnneededTime
+		}
+		if len(ca.Expanders) > 0 {
+			autoscaler["expanders"] = toStringSlice(ca.Expanders)
+		}
+	}
+
 	return map[string]*llx.RawData{
 		"id":                                   llx.StringData(c.ID),
 		"name":                                 llx.StringData(c.Name),
@@ -446,7 +460,31 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		"nvidiaGpuDevicePluginEnabled":             llx.BoolDataPtr(nvidiaGpuEnabled),
 		"rdmaSharedDevicePluginEnabled":            llx.BoolDataPtr(rdmaEnabled),
 		"corednsAutoscalerEnabled":                 llx.BoolDataPtr(corednsAutoscalerEnabled),
+		"workerSubnetUuid":                         llx.StringData(c.WorkerSubnetUUID),
+		"clusterAutoscaler":                        llx.DictData(autoscaler),
 	}
+}
+
+// availableUpgradeVersions lists the Kubernetes versions the cluster can
+// currently upgrade to. An empty list means the cluster is already on the
+// newest version DigitalOcean offers for it.
+func (r *mqlDigitaloceanKubernetesCluster) availableUpgradeVersions() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	upgrades, _, err := conn.Client().Kubernetes.GetUpgrades(context.Background(), r.Id.Data)
+	if err != nil {
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
+		}
+		return nil, err
+	}
+	out := make([]interface{}, 0, len(upgrades))
+	for _, u := range upgrades {
+		if u == nil {
+			continue
+		}
+		out = append(out, u.Slug)
+	}
+	return out, nil
 }
 
 func initDigitaloceanKubernetesCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

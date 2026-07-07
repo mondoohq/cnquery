@@ -66,6 +66,33 @@ type mqlDigitaloceanInternal struct {
 	firewallByDroplet map[int64][]*mqlDigitaloceanFirewall
 	firewallByTag     map[string][]*mqlDigitaloceanFirewall
 	firewallIndexErr  error
+
+	partnerAttachmentIndexOnce sync.Once
+	partnerAttachmentIndex     map[string]*mqlDigitaloceanPartnerAttachment
+	partnerAttachmentIndexErr  error
+}
+
+// partnerAttachmentByID resolves a partner attachment by its ID from the
+// account-wide list, caching the index. Partner attachments reference
+// their parent and children by UUID, which matches the attachment ID.
+func (r *mqlDigitalocean) partnerAttachmentByID(id string) (*mqlDigitaloceanPartnerAttachment, error) {
+	r.partnerAttachmentIndexOnce.Do(func() {
+		attachments := r.GetPartnerAttachments()
+		if attachments.Error != nil {
+			r.partnerAttachmentIndexErr = attachments.Error
+			return
+		}
+		idx := make(map[string]*mqlDigitaloceanPartnerAttachment, len(attachments.Data))
+		for _, a := range attachments.Data {
+			ma := a.(*mqlDigitaloceanPartnerAttachment)
+			idx[ma.Id.Data] = ma
+		}
+		r.partnerAttachmentIndex = idx
+	})
+	if r.partnerAttachmentIndexErr != nil {
+		return nil, r.partnerAttachmentIndexErr
+	}
+	return r.partnerAttachmentIndex[id], nil
 }
 
 func parentDigitalocean(runtime *plugin.Runtime) (*mqlDigitalocean, error) {

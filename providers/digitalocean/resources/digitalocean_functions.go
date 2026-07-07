@@ -122,6 +122,38 @@ func listOpenWhiskActions(ctx context.Context, apiHost, uuid, key string) ([]owA
 	return all, nil
 }
 
+func (r *mqlDigitaloceanFunctionNamespace) accessKeys() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	keys, _, err := client.Functions.ListAccessKeys(context.Background(), r.Namespace.Data)
+	if err != nil {
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
+		}
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(keys))
+	for _, k := range keys {
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.function.accessKey", map[string]*llx.RawData{
+			"__id":          llx.StringData("digitalocean.function.accessKey/" + r.Uuid.Data + "/" + k.ID),
+			"namespaceUuid": llx.StringData(r.Uuid.Data),
+			"id":            llx.StringData(k.ID),
+			"name":          llx.StringData(k.Name),
+			"createdAt":     llx.TimeDataPtr(timePtr(k.CreatedAt)),
+			"updatedAt":     llx.TimeDataPtr(timePtr(k.UpdatedAt)),
+			"lastUsedAt":    llx.TimeDataPtr(timePtr(k.LastUsedAt)),
+			"expiresAt":     llx.TimeDataPtr(timePtr(k.ExpiresAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
 func (r *mqlDigitaloceanFunctionNamespace) functions() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
