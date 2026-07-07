@@ -21128,6 +21128,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.sourceKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetSourceKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.lambda.function.durableExecutionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetDurableExecutionTimeout()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.durableExecutionRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetDurableExecutionRetentionDays()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.durableExecutionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetDurableExecutionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.lambda.function.version.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionVersion).GetArn()).ToDataRes(types.String)
 	},
@@ -58000,6 +58009,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.sourceKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).SourceKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.durableExecutionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).DurableExecutionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.durableExecutionRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).DurableExecutionRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.durableExecutionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).DurableExecutionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -139205,6 +139226,9 @@ type mqlAwsLambdaFunction struct {
 	MasterArn                     plugin.TValue[string]
 	MasterFunction                plugin.TValue[*mqlAwsLambdaFunction]
 	SourceKmsKey                  plugin.TValue[*mqlAwsKmsKey]
+	DurableExecutionTimeout       plugin.TValue[int64]
+	DurableExecutionRetentionDays plugin.TValue[int64]
+	DurableExecutionKmsKey        plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -139693,6 +139717,30 @@ func (c *mqlAwsLambdaFunction) GetSourceKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.sourceKmsKey()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetDurableExecutionTimeout() *plugin.TValue[int64] {
+	return &c.DurableExecutionTimeout
+}
+
+func (c *mqlAwsLambdaFunction) GetDurableExecutionRetentionDays() *plugin.TValue[int64] {
+	return &c.DurableExecutionRetentionDays
+}
+
+func (c *mqlAwsLambdaFunction) GetDurableExecutionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.DurableExecutionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "durableExecutionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.durableExecutionKmsKey()
 	})
 }
 

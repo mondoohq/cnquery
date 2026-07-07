@@ -288,6 +288,14 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 		"masterArn":                   llx.StringDataPtr(function.MasterArn),
 	}
 
+	if function.DurableConfig != nil {
+		args["durableExecutionTimeout"] = llx.IntDataPtr(function.DurableConfig.ExecutionTimeout)
+		args["durableExecutionRetentionDays"] = llx.IntDataPtr(function.DurableConfig.RetentionPeriodInDays)
+	} else {
+		args["durableExecutionTimeout"] = llx.NilData
+		args["durableExecutionRetentionDays"] = llx.NilData
+	}
+
 	if loggingConfigResource != nil {
 		args["loggingConfig"] = llx.ResourceData(loggingConfigResource, "aws.lambda.function.loggingConfig")
 	} else {
@@ -302,6 +310,9 @@ func newLambdaFunctionResource(runtime *plugin.Runtime, region string, accountID
 	f.cacheRoleArn = function.Role
 	f.region = region
 	f.accountID = accountID
+	if function.DurableConfig != nil {
+		f.cacheDurableExecutionKmsKeyArn = function.DurableConfig.KMSKeyArn
+	}
 	if function.VpcConfig != nil {
 		f.cacheVpcId = function.VpcConfig.VpcId
 		f.cacheSubnetIds = function.VpcConfig.SubnetIds
@@ -424,6 +435,8 @@ type mqlAwsLambdaFunctionInternal struct {
 	cacheImageUri         *string
 	cacheResolvedImageUri *string
 	cacheSourceKmsKeyArn  *string
+
+	cacheDurableExecutionKmsKeyArn *string
 }
 
 // fetchImageData resolves the container image URIs for Image package type
@@ -474,6 +487,22 @@ func (a *mqlAwsLambdaFunction) sourceKmsKey() (*mqlAwsKmsKey, error) {
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheSourceKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+// durableExecutionKmsKey resolves the customer-managed KMS key that encrypts a
+// durable function's execution payload data, when one is configured. Cached
+// from the durable config at creation time.
+func (a *mqlAwsLambdaFunction) durableExecutionKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheDurableExecutionKmsKeyArn == nil || *a.cacheDurableExecutionKmsKeyArn == "" {
+		a.DurableExecutionKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheDurableExecutionKmsKeyArn)})
 	if err != nil {
 		return nil, err
 	}

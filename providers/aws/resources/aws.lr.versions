@@ -6120,6 +6120,9 @@ aws.lambda.function.codeSize 11.15.2
 aws.lambda.function.concurrency 11.15.2
 aws.lambda.function.description 11.15.2
 aws.lambda.function.dlqTargetArn 11.15.2
+aws.lambda.function.durableExecutionKmsKey 13.44.1
+aws.lambda.function.durableExecutionRetentionDays 13.44.1
+aws.lambda.function.durableExecutionTimeout 13.44.1
 aws.lambda.function.environment 11.15.2
 aws.lambda.function.environmentSecretLikeKeys 13.37.1
 aws.lambda.function.ephemeralStorageSize 11.15.2

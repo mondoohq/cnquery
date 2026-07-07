@@ -15037,6 +15037,22 @@ private aws.lambda.function @defaults("arn") {
   masterFunction() aws.lambda.function
   // KMS key used to encrypt the function's deployment package, when configured
   sourceKmsKey() aws.kms.key
+  // Maximum time in seconds a durable execution may run before timing out
+  //
+  // Applies to the entire durable execution rather than an individual
+  // invocation. Null when the function is not configured as a durable
+  // function.
+  durableExecutionTimeout int
+  // Number of days durable-execution history is retained after completion
+  //
+  // After this period the history is no longer available through the
+  // execution-history API. Null when the function is not a durable function.
+  durableExecutionRetentionDays int
+  // KMS key encrypting durable-execution payload data, including input, output, and error payloads
+  //
+  // A customer-managed key configured on the durable function. Null when the
+  // function is not a durable function or relies on an AWS-owned key.
+  durableExecutionKmsKey() aws.kms.key
 }
 
 // AWS Lambda function version
