@@ -594,6 +594,31 @@ private hetzner.certificate @defaults("id name type") {
   fingerprint string
   // PEM-encoded certificate body
   certificate string
+  // Public key algorithm parsed from the certificate (RSA, ECDSA, Ed25519, DSA)
+  //
+  // Empty when the certificate body cannot be parsed.
+  keyAlgorithm string
+  // Public key size in bits parsed from the certificate
+  //
+  // The RSA/DSA modulus size or the ECDSA curve size. Ed25519 keys report
+  // 256. 0 when the certificate body cannot be parsed or the size cannot be
+  // determined.
+  keyBits int
+  // Certificate signature algorithm parsed from the certificate
+  //
+  // For example SHA256-RSA, SHA384-ECDSA, or the legacy SHA1-RSA and
+  // MD5-RSA. Empty when the certificate body cannot be parsed.
+  signatureAlgorithm string
+  // Distinguished name of the issuer parsed from the certificate
+  issuer string
+  // Distinguished name of the subject parsed from the certificate
+  subject string
+  // Certificate serial number parsed from the certificate, in decimal
+  serialNumber string
+  // Whether the certificate is a certificate authority (the basic-constraints CA flag)
+  isCa bool
+  // Whether the certificate is self-signed (issuer equals subject)
+  selfSigned bool
   // Validity start
   notValidBefore time
   // Validity end

@@ -897,6 +897,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.certificate.certificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerCertificate).GetCertificate()).ToDataRes(types.String)
 	},
+	"hetzner.certificate.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.keyBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetKeyBits()).ToDataRes(types.Int)
+	},
+	"hetzner.certificate.signatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetSignatureAlgorithm()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"hetzner.certificate.isCa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetIsCa()).ToDataRes(types.Bool)
+	},
+	"hetzner.certificate.selfSigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerCertificate).GetSelfSigned()).ToDataRes(types.Bool)
+	},
 	"hetzner.certificate.notValidBefore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerCertificate).GetNotValidBefore()).ToDataRes(types.Time)
 	},
@@ -2204,6 +2228,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.certificate.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerCertificate).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.keyBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).KeyBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.signatureAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).SignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.isCa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).IsCa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.certificate.selfSigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerCertificate).SelfSigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"hetzner.certificate.notValidBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5375,19 +5431,27 @@ type mqlHetznerCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerCertificateInternal
-	Id             plugin.TValue[int64]
-	Name           plugin.TValue[string]
-	Type           plugin.TValue[string]
-	Fingerprint    plugin.TValue[string]
-	Certificate    plugin.TValue[string]
-	NotValidBefore plugin.TValue[*time.Time]
-	NotValidAfter  plugin.TValue[*time.Time]
-	DomainNames    plugin.TValue[[]any]
-	Status         plugin.TValue[any]
-	Created        plugin.TValue[*time.Time]
-	Servers        plugin.TValue[[]any]
-	LoadBalancers  plugin.TValue[[]any]
-	Labels         plugin.TValue[map[string]any]
+	Id                 plugin.TValue[int64]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Fingerprint        plugin.TValue[string]
+	Certificate        plugin.TValue[string]
+	KeyAlgorithm       plugin.TValue[string]
+	KeyBits            plugin.TValue[int64]
+	SignatureAlgorithm plugin.TValue[string]
+	Issuer             plugin.TValue[string]
+	Subject            plugin.TValue[string]
+	SerialNumber       plugin.TValue[string]
+	IsCa               plugin.TValue[bool]
+	SelfSigned         plugin.TValue[bool]
+	NotValidBefore     plugin.TValue[*time.Time]
+	NotValidAfter      plugin.TValue[*time.Time]
+	DomainNames        plugin.TValue[[]any]
+	Status             plugin.TValue[any]
+	Created            plugin.TValue[*time.Time]
+	Servers            plugin.TValue[[]any]
+	LoadBalancers      plugin.TValue[[]any]
+	Labels             plugin.TValue[map[string]any]
 }
 
 // createHetznerCertificate creates a new instance of this resource
@@ -5445,6 +5509,38 @@ func (c *mqlHetznerCertificate) GetFingerprint() *plugin.TValue[string] {
 
 func (c *mqlHetznerCertificate) GetCertificate() *plugin.TValue[string] {
 	return &c.Certificate
+}
+
+func (c *mqlHetznerCertificate) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlHetznerCertificate) GetKeyBits() *plugin.TValue[int64] {
+	return &c.KeyBits
+}
+
+func (c *mqlHetznerCertificate) GetSignatureAlgorithm() *plugin.TValue[string] {
+	return &c.SignatureAlgorithm
+}
+
+func (c *mqlHetznerCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlHetznerCertificate) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlHetznerCertificate) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlHetznerCertificate) GetIsCa() *plugin.TValue[bool] {
+	return &c.IsCa
+}
+
+func (c *mqlHetznerCertificate) GetSelfSigned() *plugin.TValue[bool] {
+	return &c.SelfSigned
 }
 
 func (c *mqlHetznerCertificate) GetNotValidBefore() *plugin.TValue[*time.Time] {
