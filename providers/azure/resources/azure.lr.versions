@@ -163,6 +163,7 @@ azure.subscription.aksService.cluster.servicePrincipalClientId 13.22.1
 azure.subscription.aksService.cluster.skuTier 13.1.8
 azure.subscription.aksService.cluster.storageProfile 9.0.1
 azure.subscription.aksService.cluster.supportPlan 13.1.8
+azure.subscription.aksService.cluster.systemAssignedIdentity 13.26.1
 azure.subscription.aksService.cluster.systemMetadata 13.19.2
 azure.subscription.aksService.cluster.tags 9.0.1
 azure.subscription.aksService.cluster.userAssignedIdentities 13.23.1
@@ -210,6 +211,7 @@ azure.subscription.apiManagementService.service.scmUrl 13.10.2
 azure.subscription.apiManagementService.service.skuCapacity 13.10.2
 azure.subscription.apiManagementService.service.skuName 13.10.2
 azure.subscription.apiManagementService.service.ssl30Enabled 13.24.1
+azure.subscription.apiManagementService.service.systemAssignedIdentity 13.26.1
 azure.subscription.apiManagementService.service.systemMetadata 13.22.1
 azure.subscription.apiManagementService.service.tags 13.10.2
 azure.subscription.apiManagementService.service.targetProvisioningState 13.10.2
@@ -1395,6 +1397,7 @@ azure.subscription.containerAppService.containerApp.runningStatus 13.11.3
 azure.subscription.containerAppService.containerApp.scaleRules 13.10.2
 azure.subscription.containerAppService.containerApp.secretNames 13.10.2
 azure.subscription.containerAppService.containerApp.stickySessions 13.10.2
+azure.subscription.containerAppService.containerApp.systemAssignedIdentity 13.26.1
 azure.subscription.containerAppService.containerApp.systemMetadata 13.22.1
 azure.subscription.containerAppService.containerApp.tags 13.10.2
 azure.subscription.containerAppService.containerApp.targetPort 13.10.2
@@ -2242,6 +2245,7 @@ azure.subscription.functionsService.functionApp.principalId 13.23.1
 azure.subscription.functionsService.functionApp.properties 13.3.3
 azure.subscription.functionsService.functionApp.publicNetworkAccess 13.18.1
 azure.subscription.functionsService.functionApp.state 13.3.3
+azure.subscription.functionsService.functionApp.systemAssignedIdentity 13.26.1
 azure.subscription.functionsService.functionApp.systemMetadata 13.22.1
 azure.subscription.functionsService.functionApp.tags 13.3.3
 azure.subscription.functionsService.functionApp.userAssignedIdentities 13.23.1
@@ -5351,6 +5355,7 @@ azure.subscription.webService.appsite.slots 11.3.85
 azure.subscription.webService.appsite.sshEnabled 13.1.8
 azure.subscription.webService.appsite.stack 9.0.1
 azure.subscription.webService.appsite.state 11.4.28
+azure.subscription.webService.appsite.systemAssignedIdentity 13.26.1
 azure.subscription.webService.appsite.systemMetadata 13.19.2
 azure.subscription.webService.appsite.tags 9.0.1
 azure.subscription.webService.appsite.type 9.0.1

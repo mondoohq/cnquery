@@ -100,6 +100,17 @@ func newSystemAssignedManagedIdentity(runtime *plugin.Runtime, ownerID, principa
 	return r.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
+// tenantIDFromIdentityDict extracts the tenantId from a resource's identity dict
+// (the managed-identity block Azure returns on a resource), or "" when absent.
+func tenantIDFromIdentityDict(identity plugin.TValue[any]) string {
+	if id, ok := identity.Data.(map[string]any); ok {
+		if t, ok := id["tenantId"].(string); ok {
+			return t
+		}
+	}
+	return ""
+}
+
 func (a *mqlAzureSubscription) iam() (*mqlAzureSubscriptionAuthorizationService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

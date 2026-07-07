@@ -238,6 +238,10 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) userAssignedIdentities
 	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+}
+
 func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) virtualNetworkSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	if a.VirtualNetworkSubnetId.Data == "" {
 		a.VirtualNetworkSubnet.State = plugin.StateIsSet | plugin.StateIsNull

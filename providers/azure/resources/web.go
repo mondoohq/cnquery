@@ -658,6 +658,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) userAssignedIdentities() ([]any,
 	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsite) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+}
+
 // keyVaultReferenceIdentityRef resolves the user-assigned managed identity used
 // to fetch Key Vault references in app settings. When the app uses its
 // system-assigned identity the raw value is "SystemAssigned" (not a resource

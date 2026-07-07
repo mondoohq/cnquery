@@ -33,6 +33,10 @@ func (a *mqlAzureSubscriptionApiManagementServiceService) userAssignedIdentities
 	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
+func (a *mqlAzureSubscriptionApiManagementServiceService) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, a.TenantId.Data, &a.SystemAssignedIdentity)
+}
+
 func (a *mqlAzureSubscriptionApiManagementServiceService) privateEndpointConnections() ([]any, error) {
 	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }

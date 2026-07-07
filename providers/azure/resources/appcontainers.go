@@ -247,6 +247,10 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) userAssignedIdenti
 	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
+func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+}
+
 // managedEnvironment resolves the parent managed environment of the container
 // app from its ARM resource ID. The runtime cache short-circuits environments
 // already listed by managedEnvironments(); otherwise the init fetches it on

@@ -8141,6 +8141,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"azure.subscription.webService.appsite.systemAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetSystemAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.webService.appsite.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
@@ -12434,6 +12437,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"azure.subscription.aksService.cluster.systemAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetSystemAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.aksService.cluster.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
@@ -14330,6 +14336,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.functionsService.functionApp.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"azure.subscription.functionsService.functionApp.systemAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetSystemAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.functionsService.functionApp.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
@@ -15497,6 +15506,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerAppService.containerApp.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetPrincipalId()).ToDataRes(types.String)
 	},
+	"azure.subscription.containerAppService.containerApp.systemAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetSystemAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
 	"azure.subscription.containerAppService.containerApp.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
 	},
@@ -16036,6 +16048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.apiManagementService.service.tenantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.systemAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSystemAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
 	},
 	"azure.subscription.apiManagementService.service.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -26049,6 +26064,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.systemAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).SystemAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -32269,6 +32288,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.aksService.cluster.systemAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).SystemAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.aksService.cluster.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -35061,6 +35084,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.functionsService.functionApp.systemAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).SystemAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.functionsService.functionApp.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -36777,6 +36804,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.containerAppService.containerApp.systemAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).SystemAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.containerAppService.containerApp.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -37539,6 +37570,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.apiManagementService.service.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionApiManagementServiceService).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.systemAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).SystemAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.apiManagementService.service.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -59801,6 +59836,7 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Identity                     plugin.TValue[any]
 	IdentityType                 plugin.TValue[string]
 	PrincipalId                  plugin.TValue[string]
+	SystemAssignedIdentity       plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities       plugin.TValue[[]any]
 	HttpsOnly                    plugin.TValue[bool]
 	ClientCertEnabled            plugin.TValue[bool]
@@ -59911,6 +59947,22 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetIdentityType() *plugin.TValue
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetSystemAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.SystemAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "systemAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.systemAssignedIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -74494,6 +74546,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	IdentityBindings                  plugin.TValue[[]any]
 	Identity                          plugin.TValue[any]
 	PrincipalId                       plugin.TValue[string]
+	SystemAssignedIdentity            plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities            plugin.TValue[[]any]
 	DiskEncryptionSet                 plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
 	KubeletIdentity                   plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
@@ -74810,6 +74863,22 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetIdentity() *plugin.TValue[any
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetSystemAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.SystemAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "systemAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.systemAssignedIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -81852,6 +81921,7 @@ type mqlAzureSubscriptionFunctionsServiceFunctionApp struct {
 	ClientCertMode            plugin.TValue[string]
 	ManagedServiceIdentityId  plugin.TValue[string]
 	PrincipalId               plugin.TValue[string]
+	SystemAssignedIdentity    plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities    plugin.TValue[[]any]
 	KeyVaultReferenceIdentity plugin.TValue[string]
 	PublicNetworkAccess       plugin.TValue[string]
@@ -81948,6 +82018,22 @@ func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetManagedServiceIdent
 
 func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetSystemAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.SystemAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.functionsService.functionApp", c.__id, "systemAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.systemAssignedIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -86279,6 +86365,7 @@ type mqlAzureSubscriptionContainerAppServiceContainerApp struct {
 	ScaleRules               plugin.TValue[[]any]
 	Identity                 plugin.TValue[any]
 	PrincipalId              plugin.TValue[string]
+	SystemAssignedIdentity   plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities   plugin.TValue[[]any]
 	Registries               plugin.TValue[[]any]
 	RegistryAuthUsesIdentity plugin.TValue[bool]
@@ -86454,6 +86541,22 @@ func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetIdentity() *plu
 
 func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetSystemAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.SystemAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.containerAppService.containerApp", c.__id, "systemAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.systemAssignedIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -87811,6 +87914,7 @@ type mqlAzureSubscriptionApiManagementServiceService struct {
 	IdentityType                   plugin.TValue[string]
 	PrincipalId                    plugin.TValue[string]
 	TenantId                       plugin.TValue[string]
+	SystemAssignedIdentity         plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities         plugin.TValue[[]any]
 	PublicIpAddresses              plugin.TValue[[]any]
 	PrivateIpAddresses             plugin.TValue[[]any]
@@ -88006,6 +88110,22 @@ func (c *mqlAzureSubscriptionApiManagementServiceService) GetPrincipalId() *plug
 
 func (c *mqlAzureSubscriptionApiManagementServiceService) GetTenantId() *plugin.TValue[string] {
 	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetSystemAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.SystemAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "systemAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.systemAssignedIdentity()
+	})
 }
 
 func (c *mqlAzureSubscriptionApiManagementServiceService) GetUserAssignedIdentities() *plugin.TValue[[]any] {

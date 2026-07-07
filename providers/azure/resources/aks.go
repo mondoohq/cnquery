@@ -696,6 +696,10 @@ func (a *mqlAzureSubscriptionAksServiceCluster) userAssignedIdentities() ([]any,
 	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
+func (a *mqlAzureSubscriptionAksServiceCluster) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
+}
+
 func (a *mqlAzureSubscriptionAksServiceCluster) diskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
 	if a.cacheDiskEncryptionSetId == "" {
 		a.DiskEncryptionSet.State = plugin.StateIsSet | plugin.StateIsNull

@@ -5429,6 +5429,12 @@ azure.subscription.webService.appsite @defaults("id name location") {
   identityType string
   // Principal ID of the app's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
+  // System-assigned managed identity of the app; null when no system-assigned identity is enabled
+  //
+  // Resolves the system-assigned identity so its role assignments, and their
+  // role definitions and permissions, can be traversed, completing the
+  // resource-to-privilege leg of an attack path.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the app
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the app requires HTTPS only
@@ -9066,6 +9072,12 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   identity dict
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
+  // System-assigned control-plane managed identity of the cluster; null when a user-assigned identity is used
+  //
+  // Resolves the system-assigned identity so its role assignments, and their
+  // role definitions and permissions, can be traversed, completing the
+  // resource-to-privilege leg of an attack path.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the cluster control plane
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Disk encryption set used to encrypt cluster OS and data disks with a customer-managed key
@@ -10741,6 +10753,12 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   managedServiceIdentityId @maturity("deprecated") string
   // Principal ID of the function app's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
+  // System-assigned managed identity of the function app; null when no system-assigned identity is enabled
+  //
+  // Resolves the system-assigned identity so its role assignments, and their
+  // role definitions and permissions, can be traversed, completing the
+  // resource-to-privilege leg of an attack path.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the function app
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Identity used to resolve Key Vault references in app settings and connection strings (resource ID of a user-assigned identity, or "SystemAssigned")
@@ -11838,6 +11856,12 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   identity @maturity("deprecated") dict
   // Principal ID of the container app's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
+  // System-assigned managed identity of the container app; null when no system-assigned identity is enabled
+  //
+  // Resolves the system-assigned identity so its role assignments, and their
+  // role definitions and permissions, can be traversed, completing the
+  // resource-to-privilege leg of an attack path.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities attached to the container app
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Container registry references (server, identity, passwordSecretRef)
@@ -12311,6 +12335,12 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   principalId string
   // Tenant ID of the system-assigned managed identity
   tenantId string
+  // System-assigned managed identity of the service; null when no system-assigned identity is enabled
+  //
+  // Resolves the system-assigned identity so its role assignments, and their
+  // role definitions and permissions, can be traversed, completing the
+  // resource-to-privilege leg of an attack path.
+  systemAssignedIdentity() azure.subscription.managedIdentity
   // User-assigned managed identities associated with the service
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Public load-balanced IPv4 addresses of the service in its primary region (Basic / Standard / Premium / Isolated SKUs)

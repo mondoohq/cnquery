@@ -307,13 +307,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) userAssignedIdentities() ([]any, 
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	tenantID := ""
-	if id, ok := a.Identity.Data.(map[string]any); ok {
-		if t, ok := id["tenantId"].(string); ok {
-			tenantID = t
-		}
-	}
-	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantID, &a.SystemAssignedIdentity)
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {

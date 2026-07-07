@@ -47,3 +47,20 @@ func TestFilterRoleAssignmentsByPrincipal(t *testing.T) {
 		assert.Len(t, filterRoleAssignmentsByPrincipal(mixed, "aaa"), 1)
 	})
 }
+
+func TestTenantIDFromIdentityDict(t *testing.T) {
+	t.Run("reads tenantId from the identity dict", func(t *testing.T) {
+		id := plugin.TValue[any]{Data: map[string]any{"tenantId": "t-123", "principalId": "p-1"}, State: plugin.StateIsSet}
+		assert.Equal(t, "t-123", tenantIDFromIdentityDict(id))
+	})
+	t.Run("empty when tenantId is absent", func(t *testing.T) {
+		id := plugin.TValue[any]{Data: map[string]any{"principalId": "p-1"}, State: plugin.StateIsSet}
+		assert.Equal(t, "", tenantIDFromIdentityDict(id))
+	})
+	t.Run("empty when the value is not a map", func(t *testing.T) {
+		assert.Equal(t, "", tenantIDFromIdentityDict(plugin.TValue[any]{Data: "not-a-map"}))
+	})
+	t.Run("empty when nil", func(t *testing.T) {
+		assert.Equal(t, "", tenantIDFromIdentityDict(plugin.TValue[any]{}))
+	})
+}
