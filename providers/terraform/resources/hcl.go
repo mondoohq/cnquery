@@ -26,12 +26,25 @@ import (
 )
 
 type mqlTerraformInternal struct {
-	blocksByName  map[string]*mqlTerraformBlock
-	relatedBlocks map[string][]*mqlTerraformBlock
+	// lock guards every field below. The cache is populated exactly once by
+	// ensureCache and is immutable afterwards; all readers must hold lock.
+	lock sync.Mutex
+	// cached reports whether ensureCache has already populated the fields below.
+	cached bool
+
+	// The parsed HCL blocks, split by type. allBlocks holds every block;
+	// the type-specific slices are views into the same block instances.
+	allBlocks        []any
+	providerBlocks   []any
+	datasourceBlocks []any
+	variableBlocks   []any
+	outputBlocks     []any
+	resources        []*mqlTerraformBlock
 	// these are blocks with the type set to "terraform", used for settings
 	terraformBlocks []*mqlTerraformBlock
-	lock            sync.Mutex
-	resources       []*mqlTerraformBlock
+
+	blocksByName  map[string]*mqlTerraformBlock
+	relatedBlocks map[string][]*mqlTerraformBlock
 }
 
 func (t *mqlTerraform) files() ([]any, error) {
@@ -95,69 +108,73 @@ func (t *mqlTerraform) modules() ([]any, error) {
 }
 
 func (t *mqlTerraform) blocks() ([]any, error) {
-	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	parser := conn.Parser()
-	if parser == nil {
-		return []any{}, nil
+	if err := t.ensureCache(); err != nil {
+		return nil, err
 	}
-
-	files := parser.Files()
-	mqlHclBlocks := make([]any, 0)
-	for k := range files {
-		f := files[k]
-		blocks, err := listHclBlocks(t.MqlRuntime, f.Body, f)
-		if err != nil {
-			return nil, err
-		}
-		mqlHclBlocks = append(mqlHclBlocks, blocks...)
-	}
-
-	return mqlHclBlocks, t.refreshCache(mqlHclBlocks)
-}
-
-func (t *mqlTerraform) refreshCache(blocks []any) error {
-	if blocks == nil {
-		raw := t.GetBlocks()
-		return raw.Error
-	}
-
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	if t.blocksByName != nil {
+	return t.allBlocks, nil
+}
+
+// ensureCache parses the HCL configuration once and populates every cached
+// collection on the terraform singleton. It is safe to call concurrently from
+// any terraform.* field getter or init function: the first caller does the
+// work while holding lock, and every other caller blocks on lock and then
+// observes the fully-populated cache. Populating under a single lock (instead
+// of bouncing through GetBlocks/GetOrCompute, which is not synchronized) is
+// what prevents the intermittently-empty terraform.resources list — several
+// terraform.* fields resolve in parallel during a policy scan and previously
+// raced on this shared state (mondoohq/mql#8966).
+func (t *mqlTerraform) ensureCache() error {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if t.cached {
 		return nil
 	}
 
+	var blocks []any
+	// plan and state assets have no HCL parser; there are no blocks to list and
+	// the cache is left empty (but marked populated so we don't re-parse).
+	conn, ok := t.MqlRuntime.Connection.(*connection.Connection)
+	if ok && conn != nil {
+		if parser := conn.Parser(); parser != nil {
+			files := parser.Files()
+			for k := range files {
+				f := files[k]
+				bs, err := listHclBlocks(t.MqlRuntime, f.Body, f)
+				if err != nil {
+					return err
+				}
+				blocks = append(blocks, bs...)
+			}
+		}
+	}
+
+	t.allBlocks = blocks
 	t.blocksByName = map[string]*mqlTerraformBlock{}
 	t.relatedBlocks = map[string][]*mqlTerraformBlock{}
-
-	t.Providers.State = plugin.StateIsSet
-	t.Providers.Data = []any{}
-	t.Datasources.State = plugin.StateIsSet
-	t.Datasources.Data = []any{}
-	t.mqlTerraformInternal.resources = []*mqlTerraformBlock{}
-	t.Variables.State = plugin.StateIsSet
-	t.Variables.Data = []any{}
-	t.Outputs.State = plugin.StateIsSet
-	t.Outputs.Data = []any{}
+	t.providerBlocks = []any{}
+	t.datasourceBlocks = []any{}
+	t.variableBlocks = []any{}
+	t.outputBlocks = []any{}
+	t.resources = []*mqlTerraformBlock{}
 	t.terraformBlocks = []*mqlTerraformBlock{}
 
 	for i := range blocks {
 		block := blocks[i].(*mqlTerraformBlock)
 
 		// type must be pre-initialized
-		typ := block.Type.Data
-
-		switch typ {
+		switch block.Type.Data {
 		case "provider":
-			t.Providers.Data = append(t.Providers.Data, block)
+			t.providerBlocks = append(t.providerBlocks, block)
 		case "data":
-			t.Datasources.Data = append(t.Datasources.Data, block)
+			t.datasourceBlocks = append(t.datasourceBlocks, block)
 		case "resource":
-			t.mqlTerraformInternal.resources = append(t.mqlTerraformInternal.resources, block)
+			t.resources = append(t.resources, block)
 		case "variable":
-			t.Variables.Data = append(t.Variables.Data, block)
+			t.variableBlocks = append(t.variableBlocks, block)
 		case "output":
-			t.Outputs.Data = append(t.Outputs.Data, block)
+			t.outputBlocks = append(t.outputBlocks, block)
 		case "terraform":
 			t.terraformBlocks = append(t.terraformBlocks, block)
 		default:
@@ -192,23 +209,7 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 		}
 	}
 
-	for k, v := range t.relatedBlocks {
-		block, ok := t.blocksByName[k]
-		if !ok {
-			return errors.New("cannot find terraform block by name: " + k)
-		}
-
-		vi := make([]any, len(v))
-		for i := range v {
-			vi[i] = v[i]
-		}
-
-		block.Related = plugin.TValue[[]any]{
-			State: plugin.StateIsSet,
-			Data:  vi,
-		}
-	}
-
+	t.cached = true
 	return nil
 }
 
@@ -238,23 +239,39 @@ func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, erro
 }
 
 func (t *mqlTerraform) providers() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	if err := t.ensureCache(); err != nil {
+		return nil, err
+	}
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.providerBlocks, nil
 }
 
 func (t *mqlTerraform) datasources() ([]any, error) {
-	return nil, t.refreshCache(nil)
-}
-
-func (t *mqlTerraform) resources() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	if err := t.ensureCache(); err != nil {
+		return nil, err
+	}
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.datasourceBlocks, nil
 }
 
 func (t *mqlTerraform) variables() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	if err := t.ensureCache(); err != nil {
+		return nil, err
+	}
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.variableBlocks, nil
 }
 
 func (t *mqlTerraform) outputs() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	if err := t.ensureCache(); err != nil {
+		return nil, err
+	}
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.outputBlocks, nil
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -461,10 +478,13 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	tf := tfraw.(*mqlTerraform)
-	if err := tf.refreshCache(nil); err != nil {
+	if err := tf.ensureCache(); err != nil {
 		return nil, nil, err
 	}
-	resources := tf.mqlTerraformInternal.resources
+	tf.lock.Lock()
+	resources := make([]*mqlTerraformBlock, len(tf.resources))
+	copy(resources, tf.resources)
+	tf.lock.Unlock()
 
 	resourceArg := args["resource"]
 	nameArg := args["name"]
@@ -1036,16 +1056,26 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody any, file *hcl.File) ([]any,
 }
 
 func (g *mqlTerraformBlock) related() ([]any, error) {
-	// This field should be default be set by the Terraform routine that
-	// initializes all blocks. If we land here from a recording or other
-	// path, re-run it.
+	// The related-block graph is built once by the terraform singleton's
+	// ensureCache; look this block up in it.
 	o, err := CreateResource(g.MqlRuntime, "terraform", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
 
 	terraform := o.(*mqlTerraform)
-	return nil, terraform.refreshCache(nil)
+	if err := terraform.ensureCache(); err != nil {
+		return nil, err
+	}
+
+	terraform.lock.Lock()
+	defer terraform.lock.Unlock()
+	related := terraform.relatedBlocks[g.terraformID()]
+	res := make([]any, len(related))
+	for i := range related {
+		res[i] = related[i]
+	}
+	return res, nil
 }
 
 func newFilePosRange(runtime *plugin.Runtime, r hcl.Range) (plugin.Resource, plugin.Resource, error) {
@@ -1158,11 +1188,14 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	terraform := o.(*mqlTerraform)
-	if err := terraform.refreshCache(nil); err != nil {
+	if err := terraform.ensureCache(); err != nil {
 		return nil, nil, err
 	}
 
-	blocks := terraform.terraformBlocks
+	terraform.lock.Lock()
+	blocks := make([]*mqlTerraformBlock, len(terraform.terraformBlocks))
+	copy(blocks, terraform.terraformBlocks)
+	terraform.lock.Unlock()
 	if len(blocks) == 0 {
 		// no terraform settings block found, this is ok for terraform and not an error
 		// TODO: return modified arguments to load from recording

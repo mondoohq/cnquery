@@ -1,0 +1,95 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"sync"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/terraform/connection"
+	"go.mondoo.com/mql/v13/utils/syncx"
+)
+
+// newHclRaceRuntime builds a fresh runtime (and therefore a fresh terraform
+// singleton) backed by a real parsed HCL config with several resource blocks.
+func newHclRaceRuntime(t *testing.T) *plugin.Runtime {
+	t.Helper()
+	asset := &inventory.Asset{
+		Connections: []*inventory.Config{
+			{Type: "hcl", Options: map[string]string{"path": "../provider/testdata/terraform"}},
+		},
+	}
+	conn, err := connection.NewHclConnection(1, asset)
+	require.NoError(t, err)
+	return &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+}
+
+// TestHclCache_ConcurrentAccess is a regression test for the intermittent
+// `terraform.resources` empty-list bug reported in mondoohq/mql#8966. In a real
+// policy scan several terraform.* collection fields (blocks, providers,
+// datasources, ...) and the terraform.resources init all resolve concurrently
+// against the same terraform singleton. Before the fix each funneled into
+// refreshCache -> GetBlocks -> the unsynchronized GetOrCompute, so multiple
+// goroutines parsed and wrote the shared cache at once, and terraform.resources
+// init read the internal slice without holding the lock — a data race whose
+// visible symptom (an empty resources list) surfaced non-deterministically
+// depending on scheduling and memory ordering.
+//
+// Run with -race to surface any regression of the data race; the length
+// assertion catches the user-visible symptom (terraform.resources.length == 0).
+func TestHclCache_ConcurrentAccess(t *testing.T) {
+	const iterations = 300
+
+	for i := 0; i < iterations; i++ {
+		rt := newHclRaceRuntime(t)
+
+		tfraw, err := CreateResource(rt, "terraform", map[string]*llx.RawData{})
+		require.NoError(t, err)
+		tf := tfraw.(*mqlTerraform)
+
+		var wg sync.WaitGroup
+
+		// Writers: concurrent field resolutions that all populate the shared
+		// cache via ensureCache.
+		for _, get := range []func() *plugin.TValue[[]any]{
+			tf.GetBlocks, tf.GetProviders, tf.GetDatasources, tf.GetVariables, tf.GetOutputs,
+		} {
+			get := get
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				get()
+			}()
+		}
+
+		// Readers: terraform.resources init, which reads the internal
+		// `resources` slice.
+		gotLen := make([]int, 3)
+		for r := range gotLen {
+			r := r
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
+				if err != nil {
+					return
+				}
+				gotLen[r] = len(args["list"].Value.([]any))
+			}()
+		}
+
+		wg.Wait()
+
+		for r, l := range gotLen {
+			require.Positivef(t, l, "iteration %d reader %d: terraform.resources came back empty", i, r)
+		}
+	}
+}
