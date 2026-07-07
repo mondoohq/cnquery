@@ -54,7 +54,7 @@ func (s *mqlShadow) list() ([]any, error) {
 
 	// entries is already materialized in memory, but bound the count explicitly
 	// before sizing the result slice from this file-derived length.
-	if len(entries) > math.MaxInt32 {
+	if len(entries) > math.MaxInt/2 {
 		return nil, errors.New("shadow file has too many entries")
 	}
 	shadowEntryResources := make([]any, len(entries))
