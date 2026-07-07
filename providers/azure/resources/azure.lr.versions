@@ -3589,6 +3589,7 @@ azure.subscription.networkService.privateEndpoint.id 11.4.28
 azure.subscription.networkService.privateEndpoint.location 11.4.28
 azure.subscription.networkService.privateEndpoint.manualPrivateLinkServiceConnections 11.4.28
 azure.subscription.networkService.privateEndpoint.name 11.4.28
+azure.subscription.networkService.privateEndpoint.networkInterfaces 13.26.1
 azure.subscription.networkService.privateEndpoint.privateDnsZoneGroups 13.5.1
 azure.subscription.networkService.privateEndpoint.privateLinkServiceConnections 11.4.28
 azure.subscription.networkService.privateEndpoint.provisioningState 11.4.28

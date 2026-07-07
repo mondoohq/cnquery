@@ -1910,6 +1910,7 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 
 	var provisioningState, subnetId, customNicName, billingSku string
 	var plsConns, manualPlsConns []any
+	var nicIDs []string
 
 	if pe.Properties != nil {
 		if pe.Properties.ProvisioningState != nil {
@@ -1921,6 +1922,11 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 		customNicName = convert.ToValue(pe.Properties.CustomNetworkInterfaceName)
 		if pe.Properties.BillingSKU != nil {
 			billingSku = string(*pe.Properties.BillingSKU)
+		}
+		for _, nic := range pe.Properties.NetworkInterfaces {
+			if nic != nil && nic.ID != nil {
+				nicIDs = append(nicIDs, *nic.ID)
+			}
 		}
 
 		for _, c := range pe.Properties.PrivateLinkServiceConnections {
@@ -1941,6 +1947,7 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint",
 		map[string]*llx.RawData{
+			"__id":                                llx.StringDataPtr(pe.ID),
 			"id":                                  llx.StringDataPtr(pe.ID),
 			"name":                                llx.StringDataPtr(pe.Name),
 			"location":                            llx.StringDataPtr(pe.Location),
@@ -1956,7 +1963,13 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+	mqlPe := res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint)
+	mqlPe.cacheNetworkInterfaceIDs = nicIDs
+	return mqlPe, nil
+}
+
+type mqlAzureSubscriptionNetworkServicePrivateEndpointInternal struct {
+	cacheNetworkInterfaceIDs []string
 }
 
 // subnet resolves the subnet the private endpoint's network interface is
@@ -1973,6 +1986,71 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) subnet() (*mqlAzureS
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+// networkInterfaces resolves the interfaces holding the private endpoint's
+// private IPs so their effective security rules and routes can be examined.
+func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) networkInterfaces() ([]any, error) {
+	res := make([]any, 0, len(a.cacheNetworkInterfaceIDs))
+	for _, id := range a.cacheNetworkInterfaceIDs {
+		if id == "" {
+			continue
+		}
+		nic, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.interface",
+			map[string]*llx.RawData{"id": llx.StringData(id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, nic)
+	}
+	return res, nil
+}
+
+// initAzureSubscriptionNetworkServiceInterface resolves a network interface
+// referenced only by its resource ID (e.g. from a private endpoint) by fetching
+// it on demand. When the interface was already listed by interfaces() the
+// runtime cache short-circuits this and the init never runs.
+func initAzureSubscriptionNetworkServiceInterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return args, nil, nil
+	}
+	name, err := resourceID.Component("networkInterfaces")
+	if err != nil {
+		return args, nil, nil
+	}
+	client, err := network.NewInterfacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, name, nil)
+	if err != nil {
+		// The interface may be inaccessible (deleted, cross-subscription, or
+		// access denied); fall back to the bare reference rather than failing
+		// the surrounding query.
+		return args, nil, nil
+	}
+	mqlIface, err := azureInterfaceToMql(runtime, resp.Interface)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlIface, nil
 }
 
 func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

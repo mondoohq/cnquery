@@ -3464,6 +3464,12 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   // reachable, completing a private-access path from a virtual network to the
   // resource behind the endpoint.
   subnet() azure.subscription.networkService.subnet
+  // Network interfaces automatically created for the private endpoint
+  //
+  // Resolves the interfaces that hold the endpoint's private IPs so their
+  // effective security rules and routes can be examined, connecting the
+  // private-access path to the network filtering applied at the endpoint.
+  networkInterfaces() []azure.subscription.networkService.interface
   // Custom name of the network interface attached to the private endpoint
   customNetworkInterfaceName string
   // Billing SKU of the private endpoint ("Fixed" or "PayAsYouGo")

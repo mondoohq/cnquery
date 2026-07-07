@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.26.0",
-  "generated_at": "2026-07-06T12:03:49-07:00",
+  "generated_at": "2026-07-06T21:41:00-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -1250,7 +1250,7 @@
     {
       "permission": "Microsoft.Network/networkInterfaces/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
