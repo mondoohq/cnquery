@@ -62,7 +62,6 @@ func TestHclCache_ConcurrentAccess(t *testing.T) {
 		for _, get := range []func() *plugin.TValue[[]any]{
 			tf.GetBlocks, tf.GetProviders, tf.GetDatasources, tf.GetVariables, tf.GetOutputs,
 		} {
-			get := get
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -74,7 +73,6 @@ func TestHclCache_ConcurrentAccess(t *testing.T) {
 		// `resources` slice.
 		gotLen := make([]int, 3)
 		for r := range gotLen {
-			r := r
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
