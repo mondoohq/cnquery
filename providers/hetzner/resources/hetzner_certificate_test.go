@@ -106,6 +106,38 @@ func TestParseCertificatePEM(t *testing.T) {
 		assert.False(t, got.isCa)
 	})
 
+	t.Run("self-issued but cross-signed is not self-signed", func(t *testing.T) {
+		ownKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		require.NoError(t, err)
+		otherKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		require.NoError(t, err)
+		// tmpl and parent share a subject name, so the issued cert has
+		// issuer == subject, but it is signed with otherKey rather than ownKey.
+		tmpl := &x509.Certificate{
+			SerialNumber:          big.NewInt(7),
+			Subject:               pkix.Name{CommonName: "shared.example.com"},
+			NotBefore:             time.Unix(0, 0),
+			NotAfter:              time.Unix(1<<31, 0),
+			IsCA:                  true,
+			BasicConstraintsValid: true,
+		}
+		parent := &x509.Certificate{
+			SerialNumber:          big.NewInt(8),
+			Subject:               pkix.Name{CommonName: "shared.example.com"},
+			NotBefore:             time.Unix(0, 0),
+			NotAfter:              time.Unix(1<<31, 0),
+			IsCA:                  true,
+			BasicConstraintsValid: true,
+		}
+		der, err := x509.CreateCertificate(rand.Reader, tmpl, parent, &ownKey.PublicKey, otherKey)
+		require.NoError(t, err)
+		got := parseCertificatePEM(string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})))
+		// Issuer and subject names match, but the signature is from otherKey,
+		// so it must not be reported as self-signed.
+		assert.Equal(t, got.issuer, got.subject)
+		assert.False(t, got.selfSigned)
+	})
+
 	t.Run("empty body", func(t *testing.T) {
 		assert.Equal(t, parsedCertificate{}, parseCertificatePEM(""))
 	})

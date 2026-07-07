@@ -54,9 +54,14 @@ func parseCertificatePEM(pemBody string) parsedCertificate {
 	out.issuer = c.Issuer.String()
 	out.subject = c.Subject.String()
 	out.isCa = c.IsCA
-	// A self-issued (self-signed) certificate has an identical issuer and
-	// subject; comparing the raw DER is the canonical check.
-	out.selfSigned = bytes.Equal(c.RawIssuer, c.RawSubject)
+	// Self-signed means the certificate is both self-issued (identical issuer
+	// and subject DER) and carries a signature that verifies against its own
+	// public key. The signature check rules out a cross-signed certificate,
+	// which shares issuer and subject names but is signed by a different key.
+	if bytes.Equal(c.RawIssuer, c.RawSubject) &&
+		c.CheckSignature(c.SignatureAlgorithm, c.RawTBSCertificate, c.Signature) == nil {
+		out.selfSigned = true
+	}
 	if c.SerialNumber != nil {
 		out.serialNumber = c.SerialNumber.String()
 	}

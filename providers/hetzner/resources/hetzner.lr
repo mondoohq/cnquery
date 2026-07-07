@@ -617,7 +617,12 @@ private hetzner.certificate @defaults("id name type") {
   serialNumber string
   // Whether the certificate is a certificate authority (the basic-constraints CA flag)
   isCa bool
-  // Whether the certificate is self-signed (issuer equals subject)
+  // Whether the certificate is self-signed
+  //
+  // True when the issuer equals the subject and the signature verifies
+  // against the certificate's own public key. The signature check
+  // distinguishes a genuinely self-signed certificate from a cross-signed
+  // one that shares issuer and subject names but is signed by another key.
   selfSigned bool
   // Validity start
   notValidBefore time
