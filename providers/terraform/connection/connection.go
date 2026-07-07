@@ -40,7 +40,23 @@ type Connection struct {
 	// built only once per connection. Guarded by varCtxOnce.
 	varCtx     *hcl.EvalContext
 	varCtxOnce sync.Once
+
+	// hclCache carries the resources package's one-time HCL block
+	// classification for this connection as an opaque handle — owned and
+	// synchronized entirely by that package. It lives on the connection so
+	// the state is built once per asset (resource instances may be
+	// duplicated by the runtime registry) and is released together with the
+	// connection on disconnect.
+	hclCache any
 }
+
+// HclCache returns the classification handle stored via SetHclCache, or nil.
+// Synchronization is the caller's responsibility.
+func (c *Connection) HclCache() any { return c.hclCache }
+
+// SetHclCache stores the resources package's HCL block classification.
+// Synchronization is the caller's responsibility.
+func (c *Connection) SetHclCache(cache any) { c.hclCache = cache }
 
 // SetFeatures stores the active MQL feature-flag bitset on the connection.
 func (c *Connection) SetFeatures(features []byte) {

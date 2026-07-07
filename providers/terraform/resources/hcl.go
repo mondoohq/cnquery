@@ -25,13 +25,59 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// mqlTerraformInternal is embedded in mqlTerraform by the generated code.
+// The block classification itself lives in an hclCache on the connection,
+// not here: the runtime registry can hand out duplicate mqlTerraform
+// instances, so instance-local state would be built repeatedly and would
+// let readers of one instance race the build of another.
 type mqlTerraformInternal struct {
-	blocksByName  map[string]*mqlTerraformBlock
-	relatedBlocks map[string][]*mqlTerraformBlock
-	// these are blocks with the type set to "terraform", used for settings
-	terraformBlocks []*mqlTerraformBlock
-	lock            sync.Mutex
+	// published tracks whether the cached collections were already copied to
+	// this instance's accessor cells, so the cells are written exactly once
+	// — republishing would race concurrent lock-free accessor reads.
+	// Guarded by hclStateLock.
+	published bool
+}
+
+// hclCache is the one-time classification of an asset's HCL blocks — the
+// internal state behind every collection accessor. It is built exactly once
+// per connection (stored via connection.SetHclCache) and read-only
+// afterwards.
+type hclCache struct {
+	blocks          []any
+	providers       []any
+	datasources     []any
 	resources       []*mqlTerraformBlock
+	variables       []any
+	outputs         []any
+	terraformBlocks []*mqlTerraformBlock
+}
+
+// hclStateLock serializes the one-time hclCache build and every
+// listHclBlocks call across the whole provider. It guards two things at
+// once: the per-connection cache handle, and the terraform.block instances
+// themselves — blocks are deduped through the runtime's resource registry
+// with a non-atomic get-then-set and are initialized in place, so concurrent
+// listings would both duplicate registry entries and mutate instances
+// another goroutine is reading. A single process-wide mutex is deliberately
+// coarse but safe: builds are one-shot per asset and block listings are
+// cheap, static HCL walks. (It also covers the case where the registry's
+// get-then-set hands out two `terraform` instances — a per-instance lock
+// would then guard nothing.)
+var hclStateLock sync.Mutex
+
+// hclCacheLocked returns the connection's built HCL classification, building
+// and storing it on first use. Callers must hold hclStateLock.
+func hclCacheLocked(runtime *plugin.Runtime) (*hclCache, error) {
+	conn := runtime.Connection.(*connection.Connection)
+	if cache, ok := conn.HclCache().(*hclCache); ok {
+		return cache, nil
+	}
+	cache, err := buildHclCache(runtime, conn)
+	if err != nil {
+		return nil, err
+	}
+	conn.SetHclCache(cache)
+	return cache, nil
 }
 
 func (t *mqlTerraform) files() ([]any, error) {
@@ -95,71 +141,98 @@ func (t *mqlTerraform) modules() ([]any, error) {
 }
 
 func (t *mqlTerraform) blocks() ([]any, error) {
-	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	parser := conn.Parser()
-	if parser == nil {
-		return []any{}, nil
-	}
-
-	files := parser.Files()
-	mqlHclBlocks := make([]any, 0)
-	for k := range files {
-		f := files[k]
-		blocks, err := listHclBlocks(t.MqlRuntime, f.Body, f)
-		if err != nil {
-			return nil, err
-		}
-		mqlHclBlocks = append(mqlHclBlocks, blocks...)
-	}
-
-	return mqlHclBlocks, t.refreshCache(mqlHclBlocks)
+	// The guarded build proactively sets Blocks (and the other collection
+	// fields), so the generated accessor picks the value up from the cache.
+	return nil, t.refreshCache()
 }
 
-func (t *mqlTerraform) refreshCache(blocks []any) error {
-	if blocks == nil {
-		raw := t.GetBlocks()
-		return raw.Error
+// cachedState returns the connection's HCL block classification — built
+// exactly once per connection, no matter how many `terraform` resource
+// instances the registry handed out — after publishing the cached
+// collections to this instance's accessor cells exactly once.
+func (t *mqlTerraform) cachedState() (*hclCache, error) {
+	hclStateLock.Lock()
+	defer hclStateLock.Unlock()
+
+	cache, err := hclCacheLocked(t.MqlRuntime)
+	if err != nil {
+		return nil, err
 	}
 
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	if t.blocksByName != nil {
-		return nil
+	// Publish once per instance: a duplicate instance gets the same cached
+	// data as the one that triggered the build. Never republish — the
+	// generated accessors read these cells without a lock, so any later
+	// write would race them.
+	if !t.published {
+		t.Blocks = plugin.TValue[[]any]{Data: cache.blocks, State: plugin.StateIsSet}
+		t.Providers = plugin.TValue[[]any]{Data: cache.providers, State: plugin.StateIsSet}
+		t.Datasources = plugin.TValue[[]any]{Data: cache.datasources, State: plugin.StateIsSet}
+		t.Variables = plugin.TValue[[]any]{Data: cache.variables, State: plugin.StateIsSet}
+		t.Outputs = plugin.TValue[[]any]{Data: cache.outputs, State: plugin.StateIsSet}
+		t.published = true
+	}
+	return cache, nil
+}
+
+// refreshCache ensures the classification exists and this instance's
+// accessor cells are published. The generated collection accessors (blocks,
+// providers, datasources, variables, outputs) all funnel through here;
+// their compute methods return nil and pick the published cells up.
+func (t *mqlTerraform) refreshCache() error {
+	_, err := t.cachedState()
+	return err
+}
+
+// buildHclCache parses the connection's HCL files, creates and initializes
+// the (registry-shared) block resources, and classifies them. Everything is
+// assembled in locals and returned as one immutable cache, so a failed
+// build stores nothing and is retried by the next caller. Callers must hold
+// hclStateLock — it makes this the only goroutine creating or touching
+// block instances.
+func buildHclCache(runtime *plugin.Runtime, conn *connection.Connection) (*hclCache, error) {
+
+	// plan and state assets have no HCL parser; the cache stays empty.
+	mqlHclBlocks := []any{}
+	if parser := conn.Parser(); parser != nil {
+		files := parser.Files()
+		for k := range files {
+			f := files[k]
+			blocks, err := listHclBlocks(runtime, f.Body, f)
+			if err != nil {
+				return nil, err
+			}
+			mqlHclBlocks = append(mqlHclBlocks, blocks...)
+		}
 	}
 
-	t.blocksByName = map[string]*mqlTerraformBlock{}
-	t.relatedBlocks = map[string][]*mqlTerraformBlock{}
+	blocksByName := map[string]*mqlTerraformBlock{}
+	relatedBlocks := map[string][]*mqlTerraformBlock{}
+	providers := []any{}
+	datasources := []any{}
+	resources := []*mqlTerraformBlock{}
+	variables := []any{}
+	outputs := []any{}
+	terraformBlocks := []*mqlTerraformBlock{}
 
-	t.Providers.State = plugin.StateIsSet
-	t.Providers.Data = []any{}
-	t.Datasources.State = plugin.StateIsSet
-	t.Datasources.Data = []any{}
-	t.mqlTerraformInternal.resources = []*mqlTerraformBlock{}
-	t.Variables.State = plugin.StateIsSet
-	t.Variables.Data = []any{}
-	t.Outputs.State = plugin.StateIsSet
-	t.Outputs.Data = []any{}
-	t.terraformBlocks = []*mqlTerraformBlock{}
-
-	for i := range blocks {
-		block := blocks[i].(*mqlTerraformBlock)
+	for i := range mqlHclBlocks {
+		block := mqlHclBlocks[i].(*mqlTerraformBlock)
 
 		// type must be pre-initialized
 		typ := block.Type.Data
 
 		switch typ {
 		case "provider":
-			t.Providers.Data = append(t.Providers.Data, block)
+			providers = append(providers, block)
 		case "data":
-			t.Datasources.Data = append(t.Datasources.Data, block)
+			datasources = append(datasources, block)
 		case "resource":
-			t.mqlTerraformInternal.resources = append(t.mqlTerraformInternal.resources, block)
+			resources = append(resources, block)
 		case "variable":
-			t.Variables.Data = append(t.Variables.Data, block)
+			variables = append(variables, block)
 		case "output":
-			t.Outputs.Data = append(t.Outputs.Data, block)
+			outputs = append(outputs, block)
 		case "terraform":
-			t.terraformBlocks = append(t.terraformBlocks, block)
+			terraformBlocks = append(terraformBlocks, block)
 		default:
 			// Note: we don't do anything with these blocks yet.
 			// They might be worth looking into.
@@ -167,35 +240,35 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 
 		// labels must be pre-initialized
 		name := block.terraformID()
-		t.blocksByName[name] = block
+		blocksByName[name] = block
 	}
 
 	// We need blocks by name before we can jump into
 	// related blocks, because we need to access them
 	// via their name
-	for i := range blocks {
-		block := blocks[i].(*mqlTerraformBlock)
+	for i := range mqlHclBlocks {
+		block := mqlHclBlocks[i].(*mqlTerraformBlock)
 		name := block.terraformID()
 
-		rel, err := listRelatedBlocks(t, block.block.Data.Body)
+		rel, err := listRelatedBlocks(blocksByName, block.block.Data.Body)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// connect from this block to all related blocks...
-		t.relatedBlocks[name] = append(t.relatedBlocks[name], rel...)
+		relatedBlocks[name] = append(relatedBlocks[name], rel...)
 		// ... and also connect the inverse (related to this block)
 		for i := range rel {
 			relBlock := rel[i]
 			relName := relBlock.terraformID()
-			t.relatedBlocks[relName] = append(t.relatedBlocks[relName], block)
+			relatedBlocks[relName] = append(relatedBlocks[relName], block)
 		}
 	}
 
-	for k, v := range t.relatedBlocks {
-		block, ok := t.blocksByName[k]
+	for k, v := range relatedBlocks {
+		block, ok := blocksByName[k]
 		if !ok {
-			return errors.New("cannot find terraform block by name: " + k)
+			return nil, errors.New("cannot find terraform block by name: " + k)
 		}
 
 		vi := make([]any, len(v))
@@ -209,10 +282,18 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 		}
 	}
 
-	return nil
+	return &hclCache{
+		blocks:          mqlHclBlocks,
+		providers:       providers,
+		datasources:     datasources,
+		resources:       resources,
+		variables:       variables,
+		outputs:         outputs,
+		terraformBlocks: terraformBlocks,
+	}, nil
 }
 
-func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, error) {
+func listRelatedBlocks(blocksByName map[string]*mqlTerraformBlock, rawBody any) ([]*mqlTerraformBlock, error) {
 	var res []*mqlTerraformBlock
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
@@ -226,10 +307,10 @@ func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, erro
 			}
 
 			refName := strings.Join(refs[0:2], "\x00")
-			if t.blocksByName[refName] == nil { // do not add nil blocks
+			if blocksByName[refName] == nil { // do not add nil blocks
 				continue
 			}
-			res = append(res, t.blocksByName[refName])
+			res = append(res, blocksByName[refName])
 		}
 	case hcl.Body:
 		return nil, errors.New("cannot yet list related blocks for regular hcl Body")
@@ -238,23 +319,43 @@ func listRelatedBlocks(t *mqlTerraform, rawBody any) ([]*mqlTerraformBlock, erro
 }
 
 func (t *mqlTerraform) providers() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	return nil, t.refreshCache()
 }
 
 func (t *mqlTerraform) datasources() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	return nil, t.refreshCache()
 }
 
 func (t *mqlTerraform) resources() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	return nil, t.refreshCache()
 }
 
 func (t *mqlTerraform) variables() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	return nil, t.refreshCache()
 }
 
 func (t *mqlTerraform) outputs() ([]any, error) {
-	return nil, t.refreshCache(nil)
+	return nil, t.refreshCache()
+}
+
+// resourceBlocks returns the classified resource-type blocks from the
+// connection's cache, building it if needed.
+func (t *mqlTerraform) resourceBlocks() ([]*mqlTerraformBlock, error) {
+	cache, err := t.cachedState()
+	if err != nil {
+		return nil, err
+	}
+	return cache.resources, nil
+}
+
+// settingsBlocks returns the `terraform { ... }` settings blocks from the
+// connection's cache, building it if needed.
+func (t *mqlTerraform) settingsBlocks() ([]*mqlTerraformBlock, error) {
+	cache, err := t.cachedState()
+	if err != nil {
+		return nil, err
+	}
+	return cache.terraformBlocks, nil
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -304,8 +405,14 @@ func newMqlHclBlock(runtime *plugin.Runtime, block *hcl.Block, file *hcl.File) (
 		return nil, err
 	}
 	r := res.(*mqlTerraformBlock)
-	r.block = plugin.TValue[*hcl.Block]{State: plugin.StateIsSet, Data: block}
-	r.cachedFile = plugin.TValue[*hcl.File]{State: plugin.StateIsSet, Data: file}
+	// The instance is deduped by the resource registry, so a re-listing hands
+	// back a block that is already initialized — leave it untouched then.
+	// Every listHclBlocks call site holds hclStateLock, which is what makes
+	// this check-then-set safe.
+	if r.block.State&plugin.StateIsSet == 0 {
+		r.block = plugin.TValue[*hcl.Block]{State: plugin.StateIsSet, Data: block}
+		r.cachedFile = plugin.TValue[*hcl.File]{State: plugin.StateIsSet, Data: file}
+	}
 	return r, err
 }
 
@@ -461,10 +568,10 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	tf := tfraw.(*mqlTerraform)
-	if err := tf.refreshCache(nil); err != nil {
+	resources, err := tf.resourceBlocks()
+	if err != nil {
 		return nil, nil, err
 	}
-	resources := tf.mqlTerraformInternal.resources
 
 	resourceArg := args["resource"]
 	nameArg := args["name"]
@@ -1004,6 +1111,8 @@ func (g *mqlTerraformBlock) blocks() ([]any, error) {
 		return nil, errors.New("cannot get hcl file")
 	}
 
+	hclStateLock.Lock()
+	defer hclStateLock.Unlock()
 	return listHclBlocks(g.MqlRuntime, hclBlock.Body, hclFile)
 }
 
@@ -1045,7 +1154,7 @@ func (g *mqlTerraformBlock) related() ([]any, error) {
 	}
 
 	terraform := o.(*mqlTerraform)
-	return nil, terraform.refreshCache(nil)
+	return nil, terraform.refreshCache()
 }
 
 func newFilePosRange(runtime *plugin.Runtime, r hcl.Range) (plugin.Resource, plugin.Resource, error) {
@@ -1101,6 +1210,9 @@ func (t *mqlTerraformFile) blocks() ([]any, error) {
 		// or case mismatch); there are no blocks to list rather than a panic.
 		return []any{}, nil
 	}
+
+	hclStateLock.Lock()
+	defer hclStateLock.Unlock()
 	return listHclBlocks(t.MqlRuntime, file.Body, file)
 }
 
@@ -1123,6 +1235,9 @@ func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 	}
 
 	files := parser.Files()
+
+	hclStateLock.Lock()
+	defer hclStateLock.Unlock()
 
 	var mqlHclBlock *mqlTerraformBlock
 	for k := range files {
@@ -1158,11 +1273,10 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	terraform := o.(*mqlTerraform)
-	if err := terraform.refreshCache(nil); err != nil {
+	blocks, err := terraform.settingsBlocks()
+	if err != nil {
 		return nil, nil, err
 	}
-
-	blocks := terraform.terraformBlocks
 	if len(blocks) == 0 {
 		// no terraform settings block found, this is ok for terraform and not an error
 		// TODO: return modified arguments to load from recording
