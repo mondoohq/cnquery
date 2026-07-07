@@ -6,6 +6,7 @@ package mqlc
 import (
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -835,7 +836,12 @@ func (c *compiler) unnamedArgs(callerLabel string, init *resources.Init, args []
 	}
 
 	// add all calls to the chunk stack
-	// collect all their types and call references
+	// collect all their types and call references.
+	// len(args) is bounded by the parsed query, but guard the size computation
+	// explicitly so len(args)*2 can never overflow on pathological input.
+	if len(args) > math.MaxInt/2 {
+		return nil, errors.New("Called " + callerLabel + " with too many arguments")
+	}
 	res := make([]*llx.Primitive, len(args)*2)
 
 	for idx := range args {
@@ -894,6 +900,11 @@ func (c *compiler) resourceArgs(resource *resources.ResourceInfo, args []*parser
 		return c.unnamedResourceArgs(resource, args)
 	}
 
+	// len(args) is bounded by the parsed query, but guard the size computation
+	// explicitly so len(args)*2 can never overflow on pathological input.
+	if len(args) > math.MaxInt/2 {
+		return nil, errors.New("resource " + resource.Name + " called with too many arguments")
+	}
 	res := make([]*llx.Primitive, len(args)*2)
 	for idx := range args {
 		arg := args[idx]

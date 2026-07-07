@@ -87,6 +87,13 @@ func sidStringToBytes(sidStr string) ([]byte, error) {
 	}
 
 	subAuthCount := len(parts) - 3
+	// The binary SID encodes SubAuthorityCount in a single byte (buf[1] below),
+	// so a valid SID has at most 255 sub-authorities. Reject anything larger
+	// before sizing the buffer, both to keep the encoding correct and to avoid
+	// computing an allocation size from an unbounded, externally-derived value.
+	if subAuthCount > 255 {
+		return nil, fmt.Errorf("invalid SID string: too many sub-authorities (%d): %s", subAuthCount, sidStr)
+	}
 	buf := make([]byte, 8+4*subAuthCount)
 
 	buf[0] = byte(revision)
