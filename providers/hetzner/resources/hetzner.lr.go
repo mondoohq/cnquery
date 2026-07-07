@@ -2734,7 +2734,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlHetzner struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlHetznerInternal it will be used here
+	mqlHetznerInternal
 	Servers           plugin.TValue[[]any]
 	ServerTypes       plugin.TValue[[]any]
 	Images            plugin.TValue[[]any]

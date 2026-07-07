@@ -5,12 +5,22 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlHetznerInternal struct {
+	// serversOnce guards a single project-wide Server.List so the servers()
+	// field and the location/datacenter server rollups share one API round-trip
+	// instead of each firing its own list call.
+	serversOnce sync.Once
+	serversList []*hcloud.Server
+	serversErr  error
+}
 
 type mqlHetznerServerInternal struct {
 	cacheServerType     *hcloud.ServerType
@@ -32,11 +42,23 @@ func (r *mqlHetznerServer) id() (string, error) {
 	return fmt.Sprintf("hetzner.server/%d", r.Id.Data), nil
 }
 
-func (h *mqlHetzner) servers() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
-		return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
+// allServers lists every project server exactly once and caches the raw
+// result on the hetzner namespace resource. The servers() field and the
+// location/datacenter server rollups all resolve through here, so a bulk query
+// like `hetzner.locations { servers }` costs a single Server.List rather than
+// one per location.
+func (h *mqlHetzner) allServers() ([]*hcloud.Server, error) {
+	h.serversOnce.Do(func() {
+		c := conn(h.MqlRuntime)
+		h.serversList, h.serversErr = paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
+			return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
+		})
 	})
+	return h.serversList, h.serversErr
+}
+
+func (h *mqlHetzner) servers() ([]any, error) {
+	items, err := h.allServers()
 	if err != nil {
 		return nil, err
 	}
@@ -51,15 +73,26 @@ func (h *mqlHetzner) servers() ([]any, error) {
 	return out, nil
 }
 
-// serversMatching lists all project servers once and builds full server
-// resources for the ones the match predicate selects. Reverse edges
-// (location.servers, datacenter.servers) use it so a single list call backs
-// the filter instead of a lazy Get per server.
+// hetznerNamespace resolves the singleton hetzner namespace resource so shared
+// caches (e.g. the server list) can be reached from other resources.
+func hetznerNamespace(runtime *plugin.Runtime) (*mqlHetzner, error) {
+	res, err := NewResource(runtime, "hetzner", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHetzner), nil
+}
+
+// serversMatching returns full server resources for the servers the match
+// predicate selects, filtering the once-cached project server list in memory.
+// Reverse edges (location.servers, datacenter.servers) use it so repeated
+// calls across a bulk query share a single Server.List round-trip.
 func serversMatching(runtime *plugin.Runtime, match func(*hcloud.Server) bool) ([]any, error) {
-	c := conn(runtime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
-		return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
-	})
+	h, err := hetznerNamespace(runtime)
+	if err != nil {
+		return nil, err
+	}
+	items, err := h.allServers()
 	if err != nil {
 		return nil, err
 	}
