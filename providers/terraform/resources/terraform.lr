@@ -296,7 +296,7 @@ terraform.plan.variable @defaults("name value") {
 // when the change applies to a deposed object), the typed
 // `proposedChange` describing the actions and before / after values,
 // and the human-readable `actionReason`.
-terraform.plan.resourceChange @defaults("type name") {
+terraform.plan.resourceChange @defaults("address") {
   // Resource address
   address string
   // Resource previous address
