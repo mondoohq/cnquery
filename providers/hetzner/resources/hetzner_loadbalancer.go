@@ -254,6 +254,11 @@ func (m *mqlHetznerLoadBalancerService) certificates() ([]any, error) {
 
 type mqlHetznerLoadBalancerTargetInternal struct {
 	cacheServerID int64
+	// cacheLabelSelectorServerIDs holds the servers a label_selector target
+	// currently resolves to (from the target's nested Targets), so
+	// labelSelectorTargets() can surface the effective backend set without a
+	// refetch.
+	cacheLabelSelectorServerIDs []int64
 }
 
 func (r *mqlHetznerLoadBalancerTarget) id() (string, error) {
@@ -289,6 +294,7 @@ func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx in
 
 	var keyForId string
 	var serverID int64
+	var labelSelectorServerIDs []int64
 	switch t.Type {
 	case hcloud.LoadBalancerTargetTypeServer:
 		if t.Server != nil && t.Server.Server != nil {
@@ -299,6 +305,7 @@ func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx in
 		}
 	case hcloud.LoadBalancerTargetTypeLabelSelector:
 		keyForId = fmt.Sprintf("label/%s", labelSelector)
+		labelSelectorServerIDs = targetServerIDs(t.Targets)
 	case hcloud.LoadBalancerTargetTypeIP:
 		keyForId = fmt.Sprintf("ip/%s", ip)
 	default:
@@ -319,6 +326,7 @@ func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx in
 	}
 	m := res.(*mqlHetznerLoadBalancerTarget)
 	m.cacheServerID = serverID
+	m.cacheLabelSelectorServerIDs = labelSelectorServerIDs
 	return m, nil
 }
 
@@ -334,4 +342,59 @@ func (m *mqlHetznerLoadBalancerTarget) server() (*mqlHetznerServer, error) {
 		return nil, err
 	}
 	return ref.(*mqlHetznerServer), nil
+}
+
+func (m *mqlHetznerLoadBalancerTarget) labelSelectorTargets() ([]any, error) {
+	return serverRefs(m.MqlRuntime, m.cacheLabelSelectorServerIDs)
+}
+
+// targetServerIDs extracts the deduplicated server IDs a label_selector
+// target resolves to. Hetzner nests the resolved server targets under the
+// label_selector target's Targets field.
+func targetServerIDs(targets []hcloud.LoadBalancerTarget) []int64 {
+	var ids []int64
+	seen := map[int64]struct{}{}
+	for _, t := range targets {
+		if t.Server == nil || t.Server.Server == nil {
+			continue
+		}
+		id := t.Server.Server.ID
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// servers returns the deduplicated backend servers behind the load balancer,
+// combining direct server targets with the servers matched by any
+// label_selector targets.
+func (m *mqlHetznerLoadBalancer) servers() ([]any, error) {
+	var ids []int64
+	seen := map[int64]struct{}{}
+	add := func(id int64) {
+		if id == 0 {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	for _, t := range m.cacheTargets {
+		switch t.Type {
+		case hcloud.LoadBalancerTargetTypeServer:
+			if t.Server != nil && t.Server.Server != nil {
+				add(t.Server.Server.ID)
+			}
+		case hcloud.LoadBalancerTargetTypeLabelSelector:
+			for _, id := range targetServerIDs(t.Targets) {
+				add(id)
+			}
+		}
+	}
+	return serverRefs(m.MqlRuntime, ids)
 }

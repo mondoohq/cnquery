@@ -51,6 +51,32 @@ func (h *mqlHetzner) servers() ([]any, error) {
 	return out, nil
 }
 
+// serversMatching lists all project servers once and builds full server
+// resources for the ones the match predicate selects. Reverse edges
+// (location.servers, datacenter.servers) use it so a single list call backs
+// the filter instead of a lazy Get per server.
+func serversMatching(runtime *plugin.Runtime, match func(*hcloud.Server) bool) ([]any, error) {
+	c := conn(runtime)
+	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Server, *hcloud.Response, error) {
+		return c.Client().Server.List(ctx(), hcloud.ServerListOpts{ListOpts: opts})
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := []any{}
+	for _, s := range items {
+		if !match(s) {
+			continue
+		}
+		res, err := newMqlHetznerServer(runtime, s)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
 func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetznerServer, error) {
 	// Hetzner assigns a /64 to each server; prefer the network CIDR and fall
 	// back to the bare address when the network is not populated.
