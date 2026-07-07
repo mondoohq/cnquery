@@ -366,6 +366,8 @@ digitalocean.database @defaults("id name engine") {
   createdAt time
   // ID of the project the cluster belongs to
   projectId string
+  // Project the cluster belongs to
+  project() digitalocean.project
   // Private network UUID
   privateNetworkUuid string
   // VPC the cluster is attached to (resolved from privateNetworkUuid)
@@ -453,6 +455,11 @@ private digitalocean.database.backup @defaults("databaseId createdAt sizeGigabyt
 }
 
 // DigitalOcean database user
+//
+// A user account on a managed database cluster. Surfaces the `name` and
+// the `role` (primary or normal) granted on the cluster. Use this to
+// audit which accounts exist on a cluster and which hold the primary
+// role.
 private digitalocean.database.user @defaults("name role") {
   // ID of the parent database cluster
   databaseId string
@@ -465,6 +472,12 @@ private digitalocean.database.user @defaults("name role") {
 }
 
 // DigitalOcean database replica
+//
+// A read-only replica of a managed database cluster. Surfaces the
+// replica `name`, its `region` and `size` slug, lifecycle `status`, the
+// applied `tags`, and the creation time. Use this to confirm replicas
+// exist for read scaling or cross-region redundancy and that they are
+// online.
 private digitalocean.database.replica @defaults("name status") {
   // ID of the parent database cluster
   databaseId string
@@ -485,6 +498,12 @@ private digitalocean.database.replica @defaults("name status") {
 }
 
 // DigitalOcean database connection pool
+//
+// A connection pool fronting a managed database cluster. Surfaces the
+// pool `name`, the logical `database` it connects to, the `user` it
+// authenticates as, the pool `size`, and the connection `mode`
+// (transaction, session, or statement). Reach the parent cluster
+// through `databaseCluster`.
 private digitalocean.database.pool @defaults("name mode") {
   // ID of the parent database cluster
   databaseId string
@@ -583,6 +602,13 @@ digitalocean.domain @defaults("name") {
 }
 
 // DigitalOcean DNS record
+//
+// A single DNS record within a DigitalOcean-managed domain. Surfaces
+// the record `type` (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA), the record
+// `name` (subdomain), the `data` it resolves to, the `ttl`, and the
+// `priority`, `port`, and `weight` used by MX and SRV records. Use this
+// to audit zone contents (for example, dangling CNAMEs or unexpected
+// records).
 private digitalocean.domain.record @defaults("type name data") {
   // Name of the parent domain
   domainName string
@@ -851,6 +877,12 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
 }
 
 // DigitalOcean Kubernetes node pool
+//
+// A pool of worker nodes within a DOKS cluster. Surfaces the pool
+// `name` and droplet `size`, the node `count`, the autoscaling
+// configuration (`autoScale`, `minNodes`, `maxNodes`), the Kubernetes
+// `labels` and `taints` applied to nodes in the pool, and the applied
+// `tags`. Reach the parent `cluster` and the individual worker `nodes`.
 private digitalocean.kubernetes.nodePool @defaults("id name size") {
   // Node pool ID
   id string
@@ -1159,6 +1191,103 @@ digitalocean.app @defaults("id name") {
   activeDeploymentId string
   // Custom domains attached to the app (each dict: id, name, phase, certificateExpiresAt)
   domains []dict
+  // Deployment history for the app, most recent first
+  deployments() []digitalocean.app.deployment
+  // Currently active deployment, resolved from activeDeploymentId; null when the app has never deployed
+  activeDeployment() digitalocean.app.deployment
+  // Alerts configured for the app and its components
+  alerts() []digitalocean.app.alert
+  // Ephemeral compute instances of the current deployment
+  //
+  // Each entry: componentName, componentType (SERVICE, WORKER, JOB), instanceName, instanceAlias.
+  instances() []dict
+}
+
+// DigitalOcean App Platform deployment
+//
+// Examine a single deployment of an App Platform application. Surfaces
+// the deployment `id`, the `cause` that triggered it (a manual action,
+// a git push, or a container-image push), the lifecycle `phase`, the
+// `tierSlug` active for the deployment, the `previousDeploymentId` it
+// replaced, and the `loadBalancerId` serving it. The component-name
+// lists (`services`, `workers`, `jobs`, `staticSites`, `functions`)
+// describe what the deployment ran, and the progress-step counts report
+// how the build and deploy stages resolved. Use the deployment history
+// to audit change cadence, spot failed or superseded rollouts, and
+// correlate a running app with the exact revision it is serving.
+private digitalocean.app.deployment @defaults("id phase cause") {
+  // Deployment ID
+  id string
+  // ID of the parent app
+  appId string
+  // What triggered the deployment (e.g., a manual action, a git push, an image push)
+  cause string
+  // Lifecycle phase (PENDING, BUILDING, DEPLOYING, ACTIVE, SUPERSEDED, ERROR, CANCELED)
+  phase string
+  // App tier slug active for this deployment
+  tierSlug string
+  // ID of the deployment this one replaced; empty for the first deployment
+  previousDeploymentId string
+  // ID of the load balancer serving this deployment; empty when none
+  loadBalancerId string
+  // Names of the service components in this deployment
+  services []string
+  // Names of the worker components in this deployment
+  workers []string
+  // Names of the job components in this deployment
+  jobs []string
+  // Names of the static-site components in this deployment
+  staticSites []string
+  // Names of the functions components in this deployment
+  functions []string
+  // Number of build/deploy steps that completed successfully
+  progressSuccessSteps int
+  // Number of build/deploy steps that errored
+  progressErrorSteps int
+  // Total number of build/deploy steps
+  progressTotalSteps int
+  // Time the deployment was created
+  createdAt time
+  // Time the deployment was last updated
+  updatedAt time
+  // Time the deployment's phase last changed
+  phaseLastUpdatedAt time
+}
+
+// DigitalOcean App Platform alert
+//
+// Examine a single alert configured on an App Platform application or
+// one of its components. `rule` identifies the metric or event the
+// alert fires on (for example CPU_UTILIZATION or DEPLOYMENT_FAILED),
+// with `operator`, `value`, and `window` describing the threshold for
+// metric alerts. `componentName` is empty for app-level alerts.
+// `disabled` reports whether the alert is currently off, `phase` its
+// configuration state, and `emails` / `slackWebhookCount` the
+// notification destinations. Use this to confirm that failure and
+// resource-pressure alerting is actually enabled on production apps.
+private digitalocean.app.alert @defaults("id rule phase") {
+  // Alert ID
+  id string
+  // ID of the parent app
+  appId string
+  // Component the alert applies to; empty for app-level alerts
+  componentName string
+  // Metric or event the alert fires on (e.g., CPU_UTILIZATION, RESTART_COUNT, DEPLOYMENT_FAILED)
+  rule string
+  // Whether the alert is disabled
+  disabled bool
+  // Comparison operator (GREATER_THAN, LESS_THAN); empty for event alerts
+  operator string
+  // Threshold value; meaningful only for metric alerts
+  value float
+  // Evaluation window (e.g., FIVE_MINUTES, TEN_MINUTES, ONE_HOUR); empty for event alerts
+  window string
+  // Configuration phase (PENDING, CONFIGURING, ACTIVE, ERROR)
+  phase string
+  // Email destinations notified when the alert triggers
+  emails []string
+  // Number of Slack webhook destinations configured for the alert
+  slackWebhookCount int
 }
 
 // DigitalOcean alert policy
@@ -1185,6 +1314,8 @@ digitalocean.alertPolicy @defaults("uuid type enabled") {
   enabled bool
   // Entity IDs being monitored
   entities []string
+  // Droplets monitored by this policy, resolved from entity IDs; empty for policies that target non-droplet entities
+  droplets() []digitalocean.droplet
   // Tags
   tags []string
   // Email notification targets
@@ -1388,6 +1519,10 @@ digitalocean.snapshot @defaults("id name resourceType") {
   resourceId string
   // Type of the source resource (droplet, volume)
   resourceType string
+  // Source droplet the snapshot was taken from; null unless resourceType is "droplet"
+  droplet() digitalocean.droplet
+  // Source block-storage volume the snapshot was taken from; null unless resourceType is "volume"
+  volume() digitalocean.volume
   // Region slugs the snapshot is replicated to
   regions []string
   // Minimum disk size a droplet must have to use this snapshot, in gigabytes
@@ -1424,9 +1559,56 @@ digitalocean.function.namespace @defaults("uuid label region") {
   updatedAt time
   // Scheduled triggers in the namespace
   triggers() []digitalocean.function.trigger
+  // Functions (actions) deployed in the namespace
+  functions() []digitalocean.function.action
+}
+
+// DigitalOcean Functions action
+//
+// Examine a single function (action) deployed in a Functions namespace.
+// Surfaces the action `name` and the `package` it belongs to, the
+// `runtime` it executes on, the resource `limits` (`timeoutMs`,
+// `memoryMb`, `logSizeMb`, `concurrency`), and the security posture:
+// `webExported` flags an action published as a raw public HTTP endpoint,
+// and `requiresApiKey` reports whether such a web action still demands
+// authentication. Use this to audit for unauthenticated web functions
+// and to inventory the serverless code running in an account. Data is
+// read from the namespace's Functions API host.
+private digitalocean.function.action @defaults("name runtime updatedAt") {
+  // UUID of the parent namespace
+  namespaceUuid string
+  // Action name
+  name string
+  // Package the action belongs to; empty for actions at the namespace root
+  package string
+  // Version assigned to the action by the platform
+  version string
+  // Runtime the action executes on (e.g., nodejs:18, python:3.11, go:1.21)
+  runtime string
+  // Whether the action is published as a public web endpoint
+  webExported bool
+  // Whether an invoker must present an API key; meaningful only when webExported is true
+  requiresApiKey bool
+  // Execution timeout, in milliseconds
+  timeoutMs int
+  // Memory limit, in megabytes
+  memoryMb int
+  // Log size limit, in megabytes
+  logSizeMb int
+  // Number of concurrent activations allowed
+  concurrency int
+  // Time the action was last updated
+  updatedAt time
 }
 
 // DigitalOcean Functions trigger
+//
+// Examine a trigger that invokes a function in a namespace. Surfaces
+// the trigger `name`, its `type` (for example SCHEDULED), the `function`
+// it invokes, and whether it is `enabled`. For scheduled triggers,
+// `cron` is the schedule expression and `lastRunAt` / `nextRunAt` report
+// the firing history. Use this to confirm that expected schedules are
+// enabled and firing.
 private digitalocean.function.trigger @defaults("name function enabled") {
   // Internal identifier of the parent namespace
   namespace string
@@ -1758,7 +1940,9 @@ private digitalocean.gradientai.agent @defaults("uuid name region") {
   // ID of the project the agent belongs to
   projectId string
   // UUID of the VPC the agent runs in
-  vpcUuid string
+  //
+  // Deprecated in favor of `vpc`.
+  vpcUuid @maturity("deprecated") string
   // Public IPs the agent egresses from
   vpcEgressIps []string
   // Tags applied to the agent
@@ -2219,7 +2403,9 @@ private digitalocean.gradientai.dedicatedInferenceEndpoint @defaults("id name re
   // Lifecycle status
   status string
   // UUID of the VPC the endpoint runs in
-  vpcUuid string
+  //
+  // Deprecated in favor of `vpc`.
+  vpcUuid @maturity("deprecated") string
   // Model IDs served by the endpoint
   providerModelIds []string
   // Public endpoint FQDN
@@ -2388,6 +2574,14 @@ digitalocean.byoipPrefix @defaults("prefix status region") {
 }
 
 // DigitalOcean BYOIP prefix resource assignment
+//
+// A single assignment of a bring-your-own-IP address to a resource in
+// the account. Surfaces the assigned `byoip` address, the `resource`
+// URN it routes to (for example `do:droplet:123`), the `region`, and
+// the `assignedAt` time. Customer-owned address space routing to a
+// specific droplet is an ownership and attack-surface concern, so use
+// this to inventory exactly what each advertised address reaches. When
+// the assignment targets a droplet, `droplet` resolves it.
 private digitalocean.byoipPrefix.resource @defaults("resource region") {
   // Assignment ID
   id int
@@ -2397,6 +2591,8 @@ private digitalocean.byoipPrefix.resource @defaults("resource region") {
   byoip string
   // URN of the resource the address is assigned to (e.g., do:droplet:123)
   resource string
+  // Droplet the address is assigned to; null unless the resource URN is a droplet
+  droplet() digitalocean.droplet
   // Region slug
   region string
   // Time the address was assigned

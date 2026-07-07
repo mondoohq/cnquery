@@ -5,9 +5,118 @@ package resources
 
 import (
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// parseDropletID extracts a droplet id from either a bare numeric id
+// ("12345") or a DigitalOcean droplet URN ("do:droplet:12345"). The
+// second return is false when the string names something other than a
+// droplet.
+func parseDropletID(s string) (int64, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, false
+	}
+	if strings.HasPrefix(s, "do:") {
+		parts := strings.Split(s, ":")
+		if len(parts) != 3 || parts[1] != "droplet" {
+			return 0, false
+		}
+		s = parts[2]
+	}
+	id, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return id, true
+}
+
+// volumeRef resolves a single volume by id from the parent's cached
+// index, setting StateIsSet|StateIsNull when the id is unset or unknown.
+func volumeRef(runtime *plugin.Runtime, id string, target *plugin.TValue[*mqlDigitaloceanVolume]) (*mqlDigitaloceanVolume, error) {
+	if id == "" {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parent, err := parentDigitalocean(runtime)
+	if err != nil {
+		return nil, err
+	}
+	volumes, err := parent.volumesByIDs([]string{id})
+	if err != nil {
+		return nil, err
+	}
+	if len(volumes) == 0 {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return volumes[0].(*mqlDigitaloceanVolume), nil
+}
+
+// ----- Database cluster project -----
+
+func (r *mqlDigitaloceanDatabase) project() (*mqlDigitaloceanProject, error) {
+	return projectRef(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+}
+
+// ----- Snapshot source -----
+
+func (r *mqlDigitaloceanSnapshot) droplet() (*mqlDigitaloceanDroplet, error) {
+	if r.ResourceType.Data != "droplet" {
+		r.Droplet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id, ok := parseDropletID(r.ResourceId.Data)
+	if !ok {
+		r.Droplet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return dropletRef(r.MqlRuntime, id, &r.Droplet)
+}
+
+func (r *mqlDigitaloceanSnapshot) volume() (*mqlDigitaloceanVolume, error) {
+	if r.ResourceType.Data != "volume" {
+		r.Volume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return volumeRef(r.MqlRuntime, r.ResourceId.Data, &r.Volume)
+}
+
+// ----- Alert policy targets -----
+
+// droplets resolves the policy's entity IDs to droplets. Droplet alert
+// types carry droplet IDs (bare or as a do:droplet: URN); policies that
+// target other entity kinds resolve to an empty list.
+func (r *mqlDigitaloceanAlertPolicy) droplets() ([]any, error) {
+	ids := make([]any, 0, len(r.Entities.Data))
+	for _, e := range r.Entities.Data {
+		s, ok := e.(string)
+		if !ok {
+			continue
+		}
+		if id, ok := parseDropletID(s); ok {
+			ids = append(ids, id)
+		}
+	}
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	return parent.dropletByIDs(ids)
+}
+
+// ----- BYOIP prefix resource assignment -----
+
+func (r *mqlDigitaloceanByoipPrefixResource) droplet() (*mqlDigitaloceanDroplet, error) {
+	id, ok := parseDropletID(r.Resource.Data)
+	if !ok {
+		r.Droplet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return dropletRef(r.MqlRuntime, id, &r.Droplet)
+}
 
 // ----- VPC peering -----
 
