@@ -1228,8 +1228,12 @@ private digitalocean.app.deployment @defaults("id phase cause") {
   tierSlug string
   // ID of the deployment this one replaced; empty for the first deployment
   previousDeploymentId string
+  // Deployment this one replaced; null for the first deployment
+  previousDeployment() digitalocean.app.deployment
   // ID of the load balancer serving this deployment; empty when none
   loadBalancerId string
+  // Load balancer serving this deployment; null when the deployment has no dedicated load balancer
+  loadBalancer() digitalocean.loadBalancer
   // Names of the service components in this deployment
   services []string
   // Names of the worker components in this deployment

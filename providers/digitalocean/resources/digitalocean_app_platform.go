@@ -69,6 +69,45 @@ func newAppDeployment(runtime *plugin.Runtime, appID string, d *godo.Deployment)
 	return res.(*mqlDigitaloceanAppDeployment), nil
 }
 
+func (r *mqlDigitaloceanAppDeployment) loadBalancer() (*mqlDigitaloceanLoadBalancer, error) {
+	if r.LoadBalancerId.Data == "" {
+		r.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	parent, err := parentDigitalocean(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	lbs, err := parent.loadBalancerByUIDs([]any{r.LoadBalancerId.Data})
+	if err != nil {
+		return nil, err
+	}
+	if len(lbs) == 0 {
+		r.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return lbs[0].(*mqlDigitaloceanLoadBalancer), nil
+}
+
+func (r *mqlDigitaloceanAppDeployment) previousDeployment() (*mqlDigitaloceanAppDeployment, error) {
+	if r.PreviousDeploymentId.Data == "" {
+		r.PreviousDeployment.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	deployment, _, err := client.Apps.GetDeployment(context.Background(), r.AppId.Data, r.PreviousDeploymentId.Data)
+	if err != nil {
+		if isDoNotFound(err) {
+			r.PreviousDeployment.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newAppDeployment(r.MqlRuntime, r.AppId.Data, deployment)
+}
+
 func (r *mqlDigitaloceanApp) deployments() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()

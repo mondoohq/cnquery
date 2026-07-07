@@ -53,9 +53,11 @@ digitalocean.app.deployment.createdAt 13.10.2
 digitalocean.app.deployment.functions 13.10.2
 digitalocean.app.deployment.id 13.10.2
 digitalocean.app.deployment.jobs 13.10.2
+digitalocean.app.deployment.loadBalancer 13.10.2
 digitalocean.app.deployment.loadBalancerId 13.10.2
 digitalocean.app.deployment.phase 13.10.2
 digitalocean.app.deployment.phaseLastUpdatedAt 13.10.2
+digitalocean.app.deployment.previousDeployment 13.10.2
 digitalocean.app.deployment.previousDeploymentId 13.10.2
 digitalocean.app.deployment.progressErrorSteps 13.10.2
 digitalocean.app.deployment.progressSuccessSteps 13.10.2

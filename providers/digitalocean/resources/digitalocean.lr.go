@@ -1692,8 +1692,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.app.deployment.previousDeploymentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAppDeployment).GetPreviousDeploymentId()).ToDataRes(types.String)
 	},
+	"digitalocean.app.deployment.previousDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAppDeployment).GetPreviousDeployment()).ToDataRes(types.Resource("digitalocean.app.deployment"))
+	},
 	"digitalocean.app.deployment.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAppDeployment).GetLoadBalancerId()).ToDataRes(types.String)
+	},
+	"digitalocean.app.deployment.loadBalancer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanAppDeployment).GetLoadBalancer()).ToDataRes(types.Resource("digitalocean.loadBalancer"))
 	},
 	"digitalocean.app.deployment.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAppDeployment).GetServices()).ToDataRes(types.Array(types.String))
@@ -4897,8 +4903,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanAppDeployment).PreviousDeploymentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"digitalocean.app.deployment.previousDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAppDeployment).PreviousDeployment, ok = plugin.RawToTValue[*mqlDigitaloceanAppDeployment](v.Value, v.Error)
+		return
+	},
 	"digitalocean.app.deployment.loadBalancerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanAppDeployment).LoadBalancerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.app.deployment.loadBalancer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanAppDeployment).LoadBalancer, ok = plugin.RawToTValue[*mqlDigitaloceanLoadBalancer](v.Value, v.Error)
 		return
 	},
 	"digitalocean.app.deployment.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11512,7 +11526,9 @@ type mqlDigitaloceanAppDeployment struct {
 	Phase                plugin.TValue[string]
 	TierSlug             plugin.TValue[string]
 	PreviousDeploymentId plugin.TValue[string]
+	PreviousDeployment   plugin.TValue[*mqlDigitaloceanAppDeployment]
 	LoadBalancerId       plugin.TValue[string]
+	LoadBalancer         plugin.TValue[*mqlDigitaloceanLoadBalancer]
 	Services             plugin.TValue[[]any]
 	Workers              plugin.TValue[[]any]
 	Jobs                 plugin.TValue[[]any]
@@ -11582,8 +11598,40 @@ func (c *mqlDigitaloceanAppDeployment) GetPreviousDeploymentId() *plugin.TValue[
 	return &c.PreviousDeploymentId
 }
 
+func (c *mqlDigitaloceanAppDeployment) GetPreviousDeployment() *plugin.TValue[*mqlDigitaloceanAppDeployment] {
+	return plugin.GetOrCompute[*mqlDigitaloceanAppDeployment](&c.PreviousDeployment, func() (*mqlDigitaloceanAppDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.app.deployment", c.__id, "previousDeployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanAppDeployment), nil
+			}
+		}
+
+		return c.previousDeployment()
+	})
+}
+
 func (c *mqlDigitaloceanAppDeployment) GetLoadBalancerId() *plugin.TValue[string] {
 	return &c.LoadBalancerId
+}
+
+func (c *mqlDigitaloceanAppDeployment) GetLoadBalancer() *plugin.TValue[*mqlDigitaloceanLoadBalancer] {
+	return plugin.GetOrCompute[*mqlDigitaloceanLoadBalancer](&c.LoadBalancer, func() (*mqlDigitaloceanLoadBalancer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.app.deployment", c.__id, "loadBalancer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDigitaloceanLoadBalancer), nil
+			}
+		}
+
+		return c.loadBalancer()
+	})
 }
 
 func (c *mqlDigitaloceanAppDeployment) GetServices() *plugin.TValue[[]any] {
