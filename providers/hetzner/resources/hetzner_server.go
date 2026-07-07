@@ -72,6 +72,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 		"publicIpv6Blocked": llx.BoolData(s.PublicNet.IPv6.Blocked),
 		"publicIpv6DnsPtr":  dictArrayData(dnsPtrSliceFromMap(s.PublicNet.IPv6.DNSPtr)),
 		"backupWindow":      llx.StringData(s.BackupWindow),
+		"backupsEnabled":    llx.BoolData(s.BackupWindow != ""),
 		"rescueEnabled":     llx.BoolData(s.RescueEnabled),
 		"locked":            llx.BoolData(s.Locked),
 		"includedTraffic":   llx.IntData(int64(s.IncludedTraffic)),

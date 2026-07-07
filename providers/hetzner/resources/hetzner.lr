@@ -113,6 +113,8 @@ private hetzner.server @defaults("id name status") {
   loadBalancers() []hetzner.loadBalancer
   // Backup window (e.g., "22-02"); empty if backups disabled
   backupWindow string
+  // Whether automated backups are enabled (a backup window is set)
+  backupsEnabled bool
   // Whether rescue mode is enabled
   rescueEnabled bool
   // Whether the server is locked (Hetzner-side lock)
@@ -281,6 +283,18 @@ private hetzner.sshKey @defaults("id name fingerprint") {
   fingerprint string
   // Public key content
   publicKey string
+  // Key algorithm parsed from the public key
+  //
+  // The key type as it appears in the public key, for example
+  // ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256, or ssh-dss. Empty when
+  // the public key cannot be parsed.
+  algorithm string
+  // Key size in bits parsed from the public key
+  //
+  // The modulus size for RSA/DSA keys or the curve size for ECDSA keys.
+  // Ed25519 keys report 256. 0 when the public key cannot be parsed or
+  // the size cannot be determined.
+  bits int
   // Creation timestamp
   created time
   // User-defined labels for organizing the resource

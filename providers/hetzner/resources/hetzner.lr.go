@@ -375,6 +375,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.server.backupWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetBackupWindow()).ToDataRes(types.String)
 	},
+	"hetzner.server.backupsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetBackupsEnabled()).ToDataRes(types.Bool)
+	},
 	"hetzner.server.rescueEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetRescueEnabled()).ToDataRes(types.Bool)
 	},
@@ -560,6 +563,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.sshKey.publicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerSshKey).GetPublicKey()).ToDataRes(types.String)
+	},
+	"hetzner.sshKey.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerSshKey).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"hetzner.sshKey.bits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerSshKey).GetBits()).ToDataRes(types.Int)
 	},
 	"hetzner.sshKey.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerSshKey).GetCreated()).ToDataRes(types.Time)
@@ -1417,6 +1426,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerServer).BackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"hetzner.server.backupsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).BackupsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"hetzner.server.rescueEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).RescueEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1691,6 +1704,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.sshKey.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerSshKey).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.sshKey.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerSshKey).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.sshKey.bits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerSshKey).Bits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"hetzner.sshKey.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3078,6 +3099,7 @@ type mqlHetznerServer struct {
 	Exposure          plugin.TValue[*mqlHetznerNetworkExposure]
 	LoadBalancers     plugin.TValue[[]any]
 	BackupWindow      plugin.TValue[string]
+	BackupsEnabled    plugin.TValue[bool]
 	RescueEnabled     plugin.TValue[bool]
 	Locked            plugin.TValue[bool]
 	IncludedTraffic   plugin.TValue[int64]
@@ -3380,6 +3402,10 @@ func (c *mqlHetznerServer) GetLoadBalancers() *plugin.TValue[[]any] {
 
 func (c *mqlHetznerServer) GetBackupWindow() *plugin.TValue[string] {
 	return &c.BackupWindow
+}
+
+func (c *mqlHetznerServer) GetBackupsEnabled() *plugin.TValue[bool] {
+	return &c.BackupsEnabled
 }
 
 func (c *mqlHetznerServer) GetRescueEnabled() *plugin.TValue[bool] {
@@ -4027,6 +4053,8 @@ type mqlHetznerSshKey struct {
 	Name        plugin.TValue[string]
 	Fingerprint plugin.TValue[string]
 	PublicKey   plugin.TValue[string]
+	Algorithm   plugin.TValue[string]
+	Bits        plugin.TValue[int64]
 	Created     plugin.TValue[*time.Time]
 	Labels      plugin.TValue[map[string]any]
 }
@@ -4082,6 +4110,14 @@ func (c *mqlHetznerSshKey) GetFingerprint() *plugin.TValue[string] {
 
 func (c *mqlHetznerSshKey) GetPublicKey() *plugin.TValue[string] {
 	return &c.PublicKey
+}
+
+func (c *mqlHetznerSshKey) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+func (c *mqlHetznerSshKey) GetBits() *plugin.TValue[int64] {
+	return &c.Bits
 }
 
 func (c *mqlHetznerSshKey) GetCreated() *plugin.TValue[*time.Time] {
