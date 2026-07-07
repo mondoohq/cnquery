@@ -8,7 +8,8 @@ package keypair
 
 import (
 	"crypto/ed25519"
-	"math/rand"
+	"crypto/rand"
+	"encoding/binary"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -37,8 +38,13 @@ func MarshalED25519PrivateKey(key ed25519.PrivateKey) []byte {
 		Pad     []byte `ssh:"rest"`
 	}{}
 
-	// Set our check ints
-	ci := rand.Uint32()
+	// Set our check ints. These live inside a private key file, so source them
+	// from crypto/rand rather than math/rand.
+	var ciBytes [4]byte
+	if _, err := rand.Read(ciBytes[:]); err != nil {
+		return nil
+	}
+	ci := binary.BigEndian.Uint32(ciBytes[:])
 	pk1.Check1 = ci
 	pk1.Check2 = ci
 

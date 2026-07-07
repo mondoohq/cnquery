@@ -8,6 +8,7 @@ package tlsshake
 import (
 	"bufio"
 	"bytes"
+	crand "crypto/rand"
 	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
@@ -804,7 +805,11 @@ func (s *Tester) helloTLSMsg(conf *ScanConfig) ([]byte, int, error) {
 		return nil, 0, errors.New("unsupported TLS/SSL version: " + conf.version)
 	}
 
-	return constructTLSHello(conf.version, ciphers, extensions.Bytes()), cipherCount, nil
+	hello, err := constructTLSHello(conf.version, ciphers, extensions.Bytes())
+	if err != nil {
+		return nil, 0, err
+	}
+	return hello, cipherCount, nil
 }
 
 // OCSP:
@@ -887,21 +892,19 @@ func bytes3int(b []byte) int {
 	return int(binary.BigEndian.Uint32(append([]byte{0x00}, b...)))
 }
 
-func constructTLSHello(version string, ciphers []byte, extensions []byte) []byte {
+func constructTLSHello(version string, ciphers []byte, extensions []byte) ([]byte, error) {
 	sessionID := ""
 	compressions := "\x00"
 
 	var content bytes.Buffer
 	content.WriteString(VERSIONS[version])
 
-	rnd := make([]byte, 8)
-	binary.BigEndian.PutUint64(rnd, rand.Uint64())
-	content.Write(rnd)
-	binary.BigEndian.PutUint64(rnd, rand.Uint64())
-	content.Write(rnd)
-	binary.BigEndian.PutUint64(rnd, rand.Uint64())
-	content.Write(rnd)
-	binary.BigEndian.PutUint64(rnd, rand.Uint64())
+	// The 32-byte ClientHello random must come from a cryptographically secure
+	// source per the TLS spec.
+	rnd := make([]byte, 32)
+	if _, err := crand.Read(rnd); err != nil {
+		return nil, err
+	}
 	content.Write(rnd)
 
 	content.Write(int1byte(len(sessionID)))
@@ -922,7 +925,7 @@ func constructTLSHello(version string, ciphers []byte, extensions []byte) []byte
 	core = append(core, int3bytes(len(c))...)
 	core = append(core, c...)
 
-	return constructTLSMsg(CONTENT_TYPE_Handshake, core, []byte(VERSIONS[version]))
+	return constructTLSMsg(CONTENT_TYPE_Handshake, core, []byte(VERSIONS[version])), nil
 }
 
 func constructTLSMsg(contentType byte, content []byte, version []byte) []byte {
