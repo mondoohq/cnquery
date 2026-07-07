@@ -1959,6 +1959,22 @@ func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) 
 	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
 }
 
+// subnet resolves the subnet the private endpoint's network interface is
+// allocated in, the network location from which the linked resource is
+// privately reachable.
+func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.SubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.SubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
 func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
@@ -4373,6 +4389,34 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) routeTable() (*mqlAzureSubscr
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServiceRouteTable), nil
+}
+
+// virtualNetworkIDFromSubnetID derives the parent virtual network's resource ID
+// from a subnet resource ID by trimming the trailing "/subnets/<name>" segment.
+// It returns "" when the ID has no "/subnets/" segment.
+func virtualNetworkIDFromSubnetID(subnetID string) string {
+	idx := strings.Index(strings.ToLower(subnetID), "/subnets/")
+	if idx < 0 {
+		return ""
+	}
+	return subnetID[:idx]
+}
+
+// virtualNetwork resolves the parent virtual network of the subnet so its
+// peerings and address space can be traversed, extending a reachability path to
+// networks peered with the one hosting the subnet.
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) virtualNetwork() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+	vnetID := virtualNetworkIDFromSubnetID(a.Id.Data)
+	if vnetID == "" {
+		a.VirtualNetwork.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork",
+		map[string]*llx.RawData{"id": llx.StringData(vnetID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
 }
 
 func azureSubnetServiceEndpointToMql(runtime *plugin.Runtime, subnetID string, idx int, se *network.ServiceEndpointPropertiesFormat) (*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint, error) {

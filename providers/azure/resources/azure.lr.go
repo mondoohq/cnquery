@@ -4976,6 +4976,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.subnet.defaultOutboundAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetDefaultOutboundAccess()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.networkService.subnet.virtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.networkService.virtualNetwork"))
+	},
 	"azure.subscription.networkService.subnet.networkSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetNetworkSecurityGroup()).ToDataRes(types.Resource("azure.subscription.networkService.securityGroup"))
 	},
@@ -6043,6 +6046,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.privateEndpoint.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateEndpoint.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
 	},
 	"azure.subscription.networkService.privateEndpoint.customNetworkInterfaceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).GetCustomNetworkInterfaceName()).ToDataRes(types.String)
@@ -7924,6 +7930,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.privateEndpointConnection.privateEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).GetPrivateEndpoint()).ToDataRes(types.Resource("azure.subscription.networkService.privateEndpoint"))
 	},
 	"azure.subscription.storageService.account.privateEndpointConnection.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).GetStatus()).ToDataRes(types.String)
@@ -21440,6 +21449,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).DefaultOutboundAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.subnet.virtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).VirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.subnet.networkSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).NetworkSecurityGroup, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup](v.Value, v.Error)
 		return
@@ -22994,6 +23007,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.privateEndpoint.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateEndpoint.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.privateEndpoint.customNetworkInterfaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25722,6 +25739,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.privateEndpointConnection.privateEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).PrivateEndpoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.privateEndpointConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49044,6 +49065,7 @@ type mqlAzureSubscriptionNetworkServiceSubnet struct {
 	PrivateEndpointNetworkPolicies    plugin.TValue[string]
 	PrivateLinkServiceNetworkPolicies plugin.TValue[string]
 	DefaultOutboundAccess             plugin.TValue[bool]
+	VirtualNetwork                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork]
 	NetworkSecurityGroup              plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup]
 	RouteTable                        plugin.TValue[*mqlAzureSubscriptionNetworkServiceRouteTable]
 	ServiceEndpoints                  plugin.TValue[[]any]
@@ -49129,6 +49151,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetPrivateLinkServiceNetworkP
 
 func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetDefaultOutboundAccess() *plugin.TValue[bool] {
 	return &c.DefaultOutboundAccess
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetwork] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualNetwork](&c.VirtualNetwork, func() (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.subnet", c.__id, "virtualNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+			}
+		}
+
+		return c.virtualNetwork()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetNetworkSecurityGroup() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup] {
@@ -52879,6 +52917,7 @@ type mqlAzureSubscriptionNetworkServicePrivateEndpoint struct {
 	Type                                plugin.TValue[string]
 	ProvisioningState                   plugin.TValue[string]
 	SubnetId                            plugin.TValue[string]
+	Subnet                              plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	CustomNetworkInterfaceName          plugin.TValue[string]
 	BillingSku                          plugin.TValue[string]
 	PrivateLinkServiceConnections       plugin.TValue[[]any]
@@ -52944,6 +52983,22 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetProvisioningState
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetSubnetId() *plugin.TValue[string] {
 	return &c.SubnetId
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.privateEndpoint", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetCustomNetworkInterfaceName() *plugin.TValue[string] {
@@ -59033,6 +59088,7 @@ type mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection struct {
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
 	PrivateEndpointId plugin.TValue[string]
+	PrivateEndpoint   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint]
 	Status            plugin.TValue[string]
 	Description       plugin.TValue[string]
 	ActionsRequired   plugin.TValue[string]
@@ -59090,6 +59146,22 @@ func (c *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) Get
 
 func (c *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
 	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) GetPrivateEndpoint() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](&c.PrivateEndpoint, func() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.privateEndpointConnection", c.__id, "privateEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+			}
+		}
+
+		return c.privateEndpoint()
+	})
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) GetStatus() *plugin.TValue[string] {

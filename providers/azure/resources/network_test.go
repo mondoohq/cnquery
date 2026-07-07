@@ -147,3 +147,19 @@ func TestParseAzurePortRange(t *testing.T) {
 	assert.Equal(t, "1024", ranges[2].FromPort)
 	assert.Equal(t, "65535", ranges[2].ToPort)
 }
+
+func TestVirtualNetworkIDFromSubnetID(t *testing.T) {
+	base := "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/my-vnet"
+	t.Run("derives the parent virtual network ID", func(t *testing.T) {
+		assert.Equal(t, base, virtualNetworkIDFromSubnetID(base+"/subnets/my-subnet"))
+	})
+	t.Run("case-insensitive on the /subnets/ segment", func(t *testing.T) {
+		assert.Equal(t, base, virtualNetworkIDFromSubnetID(base+"/Subnets/my-subnet"))
+	})
+	t.Run("returns empty when there is no subnets segment", func(t *testing.T) {
+		assert.Equal(t, "", virtualNetworkIDFromSubnetID(base))
+	})
+	t.Run("returns empty for an empty ID", func(t *testing.T) {
+		assert.Equal(t, "", virtualNetworkIDFromSubnetID(""))
+	})
+}

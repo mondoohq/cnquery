@@ -2414,6 +2414,12 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   privateLinkServiceNetworkPolicies string
   // Whether default outbound access is enabled for VMs in the subnet
   defaultOutboundAccess bool
+  // Virtual network the subnet belongs to; null when the subnet ID has no parent virtual network
+  //
+  // Resolves the parent virtual network so its peerings and address space can
+  // be traversed, extending a reachability path from the subnet to peered
+  // networks that can reach it.
+  virtualNetwork() azure.subscription.networkService.virtualNetwork
   // Network Security Group attached to the subnet; null when no NSG is associated
   networkSecurityGroup() azure.subscription.networkService.securityGroup
   // Route table attached to the subnet; null when no route table is associated
@@ -3447,7 +3453,17 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   // Provisioning state of the private endpoint
   provisioningState string
   // Subnet ID from which the private IP is allocated
-  subnetId string
+  //
+  // Deprecated in favor of subnet.
+  subnetId @maturity("deprecated") string
+  // Subnet the private endpoint's network interface is allocated in; null when the endpoint has no subnet
+  //
+  // Resolves the subnet hosting the private endpoint so its network security
+  // group, route table, address space, and virtual network can be examined.
+  // This is the network location from which the linked resource is privately
+  // reachable, completing a private-access path from a virtual network to the
+  // resource behind the endpoint.
+  subnet() azure.subscription.networkService.subnet
   // Custom name of the network interface attached to the private endpoint
   customNetworkInterfaceName string
   // Billing SKU of the private endpoint ("Fixed" or "PayAsYouGo")
@@ -5183,7 +5199,15 @@ private azure.subscription.storageService.account.privateEndpointConnection @def
   // Resource type
   type string
   // ARM resource ID of the consumer-side private endpoint, when present
-  privateEndpointId string
+  //
+  // Deprecated in favor of privateEndpoint.
+  privateEndpointId @maturity("deprecated") string
+  // Consumer-side private endpoint, or null when the connection has none
+  //
+  // Resolves the private endpoint connecting to this storage account so the
+  // subnet and virtual network it is reachable from can be traversed, giving
+  // the private-access path into the account.
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
   status string
   // Reason for the current status

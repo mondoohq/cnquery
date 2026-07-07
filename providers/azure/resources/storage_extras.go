@@ -30,6 +30,22 @@ func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) id(
 	return a.Id.Data, nil
 }
 
+// privateEndpoint resolves the consumer-side private endpoint of this
+// connection so the subnet and virtual network it is reachable from can be
+// traversed, giving the private-access path into the storage account.
+func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	if a.PrivateEndpointId.Data == "" {
+		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint",
+		map[string]*llx.RawData{"id": llx.StringData(a.PrivateEndpointId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) id() (string, error) {
 	return a.Id.Data, nil
 }

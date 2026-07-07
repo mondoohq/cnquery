@@ -3596,6 +3596,7 @@ azure.subscription.networkService.privateEndpoint.serviceconnection.name 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService 13.9.3
 azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.requestMessage 11.4.28
+azure.subscription.networkService.privateEndpoint.subnet 13.26.1
 azure.subscription.networkService.privateEndpoint.subnetId 11.4.28
 azure.subscription.networkService.privateEndpoint.tags 11.4.28
 azure.subscription.networkService.privateEndpoint.type 11.4.28
@@ -3820,6 +3821,7 @@ azure.subscription.networkService.subnet.serviceEndpoint.provisioningState 13.12
 azure.subscription.networkService.subnet.serviceEndpoint.service 13.12.2
 azure.subscription.networkService.subnet.serviceEndpoints 13.12.2
 azure.subscription.networkService.subnet.type 9.0.8
+azure.subscription.networkService.subnet.virtualNetwork 13.26.1
 azure.subscription.networkService.subscriptionId 9.0.1
 azure.subscription.networkService.trafficManagerProfile 13.12.2
 azure.subscription.networkService.trafficManagerProfile.allowedEndpointRecordTypes 13.12.2
@@ -5132,6 +5134,7 @@ azure.subscription.storageService.account.privateEndpointConnection.actionsRequi
 azure.subscription.storageService.account.privateEndpointConnection.description 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.id 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.name 13.10.2
+azure.subscription.storageService.account.privateEndpointConnection.privateEndpoint 13.26.1
 azure.subscription.storageService.account.privateEndpointConnection.privateEndpointId 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.provisioningState 13.10.2
 azure.subscription.storageService.account.privateEndpointConnection.status 13.10.2
