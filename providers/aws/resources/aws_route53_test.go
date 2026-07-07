@@ -455,3 +455,32 @@ func TestRecordAliasTargetNullState(t *testing.T) {
 		assert.True(t, record.AliasCloudFrontDistribution.IsSet())
 	})
 }
+
+func lbWithDNSName(dnsName string) *mqlAwsElbLoadbalancer {
+	lb := &mqlAwsElbLoadbalancer{}
+	lb.DnsName = plugin.TValue[string]{Data: dnsName, State: plugin.StateIsSet}
+	return lb
+}
+
+// TestBuildLoadBalancerDNSIndex verifies the alias-target DNS index that backs
+// aws.route53.record.aliasLoadBalancer(): it must key every load balancer by its
+// normalized DNS name and include classic load balancers, not just v2 ones (a
+// Route 53 alias record can point at either).
+func TestBuildLoadBalancerDNSIndex(t *testing.T) {
+	v2 := lbWithDNSName("my-alb-123.us-east-1.elb.amazonaws.com")
+	classic := lbWithDNSName("my-classic-elb-456.us-east-1.elb.amazonaws.com")
+	blank := lbWithDNSName("")
+
+	idx, err := buildLoadBalancerDNSIndex([]any{v2, blank}, []any{classic})
+	require.NoError(t, err)
+
+	// A v2 load balancer alias target (Route 53 prepends "dualstack." and a
+	// trailing dot) resolves through the normalized key.
+	assert.Same(t, v2, idx[normalizeAliasDNSName("dualstack.my-alb-123.us-east-1.elb.amazonaws.com.")])
+	// The classic load balancer is indexed too — the regression this guards.
+	assert.Same(t, classic, idx[normalizeAliasDNSName("my-classic-elb-456.us-east-1.elb.amazonaws.com")])
+	// Load balancers with no DNS name are skipped rather than keyed under "".
+	_, hasBlank := idx[""]
+	assert.False(t, hasBlank)
+	assert.Len(t, idx, 2)
+}

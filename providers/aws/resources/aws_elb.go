@@ -46,12 +46,35 @@ func (a *mqlAwsElb) loadBalancerByDNSName(normalized string) (*mqlAwsElbLoadbala
 	defer a.dnsIndexMu.Unlock()
 
 	if !a.dnsIndexBuilt {
+		// Index both v2 (application/network/gateway) and classic load balancers:
+		// a Route 53 alias record can point at either, and each carries its own
+		// DNS name.
 		lbs := a.GetLoadBalancers()
 		if lbs.Error != nil {
 			return nil, lbs.Error
 		}
-		idx := make(map[string]*mqlAwsElbLoadbalancer, len(lbs.Data))
-		for _, l := range lbs.Data {
+		classic := a.GetClassicLoadBalancers()
+		if classic.Error != nil {
+			return nil, classic.Error
+		}
+		idx, err := buildLoadBalancerDNSIndex(lbs.Data, classic.Data)
+		if err != nil {
+			return nil, err
+		}
+		a.dnsIndex = idx
+		a.dnsIndexBuilt = true
+	}
+	return a.dnsIndex[normalized], nil
+}
+
+// buildLoadBalancerDNSIndex maps each load balancer's normalized DNS name to the
+// load balancer, across every provided list (v2 and classic). DNS names are
+// unique across load balancer types, so the lists share one index without
+// collision.
+func buildLoadBalancerDNSIndex(lbLists ...[]any) (map[string]*mqlAwsElbLoadbalancer, error) {
+	idx := map[string]*mqlAwsElbLoadbalancer{}
+	for _, lbs := range lbLists {
+		for _, l := range lbs {
 			lb, ok := l.(*mqlAwsElbLoadbalancer)
 			if !ok {
 				continue
@@ -64,10 +87,8 @@ func (a *mqlAwsElb) loadBalancerByDNSName(normalized string) (*mqlAwsElbLoadbala
 				idx[normalizeAliasDNSName(dnsName.Data)] = lb
 			}
 		}
-		a.dnsIndex = idx
-		a.dnsIndexBuilt = true
 	}
-	return a.dnsIndex[normalized], nil
+	return idx, nil
 }
 
 func (a *mqlAwsElb) classicLoadBalancers() ([]any, error) {
