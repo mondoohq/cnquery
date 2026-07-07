@@ -1195,38 +1195,22 @@ func (a *mqlAwsElbLoadbalancer) webAcl() (*mqlAwsWafAcl, error) {
 		return nil, nil
 	}
 
-	// Resolve the associated web ACL ARN to the typed resource from the account
-	// web ACL list.
-	obj, err := CreateResource(a.MqlRuntime, ResourceAwsWaf, map[string]*llx.RawData{})
+	// Build the typed web ACL directly from the association response. An ALB's
+	// associated web ACL is always REGIONAL scope; setting scope here (rather
+	// than resolving through the account-wide aws.waf listing) both avoids a
+	// scopeless ListWebACLs call that fails validation and gives the returned
+	// ACL the scope its own accessors (associatedLoadBalancers, rules) need.
+	acl := resp.WebACL
+	mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl", map[string]*llx.RawData{
+		"__id":        llx.StringDataPtr(acl.ARN),
+		"id":          llx.StringDataPtr(acl.Id),
+		"scope":       llx.StringData(string(waftypes.ScopeRegional)),
+		"arn":         llx.StringDataPtr(acl.ARN),
+		"name":        llx.StringDataPtr(acl.Name),
+		"description": llx.StringDataPtr(acl.Description),
+	})
 	if err != nil {
 		return nil, err
 	}
-	acl, err := obj.(*mqlAwsWaf).wafAclByArn(*resp.WebACL.ARN)
-	if err != nil {
-		return nil, err
-	}
-	if acl == nil {
-		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	return acl, nil
-}
-
-// wafAclByArn returns the web ACL with the given ARN from the account's web ACLs,
-// or nil when none matches.
-func (a *mqlAwsWaf) wafAclByArn(arnVal string) (*mqlAwsWafAcl, error) {
-	acls := a.GetAcls()
-	if acls.Error != nil {
-		return nil, acls.Error
-	}
-	for _, x := range acls.Data {
-		acl, ok := x.(*mqlAwsWafAcl)
-		if !ok {
-			continue
-		}
-		if acl.Arn.Data == arnVal {
-			return acl, nil
-		}
-	}
-	return nil, nil
+	return mqlAcl.(*mqlAwsWafAcl), nil
 }
