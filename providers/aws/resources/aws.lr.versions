@@ -3119,6 +3119,7 @@ aws.ec2.instance.instanceId 11.15.2
 aws.ec2.instance.instanceLifecycle 11.15.2
 aws.ec2.instance.instanceStatus 11.15.2
 aws.ec2.instance.instanceType 11.15.2
+aws.ec2.instance.instanceTypeHypervisor 13.43.1
 aws.ec2.instance.ipv6Address 11.15.2
 aws.ec2.instance.keypair 11.15.2
 aws.ec2.instance.launchTime 11.15.2

@@ -23066,6 +23066,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.hypervisor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetHypervisor()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.instanceTypeHypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetInstanceTypeHypervisor()).ToDataRes(types.String)
+	},
 	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceLifecycle()).ToDataRes(types.String)
 	},
@@ -60829,6 +60832,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.instanceTypeHypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).InstanceTypeHypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -146574,6 +146581,7 @@ type mqlAwsEc2Instance struct {
 	StateTransitionTime     plugin.TValue[*time.Time]
 	VpcArn                  plugin.TValue[string]
 	Hypervisor              plugin.TValue[string]
+	InstanceTypeHypervisor  plugin.TValue[string]
 	InstanceLifecycle       plugin.TValue[string]
 	RootDeviceType          plugin.TValue[string]
 	RootDeviceName          plugin.TValue[string]
@@ -146844,6 +146852,12 @@ func (c *mqlAwsEc2Instance) GetVpcArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetHypervisor() *plugin.TValue[string] {
 	return &c.Hypervisor
+}
+
+func (c *mqlAwsEc2Instance) GetInstanceTypeHypervisor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InstanceTypeHypervisor, func() (string, error) {
+		return c.instanceTypeHypervisor()
+	})
 }
 
 func (c *mqlAwsEc2Instance) GetInstanceLifecycle() *plugin.TValue[string] {

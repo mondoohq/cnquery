@@ -16678,6 +16678,14 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   vpcArn @maturity("deprecated") string
   // Hypervisor type of the instance: ovm or xen
   hypervisor string
+  // Hypervisor of the instance type: nitro or xen
+  //
+  // Reports whether the instance type is built on the AWS Nitro System
+  // (nitro) or the Xen hypervisor (xen). Unlike the instance-level
+  // hypervisor field, which only reports ovm or xen, this reflects the
+  // underlying platform and is how you tell whether an instance is
+  // Nitro-based.
+  instanceTypeHypervisor() string
   // Whether this is a Spot Instance or a Scheduled Instance: spot, scheduled, or capacity-block
   instanceLifecycle string
   // Root device type used by the AMI: ebs or instance-store

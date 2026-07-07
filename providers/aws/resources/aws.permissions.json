@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.43.0",
-  "generated_at": "2026-07-06T13:52:17-07:00",
+  "generated_at": "2026-07-06T22:30:03-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -262,6 +262,7 @@
     "ec2:DescribeInstanceAttribute",
     "ec2:DescribeInstanceConnectEndpoints",
     "ec2:DescribeInstanceStatus",
+    "ec2:DescribeInstanceTypes",
     "ec2:DescribeInstances",
     "ec2:DescribeInternetGateways",
     "ec2:DescribeIpamPools",
@@ -2501,6 +2502,12 @@
       "permission": "ec2:DescribeInstanceStatus",
       "service": "ec2",
       "action": "DescribeInstanceStatus",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInstanceTypes",
+      "service": "ec2",
+      "action": "DescribeInstanceTypes",
       "source_file": "aws_ec2.go"
     },
     {

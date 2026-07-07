@@ -1511,6 +1511,50 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 	return res, nil
 }
 
+// instanceTypeHypervisorCache memoizes the mapping from EC2 instance type to its
+// hypervisor (nitro or xen). DescribeInstanceTypes is the only API that reports
+// it, and the value is an immutable, region-independent property of the instance
+// type, so we cache it process-wide to avoid an API call per instance (many
+// instances share a type).
+var instanceTypeHypervisorCache sync.Map // map[string]string
+
+func (i *mqlAwsEc2Instance) instanceTypeHypervisor() (string, error) {
+	instanceType := i.InstanceType.Data
+	if instanceType == "" {
+		return "", nil
+	}
+	if v, ok := instanceTypeHypervisorCache.Load(instanceType); ok {
+		return v.(string), nil
+	}
+
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(i.Region.Data)
+	resp, err := svc.DescribeInstanceTypes(context.Background(), &ec2.DescribeInstanceTypesInput{
+		InstanceTypes: []ec2types.InstanceType{ec2types.InstanceType(instanceType)},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			// Don't mask the missing permission behind an empty "not Nitro"
+			// answer; surface it so it can be granted.
+			log.Warn().Str("instanceType", instanceType).Str("instance", i.InstanceId.Data).
+				Msg("no permission for ec2:DescribeInstanceTypes; cannot determine instance-type hypervisor")
+			return "", nil
+		}
+		return "", err
+	}
+
+	// A running instance's type always exists in its own region, so an empty
+	// result is unexpected. Don't cache it, or we'd poison the process-wide
+	// cache for regions where the type does exist.
+	if len(resp.InstanceTypes) == 0 {
+		return "", nil
+	}
+
+	hypervisor := string(resp.InstanceTypes[0].Hypervisor)
+	instanceTypeHypervisorCache.Store(instanceType, hypervisor)
+	return hypervisor, nil
+}
+
 type mqlAwsEc2NetworkinterfaceInternal struct {
 	networkInterfaceCache   ec2types.NetworkInterface
 	region                  string
