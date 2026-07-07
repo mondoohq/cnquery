@@ -448,6 +448,13 @@ hetzner.loadBalancer @defaults("id name") {
   services() []hetzner.loadBalancer.service
   // Targets behind the load balancer
   targets() []hetzner.loadBalancer.target
+  // Backend servers behind the load balancer
+  //
+  // The servers the load balancer forwards to, combining the direct
+  // server targets with the servers currently matched by any
+  // label_selector targets, deduplicated. The reverse of the load
+  // balancers listed on each server.
+  servers() []hetzner.server
   // Internet-exposure breakdown (public network combined with forwarding services)
   exposure() hetzner.network.exposure
   // Resource protection (delete)
@@ -510,6 +517,12 @@ private hetzner.loadBalancer.target @defaults("type") {
   server() hetzner.server
   // Label selector (only for type=label_selector)
   labelSelector string
+  // Servers resolved from the target's label selector
+  //
+  // The servers a label_selector target currently forwards to. Where
+  // labelSelector holds the selector expression, this lists the servers
+  // it actually matches. Empty for server and ip targets.
+  labelSelectorTargets() []hetzner.server
   // IP address (only for type=ip)
   ip string
 }
@@ -652,6 +665,8 @@ private hetzner.location @defaults("id name city") {
   longitude float
   // Network zone (eu-central, us-east, us-west)
   networkZone string
+  // Servers running in this location
+  servers() []hetzner.server
 }
 
 // Hetzner Cloud datacenter
@@ -671,6 +686,8 @@ private hetzner.datacenter @defaults("id name") {
   availableServerTypes() []hetzner.serverType
   // Server types available for migration into this datacenter
   serverTypesAvailableForMigration() []hetzner.serverType
+  // Servers running in this datacenter
+  servers() []hetzner.server
 }
 
 // Hetzner Cloud Storage Box (managed backup/file storage)

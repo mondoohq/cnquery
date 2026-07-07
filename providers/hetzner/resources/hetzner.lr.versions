@@ -24,6 +24,7 @@ hetzner.datacenter.id 13.0.1
 hetzner.datacenter.location 13.0.1
 hetzner.datacenter.name 13.0.1
 hetzner.datacenter.serverTypesAvailableForMigration 13.0.1
+hetzner.datacenter.servers 13.5.2
 hetzner.datacenter.supportedServerTypes 13.0.1
 hetzner.datacenters 13.0.1
 hetzner.firewall 13.0.1
@@ -97,6 +98,7 @@ hetzner.loadBalancer.privateNet.network 13.0.1
 hetzner.loadBalancer.privateNet.networkId 13.0.1
 hetzner.loadBalancer.protection 13.0.1
 hetzner.loadBalancer.publicNet 13.0.1
+hetzner.loadBalancer.servers 13.5.2
 hetzner.loadBalancer.service 13.0.1
 hetzner.loadBalancer.service.certificates 13.0.1
 hetzner.loadBalancer.service.destinationPort 13.0.1
@@ -111,6 +113,7 @@ hetzner.loadBalancer.target 13.0.1
 hetzner.loadBalancer.target.healthStatus 13.0.1
 hetzner.loadBalancer.target.ip 13.0.1
 hetzner.loadBalancer.target.labelSelector 13.0.1
+hetzner.loadBalancer.target.labelSelectorTargets 13.5.2
 hetzner.loadBalancer.target.loadBalancerId 13.0.1
 hetzner.loadBalancer.target.server 13.0.1
 hetzner.loadBalancer.target.type 13.0.1
@@ -136,6 +139,7 @@ hetzner.location.latitude 13.0.1
 hetzner.location.longitude 13.0.1
 hetzner.location.name 13.0.1
 hetzner.location.networkZone 13.0.1
+hetzner.location.servers 13.5.2
 hetzner.locations 13.0.1
 hetzner.network 13.0.1
 hetzner.network.created 13.0.1
