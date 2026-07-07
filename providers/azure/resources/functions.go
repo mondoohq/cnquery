@@ -239,6 +239,10 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) userAssignedIdentities
 }
 
 func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	// Unlike the other resources, the function app has no identity dict (it models
+	// identity as managedServiceIdentityId), so no tenant ID is available here;
+	// tenantID is cosmetic on the synthesized identity anyway, as role assignments
+	// resolve by principal ID.
 	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
 }
 

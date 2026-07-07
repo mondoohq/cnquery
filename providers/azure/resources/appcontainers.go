@@ -248,7 +248,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) userAssignedIdenti
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
 }
 
 // managedEnvironment resolves the parent managed environment of the container

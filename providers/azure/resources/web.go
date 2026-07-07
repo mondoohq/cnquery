@@ -659,7 +659,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) userAssignedIdentities() ([]any,
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) systemAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
-	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, "", &a.SystemAssignedIdentity)
+	return newSystemAssignedManagedIdentity(a.MqlRuntime, a.Id.Data, a.PrincipalId.Data, tenantIDFromIdentityDict(a.Identity), &a.SystemAssignedIdentity)
 }
 
 // keyVaultReferenceIdentityRef resolves the user-assigned managed identity used
