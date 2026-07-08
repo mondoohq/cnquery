@@ -498,7 +498,10 @@ func initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, err
 	}
 
-	var id string
+	// The unfiltered list must have a stable, non-empty __id. An empty __id
+	// makes the resource cache key collide/race with concurrently-resolved
+	// terraform.resources("...") selector instances (mondoohq/mql#8966).
+	id := "terraform.resources"
 	if matchResource != nil || matchName != nil {
 		s := checksums.New
 		if matchResource != nil {

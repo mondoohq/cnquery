@@ -91,3 +91,51 @@ func TestHclCache_ConcurrentAccess(t *testing.T) {
 		}
 	}
 }
+
+// TestTerraformResources_UnfilteredStableID is a regression test for the second
+// half of mondoohq/mql#8966. The unfiltered `terraform.resources` list (no
+// selector args) must carry a stable, NON-EMPTY __id.
+//
+// Why it matters: resources are cached in the runtime keyed by
+// name+"\x00"+__id. An empty __id makes the unfiltered list share the constant
+// slot "terraform.resources\x00". When a policy resolves the unfiltered list
+// (e.g. `terraform.resources.where(...)`) concurrently with several
+// `terraform.resources("type")` selector instances — exactly what happens when
+// AWS/GCP checks and an inventory query run against the same asset — that
+// shared empty-id slot races and the unfiltered list intermittently resolves
+// empty, so `.all(...)` passes vacuously. A non-empty id takes the normal,
+// race-free cache path (selector instances, which already carry a checksum id,
+// were never affected).
+//
+// This asserts the invariant directly (deterministic) rather than the flaky
+// race symptom: if the id ever regresses to "" this fails immediately, and
+// selector forms must keep their own distinct non-empty ids.
+func TestTerraformResources_UnfilteredStableID(t *testing.T) {
+	rt := newHclRaceRuntime(t)
+
+	bare, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
+	require.NoError(t, err)
+	bareID := bare["__id"].Value.(string)
+	require.NotEmpty(t, bareID,
+		"unfiltered terraform.resources must have a non-empty __id (mondoohq/mql#8966)")
+	require.Positive(t, len(bare["list"].Value.([]any)),
+		"unfiltered terraform.resources must not be empty")
+
+	// A selector form must resolve to a different, non-empty id so it neither
+	// collides with the unfiltered slot nor with other selectors.
+	sel, _, err := initTerraformResources(rt, map[string]*llx.RawData{
+		"resource": llx.StringData("aws_instance"),
+	})
+	require.NoError(t, err)
+	selID := sel["__id"].Value.(string)
+	require.NotEmpty(t, selID)
+	require.NotEqual(t, bareID, selID,
+		"terraform.resources(\"type\") must not share the unfiltered list's __id")
+
+	sel2, _, err := initTerraformResources(rt, map[string]*llx.RawData{
+		"resource": llx.StringData("aws_s3_bucket"),
+	})
+	require.NoError(t, err)
+	require.NotEqual(t, selID, sel2["__id"].Value.(string),
+		"distinct terraform.resources(\"type\") selectors must have distinct __ids")
+}
