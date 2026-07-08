@@ -54,7 +54,8 @@ type connectionGraph struct {
 	// reconnect the parent before connecting the child.
 	//
 	// Bounded by: addNode/addImplicitNode remove entries for re-added
-	// IDs, and Reconnect() resets the entire graph including this map.
+	// IDs, and Reconnect() clears this map since stale data from before
+	// a provider restart is no longer meaningful.
 	collectedNodes map[uint32]connectReq
 }
 
@@ -240,7 +241,7 @@ func (r *RestartableProvider) Connect(req *pp.ConnectReq, cb pp.ProviderCallback
 
 		if !alreadyBack {
 			if _, err := r.plugin.Connect(parentToReconnect.req, parentToReconnect.cb); err != nil {
-				log.Warn().Err(err).Uint32("parent", parentId).Msg("failed to reconnect garbage-collected parent connection")
+				return nil, fmt.Errorf("failed to reconnect garbage-collected parent %d: %w", parentId, err)
 			} else {
 				r.lock.Lock()
 				if _, ok := r.connectionGraph.getNode(parentId); !ok {
@@ -277,6 +278,7 @@ func (r *RestartableProvider) Reconnect() error {
 	}
 	r.plugin = p
 	r.client = c
+	clear(r.connectionGraph.collectedNodes)
 
 	connectRequestOrder := r.connectionGraph.topoSort()
 
