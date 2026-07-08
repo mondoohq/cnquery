@@ -336,11 +336,10 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
 				tenantID:    tenantID,
 				compartment: e.CompartmentID.Data,
-				// The endpoint resource doesn't retain the region it was
-				// enumerated in, so fall back to the "unknown" placeholder;
-				// the platform id stays valid and the endpoint id is globally
-				// unique on its own.
-				region:     fallbackRegion(""),
+				// cacheRegion is populated during endpoint enumeration (the
+				// listing runs per subscribed region); empty only when the
+				// enumeration didn't hit a region (defensive fallback).
+				region:     fallbackRegion(e.cacheRegion),
 				id:         e.Id.Data,
 				service:    "generativeai",
 				objectType: "endpoint",
