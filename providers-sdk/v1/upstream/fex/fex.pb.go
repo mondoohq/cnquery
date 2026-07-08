@@ -342,6 +342,7 @@ const (
 	FindingDetail_CATEGORY_THREAT        FindingDetail_Category = 4
 	FindingDetail_CATEGORY_MALWARE       FindingDetail_Category = 5
 	FindingDetail_CATEGORY_INFORMATIONAL FindingDetail_Category = 6
+	FindingDetail_CATEGORY_SECRET        FindingDetail_Category = 7
 )
 
 // Enum value maps for FindingDetail_Category.
@@ -354,6 +355,7 @@ var (
 		4: "CATEGORY_THREAT",
 		5: "CATEGORY_MALWARE",
 		6: "CATEGORY_INFORMATIONAL",
+		7: "CATEGORY_SECRET",
 	}
 	FindingDetail_Category_value = map[string]int32{
 		"CATEGORY_UNSPECIFIED":   0,
@@ -363,6 +365,7 @@ var (
 		"CATEGORY_THREAT":        4,
 		"CATEGORY_MALWARE":       5,
 		"CATEGORY_INFORMATIONAL": 6,
+		"CATEGORY_SECRET":        7,
 	}
 )
 
@@ -2893,7 +2896,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x06source\x18\v \x01(\v2\x12.mql.fex.v1.SourceR\x06source\x12-\n" +
 	"\aaffects\x18\f \x03(\v2\x13.mql.fex.v1.AffectsR\aaffects\x122\n" +
 	"\tevidences\x18\x14 \x03(\v2\x14.mql.fex.v1.EvidenceR\tevidences\x12;\n" +
-	"\fremediations\x18\x15 \x03(\v2\x17.mql.fex.v1.RemediationR\fremediations\"\xd4\x04\n" +
+	"\fremediations\x18\x15 \x03(\v2\x17.mql.fex.v1.RemediationR\fremediations\"\xe9\x04\n" +
 	"\rFindingDetail\x12>\n" +
 	"\bcategory\x18\x01 \x01(\x0e2\".mql.fex.v1.FindingDetail.CategoryR\bcategory\x120\n" +
 	"\bseverity\x18\x02 \x01(\v2\x14.mql.fex.v1.SeverityR\bseverity\x126\n" +
@@ -2909,7 +2912,7 @@ const file_fex_proto_rawDesc = "" +
 	"properties\x1a=\n" +
 	"\x0fPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb5\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xca\x01\n" +
 	"\bCategory\x12\x18\n" +
 	"\x14CATEGORY_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11CATEGORY_SECURITY\x10\x01\x12\x1a\n" +
@@ -2917,7 +2920,8 @@ const file_fex_proto_rawDesc = "" +
 	"\x11CATEGORY_ADVISORY\x10\x03\x12\x13\n" +
 	"\x0fCATEGORY_THREAT\x10\x04\x12\x14\n" +
 	"\x10CATEGORY_MALWARE\x10\x05\x12\x1a\n" +
-	"\x16CATEGORY_INFORMATIONAL\x10\x06\"\xa9\x05\n" +
+	"\x16CATEGORY_INFORMATIONAL\x10\x06\x12\x13\n" +
+	"\x0fCATEGORY_SECRET\x10\a\"\xa9\x05\n" +
 	"\bEvidence\x120\n" +
 	"\x06tactic\x18\x01 \x01(\v2\x18.mql.fex.v1.AttackTacticR\x06tactic\x129\n" +
 	"\ttechnique\x18\x02 \x01(\v2\x1b.mql.fex.v1.AttackTechniqueR\ttechnique\x126\n" +
