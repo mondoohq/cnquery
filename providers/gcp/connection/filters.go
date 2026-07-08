@@ -5,7 +5,8 @@ package connection
 
 import (
 	"slices"
-	"strings"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
 )
 
 // DiscoveryFilters holds the per-service filters used to narrow discovery.
@@ -18,8 +19,8 @@ type DiscoveryFilters struct {
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 	return DiscoveryFilters{
 		Storage: StorageDiscoveryFilters{
-			BucketNames:        parseCsvSliceOpt(opts, "storage:bucket-names"),
-			ExcludeBucketNames: parseCsvSliceOpt(opts, "storage:exclude:bucket-names"),
+			BucketNames:        filteropts.ParseCsvSliceOpt(opts, "storage:bucket-names"),
+			ExcludeBucketNames: filteropts.ParseCsvSliceOpt(opts, "storage:exclude:bucket-names"),
 		},
 	}
 }
@@ -35,20 +36,4 @@ func (f StorageDiscoveryFilters) IsFilteredOut(bucketName string) bool {
 		return true
 	}
 	return slices.Contains(f.ExcludeBucketNames, bucketName)
-}
-
-// parseCsvSliceOpt returns the comma-separated values for the given key as a
-// slice. Empty keys or values are skipped, and a non-nil empty slice is
-// returned when there is nothing to parse.
-func parseCsvSliceOpt(opts map[string]string, key string) []string {
-	res := []string{}
-	for k, v := range opts {
-		if k == "" || v == "" {
-			continue
-		}
-		if k == key {
-			res = append(res, strings.Split(v, ",")...)
-		}
-	}
-	return res
 }

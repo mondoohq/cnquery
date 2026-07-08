@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
 )
 
 type DiscoveryFilters struct {
@@ -30,20 +31,20 @@ type DiscoveryFilters struct {
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 	d := DiscoveryFilters{
 		General: GeneralDiscoveryFilters{
-			Regions:        parseCsvSliceOpt(opts, "regions"),
-			ExcludeRegions: parseCsvSliceOpt(opts, "exclude:regions"),
+			Regions:        filteropts.ParseCsvSliceOpt(opts, "regions"),
+			ExcludeRegions: filteropts.ParseCsvSliceOpt(opts, "exclude:regions"),
 			Tags:           parseMapOpt(opts, "tag:"),
 			ExcludeTags:    parseMapOpt(opts, "exclude:tag:"),
 		},
 		Ec2: Ec2DiscoveryFilters{
-			InstanceIds:        parseCsvSliceOpt(opts, "ec2:instance-ids"),
-			ExcludeInstanceIds: parseCsvSliceOpt(opts, "ec2:exclude:instance-ids"),
+			InstanceIds:        filteropts.ParseCsvSliceOpt(opts, "ec2:instance-ids"),
+			ExcludeInstanceIds: filteropts.ParseCsvSliceOpt(opts, "ec2:exclude:instance-ids"),
 		},
 		Ecr: EcrDiscoveryFilters{
-			Tags:                   parseCsvSliceOpt(opts, "ecr:tags"),
-			ExcludeTags:            parseCsvSliceOpt(opts, "ecr:exclude:tags"),
-			PrivateRepositoryNames: parseCsvSliceOpt(opts, "ecr:private-repository-names"),
-			PublicRepositoryNames:  parseCsvSliceOpt(opts, "ecr:public-repository-names"),
+			Tags:                   filteropts.ParseCsvSliceOpt(opts, "ecr:tags"),
+			ExcludeTags:            filteropts.ParseCsvSliceOpt(opts, "ecr:exclude:tags"),
+			PrivateRepositoryNames: filteropts.ParseCsvSliceOpt(opts, "ecr:private-repository-names"),
+			PublicRepositoryNames:  filteropts.ParseCsvSliceOpt(opts, "ecr:public-repository-names"),
 			Scope:                  parseStringOpt(opts, "ecr:scope"),
 		},
 		Ecs: EcsDiscoveryFilters{
@@ -52,8 +53,8 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
 		},
 		S3: S3DiscoveryFilters{
-			BucketNames:        parseCsvSliceOpt(opts, "s3:bucket-names"),
-			ExcludeBucketNames: parseCsvSliceOpt(opts, "s3:exclude:bucket-names"),
+			BucketNames:        filteropts.ParseCsvSliceOpt(opts, "s3:bucket-names"),
+			ExcludeBucketNames: filteropts.ParseCsvSliceOpt(opts, "s3:exclude:bucket-names"),
 		},
 		PropagateAccountTags: parseBoolOpt(opts, "propagate-account-tags", false),
 		AccountTags:          parseMapOpt(opts, "account-tag:"),
@@ -283,23 +284,4 @@ func parseMapOpt(opts map[string]string, keyPrefix string) map[string]string {
 // returns "private"
 func parseStringOpt(opts map[string]string, key string) string {
 	return opts[key]
-}
-
-// Given a map of options and a key, return a slice of strings
-// where the key matches the given key. The value is split by commas.
-// Example:
-// key = "regions"
-// opts = {"regions": "us-east-1,us-west-2"}
-// returns []string{"us-east-1", "us-west-2"}
-func parseCsvSliceOpt(opts map[string]string, key string) []string {
-	res := []string{}
-	for k, v := range opts {
-		if k == "" || v == "" {
-			continue
-		}
-		if k == key {
-			res = append(res, strings.Split(v, ",")...)
-		}
-	}
-	return res
 }

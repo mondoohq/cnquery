@@ -260,6 +260,15 @@ func TestS3IsFilteredOut(t *testing.T) {
 		}
 		require.False(t, filters.IsFilteredOut("other-bucket"))
 	})
+
+	t.Run("exclude wins when bucket is in both include and exclude lists", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames:        []string{"my-bucket", "other-bucket"},
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("my-bucket"))
+		require.False(t, filters.IsFilteredOut("other-bucket"))
+	})
 }
 
 func TestDiscoveryFiltersFromOpts(t *testing.T) {
@@ -434,33 +443,6 @@ func TestParseMapOpt(t *testing.T) {
 		opts := map[string]string{}
 		result := parseMapOpt(opts, "tag:")
 		expected := map[string]string{}
-		require.Equal(t, expected, result)
-	})
-}
-
-func TestParseCsvSliceOpt(t *testing.T) {
-	t.Run("parses comma-separated values correctly", func(t *testing.T) {
-		opts := map[string]string{
-			"key": "value1,value2,value3",
-		}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{"value1", "value2", "value3"}
-		require.Equal(t, expected, result)
-	})
-
-	t.Run("returns empty slice for missing key", func(t *testing.T) {
-		opts := map[string]string{}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{}
-		require.Equal(t, expected, result)
-	})
-
-	t.Run("returns empty slice for empty value", func(t *testing.T) {
-		opts := map[string]string{
-			"key": "",
-		}
-		result := parseCsvSliceOpt(opts, "key")
-		expected := []string{}
 		require.Equal(t, expected, result)
 	})
 }

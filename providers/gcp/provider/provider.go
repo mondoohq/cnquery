@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -197,17 +198,14 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 		return o
 	}
 
-	knownPrefixes := []string{
+	knownKeys := []string{
 		// storage filters
 		"storage:bucket-names",
 		"storage:exclude:bucket-names",
 	}
 	for k, v := range x.Map {
-		for _, prefix := range knownPrefixes {
-			if strings.HasPrefix(k, prefix) {
-				o[k] = string(v.Value)
-				break
-			}
+		if slices.Contains(knownKeys, k) {
+			o[k] = string(v.Value)
 		}
 	}
 

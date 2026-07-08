@@ -42,6 +42,15 @@ func TestStorageIsFilteredOut(t *testing.T) {
 		}
 		require.False(t, filters.IsFilteredOut("other-bucket"))
 	})
+
+	t.Run("exclude wins when bucket is in both include and exclude lists", func(t *testing.T) {
+		filters := StorageDiscoveryFilters{
+			BucketNames:        []string{"my-bucket", "other-bucket"},
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("my-bucket"))
+		require.False(t, filters.IsFilteredOut("other-bucket"))
+	})
 }
 
 func TestDiscoveryFiltersFromOpts(t *testing.T) {
