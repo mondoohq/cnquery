@@ -48,6 +48,8 @@ const (
 	DiscoveryStorageAccounts         = "storage-accounts"
 	DiscoveryStorageContainers       = "storage-containers"
 	DiscoveryKeyVaults               = "keyvaults-vaults"
+	DiscoveryManagedHsms             = "keyvaults-managed-hsms"
+	DiscoveryIotHubs                 = "iot-hubs"
 	DiscoverySecurityGroups          = "security-groups"
 	DiscoveryCosmosDb                = "cosmosdb"
 	DiscoveryVirtualNetworks         = "virtual-networks"
@@ -93,6 +95,8 @@ var AllAPIResources = []string{
 	DiscoveryStorageAccounts,
 	DiscoveryStorageContainers,
 	DiscoveryKeyVaults,
+	DiscoveryManagedHsms,
+	DiscoveryIotHubs,
 	DiscoverySecurityGroups,
 	DiscoveryCosmosDb,
 	DiscoveryVirtualNetworks,
@@ -155,6 +159,8 @@ var genericDiscoverySpecs = []genericDiscoverySpec{
 	{armType: "Microsoft.Network/applicationGateways", discoveryTarget: DiscoveryApplicationGateways, service: "network", objectType: "application-gateway", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.Network/azureFirewalls", discoveryTarget: DiscoveryFirewalls, service: "network", objectType: "firewall", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.KeyVault/vaults", discoveryTarget: DiscoveryKeyVaults, service: "keyvault", objectType: "vault"},
+	{armType: "Microsoft.KeyVault/managedHSMs", discoveryTarget: DiscoveryManagedHsms, service: "keyvault", objectType: "managed-hsm"},
+	{armType: "Microsoft.Devices/IotHubs", discoveryTarget: DiscoveryIotHubs, service: "iot", objectType: "iothub"},
 	{armType: "Microsoft.DocumentDB/databaseAccounts", discoveryTarget: DiscoveryCosmosDb, service: "cosmosdb", objectType: "account"},
 	{armType: "Microsoft.Network/virtualNetworks", discoveryTarget: DiscoveryVirtualNetworks, service: "network", objectType: "virtual-network", includeObjectTypeInUrl: true},
 	{armType: "Microsoft.ContainerRegistry/registries", discoveryTarget: DiscoveryContainerRegistries, service: "containerregistry", objectType: "registry"},
@@ -726,6 +732,13 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	case "keyvault":
 		if azureObject.objectType == "vault" {
 			return azureObjectPlatformInfo{title: "Azure Key Vault", platform: "azure-keyvault-vault"}, nil
+		}
+		if azureObject.objectType == "managed-hsm" {
+			return azureObjectPlatformInfo{title: "Azure Key Vault Managed HSM", platform: "azure-keyvault-managedhsm"}, nil
+		}
+	case "iot":
+		if azureObject.objectType == "iothub" {
+			return azureObjectPlatformInfo{title: "Azure IoT Hub", platform: "azure-iot-iothub"}, nil
 		}
 	case "cosmosdb":
 		if azureObject.objectType == "account" {

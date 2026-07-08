@@ -33,6 +33,8 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "azure-function-app", Title: "Azure Function App", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-container-app", Title: "Azure Container App", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-keyvault-vault", Title: "Azure Key Vault", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
+	{Name: "azure-keyvault-managedhsm", Title: "Azure Key Vault Managed HSM", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
+	{Name: "azure-iot-iothub", Title: "Azure IoT Hub", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-cosmosdb", Title: "Azure Cosmos DB Account", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-container-registry", Title: "Azure Container Registry", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},
 	{Name: "azure-recovery-services-vault", Title: "Azure Recovery Services Vault", Kind: []string{"azure-object"}, Runtime: []string{"azure"}},

@@ -1591,6 +1591,52 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// initAzureSubscriptionKeyVaultServiceManagedHsm resolves a single managed HSM.
+// When called without arguments it falls back to the discovered asset's
+// platform id (see getAssetIdentifier), so an azure-keyvault-managedhsm asset
+// resolves to its backing HSM instead of an empty husk.
+func initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure managed hsm")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	res, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	kvSvc := res.(*mqlAzureSubscriptionKeyVaultService)
+	hsms := kvSvc.GetManagedHsms()
+	if hsms.Error != nil {
+		return nil, nil, hsms.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range hsms.Data {
+		hsm := entry.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
+		if hsm.Id.Data == id {
+			return args, hsm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure managed hsm does not exist")
+}
+
 type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
 	cachePrivateEndpointConnections []*keyvault.MHSMPrivateEndpointConnectionItem
 	cacheSystemData                 any

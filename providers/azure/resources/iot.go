@@ -57,6 +57,52 @@ func initAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]*l
 	return args, nil, nil
 }
 
+// initAzureSubscriptionIotServiceIotHub resolves a single IoT hub. When called
+// without arguments it falls back to the discovered asset's platform id (see
+// getAssetIdentifier), so an azure-iot-iothub asset resolves to its backing
+// hub instead of an empty husk.
+func initAzureSubscriptionIotServiceIotHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, fmt.Errorf("id required to fetch azure iot hub")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, fmt.Errorf("invalid connection provided, it is not an Azure connection")
+	}
+
+	res, err := NewResource(runtime, "azure.subscription.iotService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	iotSvc := res.(*mqlAzureSubscriptionIotService)
+	hubs := iotSvc.GetIotHubs()
+	if hubs.Error != nil {
+		return nil, nil, hubs.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range hubs.Data {
+		hub := entry.(*mqlAzureSubscriptionIotServiceIotHub)
+		if hub.Id.Data == id {
+			return args, hub, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("azure iot hub does not exist")
+}
+
 func (a *mqlAzureSubscriptionIotService) hubs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

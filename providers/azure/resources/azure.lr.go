@@ -1344,7 +1344,7 @@ func init() {
 			Create: createAzureSubscriptionKeyVaultService,
 		},
 		"azure.subscription.keyVaultService.managedHsm": {
-			// to override args, implement: initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionKeyVaultServiceManagedHsm,
 			Create: createAzureSubscriptionKeyVaultServiceManagedHsm,
 		},
 		"azure.subscription.keyVaultService.vault": {
@@ -1648,7 +1648,7 @@ func init() {
 			Create: createAzureSubscriptionIotService,
 		},
 		"azure.subscription.iotService.iotHub": {
-			// to override args, implement: initAzureSubscriptionIotServiceIotHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionIotServiceIotHub,
 			Create: createAzureSubscriptionIotServiceIotHub,
 		},
 		"azure.subscription.cacheService": {

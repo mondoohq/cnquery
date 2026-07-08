@@ -54,6 +54,8 @@ Examples run in the Azure CLI:
 				resources.DiscoveryStorageAccounts,
 				resources.DiscoveryStorageContainers,
 				resources.DiscoveryKeyVaults,
+				resources.DiscoveryManagedHsms,
+				resources.DiscoveryIotHubs,
 				resources.DiscoverySecurityGroups,
 				resources.DiscoveryCosmosDb,
 				resources.DiscoveryVirtualNetworks,
