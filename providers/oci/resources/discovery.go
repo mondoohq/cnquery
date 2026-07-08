@@ -32,6 +32,7 @@ const (
 	DiscoveryRedisClusters         = "redis-clusters"
 	DiscoveryVaultSecrets          = "vault-secrets"
 	DiscoveryOkeClusters           = "oke-clusters"
+	DiscoveryGenerativeAiEndpoints = "generativeai-endpoints"
 )
 
 // AllAPIResources lists every fine-grained per-resource discovery target.
@@ -39,6 +40,7 @@ const (
 var AllAPIResources = []string{
 	DiscoveryAPIGatewayDeployments,
 	DiscoveryBuckets,
+	DiscoveryGenerativeAiEndpoints,
 	DiscoveryLoadBalancers,
 	DiscoveryOkeClusters,
 	DiscoveryPolicies,
@@ -319,6 +321,31 @@ func discover(runtime *plugin.Runtime, conn *connection.OciConnection, target st
 				objectType:  "cluster",
 			}, c.Name.Data, tagsToLabels(c.FreeformTags.Data), conn))
 		}
+	case DiscoveryGenerativeAiEndpoints:
+		res, err := NewResource(runtime, "oci.ai.generativeAi", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+		genAi := res.(*mqlOciAiGenerativeAi)
+		endpoints := genAi.GetEndpoints()
+		if endpoints.Error != nil {
+			return nil, endpoints.Error
+		}
+		for i := range endpoints.Data {
+			e := endpoints.Data[i].(*mqlOciAiGenerativeAiEndpoint)
+			appendIfNotNil(&assetList, ociObjectToAsset(ociObject{
+				tenantID:    tenantID,
+				compartment: e.CompartmentID.Data,
+				// The endpoint resource doesn't retain the region it was
+				// enumerated in, so fall back to the "unknown" placeholder;
+				// the platform id stays valid and the endpoint id is globally
+				// unique on its own.
+				region:     fallbackRegion(""),
+				id:         e.Id.Data,
+				service:    "generativeai",
+				objectType: "endpoint",
+			}, e.Name.Data, tagsToLabels(e.FreeformTags.Data), conn))
+		}
 	default:
 		log.Warn().Str("target", target).Msg("oci discovery: unknown target; skipping")
 	}
@@ -395,6 +422,10 @@ func getPlatformName(obj ociObject) string {
 	case "oke":
 		if obj.objectType == "cluster" {
 			return "oci-oke-cluster"
+		}
+	case "generativeai":
+		if obj.objectType == "endpoint" {
+			return "oci-ai-generativeai-endpoint"
 		}
 	}
 	return ""

@@ -21,6 +21,7 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "oci-redis-cluster", Title: "OCI Redis Cluster", Family: []string{"oci"}, Kind: []string{"oci-object"}, Runtime: []string{"oci"}},
 	{Name: "oci-vault-secret", Title: "OCI Vault Secret", Family: []string{"oci"}, Kind: []string{"oci-object"}, Runtime: []string{"oci"}},
 	{Name: "oci-oke-cluster", Title: "OCI OKE Cluster", Family: []string{"oci"}, Kind: []string{"oci-object"}, Runtime: []string{"oci"}},
+	{Name: "oci-ai-generativeai-endpoint", Title: "OCI Generative AI Endpoint", Family: []string{"oci"}, Kind: []string{"oci-object"}, Runtime: []string{"oci"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

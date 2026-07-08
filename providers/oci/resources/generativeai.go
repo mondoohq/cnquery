@@ -306,6 +306,21 @@ type mqlOciAiGenerativeAiEndpointInternal struct {
 }
 
 func initOciAiGenerativeAiEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// When selected as a discovered asset there is no "id" arg; fall back to
+	// the connection's platform id and pull the endpoint OCID from it, matching
+	// the oci-ai-generativeai-endpoint platform emitted during discovery.
+	if ociArgString(args, "id") == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf != nil && conn.Conf.PlatformId != "" {
+			if parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId); ok &&
+				parsed.service == "generativeai" && parsed.objectType == "endpoint" {
+				if args == nil {
+					args = map[string]*llx.RawData{}
+				}
+				args["id"] = llx.StringData(parsed.id)
+			}
+		}
+	}
 	return findOciGenerativeAiByID(runtime, args, (*mqlOciAiGenerativeAi).GetEndpoints)
 }
 

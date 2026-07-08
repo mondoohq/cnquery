@@ -40,6 +40,7 @@ Examples:
 				resources.DiscoveryRedisClusters,
 				resources.DiscoveryVaultSecrets,
 				resources.DiscoveryOkeClusters,
+				resources.DiscoveryGenerativeAiEndpoints,
 			},
 			Flags: []plugin.Flag{
 				{
