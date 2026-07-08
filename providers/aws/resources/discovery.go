@@ -450,6 +450,10 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		for i := range bs.Data {
 			f := bs.Data[i].(*mqlAwsS3Bucket)
 
+			if filters.S3.IsFilteredOut(f.Name.Data) {
+				continue
+			}
+
 			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
 				name: f.Name.Data, labels: tags,

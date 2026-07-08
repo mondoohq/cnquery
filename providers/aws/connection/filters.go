@@ -17,6 +17,7 @@ type DiscoveryFilters struct {
 	Ec2                  Ec2DiscoveryFilters
 	Ecr                  EcrDiscoveryFilters
 	Ecs                  EcsDiscoveryFilters
+	S3                   S3DiscoveryFilters
 	General              GeneralDiscoveryFilters
 	PropagateAccountTags bool
 	// AccountTags, when non-empty, is used as the source of account-level tags
@@ -49,6 +50,10 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			OnlyRunningContainers: parseBoolOpt(opts, "ecs:only-running-containers", false),
 			DiscoverInstances:     parseBoolOpt(opts, "ecs:discover-instances", false),
 			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
+		},
+		S3: S3DiscoveryFilters{
+			BucketNames:        parseCsvSliceOpt(opts, "s3:bucket-names"),
+			ExcludeBucketNames: parseCsvSliceOpt(opts, "s3:exclude:bucket-names"),
 		},
 		PropagateAccountTags: parseBoolOpt(opts, "propagate-account-tags", false),
 		AccountTags:          parseMapOpt(opts, "account-tag:"),
@@ -212,6 +217,19 @@ type EcsDiscoveryFilters struct {
 	OnlyRunningContainers bool
 	DiscoverImages        bool
 	DiscoverInstances     bool
+}
+
+type S3DiscoveryFilters struct {
+	BucketNames        []string
+	ExcludeBucketNames []string
+}
+
+// note: if this function returns `true`, it means that the bucket should be skipped
+func (f S3DiscoveryFilters) IsFilteredOut(bucketName string) bool {
+	if len(f.BucketNames) > 0 && !slices.Contains(f.BucketNames, bucketName) {
+		return true
+	}
+	return slices.Contains(f.ExcludeBucketNames, bucketName)
 }
 
 func (f EcsDiscoveryFilters) MatchesOnlyRunningContainers(containerState string) bool {

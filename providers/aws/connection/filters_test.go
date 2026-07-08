@@ -227,6 +227,41 @@ func TestEcrMatchesExcludeTags(t *testing.T) {
 	})
 }
 
+func TestS3IsFilteredOut(t *testing.T) {
+	t.Run("no filters keeps every bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{}
+		require.False(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("include list keeps matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames: []string{"my-bucket", "other-bucket"},
+		}
+		require.False(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("include list drops non-matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			BucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("other-bucket"))
+	})
+
+	t.Run("exclude list drops matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.True(t, filters.IsFilteredOut("my-bucket"))
+	})
+
+	t.Run("exclude list keeps non-matching bucket", func(t *testing.T) {
+		filters := S3DiscoveryFilters{
+			ExcludeBucketNames: []string{"my-bucket"},
+		}
+		require.False(t, filters.IsFilteredOut("other-bucket"))
+	})
+}
+
 func TestDiscoveryFiltersFromOpts(t *testing.T) {
 	t.Run("all opts are mapped to discovery filters correctly", func(t *testing.T) {
 		opts := map[string]string{
@@ -254,6 +289,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 			"ecr:public-repository-names": "pub1,pub2",
 			// EcrDiscoveryFilters.Scope
 			"ecr:scope": "private",
+			// S3DiscoveryFilters.BucketNames
+			"s3:bucket-names": "bucket1,bucket2",
+			// S3DiscoveryFilters.ExcludeBucketNames
+			"s3:exclude:bucket-names": "bucket3,bucket4",
 			// EcsDiscoveryFilters
 			"ecs:only-running-containers": "true",
 			"ecs:discover-images":         "T",
@@ -292,6 +331,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				PublicRepositoryNames:  []string{"pub1", "pub2"},
 				Scope:                  EcrScopePrivate,
 			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{"bucket1", "bucket2"},
+				ExcludeBucketNames: []string{"bucket3", "bucket4"},
+			},
 			PropagateAccountTags: true,
 			AccountTags: map[string]string{
 				"Owner":      "team-a",
@@ -321,6 +364,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				PrivateRepositoryNames: []string{},
 				PublicRepositoryNames:  []string{},
 			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{},
+				ExcludeBucketNames: []string{},
+			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},
 		}
@@ -345,6 +392,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				ExcludeTags:            []string{},
 				PrivateRepositoryNames: []string{},
 				PublicRepositoryNames:  []string{},
+			},
+			S3: S3DiscoveryFilters{
+				BucketNames:        []string{},
+				ExcludeBucketNames: []string{},
 			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},
