@@ -28,7 +28,16 @@ func tagsToStringMap[T any](tags []T, key func(T) *string, value func(T) *string
 }
 
 // tagsToMap is tagsToStringMap with a map[string]any result, the shape MQL
-// expects for tag fields.
+// expects for tag fields. It builds the map directly rather than converting a
+// map[string]string, avoiding a second allocation and copy.
 func tagsToMap[T any](tags []T, key func(T) *string, value func(T) *string) map[string]any {
-	return toInterfaceMap(tagsToStringMap(tags, key, value))
+	m := make(map[string]any, len(tags))
+	for i := range tags {
+		k := key(tags[i])
+		if k == nil {
+			continue
+		}
+		m[*k] = convert.ToValue(value(tags[i]))
+	}
+	return m
 }
