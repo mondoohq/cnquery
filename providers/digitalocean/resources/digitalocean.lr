@@ -1951,7 +1951,8 @@ digitalocean.gradientai {
 // it uses, and the agent routing graph through `childAgents()` and
 // `parentAgents()`. Select an agent by uuid with
 // `digitalocean.gradientai.agent(uuid: "...")`.
-private digitalocean.gradientai.agent @defaults("uuid name region") {
+digitalocean.gradientai.agent @defaults("uuid name region") {
+  init(uuid? string)
   // Agent UUID
   uuid string
   // Name

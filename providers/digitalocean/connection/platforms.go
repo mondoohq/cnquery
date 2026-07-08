@@ -51,6 +51,13 @@ var Platforms = []*plugin.PlatformInfo{
 		Kind:    []string{"api"},
 		Runtime: []string{"digitalocean"},
 	},
+	{
+		Name:    "digitalocean-gradientai-agent",
+		Title:   "DigitalOcean GradientAI Agent",
+		Family:  []string{"digitalocean"},
+		Kind:    []string{"api"},
+		Runtime: []string{"digitalocean"},
+	},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)

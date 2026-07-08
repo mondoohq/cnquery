@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -263,6 +264,35 @@ func newMqlGradientaiAgent(runtime *plugin.Runtime, a *godo.Agent) (*mqlDigitalo
 		}
 	}
 	return agent, nil
+}
+
+// initDigitaloceanGradientaiAgent resolves a single GradientAI agent. It
+// binds the agent selected by an explicit uuid argument, or - when the
+// connection is scoped to a discovered digitalocean-gradientai-agent
+// asset - the agent whose uuid the discovery step stamped on the
+// connection options. Without either, the resource has nothing to bind
+// to and returns an error.
+func initDigitaloceanGradientaiAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.DigitaloceanConnection)
+	uuid := stringArg(args, "uuid")
+	if uuid == "" {
+		uuid = conn.Conf.Options[connection.OptionGradientaiAgent]
+	}
+	if uuid == "" {
+		return nil, nil, errors.New("digitalocean.gradientai.agent requires a uuid or a connected digitalocean-gradientai-agent asset")
+	}
+	agent, _, err := conn.Client().GradientAI.GetAgent(context.Background(), uuid)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := newMqlGradientaiAgent(runtime, agent)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
 }
 
 func (r *mqlDigitaloceanGradientaiAgent) model() (*mqlDigitaloceanGradientaiModel, error) {

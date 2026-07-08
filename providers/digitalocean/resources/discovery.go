@@ -184,6 +184,35 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 	}
 
+	if stringx.Contains(targets, connection.DiscoveryGradientaiAgents) {
+		opt := &godo.ListOptions{PerPage: 200}
+		for {
+			agents, resp, err := client.GradientAI.ListAgents(ctx, opt)
+			if err != nil {
+				return nil, err
+			}
+			for _, a := range agents {
+				if a == nil {
+					continue
+				}
+				assets = append(assets, childAsset(
+					connection.GradientaiAgentPlatform(),
+					connection.NewGradientaiAgentIdentifier(accountUUID, a.Uuid),
+					"DigitalOcean GradientAI Agent "+a.Name,
+					map[string]string{connection.OptionGradientaiAgent: a.Uuid},
+				))
+			}
+			if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
+				break
+			}
+			page, err := resp.Links.CurrentPage()
+			if err != nil {
+				return nil, err
+			}
+			opt.Page = page + 1
+		}
+	}
+
 	return &inventory.Inventory{Spec: &inventory.InventorySpec{Assets: assets}}, nil
 }
 
@@ -197,6 +226,7 @@ func resolveDiscoveryTargets(targets []string) []string {
 			connection.DiscoveryLoadBalancers,
 			connection.DiscoveryFirewalls,
 			connection.DiscoverySpacesBuckets,
+			connection.DiscoveryGradientaiAgents,
 		}
 	}
 	return targets

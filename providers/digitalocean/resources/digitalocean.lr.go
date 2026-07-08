@@ -315,7 +315,7 @@ func init() {
 			Create: createDigitaloceanGradientai,
 		},
 		"digitalocean.gradientai.agent": {
-			// to override args, implement: initDigitaloceanGradientaiAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initDigitaloceanGradientaiAgent,
 			Create: createDigitaloceanGradientaiAgent,
 		},
 		"digitalocean.gradientai.agent.guardrail": {

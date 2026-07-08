@@ -39,6 +39,7 @@ Notes:
 				connection.DiscoveryLoadBalancers,
 				connection.DiscoveryFirewalls,
 				connection.DiscoverySpacesBuckets,
+				connection.DiscoveryGradientaiAgents,
 			},
 			Flags: []plugin.Flag{
 				{
