@@ -41,7 +41,7 @@ require (
 	cloud.google.com/go/modelarmor v1.1.0
 	cloud.google.com/go/monitoring v1.29.0
 	cloud.google.com/go/orgpolicy v1.20.0
-	cloud.google.com/go/pubsub/v2 v2.6.0
+	cloud.google.com/go/pubsub/v2 v2.6.1
 	cloud.google.com/go/recommender v1.19.0
 	cloud.google.com/go/redis v1.23.0
 	cloud.google.com/go/run v1.21.0
