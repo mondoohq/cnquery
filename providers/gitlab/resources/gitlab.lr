@@ -78,8 +78,13 @@ gitlab.settings @defaults("requireTwoFactorAuthentication") {
   // Maximum web-terminal session time, in seconds
   terminalMaxSessionTime int
   // Whether GitLab Duo AI features are enabled for the instance
+  //
+  // Reads false when the instance does not support or has not enabled Duo;
+  // older GitLab versions do not report this field.
   duoFeaturesEnabled bool
   // Whether the GitLab Duo features toggle is locked so groups and projects cannot override it
+  //
+  // Reads false on instances that do not report this setting.
   lockDuoFeaturesEnabled bool
 }
 
@@ -721,10 +726,19 @@ gitlab.project @defaults("fullName visibility webURL") {
   // Whether mirroring is limited to protected branches
   onlyMirrorProtectedBranches bool
   // Whether GitLab Duo automatically reviews merge requests
+  //
+  // Reads false when the project's GitLab instance does not support or has not
+  // enabled Duo.
   autoDuoCodeReviewEnabled bool
-  // Visibility of the machine-learning model experiments feature (disabled, private, enabled)
+  // Visibility of the machine-learning model experiments feature
+  //
+  // One of disabled, private, or enabled; empty on instances that do not report
+  // it.
   modelExperimentsAccessLevel string
-  // Visibility of the machine-learning model registry feature (disabled, private, enabled)
+  // Visibility of the machine-learning model registry feature
+  //
+  // One of disabled, private, or enabled; empty on instances that do not report
+  // it.
   modelRegistryAccessLevel string
   // Approval rules for the project
   approvalRules() []gitlab.project.approvalRule
