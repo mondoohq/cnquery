@@ -3628,7 +3628,7 @@ func init() {
 			Create: createAwsAthena,
 		},
 		"aws.athena.workgroup": {
-			// to override args, implement: initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAthenaWorkgroup,
 			Create: createAwsAthenaWorkgroup,
 		},
 		"aws.athena.dataCatalog": {
@@ -3644,7 +3644,7 @@ func init() {
 			Create: createAwsDirectoryservice,
 		},
 		"aws.directoryservice.directory": {
-			// to override args, implement: initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsDirectoryserviceDirectory,
 			Create: createAwsDirectoryserviceDirectory,
 		},
 		"aws.directoryservice.radiusSettings": {
@@ -4028,7 +4028,7 @@ func init() {
 			Create: createAwsBatchJobQueue,
 		},
 		"aws.batch.jobDefinition": {
-			// to override args, implement: initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBatchJobDefinition,
 			Create: createAwsBatchJobDefinition,
 		},
 		"aws.batch.jobDefinition.containerProperties": {

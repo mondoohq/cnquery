@@ -125,6 +125,18 @@ func getServiceName(platformName string) string {
 		return "cognito"
 	case "aws-transfer-server":
 		return "transfer"
+	case "aws-apigatewayv2-api":
+		return "apigateway"
+	case "aws-athena-workgroup":
+		return "athena"
+	case "aws-appstream-fleet":
+		return "appstream"
+	case "aws-batch-jobdefinition":
+		return "batch"
+	case "aws-directoryservice-directory":
+		return "ds"
+	case "aws-documentdb-instance":
+		return "documentdb"
 	}
 	return "other"
 }

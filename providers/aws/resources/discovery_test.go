@@ -56,6 +56,12 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryCodebuildProjects,
 		DiscoveryCognitoUserPools,
 		DiscoveryTransferServers,
+		DiscoveryApigatewayV2APIs,
+		DiscoveryAthenaWorkgroups,
+		DiscoveryAppStreamFleets,
+		DiscoveryBatchJobDefinitions,
+		DiscoveryDirectoryServiceDirectories,
+		DiscoveryDocumentDBInstances,
 		DiscoveryInstances,
 		DiscoverySSMInstances,
 		DiscoveryECR,
@@ -107,6 +113,12 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoveryCodebuildProjects,
 		DiscoveryCognitoUserPools,
 		DiscoveryTransferServers,
+		DiscoveryApigatewayV2APIs,
+		DiscoveryAthenaWorkgroups,
+		DiscoveryAppStreamFleets,
+		DiscoveryBatchJobDefinitions,
+		DiscoveryDirectoryServiceDirectories,
+		DiscoveryDocumentDBInstances,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

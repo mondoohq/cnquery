@@ -80,6 +80,48 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+// initAwsAthenaWorkgroup resolves a single Athena workgroup. When invoked
+// for a discovered asset (aws-athena-workgroup platform), no args are passed,
+// so the workgroup ARN is read from the connection's asset identifier and used
+// to select the matching workgroup from the parent collection.
+func initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil && args["name"] == nil {
+		return args, nil, fmt.Errorf("arn or name required to fetch athena workgroup")
+	}
+
+	obj, err := CreateResource(runtime, "aws.athena", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	wgs := obj.(*mqlAwsAthena).GetWorkgroups()
+	if wgs.Error != nil {
+		return nil, nil, wgs.Error
+	}
+
+	var wantArn, wantName string
+	if args["arn"] != nil {
+		wantArn = args["arn"].Value.(string)
+	}
+	if args["name"] != nil {
+		wantName = args["name"].Value.(string)
+	}
+	for _, r := range wgs.Data {
+		wg := r.(*mqlAwsAthenaWorkgroup)
+		if (wantArn != "" && wg.Arn.Data == wantArn) || (wantName != "" && wg.Name.Data == wantName) {
+			return args, wg, nil
+		}
+	}
+	return args, nil, nil
+}
+
 func newMqlAwsAthenaWorkgroupFromSummary(runtime *plugin.Runtime, region string, accountID string, wg *athena_types.WorkGroupSummary) (*mqlAwsAthenaWorkgroup, error) {
 	if wg == nil {
 		return nil, fmt.Errorf("workgroup summary is nil")

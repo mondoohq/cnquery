@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 
@@ -27,53 +28,59 @@ const (
 	DiscoveryAuto = "auto" // account + resources
 
 	// API scan
-	DiscoveryAccounts                   = "accounts"
-	DiscoveryOrg                        = "organization"
-	DiscoveryResources                  = "resources"          // all the resources
-	DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
-	DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
-	DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
-	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // need policy + dedup story
-	DiscoveryS3Buckets                  = "s3-buckets"
-	DiscoveryEKSClusters                = "eks-clusters"
-	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
-	DiscoveryRdsDbInstances             = "rds-dbinstances"
-	DiscoveryRdsDbClusters              = "rds-dbclusters"
-	DiscoveryVPCs                       = "vpcs"
-	DiscoverySecurityGroups             = "security-groups"
-	DiscoveryIAMUsers                   = "iam-users"
-	DiscoveryIAMGroups                  = "iam-groups"
-	DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
-	DiscoveryLambdaFunctions            = "lambda-functions"
-	DiscoveryDynamoDBTables             = "dynamodb-tables"
-	DiscoveryDynamoDBGlobalTables       = "dynamodb-global-tables"
-	DiscoveryRedshiftClusters           = "redshift-clusters"
-	DiscoveryVolumes                    = "ec2-volumes"
-	DiscoverySnapshots                  = "ec2-snapshots"
-	DiscoveryEFSFilesystems             = "efs-filesystems"
-	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"
-	DiscoveryELBLoadBalancers           = "elb-loadbalancers"
-	DiscoveryESDomains                  = "es-domains"
-	DiscoveryOpenSearchDomains          = "opensearch-domains"
-	DiscoveryKMSKeys                    = "kms-keys"
-	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
-	DiscoverySagemakerProcessingJobs    = "sagemaker-processingjobs"
-	DiscoverySagemakerTrainingJobs      = "sagemaker-trainingjobs"
-	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
-	DiscoveryElasticacheClusters        = "elasticache-clusters"
-	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
-	DiscoveryNeptuneClusters            = "neptune-clusters"
-	DiscoveryEMRClusters                = "emr-clusters"
-	DiscoveryDocumentDBClusters         = "documentdb-clusters"
-	DiscoveryMskClusters                = "msk-clusters"
-	DiscoveryMqBrokers                  = "mq-brokers"
-	DiscoveryEcsTaskDefinitions         = "ecs-taskdefinitions"
-	DiscoveryRoute53HostedZones         = "route53-hostedzones"
-	DiscoveryEcrRepositories            = "ecr-repositories"
-	DiscoveryMemorydbClusters           = "memorydb-clusters"
-	DiscoveryCodebuildProjects          = "codebuild-projects"
-	DiscoveryCognitoUserPools           = "cognito-userpools"
-	DiscoveryTransferServers            = "transfer-servers"
+	DiscoveryAccounts                    = "accounts"
+	DiscoveryOrg                         = "organization"
+	DiscoveryResources                   = "resources"          // all the resources
+	DiscoveryECSContainersAPI            = "ecs-containers-api" // need dedup story
+	DiscoveryECRImageAPI                 = "ecr-image-api"      // need policy + dedup story
+	DiscoveryEC2InstanceAPI              = "ec2-instances-api"  // need policy + dedup story
+	DiscoverySSMInstanceAPI              = "ssm-instances-api"  // need policy + dedup story
+	DiscoveryS3Buckets                   = "s3-buckets"
+	DiscoveryEKSClusters                 = "eks-clusters"
+	DiscoveryCloudtrailTrails            = "cloudtrail-trails"
+	DiscoveryRdsDbInstances              = "rds-dbinstances"
+	DiscoveryRdsDbClusters               = "rds-dbclusters"
+	DiscoveryVPCs                        = "vpcs"
+	DiscoverySecurityGroups              = "security-groups"
+	DiscoveryIAMUsers                    = "iam-users"
+	DiscoveryIAMGroups                   = "iam-groups"
+	DiscoveryCloudwatchLoggroups         = "cloudwatch-loggroups"
+	DiscoveryLambdaFunctions             = "lambda-functions"
+	DiscoveryDynamoDBTables              = "dynamodb-tables"
+	DiscoveryDynamoDBGlobalTables        = "dynamodb-global-tables"
+	DiscoveryRedshiftClusters            = "redshift-clusters"
+	DiscoveryVolumes                     = "ec2-volumes"
+	DiscoverySnapshots                   = "ec2-snapshots"
+	DiscoveryEFSFilesystems              = "efs-filesystems"
+	DiscoveryAPIGatewayRestAPIs          = "gateway-restapis"
+	DiscoveryELBLoadBalancers            = "elb-loadbalancers"
+	DiscoveryESDomains                   = "es-domains"
+	DiscoveryOpenSearchDomains           = "opensearch-domains"
+	DiscoveryKMSKeys                     = "kms-keys"
+	DiscoverySagemakerNotebookInstances  = "sagemaker-notebookinstances"
+	DiscoverySagemakerProcessingJobs     = "sagemaker-processingjobs"
+	DiscoverySagemakerTrainingJobs       = "sagemaker-trainingjobs"
+	DiscoverySecretsManagerSecrets       = "secretsmanager-secrets"
+	DiscoveryElasticacheClusters         = "elasticache-clusters"
+	DiscoveryCloudfrontDistributions     = "cloudfront-distributions"
+	DiscoveryNeptuneClusters             = "neptune-clusters"
+	DiscoveryEMRClusters                 = "emr-clusters"
+	DiscoveryDocumentDBClusters          = "documentdb-clusters"
+	DiscoveryMskClusters                 = "msk-clusters"
+	DiscoveryMqBrokers                   = "mq-brokers"
+	DiscoveryEcsTaskDefinitions          = "ecs-taskdefinitions"
+	DiscoveryRoute53HostedZones          = "route53-hostedzones"
+	DiscoveryEcrRepositories             = "ecr-repositories"
+	DiscoveryMemorydbClusters            = "memorydb-clusters"
+	DiscoveryCodebuildProjects           = "codebuild-projects"
+	DiscoveryCognitoUserPools            = "cognito-userpools"
+	DiscoveryTransferServers             = "transfer-servers"
+	DiscoveryApigatewayV2APIs            = "apigatewayv2-apis"
+	DiscoveryAthenaWorkgroups            = "athena-workgroups"
+	DiscoveryAppStreamFleets             = "appstream-fleets"
+	DiscoveryBatchJobDefinitions         = "batch-jobdefinitions"
+	DiscoveryDirectoryServiceDirectories = "directoryservice-directories"
+	DiscoveryDocumentDBInstances         = "documentdb-instances"
 )
 
 var AllAPIResources = []string{
@@ -121,6 +128,12 @@ var AllAPIResources = []string{
 	DiscoveryCodebuildProjects,
 	DiscoveryCognitoUserPools,
 	DiscoveryTransferServers,
+	DiscoveryApigatewayV2APIs,
+	DiscoveryAthenaWorkgroups,
+	DiscoveryAppStreamFleets,
+	DiscoveryBatchJobDefinitions,
+	DiscoveryDirectoryServiceDirectories,
+	DiscoveryDocumentDBInstances,
 }
 
 var Auto = append(
@@ -1515,6 +1528,187 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.ServerId.Data, service: "transfer", objectType: "server",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryApigatewayV2APIs:
+		res, err := NewResource(runtime, "aws.apigatewayv2", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		a := res.(*mqlAwsApigatewayv2)
+
+		apis := a.GetApis()
+		if apis == nil {
+			return assetList, nil
+		}
+		if apis.Error != nil {
+			return nil, apis.Error
+		}
+
+		for i := range apis.Data {
+			f := apis.Data[i].(*mqlAwsApigatewayv2Api)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.ApiId.Data, service: "apigatewayv2", objectType: "api",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryAthenaWorkgroups:
+		res, err := NewResource(runtime, "aws.athena", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		a := res.(*mqlAwsAthena)
+
+		wgs := a.GetWorkgroups()
+		if wgs == nil {
+			return assetList, nil
+		}
+		if wgs.Error != nil {
+			return nil, wgs.Error
+		}
+
+		for i := range wgs.Data {
+			f := wgs.Data[i].(*mqlAwsAthenaWorkgroup)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "athena", objectType: "workgroup",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryAppStreamFleets:
+		res, err := NewResource(runtime, "aws.appstream", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		a := res.(*mqlAwsAppstream)
+
+		fleets := a.GetFleets()
+		if fleets == nil {
+			return assetList, nil
+		}
+		if fleets.Error != nil {
+			return nil, fleets.Error
+		}
+
+		for i := range fleets.Data {
+			f := fleets.Data[i].(*mqlAwsAppstreamFleet)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "appstream", objectType: "fleet",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryBatchJobDefinitions:
+		res, err := NewResource(runtime, "aws.batch", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		b := res.(*mqlAwsBatch)
+
+		jds := b.GetJobDefinitions()
+		if jds == nil {
+			return assetList, nil
+		}
+		if jds.Error != nil {
+			return nil, jds.Error
+		}
+
+		for i := range jds.Data {
+			f := jds.Data[i].(*mqlAwsBatchJobDefinition)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Arn.Data, service: "batch", objectType: "jobdefinition",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryDirectoryServiceDirectories:
+		res, err := NewResource(runtime, "aws.directoryservice", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		d := res.(*mqlAwsDirectoryservice)
+
+		dirs := d.GetDirectories()
+		if dirs == nil {
+			return assetList, nil
+		}
+		if dirs.Error != nil {
+			return nil, dirs.Error
+		}
+
+		for i := range dirs.Data {
+			f := dirs.Data[i].(*mqlAwsDirectoryserviceDirectory)
+
+			// Directory Service directories have no ARN in the API response;
+			// synthesize the canonical directory ARN for the platform id.
+			dirArn := fmt.Sprintf("arn:aws:ds:%s:%s:directory/%s", f.Region.Data, accountId, f.DirectoryId.Data)
+			name := f.Name.Data
+			if name == "" {
+				name = f.DirectoryId.Data
+			}
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: name, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: dirArn,
+					id: f.DirectoryId.Data, service: "ds", objectType: "directory",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
+		}
+	case DiscoveryDocumentDBInstances:
+		res, err := NewResource(runtime, "aws.documentdb", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		d := res.(*mqlAwsDocumentdb)
+
+		instances := d.GetInstances()
+		if instances == nil {
+			return assetList, nil
+		}
+		if instances.Error != nil {
+			return nil, instances.Error
+		}
+
+		for i := range instances.Data {
+			f := instances.Data[i].(*mqlAwsDocumentdbInstance)
+
+			tags := mapStringInterfaceToStringString(f.GetTags().Data)
+			obj := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Arn.Data, service: "documentdb", objectType: "instance",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))

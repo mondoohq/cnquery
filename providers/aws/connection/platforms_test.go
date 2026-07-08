@@ -15,6 +15,8 @@ import (
 // resources/discovery_conversion.go). Every one must be in the static catalog.
 // If discovery learns a new object type, add it here AND to Platforms.
 var discoveryPlatformNames = []string{
+	"aws-apigatewayv2-api", "aws-appstream-fleet", "aws-athena-workgroup",
+	"aws-batch-jobdefinition", "aws-directoryservice-directory", "aws-documentdb-instance",
 	"aws-cloudfront-distribution", "aws-cloudtrail-trail", "aws-cloudwatch-loggroup",
 	"aws-documentdb-cluster", "aws-dynamodb-table", "aws-ebs-snapshot", "aws-ebs-volume",
 	"aws-ec2-instance", "aws-ecr-image", "aws-ecr-repository", "aws-ecs-container",

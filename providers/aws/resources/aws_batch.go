@@ -604,6 +604,43 @@ func (a *mqlAwsBatch) jobDefinitions() ([]any, error) {
 	return res, nil
 }
 
+// initAwsBatchJobDefinition resolves a single Batch job definition. When
+// invoked for a discovered asset (aws-batch-jobdefinition platform), no args
+// are passed, so the job definition ARN is read from the connection's asset
+// identifier and used to select the matching definition from the parent
+// collection.
+func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil {
+		return args, nil, fmt.Errorf("arn required to fetch batch job definition")
+	}
+
+	obj, err := CreateResource(runtime, "aws.batch", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	jds := obj.(*mqlAwsBatch).GetJobDefinitions()
+	if jds.Error != nil {
+		return nil, nil, jds.Error
+	}
+
+	wantArn := args["arn"].Value.(string)
+	for _, r := range jds.Data {
+		jd := r.(*mqlAwsBatchJobDefinition)
+		if jd.Arn.Data == wantArn {
+			return args, jd, nil
+		}
+	}
+	return args, nil, nil
+}
+
 func (a *mqlAwsBatch) getJobDefinitions(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()

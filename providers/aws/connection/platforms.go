@@ -56,6 +56,12 @@ var Platforms = []*plugin.PlatformInfo{
 	{Name: "aws-codebuild-project", Title: "AWS CodeBuild Project", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-cognito-userpool", Title: "AWS Cognito User Pool", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 	{Name: "aws-transfer-server", Title: "AWS Transfer Family Server", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-apigatewayv2-api", Title: "AWS API Gateway V2 API", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-athena-workgroup", Title: "AWS Athena Workgroup", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-appstream-fleet", Title: "AWS AppStream Fleet", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-batch-jobdefinition", Title: "AWS Batch Job Definition", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-directoryservice-directory", Title: "AWS Directory Service Directory", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
+	{Name: "aws-documentdb-instance", Title: "AWS DocumentDB Instance", Kind: []string{"aws-object"}, Runtime: []string{"aws"}},
 }
 
 var platformsByName = plugin.PlatformsByName(Platforms)
