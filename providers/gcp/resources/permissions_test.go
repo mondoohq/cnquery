@@ -242,6 +242,7 @@ var validatedGCPPermissions = []string{
 	"memorystore.instances.get",
 	"memorystore.instances.list",
 	"modelarmor.floorSettings.get",
+	"modelarmor.templates.get",
 	"modelarmor.templates.list",
 	"monitoring.alertPolicies.list",
 	"monitoring.dashboards.list",

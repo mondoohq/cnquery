@@ -24,6 +24,7 @@ var gcpPlatformNames = []string{
 	"gcp-dataproc-cluster", "gcp-alloydb-cluster", "gcp-spanner-instance",
 	"gcp-firestore-database", "gcp-bigtable-instance", "gcp-logging-bucket",
 	"gcp-apikey", "gcp-iam-service-account",
+	"gcp-modelarmor-template", "gcp-datastream-connectionprofile",
 }
 
 // Platforms is the static catalog of platforms the GCP provider can emit. Every

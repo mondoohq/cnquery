@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.29.1",
-  "generated_at": "2026-07-07T12:19:21-07:00",
+  "generated_at": "2026-07-07T23:28:50-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -203,6 +203,7 @@
     "memorystore.instances.get",
     "memorystore.instances.list",
     "modelarmor.floorSettings.get",
+    "modelarmor.templates.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
     "monitoring.dashboards.list",
@@ -1517,6 +1518,12 @@
       "permission": "modelarmor.floorSettings.get",
       "service": "modelarmor",
       "action": "GetFloorSetting",
+      "source_file": "modelarmor.go"
+    },
+    {
+      "permission": "modelarmor.templates.get",
+      "service": "modelarmor",
+      "action": "GetTemplate",
       "source_file": "modelarmor.go"
     },
     {

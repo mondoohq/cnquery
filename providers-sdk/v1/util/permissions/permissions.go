@@ -1182,6 +1182,9 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	},
 	"modelarmor": {
 		"GetFloorSetting": "modelarmor.floorSettings.get",
+		// GetTemplate → singular "template" by default; the real IAM permission
+		// is the plural form (matching modelarmor.templates.list).
+		"GetTemplate": "modelarmor.templates.get",
 	},
 	"cloudbuild": {
 		// Cloud Build triggers use the builds permission, not a separate triggers permission

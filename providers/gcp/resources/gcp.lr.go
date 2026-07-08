@@ -1944,7 +1944,7 @@ func init() {
 			Create: createGcpProjectModelArmorService,
 		},
 		"gcp.project.modelArmorService.template": {
-			// to override args, implement: initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectModelArmorServiceTemplate,
 			Create: createGcpProjectModelArmorServiceTemplate,
 		},
 		"gcp.project.modelArmorService.floorSetting": {

@@ -67,6 +67,8 @@ const (
 	DiscoverArtifactRegistryRepos   = "artifactregistry-repositories"
 	DiscoverMemcacheInstances       = "memcache-instances"
 	DiscoverVertexAIJobs            = "vertexai-jobs"
+	DiscoverModelArmorTemplates     = "modelarmor-templates"
+	DiscoverDatastreamProfiles      = "datastream-connectionprofiles"
 )
 
 // All includes every discovery target: Auto covers all of them for GCP.
@@ -110,6 +112,8 @@ var Auto = []string{
 	DiscoverArtifactRegistryRepos,
 	DiscoverMemcacheInstances,
 	DiscoverVertexAIJobs,
+	DiscoverModelArmorTemplates,
+	DiscoverDatastreamProfiles,
 }
 
 var AllAPIResources = []string{
@@ -147,6 +151,8 @@ var AllAPIResources = []string{
 	DiscoverArtifactRegistryRepos,
 	DiscoverMemcacheInstances,
 	DiscoverVertexAIJobs,
+	DiscoverModelArmorTemplates,
+	DiscoverDatastreamProfiles,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -1166,6 +1172,80 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 						TechnologyUrlSegments: connection.ResourceTechnologyUrl("secretmanager", gcpProject.Id.Data, "global", "secret", secret.Name.Data),
 					},
 					Labels:      mapStrInterfaceToMapStrStr(secret.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverModelArmorTemplates) {
+		if err := runDiscoveryStep(DiscoverModelArmorTemplates, func() error {
+			modelArmorService := gcpProject.GetModelArmor()
+			if modelArmorService.Error != nil {
+				return modelArmorService.Error
+			}
+			templates := modelArmorService.Data.GetTemplates()
+			if templates.Error != nil {
+				return templates.Error
+			}
+			for i := range templates.Data {
+				template := templates.Data[i].(*mqlGcpProjectModelArmorServiceTemplate)
+				location := parseLocationFromPath(template.Name.Data)
+				shortName := parseResourceName(template.Name.Data)
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("modelarmor", gcpProject.Id.Data, location, "template", shortName),
+					},
+					Name: shortName,
+					Platform: &inventory.Platform{
+						Name:                  "gcp-modelarmor-template",
+						Title:                 connection.GetTitleForPlatformName("gcp-modelarmor-template"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("modelarmor", gcpProject.Id.Data, location, "template", shortName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(template.GetLabels().Data),
+					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+				})
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverDatastreamProfiles) {
+		if err := runDiscoveryStep(DiscoverDatastreamProfiles, func() error {
+			datastreamService := gcpProject.GetDatastream()
+			if datastreamService.Error != nil {
+				return datastreamService.Error
+			}
+			profiles := datastreamService.Data.GetConnectionProfiles()
+			if profiles.Error != nil {
+				return profiles.Error
+			}
+			for i := range profiles.Data {
+				profile := profiles.Data[i].(*mqlGcpProjectDatastreamServiceConnectionProfile)
+				location := parseLocationFromPath(profile.Name.Data)
+				shortName := parseResourceName(profile.Name.Data)
+				assetList = append(assetList, &inventory.Asset{
+					PlatformIds: []string{
+						connection.NewResourcePlatformID("datastream", gcpProject.Id.Data, location, "connectionprofile", shortName),
+					},
+					Name: shortName,
+					Platform: &inventory.Platform{
+						Name:                  "gcp-datastream-connectionprofile",
+						Title:                 connection.GetTitleForPlatformName("gcp-datastream-connectionprofile"),
+						Runtime:               "gcp",
+						Kind:                  "gcp-object",
+						Family:                []string{"google"},
+						TechnologyUrlSegments: connection.ResourceTechnologyUrl("datastream", gcpProject.Id.Data, location, "connectionprofile", shortName),
+					},
+					Labels:      mapStrInterfaceToMapStrStr(profile.GetLabels().Data),
 					Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 				})
 			}

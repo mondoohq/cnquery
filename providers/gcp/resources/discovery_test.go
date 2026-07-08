@@ -57,6 +57,8 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverModelArmorTemplates,
+		DiscoverDatastreamProfiles,
 	}
 	require.ElementsMatch(t, expected, All)
 }
@@ -100,6 +102,8 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverArtifactRegistryRepos,
 		DiscoverMemcacheInstances,
 		DiscoverVertexAIJobs,
+		DiscoverModelArmorTemplates,
+		DiscoverDatastreamProfiles,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

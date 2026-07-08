@@ -73,6 +73,8 @@ Examples with the GCP project configured:
 				resources.DiscoverSpannerInstances,
 				resources.DiscoverFirestoreDatabases,
 				resources.DiscoverBigtableInstances,
+				resources.DiscoverModelArmorTemplates,
+				resources.DiscoverDatastreamProfiles,
 			},
 			Flags: []plugin.Flag{
 				{
