@@ -676,6 +676,19 @@ func (print *Printer) autoExpand(blockRef uint64, data any, indent string, cache
 				}
 			}
 
+			// Multi-line string values (e.g. a source-context `content` snippet)
+			// read best as a raw block indented on the following lines rather than
+			// trailing off a `label=` on the current line. The preceding fields
+			// (path, range) already identify it, so we drop the label entirely.
+			if s, ok := vv.Value.(string); ok && strings.Contains(s, "\n") {
+				fieldIndent := indent + "  "
+				res.WriteByte('\n')
+				res.WriteString(fieldIndent)
+				res.WriteString(indentBlock(strings.TrimRight(s, "\n"), fieldIndent))
+				first = false
+				continue
+			}
+
 			val := print.data(vv.Type, vv.Value, checksum, indent, cache)
 			if !first || !hasEntrypoints {
 				res.WriteByte(' ')
@@ -812,10 +825,13 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 		}
 
 	case types.Range:
+		// A range is a scalar value, so (like int/string) it must not carry the
+		// block indent — otherwise it renders right-shifted when printed inline
+		// after a `range=` label.
 		if d, ok := data.(llx.Range); ok {
-			return indent + d.String()
+			return d.String()
 		} else {
-			return indent + "<bad range>"
+			return "<bad range>"
 		}
 
 	default:
