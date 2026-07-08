@@ -75,7 +75,7 @@ const (
 	DiscoveryCodebuildProjects           = "codebuild-projects"
 	DiscoveryCognitoUserPools            = "cognito-userpools"
 	DiscoveryTransferServers             = "transfer-servers"
-	DiscoveryApigatewayV2APIs            = "apigatewayv2-apis"
+	DiscoveryAPIGatewayV2APIs            = "apigatewayv2-apis"
 	DiscoveryAthenaWorkgroups            = "athena-workgroups"
 	DiscoveryAppStreamFleets             = "appstream-fleets"
 	DiscoveryBatchJobDefinitions         = "batch-jobdefinitions"
@@ -128,7 +128,7 @@ var AllAPIResources = []string{
 	DiscoveryCodebuildProjects,
 	DiscoveryCognitoUserPools,
 	DiscoveryTransferServers,
-	DiscoveryApigatewayV2APIs,
+	DiscoveryAPIGatewayV2APIs,
 	DiscoveryAthenaWorkgroups,
 	DiscoveryAppStreamFleets,
 	DiscoveryBatchJobDefinitions,
@@ -1532,7 +1532,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, obj, conn))
 		}
-	case DiscoveryApigatewayV2APIs:
+	case DiscoveryAPIGatewayV2APIs:
 		res, err := NewResource(runtime, "aws.apigatewayv2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err

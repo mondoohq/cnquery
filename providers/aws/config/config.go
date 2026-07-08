@@ -106,7 +106,7 @@ Notes:
 				resources.DiscoverySSMInstances,
 				resources.DiscoverySSMInstanceAPI,
 				resources.DiscoveryTransferServers,
-				resources.DiscoveryApigatewayV2APIs,
+				resources.DiscoveryAPIGatewayV2APIs,
 				resources.DiscoveryAthenaWorkgroups,
 				resources.DiscoveryAppStreamFleets,
 				resources.DiscoveryBatchJobDefinitions,
