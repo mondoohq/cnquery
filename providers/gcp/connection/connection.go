@@ -36,6 +36,10 @@ type GcpConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
+	// Filters narrow discovery to a subset of resources (e.g. specific storage
+	// bucket names). Populated from the --filters flag on the connection config.
+	Filters DiscoveryFilters
+
 	opts gcpConnectionOptions
 
 	// clientCache and credsCache memoize the HTTP client / credentials per
@@ -62,6 +66,7 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		Conf:       conf,
 		asset:      asset,
 		opts:       gcpConnectionOptions{},
+		Filters:    DiscoveryFiltersFromOpts(conf.GetDiscover().GetFilter()),
 	}
 
 	// initialize connection

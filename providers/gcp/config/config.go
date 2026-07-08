@@ -105,6 +105,12 @@ Examples with the GCP project configured:
 					Default: "false",
 					Desc:    "[gcp snapshot, gcp instance] create a new snapshot instead of using the latest available snapshot (only used for instance)",
 				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter discovered resources, e.g., --filters storage:bucket-names=my-bucket --filters storage:exclude:bucket-names=noisy-bucket",
+				},
 			},
 		},
 	},

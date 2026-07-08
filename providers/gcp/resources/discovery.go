@@ -1084,6 +1084,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			}
 			for i := range buckets.Data {
 				bucket := buckets.Data[i].(*mqlGcpProjectStorageServiceBucket)
+				if conn.Filters.Storage.IsFilteredOut(bucket.Name.Data) {
+					continue
+				}
 				assetList = append(assetList, &inventory.Asset{
 					PlatformIds: []string{
 						connection.NewResourcePlatformID("storage", gcpProject.Id.Data, bucket.GetLocation().Data, "bucket", bucket.Name.Data),
