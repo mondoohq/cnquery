@@ -169,9 +169,16 @@ jobs:
             make providers/test
           else
             echo "=== Testing changed providers: $PROVIDERS ==="
+            # Test every changed provider even if one fails, then report all
+            # failures at the end (mirrors reusable-lint-providers.yml).
+            failed=""
             for p in $PROVIDERS; do
-              make "providers/test/$p"
+              make "providers/test/$p" || failed="$failed $p"
             done
+            if [ -n "$failed" ]; then
+              echo "=== Failed providers:$failed ==="
+              exit 1
+            fi
           fi
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
