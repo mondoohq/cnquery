@@ -151,6 +151,11 @@ func TestClientCacheConcurrentAccess(t *testing.T) {
 	for i := range goroutines {
 		require.NotNil(t, results[i], "concurrent getter must never return nil")
 	}
+	// Every goroutine must receive the same cached client: newClient uses
+	// LoadOrStore, so racing constructions collapse to a single instance.
+	for i := 1; i < goroutines; i++ {
+		require.Same(t, results[0], results[i], "all goroutines should get the same cached client")
+	}
 	// After the burst, the cache is settled: repeated calls are stable.
 	require.Same(t, conn.Ec2("us-east-1"), conn.Ec2("us-east-1"))
 }

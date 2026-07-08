@@ -161,10 +161,13 @@ func newClient[T any, O any](t *AwsConnection, cacheKey, region string, newFromC
 
 	cfg := t.cfg.Copy()
 	cfg.Region = region
-	client := newFromConfig(cfg)
+	entry := &CacheEntry{Data: newFromConfig(cfg)}
 
-	t.clientcache.Store(cacheKey, &CacheEntry{Data: client})
-	return client
+	// LoadOrStore closes the check-then-act gap: if another goroutine cached a
+	// client for this key between the Load above and here, we keep theirs and
+	// discard our redundant construction, so every caller sees one instance.
+	actual, _ := t.clientcache.Map.LoadOrStore(cacheKey, entry)
+	return actual.(*CacheEntry).Data.(T)
 }
 
 // regionalClient returns a per-region client for a regional service. An empty
