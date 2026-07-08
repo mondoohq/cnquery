@@ -107,6 +107,9 @@ func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
 		"sharedWithGroups":                          llx.ArrayData(projectSharedGroupsToDicts(prj.SharedWithGroups), types.Dict),
 		"mirrorTriggerBuilds":                       llx.BoolData(prj.MirrorTriggerBuilds),
 		"onlyMirrorProtectedBranches":               llx.BoolData(prj.OnlyMirrorProtectedBranches),
+		"autoDuoCodeReviewEnabled":                  llx.BoolData(prj.AutoDuoCodeReviewEnabled),
+		"modelExperimentsAccessLevel":               llx.StringData(string(prj.ModelExperimentsAccessLevel)),
+		"modelRegistryAccessLevel":                  llx.StringData(string(prj.ModelRegistryAccessLevel)),
 	}
 }
 

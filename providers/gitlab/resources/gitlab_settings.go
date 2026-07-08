@@ -55,6 +55,8 @@ func initGitlabSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	args["importSources"] = llx.ArrayData(convert.SliceAnyToInterface(settings.ImportSources), types.String)
 	args["sessionExpireDelay"] = llx.IntData(settings.SessionExpireDelay)
 	args["terminalMaxSessionTime"] = llx.IntData(settings.TerminalMaxSessionTime)
+	args["duoFeaturesEnabled"] = llx.BoolData(settings.DuoFeaturesEnabled)
+	args["lockDuoFeaturesEnabled"] = llx.BoolData(settings.LockDuoFeaturesEnabled)
 
 	return args, nil, nil
 }

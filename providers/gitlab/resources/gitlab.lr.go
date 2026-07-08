@@ -461,6 +461,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.settings.terminalMaxSessionTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabSettings).GetTerminalMaxSessionTime()).ToDataRes(types.Int)
 	},
+	"gitlab.settings.duoFeaturesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDuoFeaturesEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.lockDuoFeaturesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetLockDuoFeaturesEnabled()).ToDataRes(types.Bool)
+	},
 	"gitlab.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetId()).ToDataRes(types.Int)
 	},
@@ -1192,6 +1198,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.onlyMirrorProtectedBranches": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetOnlyMirrorProtectedBranches()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.autoDuoCodeReviewEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetAutoDuoCodeReviewEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.modelExperimentsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetModelExperimentsAccessLevel()).ToDataRes(types.String)
+	},
+	"gitlab.project.modelRegistryAccessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetModelRegistryAccessLevel()).ToDataRes(types.String)
 	},
 	"gitlab.project.approvalRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetApprovalRules()).ToDataRes(types.Array(types.Resource("gitlab.project.approvalRule")))
@@ -2851,6 +2866,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabSettings).TerminalMaxSessionTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gitlab.settings.duoFeaturesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DuoFeaturesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.lockDuoFeaturesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).LockDuoFeaturesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gitlab.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabUser).__id, ok = v.Value.(string)
 		return
@@ -3877,6 +3900,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.onlyMirrorProtectedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).OnlyMirrorProtectedBranches, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.autoDuoCodeReviewEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).AutoDuoCodeReviewEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.modelExperimentsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ModelExperimentsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.modelRegistryAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ModelRegistryAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.approvalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6127,6 +6162,8 @@ type mqlGitlabSettings struct {
 	ImportSources                             plugin.TValue[[]any]
 	SessionExpireDelay                        plugin.TValue[int64]
 	TerminalMaxSessionTime                    plugin.TValue[int64]
+	DuoFeaturesEnabled                        plugin.TValue[bool]
+	LockDuoFeaturesEnabled                    plugin.TValue[bool]
 }
 
 // createGitlabSettings creates a new instance of this resource
@@ -6288,6 +6325,14 @@ func (c *mqlGitlabSettings) GetSessionExpireDelay() *plugin.TValue[int64] {
 
 func (c *mqlGitlabSettings) GetTerminalMaxSessionTime() *plugin.TValue[int64] {
 	return &c.TerminalMaxSessionTime
+}
+
+func (c *mqlGitlabSettings) GetDuoFeaturesEnabled() *plugin.TValue[bool] {
+	return &c.DuoFeaturesEnabled
+}
+
+func (c *mqlGitlabSettings) GetLockDuoFeaturesEnabled() *plugin.TValue[bool] {
+	return &c.LockDuoFeaturesEnabled
 }
 
 // mqlGitlabUser for the gitlab.user resource
@@ -8333,6 +8378,9 @@ type mqlGitlabProject struct {
 	SharedWithGroups                          plugin.TValue[[]any]
 	MirrorTriggerBuilds                       plugin.TValue[bool]
 	OnlyMirrorProtectedBranches               plugin.TValue[bool]
+	AutoDuoCodeReviewEnabled                  plugin.TValue[bool]
+	ModelExperimentsAccessLevel               plugin.TValue[string]
+	ModelRegistryAccessLevel                  plugin.TValue[string]
 	ApprovalRules                             plugin.TValue[[]any]
 	MergeMethod                               plugin.TValue[string]
 	ApprovalSettings                          plugin.TValue[*mqlGitlabProjectApprovalSetting]
@@ -8583,6 +8631,18 @@ func (c *mqlGitlabProject) GetMirrorTriggerBuilds() *plugin.TValue[bool] {
 
 func (c *mqlGitlabProject) GetOnlyMirrorProtectedBranches() *plugin.TValue[bool] {
 	return &c.OnlyMirrorProtectedBranches
+}
+
+func (c *mqlGitlabProject) GetAutoDuoCodeReviewEnabled() *plugin.TValue[bool] {
+	return &c.AutoDuoCodeReviewEnabled
+}
+
+func (c *mqlGitlabProject) GetModelExperimentsAccessLevel() *plugin.TValue[string] {
+	return &c.ModelExperimentsAccessLevel
+}
+
+func (c *mqlGitlabProject) GetModelRegistryAccessLevel() *plugin.TValue[string] {
+	return &c.ModelRegistryAccessLevel
 }
 
 func (c *mqlGitlabProject) GetApprovalRules() *plugin.TValue[[]any] {

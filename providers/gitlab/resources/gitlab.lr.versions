@@ -290,6 +290,7 @@ gitlab.project.auditEvent.targetDetails 13.3.9
 gitlab.project.auditEvent.targetType 13.3.9
 gitlab.project.auditEvents 13.3.9
 gitlab.project.autoDevopsEnabled 9.0.1
+gitlab.project.autoDuoCodeReviewEnabled 13.4.2
 gitlab.project.autocloseReferencedIssues 11.1.107
 gitlab.project.buildsAccessLevel 13.3.9
 gitlab.project.ciJobTokenScopeEnabled 13.3.9
@@ -502,6 +503,8 @@ gitlab.project.milestone.updatedAt 11.1.129
 gitlab.project.milestones 11.1.129
 gitlab.project.mirror 9.0.1
 gitlab.project.mirrorTriggerBuilds 13.3.9
+gitlab.project.modelExperimentsAccessLevel 13.4.2
+gitlab.project.modelRegistryAccessLevel 13.4.2
 gitlab.project.name 9.0.0
 gitlab.project.onlyAllowMergeIfAllDiscussionsAreResolved 9.0.1
 gitlab.project.onlyAllowMergeIfPipelineSucceeds 9.0.1
@@ -745,12 +748,14 @@ gitlab.settings.disabledOauthSignInSources 13.3.9
 gitlab.settings.domainAllowlist 13.3.9
 gitlab.settings.domainDenylist 13.3.9
 gitlab.settings.domainDenylistEnabled 13.3.9
+gitlab.settings.duoFeaturesEnabled 13.4.2
 gitlab.settings.enforcePatExpiration 13.3.9
 gitlab.settings.enforceSshKeyExpiration 13.3.9
 gitlab.settings.externalAuthorizationServiceEnabled 13.3.9
 gitlab.settings.gitTwoFactorSessionExpiry 13.0.3
 gitlab.settings.id 13.0.3
 gitlab.settings.importSources 13.3.9
+gitlab.settings.lockDuoFeaturesEnabled 13.4.2
 gitlab.settings.minimumPasswordLength 13.3.9
 gitlab.settings.notifyOnUnknownSignIn 13.3.9
 gitlab.settings.passwordAuthenticationEnabledForGit 13.0.3
