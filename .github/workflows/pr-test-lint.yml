@@ -96,7 +96,41 @@ jobs:
       only-new-issues: false
       providers: ${{ needs.detect-changed-providers.outputs.all == 'true' && '' || needs.detect-changed-providers.outputs.providers }}
 
+  # Core (non-provider) tests only. Provider packages are tested in the
+  # separate go-test-providers job. This always runs: the core scope can be
+  # affected by any change, and go-auto-approve depends on it.
   go-test:
+    runs-on:
+      group: Default
+    timeout-minutes: 120
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          check-latest: true
+          cache: false
+
+      - name: Test mql
+        run: make test/go/plain-ci
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: success() || failure() # run this step even if previous step failed
+        with:
+          name: test-results
+          path: "report.xml"
+
+  # Provider tests. Only the changed providers are built and tested. When a
+  # shared dependency changes (detect-changed-providers -> all=true) or the
+  # changed list is empty (e.g. pushes to main), every provider is tested.
+  go-test-providers:
+    needs: detect-changed-providers
     runs-on:
       group: Default
     timeout-minutes: 120
@@ -119,20 +153,32 @@ jobs:
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
-      - name: Display Provider Path
-        run: echo $PROVIDERS_PATH
 
-      - name: Test mql
-        run: make test/go/plain-ci
+      - name: Prepare tools and generated code
+        run: make prep/tools test/generate
 
-      - name: Test Providers
-        run: make providers/test
+      - name: Test providers
+        env:
+          ALL: ${{ needs.detect-changed-providers.outputs.all }}
+          PROVIDERS: ${{ needs.detect-changed-providers.outputs.providers }}
+        run: |
+          set -euo pipefail
+          if [ "$ALL" = "true" ] || [ -z "$PROVIDERS" ]; then
+            echo "=== Testing all providers ==="
+            make providers/build
+            make providers/test
+          else
+            echo "=== Testing changed providers: $PROVIDERS ==="
+            for p in $PROVIDERS; do
+              make "providers/test/$p"
+            done
+          fi
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: success() || failure() # run this step even if previous step failed
         with:
-          name: test-results
-          path: "*.xml"
+          name: test-results-providers
+          path: "report_*.xml"
 
   go-test-integration:
     runs-on:
@@ -190,7 +236,7 @@ jobs:
 
   go-auto-approve:
     runs-on: ubuntu-latest
-    needs: [golangci-lint, golangci-lint-providers, go-test, go-test-integration, go-mod]
+    needs: [golangci-lint, golangci-lint-providers, go-test, go-test-providers, go-test-integration, go-mod]
     # For now, we only auto approve and merge provider release PRs created by mondoo-tools.
     # We use github.actor (the authenticated GitHub user who pushed) instead of
     # github.event.commits[0].author.username (the git commit author) because git commit
