@@ -160,29 +160,29 @@ func TestDeprecatedAddRuntime_DisableDelayedDiscovery(t *testing.T) {
 func TestAddRuntime_ParentNotExist(t *testing.T) {
 	s := NewService()
 	parentId := uint32(10)
-	_, err := s.AddRuntime(&inventory.Config{Id: 1}, func(connId uint32) (*Runtime, error) {
+	runtime, err := s.AddRuntime(&inventory.Config{Id: 1}, func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
 		c.parentId = parentId
 		return &Runtime{
 			Connection: c,
 		}, nil
 	})
-	require.Error(t, err)
-	assert.Equal(t, "parent connection 10 not found", err.Error())
+	require.NoError(t, err, "missing parent should not cause an error")
+	require.NotNil(t, runtime)
 }
 
 func TestDeprecatedAddRuntime_ParentNotExist(t *testing.T) {
 	s := NewService()
 	parentId := uint32(10)
-	_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
+	runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
 		c.parentId = parentId
 		return &Runtime{
 			Connection: c,
 		}, nil
 	})
-	require.Error(t, err)
-	assert.Equal(t, "parent connection 10 not found", err.Error())
+	require.NoError(t, err, "missing parent should not cause an error")
+	require.NotNil(t, runtime)
 }
 
 func TestAddRuntime_Parent(t *testing.T) {

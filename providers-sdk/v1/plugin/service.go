@@ -79,10 +79,11 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.GetRuntime(parentId)
 			if err != nil {
-				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+				log.Warn().Uint32("parent", parentId).Uint32("child", conf.Id).
+					Msg("parent connection not found, proceeding without shared resource cache")
+			} else {
+				runtime.Resources = parentRuntime.Resources
 			}
-			runtime.Resources = parentRuntime.Resources
-
 		}
 	}
 
@@ -115,10 +116,11 @@ func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runti
 		if parentId := runtime.Connection.ParentID(); parentId > 0 {
 			parentRuntime, err := s.doGetRuntime(parentId)
 			if err != nil {
-				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+				log.Warn().Uint32("parent", parentId).Uint32("child", s.lastConnectionID).
+					Msg("parent connection not found, proceeding without shared resource cache")
+			} else {
+				runtime.Resources = parentRuntime.Resources
 			}
-			runtime.Resources = parentRuntime.Resources
-
 		}
 	}
 	s.runtimes[s.lastConnectionID] = runtime

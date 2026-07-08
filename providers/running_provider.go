@@ -48,21 +48,45 @@ type connectionGraph struct {
 	nodes map[uint32]connectionGraphNode
 	// edges is a map of connection id to parent connection id
 	edges map[uint32]uint32
+	// collectedNodes preserves connect request data for nodes removed by
+	// garbageCollect. A later Connect() call with a ParentConnectionId
+	// pointing to a collected node can use this data to transparently
+	// reconnect the parent before connecting the child.
+	//
+	// Bounded by: addNode/addImplicitNode remove entries for re-added
+	// IDs, and Reconnect() resets the entire graph including this map.
+	collectedNodes map[uint32]connectReq
 }
 
 func newConnectionGraph() *connectionGraph {
 	return &connectionGraph{
-		nodes: map[uint32]connectionGraphNode{},
-		edges: map[uint32]uint32{},
+		nodes:          map[uint32]connectionGraphNode{},
+		edges:          map[uint32]uint32{},
+		collectedNodes: map[uint32]connectReq{},
 	}
 }
 
 // addNode adds a node to the graph with the given data.
+// If the node was previously garbage-collected, its stale entry in
+// collectedNodes is removed since the fresh data supersedes it.
 func (c *connectionGraph) addNode(node uint32, data connectReq) {
 	c.nodes[node] = connectionGraphNode{
 		explicitlyConnected: true,
 		data:                data,
 	}
+	delete(c.collectedNodes, node)
+}
+
+// addImplicitNode adds a node that is NOT explicitly connected — it was
+// reconnected on behalf of a child, not by a direct user request. The node
+// will be kept alive by topoSort as long as an explicitly-connected child
+// references it, and garbage-collected once all such children disconnect.
+func (c *connectionGraph) addImplicitNode(node uint32, data connectReq) {
+	c.nodes[node] = connectionGraphNode{
+		explicitlyConnected: false,
+		data:                data,
+	}
+	delete(c.collectedNodes, node)
 }
 
 // getNode returns the connect request data for the given node.
@@ -115,7 +139,11 @@ func (c *connectionGraph) topoSort() []uint32 {
 	return sorted
 }
 
-// garbageCollect removes nodes from the graph that are not explicitly connected and are not required by any other connection.
+// garbageCollect removes nodes from the graph that are not explicitly
+// connected and are not required by any other connection.
+// The connect request data of collected nodes is preserved in
+// collectedNodes so that a future child connection can transparently
+// reconnect a garbage-collected parent.
 func (c *connectionGraph) garbageCollect() []uint32 {
 	sorted := c.topoSort()
 
@@ -128,12 +156,20 @@ func (c *connectionGraph) garbageCollect() []uint32 {
 	for node := range c.nodes {
 		if _, ok := keep[node]; !ok {
 			collected = append(collected, node)
+			c.collectedNodes[node] = c.nodes[node].data
 			delete(c.nodes, node)
 			delete(c.edges, node)
 		}
 	}
 
 	return collected
+}
+
+// getCollectedNode returns the preserved connect request data for a
+// node that was previously removed by garbageCollect.
+func (c *connectionGraph) getCollectedNode(id uint32) (connectReq, bool) {
+	cr, ok := c.collectedNodes[id]
+	return cr, ok
 }
 
 type (
@@ -163,19 +199,59 @@ func (r *RestartableProvider) Client() *plugin.Client {
 
 // Connect implements plugin.ProviderPlugin.
 func (r *RestartableProvider) Connect(req *pp.ConnectReq, cb pp.ProviderCallback) (*pp.ConnectRes, error) {
+	var parentToReconnect *connectReq
+
 	if len(req.Asset.GetConnections()) > 0 {
 		reqClone := req.CloneVT()
 		r.lock.Lock()
 		connectionId := req.Asset.Connections[0].Id
+		parentId := req.Asset.Connections[0].ParentConnectionId
 		if _, ok := r.connectionGraph.getNode(connectionId); !ok {
 			r.connectionGraph.addNode(connectionId, connectReq{
 				req: reqClone,
 				cb:  cb,
 			})
-			r.connectionGraph.setEdge(connectionId, req.Asset.Connections[0].ParentConnectionId)
+			r.connectionGraph.setEdge(connectionId, parentId)
+		}
+
+		// If the parent was garbage-collected (its runtime was disconnected
+		// because all previous children finished), we need to reconnect it
+		// before connecting this child. The preserved connect data lets us
+		// re-establish the parent's runtime transparently.
+		if parentId > 0 {
+			if _, inGraph := r.connectionGraph.getNode(parentId); !inGraph {
+				if cr, ok := r.connectionGraph.getCollectedNode(parentId); ok {
+					parentToReconnect = &cr
+				}
+			}
 		}
 
 		r.lock.Unlock()
+	}
+
+	if parentToReconnect != nil {
+		parentId := req.Asset.Connections[0].ParentConnectionId
+
+		// Re-check under lock: a concurrent Connect for a sibling child
+		// may have already reconnected this parent.
+		r.lock.Lock()
+		_, alreadyBack := r.connectionGraph.getNode(parentId)
+		r.lock.Unlock()
+
+		if !alreadyBack {
+			if _, err := r.plugin.Connect(parentToReconnect.req, parentToReconnect.cb); err != nil {
+				log.Warn().Err(err).Uint32("parent", parentId).Msg("failed to reconnect garbage-collected parent connection")
+			} else {
+				r.lock.Lock()
+				if _, ok := r.connectionGraph.getNode(parentId); !ok {
+					r.connectionGraph.addImplicitNode(parentId, *parentToReconnect)
+					if parentToReconnect.req != nil && len(parentToReconnect.req.Asset.GetConnections()) > 0 {
+						r.connectionGraph.setEdge(parentId, parentToReconnect.req.Asset.Connections[0].ParentConnectionId)
+					}
+				}
+				r.lock.Unlock()
+			}
+		}
 	}
 
 	resp, err := r.plugin.Connect(req, cb)
