@@ -544,6 +544,16 @@ github.repository.codeowners.rules 13.0.8
 github.repository.collaborators 9.0.0
 github.repository.commits 9.0.0
 github.repository.contributors 9.0.0
+github.repository.copilotCloudAgent 13.6.6
+github.repository.copilotCloudAgent.codeqlEnabled 13.6.6
+github.repository.copilotCloudAgent.copilotCodeReviewEnabled 13.6.6
+github.repository.copilotCloudAgent.customAllowlist 13.6.6
+github.repository.copilotCloudAgent.dependencyVulnerabilityChecksEnabled 13.6.6
+github.repository.copilotCloudAgent.isFirewallEnabled 13.6.6
+github.repository.copilotCloudAgent.isFirewallRecommendedAllowlistEnabled 13.6.6
+github.repository.copilotCloudAgent.mcpConfiguration 13.6.6
+github.repository.copilotCloudAgent.requireActionsWorkflowApproval 13.6.6
+github.repository.copilotCloudAgent.secretScanningEnabled 13.6.6
 github.repository.createdAt 9.0.0
 github.repository.customProperties 11.4.47
 github.repository.defaultBranch 11.4.5
@@ -564,6 +574,7 @@ github.repository.hasDownloads 9.0.0
 github.repository.hasIssues 9.0.0
 github.repository.hasPages 9.0.0
 github.repository.hasProjects 9.0.0
+github.repository.hasPullRequests 13.6.6
 github.repository.hasWiki 9.0.0
 github.repository.homepage 9.0.0
 github.repository.id 9.0.0
@@ -594,6 +605,7 @@ github.repository.pages.status 13.3.3
 github.repository.pages.url 13.3.3
 github.repository.private 9.0.0
 github.repository.privateVulnerabilityReportingEnabled 13.2.4
+github.repository.pullRequestCreationPolicy 13.6.6
 github.repository.pushedAt 9.0.0
 github.repository.releases 9.0.0
 github.repository.rulesets 11.4.131

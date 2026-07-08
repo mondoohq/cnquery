@@ -7,11 +7,13 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v89/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/github/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (g *mqlGithubOrganizationCopilot) id() (string, error) {
@@ -223,4 +225,86 @@ func newMqlCopilotSeat(runtime *plugin.Runtime, orgLogin string, seat *github.Co
 		args["user"] = llx.NilData
 	}
 	return CreateResource(runtime, "github.organization.copilot.seat", args)
+}
+
+func (g *mqlGithubRepositoryCopilotCloudAgent) id() (string, error) {
+	if g.__id == "" {
+		return "", errors.New("github.repository.copilotCloudAgent requires __id set by the creator")
+	}
+	return g.__id, nil
+}
+
+func initGithubRepositoryCopilotCloudAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	repo, err := NewResource(runtime, "github.repository", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	cfg := repo.(*mqlGithubRepository).GetCopilotCloudAgent()
+	if cfg.Error != nil {
+		return nil, nil, cfg.Error
+	}
+	if cfg.Data == nil {
+		return nil, nil, errors.New("Copilot coding agent configuration is not available for this repository")
+	}
+	return args, cfg.Data, nil
+}
+
+func (g *mqlGithubRepository) copilotCloudAgent() (*mqlGithubRepositoryCopilotCloudAgent, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	owner := g.Owner.Data
+	if owner.Login.Error != nil {
+		return nil, owner.Login.Error
+	}
+	ownerLogin := owner.Login.Data
+
+	cfg, _, err := conn.Client().Copilot.GetCloudAgentConfiguration(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		switch githubResponseStatus(err) {
+		case 404, 403, 401:
+			log.Debug().Err(err).Msg("Copilot coding agent configuration not accessible")
+			g.CopilotCloudAgent.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if cfg == nil {
+		g.CopilotCloudAgent.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	args := map[string]*llx.RawData{
+		"__id":                                  llx.StringData("github.repository.copilotCloudAgent/" + ownerLogin + "/" + repoName),
+		"isFirewallEnabled":                     llx.BoolData(cfg.IsFirewallEnabled),
+		"isFirewallRecommendedAllowlistEnabled": llx.BoolData(cfg.IsFirewallRecommendedAllowlistEnabled),
+		"customAllowlist":                       llx.ArrayData(convert.SliceAnyToInterface[string](cfg.CustomAllowlist), types.String),
+		"requireActionsWorkflowApproval":        llx.BoolData(cfg.RequireActionsWorkflowApproval),
+		"mcpConfiguration":                      llx.DictData(cfg.MCPConfiguration),
+	}
+	if t := cfg.EnabledTools; t != nil {
+		args["codeqlEnabled"] = llx.BoolData(t.Codeql)
+		args["copilotCodeReviewEnabled"] = llx.BoolData(t.CopilotCodeReview)
+		args["secretScanningEnabled"] = llx.BoolData(t.SecretScanning)
+		args["dependencyVulnerabilityChecksEnabled"] = llx.BoolData(t.DependencyVulnerabilityChecks)
+	} else {
+		args["codeqlEnabled"] = llx.BoolData(false)
+		args["copilotCodeReviewEnabled"] = llx.BoolData(false)
+		args["secretScanningEnabled"] = llx.BoolData(false)
+		args["dependencyVulnerabilityChecksEnabled"] = llx.BoolData(false)
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "github.repository.copilotCloudAgent", args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGithubRepositoryCopilotCloudAgent), nil
 }

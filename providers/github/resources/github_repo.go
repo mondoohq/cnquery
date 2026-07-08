@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v89/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
@@ -119,6 +119,8 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"hasPages":                            llx.BoolData(repo.GetHasPages()),
 		"hasDownloads":                        llx.BoolData(repo.GetHasDownloads()),
 		"hasDiscussions":                      llx.BoolData(repo.GetHasDiscussions()),
+		"hasPullRequests":                     llx.BoolData(repo.GetHasPullRequests()),
+		"pullRequestCreationPolicy":           llx.StringDataPtr(repo.PullRequestCreationPolicy),
 		"isTemplate":                          llx.BoolData(repo.GetIsTemplate()),
 		"defaultBranchName":                   llx.StringDataPtr(repo.DefaultBranch),
 		"cloneUrl":                            llx.StringData(repo.GetCloneURL()),
@@ -1311,11 +1313,11 @@ func (g *mqlGithubRepository) releases() ([]any, error) {
 		}
 
 		mqlRelease, err := CreateResource(g.MqlRuntime, "github.release", map[string]*llx.RawData{
-			"url":         llx.StringDataPtr(r.HTMLURL),
+			"url":         llx.StringData(r.HTMLURL),
 			"name":        llx.StringDataPtr(r.Name),
-			"tagName":     llx.StringDataPtr(r.TagName),
-			"preRelease":  llx.BoolDataPtr(r.Prerelease),
-			"createdAt":   llx.TimeDataPtr(githubTimestamp(r.CreatedAt)),
+			"tagName":     llx.StringData(r.TagName),
+			"preRelease":  llx.BoolData(r.Prerelease),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(&r.CreatedAt)),
 			"publishedAt": llx.TimeDataPtr(githubTimestamp(r.PublishedAt)),
 			"author":      llx.AnyData(author),
 		})

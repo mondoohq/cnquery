@@ -39,6 +39,7 @@ const (
 	ResourceGithubPackageVersion                   string = "github.packageVersion"
 	ResourceGithubPackages                         string = "github.packages"
 	ResourceGithubRepository                       string = "github.repository"
+	ResourceGithubRepositoryCopilotCloudAgent      string = "github.repository.copilotCloudAgent"
 	ResourceGithubRepositoryPages                  string = "github.repository.pages"
 	ResourceGithubDeployKey                        string = "github.deployKey"
 	ResourceGithubPublicKey                        string = "github.publicKey"
@@ -175,6 +176,10 @@ func init() {
 		"github.repository": {
 			Init:   initGithubRepository,
 			Create: createGithubRepository,
+		},
+		"github.repository.copilotCloudAgent": {
+			Init:   initGithubRepositoryCopilotCloudAgent,
+			Create: createGithubRepositoryCopilotCloudAgent,
 		},
 		"github.repository.pages": {
 			Init:   initGithubRepositoryPages,
@@ -1180,8 +1185,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.hasDiscussions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetHasDiscussions()).ToDataRes(types.Bool)
 	},
+	"github.repository.hasPullRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetHasPullRequests()).ToDataRes(types.Bool)
+	},
 	"github.repository.isTemplate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetIsTemplate()).ToDataRes(types.Bool)
+	},
+	"github.repository.pullRequestCreationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetPullRequestCreationPolicy()).ToDataRes(types.String)
 	},
 	"github.repository.customProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCustomProperties()).ToDataRes(types.Dict)
@@ -1326,6 +1337,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.pages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetPages()).ToDataRes(types.Resource("github.repository.pages"))
+	},
+	"github.repository.copilotCloudAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCopilotCloudAgent()).ToDataRes(types.Resource("github.repository.copilotCloudAgent"))
+	},
+	"github.repository.copilotCloudAgent.isFirewallEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetIsFirewallEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.isFirewallRecommendedAllowlistEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetIsFirewallRecommendedAllowlistEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.customAllowlist": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetCustomAllowlist()).ToDataRes(types.Array(types.String))
+	},
+	"github.repository.copilotCloudAgent.requireActionsWorkflowApproval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetRequireActionsWorkflowApproval()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.codeqlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetCodeqlEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.copilotCodeReviewEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetCopilotCodeReviewEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.secretScanningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetSecretScanningEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.dependencyVulnerabilityChecksEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetDependencyVulnerabilityChecksEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.copilotCloudAgent.mcpConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepositoryCopilotCloudAgent).GetMcpConfiguration()).ToDataRes(types.Dict)
 	},
 	"github.repository.pages.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositoryPages).GetUrl()).ToDataRes(types.String)
@@ -3640,8 +3681,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubRepository).HasDiscussions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"github.repository.hasPullRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).HasPullRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"github.repository.isTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).IsTemplate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.pullRequestCreationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).PullRequestCreationPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.repository.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3834,6 +3883,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.pages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Pages, ok = plugin.RawToTValue[*mqlGithubRepositoryPages](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CopilotCloudAgent, ok = plugin.RawToTValue[*mqlGithubRepositoryCopilotCloudAgent](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"github.repository.copilotCloudAgent.isFirewallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).IsFirewallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.isFirewallRecommendedAllowlistEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).IsFirewallRecommendedAllowlistEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.customAllowlist": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).CustomAllowlist, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.requireActionsWorkflowApproval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).RequireActionsWorkflowApproval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.codeqlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).CodeqlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.copilotCodeReviewEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).CopilotCodeReviewEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.secretScanningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).SecretScanningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.dependencyVulnerabilityChecksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).DependencyVulnerabilityChecksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.copilotCloudAgent.mcpConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepositoryCopilotCloudAgent).McpConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"github.repository.pages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8161,7 +8254,9 @@ type mqlGithubRepository struct {
 	HasPages                             plugin.TValue[bool]
 	HasDownloads                         plugin.TValue[bool]
 	HasDiscussions                       plugin.TValue[bool]
+	HasPullRequests                      plugin.TValue[bool]
 	IsTemplate                           plugin.TValue[bool]
+	PullRequestCreationPolicy            plugin.TValue[string]
 	CustomProperties                     plugin.TValue[any]
 	OpenMergeRequests                    plugin.TValue[[]any]
 	ClosedMergeRequests                  plugin.TValue[[]any]
@@ -8210,6 +8305,7 @@ type mqlGithubRepository struct {
 	Secrets                              plugin.TValue[[]any]
 	Variables                            plugin.TValue[[]any]
 	Pages                                plugin.TValue[*mqlGithubRepositoryPages]
+	CopilotCloudAgent                    plugin.TValue[*mqlGithubRepositoryCopilotCloudAgent]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -8377,8 +8473,16 @@ func (c *mqlGithubRepository) GetHasDiscussions() *plugin.TValue[bool] {
 	return &c.HasDiscussions
 }
 
+func (c *mqlGithubRepository) GetHasPullRequests() *plugin.TValue[bool] {
+	return &c.HasPullRequests
+}
+
 func (c *mqlGithubRepository) GetIsTemplate() *plugin.TValue[bool] {
 	return &c.IsTemplate
+}
+
+func (c *mqlGithubRepository) GetPullRequestCreationPolicy() *plugin.TValue[string] {
+	return &c.PullRequestCreationPolicy
 }
 
 func (c *mqlGithubRepository) GetCustomProperties() *plugin.TValue[any] {
@@ -9007,6 +9111,111 @@ func (c *mqlGithubRepository) GetPages() *plugin.TValue[*mqlGithubRepositoryPage
 
 		return c.pages()
 	})
+}
+
+func (c *mqlGithubRepository) GetCopilotCloudAgent() *plugin.TValue[*mqlGithubRepositoryCopilotCloudAgent] {
+	return plugin.GetOrCompute[*mqlGithubRepositoryCopilotCloudAgent](&c.CopilotCloudAgent, func() (*mqlGithubRepositoryCopilotCloudAgent, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "copilotCloudAgent")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubRepositoryCopilotCloudAgent), nil
+			}
+		}
+
+		return c.copilotCloudAgent()
+	})
+}
+
+// mqlGithubRepositoryCopilotCloudAgent for the github.repository.copilotCloudAgent resource
+type mqlGithubRepositoryCopilotCloudAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubRepositoryCopilotCloudAgentInternal it will be used here
+	IsFirewallEnabled                     plugin.TValue[bool]
+	IsFirewallRecommendedAllowlistEnabled plugin.TValue[bool]
+	CustomAllowlist                       plugin.TValue[[]any]
+	RequireActionsWorkflowApproval        plugin.TValue[bool]
+	CodeqlEnabled                         plugin.TValue[bool]
+	CopilotCodeReviewEnabled              plugin.TValue[bool]
+	SecretScanningEnabled                 plugin.TValue[bool]
+	DependencyVulnerabilityChecksEnabled  plugin.TValue[bool]
+	McpConfiguration                      plugin.TValue[any]
+}
+
+// createGithubRepositoryCopilotCloudAgent creates a new instance of this resource
+func createGithubRepositoryCopilotCloudAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubRepositoryCopilotCloudAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.repository.copilotCloudAgent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) MqlName() string {
+	return "github.repository.copilotCloudAgent"
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetIsFirewallEnabled() *plugin.TValue[bool] {
+	return &c.IsFirewallEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetIsFirewallRecommendedAllowlistEnabled() *plugin.TValue[bool] {
+	return &c.IsFirewallRecommendedAllowlistEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetCustomAllowlist() *plugin.TValue[[]any] {
+	return &c.CustomAllowlist
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetRequireActionsWorkflowApproval() *plugin.TValue[bool] {
+	return &c.RequireActionsWorkflowApproval
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetCodeqlEnabled() *plugin.TValue[bool] {
+	return &c.CodeqlEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetCopilotCodeReviewEnabled() *plugin.TValue[bool] {
+	return &c.CopilotCodeReviewEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetSecretScanningEnabled() *plugin.TValue[bool] {
+	return &c.SecretScanningEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetDependencyVulnerabilityChecksEnabled() *plugin.TValue[bool] {
+	return &c.DependencyVulnerabilityChecksEnabled
+}
+
+func (c *mqlGithubRepositoryCopilotCloudAgent) GetMcpConfiguration() *plugin.TValue[any] {
+	return &c.McpConfiguration
 }
 
 // mqlGithubRepositoryPages for the github.repository.pages resource

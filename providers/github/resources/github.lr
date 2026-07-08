@@ -745,8 +745,14 @@ github.repository @defaults("fullName") {
   hasDownloads bool
   // Whether the repository has discussions
   hasDiscussions bool
+  // Whether the repository has pull requests enabled
+  hasPullRequests bool
   // Whether the repository is an organization repository template
   isTemplate bool
+  // Policy for who can create pull requests
+  //
+  // One of "all" or "collaborators_only".
+  pullRequestCreationPolicy string
   // Repository custom properties
   customProperties dict
   // List of open merge requests for the repository
@@ -847,6 +853,41 @@ github.repository @defaults("fullName") {
   variables() []github.actionsVariable
   // GitHub Pages site configuration (null when the repository does not have Pages enabled)
   pages() github.repository.pages
+  // Copilot coding agent configuration (null when the repository has no coding agent configuration)
+  copilotCloudAgent() github.repository.copilotCloudAgent
+}
+
+// Copilot coding agent configuration for a repository
+//
+// Configuration governing how the Copilot coding agent operates in a repository:
+// whether its network `isFirewallEnabled` and the
+// `isFirewallRecommendedAllowlistEnabled` allowlist are on, any extra hosts in
+// the `customAllowlist`, whether the agent must get approval before running
+// Actions workflows via `requireActionsWorkflowApproval`, and which security
+// tools run during an agent session (`codeqlEnabled`, `copilotCodeReviewEnabled`,
+// `secretScanningEnabled`, and `dependencyVulnerabilityChecksEnabled`). The raw
+// MCP server block is available as `mcpConfiguration`. Selected from a
+// repository as `copilotCloudAgent`, and null when the repository has no coding
+// agent configuration or the token lacks access.
+private github.repository.copilotCloudAgent @defaults("isFirewallEnabled requireActionsWorkflowApproval") {
+  // Whether the coding agent network firewall is enabled
+  isFirewallEnabled bool
+  // Whether the recommended firewall allowlist is enabled
+  isFirewallRecommendedAllowlistEnabled bool
+  // Custom hosts added to the firewall allowlist
+  customAllowlist []string
+  // Whether the agent must get approval before running Actions workflows
+  requireActionsWorkflowApproval bool
+  // Whether CodeQL scanning runs during a coding agent session
+  codeqlEnabled bool
+  // Whether Copilot code review runs during a coding agent session
+  copilotCodeReviewEnabled bool
+  // Whether secret scanning runs during a coding agent session
+  secretScanningEnabled bool
+  // Whether dependency vulnerability checks run during a coding agent session
+  dependencyVulnerabilityChecksEnabled bool
+  // MCP server configuration for the coding agent
+  mcpConfiguration dict
 }
 
 // GitHub Pages site

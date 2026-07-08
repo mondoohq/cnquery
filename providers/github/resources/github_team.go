@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v89/github"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/github/connection"
 )
