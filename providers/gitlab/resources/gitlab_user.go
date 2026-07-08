@@ -504,3 +504,48 @@ func (u *mqlGitlabUser) personalAccessTokens() ([]any, error) {
 	}
 	return out, nil
 }
+
+func (e *mqlGitlabUserEmail) id() (string, error) {
+	return "gitlab.user.email/" + strconv.FormatInt(e.Id.Data, 10), nil
+}
+
+// emails lists the email addresses registered to the user. Requires an admin
+// token (to see other users' emails) or self-access; on 403/404 it returns an
+// empty list rather than failing the resource graph.
+func (u *mqlGitlabUser) emails() ([]any, error) {
+	conn := u.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	perPage := int64(50)
+	page := int64(1)
+	var all []*gitlab.Email
+	for {
+		emails, resp, err := conn.Client().Users.ListEmailsForUser(u.Id.Data, &gitlab.ListEmailsForUserOptions{
+			ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage},
+		})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		all = append(all, emails...)
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	out := make([]any, 0, len(all))
+	for _, e := range all {
+		res, err := CreateResource(u.MqlRuntime, "gitlab.user.email", map[string]*llx.RawData{
+			"id":          llx.IntData(e.ID),
+			"email":       llx.StringData(e.Email),
+			"confirmedAt": llx.TimeDataPtr(e.ConfirmedAt),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}

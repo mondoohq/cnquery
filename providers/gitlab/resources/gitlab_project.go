@@ -129,6 +129,33 @@ func (g *mqlGitlabProject) id() (string, error) {
 	return "gitlab.project/" + strconv.FormatInt(g.Id.Data, 10), nil
 }
 
+// forkedFromProject returns the project this project was forked from, or null
+// when it is not a fork. The fork parent is read from the full project payload
+// (shared via projectDetails); access-denied/missing yields null rather than
+// failing the resource graph.
+func (p *mqlGitlabProject) forkedFromProject() (*mqlGitlabProject, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+	details, err := p.projectDetails(conn)
+	if err != nil {
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
+			p.ForkedFromProject.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if details == nil || details.ForkedFromProject == nil || details.ForkedFromProject.ID <= 0 {
+		p.ForkedFromProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(p.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(details.ForkedFromProject.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
+}
+
 // init initializes the gitlab project with the arguments
 func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
@@ -1249,6 +1276,9 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 			return nil, err
 		}
 		mm := mqlMR.(*mqlGitlabProjectMergeRequest)
+		if mr.Author != nil {
+			mm.cacheAuthorID = mr.Author.ID
+		}
 		if mr.MergeUser != nil {
 			mm.cacheMergeUserID = mr.MergeUser.ID
 		}
@@ -1265,8 +1295,25 @@ func (p *mqlGitlabProject) mergeRequests() ([]any, error) {
 // mqlGitlabProjectMergeRequestInternal caches the merge/close actor ids so the
 // typed mergeUser()/closedBy() accessors resolve lazily.
 type mqlGitlabProjectMergeRequestInternal struct {
+	cacheAuthorID    int64
 	cacheMergeUserID int64
 	cacheClosedByID  int64
+}
+
+// authorUser returns the user who opened the merge request, or null when the
+// author cannot be resolved.
+func (m *mqlGitlabProjectMergeRequest) authorUser() (*mqlGitlabUser, error) {
+	if m.cacheAuthorID <= 0 {
+		m.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // mergeUser returns the user who merged the request, or null when it was not
@@ -1304,6 +1351,28 @@ func (m *mqlGitlabProjectMergeRequest) closedBy() (*mqlGitlabUser, error) {
 // id function for gitlab.project.issue
 func (i *mqlGitlabProjectIssue) id() (string, error) {
 	return strconv.FormatInt(i.Id.Data, 10), nil
+}
+
+// mqlGitlabProjectIssueInternal caches the issue author id so the typed
+// authorUser() accessor resolves lazily.
+type mqlGitlabProjectIssueInternal struct {
+	cacheAuthorID int64
+}
+
+// authorUser returns the user who opened the issue, or null when the author
+// cannot be resolved.
+func (i *mqlGitlabProjectIssue) authorUser() (*mqlGitlabUser, error) {
+	if i.cacheAuthorID <= 0 {
+		i.AuthorUser.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(i.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
+		"id": llx.IntData(i.cacheAuthorID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabUser), nil
 }
 
 // milestone fetches the milestone for an issue. The milestone is populated
@@ -1387,6 +1456,9 @@ func (p *mqlGitlabProject) issues() ([]any, error) {
 		mqlIssue, err := CreateResource(p.MqlRuntime, "gitlab.project.issue", issueInfo)
 		if err != nil {
 			return nil, err
+		}
+		if issue.Author != nil {
+			mqlIssue.(*mqlGitlabProjectIssue).cacheAuthorID = int64(issue.Author.ID)
 		}
 
 		mqlIssues = append(mqlIssues, mqlIssue)
@@ -1592,6 +1664,22 @@ func (p *mqlGitlabProject) variables() ([]any, error) {
 	}
 
 	return mqlVariables, nil
+}
+
+// project returns the project a milestone belongs to, resolved from the
+// milestone's cached projectId. Returns null when the project id is unknown.
+func (m *mqlGitlabProjectMilestone) project() (*mqlGitlabProject, error) {
+	if m.ProjectId.Data <= 0 {
+		m.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(m.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(m.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabProject), nil
 }
 
 // id function for gitlab.project.milestone

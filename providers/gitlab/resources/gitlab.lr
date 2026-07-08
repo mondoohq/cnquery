@@ -170,6 +170,8 @@ gitlab.user @defaults("username name state") {
   sshKeys() []gitlab.user.sshKey
   // Personal access tokens belonging to this user (requires admin or self-access)
   personalAccessTokens() []gitlab.user.personalAccessToken
+  // Email addresses registered to this user (requires admin or self-access)
+  emails() []gitlab.user.email
 }
 
 // GitLab personal access token
@@ -227,6 +229,21 @@ private gitlab.user.sshKey @defaults("id title createdAt") {
   daysOld() int
   // The GitLab user that owns this SSH key
   user() gitlab.user
+}
+
+// Email address registered to a GitLab user account
+//
+// Examine an email address linked to a user account and whether it has been
+// confirmed. Unconfirmed addresses (`confirmedAt` is null) can indicate a
+// pending account takeover or an unverified secondary identity. Requires the
+// calling token to be able to read the user's emails (admin or self-access).
+private gitlab.user.email @defaults("email confirmedAt") {
+  // Email ID
+  id int
+  // Email address
+  email string
+  // When the email address was confirmed; null when the address is unconfirmed
+  confirmedAt time
 }
 
 // GitLab member (used in both groups and projects)
@@ -467,6 +484,12 @@ gitlab.group @defaults("name visibility webURL") {
   containerRegistryRepositories() []gitlab.project.containerRegistryRepository
   // Packages published across all projects in the group and its subgroups
   packages() []gitlab.project.package
+  // Parent group, or null when this is a top-level group
+  parentGroup() gitlab.group
+  // Webhooks registered at the group level
+  webhooks() []gitlab.group.webhook
+  // CI/CD variables defined at the group level (inherited by every project in the group)
+  variables() []gitlab.group.variable
 }
 
 // GitLab SAML group link
@@ -785,6 +808,8 @@ gitlab.project @defaults("fullName visibility webURL") {
   integrations() []gitlab.project.integration
   // Protected environments and their deploy/approval gates
   protectedEnvironments() []gitlab.project.protectedEnvironment
+  // Project this project was forked from, or null when it is not a fork
+  forkedFromProject() gitlab.project
 }
 
 // GitLab project integration
@@ -1158,6 +1183,8 @@ private gitlab.project.mergeRequest @defaults("internalId title state") {
   targetBranch string
   // Merge request author username
   author string
+  // User who opened the merge request, or null when the author cannot be resolved
+  authorUser() gitlab.user
   // Merge request creation time
   createdAt time
   // Merge request update time
@@ -1222,6 +1249,8 @@ private gitlab.project.issue @defaults("internalId title state") {
   description string
   // Issue author username
   author string
+  // User who opened the issue, or null when the author cannot be resolved
+  authorUser() gitlab.user
   // Issue creation time
   createdAt time
   // Issue update time
@@ -1318,6 +1347,8 @@ private gitlab.project.milestone @defaults("internalId title state") {
   createdAt time
   // Whether the milestone has passed its due date
   expired bool
+  // Project this milestone belongs to
+  project() gitlab.project
 }
 
 // GitLab project label
@@ -1374,6 +1405,112 @@ private gitlab.group.label @defaults("name color") {
   priority int
   // Whether this is a project label (vs. group label)
   isProjectLabel bool
+}
+
+// GitLab group CI/CD variable
+//
+// Examine a CI/CD variable defined at the group level. Group variables are
+// inherited by every project in the group, so an unmasked or unprotected
+// secret here is exposed to all of that group's pipelines. Use `masked` to
+// find values printed in job logs and `protected` to find values available on
+// unprotected branches.
+private gitlab.group.variable @defaults("key masked protected") {
+  // Variable key/name
+  key string
+  // Variable type (env_var or file)
+  variableType string
+  // Whether the variable is protected (only available on protected branches/tags)
+  protected bool
+  // Whether the variable value is masked in job logs
+  masked bool
+  // Whether the variable is hidden
+  hidden bool
+  // Whether the variable is raw (not expanded)
+  raw bool
+  // Environment scope for the variable
+  environmentScope string
+  // Variable description
+  description string
+}
+
+// GitLab group webhook
+//
+// Examine a webhook registered at the group level. Group webhooks fire for
+// events across every project in the group, making a misconfigured endpoint a
+// broad data-egress and inbound-trigger surface. `sslVerification` reflects
+// whether TLS certificates are validated (disabling it permits man-in-the-
+// middle interception of payloads). The event flags show which categories of
+// activity are forwarded.
+//
+// Note: GitLab's API never returns the configured secret token in list/get
+// responses (write-only field), so its presence cannot be exposed directly.
+private gitlab.group.webhook @defaults("url sslVerification") {
+  // Webhook ID
+  id int
+  // Webhook URL
+  url string
+  // Webhook display name
+  name string
+  // Webhook description
+  description string
+  // Whether SSL verification is enabled - disabling permits man-in-the-middle interception of webhook payloads
+  sslVerification bool
+  // Whether push events trigger the webhook
+  pushEvents bool
+  // Branch filter for push events
+  pushEventsBranchFilter string
+  // Whether issues events trigger the webhook
+  issuesEvents bool
+  // Whether confidential issues events trigger the webhook
+  confidentialIssuesEvents bool
+  // Whether merge request events trigger the webhook
+  mergeRequestsEvents bool
+  // Whether tag push events trigger the webhook
+  tagPushEvents bool
+  // Whether note (comment) events trigger the webhook
+  noteEvents bool
+  // Whether confidential note events trigger the webhook
+  confidentialNoteEvents bool
+  // Whether job events trigger the webhook
+  jobEvents bool
+  // Whether pipeline events trigger the webhook
+  pipelineEvents bool
+  // Whether wiki page events trigger the webhook
+  wikiPageEvents bool
+  // Whether deployment events trigger the webhook
+  deploymentEvents bool
+  // Whether release events trigger the webhook
+  releasesEvents bool
+  // Whether resource access token events trigger the webhook
+  resourceAccessTokenEvents bool
+  // Whether vulnerability events trigger the webhook
+  vulnerabilityEvents bool
+  // Whether feature flag events trigger the webhook
+  featureFlagEvents bool
+  // Whether milestone events trigger the webhook
+  milestoneEvents bool
+  // Whether emoji events trigger the webhook
+  emojiEvents bool
+  // Whether repository update events trigger the webhook
+  repositoryUpdateEvents bool
+  // Whether subgroup events trigger the webhook
+  subGroupEvents bool
+  // Whether member events trigger the webhook
+  memberEvents bool
+  // Whether project events trigger the webhook
+  projectEvents bool
+  // Strategy used to filter branches for push events: all_branches, wildcard, or regex
+  branchFilterStrategy string
+  // Custom webhook payload template configured for this hook (empty when default payload is used)
+  customWebhookTemplate string
+  // Custom HTTP headers sent with the webhook request (values may be redacted by GitLab)
+  customHeaders map[string]string
+  // Webhook creation time
+  createdAt time
+  // Alert status of the webhook
+  alertStatus string
+  // The group this webhook is registered against
+  group() gitlab.group
 }
 
 // GitLab CI/CD pipeline

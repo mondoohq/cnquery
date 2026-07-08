@@ -977,3 +977,196 @@ func groupBranchAccessLevels(runtime *plugin.Runtime, idPrefix string, descs []*
 	}
 	return out, nil
 }
+
+// parentGroup returns the group this group is nested under, or null when it is
+// a top-level group. The parent id is read from the full group payload; on
+// 403/404 it yields null rather than failing the resource graph.
+func (g *mqlGitlabGroup) parentGroup() (*mqlGitlabGroup, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	grp, resp, err := conn.Client().Groups.GetGroup(int(g.Id.Data), nil)
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			g.ParentGroup.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if grp.ParentID <= 0 {
+		g.ParentGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(int64(grp.ParentID)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+func (v *mqlGitlabGroupVariable) id() (string, error) {
+	return "gitlab.group.variable/" + v.Key.Data + "/" + v.EnvironmentScope.Data, nil
+}
+
+// variables lists the group-level CI/CD variables. These are inherited by
+// every project in the group.
+func (g *mqlGitlabGroup) variables() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allVars []*gitlab.GroupVariable
+
+	for {
+		vars, resp, err := conn.Client().GroupVariables.ListVariables(groupID, &gitlab.ListGroupVariablesOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allVars = append(allVars, vars...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlVars []any
+	for _, v := range allVars {
+		varInfo := map[string]*llx.RawData{
+			"key":              llx.StringData(v.Key),
+			"variableType":     llx.StringData(string(v.VariableType)),
+			"protected":        llx.BoolData(v.Protected),
+			"masked":           llx.BoolData(v.Masked),
+			"hidden":           llx.BoolData(v.Hidden),
+			"raw":              llx.BoolData(v.Raw),
+			"environmentScope": llx.StringData(v.EnvironmentScope),
+			"description":      llx.StringData(v.Description),
+		}
+
+		mqlVar, err := CreateResource(g.MqlRuntime, "gitlab.group.variable", varInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlVars = append(mqlVars, mqlVar)
+	}
+
+	return mqlVars, nil
+}
+
+func (h *mqlGitlabGroupWebhook) id() (string, error) {
+	return "gitlab.group.webhook/" + strconv.FormatInt(h.Id.Data, 10), nil
+}
+
+// group returns the group a webhook is registered against.
+func (h *mqlGitlabGroupWebhook) group() (*mqlGitlabGroup, error) {
+	res, err := NewResource(h.MqlRuntime, "gitlab.group", map[string]*llx.RawData{
+		"id": llx.IntData(h.groupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGitlabGroup), nil
+}
+
+// mqlGitlabGroupWebhookInternal carries the parent group ID so the group()
+// back-reference resolves lazily.
+type mqlGitlabGroupWebhookInternal struct {
+	groupID int64
+}
+
+// webhooks lists the webhooks registered at the group level. Group hooks fire
+// for events across every project in the group.
+func (g *mqlGitlabGroup) webhooks() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allHooks []*gitlab.GroupHook
+
+	for {
+		hooks, resp, err := conn.Client().Groups.ListGroupHooks(groupID, &gitlab.ListGroupHooksOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allHooks = append(allHooks, hooks...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlWebhooks []any
+	for _, hook := range allHooks {
+		customHeaders := map[string]any{}
+		for _, h := range hook.CustomHeaders {
+			if h == nil {
+				continue
+			}
+			customHeaders[h.Key] = h.Value
+		}
+
+		hookInfo := map[string]*llx.RawData{
+			"id":                        llx.IntData(hook.ID),
+			"url":                       llx.StringData(hook.URL),
+			"name":                      llx.StringData(hook.Name),
+			"description":               llx.StringData(hook.Description),
+			"sslVerification":           llx.BoolData(hook.EnableSSLVerification),
+			"pushEvents":                llx.BoolData(hook.PushEvents),
+			"pushEventsBranchFilter":    llx.StringData(hook.PushEventsBranchFilter),
+			"issuesEvents":              llx.BoolData(hook.IssuesEvents),
+			"confidentialIssuesEvents":  llx.BoolData(hook.ConfidentialIssuesEvents),
+			"mergeRequestsEvents":       llx.BoolData(hook.MergeRequestsEvents),
+			"tagPushEvents":             llx.BoolData(hook.TagPushEvents),
+			"noteEvents":                llx.BoolData(hook.NoteEvents),
+			"confidentialNoteEvents":    llx.BoolData(hook.ConfidentialNoteEvents),
+			"jobEvents":                 llx.BoolData(hook.JobEvents),
+			"pipelineEvents":            llx.BoolData(hook.PipelineEvents),
+			"wikiPageEvents":            llx.BoolData(hook.WikiPageEvents),
+			"deploymentEvents":          llx.BoolData(hook.DeploymentEvents),
+			"releasesEvents":            llx.BoolData(hook.ReleasesEvents),
+			"resourceAccessTokenEvents": llx.BoolData(hook.ResourceAccessTokenEvents),
+			"vulnerabilityEvents":       llx.BoolData(hook.VulnerabilityEvents),
+			"featureFlagEvents":         llx.BoolData(hook.FeatureFlagEvents),
+			"milestoneEvents":           llx.BoolData(hook.MilestoneEvents),
+			"emojiEvents":               llx.BoolData(hook.EmojiEvents),
+			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
+			"subGroupEvents":            llx.BoolData(hook.SubGroupEvents),
+			"memberEvents":              llx.BoolData(hook.MemberEvents),
+			"projectEvents":             llx.BoolData(hook.ProjectEvents),
+			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
+			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
+			"customHeaders":             llx.MapData(customHeaders, types.String),
+			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
+			"alertStatus":               llx.StringData(hook.AlertStatus),
+		}
+
+		mqlWebhook, err := CreateResource(g.MqlRuntime, "gitlab.group.webhook", hookInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlWebhook.(*mqlGitlabGroupWebhook).groupID = g.Id.Data
+		mqlWebhooks = append(mqlWebhooks, mqlWebhook)
+	}
+
+	return mqlWebhooks, nil
+}
