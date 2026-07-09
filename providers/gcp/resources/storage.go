@@ -112,6 +112,9 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 	var res []any
 	if err := storageSvc.Buckets.List(projectID).Pages(ctx, func(page *storage.Buckets) error {
 		for _, bucket := range page.Items {
+			if conn.Filters.Storage.IsFilteredOut(bucket.Name) {
+				continue
+			}
 			mqlBucket, err := mqlBucketFromAPI(g.MqlRuntime, projectId, bucket)
 			if err != nil {
 				return err

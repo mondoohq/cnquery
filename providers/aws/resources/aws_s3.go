@@ -99,6 +99,10 @@ func (a *mqlAwsS3) getBuckets(conn *connection.AwsConnection) []*jobpool.Job {
 					break
 				}
 				for _, bucket := range output.Buckets {
+					if conn.Filters.S3.IsFilteredOut(convert.ToValue(bucket.Name)) {
+						continue
+					}
+
 					mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 						map[string]*llx.RawData{
 							"name":      llx.StringDataPtr(bucket.Name),
