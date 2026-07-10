@@ -368,14 +368,18 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	}
 
 	if conf.Id > 0 {
-		recordingAsset.mu.Lock()
-		recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
-			Url:        conf.ToUrl(),
-			ProviderID: providerID,
-			Connector:  conf.Type,
-			Id:         conf.Id,
-		}
-		recordingAsset.mu.Unlock()
+		// Scope the lock to just the map write via a closure: resyncAsset below
+		// also takes recordingAsset.mu, so a function-level defer would deadlock.
+		func() {
+			recordingAsset.mu.Lock()
+			defer recordingAsset.mu.Unlock()
+			recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
+				Url:        conf.ToUrl(),
+				ProviderID: providerID,
+				Connector:  conf.Type,
+				Id:         conf.Id,
+			}
+		}()
 	}
 
 	r.resyncAsset(recordingAsset)
