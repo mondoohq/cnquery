@@ -1477,7 +1477,7 @@ private k8s.job @defaults("namespace name succeeded failed created") @context("k
   startTime() time
   // Time the job entered a terminal state
   completionTime() time
-  // Status conditions (Complete, Failed, FailureTarget, Suspended)
+  // Status conditions (Complete, Failed, FailureTarget, SuccessCriteriaMet, Suspended)
   conditions() []dict
 }
 

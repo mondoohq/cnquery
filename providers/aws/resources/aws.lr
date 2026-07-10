@@ -14067,7 +14067,7 @@ private aws.ecr.image @defaults("uri region") {
   lastRecordedPullTime time
   // Status of the most recent image scan
   //
-  // One of: COMPLETE, FAILED, IN_PROGRESS, UNSUPPORTED_IMAGE, ACTIVE, SCAN_ELIGIBILITY_EXPIRED, FINDINGS_UNAVAILABLE, or NOT_SCANNED.
+  // One of: COMPLETE, FAILED, IN_PROGRESS, UNSUPPORTED_IMAGE, ACTIVE, PENDING, SCAN_ELIGIBILITY_EXPIRED, FINDINGS_UNAVAILABLE, LIMIT_EXCEEDED, IMAGE_ARCHIVED, or NOT_SCANNED.
   scanStatus() string
   // Findings from the most recent image scan (basic scan findings; private repositories only)
   scanFindings() []aws.ecr.image.scanFinding

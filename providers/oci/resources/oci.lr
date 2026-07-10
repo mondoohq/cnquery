@@ -2185,7 +2185,7 @@ private oci.vault.secret @defaults("name") {
   description string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, SCHEDULING_DELETION, PENDING_DELETION, CANCELLING_DELETION, FAILED)
   state string
-  // Rotation status (NOT_ENABLED, CANCELLING, ROTATING)
+  // Rotation status (NOT_ENABLED, SCHEDULED, IN_PROGRESS, CANCELLING)
   rotationStatus string
   // Last rotation time
   lastRotationTime time
@@ -2223,7 +2223,7 @@ private oci.vault.secretVersion @defaults("versionNumber") {
   versionNumber int
   // Version name
   name string
-  // Content type (BASE64, BUNDLE)
+  // Content type (BASE64)
   contentType string
   // Version lifecycle stages (CURRENT, PENDING, LATEST, PREVIOUS, DEPRECATED)
   stages []string
@@ -2754,7 +2754,7 @@ private oci.containerInstances.instance @defaults("name") {
   compartment() oci.compartment
   // Availability domain
   availabilityDomain string
-  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Compute shape
   shape string
@@ -2802,7 +2802,7 @@ private oci.containerInstances.container @defaults("name") {
   compartment() oci.compartment
   // Availability domain
   availabilityDomain string
-  // Lifecycle state (CREATING, ACTIVE, STOPPING, STOPPED, EXITED, FAILED)
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Parent container instance OCID
   containerInstanceId string
