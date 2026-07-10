@@ -15,6 +15,7 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/convert"
 	"github.com/spdx/tools-golang/spdx"
+	"github.com/spdx/tools-golang/spdx/v2/common"
 	"github.com/spdx/tools-golang/spdx/v2/v2_1"
 	"github.com/spdx/tools-golang/spdx/v2/v2_2"
 	"github.com/spdx/tools-golang/spdx/v2/v2_3"
@@ -64,6 +65,10 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		},
 	}
 
+	// bom_ref → SPDX element id, so the dependency graph (which references
+	// components by bom_ref) can be translated to SPDX DEPENDS_ON relationships.
+	refToID := map[string]spdx.ElementID{}
+
 	for i := range bom.Packages {
 		pkg := bom.Packages[i]
 
@@ -87,8 +92,11 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			})
 		}
 
+		id := NewSPDXPackageID(pkg)
+		refToID[BomRefFor(pkg)] = id
+
 		doc.Packages = append(doc.Packages, &spdx.Package{
-			PackageSPDXIdentifier:     NewSPDXPackageID(pkg),
+			PackageSPDXIdentifier:     id,
 			PackageName:               pkg.Name,
 			PackageVersion:            pkg.Version,
 			PackageLicenseDeclared:    pkg.Version,
@@ -96,6 +104,26 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
 		})
+	}
+
+	// Emit the package→package dependency graph as SPDX DEPENDS_ON relationships,
+	// skipping any edge whose endpoints are not in this document.
+	for _, dep := range bom.Dependencies {
+		fromID, ok := refToID[dep.Ref]
+		if !ok {
+			continue
+		}
+		for _, to := range dep.DependsOn {
+			toID, ok := refToID[to]
+			if !ok {
+				continue
+			}
+			doc.Relationships = append(doc.Relationships, &spdx.Relationship{
+				RefA:         common.MakeDocElementID("", string(fromID)),
+				RefB:         common.MakeDocElementID("", string(toID)),
+				Relationship: spdx.RelationshipDependsOn,
+			})
+		}
 	}
 
 	return doc

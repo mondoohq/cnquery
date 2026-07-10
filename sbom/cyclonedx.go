@@ -110,7 +110,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		}
 
 		bomPkg := cyclonedx.Component{
-			BOMRef:     uuid.New().String(), // temporary, we need to store the relationships next
+			BOMRef:     BomRefFor(pkg),
 			Type:       cyclonedx.ComponentTypeLibrary,
 			Name:       pkg.Name,
 			Version:    pkg.Version,
@@ -118,11 +118,28 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			CPE:        cpe,
 			Evidence:   evidence,
 		}
+		if pkg.Scope == PackageScopeDev {
+			bomPkg.Scope = cyclonedx.ScopeExcluded
+		}
 
 		components = append(components, bomPkg)
 	}
 
 	sbom.Components = &components
+
+	// Emit the package→package dependency graph (CycloneDX `dependencies`), each
+	// endpoint referenced by the component bom-ref set above.
+	if len(bom.Dependencies) > 0 {
+		deps := make([]cyclonedx.Dependency, 0, len(bom.Dependencies))
+		for _, d := range bom.Dependencies {
+			dependsOn := append([]string(nil), d.DependsOn...)
+			deps = append(deps, cyclonedx.Dependency{
+				Ref:          d.Ref,
+				Dependencies: &dependsOn,
+			})
+		}
+		sbom.Dependencies = &deps
+	}
 
 	return sbom, nil
 }

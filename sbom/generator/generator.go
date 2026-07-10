@@ -556,6 +556,17 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 				bom.Packages = append(bom.Packages, bomPkg)
 			}
 		}
+
+		// Stamp a stable bom_ref on every component (purl-when-present, else a
+		// synthesized fallback) so renders are reproducible and dependency-graph
+		// edges have a stable endpoint to reference. Only fills empties, so a ref
+		// already carried from a lockfile is preserved.
+		for _, pkg := range bom.Packages {
+			if pkg.BomRef == "" {
+				pkg.BomRef = sbom.BomRefFor(pkg)
+			}
+		}
+
 		boms = append(boms, bom)
 	}
 	return boms
