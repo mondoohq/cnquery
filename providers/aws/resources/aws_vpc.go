@@ -226,6 +226,11 @@ func (a *mqlAwsVpcNatgateway) id() (string, error) {
 	return a.NatGatewayId.Data, nil
 }
 
+func (a *mqlAwsVpcNatgateway) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(natGatewayArnPattern, a.region, conn.AccountId(), a.NatGatewayId.Data), nil
+}
+
 type mqlAwsVpcNatgatewayInternal struct {
 	natGatewayCache vpctypes.NatGateway
 	region          string
@@ -404,10 +409,20 @@ func (a *mqlAwsVpcEndpoint) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsVpcEndpoint) arn() (string, error) {
+	account := a.OwnerId.Data
+	if account == "" {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		account = conn.AccountId()
+	}
+	return fmt.Sprintf(vpcEndpointArnPattern, a.Region.Data, account, a.cacheEndpointId), nil
+}
+
 type mqlAwsVpcEndpointInternal struct {
 	securityGroupIdHandler
 	cacheRouteTableIds       []string
 	cacheNetworkInterfaceIds []string
+	cacheEndpointId          string
 	region                   string
 	accountID                string
 }
@@ -475,6 +490,7 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 			ep := mqlEndpoint.(*mqlAwsVpcEndpoint)
 			ep.region = a.Region.Data
 			ep.accountID = conn.AccountId()
+			ep.cacheEndpointId = convert.ToValue(endpoint.VpcEndpointId)
 
 			// Cache security group ARNs
 			sgArns := make([]string, len(endpoint.Groups))
@@ -1983,6 +1999,11 @@ func (a *mqlAwsEc2DhcpOptions) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsEc2DhcpOptions) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(dhcpOptionsArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
+}
+
 func (a *mqlAwsVpc) dhcpOptions() (*mqlAwsEc2DhcpOptions, error) {
 	dhcpOptionsId := a.DhcpOptionsId.Data
 	if dhcpOptionsId == "" {
@@ -2066,6 +2087,11 @@ type mqlAwsVpcFlowlogInternal struct {
 	cacheLogDestination           *string
 	cacheLogDestinationType       string
 	region                        string
+}
+
+func (a *mqlAwsVpcFlowlog) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(vpcFlowLogArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
 }
 
 func (a *mqlAwsVpcFlowlog) iamRole() (*mqlAwsIamRole, error) {

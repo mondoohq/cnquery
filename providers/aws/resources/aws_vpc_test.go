@@ -124,6 +124,30 @@ func TestArnPatterns(t *testing.T) {
 		{"route table", routeTableArnPattern, "us-east-1", "123456789012", "rtb-bbb", "arn:aws:ec2:us-east-1:123456789012:route-table/rtb-bbb"},
 		{"network ACL", networkAclArnPattern, "us-east-1", "123456789012", "acl-ccc", "arn:aws:ec2:us-east-1:123456789012:network-acl/acl-ccc"},
 		{"transit gateway", transitGatewayArnPattern, "us-east-1", "123456789012", "tgw-ddd", "arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-ddd"},
+		// Synthesized ARNs for resources with no ARN in their describe response.
+		// Expected strings follow the AWS Service Authorization Reference; the
+		// segment/delimiter differences below are deliberate and load-bearing.
+		{"VPC endpoint", vpcEndpointArnPattern, "us-east-1", "123456789012", "vpce-0abc123", "arn:aws:ec2:us-east-1:123456789012:vpc-endpoint/vpce-0abc123"},
+		{"VPC flow log", vpcFlowLogArnPattern, "us-east-1", "123456789012", "fl-0abc123", "arn:aws:ec2:us-east-1:123456789012:vpc-flow-log/fl-0abc123"},
+		{"NAT gateway", natGatewayArnPattern, "us-east-1", "123456789012", "nat-0abc123", "arn:aws:ec2:us-east-1:123456789012:natgateway/nat-0abc123"},
+		{"network interface", networkInterfaceArnPattern, "us-east-1", "123456789012", "eni-0abc123", "arn:aws:ec2:us-east-1:123456789012:network-interface/eni-0abc123"},
+		{"DHCP options", dhcpOptionsArnPattern, "us-east-1", "123456789012", "dopt-0abc123", "arn:aws:ec2:us-east-1:123456789012:dhcp-options/dopt-0abc123"},
+		{"TGW attachment", tgwAttachmentArnPattern, "us-east-1", "123456789012", "tgw-attach-0abc123", "arn:aws:ec2:us-east-1:123456789012:transit-gateway-attachment/tgw-attach-0abc123"},
+		{"TGW route table", tgwRouteTableArnPattern, "us-east-1", "123456789012", "tgw-rtb-0abc123", "arn:aws:ec2:us-east-1:123456789012:transit-gateway-route-table/tgw-rtb-0abc123"},
+		{"CloudHSM cluster", cloudhsmClusterArnPattern, "us-east-1", "123456789012", "cluster-abc", "arn:aws:cloudhsm:us-east-1:123456789012:cluster/cluster-abc"},
+		{"GuardDuty detector", guarddutyDetectorArnPattern, "us-east-1", "123456789012", "det-abc", "arn:aws:guardduty:us-east-1:123456789012:detector/det-abc"},
+		{"Cognito identity pool", cognitoIdentityPoolArnPattern, "us-east-1", "123456789012", "us-east-1:guid", "arn:aws:cognito-identity:us-east-1:123456789012:identitypool/us-east-1:guid"},
+		{"Glue database", glueDatabaseArnPattern, "us-east-1", "123456789012", "mydb", "arn:aws:glue:us-east-1:123456789012:database/mydb"},
+		{"Glue connection", glueConnectionArnPattern, "us-east-1", "123456789012", "myconn", "arn:aws:glue:us-east-1:123456789012:connection/myconn"},
+		{"Glue workflow", glueWorkflowArnPattern, "us-east-1", "123456789012", "mywf", "arn:aws:glue:us-east-1:123456789012:workflow/mywf"},
+		{"Athena data catalog", athenaDataCatalogArnPattern, "us-east-1", "123456789012", "mycatalog", "arn:aws:athena:us-east-1:123456789012:datacatalog/mycatalog"},
+		{"WorkSpaces workspace", workspacesWorkspaceArnPattern, "us-east-1", "123456789012", "ws-abc", "arn:aws:workspaces:us-east-1:123456789012:workspace/ws-abc"},
+		{"WorkSpaces directory", workspacesDirectoryArnPattern, "us-east-1", "123456789012", "d-abc", "arn:aws:workspaces:us-east-1:123456789012:directory/d-abc"},
+		{"WorkSpaces IP group", workspacesIpGroupArnPattern, "us-east-1", "123456789012", "wsipg-abc", "arn:aws:workspaces:us-east-1:123456789012:workspaceipgroup/wsipg-abc"},
+		// colon delimiter before the identifier, not a slash
+		{"Redshift subnet group", redshiftSubnetGroupArnPattern, "us-east-1", "123456789012", "mygroup", "arn:aws:redshift:us-east-1:123456789012:subnetgroup:mygroup"},
+		{"Redshift event subscription", redshiftEventSubscriptionArnPattern, "us-east-1", "123456789012", "mysub", "arn:aws:redshift:us-east-1:123456789012:eventsubscription:mysub"},
+		{"Lambda event source mapping", lambdaEventSourceMappingArnPattern, "us-east-1", "123456789012", "uuid-abc", "arn:aws:lambda:us-east-1:123456789012:event-source-mapping:uuid-abc"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -688,6 +688,7 @@ aws.appsync.graphqlApi.webAcl 13.25.1
 aws.appsync.graphqlApi.xrayEnabled 13.25.1
 aws.athena 11.16.1
 aws.athena.dataCatalog 11.16.1
+aws.athena.dataCatalog.arn 13.44.1
 aws.athena.dataCatalog.connectionType 11.16.1
 aws.athena.dataCatalog.description 11.16.1
 aws.athena.dataCatalog.error 11.16.1
@@ -1645,6 +1646,7 @@ aws.cloudhsm.backup.state 13.28.1
 aws.cloudhsm.backup.tags 13.28.1
 aws.cloudhsm.backups 13.28.1
 aws.cloudhsm.cluster 13.28.1
+aws.cloudhsm.cluster.arn 13.44.1
 aws.cloudhsm.cluster.backupPolicy 13.28.1
 aws.cloudhsm.cluster.backupRetentionDays 13.28.1
 aws.cloudhsm.cluster.certificates 13.28.1
@@ -2114,6 +2116,7 @@ aws.cognito 11.16.1
 aws.cognito.identityPool 11.16.1
 aws.cognito.identityPool.allowClassicFlow 11.16.1
 aws.cognito.identityPool.allowUnauthenticatedIdentities 11.16.1
+aws.cognito.identityPool.arn 13.44.1
 aws.cognito.identityPool.cognitoIdentityProviders 13.26.3
 aws.cognito.identityPool.developerProviderName 11.16.1
 aws.cognito.identityPool.id 11.16.1
@@ -2987,6 +2990,7 @@ aws.ec2.customerGateway.tags 13.6.3
 aws.ec2.customerGateway.type 13.6.3
 aws.ec2.customerGateways 13.6.3
 aws.ec2.dhcpOptions 13.6.3
+aws.ec2.dhcpOptions.arn 13.44.1
 aws.ec2.dhcpOptions.configurations 13.6.3
 aws.ec2.dhcpOptions.id 13.6.3
 aws.ec2.dhcpOptions.region 13.6.3
@@ -3364,6 +3368,7 @@ aws.ec2.networkacl.isDefault 11.15.2
 aws.ec2.networkacl.region 11.15.2
 aws.ec2.networkacl.tags 11.15.2
 aws.ec2.networkinterface 11.15.2
+aws.ec2.networkinterface.arn 13.44.1
 aws.ec2.networkinterface.attachmentStatus 13.15.2
 aws.ec2.networkinterface.attachmentTime 13.15.2
 aws.ec2.networkinterface.availabilityZone 11.15.2
@@ -3469,6 +3474,7 @@ aws.ec2.transitgateway.amazonSideAsn 11.15.2
 aws.ec2.transitgateway.arn 11.15.2
 aws.ec2.transitgateway.associationDefaultRouteTableId 11.15.2
 aws.ec2.transitgateway.attachment 13.6.3
+aws.ec2.transitgateway.attachment.arn 13.44.1
 aws.ec2.transitgateway.attachment.createdAt 13.38.2
 aws.ec2.transitgateway.attachment.id 13.6.3
 aws.ec2.transitgateway.attachment.region 13.6.3
@@ -3501,6 +3507,7 @@ aws.ec2.transitgateway.peeringAttachments 13.6.3
 aws.ec2.transitgateway.propagationDefaultRouteTableId 11.15.2
 aws.ec2.transitgateway.region 11.15.2
 aws.ec2.transitgateway.routeTable 13.6.3
+aws.ec2.transitgateway.routeTable.arn 13.44.1
 aws.ec2.transitgateway.routeTable.createdAt 13.38.2
 aws.ec2.transitgateway.routeTable.defaultAssociationRouteTable 13.6.3
 aws.ec2.transitgateway.routeTable.defaultPropagationRouteTable 13.6.3
@@ -5178,6 +5185,7 @@ aws.fsx.volumes 11.15.2
 aws.glue 11.16.1
 aws.glue.catalogEncryptionSettings 11.16.1
 aws.glue.connection 13.23.2
+aws.glue.connection.arn 13.44.1
 aws.glue.connection.connectionProperties 13.23.2
 aws.glue.connection.connectionType 13.23.2
 aws.glue.connection.createdAt 13.23.2
@@ -5216,6 +5224,7 @@ aws.glue.crawler.updatedAt 11.16.1
 aws.glue.crawler.version 13.26.3
 aws.glue.crawlers 11.16.1
 aws.glue.database 11.16.1
+aws.glue.database.arn 13.44.1
 aws.glue.database.catalogId 11.16.1
 aws.glue.database.createTableDefaultPermissions 13.26.3
 aws.glue.database.createdAt 11.16.1
@@ -5330,6 +5339,7 @@ aws.glue.trigger.type 13.26.3
 aws.glue.trigger.workflowName 13.26.3
 aws.glue.triggers 13.26.3
 aws.glue.workflow 11.16.1
+aws.glue.workflow.arn 13.44.1
 aws.glue.workflow.createdAt 11.16.1
 aws.glue.workflow.defaultRunProperties 11.16.1
 aws.glue.workflow.description 11.16.1
@@ -5341,6 +5351,7 @@ aws.glue.workflow.updatedAt 11.16.1
 aws.glue.workflows 11.16.1
 aws.guardduty 11.15.2
 aws.guardduty.detector 11.15.2
+aws.guardduty.detector.arn 13.44.1
 aws.guardduty.detector.coverageStatistic 13.12.1
 aws.guardduty.detector.coverageStatistic.count 13.12.1
 aws.guardduty.detector.coverageStatistic.resourceType 13.12.1
@@ -6079,6 +6090,7 @@ aws.lambda.codeSigningConfig.id 11.15.2
 aws.lambda.codeSigningConfig.lastModified 11.15.2
 aws.lambda.codeSigningConfig.untrustedArtifactOnDeployment 11.15.2
 aws.lambda.eventSourceMapping 11.15.2
+aws.lambda.eventSourceMapping.arn 13.44.1
 aws.lambda.eventSourceMapping.batchSize 11.15.2
 aws.lambda.eventSourceMapping.bisectBatchOnFunctionError 11.15.2
 aws.lambda.eventSourceMapping.eventSourceArn 11.15.2
@@ -7689,6 +7701,7 @@ aws.redshift.cluster.vpc 11.16.1
 aws.redshift.cluster.vpcId 11.15.2
 aws.redshift.clusters 11.15.2
 aws.redshift.eventSubscription 13.12.1
+aws.redshift.eventSubscription.arn 13.44.1
 aws.redshift.eventSubscription.createdAt 13.12.1
 aws.redshift.eventSubscription.enabled 13.12.1
 aws.redshift.eventSubscription.eventCategories 13.12.1
@@ -7750,6 +7763,7 @@ aws.redshift.snapshotSchedule.scheduleDefinitions 13.12.1
 aws.redshift.snapshotSchedule.tags 13.12.1
 aws.redshift.snapshotSchedules 13.12.1
 aws.redshift.subnetGroup 13.12.1
+aws.redshift.subnetGroup.arn 13.44.1
 aws.redshift.subnetGroup.description 13.12.1
 aws.redshift.subnetGroup.name 13.12.1
 aws.redshift.subnetGroup.region 13.12.1
@@ -9982,6 +9996,7 @@ aws.vpc.encryptionControl.state 13.42.1
 aws.vpc.encryptionControl.stateMessage 13.42.1
 aws.vpc.encryptionControl.tags 13.42.1
 aws.vpc.endpoint 11.15.2
+aws.vpc.endpoint.arn 13.44.1
 aws.vpc.endpoint.createdAt 11.15.2
 aws.vpc.endpoint.dnsEntries 13.6.3
 aws.vpc.endpoint.id 11.15.2
@@ -10004,6 +10019,7 @@ aws.vpc.endpoint.vpc 11.15.2
 aws.vpc.endpoints 11.15.2
 aws.vpc.flowLogs 11.15.2
 aws.vpc.flowlog 11.15.2
+aws.vpc.flowlog.arn 13.44.1
 aws.vpc.flowlog.createdAt 11.15.2
 aws.vpc.flowlog.deliverLogsStatus 11.15.2
 aws.vpc.flowlog.destination 11.15.2
@@ -10037,6 +10053,7 @@ aws.vpc.natgateway.address.networkInterfaceId 11.15.2
 aws.vpc.natgateway.address.privateIp 11.15.2
 aws.vpc.natgateway.address.publicIp 11.15.2
 aws.vpc.natgateway.addresses 11.15.2
+aws.vpc.natgateway.arn 13.44.1
 aws.vpc.natgateway.createdAt 11.15.2
 aws.vpc.natgateway.natGatewayId 11.15.2
 aws.vpc.natgateway.state 11.15.2
@@ -10438,6 +10455,7 @@ aws.workspaces.bundles 11.16.1
 aws.workspaces.directories 11.16.1
 aws.workspaces.directory 11.16.1
 aws.workspaces.directory.alias 11.16.1
+aws.workspaces.directory.arn 13.44.1
 aws.workspaces.directory.certificateBasedAuthProperties 11.16.1
 aws.workspaces.directory.defaultCreationProperties 11.16.1
 aws.workspaces.directory.directoryId 11.16.1
@@ -10466,6 +10484,7 @@ aws.workspaces.image.state 11.16.1
 aws.workspaces.images 11.16.1
 aws.workspaces.instances 11.16.1
 aws.workspaces.ipGroup 11.16.1
+aws.workspaces.ipGroup.arn 13.44.1
 aws.workspaces.ipGroup.groupDesc 11.16.1
 aws.workspaces.ipGroup.groupId 11.16.1
 aws.workspaces.ipGroup.groupName 11.16.1
@@ -10473,6 +10492,7 @@ aws.workspaces.ipGroup.region 11.16.1
 aws.workspaces.ipGroup.userRules 11.16.1
 aws.workspaces.ipGroups 11.16.1
 aws.workspaces.workspace 11.16.1
+aws.workspaces.workspace.arn 13.44.1
 aws.workspaces.workspace.bundleId 11.16.1
 aws.workspaces.workspace.computerName 11.16.1
 aws.workspaces.workspace.connectionState 11.16.1

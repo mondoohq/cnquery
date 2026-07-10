@@ -653,6 +653,16 @@ func (a *mqlAwsRedshiftSubnetGroup) id() (string, error) {
 	return a.__id, nil
 }
 
+const (
+	redshiftSubnetGroupArnPattern       = "arn:aws:redshift:%s:%s:subnetgroup:%s"
+	redshiftEventSubscriptionArnPattern = "arn:aws:redshift:%s:%s:eventsubscription:%s"
+)
+
+func (a *mqlAwsRedshiftSubnetGroup) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(redshiftSubnetGroupArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
+}
+
 func (a *mqlAwsRedshiftSubnetGroup) vpc() (*mqlAwsVpc, error) {
 	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
@@ -746,6 +756,11 @@ func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) [
 
 func (a *mqlAwsRedshiftEventSubscription) id() (string, error) {
 	return a.__id, nil
+}
+
+func (a *mqlAwsRedshiftEventSubscription) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(redshiftEventSubscriptionArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
 }
 
 func (a *mqlAwsRedshiftEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {

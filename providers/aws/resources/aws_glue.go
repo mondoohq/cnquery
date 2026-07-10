@@ -611,6 +611,26 @@ func newMqlAwsGlueDatabase(runtime *plugin.Runtime, region string, db glue_types
 	return resource.(*mqlAwsGlueDatabase), nil
 }
 
+const (
+	glueDatabaseArnPattern   = "arn:aws:glue:%s:%s:database/%s"
+	glueConnectionArnPattern = "arn:aws:glue:%s:%s:connection/%s"
+	glueWorkflowArnPattern   = "arn:aws:glue:%s:%s:workflow/%s"
+)
+
+func (a *mqlAwsGlueDatabase) arn() (string, error) {
+	account := a.CatalogId.Data
+	if account == "" {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		account = conn.AccountId()
+	}
+	return fmt.Sprintf(glueDatabaseArnPattern, a.Region.Data, account, a.Name.Data), nil
+}
+
+func (a *mqlAwsGlueConnection) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(glueConnectionArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
+}
+
 func (a *mqlAwsGlueDatabase) tables() ([]any, error) {
 	dbName := a.Name.Data
 	region := a.Region.Data
@@ -850,6 +870,11 @@ func newMqlAwsGlueWorkflow(runtime *plugin.Runtime, region string, accountID str
 		return nil, err
 	}
 	return resource.(*mqlAwsGlueWorkflow), nil
+}
+
+func (a *mqlAwsGlueWorkflow) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(glueWorkflowArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
 }
 
 func (a *mqlAwsGlueWorkflow) tags() (map[string]any, error) {

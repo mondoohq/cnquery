@@ -1696,6 +1696,15 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 	return nil, mqlEni, nil
 }
 
+func (i *mqlAwsEc2Networkinterface) arn() (string, error) {
+	account := i.OwnerId.Data
+	if account == "" {
+		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+		account = conn.AccountId()
+	}
+	return fmt.Sprintf(networkInterfaceArnPattern, i.Region.Data, account, i.Id.Data), nil
+}
+
 func (i *mqlAwsEc2Networkinterface) elasticIp() (*mqlAwsEc2Eip, error) {
 	if i.cacheElasticIp == nil || *i.cacheElasticIp == "" {
 		i.ElasticIp.State = plugin.StateIsNull | plugin.StateIsSet
@@ -3347,8 +3356,18 @@ func (a *mqlAwsEc2TransitgatewayAttachment) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsEc2TransitgatewayAttachment) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(tgwAttachmentArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
+}
+
 func (a *mqlAwsEc2TransitgatewayRouteTable) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAwsEc2TransitgatewayRouteTable) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(tgwRouteTableArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
 }
 
 func (a *mqlAwsEc2Transitgateway) attachments() ([]any, error) {

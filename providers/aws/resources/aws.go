@@ -56,6 +56,13 @@ const (
 	efsFilesystemArnPattern       = "arn:aws:elasticfilesystem:%s:%s:file-system/%s"
 	fsxFilesystemArnPattern       = "arn:aws:fsx:%s:%s:file-system/%s"
 	prefixListArnPattern          = "arn:aws:ec2:%s:%s:prefix-list/%s"
+	vpcEndpointArnPattern         = "arn:aws:ec2:%s:%s:vpc-endpoint/%s"
+	vpcFlowLogArnPattern          = "arn:aws:ec2:%s:%s:vpc-flow-log/%s"
+	natGatewayArnPattern          = "arn:aws:ec2:%s:%s:natgateway/%s"
+	networkInterfaceArnPattern    = "arn:aws:ec2:%s:%s:network-interface/%s"
+	dhcpOptionsArnPattern         = "arn:aws:ec2:%s:%s:dhcp-options/%s"
+	tgwAttachmentArnPattern       = "arn:aws:ec2:%s:%s:transit-gateway-attachment/%s"
+	tgwRouteTableArnPattern       = "arn:aws:ec2:%s:%s:transit-gateway-route-table/%s"
 )
 
 func NewSecurityGroupArn(region, accountID, sgID string) string {

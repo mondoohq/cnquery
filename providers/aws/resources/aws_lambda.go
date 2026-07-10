@@ -1070,6 +1070,13 @@ func (a *mqlAwsLambdaEventSourceMapping) id() (string, error) {
 	return a.Uuid.Data, nil
 }
 
+const lambdaEventSourceMappingArnPattern = "arn:aws:lambda:%s:%s:event-source-mapping:%s"
+
+func (a *mqlAwsLambdaEventSourceMapping) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(lambdaEventSourceMappingArnPattern, a.Region.Data, conn.AccountId(), a.Uuid.Data), nil
+}
+
 func (a *mqlAwsLambdaEventSourceMapping) function() (*mqlAwsLambdaFunction, error) {
 	arnVal := a.FunctionArn.Data
 	if arnVal == "" {

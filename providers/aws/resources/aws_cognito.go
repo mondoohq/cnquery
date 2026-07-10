@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -469,6 +470,13 @@ type mqlAwsCognitoIdentityPoolInternal struct {
 	descCache *cognitoidentity.DescribeIdentityPoolOutput
 	descDone  bool
 	descLock  sync.Mutex
+}
+
+const cognitoIdentityPoolArnPattern = "arn:aws:cognito-identity:%s:%s:identitypool/%s"
+
+func (a *mqlAwsCognitoIdentityPool) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(cognitoIdentityPoolArnPattern, a.Region.Data, conn.AccountId(), a.Id.Data), nil
 }
 
 func (a *mqlAwsCognitoIdentityPool) describe() (*cognitoidentity.DescribeIdentityPoolOutput, error) {

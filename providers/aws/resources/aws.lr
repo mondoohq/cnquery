@@ -596,6 +596,8 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
 private aws.vpc.endpoint @defaults("id type region") {
   // Unique ID of the endpoint
   id string
+  // Amazon Resource Name (ARN) of the endpoint
+  arn() string
   // Type of the endpoint
   type string
   // VPC in which the endpoint exists
@@ -638,6 +640,8 @@ private aws.vpc.endpoint @defaults("id type region") {
 private aws.vpc.flowlog @defaults("id region status") {
   // Unique ID of the flow log
   id string
+  // Amazon Resource Name (ARN) of the flow log
+  arn() string
   // VPC in which the flow log exists
   vpc string
   // Region in which the VPC flow log exists
@@ -6167,6 +6171,8 @@ aws.guardduty {
 private aws.guardduty.detector @defaults("id region") {
   // Unique ID for the detector
   id string
+  // Amazon Resource Name (ARN) of the detector
+  arn() string
   // Region for the detector
   region string
   // Status of the detector: ENABLED or DISABLED
@@ -10163,6 +10169,8 @@ aws.cloudhsm {
 private aws.cloudhsm.cluster @defaults("clusterId state mode region") {
   // Cluster ID
   clusterId string
+  // Amazon Resource Name (ARN) of the cluster
+  arn() string
   // Region where the cluster is deployed
   region string
   // Cluster lifecycle state
@@ -12964,6 +12972,8 @@ private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt"
 private aws.redshift.subnetGroup @defaults("name status") {
   // Subnet group name
   name string
+  // Amazon Resource Name (ARN) of the subnet group
+  arn() string
   // Description of the subnet group
   description string
   // Region where the subnet group exists
@@ -12984,6 +12994,8 @@ private aws.redshift.subnetGroup @defaults("name status") {
 private aws.redshift.eventSubscription @defaults("name status") {
   // Subscription name
   name string
+  // Amazon Resource Name (ARN) of the event subscription
+  arn() string
   // Region where the subscription exists
   region string
   // Whether the subscription is enabled
@@ -15173,6 +15185,8 @@ private aws.lambda.layer.version @defaults("layerVersionArn version") {
 private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   // UUID of the event source mapping
   uuid string
+  // Amazon Resource Name (ARN) of the event source mapping
+  arn() string
   // ARN of the event source
   eventSourceArn string
   // Lambda function for the event source mapping
@@ -15493,6 +15507,8 @@ private aws.vpc.natgateway {
   createdAt time
   // ID of the NAT gateway
   natGatewayId string
+  // Amazon Resource Name (ARN) of the NAT gateway
+  arn() string
   // State of the NAT gateway (pending, failed, available, deleting, or deleted)
   state string
   // Tags for the NAT gateway
@@ -15780,6 +15796,8 @@ private aws.ec2.transitgateway @defaults("arn id state") {
 private aws.ec2.transitgateway.attachment @defaults("id resourceType state") {
   // Transit gateway attachment ID
   id string
+  // Amazon Resource Name (ARN) of the transit gateway attachment
+  arn() string
   // ID of the transit gateway
   transitGatewayId string
   // ID of the attached resource (VPC ID, VPN connection ID, etc.)
@@ -15802,6 +15820,8 @@ private aws.ec2.transitgateway.attachment @defaults("id resourceType state") {
 private aws.ec2.transitgateway.routeTable @defaults("id state") {
   // Transit gateway route table ID
   id string
+  // Amazon Resource Name (ARN) of the transit gateway route table
+  arn() string
   // ID of the transit gateway
   transitGatewayId string
   // State of the route table: pending, available, deleting, deleted
@@ -15822,6 +15842,8 @@ private aws.ec2.transitgateway.routeTable @defaults("id state") {
 private aws.ec2.dhcpOptions @defaults("id region") {
   // ID of the DHCP options set
   id string
+  // Amazon Resource Name (ARN) of the DHCP options set
+  arn() string
   // Region where the DHCP options set exists
   region string
   // Tags on the DHCP options set
@@ -16766,6 +16788,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
 private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   // ID of the network interface
   id string
+  // Amazon Resource Name (ARN) of the network interface
+  arn() string
   // Description of the network interface
   description string
   // Subnet of the network interface
@@ -18173,6 +18197,8 @@ private aws.cognito.userPoolIdentityProvider @defaults("providerName providerTyp
 private aws.cognito.identityPool @defaults("id name") {
   // Identity pool ID (format: REGION:GUID)
   id string
+  // Amazon Resource Name (ARN) of the identity pool
+  arn() string
   // Name of the identity pool
   name string
   // Region of the identity pool
@@ -19731,6 +19757,8 @@ private aws.athena.workgroup @defaults("name state region") {
 private aws.athena.dataCatalog @defaults("name type region") {
   // Name of the data catalog
   name string
+  // Amazon Resource Name (ARN) of the data catalog
+  arn() string
   // Type of data catalog: LAMBDA, GLUE, HIVE, or FEDERATED
   type string
   // Description of the data catalog
@@ -19936,6 +19964,8 @@ aws.workspaces @defaults("directories") {
 private aws.workspaces.directory @defaults("directoryId directoryName state region") {
   // Directory identifier
   directoryId string
+  // Amazon Resource Name (ARN) of the directory
+  arn() string
   // Fully qualified directory name
   directoryName string
   // Directory type: SIMPLE_AD, AD_CONNECTOR, CUSTOMER_MANAGED, AWS_IAM_IDENTITY_CENTER
@@ -20128,6 +20158,8 @@ private aws.workspacesweb.userSetting @defaults("userSettingsArn region") {
 private aws.workspaces.workspace @defaults("workspaceId userName state region") {
   // Workspace identifier
   workspaceId string
+  // Amazon Resource Name (ARN) of the workspace
+  arn() string
   // Associated directory ID
   directoryId string
   // User associated with the workspace
@@ -20224,6 +20256,8 @@ private aws.workspaces.bundle @defaults("bundleId name region") {
 private aws.workspaces.ipGroup @defaults("groupId groupName region") {
   // IP group identifier
   groupId string
+  // Amazon Resource Name (ARN) of the IP group
+  arn() string
   // IP group name
   groupName string
   // IP group description
@@ -21188,6 +21222,8 @@ private aws.glue.securityConfiguration @defaults("name") {
 private aws.glue.database @defaults("name region") {
   // Name of the database
   name string
+  // Amazon Resource Name (ARN) of the database
+  arn() string
   // ID of the Data Catalog in which the database resides
   catalogId string
   // Description of the database
@@ -21493,6 +21529,8 @@ private aws.rds.eventSubscription @defaults("arn name status") {
 private aws.glue.workflow @defaults("name region") {
   // Name of the workflow
   name string
+  // Amazon Resource Name (ARN) of the workflow
+  arn() string
   // Region of the workflow
   region string
   // Description of the workflow
@@ -21524,6 +21562,8 @@ private aws.glue.workflow @defaults("name region") {
 private aws.glue.connection @defaults("name connectionType region") {
   // Name of the connection
   name string
+  // Amazon Resource Name (ARN) of the connection
+  arn() string
   // Region of the connection
   region string
   // Description of the connection

@@ -383,6 +383,13 @@ type mqlAwsAthenaDataCatalogInternal struct {
 	lock          sync.Mutex
 }
 
+const athenaDataCatalogArnPattern = "arn:aws:athena:%s:%s:datacatalog/%s"
+
+func (a *mqlAwsAthenaDataCatalog) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(athenaDataCatalogArnPattern, a.Region.Data, conn.AccountId(), a.Name.Data), nil
+}
+
 func (a *mqlAwsAthenaDataCatalog) fetchDetail() error {
 	if a.fetchedDetail {
 		return nil

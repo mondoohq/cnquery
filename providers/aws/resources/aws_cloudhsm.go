@@ -178,6 +178,13 @@ type mqlAwsCloudhsmClusterInternal struct {
 	cacheHsms            []cloudhsmv2_types.Hsm
 }
 
+const cloudhsmClusterArnPattern = "arn:aws:cloudhsm:%s:%s:cluster/%s"
+
+func (a *mqlAwsCloudhsmCluster) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return fmt.Sprintf(cloudhsmClusterArnPattern, a.Region.Data, conn.AccountId(), a.ClusterId.Data), nil
+}
+
 func (a *mqlAwsCloudhsmCluster) vpc() (*mqlAwsVpc, error) {
 	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
 		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull

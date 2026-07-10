@@ -5201,6 +5201,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
 	},
+	"aws.vpc.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetArn()).ToDataRes(types.String)
+	},
 	"aws.vpc.endpoint.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetType()).ToDataRes(types.String)
 	},
@@ -5257,6 +5260,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.flowlog.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetArn()).ToDataRes(types.String)
 	},
 	"aws.vpc.flowlog.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetVpc()).ToDataRes(types.String)
@@ -11600,6 +11606,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.guardduty.detector.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetId()).ToDataRes(types.String)
 	},
+	"aws.guardduty.detector.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGuarddutyDetector).GetArn()).ToDataRes(types.String)
+	},
 	"aws.guardduty.detector.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuarddutyDetector).GetRegion()).ToDataRes(types.String)
 	},
@@ -15764,6 +15773,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudhsm.cluster.clusterId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudhsmCluster).GetClusterId()).ToDataRes(types.String)
 	},
+	"aws.cloudhsm.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudhsmCluster).GetArn()).ToDataRes(types.String)
+	},
 	"aws.cloudhsm.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudhsmCluster).GetRegion()).ToDataRes(types.String)
 	},
@@ -18950,6 +18962,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.subnetGroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftSubnetGroup).GetName()).ToDataRes(types.String)
 	},
+	"aws.redshift.subnetGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftSubnetGroup).GetArn()).ToDataRes(types.String)
+	},
 	"aws.redshift.subnetGroup.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftSubnetGroup).GetDescription()).ToDataRes(types.String)
 	},
@@ -18973,6 +18988,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.eventSubscription.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftEventSubscription).GetName()).ToDataRes(types.String)
+	},
+	"aws.redshift.eventSubscription.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftEventSubscription).GetArn()).ToDataRes(types.String)
 	},
 	"aws.redshift.eventSubscription.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftEventSubscription).GetRegion()).ToDataRes(types.String)
@@ -21275,6 +21293,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.eventSourceMapping.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaEventSourceMapping).GetUuid()).ToDataRes(types.String)
 	},
+	"aws.lambda.eventSourceMapping.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaEventSourceMapping).GetArn()).ToDataRes(types.String)
+	},
 	"aws.lambda.eventSourceMapping.eventSourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaEventSourceMapping).GetEventSourceArn()).ToDataRes(types.String)
 	},
@@ -21641,6 +21662,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.natgateway.natGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgateway).GetNatGatewayId()).ToDataRes(types.String)
 	},
+	"aws.vpc.natgateway.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetArn()).ToDataRes(types.String)
+	},
 	"aws.vpc.natgateway.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcNatgateway).GetState()).ToDataRes(types.String)
 	},
@@ -21977,6 +22001,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.transitgateway.attachment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetId()).ToDataRes(types.String)
 	},
+	"aws.ec2.transitgateway.attachment.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetArn()).ToDataRes(types.String)
+	},
 	"aws.ec2.transitgateway.attachment.transitGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayAttachment).GetTransitGatewayId()).ToDataRes(types.String)
 	},
@@ -22001,6 +22028,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.transitgateway.routeTable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetId()).ToDataRes(types.String)
 	},
+	"aws.ec2.transitgateway.routeTable.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetArn()).ToDataRes(types.String)
+	},
 	"aws.ec2.transitgateway.routeTable.transitGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2TransitgatewayRouteTable).GetTransitGatewayId()).ToDataRes(types.String)
 	},
@@ -22024,6 +22054,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.dhcpOptions.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2DhcpOptions).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.dhcpOptions.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2DhcpOptions).GetArn()).ToDataRes(types.String)
 	},
 	"aws.ec2.dhcpOptions.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2DhcpOptions).GetRegion()).ToDataRes(types.String)
@@ -23161,6 +23194,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetArn()).ToDataRes(types.String)
 	},
 	"aws.ec2.networkinterface.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetDescription()).ToDataRes(types.String)
@@ -24778,6 +24814,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cognito.identityPool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoIdentityPool).GetId()).ToDataRes(types.String)
+	},
+	"aws.cognito.identityPool.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetArn()).ToDataRes(types.String)
 	},
 	"aws.cognito.identityPool.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoIdentityPool).GetName()).ToDataRes(types.String)
@@ -26519,6 +26558,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.athena.dataCatalog.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaDataCatalog).GetName()).ToDataRes(types.String)
 	},
+	"aws.athena.dataCatalog.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDataCatalog).GetArn()).ToDataRes(types.String)
+	},
 	"aws.athena.dataCatalog.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaDataCatalog).GetType()).ToDataRes(types.String)
 	},
@@ -26734,6 +26776,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workspaces.directory.directoryId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetDirectoryId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetArn()).ToDataRes(types.String)
 	},
 	"aws.workspaces.directory.directoryName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetDirectoryName()).ToDataRes(types.String)
@@ -26951,6 +26996,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetWorkspaceId()).ToDataRes(types.String)
 	},
+	"aws.workspaces.workspace.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetArn()).ToDataRes(types.String)
+	},
 	"aws.workspaces.workspace.directoryId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetDirectoryId()).ToDataRes(types.String)
 	},
@@ -27073,6 +27121,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workspaces.ipGroup.groupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesIpGroup).GetGroupId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.ipGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetArn()).ToDataRes(types.String)
 	},
 	"aws.workspaces.ipGroup.groupName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesIpGroup).GetGroupName()).ToDataRes(types.String)
@@ -28154,6 +28205,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.database.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueDatabase).GetName()).ToDataRes(types.String)
 	},
+	"aws.glue.database.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetArn()).ToDataRes(types.String)
+	},
 	"aws.glue.database.catalogId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueDatabase).GetCatalogId()).ToDataRes(types.String)
 	},
@@ -28517,6 +28571,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.workflow.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueWorkflow).GetName()).ToDataRes(types.String)
 	},
+	"aws.glue.workflow.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetArn()).ToDataRes(types.String)
+	},
 	"aws.glue.workflow.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueWorkflow).GetRegion()).ToDataRes(types.String)
 	},
@@ -28540,6 +28597,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.glue.connection.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.connection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetArn()).ToDataRes(types.String)
 	},
 	"aws.glue.connection.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueConnection).GetRegion()).ToDataRes(types.String)
@@ -34754,6 +34814,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.endpoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.endpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcEndpoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34832,6 +34896,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.flowlog.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcFlowlog).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowlog.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44094,6 +44162,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGuarddutyDetector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.guardduty.detector.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGuarddutyDetector).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.guardduty.detector.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGuarddutyDetector).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -50302,6 +50374,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudhsmCluster).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudhsm.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudhsmCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudhsm.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudhsmCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -54874,6 +54950,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftSubnetGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.subnetGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftSubnetGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.subnetGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftSubnetGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -54908,6 +54988,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.eventSubscription.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftEventSubscription).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.eventSubscription.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftEventSubscription).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.eventSubscription.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58238,6 +58322,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaEventSourceMapping).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.eventSourceMapping.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaEventSourceMapping).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.eventSourceMapping.eventSourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaEventSourceMapping).EventSourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -58762,6 +58850,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVpcNatgateway).NatGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.natgateway.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.natgateway.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcNatgateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -59262,6 +59354,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2TransitgatewayAttachment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.transitgateway.attachment.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayAttachment).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.transitgateway.attachment.transitGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayAttachment).TransitGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -59298,6 +59394,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2TransitgatewayRouteTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.transitgateway.routeTable.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2TransitgatewayRouteTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.transitgateway.routeTable.transitGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2TransitgatewayRouteTable).TransitGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -59332,6 +59432,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.dhcpOptions.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2DhcpOptions).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.dhcpOptions.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2DhcpOptions).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.dhcpOptions.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60976,6 +61080,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.networkinterface.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkinterface).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkinterface.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63304,6 +63412,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cognito.identityPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoIdentityPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.identityPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65810,6 +65922,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAthenaDataCatalog).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.athena.dataCatalog.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDataCatalog).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.athena.dataCatalog.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaDataCatalog).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -66130,6 +66246,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesDirectory).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.workspaces.directory.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.directory.directoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesDirectory).DirectoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -66442,6 +66562,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesWorkspace).WorkspaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.workspaces.workspace.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.workspace.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -66616,6 +66740,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspaces.ipGroup.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesIpGroup).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.workspaces.ipGroup.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68194,6 +68322,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlueDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.glue.database.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.glue.database.catalogId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueDatabase).CatalogId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -68710,6 +68842,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlueWorkflow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.glue.workflow.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.glue.workflow.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueWorkflow).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -68744,6 +68880,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.glue.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.glue.connection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78919,6 +79059,7 @@ type mqlAwsVpcEndpoint struct {
 	__id       string
 	mqlAwsVpcEndpointInternal
 	Id                plugin.TValue[string]
+	Arn               plugin.TValue[string]
 	Type              plugin.TValue[string]
 	Vpc               plugin.TValue[string]
 	Region            plugin.TValue[string]
@@ -78978,6 +79119,12 @@ func (c *mqlAwsVpcEndpoint) MqlID() string {
 
 func (c *mqlAwsVpcEndpoint) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsVpcEndpoint) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsVpcEndpoint) GetType() *plugin.TValue[string] {
@@ -79106,6 +79253,7 @@ type mqlAwsVpcFlowlog struct {
 	__id       string
 	mqlAwsVpcFlowlogInternal
 	Id                     plugin.TValue[string]
+	Arn                    plugin.TValue[string]
 	Vpc                    plugin.TValue[string]
 	Region                 plugin.TValue[string]
 	Status                 plugin.TValue[string]
@@ -79156,6 +79304,12 @@ func (c *mqlAwsVpcFlowlog) MqlID() string {
 
 func (c *mqlAwsVpcFlowlog) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsVpcFlowlog) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsVpcFlowlog) GetVpc() *plugin.TValue[string] {
@@ -103520,6 +103674,7 @@ type mqlAwsGuarddutyDetector struct {
 	__id       string
 	mqlAwsGuarddutyDetectorInternal
 	Id                         plugin.TValue[string]
+	Arn                        plugin.TValue[string]
 	Region                     plugin.TValue[string]
 	Status                     plugin.TValue[string]
 	Features                   plugin.TValue[[]any]
@@ -103576,6 +103731,12 @@ func (c *mqlAwsGuarddutyDetector) MqlID() string {
 
 func (c *mqlAwsGuarddutyDetector) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsGuarddutyDetector) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsGuarddutyDetector) GetRegion() *plugin.TValue[string] {
@@ -120726,6 +120887,7 @@ type mqlAwsCloudhsmCluster struct {
 	__id       string
 	mqlAwsCloudhsmClusterInternal
 	ClusterId           plugin.TValue[string]
+	Arn                 plugin.TValue[string]
 	Region              plugin.TValue[string]
 	State               plugin.TValue[string]
 	StateMessage        plugin.TValue[string]
@@ -120777,6 +120939,12 @@ func (c *mqlAwsCloudhsmCluster) MqlID() string {
 
 func (c *mqlAwsCloudhsmCluster) GetClusterId() *plugin.TValue[string] {
 	return &c.ClusterId
+}
+
+func (c *mqlAwsCloudhsmCluster) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsCloudhsmCluster) GetRegion() *plugin.TValue[string] {
@@ -131933,6 +132101,7 @@ type mqlAwsRedshiftSubnetGroup struct {
 	__id       string
 	mqlAwsRedshiftSubnetGroupInternal
 	Name                           plugin.TValue[string]
+	Arn                            plugin.TValue[string]
 	Description                    plugin.TValue[string]
 	Region                         plugin.TValue[string]
 	Status                         plugin.TValue[string]
@@ -131983,6 +132152,12 @@ func (c *mqlAwsRedshiftSubnetGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAwsRedshiftSubnetGroup) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
 func (c *mqlAwsRedshiftSubnetGroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
@@ -132029,6 +132204,7 @@ type mqlAwsRedshiftEventSubscription struct {
 	__id       string
 	// optional: if you define mqlAwsRedshiftEventSubscriptionInternal it will be used here
 	Name            plugin.TValue[string]
+	Arn             plugin.TValue[string]
 	Region          plugin.TValue[string]
 	Enabled         plugin.TValue[bool]
 	EventCategories plugin.TValue[[]any]
@@ -132081,6 +132257,12 @@ func (c *mqlAwsRedshiftEventSubscription) MqlID() string {
 
 func (c *mqlAwsRedshiftEventSubscription) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsRedshiftEventSubscription) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsRedshiftEventSubscription) GetRegion() *plugin.TValue[string] {
@@ -140258,6 +140440,7 @@ type mqlAwsLambdaEventSourceMapping struct {
 	__id       string
 	// optional: if you define mqlAwsLambdaEventSourceMappingInternal it will be used here
 	Uuid                           plugin.TValue[string]
+	Arn                            plugin.TValue[string]
 	EventSourceArn                 plugin.TValue[string]
 	Function                       plugin.TValue[*mqlAwsLambdaFunction]
 	FunctionArn                    plugin.TValue[string]
@@ -140320,6 +140503,12 @@ func (c *mqlAwsLambdaEventSourceMapping) MqlID() string {
 
 func (c *mqlAwsLambdaEventSourceMapping) GetUuid() *plugin.TValue[string] {
 	return &c.Uuid
+}
+
+func (c *mqlAwsLambdaEventSourceMapping) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsLambdaEventSourceMapping) GetEventSourceArn() *plugin.TValue[string] {
@@ -141728,6 +141917,7 @@ type mqlAwsVpcNatgateway struct {
 	mqlAwsVpcNatgatewayInternal
 	CreatedAt    plugin.TValue[*time.Time]
 	NatGatewayId plugin.TValue[string]
+	Arn          plugin.TValue[string]
 	State        plugin.TValue[string]
 	Tags         plugin.TValue[map[string]any]
 	Vpc          plugin.TValue[*mqlAwsVpc]
@@ -141778,6 +141968,12 @@ func (c *mqlAwsVpcNatgateway) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsVpcNatgateway) GetNatGatewayId() *plugin.TValue[string] {
 	return &c.NatGatewayId
+}
+
+func (c *mqlAwsVpcNatgateway) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsVpcNatgateway) GetState() *plugin.TValue[string] {
@@ -143067,6 +143263,7 @@ type mqlAwsEc2TransitgatewayAttachment struct {
 	__id       string
 	// optional: if you define mqlAwsEc2TransitgatewayAttachmentInternal it will be used here
 	Id               plugin.TValue[string]
+	Arn              plugin.TValue[string]
 	TransitGatewayId plugin.TValue[string]
 	ResourceId       plugin.TValue[string]
 	ResourceType     plugin.TValue[string]
@@ -143117,6 +143314,12 @@ func (c *mqlAwsEc2TransitgatewayAttachment) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlAwsEc2TransitgatewayAttachment) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
 func (c *mqlAwsEc2TransitgatewayAttachment) GetTransitGatewayId() *plugin.TValue[string] {
 	return &c.TransitGatewayId
 }
@@ -143151,6 +143354,7 @@ type mqlAwsEc2TransitgatewayRouteTable struct {
 	__id       string
 	// optional: if you define mqlAwsEc2TransitgatewayRouteTableInternal it will be used here
 	Id                           plugin.TValue[string]
+	Arn                          plugin.TValue[string]
 	TransitGatewayId             plugin.TValue[string]
 	State                        plugin.TValue[string]
 	DefaultAssociationRouteTable plugin.TValue[bool]
@@ -143201,6 +143405,12 @@ func (c *mqlAwsEc2TransitgatewayRouteTable) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlAwsEc2TransitgatewayRouteTable) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
 func (c *mqlAwsEc2TransitgatewayRouteTable) GetTransitGatewayId() *plugin.TValue[string] {
 	return &c.TransitGatewayId
 }
@@ -143235,6 +143445,7 @@ type mqlAwsEc2DhcpOptions struct {
 	__id       string
 	// optional: if you define mqlAwsEc2DhcpOptionsInternal it will be used here
 	Id             plugin.TValue[string]
+	Arn            plugin.TValue[string]
 	Region         plugin.TValue[string]
 	Tags           plugin.TValue[map[string]any]
 	Configurations plugin.TValue[[]any]
@@ -143279,6 +143490,12 @@ func (c *mqlAwsEc2DhcpOptions) MqlID() string {
 
 func (c *mqlAwsEc2DhcpOptions) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsEc2DhcpOptions) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsEc2DhcpOptions) GetRegion() *plugin.TValue[string] {
@@ -147117,6 +147334,7 @@ type mqlAwsEc2Networkinterface struct {
 	__id       string
 	mqlAwsEc2NetworkinterfaceInternal
 	Id                  plugin.TValue[string]
+	Arn                 plugin.TValue[string]
 	Description         plugin.TValue[string]
 	Subnet              plugin.TValue[*mqlAwsVpcSubnet]
 	Vpc                 plugin.TValue[*mqlAwsVpc]
@@ -147180,6 +147398,12 @@ func (c *mqlAwsEc2Networkinterface) MqlID() string {
 
 func (c *mqlAwsEc2Networkinterface) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsEc2Networkinterface) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsEc2Networkinterface) GetDescription() *plugin.TValue[string] {
@@ -152789,6 +153013,7 @@ type mqlAwsCognitoIdentityPool struct {
 	__id       string
 	mqlAwsCognitoIdentityPoolInternal
 	Id                             plugin.TValue[string]
+	Arn                            plugin.TValue[string]
 	Name                           plugin.TValue[string]
 	Region                         plugin.TValue[string]
 	AllowUnauthenticatedIdentities plugin.TValue[bool]
@@ -152836,6 +153061,12 @@ func (c *mqlAwsCognitoIdentityPool) MqlID() string {
 
 func (c *mqlAwsCognitoIdentityPool) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsCognitoIdentityPool) GetName() *plugin.TValue[string] {
@@ -159054,6 +159285,7 @@ type mqlAwsAthenaDataCatalog struct {
 	__id       string
 	mqlAwsAthenaDataCatalogInternal
 	Name           plugin.TValue[string]
+	Arn            plugin.TValue[string]
 	Type           plugin.TValue[string]
 	Description    plugin.TValue[string]
 	Parameters     plugin.TValue[map[string]any]
@@ -159097,6 +159329,12 @@ func (c *mqlAwsAthenaDataCatalog) MqlID() string {
 
 func (c *mqlAwsAthenaDataCatalog) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsAthenaDataCatalog) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsAthenaDataCatalog) GetType() *plugin.TValue[string] {
@@ -159944,6 +160182,7 @@ type mqlAwsWorkspacesDirectory struct {
 	__id       string
 	// optional: if you define mqlAwsWorkspacesDirectoryInternal it will be used here
 	DirectoryId                    plugin.TValue[string]
+	Arn                            plugin.TValue[string]
 	DirectoryName                  plugin.TValue[string]
 	DirectoryType                  plugin.TValue[string]
 	Alias                          plugin.TValue[string]
@@ -160001,6 +160240,12 @@ func (c *mqlAwsWorkspacesDirectory) MqlID() string {
 
 func (c *mqlAwsWorkspacesDirectory) GetDirectoryId() *plugin.TValue[string] {
 	return &c.DirectoryId
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsWorkspacesDirectory) GetDirectoryName() *plugin.TValue[string] {
@@ -160772,6 +161017,7 @@ type mqlAwsWorkspacesWorkspace struct {
 	__id       string
 	mqlAwsWorkspacesWorkspaceInternal
 	WorkspaceId                      plugin.TValue[string]
+	Arn                              plugin.TValue[string]
 	DirectoryId                      plugin.TValue[string]
 	UserName                         plugin.TValue[string]
 	IpAddress                        plugin.TValue[string]
@@ -160832,6 +161078,12 @@ func (c *mqlAwsWorkspacesWorkspace) MqlID() string {
 
 func (c *mqlAwsWorkspacesWorkspace) GetWorkspaceId() *plugin.TValue[string] {
 	return &c.WorkspaceId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsWorkspacesWorkspace) GetDirectoryId() *plugin.TValue[string] {
@@ -161141,6 +161393,7 @@ type mqlAwsWorkspacesIpGroup struct {
 	__id       string
 	// optional: if you define mqlAwsWorkspacesIpGroupInternal it will be used here
 	GroupId   plugin.TValue[string]
+	Arn       plugin.TValue[string]
 	GroupName plugin.TValue[string]
 	GroupDesc plugin.TValue[string]
 	UserRules plugin.TValue[[]any]
@@ -161186,6 +161439,12 @@ func (c *mqlAwsWorkspacesIpGroup) MqlID() string {
 
 func (c *mqlAwsWorkspacesIpGroup) GetGroupId() *plugin.TValue[string] {
 	return &c.GroupId
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsWorkspacesIpGroup) GetGroupName() *plugin.TValue[string] {
@@ -165211,6 +165470,7 @@ type mqlAwsGlueDatabase struct {
 	__id       string
 	// optional: if you define mqlAwsGlueDatabaseInternal it will be used here
 	Name                          plugin.TValue[string]
+	Arn                           plugin.TValue[string]
 	CatalogId                     plugin.TValue[string]
 	Description                   plugin.TValue[string]
 	LocationUri                   plugin.TValue[string]
@@ -165257,6 +165517,12 @@ func (c *mqlAwsGlueDatabase) MqlID() string {
 
 func (c *mqlAwsGlueDatabase) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsGlueDatabase) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsGlueDatabase) GetCatalogId() *plugin.TValue[string] {
@@ -166304,6 +166570,7 @@ type mqlAwsGlueWorkflow struct {
 	__id       string
 	// optional: if you define mqlAwsGlueWorkflowInternal it will be used here
 	Name                 plugin.TValue[string]
+	Arn                  plugin.TValue[string]
 	Region               plugin.TValue[string]
 	Description          plugin.TValue[string]
 	DefaultRunProperties plugin.TValue[map[string]any]
@@ -166349,6 +166616,12 @@ func (c *mqlAwsGlueWorkflow) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAwsGlueWorkflow) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
 func (c *mqlAwsGlueWorkflow) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -166385,6 +166658,7 @@ type mqlAwsGlueConnection struct {
 	__id       string
 	// optional: if you define mqlAwsGlueConnectionInternal it will be used here
 	Name                           plugin.TValue[string]
+	Arn                            plugin.TValue[string]
 	Region                         plugin.TValue[string]
 	Description                    plugin.TValue[string]
 	ConnectionType                 plugin.TValue[string]
@@ -166429,6 +166703,12 @@ func (c *mqlAwsGlueConnection) MqlID() string {
 
 func (c *mqlAwsGlueConnection) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsGlueConnection) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsGlueConnection) GetRegion() *plugin.TValue[string] {
