@@ -180,11 +180,24 @@ func azureNetworkGroupToMql(runtime *plugin.Runtime, g *network.Group) (*mqlAzur
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(g.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlGroup.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup).cacheSystemData = sysData
 	return mqlGroup.(*mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup), nil
+}
+
+type mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroupInternal struct {
+	cacheSystemData any
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // initAzureSubscriptionNetworkServiceNetworkManagerNetworkGroup resolves a
@@ -288,14 +301,27 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) securityAdminConfigur
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(cfg.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCfg.(*mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration).cacheSystemData = sysData
 			res = append(res, mqlCfg)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfigurationInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerSecurityAdminConfiguration) ruleCollections() ([]any, error) {
@@ -610,6 +636,11 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) connectivityConfigura
 				return nil, err
 			}
 			mqlCfg.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).cacheAppliesToGroupIds = appliesToGroupIds
+			sysData, err := convert.JsonToDict(cfg.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlCfg.(*mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration).cacheSystemData = sysData
 			res = append(res, mqlCfg)
 		}
 	}
@@ -618,10 +649,15 @@ func (a *mqlAzureSubscriptionNetworkServiceNetworkManager) connectivityConfigura
 
 type mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfigurationInternal struct {
 	cacheAppliesToGroupIds []string
+	cacheSystemData        any
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceNetworkManagerConnectivityConfiguration) appliesToGroups() ([]any, error) {

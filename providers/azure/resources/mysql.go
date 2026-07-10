@@ -615,6 +615,14 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) id() (stri
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionMySqlServiceFlexibleServerAdministratorInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 // threatProtectionState fetches the Microsoft Defender for Cloud advanced threat protection state.
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) threatProtectionState() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -691,6 +699,11 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) azureAdAdministrators()
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAdmin.(*mqlAzureSubscriptionMySqlServiceFlexibleServerAdministrator).cacheSystemData = sysData
 			res = append(res, mqlAdmin)
 		}
 	}

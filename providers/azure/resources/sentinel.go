@@ -43,6 +43,14 @@ func (a *mqlAzureSubscriptionSentinelServiceWorkspace) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionSentinelServiceWorkspaceInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSentinelServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionSentinelServiceAlertRule) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -109,6 +117,11 @@ func (a *mqlAzureSubscriptionSentinelService) workspaces() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(ws.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlWs.(*mqlAzureSubscriptionSentinelServiceWorkspace).cacheSystemData = sysData
 			res = append(res, mqlWs)
 		}
 	}

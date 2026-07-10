@@ -62,14 +62,27 @@ func (a *mqlAzureSubscriptionNetworkService) securityPerimeters() ([]any, error)
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(nsp.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNsp.(*mqlAzureSubscriptionNetworkServiceSecurityPerimeter).cacheSystemData = sysData
 			res = append(res, mqlNsp)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionNetworkServiceSecurityPerimeterInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSecurityPerimeter) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // profiles resolves the access-rule profiles defined on the perimeter. The

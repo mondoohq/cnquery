@@ -324,6 +324,11 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnectio
 		if err != nil {
 			return nil, err
 		}
+		sysData, err := convert.JsonToDict(pec.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		pecResource.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).cacheSystemData = sysData
 		res = append(res, pecResource)
 	}
 	return res, nil
@@ -382,6 +387,11 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) firewallRules() ([]any, 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(rule.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRule.(*mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule).cacheSystemData = sysData
 			res = append(res, mqlRule)
 		}
 	}
@@ -450,6 +460,11 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) patchSchedules() ([]any,
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(schedule.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSchedule.(*mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule).cacheSystemData = sysData
 			res = append(res, mqlSchedule)
 		}
 	}
@@ -468,12 +483,36 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) id() (string
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRuleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionCacheServiceRedisInstancePatchScheduleInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {

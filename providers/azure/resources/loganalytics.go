@@ -843,14 +843,27 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterCo
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(nsp.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNsp.(*mqlAzureSubscriptionMonitorServiceWorkspaceNspConfiguration).cacheSystemData = sysData
 			res = append(res, mqlNsp)
 		}
 	}
 	return res, nil
 }
 
+type mqlAzureSubscriptionMonitorServiceWorkspaceNspConfigurationInternal struct {
+	cacheSystemData any
+}
+
 func (a *mqlAzureSubscriptionMonitorServiceWorkspaceNspConfiguration) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceNspConfiguration) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // workspace returns a typed reference to the Log Analytics workspace from an Application Insight.

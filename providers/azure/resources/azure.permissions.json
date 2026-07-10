@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.26.0",
-  "generated_at": "2026-07-06T21:41:00-07:00",
+  "version": "13.28.0",
+  "generated_at": "2026-07-09T21:23:22-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",

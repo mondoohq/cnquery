@@ -61,6 +61,14 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, 
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionCloudDefenderServiceSecurityContactInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 // commonPricingArgs extracts common pricing fields from an Azure PricingProperties response
 // into a map suitable for CreateResource.
 func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId string) map[string]*llx.RawData {
@@ -741,6 +749,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, er
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(contact.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlSecurityContact.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).cacheSystemData = sysData
 			res = append(res, mqlSecurityContact)
 		}
 	}
@@ -1279,8 +1292,24 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) id() (string, error
 	return a.__id, nil
 }
 
+type mqlAzureSubscriptionCloudDefenderServiceAssessmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) id() (string, error) {
 	return a.__id, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceAlertInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // assessmentMetadata holds the catalog metadata for a single assessment
@@ -1520,6 +1549,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(item.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1624,6 +1658,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(item.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionCloudDefenderServiceAlert).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1724,6 +1763,11 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceAssessmentSubAssessment) id() (
 
 type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyInternal struct {
 	cacheVirtualMachines []*armsecurity.JitNetworkAccessPolicyVirtualMachine
+	cacheSystemData      any
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // jitNetworkAccessPolicies lists the subscription's just-in-time VM access
@@ -1775,6 +1819,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) jitNetworkAccessPolicies() ([
 			if p := pol.Properties; p != nil {
 				mqlPol.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).cacheVirtualMachines = p.VirtualMachines
 			}
+			sysData, err := convert.JsonToDict(pol.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPol.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy).cacheSystemData = sysData
 			res = append(res, mqlPol)
 		}
 	}

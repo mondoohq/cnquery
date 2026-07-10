@@ -26,8 +26,24 @@ func (a *mqlAzureSubscriptionStorageServiceAccountFileShare) id() (string, error
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionStorageServiceAccountFileShareInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountFileShare) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // privateEndpoint resolves the consumer-side private endpoint of this
@@ -50,8 +66,24 @@ func (a *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) id() 
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 // storageAccountResourceGroup returns the {resourceGroup, accountName} pair
@@ -163,7 +195,7 @@ func fileShareToMQL(runtime *plugin.Runtime, share *storage.FileShareItem) (plug
 		}
 	}
 
-	return CreateResource(runtime, "azure.subscription.storageService.account.fileShare",
+	mqlShare, err := CreateResource(runtime, "azure.subscription.storageService.account.fileShare",
 		map[string]*llx.RawData{
 			"id":                        llx.StringDataPtr(share.ID),
 			"name":                      llx.StringDataPtr(share.Name),
@@ -186,6 +218,15 @@ func fileShareToMQL(runtime *plugin.Runtime, share *storage.FileShareItem) (plug
 			"leaseDuration":             llx.StringData(leaseDuration),
 			"metadata":                  llx.MapData(metadata, types.String),
 		})
+	if err != nil {
+		return nil, err
+	}
+	sysData, err := convert.JsonToDict(share.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlShare.(*mqlAzureSubscriptionStorageServiceAccountFileShare).cacheSystemData = sysData
+	return mqlShare, nil
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections() ([]any, error) {
@@ -250,6 +291,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections()
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(c.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPe.(*mqlAzureSubscriptionStorageServiceAccountPrivateEndpointConnection).cacheSystemData = sysData
 			res = append(res, mqlPe)
 		}
 	}
@@ -320,6 +366,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(pol.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlPol.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).cacheSystemData = sysData
 			res = append(res, mqlPol)
 		}
 	}
@@ -328,6 +379,14 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 
 func (a *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfigurationInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) networkSecurityPerimeterConfigurations() ([]any, error) {
@@ -448,6 +507,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) networkSecurityPerimeterConf
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(nsp.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlNsp.(*mqlAzureSubscriptionStorageServiceAccountNetworkSecurityPerimeterConfiguration).cacheSystemData = sysData
 			res = append(res, mqlNsp)
 		}
 	}
@@ -550,6 +614,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobInventoryPolicy() (*mqlA
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(pol.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlPol.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy).cacheSystemData = sysData
 	return mqlPol.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy), nil
 }
 
@@ -703,11 +772,24 @@ func (a *mqlAzureSubscriptionStorageServiceAccountTable) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionStorageServiceAccountTableInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountTable) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 type mqlAzureSubscriptionStorageServiceAccountQueueInternal struct {
-	cacheAccountId string
-	countFetched   bool
-	count          int64
-	countLock      sync.Mutex
+	cacheSystemData any
+	cacheAccountId  string
+	countFetched    bool
+	count           int64
+	countLock       sync.Mutex
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountQueue) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) queues() ([]any, error) {
@@ -761,6 +843,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) queues() ([]any, error) {
 			}
 			mqlQ := mqlQueue.(*mqlAzureSubscriptionStorageServiceAccountQueue)
 			mqlQ.cacheAccountId = a.Id.Data
+			sysData, err := convert.JsonToDict(q.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlQ.cacheSystemData = sysData
 			res = append(res, mqlQ)
 		}
 	}
@@ -869,6 +956,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) tables() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(t.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlTable.(*mqlAzureSubscriptionStorageServiceAccountTable).cacheSystemData = sysData
 			res = append(res, mqlTable)
 		}
 	}

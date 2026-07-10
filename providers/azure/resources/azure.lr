@@ -163,6 +163,8 @@ private azure.subscription.webService.function @defaults("name type") {
   kind string
   // Properties for the function
   properties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure resource group
@@ -393,7 +395,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   publicIpAddresses() []azure.subscription.networkService.ipAddress
   // Whether encryption at host is enabled for all VM disks
   encryptionAtHost bool
-  // Security type of the VM ("ConfidentialVM" or "TrustedLaunch")
+  // Security type of the VM ("ConfidentialVM", "TrustedLaunch", or "Standard")
   securityType string
   // Whether UEFI Secure Boot is enabled
   secureBootEnabled bool
@@ -522,7 +524,7 @@ azure.subscription.computeService.hybridMachine @defaults("name location osName 
   tags map[string]string
   // ARM resource type (Microsoft.HybridCompute/machines)
   type string
-  // Connection status of the Arc agent. Possible values: "Connected", "Disconnected", "Error", "Expired"
+  // Connection status of the Arc agent. Possible values: "Connected", "Disconnected", "Error"
   status string
   // Last time the Arc agent reported in
   lastStatusChange time
@@ -912,7 +914,7 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   securityPostureReference dict
   // Whether encryption at host is enabled for all scale-set VM disks
   encryptionAtHost bool
-  // Security type applied to scale-set VMs ("ConfidentialVM" or "TrustedLaunch")
+  // Security type applied to scale-set VMs ("ConfidentialVM", "TrustedLaunch", or "Standard")
   securityType string
   // Whether UEFI Secure Boot is enabled on scale-set VMs
   secureBootEnabled bool
@@ -1098,6 +1100,8 @@ azure.subscription.computeService.proximityPlacementGroup @defaults("name locati
   virtualMachineScaleSetIds []string
   // ARM IDs of availability sets in this group (references)
   availabilitySetIds []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure managed image
@@ -1132,6 +1136,8 @@ azure.subscription.computeService.image @defaults("name location hyperVGeneratio
   provisioningState string
   // Hyper-V generation (V1, V2)
   hyperVGeneration string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Compute Gallery
@@ -1169,6 +1175,8 @@ azure.subscription.computeService.gallery @defaults("name location description")
   sharingStatus dict
   // Image definitions in this gallery
   images() []azure.subscription.computeService.gallery.image
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Compute Gallery image definition
@@ -1224,6 +1232,8 @@ azure.subscription.computeService.gallery.image @defaults("name osType osState h
   releaseNoteUri string
   // Image versions in this image definition
   versions() []azure.subscription.computeService.gallery.image.version
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Compute Gallery image version
@@ -1259,6 +1269,8 @@ azure.subscription.computeService.gallery.image.version @defaults("name location
   replicationStatus dict
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Batch
@@ -1620,6 +1632,8 @@ private azure.subscription.networkService.networkManager.networkGroup @defaults(
   memberType string
   // Resource GUID of the group
   resourceGuid string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network manager security admin configuration
@@ -1646,6 +1660,8 @@ private azure.subscription.networkService.networkManager.securityAdminConfigurat
   applyOnNetworkIntentPolicyBasedServices []string
   // Rule collections in the configuration
   ruleCollections() []azure.subscription.networkService.networkManager.securityAdminConfiguration.ruleCollection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network manager admin rule collection
@@ -1743,6 +1759,8 @@ private azure.subscription.networkService.networkManager.connectivityConfigurati
   appliesToGroups() []azure.subscription.networkService.networkManager.networkGroup
   // Hub resources in the topology; each entry carries resourceId and resourceType
   hubs []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure IP group
@@ -3321,7 +3339,7 @@ private azure.subscription.networkService.applicationGateway.listener @defaults(
   id string
   // Listener name
   name string
-  // Listener protocol ("Http" or "Https")
+  // Listener protocol ("Http", "Https", "Tcp", or "Tls")
   protocol string
   // Port the listener binds to (resolved from the referenced frontendPort)
   port int
@@ -4129,6 +4147,8 @@ azure.subscription.networkService.securityPerimeter @defaults("id name location"
   profiles() []azure.subscription.networkService.securityPerimeter.profile
   // Resource associations placing PaaS resources inside the perimeter
   associations() []azure.subscription.networkService.securityPerimeter.association
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network security perimeter profile
@@ -4857,6 +4877,8 @@ private azure.subscription.storageService.account.queue @defaults("id name") {
   metadata map[string]string
   // Approximate number of messages in the queue (fetched on demand via Get)
   approximateMessageCount() int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage account table
@@ -4867,6 +4889,8 @@ private azure.subscription.storageService.account.table @defaults("id name") {
   name string
   // Stored access policies (SAS) on the table; each entry has id, permission, startTime, expiryTime
   signedIdentifiers []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Local user configured on a storage account for SFTP/SSH access
@@ -4895,6 +4919,8 @@ private azure.subscription.storageService.account.localUser @defaults("id name h
   userId int
   // Numeric POSIX group ID
   groupId int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage account data protection
@@ -4969,6 +4995,8 @@ private azure.subscription.storageService.account.encryptionScope @defaults("nam
   creationTime time
   // When the encryption scope was last modified
   lastModifiedTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage lifecycle management policy
@@ -4983,6 +5011,8 @@ private azure.subscription.storageService.account.managementPolicy @defaults("id
   lastModifiedTime time
   // Lifecycle management rules
   rules []azure.subscription.storageService.account.managementPolicy.rule
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage lifecycle management policy rule
@@ -5141,6 +5171,8 @@ private azure.subscription.storageService.account.container @defaults("id name")
   deletedTime time
   // Number of remaining days in the soft delete retention period
   remainingRetentionDays int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage file share
@@ -5190,6 +5222,8 @@ private azure.subscription.storageService.account.fileShare @defaults("name enab
   leaseDuration string
   // User-defined metadata
   metadata map[string]string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage private endpoint connection
@@ -5222,6 +5256,8 @@ private azure.subscription.storageService.account.privateEndpointConnection @def
   actionsRequired string
   // Provisioning state of the connection
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage object replication policy
@@ -5250,6 +5286,8 @@ private azure.subscription.storageService.account.objectReplicationPolicy @defau
   rules []dict
   // Whether blob index tags are replicated alongside blob data; false when the policy omits tag replication
   tagsReplicationEnabled bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Network Security Perimeter configuration of an Azure Storage account
@@ -5305,6 +5343,8 @@ private azure.subscription.storageService.account.networkSecurityPerimeterConfig
   // Each entry has keys: name; issueType ("ConfigurationPropagationFailure"
   // or "Unknown"); severity ("Error" or "Warning"); and description.
   provisioningIssues []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Storage blob inventory policy
@@ -5326,6 +5366,8 @@ private azure.subscription.storageService.account.blobInventoryPolicy @defaults(
   lastModifiedTime time
   // Inventory rules. Each entry has {name, enabled, destination, definition: {format, schedule, objectType, schemaFields, filters}}.
   rules []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Defender for Storage configuration for a single storage account
@@ -5631,7 +5673,7 @@ private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
   enabled bool
   // Action taken when an unauthenticated client requests the app
   //
-  // Possible values: AllowAnonymous, RedirectToLoginPage, Show401, Show403.
+  // Possible values: AllowAnonymous, RedirectToLoginPage.
   // Anything other than AllowAnonymous means unauthenticated requests are blocked
   // or redirected to a login provider.
   unauthenticatedClientAction string
@@ -5679,6 +5721,8 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   detailedErrorLoggingEnabled bool
   // Whether auto-heal is enabled (the app is automatically restarted on certain conditions)
   autoHealEnabled bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure AppSite config IP security restriction rule
@@ -5753,6 +5797,8 @@ private azure.subscription.webService.hostingEnvironment @defaults("id name") {
   virtualNetwork azure.subscription.webService.hostingEnvironment.virtualNetwork
   // Custom settings for changing the behavior of the App Service Environment
   clusterSettings []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Virtual network configuration for an App Service Environment
@@ -5799,6 +5845,8 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   perSiteScaling bool
   // Whether elastic scale is enabled
   elasticScaleEnabled bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure App Service Certificate
@@ -5827,6 +5875,8 @@ private azure.subscription.webService.certificate @defaults("id name") {
   hostNames []string
   // Whether the certificate is valid
   valid bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Static Web App
@@ -5907,6 +5957,8 @@ private azure.subscription.webService.appsite.hostNameBinding @defaults("id name
   thumbprint string
   // Virtual IP address assigned to the hostname
   virtualIP string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure App Service Virtual Network Connection
@@ -5921,6 +5973,8 @@ private azure.subscription.webService.appsite.virtualNetworkConnection @defaults
   isSwift bool
   // Whether a resync is required
   resyncRequired bool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL
@@ -6175,6 +6229,8 @@ private azure.subscription.sqlService.database.advancedthreatprotection @default
   state string
   // UTC creation time of the policy
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL Database backup short-term retention policy
@@ -6281,6 +6337,8 @@ private azure.subscription.sqlService.server.securityAlertPolicyConfig @defaults
   retentionDays int
   // UTC creation time of the policy
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL Database server-scoped Microsoft Defender for SQL advanced threat protection setting
@@ -6291,6 +6349,8 @@ private azure.subscription.sqlService.server.advancedThreatProtectionSetting @de
   state string
   // UTC creation time of the setting
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL Database server Microsoft Entra (Azure AD) DevOps audit setting
@@ -6305,6 +6365,8 @@ private azure.subscription.sqlService.server.devOpsAuditingSetting @defaults("st
   storageAccountSubscriptionId string
   // Audit log storage account blob endpoint
   storageEndpoint string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL Database server customer-managed (BYOK) encryption key
@@ -6385,7 +6447,7 @@ private azure.subscription.sqlService.server.replicationLink @defaults("name par
   replicationMode string
   // Replication state ("PENDING", "SEEDING", "CATCH_UP", "SUSPENDED")
   replicationState string
-  // Local replication role ("Primary" or "Secondary")
+  // Local replication role ("Primary", "Secondary", "Source", "Copy", or "NonReadableSecondary")
   role string
   // Whether termination of the replication link is allowed
   isTerminationAllowed bool
@@ -6463,6 +6525,8 @@ private azure.subscription.sqlService.database.securityAlertPolicy @defaults("st
   retentionDays int
   // UTC creation time of the policy
   creationTime time
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure SQL Database database-level vulnerability assessment configuration
@@ -7020,6 +7084,8 @@ private azure.subscription.mySqlService.flexibleServer.administrator @defaults("
   sid string
   // Tenant ID of the administrator
   tenantId string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cosmos DB
@@ -7764,9 +7830,9 @@ private azure.subscription.monitorService.applicationInsight @defaults("name loc
   type string
   // Whether IP masking is disabled
   disableIpMasking bool
-  // Public network access for ingestion (Enabled, Disabled)
+  // Public network access for ingestion ("Enabled", "Disabled", or "SecuredByPerimeter")
   publicNetworkAccessForIngestion string
-  // Public network access for query (Enabled, Disabled)
+  // Public network access for query ("Enabled", "Disabled", or "SecuredByPerimeter")
   publicNetworkAccessForQuery string
   // Data retention period in days
   retentionInDays int
@@ -8082,6 +8148,8 @@ private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy @defaults
   provisioningState string
   // Virtual machines governed by the policy
   virtualMachines() []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Just-in-time network access VM configuration
@@ -8265,6 +8333,8 @@ private azure.subscription.cloudDefenderService.assessment @defaults("displayNam
   description string
   // Detailed sub-findings underlying the assessment (per-CVE, per-misconfiguration)
   subAssessments() []azure.subscription.cloudDefenderService.assessment.subAssessment
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Defender for Cloud sub-assessment
@@ -8339,6 +8409,8 @@ private azure.subscription.cloudDefenderService.alert @defaults("displayName sev
   remediationSteps []string
   // Identifiers of the resources the alert is related to
   resourceIdentifiers []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Defender for Cloud security settings
@@ -8745,6 +8817,8 @@ private azure.subscription.cloudDefenderService.securityContact @defaults("id na
   notificationSources dict
   // Notifications by role settings
   notificationsByRole dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure IAM service
@@ -9177,7 +9251,7 @@ private azure.subscription.aksService.cluster.nodePool @defaults("name mode vmSi
   name string
   // Pool mode ("System" for kube-system pods, "User" for workloads, "Gateway" for static-egress gateway pools)
   mode string
-  // Pool VM type ("VirtualMachineScaleSets" or "AvailabilitySet")
+  // Pool VM type ("VirtualMachineScaleSets", "AvailabilitySet", or "VirtualMachines")
   vmType string
   // Number of nodes currently in the pool
   count int
@@ -9635,6 +9709,8 @@ private azure.subscription.cacheService.redisInstance.firewallRule @defaults("id
   startIpAddress string
   // Highest IP address in the range
   endIpAddress string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cache for Redis patch schedule
@@ -9647,6 +9723,8 @@ private azure.subscription.cacheService.redisInstance.patchSchedule @defaults("n
   location string
   // List of schedule entries (dayOfWeek, startHourUtc, maintenanceWindow)
   entries []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Cache for Redis private endpoint connection
@@ -9667,10 +9745,12 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   status string
   // Reason for approval/rejection of the connection
   description string
-  // Provisioning state. Possible values: "Succeeded", "Creating", "Deleting", "Failed", "Updating"
+  // Provisioning state. Possible values: "Succeeded", "Creating", "Deleting", "Failed"
   provisioningState string
   // Private link group IDs the connection targets (for example "redisCache")
   groupIds []string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Factory service
@@ -9748,6 +9828,8 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   integrationRuntimes() []azure.subscription.dataFactoryService.factory.integrationRuntime
   // Managed virtual network for the factory, if one exists
   managedVirtualNetwork() azure.subscription.dataFactoryService.factory.managedVirtualNetwork
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Factory linked service
@@ -9779,10 +9861,20 @@ private azure.subscription.dataFactoryService.factory.linkedService @defaults("n
   //
   // True when a nested `{type: "AzureKeyVaultSecret", store: {...}, secretName: ...}` reference exists in typeProperties.
   usesKeyVaultReference bool
+  // Authentication mode declared by the connector
+  //
+  // The auth scheme the linked service uses to reach its external system,
+  // when the connector declares one, for example "Basic",
+  // "ManagedServiceIdentity", "ServicePrincipal", or "Anonymous". Empty
+  // when the connector has no auth-type field or the credential resolves
+  // through Key Vault (see usesKeyVaultReference).
+  authenticationType string
   // Annotations declared on the linked service (free-form list of any)
   annotations []dict
   // Raw type-specific properties returned by the SDK (shape varies by serviceType)
   typeProperties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Factory integration runtime
@@ -9806,6 +9898,8 @@ private azure.subscription.dataFactoryService.factory.integrationRuntime @defaul
   description string
   // Type-specific properties returned by the SDK (shape varies by runtimeType)
   typeProperties dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Factory managed virtual network
@@ -9827,6 +9921,8 @@ private azure.subscription.dataFactoryService.factory.managedVirtualNetwork @def
   vnetId string
   // Managed private endpoints attached to this managed virtual network
   privateEndpoints() []azure.subscription.dataFactoryService.factory.managedPrivateEndpoint
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Factory managed private endpoint
@@ -9858,6 +9954,8 @@ private azure.subscription.dataFactoryService.factory.managedPrivateEndpoint @de
   reserved bool
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Synapse Analytics service
@@ -10086,6 +10184,8 @@ private azure.subscription.containerRegistryService.registry.webhook @defaults("
   actions []string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Geo-replication for an Azure Container Registry
@@ -10106,6 +10206,8 @@ private azure.subscription.containerRegistryService.registry.replication @defaul
   zoneRedundancy string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Scope map for token-based access in an Azure Container Registry
@@ -10124,6 +10226,8 @@ private azure.subscription.containerRegistryService.registry.scopeMap @defaults(
   creationDate time
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Repository-scoped access token for an Azure Container Registry
@@ -10150,6 +10254,8 @@ private azure.subscription.containerRegistryService.registry.token @defaults("id
   // `expiry`. An absent expiry means the password never expires. Secret
   // values are never returned.
   passwords []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Pull-through cache rule for an Azure Container Registry
@@ -10172,6 +10278,8 @@ private azure.subscription.containerRegistryService.registry.cacheRule @defaults
   creationDate time
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Credential set referenced by cache rules in an Azure Container Registry
@@ -10192,6 +10300,8 @@ private azure.subscription.containerRegistryService.registry.credentialSet @defa
   creationDate time
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Connected (edge/on-prem) registry that mirrors an Azure Container Registry
@@ -10242,6 +10352,8 @@ private azure.subscription.containerRegistryService.registry.connectedRegistry @
   notificationsList []string
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Log Analytics workspace
@@ -10271,9 +10383,9 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   skuCapacityReservationLevel int
   // Data retention period in days
   retentionInDays int
-  // Public network access for ingestion ("Enabled" or "Disabled")
+  // Public network access for ingestion ("Enabled", "Disabled", or "SecuredByPerimeter")
   publicNetworkAccessForIngestion string
-  // Public network access for query ("Enabled" or "Disabled")
+  // Public network access for query ("Enabled", "Disabled", or "SecuredByPerimeter")
   publicNetworkAccessForQuery string
   // Whether customer-managed key is required for query
   forceCmkForQuery bool
@@ -10488,6 +10600,8 @@ private azure.subscription.monitorService.workspace.nspConfiguration @defaults("
   // Each entry has keys: name; issueType ("ConfigurationPropagationFailure"
   // or "Unknown"); severity ("Error" or "Warning"); and description.
   provisioningIssues []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Log Analytics QueryPack
@@ -10593,7 +10707,7 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   privateEndpointStateForBackup string
   // Private endpoint state for site recovery ("None" or "Enabled")
   privateEndpointStateForSiteRecovery string
-  // Secure score ("Healthy" or "Unhealthy")
+  // Secure score ("Adequate", "Maximum", "Minimum", or "None")
   secureScore string
   // Security settings (soft delete, immutability, enhanced security)
   securitySettings() azure.subscription.recoveryServicesService.vault.securitySettings
@@ -10619,13 +10733,13 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
 private azure.subscription.recoveryServicesService.vault.securitySettings @defaults("softDeleteState immutabilityState multiUserAuthorization") {
   // Security settings identifier
   id string
-  // Soft delete state ("Enabled" or "Disabled")
+  // Soft delete state ("Enabled", "Disabled", or "AlwaysON")
   softDeleteState string
   // Soft delete retention period in days
   softDeleteRetentionPeriodInDays int
-  // Enhanced security state ("Enabled" or "Disabled")
+  // Enhanced security state ("Enabled", "Disabled", or "AlwaysON")
   enhancedSecurityState string
-  // Immutability state ("Locked" or "Unlocked")
+  // Immutability state ("Disabled", "Locked", or "Unlocked")
   immutabilityState string
   // Multi-User Authorization state ("Enabled", "Disabled", or "Invalid"); Enabled requires a Resource Guard for destructive ops
   multiUserAuthorization string
@@ -10665,7 +10779,7 @@ private azure.subscription.recoveryServicesService.vault.monitoringSettings @def
 private azure.subscription.recoveryServicesService.vault.redundancySettings @defaults("storageRedundancy crossRegionRestore") {
   // Redundancy settings identifier
   id string
-  // Standard tier storage redundancy ("GeoRedundant" or "LocallyRedundant")
+  // Standard tier storage redundancy ("GeoRedundant", "LocallyRedundant", or "ZoneRedundant")
   storageRedundancy string
   // Cross-region restore setting ("Enabled" or "Disabled")
   crossRegionRestore string
@@ -10914,7 +11028,7 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
 private azure.subscription.serviceBusService.namespace.networkRules @defaults("defaultAction publicNetworkAccess trustedServiceAccessEnabled") {
   // Default action for traffic that does not match any rule ("Allow" or "Deny")
   defaultAction string
-  // Whether traffic is allowed over the public network ("Enabled", "Disabled", or "SecuredByPerimeter")
+  // Whether traffic is allowed over the public network ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether Microsoft-owned trusted services can bypass the rule set
   trustedServiceAccessEnabled bool
@@ -13411,6 +13525,8 @@ private azure.subscription.sentinelService.workspace @defaults("name resourceGro
   //
   // Each entry is a kind-specific dict with `name`, `kind`, and `properties` describing the connector configuration. Kinds include `OfficeATP`, `AzureActiveDirectory`, `AzureSecurityCenter`, `MicrosoftDefenderAdvancedThreatProtection`, and many others.
   dataConnectors() []dict
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Microsoft Sentinel analytics rule
@@ -13609,7 +13725,7 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   state string
   // Provisioning state
   provisioningState string
-  // Whether the cluster is reachable from the public internet ("Enabled" or "Disabled")
+  // Whether the cluster is reachable from the public internet, one of "Enabled", "Disabled", or "SecuredByPerimeter"
   publicNetworkAccess string
   // Public IP exposure type ("IPv4" or "DualStack")
   publicIpType string
@@ -13635,6 +13751,8 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   cmkKeyVaultUri string
   // Version of the customer-managed encryption key; empty means the latest version is used
   cmkKeyVersion string
+  // Client ID of the multi-tenant Microsoft Entra application used for cross-tenant customer-managed key access; empty for same-tenant keys
+  cmkFederatedIdentityClientId string
   // Databases hosted on the cluster
   databases() []azure.subscription.kustoService.cluster.database
   // Microsoft Entra principals granted cluster-wide access
@@ -13690,6 +13808,8 @@ azure.subscription.kustoService.cluster.database @defaults("name kind hotCachePe
   principalAssignments() []azure.subscription.kustoService.cluster.database.principalAssignment
   // Ingestion data connections feeding the database
   dataConnections() []azure.subscription.kustoService.cluster.database.dataConnection
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer cluster principal assignment
@@ -13716,6 +13836,8 @@ private azure.subscription.kustoService.cluster.principalAssignment @defaults("p
   tenantId string
   // Provisioning state of the assignment
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer database principal assignment
@@ -13742,6 +13864,8 @@ private azure.subscription.kustoService.cluster.database.principalAssignment @de
   tenantId string
   // Provisioning state of the assignment
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Data Explorer cluster callout policy
@@ -13835,7 +13959,10 @@ private azure.subscription.kustoService.cluster.database.dataConnection @default
   name string
   // Data connection location
   location string
-  // Source kind, one of "EventHub", "EventGrid", "IotHub", or "CosmosDb"
+  // Source kind
+  //
+  // One of "EventHub", "EventGrid", "IotHub", "CosmosDb",
+  // "EventHubWithManagedIdentity", or "EventGridWithManagedIdentity".
   kind string
   // Target table the connection ingests into
   tableName string
@@ -13853,6 +13980,8 @@ private azure.subscription.kustoService.cluster.database.dataConnection @default
   managedIdentity() azure.subscription.managedIdentity
   // Provisioning state
   provisioningState string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
 
 // Azure Automation

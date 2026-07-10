@@ -861,6 +861,14 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (any, error) {
 	return convert.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
+type mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionSqlServiceDatabase) advancedThreatProtection() (*mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -911,6 +919,11 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advancedThreatProtection() (*mq
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(policy.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionSqlServiceDatabaseAdvancedthreatprotection), nil
 }
 
@@ -1171,12 +1184,36 @@ func (a *mqlAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig) id() (st
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfigInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSettingInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServerDevOpsAuditingSetting) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionSqlServiceServerDevOpsAuditingSettingInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServerDevOpsAuditingSetting) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServerKey) id() (string, error) {
@@ -1205,6 +1242,14 @@ func (a *mqlAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy) id() (string,
 
 func (a *mqlAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicyInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionSqlServiceDatabaseVulnerabilityAssessment) id() (string, error) {
@@ -1454,6 +1499,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicyConfig() (*mql
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionSqlServiceServerSecurityAlertPolicyConfig), nil
 }
 
@@ -1499,6 +1549,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) advancedThreatProtectionSetting()
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionSqlServiceServerAdvancedThreatProtectionSetting), nil
 }
 
@@ -1558,6 +1613,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) devOpsAuditingSetting() (*mqlAzur
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSqlServiceServerDevOpsAuditingSetting).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionSqlServiceServerDevOpsAuditingSetting), nil
 }
 
@@ -2143,6 +2203,11 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) securityAlertPolicy() (*mqlAzur
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy).cacheSystemData = sysData
 	return res.(*mqlAzureSubscriptionSqlServiceDatabaseSecurityAlertPolicy), nil
 }
 

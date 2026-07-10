@@ -186,6 +186,62 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) systemMetadata() (*mqlAzureSubsc
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
+type mqlAzureSubscriptionWebServiceFunctionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceFunction) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceAppsiteconfigInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceHostingEnvironmentInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceHostingEnvironment) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceAppServicePlanInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppServicePlan) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceCertificateInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceCertificate) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceAppsiteHostNameBindingInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteHostNameBinding) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+type mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnectionInternal struct {
+	cacheSystemData any
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
 type runtimeStackDescriptor struct {
 	Name         string
 	MinorVersion string
@@ -780,6 +836,11 @@ func webAppSiteConfigToMql(runtime *plugin.Runtime, conn *connection.AzureConnec
 	if err != nil {
 		return nil, err
 	}
+	sysData, err := convert.JsonToDict(entry.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionWebServiceAppsiteconfig).cacheSystemData = sysData
 
 	return res.(*mqlAzureSubscriptionWebServiceAppsiteconfig), nil
 }
@@ -1115,6 +1176,11 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) functions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure.(*mqlAzureSubscriptionWebServiceFunction).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}
@@ -1390,6 +1456,11 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) functions() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure.(*mqlAzureSubscriptionWebServiceFunction).cacheSystemData = sysData
 			res = append(res, mqlAzure)
 		}
 	}
@@ -1730,6 +1801,11 @@ func (a *mqlAzureSubscriptionWebService) appServicePlans() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(plan.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionWebServiceAppServicePlan).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1798,6 +1874,11 @@ func (a *mqlAzureSubscriptionWebService) certificates() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(cert.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionWebServiceCertificate).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1868,6 +1949,11 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) hostNameBindings() ([]any, error
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(binding.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).cacheSystemData = sysData
 			res = append(res, mqlResource)
 		}
 	}
@@ -1927,6 +2013,11 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) virtualNetworkConnections() ([]a
 		if err != nil {
 			return nil, err
 		}
+		sysData, err := convert.JsonToDict(vnet.SystemData)
+		if err != nil {
+			return nil, err
+		}
+		mqlResource.(*mqlAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection).cacheSystemData = sysData
 		res = append(res, mqlResource)
 	}
 
@@ -2034,6 +2125,11 @@ func (a *mqlAzureSubscriptionWebService) hostingEnvironments() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			sysData, err := convert.JsonToDict(entry.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			mqlRes.(*mqlAzureSubscriptionWebServiceHostingEnvironment).cacheSystemData = sysData
 
 			res = append(res, mqlRes)
 		}

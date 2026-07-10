@@ -11,7 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v10"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v11"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -22,6 +22,11 @@ import (
 
 type mqlAzureSubscriptionDataFactoryServiceFactoryInternal struct {
 	cacheUserAssignedIdentityIds []string
+	cacheSystemData              any
+}
+
+func (a *mqlAzureSubscriptionDataFactoryServiceFactory) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
+	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
 func (a *mqlAzureSubscriptionDataFactoryService) id() (string, error) {
@@ -159,6 +164,11 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 			}
 			factoryRes := mqlFactory.(*mqlAzureSubscriptionDataFactoryServiceFactory)
 			factoryRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			sysData, err := convert.JsonToDict(factory.SystemData)
+			if err != nil {
+				return nil, err
+			}
+			factoryRes.cacheSystemData = sysData
 			res = append(res, factoryRes)
 		}
 	}
