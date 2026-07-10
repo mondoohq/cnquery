@@ -35,3 +35,31 @@ func TestParseCsvSliceOpt(t *testing.T) {
 		require.Equal(t, expected, result)
 	})
 }
+
+func TestParseBoolOpt(t *testing.T) {
+	t.Run("parses true values correctly", func(t *testing.T) {
+		trueValues := []string{"true", "TRUE", "t", "T", "1"}
+		for _, val := range trueValues {
+			result := ParseBoolOpt(map[string]string{"key": val}, "key", false)
+			require.True(t, result)
+		}
+	})
+
+	t.Run("parses false values correctly", func(t *testing.T) {
+		falseValues := []string{"false", "FALSE", "f", "F", "0"}
+		for _, val := range falseValues {
+			result := ParseBoolOpt(map[string]string{"key": val}, "key", true)
+			require.False(t, result)
+		}
+	})
+
+	t.Run("returns default for missing key", func(t *testing.T) {
+		require.True(t, ParseBoolOpt(map[string]string{}, "key", true))
+		require.False(t, ParseBoolOpt(map[string]string{}, "key", false))
+	})
+
+	t.Run("returns default for unparseable value", func(t *testing.T) {
+		require.True(t, ParseBoolOpt(map[string]string{"key": "notabool"}, "key", true))
+		require.False(t, ParseBoolOpt(map[string]string{"key": "notabool"}, "key", false))
+	})
+}

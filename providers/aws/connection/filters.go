@@ -6,7 +6,6 @@ package connection
 import (
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -48,15 +47,15 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			Scope:                  parseStringOpt(opts, "ecr:scope"),
 		},
 		Ecs: EcsDiscoveryFilters{
-			OnlyRunningContainers: parseBoolOpt(opts, "ecs:only-running-containers", false),
-			DiscoverInstances:     parseBoolOpt(opts, "ecs:discover-instances", false),
-			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
+			OnlyRunningContainers: filteropts.ParseBoolOpt(opts, "ecs:only-running-containers", false),
+			DiscoverInstances:     filteropts.ParseBoolOpt(opts, "ecs:discover-instances", false),
+			DiscoverImages:        filteropts.ParseBoolOpt(opts, "ecs:discover-images", false),
 		},
 		S3: S3DiscoveryFilters{
 			BucketNames:        filteropts.ParseCsvSliceOpt(opts, "s3:bucket-names"),
 			ExcludeBucketNames: filteropts.ParseCsvSliceOpt(opts, "s3:exclude:bucket-names"),
 		},
-		PropagateAccountTags: parseBoolOpt(opts, "propagate-account-tags", false),
+		PropagateAccountTags: filteropts.ParseBoolOpt(opts, "propagate-account-tags", false),
 		AccountTags:          parseMapOpt(opts, "account-tag:"),
 	}
 
@@ -238,22 +237,6 @@ func (f EcsDiscoveryFilters) MatchesOnlyRunningContainers(containerState string)
 		return true
 	}
 	return containerState == "RUNNING"
-}
-
-// Given a key-value pair that matches a key, return the boolean value of the key.
-// If the key is not found or the value cannot be parsed as a boolean, return the default value.
-// Example: key = "ecs:only-running-containers", opts = {"ecs:only-running-containers": "true"}
-// Returns: true
-func parseBoolOpt(opts map[string]string, key string, defaultVal bool) bool {
-	for k, v := range opts {
-		if k == key {
-			parsed, err := strconv.ParseBool(v)
-			if err == nil {
-				return parsed
-			}
-		}
-	}
-	return defaultVal
 }
 
 // Given a map of options and a key prefix, return a map of key-value pairs

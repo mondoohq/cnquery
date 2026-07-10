@@ -447,32 +447,6 @@ func TestParseMapOpt(t *testing.T) {
 	})
 }
 
-func TestParseBoolOpt(t *testing.T) {
-	t.Run("parses true values correctly", func(t *testing.T) {
-		trueValues := []string{"true", "TRUE", "t", "T", "1"}
-		for _, val := range trueValues {
-			result := parseBoolOpt(map[string]string{"key": val}, "key", false)
-			require.True(t, result)
-		}
-	})
-
-	t.Run("parses false values correctly", func(t *testing.T) {
-		falseValues := []string{"false", "FALSE", "f", "F", "0"}
-		for _, val := range falseValues {
-			result := parseBoolOpt(map[string]string{"key": val}, "key", true)
-			require.False(t, result)
-		}
-	})
-
-	t.Run("returns default for missing key", func(t *testing.T) {
-		result := parseBoolOpt(map[string]string{}, "key", true)
-		require.True(t, result)
-
-		result = parseBoolOpt(map[string]string{}, "key", false)
-		require.False(t, result)
-	})
-}
-
 func TestBatchRepositoryNames(t *testing.T) {
 	makeNames := func(n int) []string {
 		names := make([]string, n)
