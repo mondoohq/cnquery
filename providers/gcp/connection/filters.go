@@ -12,6 +12,13 @@ import (
 // DiscoveryFilters holds the per-service filters used to narrow discovery.
 type DiscoveryFilters struct {
 	Storage StorageDiscoveryFilters
+	// PropagateProjectLabels, when enabled, merges each project's labels into
+	// every asset discovered under that project (an asset's own labels win on
+	// collision). GCP resource labels do not inherit from the parent project on
+	// their own, so this mirrors the AWS "propagate-account-tags" behavior.
+	// Note: Resource Manager tags already inherit from project/folder/org
+	// natively and are unaffected by this option.
+	PropagateProjectLabels bool
 }
 
 // DiscoveryFiltersFromOpts builds the discovery filters from the raw --filters
@@ -22,6 +29,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			BucketNames:        filteropts.ParseCsvSliceOpt(opts, "storage:bucket-names"),
 			ExcludeBucketNames: filteropts.ParseCsvSliceOpt(opts, "storage:exclude:bucket-names"),
 		},
+		PropagateProjectLabels: filteropts.ParseBoolOpt(opts, "propagate-project-labels", false),
 	}
 }
 

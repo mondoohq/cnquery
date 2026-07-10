@@ -202,6 +202,8 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 		// storage filters
 		"storage:bucket-names",
 		"storage:exclude:bucket-names",
+		// project-level filters
+		"propagate-project-labels",
 	}
 	for k, v := range x.Map {
 		if slices.Contains(knownKeys, k) {

@@ -1762,11 +1762,38 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 		}
 	}
 
+	if conn.Filters.PropagateProjectLabels {
+		projectLabels := mapStrInterfaceToMapStrStr(gcpProject.GetLabels().Data)
+		propagateProjectLabelsToAssets(assetList, projectLabels)
+	}
+
 	log.Debug().
 		Str("project", gcpProject.Id.Data).
 		Int("assets", len(assetList)).
 		Msg("gcp.discovery> project discovery complete")
 	return assetList, nil
+}
+
+// propagateProjectLabelsToAssets merges the project's labels into every asset
+// discovered under that project. An asset's own labels take precedence, so
+// project labels only fill in keys the asset doesn't already define.
+func propagateProjectLabelsToAssets(assets []*inventory.Asset, projectLabels map[string]string) {
+	if len(projectLabels) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if a == nil {
+			continue
+		}
+		if a.Labels == nil {
+			a.Labels = map[string]string{}
+		}
+		for k, v := range projectLabels {
+			if _, exists := a.Labels[k]; !exists {
+				a.Labels[k] = v
+			}
+		}
+	}
 }
 
 func resolveGcr(ctx context.Context, conf *inventory.Config) ([]*inventory.Asset, error) {

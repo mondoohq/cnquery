@@ -5,7 +5,10 @@
 // key/value options that providers use to narrow discovery.
 package filteropts
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // ParseCsvSliceOpt returns the comma-separated values for the given key as a
 // slice. Empty keys or values are skipped, and a non-nil empty slice is
@@ -27,4 +30,21 @@ func ParseCsvSliceOpt(opts map[string]string, key string) []string {
 		}
 	}
 	return res
+}
+
+// ParseBoolOpt returns the boolean value for the given key. If the key is
+// missing or its value cannot be parsed as a boolean, defaultVal is returned.
+//
+// Example:
+//
+//	key        = "propagate-project-labels"
+//	opts       = {"propagate-project-labels": "true"}
+//	returns true
+func ParseBoolOpt(opts map[string]string, key string, defaultVal bool) bool {
+	if v, ok := opts[key]; ok {
+		if parsed, err := strconv.ParseBool(v); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
 }

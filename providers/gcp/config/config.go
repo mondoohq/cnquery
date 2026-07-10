@@ -111,7 +111,7 @@ Examples with the GCP project configured:
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter discovered resources, e.g., --filters storage:bucket-names=my-bucket --filters storage:exclude:bucket-names=noisy-bucket",
+					Desc:    "Filter discovered resources, e.g., --filters storage:bucket-names=my-bucket --filters storage:exclude:bucket-names=noisy-bucket --filters propagate-project-labels=true",
 				},
 			},
 		},

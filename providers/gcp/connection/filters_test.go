@@ -87,4 +87,13 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 		}
 		require.Equal(t, expected, DiscoveryFiltersFromOpts(nil))
 	})
+
+	t.Run("propagate-project-labels defaults to false", func(t *testing.T) {
+		require.False(t, DiscoveryFiltersFromOpts(map[string]string{}).PropagateProjectLabels)
+	})
+
+	t.Run("propagate-project-labels is parsed when enabled", func(t *testing.T) {
+		opts := map[string]string{"propagate-project-labels": "true"}
+		require.True(t, DiscoveryFiltersFromOpts(opts).PropagateProjectLabels)
+	})
 }
