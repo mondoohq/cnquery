@@ -70,6 +70,28 @@ func TestPackageJsonLockDependencyEdges(t *testing.T) {
 	assert.Nil(t, bar.DependsOn, "bar has no dependencies")
 }
 
+// TestPackageJsonLockDirect verifies Direct() resolves the root's declared
+// dependencies via their node_modules/<name> path (lockfileVersion 2+), matching
+// the same package's Transitive() representation. Previously it looked deps up by
+// bare name against the path-keyed `packages` map and returned nothing.
+func TestPackageJsonLockDirect(t *testing.T) {
+	f, err := os.Open("./testdata/graph-lock.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	info, err := (&Extractor{}).Parse(f, "path/to/package-lock.json")
+	require.NoError(t, err)
+
+	direct := info.Direct()
+	require.Len(t, direct, 1, "root declares exactly one direct dependency (foo)")
+	foo := direct.Find("foo")
+	require.NotNil(t, foo)
+	assert.Equal(t, "1.2.3", foo.Version)
+	// Direct's foo matches Transitive's foo exactly (same purl + edges).
+	assert.Equal(t, info.Transitive().Find("foo").Purl, foo.Purl)
+	assert.Equal(t, info.Transitive().Find("foo").DependsOn, foo.DependsOn)
+}
+
 func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 	f, err := os.Open("./testdata/workbox-package-lock.json")
 	require.NoError(t, err)

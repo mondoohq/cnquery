@@ -64,18 +64,27 @@ func (p *packageLock) Direct() languages.Packages {
 	}
 
 	filteredList := []*languages.Package{}
-	for k := range rootPkg.Dependencies {
-		pkg, ok := p.Packages[k]
+	for name := range rootPkg.Dependencies {
+		// The root's declared dependencies are keyed in `packages` by their
+		// install path, node_modules/<name> (npm hoists direct deps to the root
+		// node_modules), not by bare name. Look them up there; keying by bare
+		// name matched nothing for lockfileVersion 2+, so Direct() returned an
+		// empty set. Build Name/Purl/Cpes from the path key exactly as
+		// Transitive() does, so a package's Direct and Transitive representations
+		// (and their refs) are identical.
+		path := "node_modules/" + name
+		pkg, ok := p.Packages[path]
 		if !ok {
 			continue
 		}
 
 		filteredList = append(filteredList, &languages.Package{
-			Name:         packageLockPackageName(k),
+			Name:         packageLockPackageName(path),
 			Version:      pkg.Version,
-			Purl:         javascript.NewPackageUrl(k, pkg.Version),
-			Cpes:         javascript.NewCpes(k, pkg.Version),
+			Purl:         javascript.NewPackageUrl(path, pkg.Version),
+			Cpes:         javascript.NewCpes(path, pkg.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
+			DependsOn:    dependsOnRefs(p.Packages, path, pkg.Dependencies),
 		})
 	}
 
