@@ -47,6 +47,13 @@ func listStorageContainers(conn *connection.NutanixConnection) ([]clustermgmtcon
 }
 
 func newMqlStorageContainer(runtime *plugin.Runtime, c *clustermgmtconfig.StorageContainer) (*mqlNutanixStorageContainer, error) {
+	// ExtId is the container's stable identity and becomes the resource __id.
+	// The API can return a container without one (e.g. system/partially
+	// provisioned containers); such a container cannot be cached or
+	// cross-referenced, so skip it rather than fail the whole listing.
+	if c.ExtId == nil {
+		return nil, nil
+	}
 	onDiskDedup := ""
 	if c.OnDiskDedup != nil {
 		onDiskDedup = c.OnDiskDedup.GetName()
@@ -117,6 +124,9 @@ func storageContainersForCluster(runtime *plugin.Runtime, conn *connection.Nutan
 		mqlContainer, err := newMqlStorageContainer(runtime, &c)
 		if err != nil {
 			return nil, err
+		}
+		if mqlContainer == nil {
+			continue
 		}
 		res = append(res, mqlContainer)
 	}
