@@ -9,7 +9,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
 	"github.com/stackitcloud/stackit-sdk-go/services/observability"
 	"github.com/stackitcloud/stackit-sdk-go/services/postgresflex"
-	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
+	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -1045,7 +1045,7 @@ func (r *mqlStackitSqlServerFlex) instances() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	resp, err := client.DefaultAPI.ListInstances(bgctx(), c.ProjectID(), c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			return []any{}, nil
@@ -1089,7 +1089,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), r.Id.Data, c.Region()).Execute()
 	if err != nil {
 		if isAccessDenied(err) {
 			r.fetched = true
@@ -1098,7 +1098,7 @@ func (r *mqlStackitSqlServerFlexInstance) fetchDetail() (*sqlserverflex.Instance
 		return nil, err
 	}
 	if item, ok := resp.GetItemOk(); ok {
-		r.detail = &item
+		r.detail = item
 	}
 	r.fetched = true
 	return r.detail, nil
@@ -1136,7 +1136,7 @@ func (r *mqlStackitSqlServerFlexInstance) replicas() (int64, error) {
 	if err != nil || d == nil {
 		return 0, err
 	}
-	return d.GetReplicas(), nil
+	return int64(d.GetReplicas()), nil
 }
 
 func (r *mqlStackitSqlServerFlexInstance) storage() (any, error) {
@@ -1176,7 +1176,7 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id, c.Region())
+	resp, err := client.DefaultAPI.GetInstance(bgctx(), c.ProjectID(), id, c.Region()).Execute()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1194,7 +1194,7 @@ func initStackitSqlServerFlexInstance(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, err
 	}
 	r := res.(*mqlStackitSqlServerFlexInstance)
-	r.detail = &inst
+	r.detail = inst
 	r.fetched = true
 	return nil, res, nil
 }

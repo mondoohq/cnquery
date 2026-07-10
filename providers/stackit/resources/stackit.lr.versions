@@ -21,10 +21,16 @@ stackit.alb.loadBalancer.targetPools 13.0.1
 stackit.alb.loadBalancer.targetSecurityGroup 13.0.1
 stackit.albLoadBalancers 13.0.1
 stackit.certificate 13.0.1
+stackit.certificate.dnsNames 13.4.2
+stackit.certificate.extendedKeyUsage 13.4.2
+stackit.certificate.fingerprintSha1 13.4.2
+stackit.certificate.fingerprintSha256 13.4.2
 stackit.certificate.id 13.0.1
+stackit.certificate.labels 13.4.2
 stackit.certificate.name 13.0.1
 stackit.certificate.publicKey 13.0.1
 stackit.certificate.region 13.0.1
+stackit.certificate.usage 13.4.2
 stackit.certificates 13.0.1
 stackit.dns 13.0.0
 stackit.dns.recordSet 13.0.0

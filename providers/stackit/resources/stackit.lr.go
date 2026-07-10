@@ -1929,6 +1929,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.certificate.publicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitCertificate).GetPublicKey()).ToDataRes(types.String)
 	},
+	"stackit.certificate.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.certificate.dnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetDnsNames()).ToDataRes(types.String)
+	},
+	"stackit.certificate.extendedKeyUsage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetExtendedKeyUsage()).ToDataRes(types.String)
+	},
+	"stackit.certificate.fingerprintSha1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetFingerprintSha1()).ToDataRes(types.String)
+	},
+	"stackit.certificate.fingerprintSha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetFingerprintSha256()).ToDataRes(types.String)
+	},
+	"stackit.certificate.usage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetUsage()).ToDataRes(types.Array(types.Dict))
+	},
 	"stackit.alb.loadBalancer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetName()).ToDataRes(types.String)
 	},
@@ -4312,6 +4330,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.certificate.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitCertificate).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.dnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).DnsNames, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.extendedKeyUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).ExtendedKeyUsage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.fingerprintSha1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).FingerprintSha1, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.fingerprintSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).FingerprintSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).Usage, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.alb.loadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10506,10 +10548,16 @@ type mqlStackitCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitCertificateInternal it will be used here
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	Region    plugin.TValue[string]
-	PublicKey plugin.TValue[string]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	PublicKey         plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	DnsNames          plugin.TValue[string]
+	ExtendedKeyUsage  plugin.TValue[string]
+	FingerprintSha1   plugin.TValue[string]
+	FingerprintSha256 plugin.TValue[string]
+	Usage             plugin.TValue[[]any]
 }
 
 // createStackitCertificate creates a new instance of this resource
@@ -10563,6 +10611,30 @@ func (c *mqlStackitCertificate) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlStackitCertificate) GetPublicKey() *plugin.TValue[string] {
 	return &c.PublicKey
+}
+
+func (c *mqlStackitCertificate) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlStackitCertificate) GetDnsNames() *plugin.TValue[string] {
+	return &c.DnsNames
+}
+
+func (c *mqlStackitCertificate) GetExtendedKeyUsage() *plugin.TValue[string] {
+	return &c.ExtendedKeyUsage
+}
+
+func (c *mqlStackitCertificate) GetFingerprintSha1() *plugin.TValue[string] {
+	return &c.FingerprintSha1
+}
+
+func (c *mqlStackitCertificate) GetFingerprintSha256() *plugin.TValue[string] {
+	return &c.FingerprintSha256
+}
+
+func (c *mqlStackitCertificate) GetUsage() *plugin.TValue[[]any] {
+	return &c.Usage
 }
 
 // mqlStackitAlbLoadBalancer for the stackit.alb.loadBalancer resource

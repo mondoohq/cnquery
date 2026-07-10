@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -192,6 +193,59 @@ func TestIdArg(t *testing.T) {
 			got, ok := idArg(tc.args, tc.key)
 			if got != tc.wantStr || ok != tc.wantOk {
 				t.Fatalf("got (%q, %v), want (%q, %v)", got, ok, tc.wantStr, tc.wantOk)
+			}
+		})
+	}
+}
+
+func TestStrSlice(t *testing.T) {
+	if got := strSlice(nil); len(got) != 0 {
+		t.Fatalf("nil input: expected empty slice, got %#v", got)
+	}
+	got := strSlice([]string{"a", "b"})
+	want := []any{"a", "b"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestStringMap(t *testing.T) {
+	if got := stringMap(nil); len(got) != 0 {
+		t.Fatalf("nil input: expected empty map, got %#v", got)
+	}
+	got := stringMap(map[string]string{"k": "v"})
+	want := map[string]any{"k": "v"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestPtrStr(t *testing.T) {
+	if got := ptrStr(nil); got != "" {
+		t.Fatalf("nil pointer: expected empty string, got %q", got)
+	}
+	s := "value"
+	if got := ptrStr(&s); got != "value" {
+		t.Fatalf("got %q, want %q", got, "value")
+	}
+}
+
+func TestIsNotFound(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil", nil, false},
+		{"typed 404", &oapierror.GenericOpenAPIError{StatusCode: 404}, true},
+		{"typed 403", &oapierror.GenericOpenAPIError{StatusCode: 403}, false},
+		{"string 404", errors.New("request failed with status 404"), true},
+		{"unrelated", errors.New("boom"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isNotFound(tc.err); got != tc.want {
+				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
 	}

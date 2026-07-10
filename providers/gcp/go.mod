@@ -27,7 +27,7 @@ require (
 	cloud.google.com/go/dlp v1.36.0
 	cloud.google.com/go/eventarc v1.24.0
 	cloud.google.com/go/filestore v1.15.0
-	cloud.google.com/go/firestore v1.22.0
+	cloud.google.com/go/firestore v1.23.0
 	cloud.google.com/go/functions v1.24.0
 	cloud.google.com/go/gkebackup v1.13.0
 	cloud.google.com/go/iam v1.11.0
@@ -35,7 +35,7 @@ require (
 	cloud.google.com/go/ids v1.10.0
 	cloud.google.com/go/kms v1.31.0
 	cloud.google.com/go/logging v1.18.0
-	cloud.google.com/go/longrunning v1.1.0
+	cloud.google.com/go/longrunning v1.2.0
 	cloud.google.com/go/memcache v1.16.0
 	cloud.google.com/go/memorystore v1.0.0
 	cloud.google.com/go/modelarmor v1.1.0

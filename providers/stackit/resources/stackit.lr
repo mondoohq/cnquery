@@ -1597,9 +1597,12 @@ private stackit.serviceAccount @defaults("email projectId") {
 //
 // Examine a single managed TLS certificate. The certificate is keyed
 // by its UUID `id` and exposes the user-supplied `name`, the region
-// it was uploaded to, and the PEM-encoded `publicKey` chain. Parse
-// `publicKey` with `parse.certificates(...)` for subject, issuer,
-// expiry, and key strength.
+// it was uploaded to, and the PEM-encoded `publicKey` chain. The
+// `dnsNames`, `extendedKeyUsage`, and `fingerprintSha1`/`fingerprintSha256`
+// fields describe the certificate contents, `labels` carries user
+// metadata, and `usage` lists the load balancer listeners consuming
+// the certificate. Parse `publicKey` with `parse.certificates(...)`
+// for subject, issuer, expiry, and key strength.
 private stackit.certificate @defaults("id name region") {
   init(id? string)
   // Certificate UUID
@@ -1610,6 +1613,28 @@ private stackit.certificate @defaults("id name region") {
   region string
   // PEM-encoded certificate chain (leaf + intermediates)
   publicKey string
+  // User-defined labels attached to the certificate
+  labels map[string]string
+  // Subject Alternative Names the certificate is valid for
+  //
+  // Comma-separated list of all domains and IP addresses covered by
+  // the certificate.
+  dnsNames string
+  // Extended key usages the certificate is valid for
+  //
+  // Comma-separated list of purposes, for example "Server Auth", which
+  // is required for load balancer use.
+  extendedKeyUsage string
+  // SHA1 thumbprint of the certificate
+  fingerprintSha1 string
+  // SHA256 hash of the raw certificate bytes
+  fingerprintSha256 string
+  // Load balancer listeners consuming the certificate
+  //
+  // One entry per load balancer that references the certificate, each
+  // with `loadBalancerName` and the `listenerNames` on that load
+  // balancer using it ([{loadBalancerName, listenerNames}]).
+  usage []dict
 }
 
 // STACKIT Application Load Balancer

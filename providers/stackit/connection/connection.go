@@ -35,7 +35,7 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
 	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
-	"github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex"
+	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
 	telemetrylink "github.com/stackitcloud/stackit-sdk-go/services/telemetrylink/v1betaapi"
 	telemetryrouter "github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter/v1betaapi"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"

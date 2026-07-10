@@ -7,9 +7,9 @@ go 1.26.4
 require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.26.0
-	github.com/stackitcloud/stackit-sdk-go/services/alb v0.15.0
+	github.com/stackitcloud/stackit-sdk-go/services/alb v0.16.0
 	github.com/stackitcloud/stackit-sdk-go/services/authorization v0.15.2
-	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.8.0
+	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v1.12.2
 	github.com/stackitcloud/stackit-sdk-go/services/kms v1.11.0
@@ -29,8 +29,8 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/serviceaccount v0.20.0
 	github.com/stackitcloud/stackit-sdk-go/services/sfs v0.11.0
 	github.com/stackitcloud/stackit-sdk-go/services/ske v1.19.0
-	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.15.0
-	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.3.0
+	github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex v1.16.0
+	github.com/stackitcloud/stackit-sdk-go/services/telemetrylink v0.4.0
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.4.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.28.0

@@ -6211,7 +6211,7 @@ private aws.guardduty.detector @defaults("id region") {
 private aws.guardduty.detector.feature @defaults("name status") {
   // Feature name
   //
-  // One of: S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS, RUNTIME_MONITORING.
+  // One of: S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS, RUNTIME_MONITORING, AI_ANALYST.
   name string
   // Feature status: ENABLED, DISABLED
   status string

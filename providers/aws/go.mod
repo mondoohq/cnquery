@@ -6,8 +6,8 @@ go 1.26.4
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.42.1
-	github.com/aws/aws-sdk-go-v2/config v1.32.28
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.27
+	github.com/aws/aws-sdk-go-v2/config v1.32.29
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.28
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.33.0
@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.57.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.46.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.66.0
@@ -54,10 +54,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.60.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.313.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.315.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.40.0
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.87.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.89.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.55.0
@@ -71,7 +71,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/glue v1.148.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.81.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.51.0
@@ -160,7 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.3.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.0 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 // indirect
