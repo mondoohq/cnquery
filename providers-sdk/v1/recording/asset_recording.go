@@ -6,6 +6,7 @@ package recording
 import (
 	"fmt"
 	"sort"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -36,6 +37,13 @@ type Asset struct {
 
 	connections map[string]*connection `json:"-"`
 	resources   map[string]*Resource   `json:"-"`
+
+	// mu guards concurrent access to the connections, resources, and IdsLookup
+	// maps. During a parallel scan multiple assets share one recording: one
+	// asset closing triggers Save (which finalizes every asset by iterating its
+	// resources map) while other assets are still fetching data via AddData
+	// (which writes those maps). Go maps are not safe for concurrent use.
+	mu sync.Mutex `json:"-"`
 }
 
 type connection struct {
@@ -53,6 +61,9 @@ type Resource struct {
 }
 
 func (asset *Asset) finalize() {
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
+
 	asset.Resources = make([]Resource, len(asset.resources))
 	asset.Connections = make([]connection, len(asset.connections))
 
@@ -79,11 +90,17 @@ func (asset *Asset) finalize() {
 }
 
 func (asset *Asset) GetResource(name string, id string) (*Resource, bool) {
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
+
 	r, ok := asset.resources[name+keySep+id]
 	return r, ok
 }
 
 func (asset *Asset) RefreshCache() {
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
+
 	asset.resources = make(map[string]*Resource, len(asset.Resources))
 	asset.connections = make(map[string]*connection, len(asset.Connections))
 

@@ -4,6 +4,8 @@
 package recording
 
 import (
+	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +17,46 @@ func TestLoadRecording(t *testing.T) {
 	record, err := LoadRecordingFile("testdata/recording.json")
 	assert.NoError(t, err)
 	assert.NotNil(t, record)
+}
+
+// TestSaveWhileAddingData reproduces the data race that crashes a parallel scan:
+// a shared recording is saved (which finalizes every asset by iterating its
+// `resources` map) while another goroutine is still fetching data for that asset
+// via AddData (which writes to the same map). Without synchronization this panics
+// with "index out of range" in finalize() or "concurrent map ... write", and the
+// race detector flags it. See providers-sdk/v1/recording/asset_recording.go.
+func TestSaveWhileAddingData(t *testing.T) {
+	r := newTestRecording(t, "test-asset-race", []string{"pid-race"}, 1)
+	r.doNotSave = true // exercise finalize() without touching the filesystem
+
+	var wg sync.WaitGroup
+
+	// Writer: keeps inserting new resources, growing asset.resources.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 20000; i++ {
+			r.AddData(llx.AddDataReq{
+				ConnectionID:      1,
+				Resource:          "aws.ec2.instance",
+				ResourceID:        strconv.Itoa(i),
+				RequestResourceId: strconv.Itoa(i),
+				Field:             "name",
+				Data:              llx.StringData("instance"),
+			})
+		}
+	}()
+
+	// Reader: finalizes the recording repeatedly, iterating the same map.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 2000; i++ {
+			assert.NoError(t, r.Save())
+		}
+	}()
+
+	wg.Wait()
 }
 
 // newTestRecording creates a fresh recording and ensures an asset with the given

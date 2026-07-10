@@ -367,12 +367,14 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	}
 
 	if conf.Id > 0 {
+		recordingAsset.mu.Lock()
 		recordingAsset.connections[fmt.Sprintf("%d", conf.Id)] = &connection{
 			Url:        conf.ToUrl(),
 			ProviderID: providerID,
 			Connector:  conf.Type,
 			Id:         conf.Id,
 		}
+		recordingAsset.mu.Unlock()
 	}
 
 	r.resyncAsset(recordingAsset)
@@ -386,6 +388,8 @@ func (r *recording) resyncAsset(recordingAsset *Asset) {
 		r.assets.Set(platformIdKey(pid), recordingAsset)
 	}
 	// Index by connection IDs from the runtime connections (added via EnsureAsset)
+	recordingAsset.mu.Lock()
+	defer recordingAsset.mu.Unlock()
 	for _, conn := range recordingAsset.connections {
 		if conn.Id > 0 {
 			r.assets.Set(connIdKey(conn.Id), recordingAsset)
@@ -398,6 +402,9 @@ func (r *recording) AddData(req llx.AddDataReq) {
 	if !ok {
 		return
 	}
+
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
 
 	if asset.IdsLookup == nil {
 		asset.IdsLookup = map[string]string{}
@@ -427,6 +434,9 @@ func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource st
 	if !ok {
 		return nil, "", false
 	}
+
+	asset.mu.Lock()
+	defer asset.mu.Unlock()
 
 	// overwrite resourceId if there exists a lookup entry
 	if lookupId, ok := asset.IdsLookup[resource+keySep+id]; ok {
@@ -514,6 +524,9 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 	if !ok {
 		return nil, false
 	}
+
+	cur.mu.Lock()
+	defer cur.mu.Unlock()
 
 	ensureAssetMetadata(cur.resources, cur.Asset)
 
