@@ -174,6 +174,19 @@ func (a *mqlAwsDirectoryserviceDirectory) id() (string, error) {
 	return "aws.directoryservice.directory/" + a.Region.Data + "/" + a.DirectoryId.Data, nil
 }
 
+// directoryServiceDirectoryArn synthesizes the canonical Directory Service
+// directory ARN. The DescribeDirectories API does not return an ARN, so it is
+// built from the region, account, and directory id. Keep this in sync with the
+// discovered asset's platform id (see discovery.go).
+func directoryServiceDirectoryArn(region, accountID, directoryID string) string {
+	return fmt.Sprintf("arn:aws:ds:%s:%s:directory/%s", region, accountID, directoryID)
+}
+
+func (a *mqlAwsDirectoryserviceDirectory) arn() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return directoryServiceDirectoryArn(a.Region.Data, conn.AccountId(), a.DirectoryId.Data), nil
+}
+
 func (a *mqlAwsDirectoryserviceDirectory) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.DirectoryService(a.Region.Data)

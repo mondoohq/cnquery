@@ -26567,6 +26567,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directoryservice.directory.directoryId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceDirectory).GetDirectoryId()).ToDataRes(types.String)
 	},
+	"aws.directoryservice.directory.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetArn()).ToDataRes(types.String)
+	},
 	"aws.directoryservice.directory.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceDirectory).GetName()).ToDataRes(types.String)
 	},
@@ -65881,6 +65884,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.directoryservice.directory.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceDirectory).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.directoryservice.directory.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -159265,6 +159272,7 @@ type mqlAwsDirectoryserviceDirectory struct {
 	__id       string
 	mqlAwsDirectoryserviceDirectoryInternal
 	DirectoryId                      plugin.TValue[string]
+	Arn                              plugin.TValue[string]
 	Name                             plugin.TValue[string]
 	ShortName                        plugin.TValue[string]
 	Description                      plugin.TValue[string]
@@ -159332,6 +159340,12 @@ func (c *mqlAwsDirectoryserviceDirectory) MqlID() string {
 
 func (c *mqlAwsDirectoryserviceDirectory) GetDirectoryId() *plugin.TValue[string] {
 	return &c.DirectoryId
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
 }
 
 func (c *mqlAwsDirectoryserviceDirectory) GetName() *plugin.TValue[string] {

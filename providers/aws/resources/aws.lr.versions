@@ -2373,6 +2373,7 @@ aws.directoryservice.directories 11.15.6
 aws.directoryservice.directory 11.15.6
 aws.directoryservice.directory.accessUrl 11.15.6
 aws.directoryservice.directory.alias 11.15.6
+aws.directoryservice.directory.arn 13.44.1
 aws.directoryservice.directory.connectSettings 11.15.6
 aws.directoryservice.directory.description 11.15.6
 aws.directoryservice.directory.desiredNumberOfDomainControllers 11.15.6

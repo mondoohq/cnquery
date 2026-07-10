@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 
@@ -1669,7 +1668,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 			// Directory Service directories have no ARN in the API response;
 			// synthesize the canonical directory ARN for the platform id.
-			dirArn := fmt.Sprintf("arn:aws:ds:%s:%s:directory/%s", f.Region.Data, accountId, f.DirectoryId.Data)
+			dirArn := directoryServiceDirectoryArn(f.Region.Data, accountId, f.DirectoryId.Data)
 			name := f.Name.Data
 			if name == "" {
 				name = f.DirectoryId.Data

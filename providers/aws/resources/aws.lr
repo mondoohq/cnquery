@@ -19782,6 +19782,8 @@ aws.directoryservice @defaults("directories") {
 private aws.directoryservice.directory @defaults("directoryId name type stage region") {
   // Unique identifier of the directory
   directoryId string
+  // Amazon Resource Name (ARN) of the directory
+  arn() string
   // Fully qualified name of the directory (e.g., corp.example.com)
   name string
   // NetBIOS short name of the directory (e.g., CORP)
