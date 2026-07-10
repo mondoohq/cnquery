@@ -5,8 +5,60 @@ package packagelockjson
 
 import (
 	"encoding/json"
+	"sort"
 	"strings"
+
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
 )
+
+// dependsOnRefs resolves a package entry's `dependencies` (name→version-range)
+// to the refs (purls) of the resolved packages, following npm's hoisting rules
+// from fromPath. Returns sorted, deduplicated purls; skips deps that do not
+// resolve to a `packages` entry. This yields the package→package edges the
+// lockfile encodes (lockfileVersion 2+).
+func dependsOnRefs(pkgs map[string]packageLockPackage, fromPath string, deps map[string]string) []string {
+	if len(deps) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	var refs []string
+	for name := range deps {
+		if ref := resolveDepPurl(pkgs, fromPath, name); ref != "" && !seen[ref] {
+			seen[ref] = true
+			refs = append(refs, ref)
+		}
+	}
+	sort.Strings(refs)
+	return refs
+}
+
+// resolveDepPurl finds the package entry that satisfies depName as required from
+// fromPath, per npm resolution: try fromPath/node_modules/depName, then walk up
+// the node_modules chain to the root. Returns the resolved package's purl, or ""
+// when no entry is found.
+func resolveDepPurl(pkgs map[string]packageLockPackage, fromPath, depName string) string {
+	base := fromPath
+	for {
+		cand := "node_modules/" + depName
+		if base != "" {
+			cand = base + "/node_modules/" + depName
+		}
+		if entry, ok := pkgs[cand]; ok {
+			// Build the ref from the resolved entry's path key, exactly as
+			// Transitive() builds each package's own Purl, so an edge ref matches
+			// its target node's Purl (a self-consistent graph).
+			return javascript.NewPackageUrl(cand, entry.Version)
+		}
+		if base == "" {
+			return ""
+		}
+		if idx := strings.LastIndex(base, "/node_modules/"); idx >= 0 {
+			base = base[:idx]
+		} else {
+			base = ""
+		}
+	}
+}
 
 // packageLock is the struct to represent the package.lock file
 // see https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json

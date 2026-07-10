@@ -98,6 +98,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				Purl:         javascript.NewPackageUrl(k, v.Version),
 				Cpes:         javascript.NewCpes(k, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
+				DependsOn:    dependsOnRefs(p.Packages, k, v.Dependencies),
 			})
 		}
 	} else if p.Dependencies != nil {

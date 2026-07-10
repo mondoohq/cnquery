@@ -44,6 +44,32 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 
 }
 
+// TestPackageJsonLockDependencyEdges verifies the package→package edges
+// (Package.DependsOn) resolved from a lockfileVersion 2+ tree: each edge ref is
+// the resolved target package's Purl, so the graph is self-consistent
+// (edge ref == target node Purl). app→foo→bar.
+func TestPackageJsonLockDependencyEdges(t *testing.T) {
+	f, err := os.Open("./testdata/graph-lock.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	info, err := (&Extractor{}).Parse(f, "path/to/package-lock.json")
+	require.NoError(t, err)
+
+	list := info.Transitive()
+	app := list.Find("app")
+	foo := list.Find("foo")
+	bar := list.Find("bar")
+	require.NotNil(t, app)
+	require.NotNil(t, foo)
+	require.NotNil(t, bar)
+
+	// edges point at the resolved target's Purl (ref == target node Purl).
+	assert.Equal(t, []string{foo.Purl}, app.DependsOn, "app depends on foo")
+	assert.Equal(t, []string{bar.Purl}, foo.DependsOn, "foo depends on bar")
+	assert.Nil(t, bar.DependsOn, "bar has no dependencies")
+}
+
 func TestPackageJsonLockExtractorWithDependencies(t *testing.T) {
 	f, err := os.Open("./testdata/workbox-package-lock.json")
 	require.NoError(t, err)

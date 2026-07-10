@@ -61,6 +61,14 @@ type Package struct {
 	// Package License — SPDX expression where the source can provide
 	// one (npm package.json `license`, python METADATA `License`).
 	License string `json:"license,omitempty"`
+	// DependsOn holds the refs of the packages this package directly depends on
+	// — the package→package edges of the dependency graph. A ref is the target
+	// package's Purl (the stable, document-internal component identity, à la a
+	// CycloneDX bom-ref). Populated by parsers whose lockfile resolves the
+	// dependency tree (npm, Cargo, pnpm…); nil when the manifest encodes no edges
+	// (e.g. Go go.mod's flat require list). Using refs (not names) disambiguates
+	// the same package present at multiple versions.
+	DependsOn []string `json:"depends_on,omitempty"`
 }
 
 // SortFn is a helper function for slices.SortFunc to sort a slice of Package
