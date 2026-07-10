@@ -144,11 +144,11 @@ func (m *Dependency) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.DependsOn) > 0 {
-		for iNdEx := len(m.DependsOn) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.DependsOn[iNdEx])
-			copy(dAtA[i:], m.DependsOn[iNdEx])
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.DependsOn[iNdEx])))
+	if len(m.DependencyRefs) > 0 {
+		for iNdEx := len(m.DependencyRefs) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.DependencyRefs[iNdEx])
+			copy(dAtA[i:], m.DependencyRefs[iNdEx])
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.DependencyRefs[iNdEx])))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -825,8 +825,8 @@ func (m *Dependency) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if len(m.DependsOn) > 0 {
-		for _, s := range m.DependsOn {
+	if len(m.DependencyRefs) > 0 {
+		for _, s := range m.DependencyRefs {
 			l = len(s)
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
@@ -1433,7 +1433,7 @@ func (m *Dependency) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DependsOn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DependencyRefs", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1461,7 +1461,7 @@ func (m *Dependency) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DependsOn = append(m.DependsOn, string(dAtA[iNdEx:postIndex]))
+			m.DependencyRefs = append(m.DependencyRefs, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

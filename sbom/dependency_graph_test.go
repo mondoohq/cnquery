@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package sbom_test
@@ -24,7 +24,7 @@ func graphBom() *sbom.Sbom {
 			{Name: "jest", Version: "29.0.0", Type: "npm", Purl: "pkg:npm/jest@29.0.0", Scope: sbom.PackageScopeDev},
 		},
 		Dependencies: []*sbom.Dependency{
-			{Ref: "pkg:npm/app@1.0.0", DependsOn: []string{"pkg:npm/left-pad@1.3.0"}},
+			{Ref: "pkg:npm/app@1.0.0", DependencyRefs: []string{"pkg:npm/left-pad@1.3.0"}},
 		},
 	}
 }

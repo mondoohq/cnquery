@@ -113,7 +113,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		if !ok {
 			continue
 		}
-		for _, to := range dep.DependsOn {
+		for _, to := range dep.DependencyRefs {
 			toID, ok := refToID[to]
 			if !ok {
 				continue

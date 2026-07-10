@@ -132,7 +132,7 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	if len(bom.Dependencies) > 0 {
 		deps := make([]cyclonedx.Dependency, 0, len(bom.Dependencies))
 		for _, d := range bom.Dependencies {
-			dependsOn := append([]string(nil), d.DependsOn...)
+			dependsOn := append([]string(nil), d.DependencyRefs...)
 			deps = append(deps, cyclonedx.Dependency{
 				Ref:          d.Ref,
 				Dependencies: &dependsOn,

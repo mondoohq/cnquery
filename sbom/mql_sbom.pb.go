@@ -262,13 +262,13 @@ type Sbom struct {
 	// 'error_message' is and optional field that describes the error from a
 	// failed scan
 	ErrorMessage string `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	// 'dependencies' is the package→package dependency graph: for each component,
-	// the components it directly depends on, both referenced by Package.bom_ref.
-	// Populated for ecosystems whose manifest resolves the dependency tree (npm,
-	// Cargo, …); empty for those that do not (e.g. Go go.mod's flat require list).
-	// This is the CycloneDX `dependencies` / SPDX `DEPENDS_ON` graph, which lets a
-	// consumer reason about reachability (which components a given component pulls
-	// in) rather than just a flat inventory.
+	// 'dependencies' is the package→package dependency graph: for each
+	// component, the components it directly depends on, both referenced by
+	// Package.bom_ref. Populated for ecosystems whose manifest resolves the
+	// dependency tree (npm, Cargo, …); empty for those that do not (e.g. Go
+	// go.mod's flat require list). This is the CycloneDX `dependencies` / SPDX
+	// `DEPENDS_ON` graph, which lets a consumer reason about which components a
+	// given component pulls in rather than just a flat inventory.
 	Dependencies  []*Dependency `protobuf:"bytes,7,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -353,16 +353,16 @@ func (x *Sbom) GetDependencies() []*Dependency {
 	return nil
 }
 
-// Dependency is one node of the dependency graph: a component and the components
-// it directly depends on, all referenced by Package.bom_ref.
+// Dependency is one node of the dependency graph: a component and the
+// components it directly depends on, all referenced by Package.bom_ref.
 type Dependency struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 'ref' is the bom_ref of the dependent component.
 	Ref string `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
-	// 'depends_on' are the bom_refs of the components it directly depends on.
-	DependsOn     []string `protobuf:"bytes,2,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// 'dependency_refs' are the bom_refs of the directly depended-on components.
+	DependencyRefs []string `protobuf:"bytes,2,rep,name=dependency_refs,json=dependencyRefs,proto3" json:"dependency_refs,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Dependency) Reset() {
@@ -402,9 +402,9 @@ func (x *Dependency) GetRef() string {
 	return ""
 }
 
-func (x *Dependency) GetDependsOn() []string {
+func (x *Dependency) GetDependencyRefs() []string {
 	if x != nil {
-		return x.DependsOn
+		return x.DependencyRefs
 	}
 	return nil
 }
@@ -816,11 +816,12 @@ type Package struct {
 	// surface install time (dpkg without log parsing, apk, pacman,
 	// macOS).
 	InstallDate string `protobuf:"bytes,27,opt,name=install_date,json=installDate,proto3" json:"install_date,omitempty"`
-	// 'bom_ref' is a stable, document-internal identifier for this component (a
-	// CycloneDX bom-ref). Deterministic: the purl when present, else a synthesized
-	// id. It is the endpoint the dependency graph (Sbom.dependencies) references,
-	// and the value the CycloneDX/SPDX renderers use — so the rendered BOM is
-	// reproducible (previously a random UUID was minted per render).
+	// 'bom_ref' is a stable, document-internal identifier for this component
+	// (a CycloneDX bom-ref). Deterministic: the purl when present, else a
+	// synthesized id. It is the endpoint the dependency graph
+	// (Sbom.dependencies) references, and the value the CycloneDX/SPDX renderers
+	// use — so the rendered BOM is reproducible (previously a random UUID was
+	// minted per render).
 	BomRef string `protobuf:"bytes,28,opt,name=bom_ref,json=bomRef,proto3" json:"bom_ref,omitempty"`
 	// 'scope' is the dependency scope: "prod" (production/runtime), "dev"
 	// (development/test-only, e.g. an npm devDependency or its closure), or empty
@@ -1112,12 +1113,11 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x05asset\x18\x04 \x01(\v2\x15.mondoo.sbom.v1.AssetR\x05asset\x123\n" +
 	"\bpackages\x18\x05 \x03(\v2\x17.mondoo.sbom.v1.PackageR\bpackages\x12#\n" +
 	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\x12>\n" +
-	"\fdependencies\x18\a \x03(\v2\x1a.mondoo.sbom.v1.DependencyR\fdependencies\"=\n" +
+	"\fdependencies\x18\a \x03(\v2\x1a.mondoo.sbom.v1.DependencyR\fdependencies\"G\n" +
 	"\n" +
 	"Dependency\x12\x10\n" +
-	"\x03ref\x18\x01 \x01(\tR\x03ref\x12\x1d\n" +
-	"\n" +
-	"depends_on\x18\x02 \x03(\tR\tdependsOn\"c\n" +
+	"\x03ref\x18\x01 \x01(\tR\x03ref\x12'\n" +
+	"\x0fdependency_refs\x18\x02 \x03(\tR\x0edependencyRefs\"c\n" +
 	"\tGenerator\x12\x16\n" +
 	"\x06vendor\x18\x01 \x01(\tR\x06vendor\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
