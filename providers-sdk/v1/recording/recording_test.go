@@ -28,14 +28,17 @@ func TestLoadRecording(t *testing.T) {
 func TestSaveWhileAddingData(t *testing.T) {
 	r := newTestRecording(t, "test-asset-race", []string{"pid-race"}, 1)
 	r.doNotSave = true // exercise finalize() without touching the filesystem
+	lookup := llx.AssetRecordingLookup{Mrn: "test-asset-race"}
 
+	const iterations = 20000
 	var wg sync.WaitGroup
 
-	// Writer: keeps inserting new resources, growing asset.resources.
+	// Writer 1: keeps inserting distinct resources, growing asset.resources.
+	// This races finalize()'s iteration of that map.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 20000; i++ {
+		for i := 0; i < iterations; i++ {
 			r.AddData(llx.AddDataReq{
 				ConnectionID:      1,
 				Resource:          "aws.ec2.instance",
@@ -47,12 +50,43 @@ func TestSaveWhileAddingData(t *testing.T) {
 		}
 	}()
 
-	// Reader: finalizes the recording repeatedly, iterating the same map.
+	// Writer 2: repeatedly writes fields on a single "hot" resource, mutating
+	// its Fields map. This races the reader goroutine's Fields access.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 2000; i++ {
+		for i := 0; i < iterations; i++ {
+			r.AddData(llx.AddDataReq{
+				ConnectionID:      1,
+				Resource:          "aws.ec2.instance",
+				ResourceID:        "hot",
+				RequestResourceId: "hot",
+				Field:             strconv.Itoa(i % 64),
+				Data:              llx.StringData("v"),
+			})
+		}
+	}()
+
+	// Reader: finalizes the recording repeatedly, iterating the resources map.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < iterations/10; i++ {
 			assert.NoError(t, r.Save())
+		}
+	}()
+
+	// Reader: exercises the data-read paths, which access Resource.Fields while
+	// Writer 2 mutates it. GetResource must hand back a safe snapshot.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < iterations; i++ {
+			r.GetData(lookup, "aws.ec2.instance", "hot", strconv.Itoa(i%64))
+			if fields, ok := r.GetResource(lookup, "aws.ec2.instance", "hot"); ok {
+				for range fields { // iterate the returned map; must be a safe snapshot
+				}
+			}
 		}
 	}()
 

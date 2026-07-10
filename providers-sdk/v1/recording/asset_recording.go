@@ -5,6 +5,7 @@ package recording
 
 import (
 	"fmt"
+	"maps"
 	"sort"
 	"sync"
 
@@ -94,7 +95,19 @@ func (asset *Asset) GetResource(name string, id string) (*Resource, bool) {
 	defer asset.mu.Unlock()
 
 	r, ok := asset.resources[name+keySep+id]
-	return r, ok
+	if !ok {
+		return nil, false
+	}
+
+	// Return a snapshot: callers iterate the Fields map after we release the
+	// lock, while AddData may still be inserting into the live map.
+	clone := &Resource{
+		Resource: r.Resource,
+		ID:       r.ID,
+		Fields:   make(map[string]*llx.RawData, len(r.Fields)),
+	}
+	maps.Copy(clone.Fields, r.Fields)
+	return clone, true
 }
 
 func (asset *Asset) RefreshCache() {
