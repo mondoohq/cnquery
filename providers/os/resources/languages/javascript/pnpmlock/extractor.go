@@ -78,6 +78,8 @@ func (l *pnpmLock) Transitive() languages.Packages {
 			Purl:         javascript.NewPackageUrl(name, version),
 			Cpes:         javascript.NewCpes(name, version),
 			EvidenceList: javascript.NewEvidenceList(l.evidence),
+			DependsOn:    dependsOnRefs(entry.Dependencies),
+			Scope:        scopeOf(entry),
 		})
 	}
 

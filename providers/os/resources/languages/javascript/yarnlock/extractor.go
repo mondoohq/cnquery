@@ -78,6 +78,7 @@ func (p *yarnLockBom) Direct() languages.Packages {
 
 func (p *yarnLockBom) Transitive() languages.Packages {
 	var transitive languages.Packages
+	idx := p.packages.specIndex()
 
 	// add all dependencies
 	for k, v := range p.packages {
@@ -92,6 +93,7 @@ func (p *yarnLockBom) Transitive() languages.Packages {
 			Purl:         javascript.NewPackageUrl(name, v.Version),
 			Cpes:         javascript.NewCpes(name, v.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
+			DependsOn:    dependsOnRefs(idx, v.Dependencies),
 		})
 	}
 
