@@ -50,6 +50,9 @@ func ipSubnetToString(s *netconfig.IPSubnet) string {
 // ---------------------------------------------------------------------------
 
 func newMqlVpc(runtime *plugin.Runtime, v *netconfig.Vpc) (*mqlNutanixNetworkVpc, error) {
+	if v.ExtId == nil {
+		return nil, nil
+	}
 	vpcType := ""
 	if v.VpcType != nil {
 		vpcType = v.VpcType.GetName()
@@ -148,6 +151,9 @@ func (a *mqlNutanix) vpcs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			if mqlVpc == nil {
+				continue
+			}
 			res = append(res, mqlVpc)
 		}
 		if len(items) < limit {
@@ -185,6 +191,9 @@ func vpcByID(runtime *plugin.Runtime, vpcID string) (*mqlNutanixNetworkVpc, erro
 // ---------------------------------------------------------------------------
 
 func newMqlSubnet(runtime *plugin.Runtime, s *netconfig.Subnet) (*mqlNutanixNetworkSubnet, error) {
+	if s.ExtId == nil {
+		return nil, nil
+	}
 	subnetType := ""
 	if s.SubnetType != nil {
 		subnetType = s.SubnetType.GetName()
@@ -265,6 +274,9 @@ func (a *mqlNutanix) subnets() ([]any, error) {
 			mqlSubnet, err := newMqlSubnet(a.MqlRuntime, &s)
 			if err != nil {
 				return nil, err
+			}
+			if mqlSubnet == nil {
+				continue
 			}
 			res = append(res, mqlSubnet)
 		}
@@ -376,6 +388,9 @@ func (a *mqlNutanix) floatingIps() ([]any, error) {
 		}
 		for i := range items {
 			f := items[i]
+			if f.ExtId == nil {
+				continue
+			}
 			associationStatus := ""
 			if f.AssociationStatus != nil {
 				associationStatus = *f.AssociationStatus

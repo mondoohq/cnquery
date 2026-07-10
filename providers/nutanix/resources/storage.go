@@ -205,6 +205,9 @@ func (a *mqlNutanix) volumeGroups() ([]any, error) {
 		}
 		for i := range items {
 			vg := items[i]
+			if vg.ExtId == nil {
+				continue
+			}
 			sharingStatus := ""
 			if vg.SharingStatus != nil {
 				sharingStatus = vg.SharingStatus.GetName()

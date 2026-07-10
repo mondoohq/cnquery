@@ -141,6 +141,9 @@ func (a *mqlNutanix) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if mqlCluster == nil {
+			continue
+		}
 		res = append(res, mqlCluster)
 	}
 	return res, nil
@@ -168,6 +171,9 @@ func (a *mqlNutanix) hosts() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if mqlHost == nil {
+			continue
+		}
 		res = append(res, mqlHost)
 	}
 	return res, nil
@@ -194,6 +200,9 @@ func (a *mqlNutanix) vms() ([]any, error) {
 		mqlVm, err := newMqlVm(a.MqlRuntime, &vm)
 		if err != nil {
 			return nil, err
+		}
+		if mqlVm == nil {
+			continue
 		}
 		res = append(res, mqlVm)
 	}
@@ -293,6 +302,9 @@ func listVms(conn *connection.NutanixConnection) ([]vmmconfig.Vm, error) {
 // ---------------------------------------------------------------------------
 
 func newMqlCluster(runtime *plugin.Runtime, c *clustermgmtconfig.Cluster) (*mqlNutanixCluster, error) {
+	if c.ExtId == nil {
+		return nil, nil
+	}
 	hypervisorTypes := []any{}
 	functions := []any{}
 	encryptionOptions := []any{}
@@ -600,8 +612,14 @@ func (a *mqlNutanixCluster) nodes() ([]any, error) {
 		if n.NodeUuid != nil {
 			nodeUuid = *n.NodeUuid
 		}
+		// NodeUuid is the node's identity; fall back to a parent-qualified key
+		// so nodes without one don't collide on an empty cache id.
+		nodeID := nodeUuid
+		if nodeID == "" {
+			nodeID = fmt.Sprintf("%s/node/%d", a.clusterId, i)
+		}
 		mqlNode, err := CreateResource(a.MqlRuntime, "nutanix.cluster.node", map[string]*llx.RawData{
-			"__id":           llx.StringData(nodeUuid),
+			"__id":           llx.StringData(nodeID),
 			"id":             llx.StringData(nodeUuid),
 			"hostIp":         llx.StringData(clusterIPToString(n.HostIp)),
 			"controllerVmIp": llx.StringData(clusterIPToString(n.ControllerVmIp)),
@@ -652,6 +670,9 @@ func (a *mqlNutanixClusterNode) host() (*mqlNutanixHost, error) {
 }
 
 func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanixHost, error) {
+	if h.ExtId == nil {
+		return nil, nil
+	}
 	hypervisorType := ""
 	hypervisorFullName := ""
 	hypervisorState := ""
@@ -807,12 +828,18 @@ func (a *mqlNutanixHost) disks() ([]any, error) {
 		if d.Uuid != nil {
 			uuid = *d.Uuid
 		}
+		// Uuid identifies the disk; fall back to a parent-qualified key so
+		// disks without one don't collide on an empty cache id.
+		diskID := uuid
+		if diskID == "" {
+			diskID = fmt.Sprintf("%s/disk/%d", a.hostId, i)
+		}
 		storageTier := ""
 		if d.StorageTier != nil {
 			storageTier = d.StorageTier.GetName()
 		}
 		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.host.disk", map[string]*llx.RawData{
-			"__id":        llx.StringData(uuid),
+			"__id":        llx.StringData(diskID),
 			"id":          llx.StringData(uuid),
 			"mountPath":   llx.StringDataPtr(d.MountPath),
 			"serialId":    llx.StringDataPtr(d.SerialId),
@@ -828,6 +855,9 @@ func (a *mqlNutanixHost) disks() ([]any, error) {
 }
 
 func newMqlVm(runtime *plugin.Runtime, vm *vmmconfig.Vm) (*mqlNutanixVm, error) {
+	if vm.ExtId == nil {
+		return nil, nil
+	}
 	powerState := ""
 	if vm.PowerState != nil {
 		powerState = vm.PowerState.GetName()
@@ -935,6 +965,12 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 		if d.ExtId != nil {
 			extId = *d.ExtId
 		}
+		// ExtId identifies the disk; fall back to a parent-qualified key so
+		// disks without one don't collide on an empty cache id.
+		diskID := extId
+		if diskID == "" {
+			diskID = fmt.Sprintf("%s/disk/%d", a.vmId, i)
+		}
 		busType := ""
 		busIndex := int64(0)
 		if d.DiskAddress != nil {
@@ -984,7 +1020,7 @@ func (a *mqlNutanixVm) disks() ([]any, error) {
 			}
 		}
 		mqlDisk, err := CreateResource(a.MqlRuntime, "nutanix.vm.disk", map[string]*llx.RawData{
-			"__id":                  llx.StringData(extId),
+			"__id":                  llx.StringData(diskID),
 			"id":                    llx.StringData(extId),
 			"tenantId":              llx.StringData(tenantId),
 			"busType":               llx.StringData(busType),
@@ -1065,6 +1101,12 @@ func (a *mqlNutanixVm) nics() ([]any, error) {
 		if n.ExtId != nil {
 			extId = *n.ExtId
 		}
+		// ExtId identifies the NIC; fall back to a parent-qualified key so
+		// NICs without one don't collide on an empty cache id.
+		nicID := extId
+		if nicID == "" {
+			nicID = fmt.Sprintf("%s/nic/%d", a.vmId, i)
+		}
 		macAddress := ""
 		model := ""
 		isConnected := false
@@ -1108,7 +1150,7 @@ func (a *mqlNutanixVm) nics() ([]any, error) {
 			}
 		}
 		mqlNic, err := CreateResource(a.MqlRuntime, "nutanix.vm.nic", map[string]*llx.RawData{
-			"__id":               llx.StringData(extId),
+			"__id":               llx.StringData(nicID),
 			"id":                 llx.StringData(extId),
 			"macAddress":         llx.StringData(macAddress),
 			"model":              llx.StringData(model),
@@ -1154,6 +1196,12 @@ func (a *mqlNutanixVm) gpus() ([]any, error) {
 		if g.ExtId != nil {
 			extId = *g.ExtId
 		}
+		// ExtId identifies the GPU; fall back to a parent-qualified key so
+		// GPUs without one don't collide on an empty cache id.
+		gpuID := extId
+		if gpuID == "" {
+			gpuID = fmt.Sprintf("%s/gpu/%d", a.vmId, i)
+		}
 		mode := ""
 		if g.Mode != nil {
 			mode = g.Mode.GetName()
@@ -1163,7 +1211,7 @@ func (a *mqlNutanixVm) gpus() ([]any, error) {
 			vendor = g.Vendor.GetName()
 		}
 		mqlGpu, err := CreateResource(a.MqlRuntime, "nutanix.vm.gpu", map[string]*llx.RawData{
-			"__id":                   llx.StringData(extId),
+			"__id":                   llx.StringData(gpuID),
 			"id":                     llx.StringData(extId),
 			"name":                   llx.StringDataPtr(g.Name),
 			"mode":                   llx.StringData(mode),
@@ -1190,6 +1238,12 @@ func (a *mqlNutanixVm) cdRoms() ([]any, error) {
 		if c.ExtId != nil {
 			extId = *c.ExtId
 		}
+		// ExtId identifies the CD-ROM; fall back to a parent-qualified key so
+		// CD-ROMs without one don't collide on an empty cache id.
+		cdromID := extId
+		if cdromID == "" {
+			cdromID = fmt.Sprintf("%s/cdrom/%d", a.vmId, i)
+		}
 		isoType := ""
 		if c.IsoType != nil {
 			isoType = c.IsoType.GetName()
@@ -1211,7 +1265,7 @@ func (a *mqlNutanixVm) cdRoms() ([]any, error) {
 			}
 		}
 		mqlCdRom, err := CreateResource(a.MqlRuntime, "nutanix.vm.cdrom", map[string]*llx.RawData{
-			"__id":      llx.StringData(extId),
+			"__id":      llx.StringData(cdromID),
 			"id":        llx.StringData(extId),
 			"isoType":   llx.StringData(isoType),
 			"busType":   llx.StringData(busType),

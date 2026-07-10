@@ -13,6 +13,9 @@ import (
 )
 
 func newMqlImage(runtime *plugin.Runtime, img *vmmcontent.Image) (*mqlNutanixImage, error) {
+	if img.ExtId == nil {
+		return nil, nil
+	}
 	imageType := ""
 	if img.Type != nil {
 		imageType = img.Type.GetName()
@@ -72,6 +75,9 @@ func (a *mqlNutanix) images() ([]any, error) {
 		mqlImg, err := newMqlImage(a.MqlRuntime, &imgs[i])
 		if err != nil {
 			return nil, err
+		}
+		if mqlImg == nil {
+			continue
 		}
 		res = append(res, mqlImg)
 	}
