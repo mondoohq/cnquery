@@ -40,8 +40,25 @@ func TestPackageJsonLockExtractorWithPackages(t *testing.T) {
 		Purl:         "pkg:npm/node-modules/%40babel@7.10.4",
 		Cpes:         []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
 		EvidenceList: []*sbom.Evidence{{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: "path/to/package-lock.json"}},
+		Scope:        languages.PackageScopeDev,
 	}, p)
 
+}
+
+// TestPackageJsonLockScope verifies the dev/prod scope: a devDependency in the
+// tree reports PackageScopeDev, a production dependency PackageScopeProd.
+func TestPackageJsonLockScope(t *testing.T) {
+	f, err := os.Open("./testdata/lockfile-v2.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	info, err := (&Extractor{}).Parse(f, "path/to/package-lock.json")
+	require.NoError(t, err)
+
+	// @babel/code-frame is dev:true in this lock.
+	cf := info.Transitive().Find("@babel/code-frame")
+	require.NotNil(t, cf)
+	assert.Equal(t, languages.PackageScopeDev, cf.Scope)
 }
 
 // TestPackageJsonLockDependencyEdges verifies the package→package edges

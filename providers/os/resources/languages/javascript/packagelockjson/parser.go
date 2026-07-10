@@ -8,8 +8,19 @@ import (
 	"sort"
 	"strings"
 
+	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
 )
+
+// scopeOf maps an npm lock package entry to a languages package scope: a dev-only
+// package reports PackageScopeDev, everything else (including devOptional, which
+// can appear in the production tree) PackageScopeProd.
+func scopeOf(pkg packageLockPackage) string {
+	if pkg.Dev && !pkg.DevOptional {
+		return languages.PackageScopeDev
+	}
+	return languages.PackageScopeProd
+}
 
 // dependsOnRefs resolves a package entry's `dependencies` (name→version-range)
 // to the refs (purls) of the resolved packages, following npm's hoisting rules
@@ -86,12 +97,18 @@ type packageLockDependency struct {
 }
 
 type packageLockPackage struct {
-	Name         string             `json:"name"`
-	Version      string             `json:"version"`
-	Resolved     string             `json:"resolved"`
-	Integrity    string             `json:"integrity"`
-	License      packageLockLicense `json:"license"`
-	Dependencies map[string]string  `json:"dependencies"`
+	Name      string             `json:"name"`
+	Version   string             `json:"version"`
+	Resolved  string             `json:"resolved"`
+	Integrity string             `json:"integrity"`
+	License   packageLockLicense `json:"license"`
+	// Dev marks a development-only dependency (npm lockfileVersion 2+): present
+	// in the tree only for devDependencies / their closure, not the production
+	// runtime. Also DevOptional (a package needed both as dev and optionally in
+	// prod) — treated as prod, since it can be in the production tree.
+	Dev          bool              `json:"dev"`
+	DevOptional  bool              `json:"devOptional"`
+	Dependencies map[string]string `json:"dependencies"`
 }
 
 type packageLockLicense []string

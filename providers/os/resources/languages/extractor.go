@@ -69,7 +69,22 @@ type Package struct {
 	// (e.g. Go go.mod's flat require list). Using refs (not names) disambiguates
 	// the same package present at multiple versions.
 	DependsOn []string `json:"depends_on,omitempty"`
+	// Scope is the dependency scope: PackageScopeProd (production/runtime),
+	// PackageScopeDev (development/test-only, e.g. an npm devDependency or its
+	// closure), or "" when the manifest does not distinguish (e.g. Go go.mod).
+	// Lets a consumer rank a CVE in a dev-only tool differently from a runtime
+	// one. Populated by parsers whose lockfile carries the flag (npm today).
+	Scope string `json:"scope,omitempty"`
 }
+
+// Dependency scopes for Package.Scope.
+const (
+	// PackageScopeProd is a production/runtime dependency.
+	PackageScopeProd = "prod"
+	// PackageScopeDev is a development/test-only dependency (not in the deployed
+	// runtime).
+	PackageScopeDev = "dev"
+)
 
 // SortFn is a helper function for slices.SortFunc to sort a slice of Package
 // by name and version. Use it like this: slices.SortFunc(packages, sbom.SortFn)

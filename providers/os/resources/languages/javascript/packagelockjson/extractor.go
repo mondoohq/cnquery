@@ -85,6 +85,7 @@ func (p *packageLock) Direct() languages.Packages {
 			Cpes:         javascript.NewCpes(path, pkg.Version),
 			EvidenceList: javascript.NewEvidenceList(p.evidence),
 			DependsOn:    dependsOnRefs(p.Packages, path, pkg.Dependencies),
+			Scope:        scopeOf(pkg),
 		})
 	}
 
@@ -108,6 +109,7 @@ func (p *packageLock) Transitive() languages.Packages {
 				Cpes:         javascript.NewCpes(k, v.Version),
 				EvidenceList: javascript.NewEvidenceList(p.evidence),
 				DependsOn:    dependsOnRefs(p.Packages, k, v.Dependencies),
+				Scope:        scopeOf(v),
 			})
 		}
 	} else if p.Dependencies != nil {

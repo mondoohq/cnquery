@@ -76,6 +76,7 @@ func TestPackageLock(t *testing.T) {
 						Version:   "7.10.4",
 						Resolved:  "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.10.4.tgz",
 						Integrity: "sha512-vG6SvB6oYEhvgisZNFRmRCUkLz11c7rp+tbNTynGqc6mS1d5ATd/sGyV6W0KZZnXRKMTzZDRgQT3Ou9jhpAfUg==",
+						Dev:       true,
 						Dependencies: map[string]string{
 							"@babel/highlight": "^7.10.4",
 						},
