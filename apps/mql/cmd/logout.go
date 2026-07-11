@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/providers"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	rangerUtils "go.mondoo.com/mql/v13/utils/ranger"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -108,13 +107,17 @@ ensure the credentials cannot be used in the future.
 
 			opts.AgentMrn = ""
 
-			data, err := yaml.Marshal(opts)
-			if err != nil {
-				log.Error().Err(err).Msg("could not update Mondoo config")
-			}
-			err = os.WriteFile(path, data, fi.Mode())
-			if err != nil {
-				log.Error().Err(err).Msg("could not update Mondoo config")
+			// Preserve the on-disk serialization format and file mode: a config
+			// loaded from JSON must be written back as JSON, not silently
+			// converted to YAML, and a credentials file's permissions must not be
+			// widened.
+			data, marshalErr := config.MarshalConfig(path, opts)
+			if marshalErr != nil {
+				// Don't write on a marshal failure; a nil payload would truncate
+				// the existing config file.
+				log.Error().Err(marshalErr).Msg("could not update Mondoo config")
+			} else if writeErr := os.WriteFile(path, data, fi.Mode()); writeErr != nil {
+				log.Error().Err(writeErr).Msg("could not update Mondoo config")
 			}
 		}
 
