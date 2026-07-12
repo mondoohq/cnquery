@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.44.0",
-  "generated_at": "2026-07-08T12:30:08+02:00",
+  "version": "13.45.0",
+  "generated_at": "2026-07-12T01:10:09-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -499,6 +499,8 @@
     "iam:ListVirtualMFADevices",
     "identitystore:ListGroups",
     "identitystore:ListUsers",
+    "inspector2:BatchGetAccountStatus",
+    "inspector2:GetConfiguration",
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
     "kafka:DescribeClusterV2",
@@ -3991,6 +3993,18 @@
       "service": "identitystore",
       "action": "ListUsers",
       "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "inspector2:BatchGetAccountStatus",
+      "service": "inspector2",
+      "action": "BatchGetAccountStatus",
+      "source_file": "aws_inspector.go"
+    },
+    {
+      "permission": "inspector2:GetConfiguration",
+      "service": "inspector2",
+      "action": "GetConfiguration",
+      "source_file": "aws_inspector.go"
     },
     {
       "permission": "inspector2:ListCoverage",

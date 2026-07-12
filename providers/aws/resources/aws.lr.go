@@ -590,6 +590,8 @@ const (
 	ResourceAwsSigner                                                           string = "aws.signer"
 	ResourceAwsSignerSigningProfile                                             string = "aws.signer.signingProfile"
 	ResourceAwsInspector                                                        string = "aws.inspector"
+	ResourceAwsInspectorAccountStatus                                           string = "aws.inspector.accountStatus"
+	ResourceAwsInspectorConfiguration                                           string = "aws.inspector.configuration"
 	ResourceAwsInspectorCoverage                                                string = "aws.inspector.coverage"
 	ResourceAwsInspectorCoverageInstance                                        string = "aws.inspector.coverage.instance"
 	ResourceAwsInspectorCoverageImage                                           string = "aws.inspector.coverage.image"
@@ -3230,6 +3232,14 @@ func init() {
 		"aws.inspector": {
 			// to override args, implement: initAwsInspector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsInspector,
+		},
+		"aws.inspector.accountStatus": {
+			// to override args, implement: initAwsInspectorAccountStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorAccountStatus,
+		},
+		"aws.inspector.configuration": {
+			// to override args, implement: initAwsInspectorConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorConfiguration,
 		},
 		"aws.inspector.coverage": {
 			// to override args, implement: initAwsInspectorCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -22774,6 +22784,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.inspector.findings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspector).GetFindings()).ToDataRes(types.Array(types.Resource("aws.inspector.finding")))
+	},
+	"aws.inspector.accountStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspector).GetAccountStatuses()).ToDataRes(types.Array(types.Resource("aws.inspector.accountStatus")))
+	},
+	"aws.inspector.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspector).GetConfigurations()).ToDataRes(types.Array(types.Resource("aws.inspector.configuration")))
+	},
+	"aws.inspector.accountStatus.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.ec2Status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetEc2Status()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.ecrStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetEcrStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.lambdaStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetLambdaStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.lambdaCodeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetLambdaCodeStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.codeRepositoryStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetCodeRepositoryStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.accountStatus.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorAccountStatus).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ecrRescanDurationDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrRescanDurationDays()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ecrPullDateRescanDurationDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrPullDateRescanDurationDays()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ecrPullDateRescanMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrPullDateRescanMode()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ecrRescanDurationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrRescanDurationStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ecrRescanUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrRescanUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.inspector.configuration.ec2ScanMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEc2ScanMode()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.ec2ScanModeStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEc2ScanModeStatus()).ToDataRes(types.String)
+	},
+	"aws.inspector.configuration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.inspector.coverage.accountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorCoverage).GetAccountId()).ToDataRes(types.String)
@@ -60472,6 +60536,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.inspector.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsInspector).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspector).AccountStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspector).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.inspector.accountStatus.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.ec2Status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).Ec2Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.ecrStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).EcrStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.lambdaStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).LambdaStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.lambdaCodeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).LambdaCodeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.codeRepositoryStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).CodeRepositoryStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.accountStatus.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorAccountStatus).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.inspector.configuration.ecrRescanDurationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrRescanDurationDays, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ecrPullDateRescanDurationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrPullDateRescanDurationDays, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ecrPullDateRescanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrPullDateRescanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ecrRescanDurationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrRescanDurationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ecrRescanUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrRescanUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ec2ScanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).Ec2ScanMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.ec2ScanModeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).Ec2ScanModeStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.configuration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.coverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -145832,8 +145976,10 @@ type mqlAwsInspector struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsInspectorInternal it will be used here
-	Coverages plugin.TValue[[]any]
-	Findings  plugin.TValue[[]any]
+	Coverages       plugin.TValue[[]any]
+	Findings        plugin.TValue[[]any]
+	AccountStatuses plugin.TValue[[]any]
+	Configurations  plugin.TValue[[]any]
 }
 
 // createAwsInspector creates a new instance of this resource
@@ -145903,6 +146049,206 @@ func (c *mqlAwsInspector) GetFindings() *plugin.TValue[[]any] {
 
 		return c.findings()
 	})
+}
+
+func (c *mqlAwsInspector) GetAccountStatuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccountStatuses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector", c.__id, "accountStatuses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accountStatuses()
+	})
+}
+
+func (c *mqlAwsInspector) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector", c.__id, "configurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurations()
+	})
+}
+
+// mqlAwsInspectorAccountStatus for the aws.inspector.accountStatus resource
+type mqlAwsInspectorAccountStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsInspectorAccountStatusInternal it will be used here
+	AccountId            plugin.TValue[string]
+	Status               plugin.TValue[string]
+	Ec2Status            plugin.TValue[string]
+	EcrStatus            plugin.TValue[string]
+	LambdaStatus         plugin.TValue[string]
+	LambdaCodeStatus     plugin.TValue[string]
+	CodeRepositoryStatus plugin.TValue[string]
+	Region               plugin.TValue[string]
+}
+
+// createAwsInspectorAccountStatus creates a new instance of this resource
+func createAwsInspectorAccountStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorAccountStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.accountStatus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorAccountStatus) MqlName() string {
+	return "aws.inspector.accountStatus"
+}
+
+func (c *mqlAwsInspectorAccountStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetEc2Status() *plugin.TValue[string] {
+	return &c.Ec2Status
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetEcrStatus() *plugin.TValue[string] {
+	return &c.EcrStatus
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetLambdaStatus() *plugin.TValue[string] {
+	return &c.LambdaStatus
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetLambdaCodeStatus() *plugin.TValue[string] {
+	return &c.LambdaCodeStatus
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetCodeRepositoryStatus() *plugin.TValue[string] {
+	return &c.CodeRepositoryStatus
+}
+
+func (c *mqlAwsInspectorAccountStatus) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsInspectorConfiguration for the aws.inspector.configuration resource
+type mqlAwsInspectorConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsInspectorConfigurationInternal it will be used here
+	EcrRescanDurationDays         plugin.TValue[string]
+	EcrPullDateRescanDurationDays plugin.TValue[string]
+	EcrPullDateRescanMode         plugin.TValue[string]
+	EcrRescanDurationStatus       plugin.TValue[string]
+	EcrRescanUpdatedAt            plugin.TValue[*time.Time]
+	Ec2ScanMode                   plugin.TValue[string]
+	Ec2ScanModeStatus             plugin.TValue[string]
+	Region                        plugin.TValue[string]
+}
+
+// createAwsInspectorConfiguration creates a new instance of this resource
+func createAwsInspectorConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorConfiguration) MqlName() string {
+	return "aws.inspector.configuration"
+}
+
+func (c *mqlAwsInspectorConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEcrRescanDurationDays() *plugin.TValue[string] {
+	return &c.EcrRescanDurationDays
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEcrPullDateRescanDurationDays() *plugin.TValue[string] {
+	return &c.EcrPullDateRescanDurationDays
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEcrPullDateRescanMode() *plugin.TValue[string] {
+	return &c.EcrPullDateRescanMode
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEcrRescanDurationStatus() *plugin.TValue[string] {
+	return &c.EcrRescanDurationStatus
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEcrRescanUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.EcrRescanUpdatedAt
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEc2ScanMode() *plugin.TValue[string] {
+	return &c.Ec2ScanMode
+}
+
+func (c *mqlAwsInspectorConfiguration) GetEc2ScanModeStatus() *plugin.TValue[string] {
+	return &c.Ec2ScanModeStatus
+}
+
+func (c *mqlAwsInspectorConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsInspectorCoverage for the aws.inspector.coverage resource

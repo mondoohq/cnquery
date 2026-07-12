@@ -16440,12 +16440,86 @@ private aws.signer.signingProfile @defaults("profileName platformId status") {
 // posture coverage in the account. Iterate `coverages()` for the per-resource
 // scan coverage status (which EC2 instances, ECR images, and Lambda
 // functions Inspector is currently scanning) and `findings()` for the
-// active findings produced across all enabled regions.
+// active findings produced across all enabled regions. Iterate
+// `accountStatuses()` and `configurations()` for the account enablement
+// posture and scan settings that govern whether those findings are produced
+// at all.
 aws.inspector {
   // List of coverage results for the AWS account
   coverages() []aws.inspector.coverage
   // List of all findings from Inspector across all regions
   findings() []aws.inspector.finding
+  // Inspector enablement status for each account, per region
+  accountStatuses() []aws.inspector.accountStatus
+  // Inspector scan settings for each enabled region
+  configurations() []aws.inspector.configuration
+}
+
+// Amazon Inspector account scan status
+//
+// Inspector enablement status for one account in one region, broken down by
+// scan type. Each entry reports the overall activation status alongside the
+// per-scan-type status for EC2, ECR, Lambda standard, Lambda code, and code
+// repository scanning, so audits can confirm that every scan type is enabled
+// across the whole account footprint.
+private aws.inspector.accountStatus @defaults("accountId status region") {
+  // Account ID the status applies to
+  accountId string
+  // Overall Inspector activation status
+  //
+  // One of ENABLING, ENABLED, DISABLING, DISABLED, SUSPENDING, or SUSPENDED.
+  status string
+  // Scanning status for EC2 instances
+  //
+  // One of ENABLING, ENABLED, DISABLING, DISABLED, SUSPENDING, or SUSPENDED.
+  ec2Status string
+  // Scanning status for ECR container images
+  ecrStatus string
+  // Scanning status for Lambda functions
+  lambdaStatus string
+  // Scanning status for custom application code in Lambda functions
+  lambdaCodeStatus string
+  // Scanning status for code repositories
+  codeRepositoryStatus string
+  // Region the status applies to
+  region string
+}
+
+// Amazon Inspector scan configuration
+//
+// Account-level scan settings for one region, covering the ECR automated
+// re-scan behavior and the EC2 scan mode. The re-scan settings control how
+// long Inspector keeps rescanning container images after they are pushed or
+// last pulled, and the EC2 scan mode records whether agent-based or hybrid
+// scanning is in effect.
+private aws.inspector.configuration @defaults("region ecrRescanDurationDays") {
+  // Duration Inspector keeps rescanning an ECR image after its push date
+  //
+  // One of LIFETIME, DAYS_3, DAYS_7, DAYS_14, DAYS_30, DAYS_60, DAYS_90, or
+  // DAYS_180.
+  ecrRescanDurationDays string
+  // Duration Inspector keeps rescanning an ECR image relative to its pull date
+  //
+  // One of DAYS_3, DAYS_7, DAYS_14, DAYS_30, DAYS_60, DAYS_90, or DAYS_180.
+  ecrPullDateRescanDurationDays string
+  // Pull-date basis used for ECR re-scan expiry
+  //
+  // One of LAST_PULL_DATE or LAST_IN_USE_AT.
+  ecrPullDateRescanMode string
+  // Status of the most recent ECR re-scan duration change
+  //
+  // One of SUCCESS, PENDING, or FAILED.
+  ecrRescanDurationStatus string
+  // Time the ECR re-scan duration setting was last changed
+  ecrRescanUpdatedAt time
+  // EC2 scan method in effect
+  //
+  // One of EC2_SSM_AGENT_BASED or EC2_HYBRID.
+  ec2ScanMode string
+  // Status of the EC2 scan mode setting
+  ec2ScanModeStatus string
+  // Region the configuration applies to
+  region string
 }
 
 // Amazon Inspector environment coverage
