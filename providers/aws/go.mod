@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.57.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.62.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.79.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.71.0
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.60.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.315.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.316.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.88.0
@@ -74,14 +74,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.49.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.96.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.97.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.35.0
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.72.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.257.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.258.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.73.0
