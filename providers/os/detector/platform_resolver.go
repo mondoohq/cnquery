@@ -20,6 +20,13 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
+// isUnnamedPlatform reports whether detection identified the system as Linux but
+// could not pin down which distribution it is. Container images in that state are
+// reported as "scratch" rather than by the generic fallback name.
+func isUnnamedPlatform(name string) bool {
+	return name == "" || name == defaultLinux.Name
+}
+
 func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform, bool) {
 	// prepare detect info object
 	platform := &inventory.Platform{}
@@ -37,7 +44,7 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		platform.Kind = "container-image"
 
 		// if the platform name is not set, we should fallback to the scratch operating system
-		if len(pi.Name) == 0 {
+		if isUnnamedPlatform(pi.Name) {
 			platform.Name = "scratch"
 			platform.Arch = tarConn.PlatformArchitecture
 			return platform, true
@@ -51,7 +58,7 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		platform.Kind = "container"
 
 		// if the platform name is not set, we should fallback to the scratch operating system
-		if len(pi.Name) == 0 {
+		if isUnnamedPlatform(pi.Name) {
 			platform.Name = "scratch"
 			platform.Arch = pi.Arch
 			return platform, true

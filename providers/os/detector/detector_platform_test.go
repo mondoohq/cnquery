@@ -1260,3 +1260,45 @@ func TestQubesOSDetector(t *testing.T) {
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
+
+// os-release does not require an ID field, and vendor firmware such as FRITZ!OS
+// ships without one. The name is derived from NAME so the platform does not end
+// up reported as "unknown".
+func TestOSReleaseWithoutIDDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-fritzos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "fritzos", di.Name, "os name should be derived from NAME")
+	assert.Equal(t, "FRITZ!OS 8.03", di.Title, "os title should be identified")
+	assert.Equal(t, "8.03", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+// a linux system that carries no lsb or os-release information at all falls back
+// to the generic-linux resolver name
+func TestGenericLinuxDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-generic-linux.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "generic-linux", di.Name, "os name should fall back to the generic name")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+func TestSlugifyPlatformName(t *testing.T) {
+	test := []struct {
+		Val      string
+		Expected string
+	}{
+		{Val: "FRITZ!OS", Expected: "fritzos"},
+		{Val: "Buildroot", Expected: "buildroot"},
+		{Val: "Generic Vendor Linux", Expected: "generic-vendor-linux"},
+		{Val: "Wind River Linux 7.0.0.2", Expected: "wind-river-linux-7.0.0.2"},
+		{Val: "", Expected: ""},
+	}
+
+	for i := range test {
+		assert.Equal(t, test[i].Expected, slugifyPlatformName(test[i].Val), test[i].Val)
+	}
+}
