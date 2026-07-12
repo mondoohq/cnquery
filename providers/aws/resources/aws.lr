@@ -19772,8 +19772,9 @@ private aws.apprunner.vpcIngressConnection @defaults("name status domainName reg
 // or cross-account catalogs) — each entry exposes its type, parameters,
 // and the associated connector. Iterate `namedQueries()` for the saved
 // queries belonging to those workgroups so audits can review the SQL
-// text, target database, owning workgroup, and owner of each saved
-// query.
+// text, target database, and owning workgroup. Iterate
+// `capacityReservations()` for the provisioned data-processing-unit
+// capacity reserved for query execution.
 aws.athena @defaults("workgroups") {
   // List of Athena workgroups
   workgroups() []aws.athena.workgroup
@@ -19781,6 +19782,8 @@ aws.athena @defaults("workgroups") {
   dataCatalogs() []aws.athena.dataCatalog
   // List of Athena named (saved) queries
   namedQueries() []aws.athena.namedQuery
+  // List of Athena capacity reservations
+  capacityReservations() []aws.athena.capacityReservation
 }
 
 // Amazon Athena workgroup
@@ -19821,6 +19824,24 @@ private aws.athena.workgroup @defaults("name state region") {
   resultEncryptionOption() string
   // KMS key protecting query results when the SSE_KMS or CSE_KMS option is used
   kmsKey() aws.kms.key
+  // Whether a minimum level of encryption is enforced on all query results
+  minimumEncryptionEnforced() bool
+  // Amazon S3 bucket where query and calculation results are stored
+  resultBucket() aws.s3.bucket
+  // Expected AWS account ID of the query result S3 bucket owner
+  expectedResultBucketOwner() string
+  // Canned ACL applied to query result objects in Amazon S3
+  //
+  // Set to BUCKET_OWNER_FULL_CONTROL when the workgroup grants the result
+  // bucket owner full control of stored objects. Empty when no ACL is
+  // configured.
+  resultAclOption() string
+  // IAM role assumed to run queries and calculations for the workgroup
+  executionRole() aws.iam.role
+  // KMS key encrypting Spark calculation results and notebook content
+  customerContentKmsKey() aws.kms.key
+  // Additional settings applied to Spark-enabled workgroups
+  additionalConfiguration() string
   // Region where the workgroup exists
   region string
   // Tags for the workgroup
@@ -19839,6 +19860,8 @@ private aws.athena.dataCatalog @defaults("name type region") {
   description() string
   // Parameters for the data catalog (e.g., Lambda ARN, Glue catalog ID)
   parameters() map[string]string
+  // Lambda function backing a LAMBDA or FEDERATED metadata connector
+  lambdaFunction() aws.lambda.function
   // Status of the data catalog: CREATE_IN_PROGRESS, CREATE_COMPLETE, CREATE_FAILED, etc.
   status string
   // Connection type for FEDERATED catalogs
@@ -19847,6 +19870,8 @@ private aws.athena.dataCatalog @defaults("name type region") {
   error string
   // Region where the data catalog exists
   region string
+  // List of databases registered in the data catalog
+  databases() []aws.athena.database
 }
 
 // Amazon Athena named (saved) query
@@ -19861,10 +19886,71 @@ private aws.athena.namedQuery @defaults("name database region") {
   queryString string
   // Description of the named query
   description string
+  // Workgroup name the named query belongs to
+  //
+  // Deprecated in favor of queryWorkgroup.
+  workGroup @maturity("deprecated") string
   // Workgroup the named query belongs to
-  workGroup string
+  queryWorkgroup() aws.athena.workgroup
   // Region where the named query exists
   region string
+}
+
+// Amazon Athena capacity reservation
+private aws.athena.capacityReservation @defaults("name status targetDpus region") {
+  // Name of the capacity reservation
+  name string
+  // ARN of the capacity reservation (synthetic: arn:aws:athena:{region}:{account}:capacity-reservation/{name})
+  arn string
+  // Status of the capacity reservation
+  //
+  // One of PENDING, ACTIVE, CANCELLING, CANCELLED, FAILED, or
+  // UPDATE_PENDING.
+  status string
+  // Number of data processing units currently allocated to the reservation
+  allocatedDpus int
+  // Number of data processing units requested for the reservation
+  targetDpus int
+  // Date and time the capacity reservation was created
+  createdAt time
+  // Date and time of the last successful allocation
+  lastSuccessfulAllocationAt time
+  // Region where the capacity reservation exists
+  region string
+}
+
+// Amazon Athena catalog database
+private aws.athena.database @defaults("name catalogName region") {
+  // Name of the database
+  name string
+  // Name of the data catalog containing the database
+  catalogName string
+  // Description of the database
+  description string
+  // Parameters associated with the database
+  parameters map[string]string
+  // Region where the database exists
+  region string
+  // List of table metadata entries in the database
+  tables() []aws.athena.table
+}
+
+// Amazon Athena table metadata
+private aws.athena.table @defaults("name tableType") {
+  // Name of the table
+  name string
+  // Type of table, such as EXTERNAL_TABLE or VIRTUAL_VIEW
+  tableType string
+  // Date and time the table was created
+  createdAt time
+  // Date and time the table was last accessed
+  lastAccessAt time
+  // Columns of the table, each with a name, type, and comment
+  columns []dict
+  // Partition keys of the table, each with a name, type, and comment
+  partitionKeys []dict
+  // Parameters associated with the table
+  parameters map[string]string
 }
 
 // AWS Directory Service

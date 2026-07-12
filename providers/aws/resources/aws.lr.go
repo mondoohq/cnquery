@@ -694,6 +694,9 @@ const (
 	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
 	ResourceAwsAthenaDataCatalog                                                string = "aws.athena.dataCatalog"
 	ResourceAwsAthenaNamedQuery                                                 string = "aws.athena.namedQuery"
+	ResourceAwsAthenaCapacityReservation                                        string = "aws.athena.capacityReservation"
+	ResourceAwsAthenaDatabase                                                   string = "aws.athena.database"
+	ResourceAwsAthenaTable                                                      string = "aws.athena.table"
 	ResourceAwsDirectoryservice                                                 string = "aws.directoryservice"
 	ResourceAwsDirectoryserviceDirectory                                        string = "aws.directoryservice.directory"
 	ResourceAwsDirectoryserviceRadiusSettings                                   string = "aws.directoryservice.radiusSettings"
@@ -3648,6 +3651,18 @@ func init() {
 		"aws.athena.namedQuery": {
 			// to override args, implement: initAwsAthenaNamedQuery(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAthenaNamedQuery,
+		},
+		"aws.athena.capacityReservation": {
+			// to override args, implement: initAwsAthenaCapacityReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthenaCapacityReservation,
+		},
+		"aws.athena.database": {
+			// to override args, implement: initAwsAthenaDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthenaDatabase,
+		},
+		"aws.athena.table": {
+			// to override args, implement: initAwsAthenaTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthenaTable,
 		},
 		"aws.directoryservice": {
 			// to override args, implement: initAwsDirectoryservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -26568,6 +26583,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.athena.namedQueries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthena).GetNamedQueries()).ToDataRes(types.Array(types.Resource("aws.athena.namedQuery")))
 	},
+	"aws.athena.capacityReservations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthena).GetCapacityReservations()).ToDataRes(types.Array(types.Resource("aws.athena.capacityReservation")))
+	},
 	"aws.athena.workgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaWorkgroup).GetName()).ToDataRes(types.String)
 	},
@@ -26613,6 +26631,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.athena.workgroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaWorkgroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.athena.workgroup.minimumEncryptionEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetMinimumEncryptionEnforced()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.resultBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.athena.workgroup.expectedResultBucketOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetExpectedResultBucketOwner()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.resultAclOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultAclOption()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.executionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.athena.workgroup.customerContentKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetCustomerContentKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.athena.workgroup.additionalConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetAdditionalConfiguration()).ToDataRes(types.String)
+	},
 	"aws.athena.workgroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaWorkgroup).GetRegion()).ToDataRes(types.String)
 	},
@@ -26634,6 +26673,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.athena.dataCatalog.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaDataCatalog).GetParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.athena.dataCatalog.lambdaFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDataCatalog).GetLambdaFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
 	"aws.athena.dataCatalog.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaDataCatalog).GetStatus()).ToDataRes(types.String)
 	},
@@ -26645,6 +26687,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.athena.dataCatalog.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaDataCatalog).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.dataCatalog.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDataCatalog).GetDatabases()).ToDataRes(types.Array(types.Resource("aws.athena.database")))
 	},
 	"aws.athena.namedQuery.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaNamedQuery).GetId()).ToDataRes(types.String)
@@ -26664,8 +26709,74 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.athena.namedQuery.workGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaNamedQuery).GetWorkGroup()).ToDataRes(types.String)
 	},
+	"aws.athena.namedQuery.queryWorkgroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaNamedQuery).GetQueryWorkgroup()).ToDataRes(types.Resource("aws.athena.workgroup"))
+	},
 	"aws.athena.namedQuery.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthenaNamedQuery).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.capacityReservation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetName()).ToDataRes(types.String)
+	},
+	"aws.athena.capacityReservation.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.athena.capacityReservation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.athena.capacityReservation.allocatedDpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetAllocatedDpus()).ToDataRes(types.Int)
+	},
+	"aws.athena.capacityReservation.targetDpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetTargetDpus()).ToDataRes(types.Int)
+	},
+	"aws.athena.capacityReservation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.capacityReservation.lastSuccessfulAllocationAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetLastSuccessfulAllocationAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.capacityReservation.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaCapacityReservation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetName()).ToDataRes(types.String)
+	},
+	"aws.athena.database.catalogName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetCatalogName()).ToDataRes(types.String)
+	},
+	"aws.athena.database.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.athena.database.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.athena.database.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.database.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaDatabase).GetTables()).ToDataRes(types.Array(types.Resource("aws.athena.table")))
+	},
+	"aws.athena.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.athena.table.tableType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetTableType()).ToDataRes(types.String)
+	},
+	"aws.athena.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.table.lastAccessAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetLastAccessAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.table.columns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetColumns()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.athena.table.partitionKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetPartitionKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.athena.table.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaTable).GetParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.directoryservice.directories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryservice).GetDirectories()).ToDataRes(types.Array(types.Resource("aws.directoryservice.directory")))
@@ -65986,6 +66097,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAthena).NamedQueries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.athena.capacityReservations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthena).CapacityReservations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.athena.workgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaWorkgroup).__id, ok = v.Value.(string)
 		return
@@ -66050,6 +66165,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAthenaWorkgroup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
+	"aws.athena.workgroup.minimumEncryptionEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).MinimumEncryptionEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.expectedResultBucketOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ExpectedResultBucketOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultAclOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultAclOption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.executionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.customerContentKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).CustomerContentKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.additionalConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).AdditionalConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.athena.workgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaWorkgroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -66082,6 +66225,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAthenaDataCatalog).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.athena.dataCatalog.lambdaFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDataCatalog).LambdaFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
 	"aws.athena.dataCatalog.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaDataCatalog).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -66096,6 +66243,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.athena.dataCatalog.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaDataCatalog).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.dataCatalog.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDataCatalog).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.athena.namedQuery.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66126,8 +66277,108 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAthenaNamedQuery).WorkGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.athena.namedQuery.queryWorkgroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaNamedQuery).QueryWorkgroup, ok = plugin.RawToTValue[*mqlAwsAthenaWorkgroup](v.Value, v.Error)
+		return
+	},
 	"aws.athena.namedQuery.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAthenaNamedQuery).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.capacityReservation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.allocatedDpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).AllocatedDpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.targetDpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).TargetDpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.lastSuccessfulAllocationAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).LastSuccessfulAllocationAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.capacityReservation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaCapacityReservation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.catalogName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.database.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaDatabase).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.tableType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).TableType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.lastAccessAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).LastAccessAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.columns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).Columns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.partitionKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).PartitionKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.table.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaTable).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.directoryservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -159379,9 +159630,10 @@ type mqlAwsAthena struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsAthenaInternal it will be used here
-	Workgroups   plugin.TValue[[]any]
-	DataCatalogs plugin.TValue[[]any]
-	NamedQueries plugin.TValue[[]any]
+	Workgroups           plugin.TValue[[]any]
+	DataCatalogs         plugin.TValue[[]any]
+	NamedQueries         plugin.TValue[[]any]
+	CapacityReservations plugin.TValue[[]any]
 }
 
 // createAwsAthena creates a new instance of this resource
@@ -159469,6 +159721,22 @@ func (c *mqlAwsAthena) GetNamedQueries() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsAthena) GetCapacityReservations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapacityReservations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena", c.__id, "capacityReservations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capacityReservations()
+	})
+}
+
 // mqlAwsAthenaWorkgroup for the aws.athena.workgroup resource
 type mqlAwsAthenaWorkgroup struct {
 	MqlRuntime *plugin.Runtime
@@ -159489,6 +159757,13 @@ type mqlAwsAthenaWorkgroup struct {
 	Encrypted                       plugin.TValue[bool]
 	ResultEncryptionOption          plugin.TValue[string]
 	KmsKey                          plugin.TValue[*mqlAwsKmsKey]
+	MinimumEncryptionEnforced       plugin.TValue[bool]
+	ResultBucket                    plugin.TValue[*mqlAwsS3Bucket]
+	ExpectedResultBucketOwner       plugin.TValue[string]
+	ResultAclOption                 plugin.TValue[string]
+	ExecutionRole                   plugin.TValue[*mqlAwsIamRole]
+	CustomerContentKmsKey           plugin.TValue[*mqlAwsKmsKey]
+	AdditionalConfiguration         plugin.TValue[string]
 	Region                          plugin.TValue[string]
 	Tags                            plugin.TValue[map[string]any]
 }
@@ -159615,6 +159890,78 @@ func (c *mqlAwsAthenaWorkgroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
+func (c *mqlAwsAthenaWorkgroup) GetMinimumEncryptionEnforced() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MinimumEncryptionEnforced, func() (bool, error) {
+		return c.minimumEncryptionEnforced()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.ResultBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.workgroup", c.__id, "resultBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.resultBucket()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetExpectedResultBucketOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExpectedResultBucketOwner, func() (string, error) {
+		return c.expectedResultBucketOwner()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultAclOption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResultAclOption, func() (string, error) {
+		return c.resultAclOption()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.workgroup", c.__id, "executionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.executionRole()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetCustomerContentKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerContentKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.workgroup", c.__id, "customerContentKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerContentKmsKey()
+	})
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetAdditionalConfiguration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AdditionalConfiguration, func() (string, error) {
+		return c.additionalConfiguration()
+	})
+}
+
 func (c *mqlAwsAthenaWorkgroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -159635,10 +159982,12 @@ type mqlAwsAthenaDataCatalog struct {
 	Type           plugin.TValue[string]
 	Description    plugin.TValue[string]
 	Parameters     plugin.TValue[map[string]any]
+	LambdaFunction plugin.TValue[*mqlAwsLambdaFunction]
 	Status         plugin.TValue[string]
 	ConnectionType plugin.TValue[string]
 	Error          plugin.TValue[string]
 	Region         plugin.TValue[string]
+	Databases      plugin.TValue[[]any]
 }
 
 // createAwsAthenaDataCatalog creates a new instance of this resource
@@ -159699,6 +160048,22 @@ func (c *mqlAwsAthenaDataCatalog) GetParameters() *plugin.TValue[map[string]any]
 	})
 }
 
+func (c *mqlAwsAthenaDataCatalog) GetLambdaFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.LambdaFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.dataCatalog", c.__id, "lambdaFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambdaFunction()
+	})
+}
+
 func (c *mqlAwsAthenaDataCatalog) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
@@ -159715,18 +160080,35 @@ func (c *mqlAwsAthenaDataCatalog) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsAthenaDataCatalog) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.dataCatalog", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
 // mqlAwsAthenaNamedQuery for the aws.athena.namedQuery resource
 type mqlAwsAthenaNamedQuery struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsAthenaNamedQueryInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Database    plugin.TValue[string]
-	QueryString plugin.TValue[string]
-	Description plugin.TValue[string]
-	WorkGroup   plugin.TValue[string]
-	Region      plugin.TValue[string]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Database       plugin.TValue[string]
+	QueryString    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	WorkGroup      plugin.TValue[string]
+	QueryWorkgroup plugin.TValue[*mqlAwsAthenaWorkgroup]
+	Region         plugin.TValue[string]
 }
 
 // createAwsAthenaNamedQuery creates a new instance of this resource
@@ -159785,8 +160167,258 @@ func (c *mqlAwsAthenaNamedQuery) GetWorkGroup() *plugin.TValue[string] {
 	return &c.WorkGroup
 }
 
+func (c *mqlAwsAthenaNamedQuery) GetQueryWorkgroup() *plugin.TValue[*mqlAwsAthenaWorkgroup] {
+	return plugin.GetOrCompute[*mqlAwsAthenaWorkgroup](&c.QueryWorkgroup, func() (*mqlAwsAthenaWorkgroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.namedQuery", c.__id, "queryWorkgroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAthenaWorkgroup), nil
+			}
+		}
+
+		return c.queryWorkgroup()
+	})
+}
+
 func (c *mqlAwsAthenaNamedQuery) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsAthenaCapacityReservation for the aws.athena.capacityReservation resource
+type mqlAwsAthenaCapacityReservation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaCapacityReservationInternal it will be used here
+	Name                       plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	AllocatedDpus              plugin.TValue[int64]
+	TargetDpus                 plugin.TValue[int64]
+	CreatedAt                  plugin.TValue[*time.Time]
+	LastSuccessfulAllocationAt plugin.TValue[*time.Time]
+	Region                     plugin.TValue[string]
+}
+
+// createAwsAthenaCapacityReservation creates a new instance of this resource
+func createAwsAthenaCapacityReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthenaCapacityReservation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena.capacityReservation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthenaCapacityReservation) MqlName() string {
+	return "aws.athena.capacityReservation"
+}
+
+func (c *mqlAwsAthenaCapacityReservation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetAllocatedDpus() *plugin.TValue[int64] {
+	return &c.AllocatedDpus
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetTargetDpus() *plugin.TValue[int64] {
+	return &c.TargetDpus
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetLastSuccessfulAllocationAt() *plugin.TValue[*time.Time] {
+	return &c.LastSuccessfulAllocationAt
+}
+
+func (c *mqlAwsAthenaCapacityReservation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsAthenaDatabase for the aws.athena.database resource
+type mqlAwsAthenaDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaDatabaseInternal it will be used here
+	Name        plugin.TValue[string]
+	CatalogName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Parameters  plugin.TValue[map[string]any]
+	Region      plugin.TValue[string]
+	Tables      plugin.TValue[[]any]
+}
+
+// createAwsAthenaDatabase creates a new instance of this resource
+func createAwsAthenaDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthenaDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthenaDatabase) MqlName() string {
+	return "aws.athena.database"
+}
+
+func (c *mqlAwsAthenaDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthenaDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAthenaDatabase) GetCatalogName() *plugin.TValue[string] {
+	return &c.CatalogName
+}
+
+func (c *mqlAwsAthenaDatabase) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAthenaDatabase) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAwsAthenaDatabase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAthenaDatabase) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena.database", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlAwsAthenaTable for the aws.athena.table resource
+type mqlAwsAthenaTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaTableInternal it will be used here
+	Name          plugin.TValue[string]
+	TableType     plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastAccessAt  plugin.TValue[*time.Time]
+	Columns       plugin.TValue[[]any]
+	PartitionKeys plugin.TValue[[]any]
+	Parameters    plugin.TValue[map[string]any]
+}
+
+// createAwsAthenaTable creates a new instance of this resource
+func createAwsAthenaTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthenaTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthenaTable) MqlName() string {
+	return "aws.athena.table"
+}
+
+func (c *mqlAwsAthenaTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthenaTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAthenaTable) GetTableType() *plugin.TValue[string] {
+	return &c.TableType
+}
+
+func (c *mqlAwsAthenaTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAthenaTable) GetLastAccessAt() *plugin.TValue[*time.Time] {
+	return &c.LastAccessAt
+}
+
+func (c *mqlAwsAthenaTable) GetColumns() *plugin.TValue[[]any] {
+	return &c.Columns
+}
+
+func (c *mqlAwsAthenaTable) GetPartitionKeys() *plugin.TValue[[]any] {
+	return &c.PartitionKeys
+}
+
+func (c *mqlAwsAthenaTable) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
 }
 
 // mqlAwsDirectoryservice for the aws.directoryservice resource

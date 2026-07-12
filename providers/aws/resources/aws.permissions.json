@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.45.0",
-  "generated_at": "2026-07-12T01:10:09-07:00",
+  "generated_at": "2026-07-12T23:00:45+02:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -56,8 +56,11 @@
     "athena:BatchGetNamedQuery",
     "athena:GetDataCatalog",
     "athena:GetWorkGroup",
+    "athena:ListCapacityReservations",
     "athena:ListDataCatalogs",
+    "athena:ListDatabases",
     "athena:ListNamedQueries",
+    "athena:ListTableMetadata",
     "athena:ListTagsForResource",
     "athena:ListWorkGroups",
     "autoscaling:DescribeAutoScalingGroups",
@@ -1271,15 +1274,33 @@
       "source_file": "aws_athena.go"
     },
     {
+      "permission": "athena:ListCapacityReservations",
+      "service": "athena",
+      "action": "ListCapacityReservations",
+      "source_file": "aws_athena.go"
+    },
+    {
       "permission": "athena:ListDataCatalogs",
       "service": "athena",
       "action": "ListDataCatalogs",
       "source_file": "aws_athena.go"
     },
     {
+      "permission": "athena:ListDatabases",
+      "service": "athena",
+      "action": "ListDatabases",
+      "source_file": "aws_athena.go"
+    },
+    {
       "permission": "athena:ListNamedQueries",
       "service": "athena",
       "action": "ListNamedQueries",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListTableMetadata",
+      "service": "athena",
+      "action": "ListTableMetadata",
       "source_file": "aws_athena.go"
     },
     {
