@@ -5711,9 +5711,9 @@ aws.inspector.accountStatuses 13.45.1
 aws.inspector.configuration 13.45.1
 aws.inspector.configuration.ec2ScanMode 13.45.1
 aws.inspector.configuration.ec2ScanModeStatus 13.45.1
-aws.inspector.configuration.ecrPullDateRescanDurationDays 13.45.1
+aws.inspector.configuration.ecrPullDateRescanDuration 13.45.1
 aws.inspector.configuration.ecrPullDateRescanMode 13.45.1
-aws.inspector.configuration.ecrRescanDurationDays 13.45.1
+aws.inspector.configuration.ecrRescanDuration 13.45.1
 aws.inspector.configuration.ecrRescanDurationStatus 13.45.1
 aws.inspector.configuration.ecrRescanUpdatedAt 13.45.1
 aws.inspector.configuration.region 13.45.1

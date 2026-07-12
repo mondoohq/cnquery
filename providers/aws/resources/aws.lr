@@ -16492,16 +16492,16 @@ private aws.inspector.accountStatus @defaults("accountId status region") {
 // long Inspector keeps rescanning container images after they are pushed or
 // last pulled, and the EC2 scan mode records whether agent-based or hybrid
 // scanning is in effect.
-private aws.inspector.configuration @defaults("region ecrRescanDurationDays") {
+private aws.inspector.configuration @defaults("region ecrRescanDuration") {
   // Duration Inspector keeps rescanning an ECR image after its push date
   //
   // One of LIFETIME, DAYS_3, DAYS_7, DAYS_14, DAYS_30, DAYS_60, DAYS_90, or
   // DAYS_180.
-  ecrRescanDurationDays string
+  ecrRescanDuration string
   // Duration Inspector keeps rescanning an ECR image relative to its pull date
   //
   // One of DAYS_3, DAYS_7, DAYS_14, DAYS_30, DAYS_60, DAYS_90, or DAYS_180.
-  ecrPullDateRescanDurationDays string
+  ecrPullDateRescanDuration string
   // Pull-date basis used for ECR re-scan expiry
   //
   // One of LAST_PULL_DATE or LAST_IN_USE_AT.

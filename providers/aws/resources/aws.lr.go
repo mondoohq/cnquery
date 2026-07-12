@@ -22815,11 +22815,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.inspector.accountStatus.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorAccountStatus).GetRegion()).ToDataRes(types.String)
 	},
-	"aws.inspector.configuration.ecrRescanDurationDays": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsInspectorConfiguration).GetEcrRescanDurationDays()).ToDataRes(types.String)
+	"aws.inspector.configuration.ecrRescanDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrRescanDuration()).ToDataRes(types.String)
 	},
-	"aws.inspector.configuration.ecrPullDateRescanDurationDays": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsInspectorConfiguration).GetEcrPullDateRescanDurationDays()).ToDataRes(types.String)
+	"aws.inspector.configuration.ecrPullDateRescanDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorConfiguration).GetEcrPullDateRescanDuration()).ToDataRes(types.String)
 	},
 	"aws.inspector.configuration.ecrPullDateRescanMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspectorConfiguration).GetEcrPullDateRescanMode()).ToDataRes(types.String)
@@ -60586,12 +60586,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsInspectorConfiguration).__id, ok = v.Value.(string)
 		return
 	},
-	"aws.inspector.configuration.ecrRescanDurationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsInspectorConfiguration).EcrRescanDurationDays, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.inspector.configuration.ecrRescanDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrRescanDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.inspector.configuration.ecrPullDateRescanDurationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsInspectorConfiguration).EcrPullDateRescanDurationDays, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.inspector.configuration.ecrPullDateRescanDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorConfiguration).EcrPullDateRescanDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.configuration.ecrPullDateRescanMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -146172,14 +146172,14 @@ type mqlAwsInspectorConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsInspectorConfigurationInternal it will be used here
-	EcrRescanDurationDays         plugin.TValue[string]
-	EcrPullDateRescanDurationDays plugin.TValue[string]
-	EcrPullDateRescanMode         plugin.TValue[string]
-	EcrRescanDurationStatus       plugin.TValue[string]
-	EcrRescanUpdatedAt            plugin.TValue[*time.Time]
-	Ec2ScanMode                   plugin.TValue[string]
-	Ec2ScanModeStatus             plugin.TValue[string]
-	Region                        plugin.TValue[string]
+	EcrRescanDuration         plugin.TValue[string]
+	EcrPullDateRescanDuration plugin.TValue[string]
+	EcrPullDateRescanMode     plugin.TValue[string]
+	EcrRescanDurationStatus   plugin.TValue[string]
+	EcrRescanUpdatedAt        plugin.TValue[*time.Time]
+	Ec2ScanMode               plugin.TValue[string]
+	Ec2ScanModeStatus         plugin.TValue[string]
+	Region                    plugin.TValue[string]
 }
 
 // createAwsInspectorConfiguration creates a new instance of this resource
@@ -146219,12 +146219,12 @@ func (c *mqlAwsInspectorConfiguration) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsInspectorConfiguration) GetEcrRescanDurationDays() *plugin.TValue[string] {
-	return &c.EcrRescanDurationDays
+func (c *mqlAwsInspectorConfiguration) GetEcrRescanDuration() *plugin.TValue[string] {
+	return &c.EcrRescanDuration
 }
 
-func (c *mqlAwsInspectorConfiguration) GetEcrPullDateRescanDurationDays() *plugin.TValue[string] {
-	return &c.EcrPullDateRescanDurationDays
+func (c *mqlAwsInspectorConfiguration) GetEcrPullDateRescanDuration() *plugin.TValue[string] {
+	return &c.EcrPullDateRescanDuration
 }
 
 func (c *mqlAwsInspectorConfiguration) GetEcrPullDateRescanMode() *plugin.TValue[string] {

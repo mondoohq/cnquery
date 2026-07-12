@@ -275,9 +275,16 @@ func (a *mqlAwsInspector) getAccountStatuses(conn *connection.AwsConnection) []*
 				if rs == nil {
 					rs = &types.ResourceState{}
 				}
+				// AccountId is a required field on the API response, but fall
+				// back to the connection account so the __id stays unique even
+				// if it ever comes back empty
+				accountID := convert.ToValue(acct.AccountId)
+				if accountID == "" {
+					accountID = conn.AccountId()
+				}
 				mqlStatus, err := CreateResource(a.MqlRuntime, "aws.inspector.accountStatus",
 					map[string]*llx.RawData{
-						"accountId":            llx.StringDataPtr(acct.AccountId),
+						"accountId":            llx.StringData(accountID),
 						"status":               llx.StringData(inspectorStateStatus(acct.State)),
 						"ec2Status":            llx.StringData(inspectorStateStatus(rs.Ec2)),
 						"ecrStatus":            llx.StringData(inspectorStateStatus(rs.Ecr)),
@@ -343,19 +350,19 @@ func (a *mqlAwsInspector) getConfigurations(conn *connection.AwsConnection) []*j
 			}
 
 			args := map[string]*llx.RawData{
-				"region":                        llx.StringData(region),
-				"ecrRescanDurationDays":         llx.StringData(""),
-				"ecrPullDateRescanDurationDays": llx.StringData(""),
-				"ecrPullDateRescanMode":         llx.StringData(""),
-				"ecrRescanDurationStatus":       llx.StringData(""),
-				"ecrRescanUpdatedAt":            llx.TimeDataPtr(nil),
-				"ec2ScanMode":                   llx.StringData(""),
-				"ec2ScanModeStatus":             llx.StringData(""),
+				"region":                    llx.StringData(region),
+				"ecrRescanDuration":         llx.StringData(""),
+				"ecrPullDateRescanDuration": llx.StringData(""),
+				"ecrPullDateRescanMode":     llx.StringData(""),
+				"ecrRescanDurationStatus":   llx.StringData(""),
+				"ecrRescanUpdatedAt":        llx.TimeDataPtr(nil),
+				"ec2ScanMode":               llx.StringData(""),
+				"ec2ScanModeStatus":         llx.StringData(""),
 			}
 			if resp.EcrConfiguration != nil && resp.EcrConfiguration.RescanDurationState != nil {
 				rds := resp.EcrConfiguration.RescanDurationState
-				args["ecrRescanDurationDays"] = llx.StringData(string(rds.RescanDuration))
-				args["ecrPullDateRescanDurationDays"] = llx.StringData(string(rds.PullDateRescanDuration))
+				args["ecrRescanDuration"] = llx.StringData(string(rds.RescanDuration))
+				args["ecrPullDateRescanDuration"] = llx.StringData(string(rds.PullDateRescanDuration))
 				args["ecrPullDateRescanMode"] = llx.StringData(string(rds.PullDateRescanMode))
 				args["ecrRescanDurationStatus"] = llx.StringData(string(rds.Status))
 				args["ecrRescanUpdatedAt"] = llx.TimeDataPtr(rds.UpdatedAt)
