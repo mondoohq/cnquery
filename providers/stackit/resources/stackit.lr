@@ -1599,10 +1599,12 @@ private stackit.serviceAccount @defaults("email projectId") {
 // by its UUID `id` and exposes the user-supplied `name`, the region
 // it was uploaded to, and the PEM-encoded `publicKey` chain. The
 // `dnsNames`, `extendedKeyUsage`, and `fingerprintSha1`/`fingerprintSha256`
-// fields describe the certificate contents, `labels` carries user
-// metadata, and `usage` lists the load balancer listeners consuming
-// the certificate. Parse `publicKey` with `parse.certificates(...)`
-// for subject, issuer, expiry, and key strength.
+// fields describe the certificate contents. The parsed X.509 attributes
+// `subject`, `issuer`, `serialNumber`, `keyAlgorithm`, `keyStrength`,
+// `keyBitSize`, `signingAlgorithm`, and the `notBefore`/`notAfter` window
+// let audits check identity, key strength, and expiry without decoding
+// the chain. `labels` carries user metadata, and `usage` lists the load
+// balancer listeners consuming the certificate.
 private stackit.certificate @defaults("id name region") {
   init(id? string)
   // Certificate UUID
@@ -1629,6 +1631,31 @@ private stackit.certificate @defaults("id name region") {
   fingerprintSha1 string
   // SHA256 hash of the raw certificate bytes
   fingerprintSha256 string
+  // Subject common name (CN) of the certificate
+  subject string
+  // Common name (CN) of the certificate authority that issued the certificate
+  issuer string
+  // Serial number assigned by the CA, in uppercase hexadecimal
+  serialNumber string
+  // Public-key algorithm of the key pair, for example RSA or ECDSA
+  keyAlgorithm string
+  // Public-key strength summary
+  //
+  // Human-readable description of the key's algorithm and bit length or
+  // curve name, for example "RSA 2048", "ECDSA P-256", or "Ed25519".
+  keyStrength string
+  // Key size in bits
+  //
+  // Bit length of the public key, for example 2048 for RSA. Null for
+  // elliptic-curve keys, which are described by a curve name rather than
+  // a bit size (see keyStrength).
+  keyBitSize int
+  // Algorithm the issuing CA used to sign the certificate
+  signingAlgorithm string
+  // Start of the certificate validity period
+  notBefore time
+  // Expiration of the certificate validity period
+  notAfter time
   // Load balancer listeners consuming the certificate
   //
   // One entry per load balancer that references the certificate, each

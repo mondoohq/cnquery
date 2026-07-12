@@ -65,6 +65,15 @@ func buildCertificate(runtime *plugin.Runtime, cert *certificates.GetCertificate
 		"extendedKeyUsage":  llx.StringData(data.GetExtendedKeyUsage()),
 		"fingerprintSha1":   llx.StringData(data.GetFingerprintSha1()),
 		"fingerprintSha256": llx.StringData(data.GetFingerprintSha256()),
+		"subject":           llx.StringData(data.GetSubjectCn()),
+		"issuer":            llx.StringData(data.GetIssuerCn()),
+		"serialNumber":      llx.StringData(data.GetSerialNumber()),
+		"keyAlgorithm":      llx.StringData(data.GetPublicKeyAlgorithm()),
+		"keyStrength":       llx.StringData(data.GetKeyStrength()),
+		"keyBitSize":        llx.IntDataPtr(parseKeyBitSize(data.GetKeyStrength())),
+		"signingAlgorithm":  llx.StringData(data.GetSignatureAlgorithm()),
+		"notBefore":         llx.TimeDataPtr(parseRFC3339(data.GetNotBefore())),
+		"notAfter":          llx.TimeDataPtr(parseRFC3339(data.GetNotAfter())),
 		"usage":             llx.ArrayData(certificateUsage(cert.GetUsage()), types.Dict),
 	}
 	return CreateResource(runtime, "stackit.certificate", args)

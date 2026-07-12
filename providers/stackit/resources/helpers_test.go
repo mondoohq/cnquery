@@ -70,6 +70,65 @@ func TestParseDnsTime(t *testing.T) {
 	}
 }
 
+func TestParseRFC3339(t *testing.T) {
+	cases := []struct {
+		name    string
+		in      string
+		wantNil bool
+		wantStr string
+	}{
+		{"empty", "", true, ""},
+		{"malformed", "not-a-date", true, ""},
+		{"valid RFC3339", "2027-11-30T23:59:59Z", false, "2027-11-30T23:59:59Z"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseRFC3339(tc.in)
+			if tc.wantNil {
+				if got != nil {
+					t.Fatalf("expected nil, got %v", *got)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatalf("expected %s, got nil", tc.wantStr)
+			}
+			if got.Format(time.RFC3339) != tc.wantStr {
+				t.Fatalf("expected %s, got %s", tc.wantStr, got.Format(time.RFC3339))
+			}
+		})
+	}
+}
+
+func TestParseKeyBitSize(t *testing.T) {
+	i := func(n int64) *int64 { return &n }
+	cases := []struct {
+		name string
+		in   string
+		want *int64
+	}{
+		{"empty", "", nil},
+		{"rsa", "RSA 2048", i(2048)},
+		{"rsa 4096", "RSA 4096", i(4096)},
+		{"ecdsa curve", "ECDSA P-256", nil},
+		{"ed25519", "Ed25519", nil},
+		{"bare number", "3072", i(3072)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseKeyBitSize(tc.in)
+			switch {
+			case tc.want == nil && got != nil:
+				t.Fatalf("expected nil, got %d", *got)
+			case tc.want != nil && got == nil:
+				t.Fatalf("expected %d, got nil", *tc.want)
+			case tc.want != nil && got != nil && *tc.want != *got:
+				t.Fatalf("expected %d, got %d", *tc.want, *got)
+			}
+		})
+	}
+}
+
 func TestIsAccessDenied(t *testing.T) {
 	cases := []struct {
 		name string

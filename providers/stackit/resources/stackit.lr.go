@@ -1944,6 +1944,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.certificate.fingerprintSha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitCertificate).GetFingerprintSha256()).ToDataRes(types.String)
 	},
+	"stackit.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"stackit.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"stackit.certificate.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"stackit.certificate.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"stackit.certificate.keyStrength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetKeyStrength()).ToDataRes(types.String)
+	},
+	"stackit.certificate.keyBitSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetKeyBitSize()).ToDataRes(types.Int)
+	},
+	"stackit.certificate.signingAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetSigningAlgorithm()).ToDataRes(types.String)
+	},
+	"stackit.certificate.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"stackit.certificate.notAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitCertificate).GetNotAfter()).ToDataRes(types.Time)
+	},
 	"stackit.certificate.usage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitCertificate).GetUsage()).ToDataRes(types.Array(types.Dict))
 	},
@@ -4350,6 +4377,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.certificate.fingerprintSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitCertificate).FingerprintSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.keyStrength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).KeyStrength, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.keyBitSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).KeyBitSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.signingAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).SigningAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"stackit.certificate.notAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitCertificate).NotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"stackit.certificate.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10557,6 +10620,15 @@ type mqlStackitCertificate struct {
 	ExtendedKeyUsage  plugin.TValue[string]
 	FingerprintSha1   plugin.TValue[string]
 	FingerprintSha256 plugin.TValue[string]
+	Subject           plugin.TValue[string]
+	Issuer            plugin.TValue[string]
+	SerialNumber      plugin.TValue[string]
+	KeyAlgorithm      plugin.TValue[string]
+	KeyStrength       plugin.TValue[string]
+	KeyBitSize        plugin.TValue[int64]
+	SigningAlgorithm  plugin.TValue[string]
+	NotBefore         plugin.TValue[*time.Time]
+	NotAfter          plugin.TValue[*time.Time]
 	Usage             plugin.TValue[[]any]
 }
 
@@ -10631,6 +10703,42 @@ func (c *mqlStackitCertificate) GetFingerprintSha1() *plugin.TValue[string] {
 
 func (c *mqlStackitCertificate) GetFingerprintSha256() *plugin.TValue[string] {
 	return &c.FingerprintSha256
+}
+
+func (c *mqlStackitCertificate) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlStackitCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlStackitCertificate) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlStackitCertificate) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlStackitCertificate) GetKeyStrength() *plugin.TValue[string] {
+	return &c.KeyStrength
+}
+
+func (c *mqlStackitCertificate) GetKeyBitSize() *plugin.TValue[int64] {
+	return &c.KeyBitSize
+}
+
+func (c *mqlStackitCertificate) GetSigningAlgorithm() *plugin.TValue[string] {
+	return &c.SigningAlgorithm
+}
+
+func (c *mqlStackitCertificate) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlStackitCertificate) GetNotAfter() *plugin.TValue[*time.Time] {
+	return &c.NotAfter
 }
 
 func (c *mqlStackitCertificate) GetUsage() *plugin.TValue[[]any] {
