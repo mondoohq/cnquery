@@ -29640,7 +29640,7 @@ func (c *mqlUser) GetNtuserDat() *plugin.TValue[string] {
 type mqlPrivatekey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlPrivatekeyInternal it will be used here
+	mqlPrivatekeyInternal
 	Pem                plugin.TValue[string]
 	Path               plugin.TValue[string]
 	File               plugin.TValue[*mqlFile]

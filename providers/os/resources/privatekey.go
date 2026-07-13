@@ -9,11 +9,22 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"errors"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"golang.org/x/crypto/ssh"
 )
+
+// mqlPrivatekeyInternal caches the parsed PEM key so the independently
+// lazy-loaded publicKeyAlgorithm and publicKeyBits accessors don't each
+// re-parse the payload. The result is computed inside parseOnce, whose
+// happens-before guarantee makes the captured key/err safe to read afterward.
+type mqlPrivatekeyInternal struct {
+	parseOnce sync.Once
+	parsedKey any
+	parseErr  error
+}
 
 func initPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
@@ -47,10 +58,20 @@ func (r *mqlPrivatekey) id() (string, error) {
 	return "privatekey:" + file.Data.Path.Data, nil
 }
 
-// parseKey parses the resource's PEM payload into a Go crypto private key.
+// parseKey parses the resource's PEM payload into a Go crypto private key once
+// and caches the result, so the independently lazy-loaded publicKeyAlgorithm and
+// publicKeyBits accessors share a single parse per query.
+func (r *mqlPrivatekey) parseKey() (any, error) {
+	r.parseOnce.Do(func() {
+		r.parsedKey, r.parseErr = r.doParseKey()
+	})
+	return r.parsedKey, r.parseErr
+}
+
+// doParseKey parses the resource's PEM payload into a Go crypto private key.
 // Encrypted keys (which require a passphrase to introspect) return a nil key
 // and a nil error, letting callers report empty/zero values instead of failing.
-func (r *mqlPrivatekey) parseKey() (any, error) {
+func (r *mqlPrivatekey) doParseKey() (any, error) {
 	pem := r.GetPem()
 	if pem.Error != nil {
 		return nil, pem.Error
