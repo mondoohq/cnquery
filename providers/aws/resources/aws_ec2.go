@@ -3464,6 +3464,34 @@ func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 	return a.OutsideIpAddress.Data, nil
 }
 
+func (a *mqlAwsEc2VpnconnectionTunnelOption) id() (string, error) {
+	return a.OutsideIpAddress.Data, nil
+}
+
+// listValuesToStrings extracts the Value field from AWS SDK "...ListValue"
+// structs into a []any of strings, guarding nil pointers.
+func listValuesToStrings[T any](values []T, get func(T) *string) []any {
+	result := []any{}
+	for i := range values {
+		if v := get(values[i]); v != nil {
+			result = append(result, *v)
+		}
+	}
+	return result
+}
+
+// dhGroupNumbersToInts extracts the *int32 Value field from AWS SDK DH-group
+// "...ListValue" structs into a []any of int64, guarding nil pointers.
+func dhGroupNumbersToInts[T any](values []T, get func(T) *int32) []any {
+	result := []any{}
+	for i := range values {
+		if v := get(values[i]); v != nil {
+			result = append(result, int64(*v))
+		}
+	}
+	return result
+}
+
 // VPN connection enhancement (#3)
 
 type mqlAwsEc2VpnconnectionInternal struct {
@@ -3491,6 +3519,7 @@ func newMqlVpnConnection(runtime *plugin.Runtime, region string, accountID strin
 
 	var staticRoutesOnly, enableAcceleration bool
 	var localIpv4, remoteIpv4, localIpv6, remoteIpv6, outsideIpType, tunnelIpVersion string
+	mqlTunnelOpts := []any{}
 	if opts := vpnConn.Options; opts != nil {
 		staticRoutesOnly = convert.ToValue(opts.StaticRoutesOnly)
 		enableAcceleration = convert.ToValue(opts.EnableAcceleration)
@@ -3500,6 +3529,25 @@ func newMqlVpnConnection(runtime *plugin.Runtime, region string, accountID strin
 		remoteIpv6 = convert.ToValue(opts.RemoteIpv6NetworkCidr)
 		outsideIpType = convert.ToValue(opts.OutsideIpAddressType)
 		tunnelIpVersion = string(opts.TunnelInsideIpVersion)
+
+		for _, tun := range opts.TunnelOptions {
+			mqlTunnelOpt, err := CreateResource(runtime, ResourceAwsEc2VpnconnectionTunnelOption,
+				map[string]*llx.RawData{
+					"outsideIpAddress":           llx.StringData(convert.ToValue(tun.OutsideIpAddress)),
+					"tunnelInsideCidr":           llx.StringData(convert.ToValue(tun.TunnelInsideCidr)),
+					"ikeVersions":                llx.ArrayData(listValuesToStrings(tun.IkeVersions, func(v ec2types.IKEVersionsListValue) *string { return v.Value }), types.String),
+					"phase1EncryptionAlgorithms": llx.ArrayData(listValuesToStrings(tun.Phase1EncryptionAlgorithms, func(v ec2types.Phase1EncryptionAlgorithmsListValue) *string { return v.Value }), types.String),
+					"phase2EncryptionAlgorithms": llx.ArrayData(listValuesToStrings(tun.Phase2EncryptionAlgorithms, func(v ec2types.Phase2EncryptionAlgorithmsListValue) *string { return v.Value }), types.String),
+					"phase1IntegrityAlgorithms":  llx.ArrayData(listValuesToStrings(tun.Phase1IntegrityAlgorithms, func(v ec2types.Phase1IntegrityAlgorithmsListValue) *string { return v.Value }), types.String),
+					"phase2IntegrityAlgorithms":  llx.ArrayData(listValuesToStrings(tun.Phase2IntegrityAlgorithms, func(v ec2types.Phase2IntegrityAlgorithmsListValue) *string { return v.Value }), types.String),
+					"phase1DHGroupNumbers":       llx.ArrayData(dhGroupNumbersToInts(tun.Phase1DHGroupNumbers, func(v ec2types.Phase1DHGroupNumbersListValue) *int32 { return v.Value }), types.Int),
+					"phase2DHGroupNumbers":       llx.ArrayData(dhGroupNumbersToInts(tun.Phase2DHGroupNumbers, func(v ec2types.Phase2DHGroupNumbersListValue) *int32 { return v.Value }), types.Int),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlTunnelOpts = append(mqlTunnelOpts, mqlTunnelOpt)
+		}
 	}
 
 	mqlVpnConn, err := CreateResource(runtime, ResourceAwsEc2Vpnconnection,
@@ -3520,6 +3568,7 @@ func newMqlVpnConnection(runtime *plugin.Runtime, region string, accountID strin
 			"tunnelInsideIpVersion": llx.StringData(tunnelIpVersion),
 			"tags":                  llx.MapData(toInterfaceMap(ec2TagsToMap(vpnConn.Tags)), types.String),
 			"vgwTelemetry":          llx.ArrayData(mqlVgwT, types.Resource(ResourceAwsEc2Vgwtelemetry)),
+			"tunnelOptions":         llx.ArrayData(mqlTunnelOpts, types.Resource(ResourceAwsEc2VpnconnectionTunnelOption)),
 		})
 	if err != nil {
 		return nil, err

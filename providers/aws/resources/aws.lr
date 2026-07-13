@@ -15757,6 +15757,8 @@ private aws.ec2.vpnconnection @defaults("arn id state") {
   tags map[string]string
   // List of telemetry data for the VPN
   vgwTelemetry []aws.ec2.vgwtelemetry
+  // IKE phase 1/phase 2 cryptographic options for each VPN tunnel
+  tunnelOptions []aws.ec2.vpnconnection.tunnelOption
 }
 
 // Amazon EC2 VPN tunnel telemetry
@@ -15767,6 +15769,28 @@ private aws.ec2.vgwtelemetry {
   status string
   // VPN tunnel status message
   statusMessage string
+}
+
+// Amazon EC2 Site-to-Site VPN tunnel IKE cryptographic options
+private aws.ec2.vpnconnection.tunnelOption {
+  // External IP address of the VPN tunnel
+  outsideIpAddress string
+  // Range of inside IPv4 addresses for the tunnel (may be empty)
+  tunnelInsideCidr string
+  // IKE versions permitted for the VPN tunnel
+  ikeVersions []string
+  // Permitted encryption algorithms for phase 1 IKE negotiations
+  phase1EncryptionAlgorithms []string
+  // Permitted encryption algorithms for phase 2 IKE negotiations
+  phase2EncryptionAlgorithms []string
+  // Permitted integrity algorithms for phase 1 IKE negotiations
+  phase1IntegrityAlgorithms []string
+  // Permitted integrity algorithms for phase 2 IKE negotiations
+  phase2IntegrityAlgorithms []string
+  // Permitted Diffie-Hellman group numbers for phase 1 IKE negotiations
+  phase1DHGroupNumbers []int
+  // Permitted Diffie-Hellman group numbers for phase 2 IKE negotiations
+  phase2DHGroupNumbers []int
 }
 
 // Amazon EC2 internet gateway

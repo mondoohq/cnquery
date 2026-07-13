@@ -240,6 +240,117 @@ func TestNewMqlVpnConnection(t *testing.T) {
 		assert.Nil(t, result.cacheTransitGatewayId)
 		assert.Nil(t, result.cacheCustomerGatewayId)
 	})
+
+	t.Run("populates tunnel IKE crypto options", func(t *testing.T) {
+		vpnConn := ec2types.VpnConnection{
+			VpnConnectionId: aws.String("vpn-tunnels"),
+			State:           ec2types.VpnStateAvailable,
+			Options: &ec2types.VpnConnectionOptions{
+				TunnelOptions: []ec2types.TunnelOption{
+					{
+						OutsideIpAddress: aws.String("203.0.113.10"),
+						TunnelInsideCidr: aws.String("169.254.10.0/30"),
+						IkeVersions: []ec2types.IKEVersionsListValue{
+							{Value: aws.String("ikev2")},
+						},
+						Phase1EncryptionAlgorithms: []ec2types.Phase1EncryptionAlgorithmsListValue{
+							{Value: aws.String("AES256")},
+							{Value: aws.String("AES256-GCM-16")},
+						},
+						Phase2EncryptionAlgorithms: []ec2types.Phase2EncryptionAlgorithmsListValue{
+							{Value: aws.String("AES256")},
+						},
+						Phase1IntegrityAlgorithms: []ec2types.Phase1IntegrityAlgorithmsListValue{
+							{Value: aws.String("SHA2-256")},
+						},
+						Phase2IntegrityAlgorithms: []ec2types.Phase2IntegrityAlgorithmsListValue{
+							{Value: aws.String("SHA2-512")},
+						},
+						Phase1DHGroupNumbers: []ec2types.Phase1DHGroupNumbersListValue{
+							{Value: aws.Int32(20)},
+							{Value: aws.Int32(21)},
+						},
+						Phase2DHGroupNumbers: []ec2types.Phase2DHGroupNumbersListValue{
+							{Value: aws.Int32(20)},
+						},
+					},
+					{
+						// second tunnel with mostly nil pointers to exercise nil-safety
+						OutsideIpAddress: aws.String("203.0.113.20"),
+					},
+				},
+			},
+		}
+
+		result, err := newMqlVpnConnection(runtime, "us-east-1", "123456789012", vpnConn)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+
+		tunnels := result.TunnelOptions.Data
+		require.Len(t, tunnels, 2)
+
+		t0 := tunnels[0].(*mqlAwsEc2VpnconnectionTunnelOption)
+		assert.Equal(t, "203.0.113.10", t0.OutsideIpAddress.Data)
+		assert.Equal(t, "169.254.10.0/30", t0.TunnelInsideCidr.Data)
+		assert.Equal(t, []any{"ikev2"}, t0.IkeVersions.Data)
+		assert.Equal(t, []any{"AES256", "AES256-GCM-16"}, t0.Phase1EncryptionAlgorithms.Data)
+		assert.Equal(t, []any{"AES256"}, t0.Phase2EncryptionAlgorithms.Data)
+		assert.Equal(t, []any{"SHA2-256"}, t0.Phase1IntegrityAlgorithms.Data)
+		assert.Equal(t, []any{"SHA2-512"}, t0.Phase2IntegrityAlgorithms.Data)
+		assert.Equal(t, []any{int64(20), int64(21)}, t0.Phase1DHGroupNumbers.Data)
+		assert.Equal(t, []any{int64(20)}, t0.Phase2DHGroupNumbers.Data)
+
+		t1 := tunnels[1].(*mqlAwsEc2VpnconnectionTunnelOption)
+		assert.Equal(t, "203.0.113.20", t1.OutsideIpAddress.Data)
+		assert.Empty(t, t1.TunnelInsideCidr.Data)
+		assert.Empty(t, t1.IkeVersions.Data)
+		assert.Empty(t, t1.Phase1DHGroupNumbers.Data)
+	})
+
+	t.Run("empty tunnel options list", func(t *testing.T) {
+		vpnConn := ec2types.VpnConnection{
+			VpnConnectionId: aws.String("vpn-no-tunnels"),
+			Options:         &ec2types.VpnConnectionOptions{},
+		}
+		result, err := newMqlVpnConnection(runtime, "us-east-1", "123456789012", vpnConn)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Empty(t, result.TunnelOptions.Data)
+	})
+}
+
+func TestTunnelOptionValueHelpers(t *testing.T) {
+	t.Run("listValuesToStrings extracts values and skips nil", func(t *testing.T) {
+		in := []ec2types.IKEVersionsListValue{
+			{Value: aws.String("ikev1")},
+			{Value: nil},
+			{Value: aws.String("ikev2")},
+		}
+		out := listValuesToStrings(in, func(v ec2types.IKEVersionsListValue) *string { return v.Value })
+		assert.Equal(t, []any{"ikev1", "ikev2"}, out)
+	})
+
+	t.Run("listValuesToStrings on nil slice returns empty (non-nil)", func(t *testing.T) {
+		out := listValuesToStrings(nil, func(v ec2types.IKEVersionsListValue) *string { return v.Value })
+		assert.NotNil(t, out)
+		assert.Empty(t, out)
+	})
+
+	t.Run("dhGroupNumbersToInts converts int32 to int64 and skips nil", func(t *testing.T) {
+		in := []ec2types.Phase1DHGroupNumbersListValue{
+			{Value: aws.Int32(14)},
+			{Value: nil},
+			{Value: aws.Int32(24)},
+		}
+		out := dhGroupNumbersToInts(in, func(v ec2types.Phase1DHGroupNumbersListValue) *int32 { return v.Value })
+		assert.Equal(t, []any{int64(14), int64(24)}, out)
+	})
+
+	t.Run("dhGroupNumbersToInts on nil slice returns empty (non-nil)", func(t *testing.T) {
+		out := dhGroupNumbersToInts(nil, func(v ec2types.Phase1DHGroupNumbersListValue) *int32 { return v.Value })
+		assert.NotNil(t, out)
+		assert.Empty(t, out)
+	})
 }
 
 func TestEipNullStateOnMissingCache(t *testing.T) {

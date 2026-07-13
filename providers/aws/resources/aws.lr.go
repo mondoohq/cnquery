@@ -565,6 +565,7 @@ const (
 	ResourceAwsEc2NetworkaclEntryPortrange                                      string = "aws.ec2.networkacl.entry.portrange"
 	ResourceAwsEc2Vpnconnection                                                 string = "aws.ec2.vpnconnection"
 	ResourceAwsEc2Vgwtelemetry                                                  string = "aws.ec2.vgwtelemetry"
+	ResourceAwsEc2VpnconnectionTunnelOption                                     string = "aws.ec2.vpnconnection.tunnelOption"
 	ResourceAwsEc2Internetgateway                                               string = "aws.ec2.internetgateway"
 	ResourceAwsEc2Transitgateway                                                string = "aws.ec2.transitgateway"
 	ResourceAwsEc2TransitgatewayAttachment                                      string = "aws.ec2.transitgateway.attachment"
@@ -3135,6 +3136,10 @@ func init() {
 		"aws.ec2.vgwtelemetry": {
 			// to override args, implement: initAwsEc2Vgwtelemetry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2Vgwtelemetry,
+		},
+		"aws.ec2.vpnconnection.tunnelOption": {
+			// to override args, implement: initAwsEc2VpnconnectionTunnelOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2VpnconnectionTunnelOption,
 		},
 		"aws.ec2.internetgateway": {
 			Init:   initAwsEc2Internetgateway,
@@ -21984,6 +21989,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.vpnconnection.vgwTelemetry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Vpnconnection).GetVgwTelemetry()).ToDataRes(types.Array(types.Resource("aws.ec2.vgwtelemetry")))
 	},
+	"aws.ec2.vpnconnection.tunnelOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Vpnconnection).GetTunnelOptions()).ToDataRes(types.Array(types.Resource("aws.ec2.vpnconnection.tunnelOption")))
+	},
 	"aws.ec2.vgwtelemetry.outsideIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Vgwtelemetry).GetOutsideIpAddress()).ToDataRes(types.String)
 	},
@@ -21992,6 +22000,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.vgwtelemetry.statusMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Vgwtelemetry).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpnconnection.tunnelOption.outsideIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetOutsideIpAddress()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpnconnection.tunnelOption.tunnelInsideCidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetTunnelInsideCidr()).ToDataRes(types.String)
+	},
+	"aws.ec2.vpnconnection.tunnelOption.ikeVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetIkeVersions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1EncryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase1EncryptionAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2EncryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase2EncryptionAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1IntegrityAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase1IntegrityAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2IntegrityAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase2IntegrityAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1DHGroupNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase1DHGroupNumbers()).ToDataRes(types.Array(types.Int))
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2DHGroupNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2VpnconnectionTunnelOption).GetPhase2DHGroupNumbers()).ToDataRes(types.Array(types.Int))
 	},
 	"aws.ec2.internetgateway.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Internetgateway).GetArn()).ToDataRes(types.String)
@@ -59535,6 +59570,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Vpnconnection).VgwTelemetry, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.vpnconnection.tunnelOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Vpnconnection).TunnelOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.vgwtelemetry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Vgwtelemetry).__id, ok = v.Value.(string)
 		return
@@ -59549,6 +59588,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.vgwtelemetry.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Vgwtelemetry).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.outsideIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).OutsideIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.tunnelInsideCidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).TunnelInsideCidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.ikeVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).IkeVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1EncryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase1EncryptionAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2EncryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase2EncryptionAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1IntegrityAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase1IntegrityAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2IntegrityAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase2IntegrityAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase1DHGroupNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase1DHGroupNumbers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.vpnconnection.tunnelOption.phase2DHGroupNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2VpnconnectionTunnelOption).Phase2DHGroupNumbers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.internetgateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -143510,6 +143589,7 @@ type mqlAwsEc2Vpnconnection struct {
 	TunnelInsideIpVersion plugin.TValue[string]
 	Tags                  plugin.TValue[map[string]any]
 	VgwTelemetry          plugin.TValue[[]any]
+	TunnelOptions         plugin.TValue[[]any]
 }
 
 // createAwsEc2Vpnconnection creates a new instance of this resource
@@ -143661,6 +143741,10 @@ func (c *mqlAwsEc2Vpnconnection) GetVgwTelemetry() *plugin.TValue[[]any] {
 	return &c.VgwTelemetry
 }
 
+func (c *mqlAwsEc2Vpnconnection) GetTunnelOptions() *plugin.TValue[[]any] {
+	return &c.TunnelOptions
+}
+
 // mqlAwsEc2Vgwtelemetry for the aws.ec2.vgwtelemetry resource
 type mqlAwsEc2Vgwtelemetry struct {
 	MqlRuntime *plugin.Runtime
@@ -143718,6 +143802,95 @@ func (c *mqlAwsEc2Vgwtelemetry) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Vgwtelemetry) GetStatusMessage() *plugin.TValue[string] {
 	return &c.StatusMessage
+}
+
+// mqlAwsEc2VpnconnectionTunnelOption for the aws.ec2.vpnconnection.tunnelOption resource
+type mqlAwsEc2VpnconnectionTunnelOption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2VpnconnectionTunnelOptionInternal it will be used here
+	OutsideIpAddress           plugin.TValue[string]
+	TunnelInsideCidr           plugin.TValue[string]
+	IkeVersions                plugin.TValue[[]any]
+	Phase1EncryptionAlgorithms plugin.TValue[[]any]
+	Phase2EncryptionAlgorithms plugin.TValue[[]any]
+	Phase1IntegrityAlgorithms  plugin.TValue[[]any]
+	Phase2IntegrityAlgorithms  plugin.TValue[[]any]
+	Phase1DHGroupNumbers       plugin.TValue[[]any]
+	Phase2DHGroupNumbers       plugin.TValue[[]any]
+}
+
+// createAwsEc2VpnconnectionTunnelOption creates a new instance of this resource
+func createAwsEc2VpnconnectionTunnelOption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2VpnconnectionTunnelOption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.vpnconnection.tunnelOption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) MqlName() string {
+	return "aws.ec2.vpnconnection.tunnelOption"
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetOutsideIpAddress() *plugin.TValue[string] {
+	return &c.OutsideIpAddress
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetTunnelInsideCidr() *plugin.TValue[string] {
+	return &c.TunnelInsideCidr
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetIkeVersions() *plugin.TValue[[]any] {
+	return &c.IkeVersions
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase1EncryptionAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase1EncryptionAlgorithms
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase2EncryptionAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase2EncryptionAlgorithms
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase1IntegrityAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase1IntegrityAlgorithms
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase2IntegrityAlgorithms() *plugin.TValue[[]any] {
+	return &c.Phase2IntegrityAlgorithms
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase1DHGroupNumbers() *plugin.TValue[[]any] {
+	return &c.Phase1DHGroupNumbers
+}
+
+func (c *mqlAwsEc2VpnconnectionTunnelOption) GetPhase2DHGroupNumbers() *plugin.TValue[[]any] {
+	return &c.Phase2DHGroupNumbers
 }
 
 // mqlAwsEc2Internetgateway for the aws.ec2.internetgateway resource

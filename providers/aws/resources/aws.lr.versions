@@ -3661,6 +3661,17 @@ aws.ec2.vpnconnection.staticRoutesOnly 13.6.3
 aws.ec2.vpnconnection.tags 13.6.3
 aws.ec2.vpnconnection.transitGateway 13.6.3
 aws.ec2.vpnconnection.tunnelInsideIpVersion 13.6.3
+aws.ec2.vpnconnection.tunnelOption 13.46.1
+aws.ec2.vpnconnection.tunnelOption.ikeVersions 13.46.1
+aws.ec2.vpnconnection.tunnelOption.outsideIpAddress 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase1DHGroupNumbers 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase1EncryptionAlgorithms 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase1IntegrityAlgorithms 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase2DHGroupNumbers 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase2EncryptionAlgorithms 13.46.1
+aws.ec2.vpnconnection.tunnelOption.phase2IntegrityAlgorithms 13.46.1
+aws.ec2.vpnconnection.tunnelOption.tunnelInsideCidr 13.46.1
+aws.ec2.vpnconnection.tunnelOptions 13.46.1
 aws.ec2.vpnconnection.type 13.6.3
 aws.ec2.vpnconnection.vgwTelemetry 11.15.2
 aws.ec2.vpnconnection.vpnGateway 13.6.3
