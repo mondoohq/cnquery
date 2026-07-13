@@ -19,10 +19,10 @@ require (
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.4
 	github.com/aws/aws-sdk-go-v2 v1.42.1
-	github.com/aws/aws-sdk-go-v2/config v1.32.28
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.27
+	github.com/aws/aws-sdk-go-v2/config v1.32.29
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.28
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.313.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.316.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.71.0
@@ -78,7 +78,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pierrec/lz4/v4 v4.1.27
 	github.com/pkg/errors v0.9.1
-	github.com/pkg/sftp v1.13.10
+	github.com/pkg/sftp v1.13.11
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10
 	github.com/prometheus/client_golang v1.23.2
 	github.com/protobom/protobom v0.5.8
@@ -96,19 +96,19 @@ require (
 	github.com/tliron/glsp v0.2.2
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.15
-	go.mondoo.com/mondoo-go v0.0.0-20260707124621-90a1d09b965e
+	go.mondoo.com/mondoo-go v0.0.0-20260711002324-faeac77769dd
 	go.mondoo.com/ranger-rpc v0.8.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
-	golang.org/x/crypto v0.53.0
-	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
-	golang.org/x/mod v0.37.0
-	golang.org/x/net v0.56.0
-	golang.org/x/sync v0.21.0
-	golang.org/x/sys v0.46.0
-	golang.org/x/term v0.44.0
-	golang.org/x/text v0.39.0
-	golang.org/x/tools v0.47.0
+	golang.org/x/crypto v0.54.0
+	golang.org/x/exp v0.0.0-20260709172345-9ea1abe57597
+	golang.org/x/mod v0.38.0
+	golang.org/x/net v0.57.0
+	golang.org/x/sync v0.22.0
+	golang.org/x/sys v0.47.0
+	golang.org/x/term v0.45.0
+	golang.org/x/text v0.40.0
+	golang.org/x/tools v0.48.0
 	google.golang.org/grpc v1.82.0
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/ini.v1 v1.67.3
@@ -154,7 +154,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.3.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.44.0 // indirect
@@ -259,7 +259,7 @@ require (
 	github.com/olekukonko/ll v0.1.8 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
-	github.com/petermattis/goid v0.0.0-20260701081913-4f67fd55d3b4 // indirect
+	github.com/petermattis/goid v0.0.0-20260713073324-57ed88f34a0a // indirect
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -312,7 +312,7 @@ require (
 	k8s.io/api v0.36.2 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
-	modernc.org/libc v1.74.0 // indirect
+	modernc.org/libc v1.74.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.53.0 // indirect
