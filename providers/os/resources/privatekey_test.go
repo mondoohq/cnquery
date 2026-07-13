@@ -15,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"golang.org/x/crypto/ssh"
 )
 
 // pkcs8PEM marshals a private key to an unencrypted PKCS#8 PEM block.
@@ -23,6 +24,17 @@ func pkcs8PEM(t *testing.T, key any) string {
 	der, err := x509.MarshalPKCS8PrivateKey(key)
 	require.NoError(t, err)
 	return string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der}))
+}
+
+// opensshPEM marshals a private key to an OpenSSH-format PEM block. This is the
+// default output of `ssh-keygen`, and unlike PKCS#8 it makes ParseRawPrivateKey
+// return a *pointer* (e.g. *ed25519.PrivateKey), which the introspection
+// switches must handle alongside the PKCS#8 value type.
+func opensshPEM(t *testing.T, key any) string {
+	t.Helper()
+	block, err := ssh.MarshalPrivateKey(key, "")
+	require.NoError(t, err)
+	return string(pem.EncodeToMemory(block))
 }
 
 // newPrivatekey builds a privatekey resource whose static pem field is set,
@@ -65,6 +77,14 @@ func TestPrivatekeyPublicKeyIntrospection(t *testing.T) {
 		{
 			name:          "Ed25519",
 			pem:           pkcs8PEM(t, edKey),
+			wantAlgorithm: "Ed25519",
+			wantBits:      256,
+		},
+		{
+			// OpenSSH format yields a *ed25519.PrivateKey (pointer), unlike the
+			// PKCS#8 case above which yields the value type. Both must resolve.
+			name:          "Ed25519 (OpenSSH)",
+			pem:           opensshPEM(t, edKey),
 			wantAlgorithm: "Ed25519",
 			wantBits:      256,
 		},
