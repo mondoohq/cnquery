@@ -8,7 +8,7 @@ require (
 	github.com/aws-cloudformation/rain v1.24.4
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.28.1
-	go.mondoo.com/ranger-rpc v0.8.0
+	go.mondoo.com/ranger-rpc v0.8.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

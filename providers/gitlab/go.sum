@@ -429,8 +429,8 @@ gitlab.com/gitlab-org/api/client-go v1.46.0 h1:YxBWFZIFYKcGESCb9fpkwzouo+apyB9pr
 gitlab.com/gitlab-org/api/client-go v1.46.0/go.mod h1:FtgyU6g2HS5+fMhw6nLK96GBEEBx5MzntOiJWfIaiN8=
 go.mondoo.com/mondoo-go v0.0.0-20260711002324-faeac77769dd h1:j2rWkLU4+b9a+Wp7iPNC/EKT5Rbk5D53N8h0eAl3mw0=
 go.mondoo.com/mondoo-go v0.0.0-20260711002324-faeac77769dd/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
-go.mondoo.com/ranger-rpc v0.8.0 h1:iBY34IhtPNPnEOZ9eS5t3Gp28HiTuv/M0SaHiBiRJlI=
-go.mondoo.com/ranger-rpc v0.8.0/go.mod h1:JbxC6J5d0pQwVGZ9efmq7amMzasEETKH80zPd0TcBug=
+go.mondoo.com/ranger-rpc v0.8.1 h1:DynUWByDnxI4wMHbFpXUMw+lndYJ21BAHOxrhGyVCD4=
+go.mondoo.com/ranger-rpc v0.8.1/go.mod h1:HP3hjWjgRFxCFAnY86YLMiY0bU7eqhKuP8Qm+QlFBbI=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 h1:8tvICD4vSTOOsNrsI4Ljf6C+6UKvpTEH5XY3JMoyPoo=
