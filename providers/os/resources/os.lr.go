@@ -351,6 +351,7 @@ const (
 	ResourceWindowsLsa                                    string = "windows.lsa"
 	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
 	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
+	ResourceWindowsSchannel                               string = "windows.schannel"
 	ResourceWindowsSpooler                                string = "windows.spooler"
 	ResourceWindowsSpoolerPointAndPrint                   string = "windows.spooler.pointAndPrint"
 	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
@@ -1840,6 +1841,10 @@ func init() {
 		"windows.lsa.secureChannel": {
 			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsLsaSecureChannel,
+		},
+		"windows.schannel": {
+			// to override args, implement: initWindowsSchannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSchannel,
 		},
 		"windows.spooler": {
 			// to override args, implement: initWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8859,6 +8864,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsaSecureChannel).GetVulnerableChannelAllowList()).ToDataRes(types.String)
+	},
+	"windows.schannel.cipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"windows.schannel.ellipticCurves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetEllipticCurves()).ToDataRes(types.Array(types.String))
+	},
+	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetPqcKeyExchangeEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.spooler.startMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetStartMode()).ToDataRes(types.Int)
@@ -21619,6 +21633,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.lsa.secureChannel.vulnerableChannelAllowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsLsaSecureChannel).VulnerableChannelAllowList, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.schannel.cipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).CipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.ellipticCurves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).EllipticCurves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).PqcKeyExchangeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56796,6 +56826,71 @@ func (c *mqlWindowsLsaSecureChannel) GetSignSecureChannel() *plugin.TValue[bool]
 
 func (c *mqlWindowsLsaSecureChannel) GetVulnerableChannelAllowList() *plugin.TValue[string] {
 	return &c.VulnerableChannelAllowList
+}
+
+// mqlWindowsSchannel for the windows.schannel resource
+type mqlWindowsSchannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSchannelInternal it will be used here
+	CipherSuites          plugin.TValue[[]any]
+	EllipticCurves        plugin.TValue[[]any]
+	PqcKeyExchangeEnabled plugin.TValue[bool]
+}
+
+// createWindowsSchannel creates a new instance of this resource
+func createWindowsSchannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSchannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.schannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSchannel) MqlName() string {
+	return "windows.schannel"
+}
+
+func (c *mqlWindowsSchannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSchannel) GetCipherSuites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CipherSuites, func() ([]any, error) {
+		return c.cipherSuites()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetEllipticCurves() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EllipticCurves, func() ([]any, error) {
+		return c.ellipticCurves()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetPqcKeyExchangeEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PqcKeyExchangeEnabled, func() (bool, error) {
+		return c.pqcKeyExchangeEnabled()
+	})
 }
 
 // mqlWindowsSpooler for the windows.spooler resource

@@ -7423,6 +7423,31 @@ private windows.lsa.secureChannel {
   vulnerableChannelAllowList string
 }
 
+// Windows Schannel TLS configuration
+//
+// Examine the Schannel (Secure Channel) TLS cipher-suite and supported-group
+// configuration that backs the Microsoft TLS/SSL stack, read from the effective
+// local Schannel store under
+// HKLM\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL.
+// The ordered cipher-suite list is the REG_MULTI_SZ `Functions` value under the
+// 00010002 subkey and the ordered elliptic-curve / supported-group list is the
+// REG_MULTI_SZ `Functions` value under the 00010003 subkey. On Windows 11 24H2
+// and Windows Server 2025 the supported-group list is where post-quantum ML-KEM
+// key-exchange groups (for example secp256r1_mlkem768) appear once enabled.
+//
+// When a key or value is absent — the common case on older Windows, on systems
+// using the default order, and on non-Windows platforms — the list accessors
+// resolve to an empty list and pqcKeyExchangeEnabled resolves to false rather
+// than failing.
+windows.schannel {
+  // Ordered TLS cipher suite list (REG_MULTI_SZ Functions under ...\SSL\00010002)
+  cipherSuites() []string
+  // Ordered TLS elliptic-curve / supported-group list (REG_MULTI_SZ Functions under ...\SSL\00010003)
+  ellipticCurves() []string
+  // Whether a post-quantum ML-KEM key-exchange group is enabled (any ellipticCurves entry contains "MLKEM", case-insensitive)
+  pqcKeyExchangeEnabled() bool
+}
+
 // Windows Print Spooler security configuration
 //
 // Examine the hardening-relevant state of the Windows Print Spooler and
