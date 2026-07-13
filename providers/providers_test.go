@@ -5,6 +5,7 @@ package providers
 
 import (
 	"context"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -128,4 +129,48 @@ func TestOsRetry_RetryableError(t *testing.T) {
 	}
 	assert.NoError(t, osRetry(testFunc, 2))
 	assert.Equal(t, 2, funcCounter)
+}
+
+func TestInstallSchemaVersion_ExistingFullInstall(t *testing.T) {
+	origFs := config.AppFs
+	config.AppFs = afero.NewMemMapFs()
+	t.Cleanup(func() { config.AppFs = origFs })
+
+	dst := "providers"
+	pdir := filepath.Join(dst, "testp")
+	require.NoError(t, config.AppFs.MkdirAll(pdir, 0o755))
+	files := map[string]string{
+		"testp":                `fake-binary`,
+		"testp.json":           `{"Name":"testp","Version":"1.2.3"}`,
+		"testp.resources.json": `{"resources":{}}`,
+	}
+	for name, content := range files {
+		require.NoError(t, afero.WriteFile(config.AppFs, filepath.Join(pdir, name), []byte(content), 0o644))
+	}
+
+	ctx := context.Background()
+
+	t.Run("same version is kept as-is", func(t *testing.T) {
+		provider, err := installSchemaVersion(ctx, "testp", "1.2.3", dst)
+		require.NoError(t, err)
+		assert.Equal(t, "1.2.3", provider.Version)
+		assert.True(t, provider.HasBinary)
+	})
+
+	t.Run("different version is kept as-is", func(t *testing.T) {
+		provider, err := installSchemaVersion(ctx, "testp", "9.9.9", dst)
+		require.NoError(t, err)
+		assert.Equal(t, "1.2.3", provider.Version)
+		assert.True(t, provider.HasBinary)
+	})
+
+	t.Run("binary with broken config errors", func(t *testing.T) {
+		brokenDir := filepath.Join(dst, "broken")
+		require.NoError(t, config.AppFs.MkdirAll(brokenDir, 0o755))
+		require.NoError(t, afero.WriteFile(config.AppFs, filepath.Join(brokenDir, "broken"), []byte(`fake-binary`), 0o644))
+
+		_, err := installSchemaVersion(ctx, "broken", "1.2.3", dst)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "broken config or schema")
+	})
 }

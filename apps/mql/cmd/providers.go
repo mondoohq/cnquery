@@ -74,7 +74,8 @@ var installProviderCmd = &cobra.Command{
 With --schema-only, only the provider's config and resource schema are
 installed, skipping the (much larger) binary download. That is enough to
 compile queries against the provider's resources; the binary is fetched
-automatically the first time the provider connects to an asset.`,
+automatically the first time the provider connects to an asset. If the
+provider is already fully installed, it is kept as-is.`,
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
 		schemaOnly, _ := cmd.Flags().GetBool("schema-only")

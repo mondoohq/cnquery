@@ -558,14 +558,37 @@ func installSchemaVersion(ctx context.Context, name string, version string, dst 
 	dstPath := filepath.Join(dst, name)
 
 	// Writing a new schema over a full install would leave a binary from a
-	// different version behind. Keep schema-only installs to schema-only
-	// (or fresh) provider directories.
+	// different version behind. A full install already ships its schema, so
+	// keep it as-is and return it.
 	bin := filepath.Join(dstPath, name)
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
 	if config.ProbeFile(bin) {
-		return nil, errors.New("provider '" + name + "' is already installed with its binary; update it with a regular install or delete it first")
+		provider, err := readProviderDir(dstPath)
+		if err != nil {
+			return nil, err
+		}
+		if provider == nil {
+			return nil, errors.New("provider '" + name + "' has a binary but a broken config or schema in " + dstPath + "; reinstall it fully or delete it first")
+		}
+		if err := provider.LoadJSON(); err != nil {
+			return nil, err
+		}
+		if err := provider.LoadResources(); err != nil {
+			return nil, err
+		}
+		if provider.Version != version {
+			log.Warn().
+				Str("installed", provider.Version).
+				Str("requested", version).
+				Msg("provider '" + name + "' is already fully installed, keeping it at its current version")
+		} else {
+			log.Info().
+				Str("version", provider.Version).
+				Msg("provider '" + name + "' is already fully installed, keeping it")
+		}
+		return provider, nil
 	}
 
 	confJSON, schemaJSON, err := registry.DownloadProviderMetadata(ctx, name, version)
