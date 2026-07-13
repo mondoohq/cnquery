@@ -47,13 +47,19 @@ type FilterOpts struct {
 	exclude []string
 }
 
+func validateGlobs(patterns []string) error {
+	for _, p := range patterns {
+		if _, err := glob.Compile(p); err != nil {
+			return fmt.Errorf("invalid glob pattern %q: %w", p, err)
+		}
+	}
+	return nil
+}
+
 func matchesAny(patterns []string, value string) bool {
 	for _, pattern := range patterns {
-		g, err := glob.Compile(pattern)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to compile glob")
-			continue
-		}
+		// Patterns are validated at construction time, so Compile cannot fail here.
+		g, _ := glob.Compile(pattern)
 		if g.Match(value) {
 			return true
 		}
@@ -110,7 +116,10 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	}
 	k8s := res.(*mqlK8s)
 
-	nsFilter := setNamespaceFilters(invConfig)
+	nsFilter, err := setNamespaceFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
 	imgFilter, err := setImageFilters(invConfig)
 	if err != nil {
 		return nil, err
@@ -152,7 +161,8 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 
 	// Discover the assets for each namespace and use the namespace platform ID as root
 	for _, ns := range nss {
-		nsFilter = FilterOpts{include: []string{ns.Name}}
+		// Plain namespace names always compile; ignore the impossible error.
+		nsFilter, _ = newFilterOpts([]string{ns.Name}, nil)
 
 		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
 
@@ -184,7 +194,10 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		return in, nil
 	}
 
-	nsFilter := setNamespaceFilters(invConfig)
+	nsFilter, err := setNamespaceFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -270,7 +283,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	}
 	k8s := res.(*mqlK8s)
 
-	nsFilter := FilterOpts{include: []string{nsName}}
+	nsFilter, _ := newFilterOpts([]string{nsName}, nil)
 	imgFilter, err := setImageFilters(invConfig)
 	if err != nil {
 		return nil, err
@@ -1397,29 +1410,29 @@ func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
 }
 
 func setImageFilters(cfg *inventory.Config) (FilterOpts, error) {
-	f := FilterOpts{}
-	if include, ok := cfg.Options[shared.OPTION_IMAGES]; ok && len(include) > 0 {
-		f.include = splitFilterValues(include)
-	}
-	if exclude, ok := cfg.Options[shared.OPTION_IMAGES_EXCLUDE]; ok && len(exclude) > 0 {
-		f.exclude = splitFilterValues(exclude)
-	}
-	if len(f.include) > 0 && len(f.exclude) > 0 {
+	includeVals := splitFilterValues(cfg.Options[shared.OPTION_IMAGES])
+	excludeVals := splitFilterValues(cfg.Options[shared.OPTION_IMAGES_EXCLUDE])
+	if len(includeVals) > 0 && len(excludeVals) > 0 {
 		return FilterOpts{}, fmt.Errorf("--images and --images-exclude are mutually exclusive")
 	}
-	return f, nil
+	return newFilterOpts(includeVals, excludeVals)
 }
 
-func setNamespaceFilters(cfg *inventory.Config) FilterOpts {
-	nsFilter := FilterOpts{}
-	if include, ok := cfg.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
-		nsFilter.include = splitFilterValues(include)
-	}
+func setNamespaceFilters(cfg *inventory.Config) (FilterOpts, error) {
+	return newFilterOpts(
+		splitFilterValues(cfg.Options[shared.OPTION_NAMESPACE]),
+		splitFilterValues(cfg.Options[shared.OPTION_NAMESPACE_EXCLUDE]),
+	)
+}
 
-	if exclude, ok := cfg.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
-		nsFilter.exclude = splitFilterValues(exclude)
+func newFilterOpts(include, exclude []string) (FilterOpts, error) {
+	if err := validateGlobs(include); err != nil {
+		return FilterOpts{}, err
 	}
-	return nsFilter
+	if err := validateGlobs(exclude); err != nil {
+		return FilterOpts{}, err
+	}
+	return FilterOpts{include: include, exclude: exclude}, nil
 }
 
 // namespaceStageName returns a namespace only when the config targets exactly

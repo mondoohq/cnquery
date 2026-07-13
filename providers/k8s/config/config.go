@@ -78,13 +78,13 @@ Examples:
 					Long:    "images",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Only include container images matching the given repositories during discovery (comma-separated, glob supported)",
+					Desc:    "Only include container images matching the given image references during discovery (comma-separated, glob supported)",
 				},
 				{
 					Long:    "images-exclude",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Filter out container images matching the given repositories during discovery (comma-separated, glob supported)",
+					Desc:    "Filter out container images matching the given image references during discovery (comma-separated, glob supported)",
 				},
 				{
 					Long:    "kubelogin",
