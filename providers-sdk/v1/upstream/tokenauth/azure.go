@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	// envClientID and envTokenAudience are variables this package defines. When set,
-	// they select the identity to mint a token with, and the audience to mint it for:
+	// envClientID and envTokenAudience are custom environment variables used to
+	// select the identity to mint a token with, and the audience to mint it for:
 	//
 	//	MONDOO_WIF_CLIENT_ID  names one user-assigned identity by its client id, for
 	//	                      environments that expose more than one. Unset selects
@@ -26,18 +26,11 @@ const (
 	//	MONDOO_WIF_AUDIENCE   names the token's aud claim. Azure mints tokens only
 	//	                      for a resource principal registered in the tenant, so
 	//	                      this is an app registration URI (e.g. api://example).
-	//	                      Unset, App Service falls back to the exchange audience,
-	//	                      which a working exchange sets to the same URI; set this
-	//	                      only when the aud claim must differ from that audience.
-	//
-	// Both apply only to endpoints that can act on them: Cloud Shell has neither
-	// user-assigned identities nor an app registration to target, so it reads
-	// neither and always mints for the exchange audience.
 	envClientID      = "MONDOO_WIF_CLIENT_ID"
 	envTokenAudience = "MONDOO_WIF_AUDIENCE"
 
-	// envIdentityEndpoint and envIdentityHeader are injected by Azure rather than
-	// defined here. Their presence identifies an App Service, Function or Container
+	// Those two environment variables are injected by Azure rather than defined
+	// here. Their presence identifies an App Service, Function or Container
 	// App (incl. jobs): the endpoint is the local token URL, and the header is the
 	// secret that authenticates the caller to it.
 	envIdentityEndpoint = "IDENTITY_ENDPOINT"
