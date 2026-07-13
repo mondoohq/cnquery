@@ -79,9 +79,19 @@ func (r *mqlWindowsSchannel) ellipticCurves() ([]interface{}, error) {
 }
 
 func (r *mqlWindowsSchannel) pqcKeyExchangeEnabled() (bool, error) {
-	curves, err := r.readMultiString(schannelSupportedGroupsPath, schannelFunctionsValue)
-	if err != nil {
-		return false, err
+	// Derive from the already-resolved ellipticCurves field rather than reading
+	// the registry again, so a query for both fields reads the supported-group
+	// key once and the two fields stay consistent by construction.
+	raw := r.GetEllipticCurves()
+	if raw.Error != nil {
+		return false, raw.Error
+	}
+
+	curves := make([]string, 0, len(raw.Data))
+	for _, v := range raw.Data {
+		if s, ok := v.(string); ok {
+			curves = append(curves, s)
+		}
 	}
 	return pqcKeyExchangeEnabled(curves), nil
 }
