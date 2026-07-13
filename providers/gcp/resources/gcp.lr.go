@@ -3921,6 +3921,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.hasInstanceSshKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasInstanceSshKeys()).ToDataRes(types.Bool)
 	},
+	"gcp.project.computeService.instance.instanceSshKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetInstanceSshKeys()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.computeService.instance.serialPortEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetSerialPortEnabled()).ToDataRes(types.Bool)
 	},
@@ -19768,6 +19771,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.hasInstanceSshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).HasInstanceSshKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.instanceSshKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).InstanceSshKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.serialPortEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45676,6 +45683,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	BlockProjectSshKeysEnabled      plugin.TValue[bool]
 	OsLoginEnabled                  plugin.TValue[bool]
 	HasInstanceSshKeys              plugin.TValue[bool]
+	InstanceSshKeys                 plugin.TValue[[]any]
 	SerialPortEnabled               plugin.TValue[bool]
 	PrivateIpv6GoogleAccess         plugin.TValue[string]
 	ReservationAffinity             plugin.TValue[any]
@@ -45897,6 +45905,12 @@ func (c *mqlGcpProjectComputeServiceInstance) GetOsLoginEnabled() *plugin.TValue
 func (c *mqlGcpProjectComputeServiceInstance) GetHasInstanceSshKeys() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasInstanceSshKeys, func() (bool, error) {
 		return c.hasInstanceSshKeys()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetInstanceSshKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceSshKeys, func() ([]any, error) {
+		return c.instanceSshKeys()
 	})
 }
 

@@ -437,7 +437,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   provisioningState string
   // When the VM was created
   timeCreated time
-  // SSH public keys configured on the Linux VM (key path + key data); empty for Windows or password-auth VMs
+  // SSH public keys configured on the Linux VM
+  //
+  // Each entry carries the `path` the key is installed to, the raw
+  // `keyData`, and the `algorithm` (for example ssh-rsa,
+  // ecdsa-sha2-nistp256, ssh-ed25519) plus key size in `bits` parsed
+  // from the key data. Empty for Windows or password-authentication VMs.
   sshPublicKeys []dict
   // Whether password authentication is disabled for SSH on the Linux VM
   disablePasswordAuthentication bool

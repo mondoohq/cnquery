@@ -668,6 +668,7 @@ oci.compute.instance.region 9.0.0
 oci.compute.instance.shape 11.1.0
 oci.compute.instance.shapeConfig 13.0.6
 oci.compute.instance.sourceDetails 13.0.6
+oci.compute.instance.sshAuthorizedKeys 13.15.1
 oci.compute.instance.state 9.0.0
 oci.compute.instance.systemTags 13.12.2
 oci.compute.instance.timeMaintenanceRebootDue 13.0.6
@@ -1397,6 +1398,13 @@ oci.network.ipsecConnectionTunnel.ikeVersion 13.13.1
 oci.network.ipsecConnectionTunnel.name 13.13.1
 oci.network.ipsecConnectionTunnel.natTranslationEnabled 13.13.1
 oci.network.ipsecConnectionTunnel.oracleCanInitiate 13.13.1
+oci.network.ipsecConnectionTunnel.phase1AuthenticationAlgorithm 13.15.1
+oci.network.ipsecConnectionTunnel.phase1DhGroup 13.15.1
+oci.network.ipsecConnectionTunnel.phase1EncryptionAlgorithm 13.15.1
+oci.network.ipsecConnectionTunnel.phase2AuthenticationAlgorithm 13.15.1
+oci.network.ipsecConnectionTunnel.phase2DhGroup 13.15.1
+oci.network.ipsecConnectionTunnel.phase2EncryptionAlgorithm 13.15.1
+oci.network.ipsecConnectionTunnel.phase2PfsEnabled 13.15.1
 oci.network.ipsecConnectionTunnel.routing 13.13.1
 oci.network.ipsecConnectionTunnel.state 13.13.1
 oci.network.ipsecConnectionTunnel.status 13.13.1

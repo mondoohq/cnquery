@@ -1481,6 +1481,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.sshKey.publicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanSshKey).GetPublicKey()).ToDataRes(types.String)
 	},
+	"digitalocean.sshKey.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSshKey).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"digitalocean.sshKey.bits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanSshKey).GetBits()).ToDataRes(types.Int)
+	},
 	"digitalocean.certificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanCertificate).GetId()).ToDataRes(types.String)
 	},
@@ -4642,6 +4648,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.sshKey.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanSshKey).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.sshKey.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSshKey).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.sshKey.bits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanSshKey).Bits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"digitalocean.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10807,6 +10821,8 @@ type mqlDigitaloceanSshKey struct {
 	Name        plugin.TValue[string]
 	Fingerprint plugin.TValue[string]
 	PublicKey   plugin.TValue[string]
+	Algorithm   plugin.TValue[string]
+	Bits        plugin.TValue[int64]
 }
 
 // createDigitaloceanSshKey creates a new instance of this resource
@@ -10860,6 +10876,14 @@ func (c *mqlDigitaloceanSshKey) GetFingerprint() *plugin.TValue[string] {
 
 func (c *mqlDigitaloceanSshKey) GetPublicKey() *plugin.TValue[string] {
 	return &c.PublicKey
+}
+
+func (c *mqlDigitaloceanSshKey) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+func (c *mqlDigitaloceanSshKey) GetBits() *plugin.TValue[int64] {
+	return &c.Bits
 }
 
 // mqlDigitaloceanCertificate for the digitalocean.certificate resource

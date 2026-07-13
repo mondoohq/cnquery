@@ -553,6 +553,13 @@ private oci.compute.instance @defaults("name") {
   bootVolume() oci.compute.bootVolume
   // Instance metadata key-value pairs
   metadata map[string]string
+  // SSH public keys authorized for the instance
+  //
+  // One entry per key in the instance metadata `ssh_authorized_keys`
+  // value. Each entry carries the key `algorithm` (for example ssh-rsa,
+  // ecdsa-sha2-nistp256, ssh-ed25519), key size in `bits`, the raw
+  // `publicKey`, and any trailing `comment`. Empty when no keys are set.
+  sshAuthorizedKeys() []dict
   // Expected maintenance reboot time, if scheduled
   timeMaintenanceRebootDue time
   // Free-form tags for resource management
@@ -1348,6 +1355,23 @@ private oci.network.ipsecConnectionTunnel @defaults("name status ikeVersion") {
   cpeIp string
   // BGP session state, when routing is BGP (UP, DOWN)
   bgpState string
+  // Negotiated IKE phase 1 (ISAKMP) encryption algorithm
+  phase1EncryptionAlgorithm() string
+  // Negotiated IKE phase 1 (ISAKMP) authentication algorithm
+  phase1AuthenticationAlgorithm() string
+  // Negotiated IKE phase 1 (ISAKMP) Diffie-Hellman group
+  //
+  // Larger groups resist attack better. Groups below 14 (2048-bit MODP)
+  // are considered weak for modern key exchange.
+  phase1DhGroup() string
+  // Negotiated IPSec phase 2 (ESP) encryption algorithm
+  phase2EncryptionAlgorithm() string
+  // Negotiated IPSec phase 2 (ESP) authentication algorithm
+  phase2AuthenticationAlgorithm() string
+  // Whether perfect forward secrecy is enabled for phase 2
+  phase2PfsEnabled() bool
+  // Diffie-Hellman group used for phase 2 perfect forward secrecy
+  phase2DhGroup() string
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
   // Creation time

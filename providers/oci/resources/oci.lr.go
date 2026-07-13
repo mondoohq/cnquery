@@ -1486,6 +1486,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.instance.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"oci.compute.instance.sshAuthorizedKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetSshAuthorizedKeys()).ToDataRes(types.Array(types.Dict))
+	},
 	"oci.compute.instance.timeMaintenanceRebootDue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetTimeMaintenanceRebootDue()).ToDataRes(types.Time)
 	},
@@ -2391,6 +2394,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.ipsecConnectionTunnel.bgpState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetBgpState()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase1EncryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase1EncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase1AuthenticationAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase1AuthenticationAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase1DhGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase1DhGroup()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase2EncryptionAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase2EncryptionAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase2AuthenticationAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase2AuthenticationAlgorithm()).ToDataRes(types.String)
+	},
+	"oci.network.ipsecConnectionTunnel.phase2PfsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase2PfsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.network.ipsecConnectionTunnel.phase2DhGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetPhase2DhGroup()).ToDataRes(types.String)
 	},
 	"oci.network.ipsecConnectionTunnel.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkIpsecConnectionTunnel).GetState()).ToDataRes(types.String)
@@ -7298,6 +7322,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"oci.compute.instance.sshAuthorizedKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).SshAuthorizedKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.compute.instance.timeMaintenanceRebootDue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).TimeMaintenanceRebootDue, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -8596,6 +8624,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.ipsecConnectionTunnel.bgpState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkIpsecConnectionTunnel).BgpState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase1EncryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase1EncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase1AuthenticationAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase1AuthenticationAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase1DhGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase1DhGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase2EncryptionAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase2EncryptionAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase2AuthenticationAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase2AuthenticationAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase2PfsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase2PfsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.ipsecConnectionTunnel.phase2DhGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkIpsecConnectionTunnel).Phase2DhGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.network.ipsecConnectionTunnel.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16646,6 +16702,7 @@ type mqlOciComputeInstance struct {
 	SourceDetails                plugin.TValue[any]
 	BootVolume                   plugin.TValue[*mqlOciComputeBootVolume]
 	Metadata                     plugin.TValue[map[string]any]
+	SshAuthorizedKeys            plugin.TValue[[]any]
 	TimeMaintenanceRebootDue     plugin.TValue[*time.Time]
 	FreeformTags                 plugin.TValue[map[string]any]
 	DefinedTags                  plugin.TValue[map[string]any]
@@ -16813,6 +16870,12 @@ func (c *mqlOciComputeInstance) GetBootVolume() *plugin.TValue[*mqlOciComputeBoo
 
 func (c *mqlOciComputeInstance) GetMetadata() *plugin.TValue[map[string]any] {
 	return &c.Metadata
+}
+
+func (c *mqlOciComputeInstance) GetSshAuthorizedKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SshAuthorizedKeys, func() ([]any, error) {
+		return c.sshAuthorizedKeys()
+	})
 }
 
 func (c *mqlOciComputeInstance) GetTimeMaintenanceRebootDue() *plugin.TValue[*time.Time] {
@@ -20185,22 +20248,29 @@ func (c *mqlOciNetworkIpsecConnection) GetDefinedTags() *plugin.TValue[map[strin
 type mqlOciNetworkIpsecConnectionTunnel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkIpsecConnectionTunnelInternal it will be used here
-	Id                    plugin.TValue[string]
-	Name                  plugin.TValue[string]
-	CompartmentID         plugin.TValue[string]
-	Compartment           plugin.TValue[*mqlOciCompartment]
-	Status                plugin.TValue[string]
-	IkeVersion            plugin.TValue[string]
-	Routing               plugin.TValue[string]
-	OracleCanInitiate     plugin.TValue[string]
-	NatTranslationEnabled plugin.TValue[string]
-	DpdMode               plugin.TValue[string]
-	VpnIp                 plugin.TValue[string]
-	CpeIp                 plugin.TValue[string]
-	BgpState              plugin.TValue[string]
-	State                 plugin.TValue[string]
-	Created               plugin.TValue[*time.Time]
+	mqlOciNetworkIpsecConnectionTunnelInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	CompartmentID                 plugin.TValue[string]
+	Compartment                   plugin.TValue[*mqlOciCompartment]
+	Status                        plugin.TValue[string]
+	IkeVersion                    plugin.TValue[string]
+	Routing                       plugin.TValue[string]
+	OracleCanInitiate             plugin.TValue[string]
+	NatTranslationEnabled         plugin.TValue[string]
+	DpdMode                       plugin.TValue[string]
+	VpnIp                         plugin.TValue[string]
+	CpeIp                         plugin.TValue[string]
+	BgpState                      plugin.TValue[string]
+	Phase1EncryptionAlgorithm     plugin.TValue[string]
+	Phase1AuthenticationAlgorithm plugin.TValue[string]
+	Phase1DhGroup                 plugin.TValue[string]
+	Phase2EncryptionAlgorithm     plugin.TValue[string]
+	Phase2AuthenticationAlgorithm plugin.TValue[string]
+	Phase2PfsEnabled              plugin.TValue[bool]
+	Phase2DhGroup                 plugin.TValue[string]
+	State                         plugin.TValue[string]
+	Created                       plugin.TValue[*time.Time]
 }
 
 // createOciNetworkIpsecConnectionTunnel creates a new instance of this resource
@@ -20302,6 +20372,48 @@ func (c *mqlOciNetworkIpsecConnectionTunnel) GetCpeIp() *plugin.TValue[string] {
 
 func (c *mqlOciNetworkIpsecConnectionTunnel) GetBgpState() *plugin.TValue[string] {
 	return &c.BgpState
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase1EncryptionAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase1EncryptionAlgorithm, func() (string, error) {
+		return c.phase1EncryptionAlgorithm()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase1AuthenticationAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase1AuthenticationAlgorithm, func() (string, error) {
+		return c.phase1AuthenticationAlgorithm()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase1DhGroup() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase1DhGroup, func() (string, error) {
+		return c.phase1DhGroup()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase2EncryptionAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase2EncryptionAlgorithm, func() (string, error) {
+		return c.phase2EncryptionAlgorithm()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase2AuthenticationAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase2AuthenticationAlgorithm, func() (string, error) {
+		return c.phase2AuthenticationAlgorithm()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase2PfsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Phase2PfsEnabled, func() (bool, error) {
+		return c.phase2PfsEnabled()
+	})
+}
+
+func (c *mqlOciNetworkIpsecConnectionTunnel) GetPhase2DhGroup() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Phase2DhGroup, func() (string, error) {
+		return c.phase2DhGroup()
+	})
 }
 
 func (c *mqlOciNetworkIpsecConnectionTunnel) GetState() *plugin.TValue[string] {

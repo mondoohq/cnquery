@@ -889,6 +889,8 @@ digitalocean.spacesKey.grants 13.0.1
 digitalocean.spacesKey.name 13.0.1
 digitalocean.spacesKeys 13.0.1
 digitalocean.sshKey 13.0.1
+digitalocean.sshKey.algorithm 13.12.1
+digitalocean.sshKey.bits 13.12.1
 digitalocean.sshKey.fingerprint 13.0.1
 digitalocean.sshKey.id 13.0.1
 digitalocean.sshKey.name 13.0.1

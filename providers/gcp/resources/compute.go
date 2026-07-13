@@ -3931,6 +3931,15 @@ func (g *mqlGcpProjectComputeServiceInstance) hasInstanceSshKeys() (bool, error)
 	return s != "", nil
 }
 
+func (g *mqlGcpProjectComputeServiceInstance) instanceSshKeys() ([]any, error) {
+	md := g.GetMetadata()
+	if md.Error != nil {
+		return nil, md.Error
+	}
+	raw, _ := md.Data["ssh-keys"].(string)
+	return parseInstanceSSHKeys(raw), nil
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {
 	md := g.GetMetadata()
 	if md.Error != nil {

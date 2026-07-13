@@ -1801,6 +1801,7 @@ gcp.project.computeService.instance.hasPublicIp 13.12.2
 gcp.project.computeService.instance.hostname 9.0.0
 gcp.project.computeService.instance.id 9.0.0
 gcp.project.computeService.instance.instanceEncryptionKey 13.16.3
+gcp.project.computeService.instance.instanceSshKeys 13.30.2
 gcp.project.computeService.instance.inventory 13.15.1
 gcp.project.computeService.instance.keyRevocationActionType 9.0.0
 gcp.project.computeService.instance.labels 9.0.0

@@ -236,6 +236,15 @@ func (o *mqlOciComputeInstance) id() (string, error) {
 	return "oci.compute.instance/" + o.Id.Data, nil
 }
 
+func (o *mqlOciComputeInstance) sshAuthorizedKeys() ([]any, error) {
+	md := o.GetMetadata()
+	if md.Error != nil {
+		return nil, md.Error
+	}
+	raw, _ := md.Data["ssh_authorized_keys"].(string)
+	return parseAuthorizedKeys(raw), nil
+}
+
 func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 	ctx := context.Background()

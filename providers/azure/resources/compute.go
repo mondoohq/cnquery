@@ -190,6 +190,9 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 						}
 						if k.KeyData != nil {
 							entry["keyData"] = *k.KeyData
+							algorithm, bits := parseSSHPublicKey(*k.KeyData)
+							entry["algorithm"] = algorithm
+							entry["bits"] = bits
 						}
 						sshPublicKeys = append(sshPublicKeys, entry)
 					}

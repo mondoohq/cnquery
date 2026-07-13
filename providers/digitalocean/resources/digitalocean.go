@@ -657,11 +657,14 @@ func (r *mqlDigitalocean) sshKeys() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, k := range keys {
+			algorithm, bits := parseSSHPublicKey(k.PublicKey)
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.sshKey", map[string]*llx.RawData{
 				"id":          llx.IntData(int64(k.ID)),
 				"name":        llx.StringData(k.Name),
 				"fingerprint": llx.StringData(k.Fingerprint),
 				"publicKey":   llx.StringData(k.PublicKey),
+				"algorithm":   llx.StringData(algorithm),
+				"bits":        llx.IntData(bits),
 			})
 			if err != nil {
 				return nil, err

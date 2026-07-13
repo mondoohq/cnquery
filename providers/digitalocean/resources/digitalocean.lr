@@ -990,6 +990,18 @@ digitalocean.sshKey @defaults("id name") {
   fingerprint string
   // Public key content
   publicKey string
+  // Key algorithm parsed from the public key
+  //
+  // The key type as it appears in the public key, for example
+  // ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256, or ssh-dss. Empty when
+  // the public key cannot be parsed.
+  algorithm string
+  // Key size in bits parsed from the public key
+  //
+  // The modulus size for RSA/DSA keys or the curve size for ECDSA keys.
+  // Ed25519 keys report 256. 0 when the public key cannot be parsed or
+  // the size cannot be determined.
+  bits int
 }
 
 // DigitalOcean TLS certificate

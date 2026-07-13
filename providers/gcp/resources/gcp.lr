@@ -1459,6 +1459,14 @@ gcp.project.computeService.instance @defaults("name id") {
   osLoginEnabled() bool
   // Whether instance-level SSH keys are set in metadata ('ssh-keys'), which grant access outside OS Login / IAM and are unmanaged
   hasInstanceSshKeys() bool
+  // Instance-level SSH public keys set in metadata
+  //
+  // One entry per key in the instance metadata 'ssh-keys' value. Each
+  // entry carries the `username`, the key `algorithm` (for example
+  // ssh-rsa, ecdsa-sha2-nistp256, ssh-ed25519), key size in `bits`, the
+  // raw `publicKey`, and any trailing `comment`. Empty when no
+  // instance-level keys are set; these grant access outside OS Login.
+  instanceSshKeys() []dict
   // Whether instance metadata 'serial-port-enable' is set to true (interactive serial console)
   serialPortEnabled() bool
   // Private IPv6 google access type for the VM
