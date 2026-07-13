@@ -4,10 +4,15 @@
 package resources
 
 import (
+	"crypto/dsa"
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
 	"errors"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"golang.org/x/crypto/ssh"
 )
 
 func initPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -40,4 +45,70 @@ func (r *mqlPrivatekey) id() (string, error) {
 	}
 
 	return "privatekey:" + file.Data.Path.Data, nil
+}
+
+// parseKey parses the resource's PEM payload into a Go crypto private key.
+// Encrypted keys (which require a passphrase to introspect) return a nil key
+// and a nil error, letting callers report empty/zero values instead of failing.
+func (r *mqlPrivatekey) parseKey() (any, error) {
+	pem := r.GetPem()
+	if pem.Error != nil {
+		return nil, pem.Error
+	}
+	if pem.Data == "" {
+		return nil, nil
+	}
+
+	key, err := ssh.ParseRawPrivateKey([]byte(pem.Data))
+	if err != nil {
+		// Encrypted keys cannot be introspected without the passphrase; treat
+		// them as "unknown" rather than a hard failure.
+		var passphraseErr *ssh.PassphraseMissingError
+		if errors.As(err, &passphraseErr) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return key, nil
+}
+
+func (r *mqlPrivatekey) publicKeyAlgorithm() (string, error) {
+	key, err := r.parseKey()
+	if err != nil {
+		return "", err
+	}
+
+	switch key.(type) {
+	case *rsa.PrivateKey:
+		return "RSA", nil
+	case *ecdsa.PrivateKey:
+		return "ECDSA", nil
+	case ed25519.PrivateKey, *ed25519.PrivateKey:
+		return "Ed25519", nil
+	case *dsa.PrivateKey:
+		return "DSA", nil
+	default:
+		return "", nil
+	}
+}
+
+func (r *mqlPrivatekey) publicKeyBits() (int64, error) {
+	key, err := r.parseKey()
+	if err != nil {
+		return 0, err
+	}
+
+	switch k := key.(type) {
+	case *rsa.PrivateKey:
+		return int64(k.N.BitLen()), nil
+	case *ecdsa.PrivateKey:
+		return int64(k.Curve.Params().BitSize), nil
+	case ed25519.PrivateKey, *ed25519.PrivateKey:
+		return 256, nil
+	case *dsa.PrivateKey:
+		return int64(k.P.BitLen()), nil
+	default:
+		return 0, nil
+	}
 }

@@ -99,6 +99,7 @@ func (x *mqlAuthorizedkeys) list(file *mqlFile, content string) ([]any, error) {
 			"label":   llx.StringData(entry.Label),
 			"options": llx.ArrayData(llx.TArr2Raw[string](entry.Options), "string"),
 			"file":    llx.ResourceData(file, "file"),
+			"bits":    llx.IntData(entry.Bits()),
 		})
 		if err != nil {
 			return nil, err

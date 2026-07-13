@@ -186,6 +186,7 @@ augment.skills 13.13.1
 authorizedkeys 9.0.0
 authorizedkeys.content 9.0.0
 authorizedkeys.entry 9.0.0
+authorizedkeys.entry.bits 13.34.4
 authorizedkeys.entry.file 9.0.0
 authorizedkeys.entry.key 9.0.0
 authorizedkeys.entry.label 9.0.0
@@ -2179,6 +2180,8 @@ privatekey.encrypted 9.0.0
 privatekey.file 9.0.0
 privatekey.path 9.0.0
 privatekey.pem 9.0.0
+privatekey.publicKeyAlgorithm 13.34.4
+privatekey.publicKeyBits 13.34.4
 process 9.0.1
 process.command 9.0.1
 process.executable 9.0.1

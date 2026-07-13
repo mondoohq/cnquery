@@ -3109,6 +3109,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"privatekey.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrivatekey).GetEncrypted()).ToDataRes(types.Bool)
 	},
+	"privatekey.publicKeyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetPublicKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"privatekey.publicKeyBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetPublicKeyBits()).ToDataRes(types.Int)
+	},
 	"users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsers).GetList()).ToDataRes(types.Array(types.Resource("user")))
 	},
@@ -3141,6 +3147,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"authorizedkeys.entry.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuthorizedkeysEntry).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"authorizedkeys.entry.bits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetBits()).ToDataRes(types.Int)
 	},
 	"group.gid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGroup).GetGid()).ToDataRes(types.Int)
@@ -12785,6 +12794,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPrivatekey).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"privatekey.publicKeyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).PublicKeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"privatekey.publicKeyBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).PublicKeyBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUsers).__id, ok = v.Value.(string)
 		return
@@ -12839,6 +12856,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"authorizedkeys.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuthorizedkeysEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"authorizedkeys.entry.bits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Bits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29620,10 +29641,12 @@ type mqlPrivatekey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlPrivatekeyInternal it will be used here
-	Pem       plugin.TValue[string]
-	Path      plugin.TValue[string]
-	File      plugin.TValue[*mqlFile]
-	Encrypted plugin.TValue[bool]
+	Pem                plugin.TValue[string]
+	Path               plugin.TValue[string]
+	File               plugin.TValue[*mqlFile]
+	Encrypted          plugin.TValue[bool]
+	PublicKeyAlgorithm plugin.TValue[string]
+	PublicKeyBits      plugin.TValue[int64]
 }
 
 // createPrivatekey creates a new instance of this resource
@@ -29677,6 +29700,18 @@ func (c *mqlPrivatekey) GetFile() *plugin.TValue[*mqlFile] {
 
 func (c *mqlPrivatekey) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
+}
+
+func (c *mqlPrivatekey) GetPublicKeyAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicKeyAlgorithm, func() (string, error) {
+		return c.publicKeyAlgorithm()
+	})
+}
+
+func (c *mqlPrivatekey) GetPublicKeyBits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PublicKeyBits, func() (int64, error) {
+		return c.publicKeyBits()
+	})
 }
 
 // mqlUsers for the users resource
@@ -29839,6 +29874,7 @@ type mqlAuthorizedkeysEntry struct {
 	Label   plugin.TValue[string]
 	Options plugin.TValue[[]any]
 	File    plugin.TValue[*mqlFile]
+	Bits    plugin.TValue[int64]
 }
 
 // createAuthorizedkeysEntry creates a new instance of this resource
@@ -29900,6 +29936,10 @@ func (c *mqlAuthorizedkeysEntry) GetOptions() *plugin.TValue[[]any] {
 
 func (c *mqlAuthorizedkeysEntry) GetFile() *plugin.TValue[*mqlFile] {
 	return &c.File
+}
+
+func (c *mqlAuthorizedkeysEntry) GetBits() *plugin.TValue[int64] {
+	return &c.Bits
 }
 
 // mqlGroup for the group resource

@@ -802,6 +802,10 @@ privatekey {
   file file
   // Whether the file is encrypted
   encrypted bool
+  // Public key algorithm of the key material (e.g., RSA, ECDSA, Ed25519, DSA)
+  publicKeyAlgorithm() string
+  // Key size in bits (e.g., 2048, 256, 384, 521)
+  publicKeyBits() int
 }
 
 // All user accounts configured on the system
@@ -859,6 +863,8 @@ authorizedkeys.entry @defaults("key") {
   options []string
   // Key file
   file file
+  // Key size in bits (e.g., 2048, 256, 384, 521)
+  bits int
 }
 
 // Group on the system
