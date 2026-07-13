@@ -3578,7 +3578,7 @@ func init() {
 			Create: createAwsAppstreamApplication,
 		},
 		"aws.appstream.image": {
-			// to override args, implement: initAwsAppstreamImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAppstreamImage,
 			Create: createAwsAppstreamImage,
 		},
 		"aws.appstream.user": {
@@ -25842,6 +25842,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.fleet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetName()).ToDataRes(types.String)
 	},
+	"aws.appstream.fleet.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetDisplayName()).ToDataRes(types.String)
+	},
 	"aws.appstream.fleet.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetState()).ToDataRes(types.String)
 	},
@@ -25878,6 +25881,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.fleet.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetVpcConfig()).ToDataRes(types.Dict)
 	},
+	"aws.appstream.fleet.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.appstream.fleet.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.appstream.fleet.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
@@ -25890,8 +25899,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.fleet.imageArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetImageArn()).ToDataRes(types.String)
 	},
+	"aws.appstream.fleet.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetImage()).ToDataRes(types.Resource("aws.appstream.image"))
+	},
 	"aws.appstream.fleet.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetPlatform()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.streamView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetStreamView()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.rootVolumeSizeInGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetRootVolumeSizeInGb()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.usbDeviceFilterStrings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetUsbDeviceFilterStrings()).ToDataRes(types.Array(types.String))
+	},
+	"aws.appstream.fleet.fleetErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetFleetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appstream.fleet.sessionScriptS3Key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetSessionScriptS3Key()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.sessionScriptBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetSessionScriptBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.appstream.fleet.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetCreatedAt()).ToDataRes(types.Time)
@@ -64938,6 +64968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamFleet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.fleet.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.fleet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -64986,6 +65020,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamFleet).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.fleet.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.fleet.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
@@ -65002,8 +65044,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamFleet).ImageArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.fleet.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Image, ok = plugin.RawToTValue[*mqlAwsAppstreamImage](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.fleet.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.streamView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).StreamView, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.rootVolumeSizeInGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).RootVolumeSizeInGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.usbDeviceFilterStrings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).UsbDeviceFilterStrings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.fleetErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).FleetErrors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.sessionScriptS3Key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).SessionScriptS3Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.sessionScriptBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).SessionScriptBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.fleet.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -156866,6 +156936,7 @@ type mqlAwsAppstreamFleet struct {
 	mqlAwsAppstreamFleetInternal
 	Arn                            plugin.TValue[string]
 	Name                           plugin.TValue[string]
+	DisplayName                    plugin.TValue[string]
 	State                          plugin.TValue[string]
 	FleetType                      plugin.TValue[string]
 	InstanceType                   plugin.TValue[string]
@@ -156878,11 +156949,20 @@ type mqlAwsAppstreamFleet struct {
 	MaxConcurrentSessions          plugin.TValue[int64]
 	MaxSessionsPerInstance         plugin.TValue[int64]
 	VpcConfig                      plugin.TValue[any]
+	Subnets                        plugin.TValue[[]any]
+	SecurityGroups                 plugin.TValue[[]any]
 	IamRole                        plugin.TValue[*mqlAwsIamRole]
 	IamRoleArn                     plugin.TValue[string]
 	ImageName                      plugin.TValue[string]
 	ImageArn                       plugin.TValue[string]
+	Image                          plugin.TValue[*mqlAwsAppstreamImage]
 	Platform                       plugin.TValue[string]
+	StreamView                     plugin.TValue[string]
+	RootVolumeSizeInGb             plugin.TValue[int64]
+	UsbDeviceFilterStrings         plugin.TValue[[]any]
+	FleetErrors                    plugin.TValue[[]any]
+	SessionScriptS3Key             plugin.TValue[string]
+	SessionScriptBucket            plugin.TValue[*mqlAwsS3Bucket]
 	CreatedAt                      plugin.TValue[*time.Time]
 	ComputeCapacityStatus          plugin.TValue[*mqlAwsAppstreamFleetComputeCapacityStatus]
 	AssociatedStacks               plugin.TValue[[]any]
@@ -156936,6 +157016,10 @@ func (c *mqlAwsAppstreamFleet) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAwsAppstreamFleet) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
 func (c *mqlAwsAppstreamFleet) GetState() *plugin.TValue[string] {
 	return &c.State
 }
@@ -156984,6 +157068,38 @@ func (c *mqlAwsAppstreamFleet) GetVpcConfig() *plugin.TValue[any] {
 	return &c.VpcConfig
 }
 
+func (c *mqlAwsAppstreamFleet) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.fleet", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsAppstreamFleet) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.fleet", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
 func (c *mqlAwsAppstreamFleet) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
 		if c.MqlRuntime.HasRecording {
@@ -157012,8 +157128,60 @@ func (c *mqlAwsAppstreamFleet) GetImageArn() *plugin.TValue[string] {
 	return &c.ImageArn
 }
 
+func (c *mqlAwsAppstreamFleet) GetImage() *plugin.TValue[*mqlAwsAppstreamImage] {
+	return plugin.GetOrCompute[*mqlAwsAppstreamImage](&c.Image, func() (*mqlAwsAppstreamImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.fleet", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAppstreamImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
 func (c *mqlAwsAppstreamFleet) GetPlatform() *plugin.TValue[string] {
 	return &c.Platform
+}
+
+func (c *mqlAwsAppstreamFleet) GetStreamView() *plugin.TValue[string] {
+	return &c.StreamView
+}
+
+func (c *mqlAwsAppstreamFleet) GetRootVolumeSizeInGb() *plugin.TValue[int64] {
+	return &c.RootVolumeSizeInGb
+}
+
+func (c *mqlAwsAppstreamFleet) GetUsbDeviceFilterStrings() *plugin.TValue[[]any] {
+	return &c.UsbDeviceFilterStrings
+}
+
+func (c *mqlAwsAppstreamFleet) GetFleetErrors() *plugin.TValue[[]any] {
+	return &c.FleetErrors
+}
+
+func (c *mqlAwsAppstreamFleet) GetSessionScriptS3Key() *plugin.TValue[string] {
+	return &c.SessionScriptS3Key
+}
+
+func (c *mqlAwsAppstreamFleet) GetSessionScriptBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.SessionScriptBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.fleet", c.__id, "sessionScriptBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.sessionScriptBucket()
+	})
 }
 
 func (c *mqlAwsAppstreamFleet) GetCreatedAt() *plugin.TValue[*time.Time] {

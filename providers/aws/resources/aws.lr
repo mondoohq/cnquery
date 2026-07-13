@@ -19090,6 +19090,8 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   arn string
   // Name of the fleet
   name string
+  // Human-readable display name of the fleet
+  displayName string
   // Current state of the fleet: STARTING, RUNNING, STOPPING, or STOPPED
   state string
   // Fleet type: ALWAYS_ON, ON_DEMAND, or ELASTIC
@@ -19114,6 +19116,10 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   maxSessionsPerInstance int
   // VPC configuration (SubnetIds, SecurityGroupIds)
   vpcConfig dict
+  // Subnets the fleet is attached to
+  subnets() []aws.vpc.subnet
+  // Security groups applied to the fleet
+  securityGroups() []aws.ec2.securitygroup
   // IAM role applied to the fleet
   iamRole() aws.iam.role
   // ARN of the IAM role applied to the fleet
@@ -19124,10 +19130,24 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   imageName string
   // ARN of the image used to create the fleet
   imageArn string
+  // Image used to create the fleet
+  image() aws.appstream.image
   // Operating system platform
   //
   // One of: WINDOWS, WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, WINDOWS_SERVER_2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, or UBUNTU_PRO_2404.
   platform string
+  // View displayed to users: APP (single application) or DESKTOP (full desktop)
+  streamView string
+  // Size of the root volume in GB
+  rootVolumeSizeInGb int
+  // USB device filter strings governing which USB devices can be redirected to streaming instances
+  usbDeviceFilterStrings []string
+  // Fleet errors, each with an errorCode and errorMessage
+  fleetErrors []dict
+  // S3 object key of the session script run on streaming instances
+  sessionScriptS3Key string
+  // S3 bucket holding the session script run on streaming instances
+  sessionScriptBucket() aws.s3.bucket
   // Time when the fleet was created
   createdAt time
   // Compute capacity status including desired, running, in-use, available counts and drain mode info
