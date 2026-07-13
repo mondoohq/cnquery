@@ -1682,18 +1682,28 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) keys() ([]any, error) {
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
-				map[string]*llx.RawData{
-					"kid":           llx.StringDataPtr((*string)(entry.KID)),
-					"managed":       llx.BoolDataPtr(entry.Managed),
-					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
-					"created":       llx.TimeDataPtr(entry.Attributes.Created),
-					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
-					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
-					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
-				})
+			fields := map[string]*llx.RawData{
+				"kid":           llx.StringDataPtr((*string)(entry.KID)),
+				"managed":       llx.BoolDataPtr(entry.Managed),
+				"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"enabled":       llx.BoolDataPtr(nil),
+				"created":       llx.TimeDataPtr(nil),
+				"updated":       llx.TimeDataPtr(nil),
+				"expires":       llx.TimeDataPtr(nil),
+				"notBefore":     llx.TimeDataPtr(nil),
+				"recoveryLevel": llx.StringDataPtr(nil),
+			}
+			// Attributes is optional on the list response; guard against a
+			// nil pointer so a sparse key summary can't panic the scan.
+			if attrs := entry.Attributes; attrs != nil {
+				fields["enabled"] = llx.BoolDataPtr(attrs.Enabled)
+				fields["created"] = llx.TimeDataPtr(attrs.Created)
+				fields["updated"] = llx.TimeDataPtr(attrs.Updated)
+				fields["expires"] = llx.TimeDataPtr(attrs.Expires)
+				fields["notBefore"] = llx.TimeDataPtr(attrs.NotBefore)
+				fields["recoveryLevel"] = llx.StringDataPtr((*string)(attrs.RecoveryLevel))
+			}
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key", fields)
 			if err != nil {
 				return nil, err
 			}
