@@ -3286,6 +3286,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.date": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetDate()).ToDataRes(types.Resource("os.date"))
 	},
+	"os.fipsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetFipsEnabled()).ToDataRes(types.Bool)
+	},
+	"os.cryptoPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetCryptoPolicy()).ToDataRes(types.String)
+	},
 	"os.date.time": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsDate).GetTime()).ToDataRes(types.Time)
 	},
@@ -16164,6 +16170,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOs).Date, ok = plugin.RawToTValue[*mqlOsDate](v.Value, v.Error)
+		return
+	},
+	"os.fipsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).FipsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"os.cryptoPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).CryptoPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"os.date.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36363,6 +36377,8 @@ type mqlOs struct {
 	Hypervisor    plugin.TValue[string]
 	Machineid     plugin.TValue[string]
 	Date          plugin.TValue[*mqlOsDate]
+	FipsEnabled   plugin.TValue[bool]
+	CryptoPolicy  plugin.TValue[string]
 }
 
 // createOs creates a new instance of this resource
@@ -36479,6 +36495,18 @@ func (c *mqlOs) GetDate() *plugin.TValue[*mqlOsDate] {
 		}
 
 		return c.date()
+	})
+}
+
+func (c *mqlOs) GetFipsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FipsEnabled, func() (bool, error) {
+		return c.fipsEnabled()
+	})
+}
+
+func (c *mqlOs) GetCryptoPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CryptoPolicy, func() (string, error) {
+		return c.cryptoPolicy()
 	})
 }
 

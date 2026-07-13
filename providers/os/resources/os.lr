@@ -371,6 +371,10 @@ os {
   machineid() string
   // Current date and timezone of the system
   date() os.date
+  // Whether the OS is running in FIPS mode
+  fipsEnabled() bool
+  // Active system-wide crypto policy (e.g. "DEFAULT", "FUTURE", "FIPS", "LEGACY"); empty when not applicable
+  cryptoPolicy() string
 }
 
 // Operating system date and timezone information
