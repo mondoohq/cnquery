@@ -78,6 +78,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[shared.OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
 	}
 
+	if img, ok := req.Flags[shared.OPTION_IMAGES]; ok {
+		conf.Options[shared.OPTION_IMAGES] = string(img.Value)
+	}
+
+	if img, ok := req.Flags[shared.OPTION_IMAGES_EXCLUDE]; ok {
+		conf.Options[shared.OPTION_IMAGES_EXCLUDE] = string(img.Value)
+	}
+
 	if val, ok := req.Flags[shared.OPTION_KUBELOGIN]; ok {
 		conf.Options[shared.OPTION_KUBELOGIN] = strconv.FormatBool(val.RawData().Value.(bool))
 	}

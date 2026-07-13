@@ -22,6 +22,8 @@ const (
 	OPTION_IMMEMORY_CONTENT  = "manifest-content"
 	OPTION_NAMESPACE         = "namespaces"
 	OPTION_NAMESPACE_EXCLUDE = "namespaces-exclude"
+	OPTION_IMAGES            = "images"
+	OPTION_IMAGES_EXCLUDE    = "images-exclude"
 	OPTION_ADMISSION         = "k8s-admission-review"
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"

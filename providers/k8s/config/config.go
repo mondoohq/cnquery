@@ -75,6 +75,18 @@ Examples:
 					Desc:    "HTTP proxy to use for container pulls",
 				},
 				{
+					Long:    "images",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include container images matching the given repositories during discovery (comma-separated, glob supported)",
+				},
+				{
+					Long:    "images-exclude",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Filter out container images matching the given repositories during discovery (comma-separated, glob supported)",
+				},
+				{
 					Long:    "kubelogin",
 					Type:    plugin.FlagType_Bool,
 					Default: "false",

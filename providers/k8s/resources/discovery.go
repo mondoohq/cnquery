@@ -42,44 +42,30 @@ const (
 	DiscoveryServices         = "services"
 )
 
-type NamespaceFilterOpts struct {
+type FilterOpts struct {
 	include []string
 	exclude []string
 }
 
-func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
-	// anything explicitly specified in the list of includes means accept only from that list
-	if len(f.include) > 0 {
-		for _, ns := range f.include {
-			g, err := glob.Compile(ns)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to compile glob")
-				return false
-			}
-			if g.Match(namespace) {
-				// stop looking, we found our match
-				return false
-			}
-		}
-
-		// didn't find it, so it must be skipped
-		return true
-	}
-
-	// if nothing explicitly meant to be included, then check whether
-	// it should be excluded
-	for _, ns := range f.exclude {
-		g, err := glob.Compile(ns)
+func matchesAny(patterns []string, value string) bool {
+	for _, pattern := range patterns {
+		g, err := glob.Compile(pattern)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to compile glob")
-			return false
+			continue
 		}
-		if g.Match(namespace) {
+		if g.Match(value) {
 			return true
 		}
 	}
-
 	return false
+}
+
+func (f *FilterOpts) skip(value string) bool {
+	if len(f.include) > 0 {
+		return !matchesAny(f.include, value)
+	}
+	return matchesAny(f.exclude, value)
 }
 
 // Discover routes to the appropriate discovery path based on whether the client
@@ -125,6 +111,10 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	k8s := res.(*mqlK8s)
 
 	nsFilter := setNamespaceFilters(invConfig)
+	imgFilter, err := setImageFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -162,12 +152,12 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 
 	// Discover the assets for each namespace and use the namespace platform ID as root
 	for _, ns := range nss {
-		nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+		nsFilter = FilterOpts{include: []string{ns.Name}}
 
 		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
 
 		// We don't want to discover the namespaces again since we have already done this above
-		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od)
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, imgFilter)
 		if err != nil {
 			return nil, err
 		}
@@ -280,7 +270,11 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	}
 	k8s := res.(*mqlK8s)
 
-	nsFilter := NamespaceFilterOpts{include: []string{nsName}}
+	nsFilter := FilterOpts{include: []string{nsName}}
+	imgFilter, err := setImageFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -300,7 +294,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 
 	od := NewPlatformIdOwnershipIndex(namespacePlatformId)
 
-	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od)
+	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od, imgFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -315,9 +309,10 @@ func discoverAssets(
 	invConfig *inventory.Config,
 	clusterId string,
 	k8s *mqlK8s,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilters *ResourceFilters,
 	od *PlatformIdOwnershipIndex,
+	imgFilter FilterOpts,
 ) ([]*inventory.Asset, error) {
 	var assets []*inventory.Asset
 	var err error
@@ -394,7 +389,7 @@ func discoverAssets(
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryContainerImages || target == DiscoveryAll {
-			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter)
+			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter, imgFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -410,7 +405,7 @@ func discoverPods(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
@@ -432,7 +427,7 @@ func discoverPods(
 	for _, p := range pods.Data {
 		pod := p.(*mqlK8sPod)
 
-		if skip := nsFilter.skipNamespace(pod.Namespace.Data); skip {
+		if skip := nsFilter.skip(pod.Namespace.Data); skip {
 			continue
 		}
 
@@ -479,7 +474,7 @@ func discoverJobs(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	jobs := k8s.GetJobs()
@@ -501,7 +496,7 @@ func discoverJobs(
 	for _, j := range jobs.Data {
 		job := j.(*mqlK8sJob)
 
-		if skip := nsFilter.skipNamespace(job.Namespace.Data); skip {
+		if skip := nsFilter.skip(job.Namespace.Data); skip {
 			continue
 		}
 
@@ -548,7 +543,7 @@ func discoverServices(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	cjs := k8s.GetServices()
@@ -570,7 +565,7 @@ func discoverServices(
 	for _, cj := range cjs.Data {
 		serv := cj.(*mqlK8sService)
 
-		if skip := nsFilter.skipNamespace(serv.Namespace.Data); skip {
+		if skip := nsFilter.skip(serv.Namespace.Data); skip {
 			continue
 		}
 
@@ -613,7 +608,7 @@ func discoverCronJobs(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	cjs := k8s.GetCronjobs()
@@ -635,7 +630,7 @@ func discoverCronJobs(
 	for _, cj := range cjs.Data {
 		cjob := cj.(*mqlK8sCronjob)
 
-		if skip := nsFilter.skipNamespace(cjob.Namespace.Data); skip {
+		if skip := nsFilter.skip(cjob.Namespace.Data); skip {
 			continue
 		}
 
@@ -678,7 +673,7 @@ func discoverStatefulSets(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ss := k8s.GetStatefulsets()
@@ -700,7 +695,7 @@ func discoverStatefulSets(
 	for _, j := range ss.Data {
 		statefulset := j.(*mqlK8sStatefulset)
 
-		if skip := nsFilter.skipNamespace(statefulset.Namespace.Data); skip {
+		if skip := nsFilter.skip(statefulset.Namespace.Data); skip {
 			continue
 		}
 
@@ -743,7 +738,7 @@ func discoverDeployments(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDeployments()
@@ -765,7 +760,7 @@ func discoverDeployments(
 	for _, d := range ds.Data {
 		deployment := d.(*mqlK8sDeployment)
 
-		if skip := nsFilter.skipNamespace(deployment.Namespace.Data); skip {
+		if skip := nsFilter.skip(deployment.Namespace.Data); skip {
 			continue
 		}
 
@@ -808,7 +803,7 @@ func discoverReplicaSets(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	rs := k8s.GetReplicasets()
@@ -830,7 +825,7 @@ func discoverReplicaSets(
 	for _, r := range rs.Data {
 		replicaset := r.(*mqlK8sReplicaset)
 
-		if skip := nsFilter.skipNamespace(replicaset.Namespace.Data); skip {
+		if skip := nsFilter.skip(replicaset.Namespace.Data); skip {
 			continue
 		}
 
@@ -877,7 +872,7 @@ func discoverDaemonSets(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDaemonsets()
@@ -899,7 +894,7 @@ func discoverDaemonSets(
 	for _, d := range ds.Data {
 		daemonset := d.(*mqlK8sDaemonset)
 
-		if skip := nsFilter.skipNamespace(daemonset.Namespace.Data); skip {
+		if skip := nsFilter.skip(daemonset.Namespace.Data); skip {
 			continue
 		}
 
@@ -942,7 +937,7 @@ func discoverAdmissionReviews(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 ) ([]*inventory.Asset, error) {
 	admissionReviews, err := conn.AdmissionReviews()
 	if err != nil {
@@ -972,7 +967,7 @@ func discoverIngresses(
 	clusterId string,
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	is := k8s.GetIngresses()
@@ -994,7 +989,7 @@ func discoverIngresses(
 	for _, d := range is.Data {
 		ingress := d.(*mqlK8sIngress)
 
-		if skip := nsFilter.skipNamespace(ingress.Namespace.Data); skip {
+		if skip := nsFilter.skip(ingress.Namespace.Data); skip {
 			continue
 		}
 
@@ -1036,7 +1031,7 @@ func discoverNamespaces(
 	invConfig *inventory.Config,
 	clusterId string,
 	od *PlatformIdOwnershipIndex,
-	nsFilter NamespaceFilterOpts,
+	nsFilter FilterOpts,
 ) ([]*inventory.Asset, error) {
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
@@ -1065,7 +1060,7 @@ func discoverNamespaces(
 
 	assetList := make([]*inventory.Asset, 0, len(nss))
 	for _, ns := range nss {
-		if skip := nsFilter.skipNamespace(ns.Name); skip {
+		if skip := nsFilter.skip(ns.Name); skip {
 			continue
 		}
 
@@ -1095,7 +1090,7 @@ func discoverNamespaces(
 	return assetList, nil
 }
 
-func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, imgFilter FilterOpts) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -1105,7 +1100,7 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 	for _, p := range pods.Data {
 		pod := p.(*mqlK8sPod)
 
-		if skip := nsFilter.skipNamespace(pod.Namespace.Data); skip {
+		if skip := nsFilter.skip(pod.Namespace.Data); skip {
 			continue
 		}
 
@@ -1128,6 +1123,9 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 
 	assetList := make([]*inventory.Asset, 0, len(runningImages))
 	for _, i := range runningImages {
+		if imgFilter.skip(i.resolvedImage) {
+			continue
+		}
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
@@ -1391,20 +1389,35 @@ func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
 
 			resourcesFilter.identifiers[resType] = append(
 				resourcesFilter.identifiers[resType],
-				K8sResourceIdentifier{Type: resType, Namespace: ns, Name: name})
+				K8sResourceIdentifier{Type: resType, Namespace: ns, Name: name},
+			)
 		}
 	}
 	return resourcesFilter, nil
 }
 
-func setNamespaceFilters(cfg *inventory.Config) NamespaceFilterOpts {
-	nsFilter := NamespaceFilterOpts{}
+func setImageFilters(cfg *inventory.Config) (FilterOpts, error) {
+	f := FilterOpts{}
+	if include, ok := cfg.Options[shared.OPTION_IMAGES]; ok && len(include) > 0 {
+		f.include = splitFilterValues(include)
+	}
+	if exclude, ok := cfg.Options[shared.OPTION_IMAGES_EXCLUDE]; ok && len(exclude) > 0 {
+		f.exclude = splitFilterValues(exclude)
+	}
+	if len(f.include) > 0 && len(f.exclude) > 0 {
+		return FilterOpts{}, fmt.Errorf("--images and --images-exclude are mutually exclusive")
+	}
+	return f, nil
+}
+
+func setNamespaceFilters(cfg *inventory.Config) FilterOpts {
+	nsFilter := FilterOpts{}
 	if include, ok := cfg.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
-		nsFilter.include = namespaceFilterValues(include)
+		nsFilter.include = splitFilterValues(include)
 	}
 
 	if exclude, ok := cfg.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
-		nsFilter.exclude = namespaceFilterValues(exclude)
+		nsFilter.exclude = splitFilterValues(exclude)
 	}
 	return nsFilter
 }
@@ -1413,14 +1426,14 @@ func setNamespaceFilters(cfg *inventory.Config) NamespaceFilterOpts {
 // one namespace, which indicates staged discovery should run the namespace stage.
 // Empty or multi-namespace filters fall through to cluster-stage discovery.
 func namespaceStageName(cfg *inventory.Config) (string, bool) {
-	namespaces := namespaceFilterValues(cfg.Options[shared.OPTION_NAMESPACE])
+	namespaces := splitFilterValues(cfg.Options[shared.OPTION_NAMESPACE])
 	if len(namespaces) != 1 {
 		return "", false
 	}
 	return namespaces[0], true
 }
 
-func namespaceFilterValues(value string) []string {
+func splitFilterValues(value string) []string {
 	values := strings.Split(value, ",")
 	res := make([]string, 0, len(values))
 	for _, value := range values {
