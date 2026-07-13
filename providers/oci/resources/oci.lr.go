@@ -102,6 +102,7 @@ const (
 	ResourceOciNetworkFirewall                                       string = "oci.networkFirewall"
 	ResourceOciNetworkFirewallFirewall                               string = "oci.networkFirewall.firewall"
 	ResourceOciNetworkFirewallPolicy                                 string = "oci.networkFirewall.policy"
+	ResourceOciNetworkFirewallPolicyDecryptionProfile                string = "oci.networkFirewall.policy.decryptionProfile"
 	ResourceOciOke                                                   string = "oci.oke"
 	ResourceOciOkeCluster                                            string = "oci.oke.cluster"
 	ResourceOciOkeNodePool                                           string = "oci.oke.nodePool"
@@ -531,6 +532,10 @@ func init() {
 		"oci.networkFirewall.policy": {
 			Init:   initOciNetworkFirewallPolicy,
 			Create: createOciNetworkFirewallPolicy,
+		},
+		"oci.networkFirewall.policy.decryptionProfile": {
+			// to override args, implement: initOciNetworkFirewallPolicyDecryptionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkFirewallPolicyDecryptionProfile,
 		},
 		"oci.oke": {
 			// to override args, implement: initOciOke(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2609,6 +2614,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.kms.key.algorithm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKey).GetAlgorithm()).ToDataRes(types.String)
 	},
+	"oci.kms.key.length": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetLength()).ToDataRes(types.Int)
+	},
+	"oci.kms.key.curveId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciKmsKey).GetCurveId()).ToDataRes(types.String)
+	},
 	"oci.kms.key.protectionMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciKmsKey).GetProtectionMode()).ToDataRes(types.String)
 	},
@@ -3433,6 +3444,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.networkFirewall.policy.systemTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkFirewallPolicy).GetSystemTags()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"oci.networkFirewall.policy.decryptionProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicy).GetDecryptionProfiles()).ToDataRes(types.Array(types.Resource("oci.networkFirewall.policy.decryptionProfile")))
+	},
+	"oci.networkFirewall.policy.decryptionProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetName()).ToDataRes(types.String)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetType()).ToDataRes(types.String)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnsupportedVersionBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsUnsupportedVersionBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnsupportedCipherBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsUnsupportedCipherBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isOutOfCapacityBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsOutOfCapacityBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isExpiredCertificateBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsExpiredCertificateBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUntrustedIssuerBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsUntrustedIssuerBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isRevocationStatusTimeoutBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsRevocationStatusTimeoutBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnknownRevocationStatusBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsUnknownRevocationStatusBlocked()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.areCertificateExtensionsRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetAreCertificateExtensionsRestricted()).ToDataRes(types.Bool)
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isAutoIncludeAltName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).GetIsAutoIncludeAltName()).ToDataRes(types.Bool)
 	},
 	"oci.oke.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOke).GetClusters()).ToDataRes(types.Array(types.Resource("oci.oke.cluster")))
@@ -8876,6 +8926,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciKmsKey).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.kms.key.length": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).Length, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.kms.key.curveId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciKmsKey).CurveId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"oci.kms.key.protectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciKmsKey).ProtectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -10106,6 +10164,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.networkFirewall.policy.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkFirewallPolicy).SystemTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicy).DecryptionProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnsupportedVersionBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsUnsupportedVersionBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnsupportedCipherBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsUnsupportedCipherBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isOutOfCapacityBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsOutOfCapacityBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isExpiredCertificateBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsExpiredCertificateBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUntrustedIssuerBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsUntrustedIssuerBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isRevocationStatusTimeoutBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsRevocationStatusTimeoutBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isUnknownRevocationStatusBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsUnknownRevocationStatusBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.areCertificateExtensionsRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).AreCertificateExtensionsRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.networkFirewall.policy.decryptionProfile.isAutoIncludeAltName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkFirewallPolicyDecryptionProfile).IsAutoIncludeAltName, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.oke.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20963,6 +21077,8 @@ type mqlOciKmsKey struct {
 	VaultId               plugin.TValue[string]
 	Vault                 plugin.TValue[*mqlOciKmsVault]
 	Algorithm             plugin.TValue[string]
+	Length                plugin.TValue[int64]
+	CurveId               plugin.TValue[string]
 	ProtectionMode        plugin.TValue[string]
 	State                 plugin.TValue[string]
 	IsAutoRotationEnabled plugin.TValue[bool]
@@ -21057,6 +21173,18 @@ func (c *mqlOciKmsKey) GetVault() *plugin.TValue[*mqlOciKmsVault] {
 
 func (c *mqlOciKmsKey) GetAlgorithm() *plugin.TValue[string] {
 	return &c.Algorithm
+}
+
+func (c *mqlOciKmsKey) GetLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Length, func() (int64, error) {
+		return c.length()
+	})
+}
+
+func (c *mqlOciKmsKey) GetCurveId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CurveId, func() (string, error) {
+		return c.curveId()
+	})
 }
 
 func (c *mqlOciKmsKey) GetProtectionMode() *plugin.TValue[string] {
@@ -24540,6 +24668,7 @@ type mqlOciNetworkFirewallPolicy struct {
 	State                 plugin.TValue[string]
 	Created               plugin.TValue[*time.Time]
 	SystemTags            plugin.TValue[map[string]any]
+	DecryptionProfiles    plugin.TValue[[]any]
 }
 
 // createOciNetworkFirewallPolicy creates a new instance of this resource
@@ -24629,6 +24758,121 @@ func (c *mqlOciNetworkFirewallPolicy) GetCreated() *plugin.TValue[*time.Time] {
 
 func (c *mqlOciNetworkFirewallPolicy) GetSystemTags() *plugin.TValue[map[string]any] {
 	return &c.SystemTags
+}
+
+func (c *mqlOciNetworkFirewallPolicy) GetDecryptionProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DecryptionProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkFirewall.policy", c.__id, "decryptionProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.decryptionProfiles()
+	})
+}
+
+// mqlOciNetworkFirewallPolicyDecryptionProfile for the oci.networkFirewall.policy.decryptionProfile resource
+type mqlOciNetworkFirewallPolicyDecryptionProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkFirewallPolicyDecryptionProfileInternal it will be used here
+	Name                               plugin.TValue[string]
+	Type                               plugin.TValue[string]
+	Description                        plugin.TValue[string]
+	IsUnsupportedVersionBlocked        plugin.TValue[bool]
+	IsUnsupportedCipherBlocked         plugin.TValue[bool]
+	IsOutOfCapacityBlocked             plugin.TValue[bool]
+	IsExpiredCertificateBlocked        plugin.TValue[bool]
+	IsUntrustedIssuerBlocked           plugin.TValue[bool]
+	IsRevocationStatusTimeoutBlocked   plugin.TValue[bool]
+	IsUnknownRevocationStatusBlocked   plugin.TValue[bool]
+	AreCertificateExtensionsRestricted plugin.TValue[bool]
+	IsAutoIncludeAltName               plugin.TValue[bool]
+}
+
+// createOciNetworkFirewallPolicyDecryptionProfile creates a new instance of this resource
+func createOciNetworkFirewallPolicyDecryptionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkFirewallPolicyDecryptionProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkFirewall.policy.decryptionProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) MqlName() string {
+	return "oci.networkFirewall.policy.decryptionProfile"
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsUnsupportedVersionBlocked() *plugin.TValue[bool] {
+	return &c.IsUnsupportedVersionBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsUnsupportedCipherBlocked() *plugin.TValue[bool] {
+	return &c.IsUnsupportedCipherBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsOutOfCapacityBlocked() *plugin.TValue[bool] {
+	return &c.IsOutOfCapacityBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsExpiredCertificateBlocked() *plugin.TValue[bool] {
+	return &c.IsExpiredCertificateBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsUntrustedIssuerBlocked() *plugin.TValue[bool] {
+	return &c.IsUntrustedIssuerBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsRevocationStatusTimeoutBlocked() *plugin.TValue[bool] {
+	return &c.IsRevocationStatusTimeoutBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsUnknownRevocationStatusBlocked() *plugin.TValue[bool] {
+	return &c.IsUnknownRevocationStatusBlocked
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetAreCertificateExtensionsRestricted() *plugin.TValue[bool] {
+	return &c.AreCertificateExtensionsRestricted
+}
+
+func (c *mqlOciNetworkFirewallPolicyDecryptionProfile) GetIsAutoIncludeAltName() *plugin.TValue[bool] {
+	return &c.IsAutoIncludeAltName
 }
 
 // mqlOciOke for the oci.oke resource

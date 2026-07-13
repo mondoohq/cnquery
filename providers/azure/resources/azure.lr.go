@@ -105,6 +105,10 @@ const (
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayFrontendIpConfig                         string = "azure.subscription.networkService.applicationGateway.frontendIpConfig"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayListener                                 string = "azure.subscription.networkService.applicationGateway.listener"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate                           string = "azure.subscription.networkService.applicationGateway.sslCertificate"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings                      string = "azure.subscription.networkService.applicationGateway.backendHttpSettings"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewaySslProfile                               string = "azure.subscription.networkService.applicationGateway.sslProfile"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate                   string = "azure.subscription.networkService.applicationGateway.trustedRootCertificate"
+	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate                 string = "azure.subscription.networkService.applicationGateway.trustedClientCertificate"
 	ResourceAzureSubscriptionNetworkServiceWafConfig                                                  string = "azure.subscription.networkService.wafConfig"
 	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                                  string = "azure.subscription.networkService.applicationFirewallPolicy"
 	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                            string = "azure.subscription.networkService.privateEndpoint"
@@ -822,6 +826,22 @@ func init() {
 		"azure.subscription.networkService.applicationGateway.sslCertificate": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate,
+		},
+		"azure.subscription.networkService.applicationGateway.backendHttpSettings": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings,
+		},
+		"azure.subscription.networkService.applicationGateway.sslProfile": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewaySslProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationGatewaySslProfile,
+		},
+		"azure.subscription.networkService.applicationGateway.trustedRootCertificate": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate,
+		},
+		"azure.subscription.networkService.applicationGateway.trustedClientCertificate": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate,
 		},
 		"azure.subscription.networkService.wafConfig": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceWafConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4397,6 +4417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway.connection")))
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.vpnClientIpsecPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetVpnClientIpsecPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetVpnClientConfiguration()).ToDataRes(types.Dict)
 	},
@@ -5888,6 +5911,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationGateway.frontendIpConfigs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetFrontendIpConfigs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")))
 	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetBackendHttpSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.backendHttpSettings")))
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetSslProfiles()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.sslProfile")))
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetTrustedRootCertificates()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.trustedRootCertificate")))
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetTrustedClientCertificates()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.applicationGateway.trustedClientCertificate")))
+	},
 	"azure.subscription.networkService.applicationGateway.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).GetPrincipalId()).ToDataRes(types.String)
 	},
@@ -5966,6 +6001,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.applicationGateway.listener.sslCertificateName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).GetSslCertificateName()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.applicationGateway.listener.sslProfileId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).GetSslProfileId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.listener.sslProfileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).GetSslProfileName()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.applicationGateway.listener.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).GetProvisioningState()).ToDataRes(types.String)
 	},
@@ -5989,6 +6030,117 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetHostName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.pickHostNameFromBackendAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetPickHostNameFromBackendAddress()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.sniName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetSniName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.validateCertChainAndExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetValidateCertChainAndExpiry()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.validateSNI": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetValidateSNI()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.trustedRootCertificateNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetTrustedRootCertificateNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.trustedRootCertificateIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetTrustedRootCertificateIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.cookieBasedAffinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetCookieBasedAffinity()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.requestTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetRequestTimeout()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslPolicyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetSslPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslPolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetSslPolicyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslMinProtocolVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetSslMinProtocolVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslCipherSuites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetSslCipherSuites()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientAuthMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetVerifyClientAuthMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientCertIssuerDN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetVerifyClientCertIssuerDN()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientRevocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetVerifyClientRevocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.trustedClientCertificateNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetTrustedClientCertificateNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.trustedClientCertificateIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetTrustedClientCertificateIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.data": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).GetData()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.keyVaultSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).GetKeyVaultSecret()).ToDataRes(types.Resource("azure.subscription.keyVaultService.secret"))
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.data": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetData()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.clientCertIssuerDN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetClientCertIssuerDN()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.validatedCertData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetValidatedCertData()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.wafConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetId()).ToDataRes(types.String)
@@ -10633,6 +10785,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.managedHsm.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.keyVaultService.managedHsm.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetKeys()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key")))
 	},
 	"azure.subscription.keyVaultService.vault.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetId()).ToDataRes(types.String)
@@ -20795,6 +20950,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.vpnClientIpsecPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).VpnClientIpsecPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).VpnClientConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -22967,6 +23126,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).FrontendIpConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).BackendHttpSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).SslProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).TrustedRootCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).TrustedClientCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationGateway.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGateway).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -23083,6 +23258,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).SslCertificateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.applicationGateway.listener.sslProfileId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).SslProfileId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.listener.sslProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).SslProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationGateway.listener.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -23117,6 +23300,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.applicationGateway.sslCertificate.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.pickHostNameFromBackendAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).PickHostNameFromBackendAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.sniName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).SniName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.validateCertChainAndExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).ValidateCertChainAndExpiry, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.validateSNI": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).ValidateSNI, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.trustedRootCertificateNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).TrustedRootCertificateNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.trustedRootCertificateIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).TrustedRootCertificateIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.cookieBasedAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).CookieBasedAffinity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.requestTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).RequestTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.backendHttpSettings.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslPolicyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).SslPolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).SslPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslMinProtocolVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).SslMinProtocolVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.sslCipherSuites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).SslCipherSuites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).VerifyClientAuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientCertIssuerDN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).VerifyClientCertIssuerDN, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.verifyClientRevocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).VerifyClientRevocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.trustedClientCertificateNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).TrustedClientCertificateNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.trustedClientCertificateIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).TrustedClientCertificateIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.sslProfile.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).Data, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.keyVaultSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).KeyVaultSecret, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceSecret](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedRootCertificate.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).Data, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.clientCertIssuerDN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).ClientCertIssuerDN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.validatedCertData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).ValidatedCertData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.applicationGateway.trustedClientCertificate.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.wafConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29833,6 +30180,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.managedHsm.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47364,6 +47715,7 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway struct {
 	BgpSettings                     plugin.TValue[*mqlAzureSubscriptionNetworkServiceBgpSettings]
 	NatRules                        plugin.TValue[[]any]
 	Connections                     plugin.TValue[[]any]
+	VpnClientIpsecPolicies          plugin.TValue[[]any]
 	VpnClientConfiguration          plugin.TValue[any]
 	VpnClientAuthenticationTypes    plugin.TValue[[]any]
 	VpnClientAddressPool            plugin.TValue[[]any]
@@ -47556,6 +47908,22 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetConnections
 		}
 
 		return c.connections()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetVpnClientIpsecPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpnClientIpsecPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway", c.__id, "vpnClientIpsecPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpnClientIpsecPolicies()
 	})
 }
 
@@ -52747,26 +53115,30 @@ type mqlAzureSubscriptionNetworkServiceApplicationGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionNetworkServiceApplicationGatewayInternal
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	Type                   plugin.TValue[string]
-	Etag                   plugin.TValue[string]
-	Properties             plugin.TValue[any]
-	Policy                 plugin.TValue[*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy]
-	WafConfiguration       plugin.TValue[[]any]
-	SslPolicyType          plugin.TValue[string]
-	SslMinProtocolVersion  plugin.TValue[string]
-	SslCipherSuites        plugin.TValue[[]any]
-	Listeners              plugin.TValue[[]any]
-	SslCertificates        plugin.TValue[[]any]
-	FrontendIpConfigs      plugin.TValue[[]any]
-	PrincipalId            plugin.TValue[string]
-	TenantId               plugin.TValue[string]
-	IdentityType           plugin.TValue[string]
-	UserAssignedIdentities plugin.TValue[[]any]
-	GatewayIpConfigs       plugin.TValue[[]any]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+	Type                      plugin.TValue[string]
+	Etag                      plugin.TValue[string]
+	Properties                plugin.TValue[any]
+	Policy                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy]
+	WafConfiguration          plugin.TValue[[]any]
+	SslPolicyType             plugin.TValue[string]
+	SslMinProtocolVersion     plugin.TValue[string]
+	SslCipherSuites           plugin.TValue[[]any]
+	Listeners                 plugin.TValue[[]any]
+	SslCertificates           plugin.TValue[[]any]
+	FrontendIpConfigs         plugin.TValue[[]any]
+	BackendHttpSettings       plugin.TValue[[]any]
+	SslProfiles               plugin.TValue[[]any]
+	TrustedRootCertificates   plugin.TValue[[]any]
+	TrustedClientCertificates plugin.TValue[[]any]
+	PrincipalId               plugin.TValue[string]
+	TenantId                  plugin.TValue[string]
+	IdentityType              plugin.TValue[string]
+	UserAssignedIdentities    plugin.TValue[[]any]
+	GatewayIpConfigs          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceApplicationGateway creates a new instance of this resource
@@ -52888,6 +53260,22 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetSslCertificate
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetFrontendIpConfigs() *plugin.TValue[[]any] {
 	return &c.FrontendIpConfigs
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetBackendHttpSettings() *plugin.TValue[[]any] {
+	return &c.BackendHttpSettings
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetSslProfiles() *plugin.TValue[[]any] {
+	return &c.SslProfiles
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetTrustedRootCertificates() *plugin.TValue[[]any] {
+	return &c.TrustedRootCertificates
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetTrustedClientCertificates() *plugin.TValue[[]any] {
+	return &c.TrustedClientCertificates
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGateway) GetPrincipalId() *plugin.TValue[string] {
@@ -53132,6 +53520,8 @@ type mqlAzureSubscriptionNetworkServiceApplicationGatewayListener struct {
 	RequireServerNameIndication plugin.TValue[bool]
 	SslCertificateId            plugin.TValue[string]
 	SslCertificateName          plugin.TValue[string]
+	SslProfileId                plugin.TValue[string]
+	SslProfileName              plugin.TValue[string]
 	ProvisioningState           plugin.TValue[string]
 }
 
@@ -53206,6 +53596,14 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetSslCer
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetSslCertificateName() *plugin.TValue[string] {
 	return &c.SslCertificateName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetSslProfileId() *plugin.TValue[string] {
+	return &c.SslProfileId
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetSslProfileName() *plugin.TValue[string] {
+	return &c.SslProfileName
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) GetProvisioningState() *plugin.TValue[string] {
@@ -53312,6 +53710,379 @@ func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) Get
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings for the azure.subscription.networkService.applicationGateway.backendHttpSettings resource
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettingsInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Protocol                       plugin.TValue[string]
+	Port                           plugin.TValue[int64]
+	HostName                       plugin.TValue[string]
+	PickHostNameFromBackendAddress plugin.TValue[bool]
+	SniName                        plugin.TValue[string]
+	ValidateCertChainAndExpiry     plugin.TValue[bool]
+	ValidateSNI                    plugin.TValue[bool]
+	TrustedRootCertificateNames    plugin.TValue[[]any]
+	TrustedRootCertificateIds      plugin.TValue[[]any]
+	CookieBasedAffinity            plugin.TValue[string]
+	RequestTimeout                 plugin.TValue[int64]
+	ProvisioningState              plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationGateway.backendHttpSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) MqlName() string {
+	return "azure.subscription.networkService.applicationGateway.backendHttpSettings"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetHostName() *plugin.TValue[string] {
+	return &c.HostName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetPickHostNameFromBackendAddress() *plugin.TValue[bool] {
+	return &c.PickHostNameFromBackendAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetSniName() *plugin.TValue[string] {
+	return &c.SniName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetValidateCertChainAndExpiry() *plugin.TValue[bool] {
+	return &c.ValidateCertChainAndExpiry
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetValidateSNI() *plugin.TValue[bool] {
+	return &c.ValidateSNI
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetTrustedRootCertificateNames() *plugin.TValue[[]any] {
+	return &c.TrustedRootCertificateNames
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetTrustedRootCertificateIds() *plugin.TValue[[]any] {
+	return &c.TrustedRootCertificateIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetCookieBasedAffinity() *plugin.TValue[string] {
+	return &c.CookieBasedAffinity
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetRequestTimeout() *plugin.TValue[int64] {
+	return &c.RequestTimeout
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile for the azure.subscription.networkService.applicationGateway.sslProfile resource
+type mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfileInternal it will be used here
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	SslPolicyType                 plugin.TValue[string]
+	SslPolicyName                 plugin.TValue[string]
+	SslMinProtocolVersion         plugin.TValue[string]
+	SslCipherSuites               plugin.TValue[[]any]
+	VerifyClientAuthMode          plugin.TValue[string]
+	VerifyClientCertIssuerDN      plugin.TValue[bool]
+	VerifyClientRevocation        plugin.TValue[string]
+	TrustedClientCertificateNames plugin.TValue[[]any]
+	TrustedClientCertificateIds   plugin.TValue[[]any]
+	ProvisioningState             plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationGatewaySslProfile creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationGatewaySslProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationGateway.sslProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) MqlName() string {
+	return "azure.subscription.networkService.applicationGateway.sslProfile"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetSslPolicyType() *plugin.TValue[string] {
+	return &c.SslPolicyType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetSslPolicyName() *plugin.TValue[string] {
+	return &c.SslPolicyName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetSslMinProtocolVersion() *plugin.TValue[string] {
+	return &c.SslMinProtocolVersion
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetSslCipherSuites() *plugin.TValue[[]any] {
+	return &c.SslCipherSuites
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetVerifyClientAuthMode() *plugin.TValue[string] {
+	return &c.VerifyClientAuthMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetVerifyClientCertIssuerDN() *plugin.TValue[bool] {
+	return &c.VerifyClientCertIssuerDN
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetVerifyClientRevocation() *plugin.TValue[string] {
+	return &c.VerifyClientRevocation
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetTrustedClientCertificateNames() *plugin.TValue[[]any] {
+	return &c.TrustedClientCertificateNames
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetTrustedClientCertificateIds() *plugin.TValue[[]any] {
+	return &c.TrustedClientCertificateIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate for the azure.subscription.networkService.applicationGateway.trustedRootCertificate resource
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificateInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Data              plugin.TValue[string]
+	KeyVaultSecret    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationGateway.trustedRootCertificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) MqlName() string {
+	return "azure.subscription.networkService.applicationGateway.trustedRootCertificate"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) GetData() *plugin.TValue[string] {
+	return &c.Data
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) GetKeyVaultSecret() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceSecret] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceSecret](&c.KeyVaultSecret, func() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.applicationGateway.trustedRootCertificate", c.__id, "keyVaultSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceSecret), nil
+			}
+		}
+
+		return c.keyVaultSecret()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate for the azure.subscription.networkService.applicationGateway.trustedClientCertificate resource
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificateInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Data               plugin.TValue[string]
+	ClientCertIssuerDN plugin.TValue[string]
+	ValidatedCertData  plugin.TValue[string]
+	ProvisioningState  plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.applicationGateway.trustedClientCertificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) MqlName() string {
+	return "azure.subscription.networkService.applicationGateway.trustedClientCertificate"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetData() *plugin.TValue[string] {
+	return &c.Data
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetClientCertIssuerDN() *plugin.TValue[string] {
+	return &c.ClientCertIssuerDN
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetValidatedCertData() *plugin.TValue[string] {
+	return &c.ValidatedCertData
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
 }
 
@@ -68993,6 +69764,7 @@ type mqlAzureSubscriptionKeyVaultServiceManagedHsm struct {
 	Regions                    plugin.TValue[[]any]
 	PrivateEndpointConnections plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Keys                       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceManagedHsm creates a new instance of this resource
@@ -69129,6 +69901,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetSystemMetadata() *plu
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.managedHsm", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keys()
 	})
 }
 

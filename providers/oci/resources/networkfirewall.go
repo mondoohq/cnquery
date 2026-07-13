@@ -359,3 +359,102 @@ func initOciNetworkFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.
 func (o *mqlOciNetworkFirewallPolicy) id() (string, error) {
 	return "oci.networkFirewall.policy/" + o.Id.Data, nil
 }
+
+func (o *mqlOciNetworkFirewallPolicy) decryptionProfiles() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	svc, err := conn.NetworkFirewallClient(o.region)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+
+	// The list returns summaries only (name/type); the blocking booleans
+	// require a per-profile Get.
+	summaries := []networkfirewall.DecryptionProfileSummary{}
+	var page *string
+	for {
+		resp, err := svc.ListDecryptionProfiles(ctx, networkfirewall.ListDecryptionProfilesRequest{
+			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			Page:                    page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		summaries = append(summaries, resp.Items...)
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	res := make([]any, 0, len(summaries))
+	for i := range summaries {
+		name := stringValue(summaries[i].Name)
+
+		getResp, err := svc.GetDecryptionProfile(ctx, networkfirewall.GetDecryptionProfileRequest{
+			NetworkFirewallPolicyId: common.String(o.Id.Data),
+			DecryptionProfileName:   common.String(name),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		fields := decryptionProfileFields(getResp.DecryptionProfile, summaries[i])
+		fields["__id"] = llx.StringData(o.Id.Data + "/decryptionProfile/" + name)
+
+		mqlProfile, err := CreateResource(o.MqlRuntime, "oci.networkFirewall.policy.decryptionProfile", fields)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlProfile)
+	}
+	return res, nil
+}
+
+// decryptionProfileFields maps an OCI decryption profile to its MQL fields.
+// Forward-proxy profiles carry all ten blocking controls; inbound-inspection
+// profiles carry only the three shared ones, so the certificate-validation
+// controls stay null (llx.BoolDataPtr(nil)) for them. The caller adds the
+// synthetic __id.
+func decryptionProfileFields(dp networkfirewall.DecryptionProfile, summary networkfirewall.DecryptionProfileSummary) map[string]*llx.RawData {
+	fields := map[string]*llx.RawData{
+		"name": llx.StringData(stringValue(summary.Name)),
+		// Forward-proxy-only fields are null on inbound profiles; the
+		// forward-proxy case below overwrites them.
+		"isExpiredCertificateBlocked":        llx.BoolDataPtr(nil),
+		"isUntrustedIssuerBlocked":           llx.BoolDataPtr(nil),
+		"isRevocationStatusTimeoutBlocked":   llx.BoolDataPtr(nil),
+		"isUnknownRevocationStatusBlocked":   llx.BoolDataPtr(nil),
+		"areCertificateExtensionsRestricted": llx.BoolDataPtr(nil),
+		"isAutoIncludeAltName":               llx.BoolDataPtr(nil),
+	}
+
+	switch p := dp.(type) {
+	case networkfirewall.SslForwardProxyProfile:
+		fields["type"] = llx.StringData(string(networkfirewall.InspectionTypeSslForwardProxy))
+		fields["description"] = llx.StringDataPtr(p.Description)
+		fields["isUnsupportedVersionBlocked"] = llx.BoolDataPtr(p.IsUnsupportedVersionBlocked)
+		fields["isUnsupportedCipherBlocked"] = llx.BoolDataPtr(p.IsUnsupportedCipherBlocked)
+		fields["isOutOfCapacityBlocked"] = llx.BoolDataPtr(p.IsOutOfCapacityBlocked)
+		fields["isExpiredCertificateBlocked"] = llx.BoolDataPtr(p.IsExpiredCertificateBlocked)
+		fields["isUntrustedIssuerBlocked"] = llx.BoolDataPtr(p.IsUntrustedIssuerBlocked)
+		fields["isRevocationStatusTimeoutBlocked"] = llx.BoolDataPtr(p.IsRevocationStatusTimeoutBlocked)
+		fields["isUnknownRevocationStatusBlocked"] = llx.BoolDataPtr(p.IsUnknownRevocationStatusBlocked)
+		fields["areCertificateExtensionsRestricted"] = llx.BoolDataPtr(p.AreCertificateExtensionsRestricted)
+		fields["isAutoIncludeAltName"] = llx.BoolDataPtr(p.IsAutoIncludeAltName)
+	case networkfirewall.SslInboundInspectionProfile:
+		fields["type"] = llx.StringData(string(networkfirewall.InspectionTypeSslInboundInspection))
+		fields["description"] = llx.StringDataPtr(p.Description)
+		fields["isUnsupportedVersionBlocked"] = llx.BoolDataPtr(p.IsUnsupportedVersionBlocked)
+		fields["isUnsupportedCipherBlocked"] = llx.BoolDataPtr(p.IsUnsupportedCipherBlocked)
+		fields["isOutOfCapacityBlocked"] = llx.BoolDataPtr(p.IsOutOfCapacityBlocked)
+	default:
+		// Unknown profile type: surface the summary type, leave booleans null.
+		fields["type"] = llx.StringData(string(summary.Type))
+		fields["description"] = llx.StringDataPtr(summary.Description)
+		fields["isUnsupportedVersionBlocked"] = llx.BoolDataPtr(nil)
+		fields["isUnsupportedCipherBlocked"] = llx.BoolDataPtr(nil)
+		fields["isOutOfCapacityBlocked"] = llx.BoolDataPtr(nil)
+	}
+	return fields
+}

@@ -1853,6 +1853,14 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   natRules() []azure.subscription.networkService.virtualNetworkGateway.natRule
   // Applicable connections for the gateway
   connections() []azure.subscription.networkService.virtualNetworkGateway.connection
+  // Custom IPsec/IKE policies negotiated for point-to-site VPN clients
+  //
+  // Iterate the custom cryptographic policies applied to point-to-site
+  // client connections, each surfacing the IKE Phase 1 and Phase 2
+  // algorithms, Diffie-Hellman groups, and security-association
+  // lifetimes. Empty when the gateway has no point-to-site configuration
+  // or uses Azure default cryptography.
+  vpnClientIpsecPolicies() []azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy
   // VPN client configuration, set only when P2S is configured
   //
   // Deprecated in favor of vpnClientAuthenticationTypes,
@@ -2273,15 +2281,19 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
   ipsecPolicies() []azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy
 }
 
-// IPsec/IKE policy of a virtual network gateway connection
+// IPsec/IKE policy of a virtual network gateway
 //
 // Examine a single custom IPsec/IKE cryptographic policy applied to a
-// virtual network gateway connection. Surfaces the IKE Phase 1 and Phase 2
-// algorithms — `ikeEncryption` and `ikeIntegrity` for IKE, `ipsecEncryption`
-// and `ipsecIntegrity` for IPsec — together with the `dhGroup` and `pfsGroup`
-// Diffie-Hellman groups and the security-association lifetime
-// (`saLifeTimeSeconds`) and payload size (`saDataSizeKilobytes`). Use it to
-// assert that site-to-site tunnels negotiate strong cryptographic parameters.
+// virtual network gateway. This covers both site-to-site connection
+// policies (from `virtualNetworkGateway.connections.ipsecPolicies`) and
+// point-to-site client policies (from
+// `virtualNetworkGateway.vpnClientIpsecPolicies`). Surfaces the IKE Phase
+// 1 and Phase 2 algorithms, `ikeEncryption` and `ikeIntegrity` for IKE,
+// `ipsecEncryption` and `ipsecIntegrity` for IPsec, together with the
+// `dhGroup` and `pfsGroup` Diffie-Hellman groups and the
+// security-association lifetime (`saLifeTimeSeconds`) and payload size
+// (`saDataSizeKilobytes`). Use it to assert that tunnels negotiate strong
+// cryptographic parameters.
 private azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy @defaults("ikeEncryption ipsecEncryption dhGroup pfsGroup") {
   // Policy ID (connection ID + positional index; not stable if policy ordering changes server-side)
   id string
@@ -3271,6 +3283,14 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   sslCertificates []azure.subscription.networkService.applicationGateway.sslCertificate
   // Frontend IP configurations on the application gateway (a config with a subnet is internal/private; one with a public IP is internet-facing)
   frontendIpConfigs []azure.subscription.networkService.applicationGateway.frontendIpConfig
+  // Backend HTTP settings that define how the gateway connects to backend pools, including TLS to the backend and certificate validation
+  backendHttpSettings []azure.subscription.networkService.applicationGateway.backendHttpSettings
+  // SSL profiles that define per-listener TLS policy and mutual-TLS client authentication
+  sslProfiles []azure.subscription.networkService.applicationGateway.sslProfile
+  // Trusted root certificates used to validate backend server certificates for end-to-end TLS
+  trustedRootCertificates []azure.subscription.networkService.applicationGateway.trustedRootCertificate
+  // Trusted client certificate authorities used to validate client certificates in mutual TLS
+  trustedClientCertificates []azure.subscription.networkService.applicationGateway.trustedClientCertificate
   // Object ID (principal ID) of the system-assigned managed identity, when one is configured
   principalId string
   // Tenant ID of the system-assigned managed identity, when one is configured
@@ -3353,6 +3373,10 @@ private azure.subscription.networkService.applicationGateway.listener @defaults(
   sslCertificateId string
   // Name of the SSL certificate the listener presents (matches `name` of an entry in the parent gateway's `sslCertificates`); empty for Http listeners
   sslCertificateName string
+  // ARM resource ID of the SSL profile bound to the listener; empty when no profile is set
+  sslProfileId string
+  // Name of the SSL profile bound to the listener (matches `name` of an entry in the parent gateway's `sslProfiles`); empty when no profile is set
+  sslProfileName string
   // Provisioning state of the listener
   provisioningState string
 }
@@ -3382,6 +3406,125 @@ private azure.subscription.networkService.applicationGateway.sslCertificate @def
   // Managed HSM key backing this certificate (null when Key Vault- or PFX-backed)
   hsmKey() azure.subscription.keyVaultService.key
   // Provisioning state of the certificate resource
+  provisioningState string
+}
+
+// Azure Application Gateway backend HTTP settings
+//
+// Examine a single backend HTTP settings collection on an Application
+// Gateway, which controls how the gateway connects to its backend pool.
+// A `protocol` of Https means the gateway re-encrypts traffic to the
+// backend for end-to-end TLS. `validateCertChainAndExpiry` and
+// `validateSNI` govern whether the backend server certificate is checked
+// against the trusted root certificates named in
+// `trustedRootCertificateNames`. `hostName`, `pickHostNameFromBackendAddress`,
+// and `sniName` determine the host header and SNI presented to the backend.
+private azure.subscription.networkService.applicationGateway.backendHttpSettings @defaults("name protocol port") {
+  // ARM resource ID
+  id string
+  // Backend HTTP settings name
+  name string
+  // Protocol used to connect to the backend ("Http", "Https", "Tcp", or "Tls")
+  protocol string
+  // Port used to connect to the backend
+  port int
+  // Host header sent to the backend; empty when derived from the backend address
+  hostName string
+  // Whether the host header is picked from the backend address instead of `hostName`
+  pickHostNameFromBackendAddress bool
+  // Server Name Indication presented to the backend during the TLS handshake
+  sniName string
+  // Whether the backend server certificate chain and expiry are validated
+  validateCertChainAndExpiry bool
+  // Whether the backend server certificate SNI is validated
+  validateSNI bool
+  // Names of trusted root certificates used to validate the backend server certificate
+  trustedRootCertificateNames []string
+  // ARM resource IDs of trusted root certificates used to validate the backend server certificate
+  trustedRootCertificateIds []string
+  // Cookie-based session affinity setting ("Enabled" or "Disabled")
+  cookieBasedAffinity string
+  // Request timeout in seconds for connections to the backend
+  requestTimeout int
+  // Provisioning state of the backend HTTP settings
+  provisioningState string
+}
+
+// Azure Application Gateway SSL profile
+//
+// Examine a single SSL profile on an Application Gateway, which defines
+// the TLS policy and mutual-TLS client authentication for the listeners
+// bound to it. `sslPolicyType`, `sslPolicyName`, `sslMinProtocolVersion`,
+// and `sslCipherSuites` describe the negotiated TLS parameters.
+// `verifyClientAuthMode`, `verifyClientCertIssuerDN`, and
+// `verifyClientRevocation` describe how client certificates are checked
+// against the authorities named in `trustedClientCertificateNames`.
+private azure.subscription.networkService.applicationGateway.sslProfile @defaults("name sslMinProtocolVersion verifyClientAuthMode") {
+  // ARM resource ID
+  id string
+  // SSL profile name
+  name string
+  // SSL policy type ("Predefined", "Custom", or "CustomV2")
+  sslPolicyType string
+  // Predefined SSL policy name, when `sslPolicyType` is Predefined
+  sslPolicyName string
+  // Minimum SSL/TLS protocol version ("TLSv1_0", "TLSv1_1", "TLSv1_2", or "TLSv1_3")
+  sslMinProtocolVersion string
+  // SSL cipher suites enabled for the profile
+  sslCipherSuites []string
+  // Client certificate verification mode ("Passthrough" or "Strict")
+  verifyClientAuthMode string
+  // Whether the client certificate issuer distinguished name is verified
+  verifyClientCertIssuerDN bool
+  // Client certificate revocation check ("None" or "OCSP")
+  verifyClientRevocation string
+  // Names of trusted client certificates used to validate client certificates
+  trustedClientCertificateNames []string
+  // ARM resource IDs of trusted client certificates used to validate client certificates
+  trustedClientCertificateIds []string
+  // Provisioning state of the SSL profile
+  provisioningState string
+}
+
+// Azure Application Gateway trusted root certificate
+//
+// Examine a single trusted root certificate on an Application Gateway,
+// used to validate the backend server certificate for end-to-end TLS.
+// The certificate is sourced either from inline `data` (base64-encoded
+// public certificate) or from a Key Vault secret resolved through
+// `keyVaultSecret`.
+private azure.subscription.networkService.applicationGateway.trustedRootCertificate @defaults("name") {
+  // ARM resource ID
+  id string
+  // Trusted root certificate name
+  name string
+  // Base64-encoded public certificate data; empty when sourced from Key Vault
+  data string
+  // Key Vault secret backing the certificate (null when the data was uploaded directly)
+  keyVaultSecret() azure.subscription.keyVaultService.secret
+  // Provisioning state of the trusted root certificate
+  provisioningState string
+}
+
+// Azure Application Gateway trusted client certificate
+//
+// Examine a single trusted client certificate authority on an Application
+// Gateway, used to validate client certificates presented during mutual
+// TLS. `data` holds the base64-encoded certificate chain, `clientCertIssuerDN`
+// the issuer distinguished name, and `validatedCertData` the validated
+// certificate data computed by Azure.
+private azure.subscription.networkService.applicationGateway.trustedClientCertificate @defaults("name clientCertIssuerDN") {
+  // ARM resource ID
+  id string
+  // Trusted client certificate name
+  name string
+  // Base64-encoded certificate chain data
+  data string
+  // Issuer distinguished name of the client certificate authority
+  clientCertIssuerDN string
+  // Validated certificate data computed by Azure
+  validatedCertData string
+  // Provisioning state of the trusted client certificate
   provisioningState string
 }
 
@@ -7515,6 +7658,14 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Cryptographic keys stored in the Managed HSM pool
+  //
+  // Iterate the keys held in the hardware security module, each exposing
+  // its key type, key size, and elliptic curve. Reading keys requires
+  // data-plane access to the HSM (a Managed HSM local RBAC role such as
+  // "Managed HSM Crypto User"), which is separate from the
+  // management-plane permission that lists the pool itself.
+  keys() []azure.subscription.keyVaultService.key
 }
 
 // Azure Key Vault vault

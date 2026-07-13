@@ -3402,25 +3402,18 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	}
 	var sslPolicyType, sslMinProtocolVersion string
 	sslCipherSuites := []any{}
-	if ag.Properties != nil && ag.Properties.SSLPolicy != nil {
-		sp := ag.Properties.SSLPolicy
-		if sp.PolicyType != nil {
-			sslPolicyType = string(*sp.PolicyType)
-		}
-		if sp.MinProtocolVersion != nil {
-			sslMinProtocolVersion = string(*sp.MinProtocolVersion)
-		}
-		for _, cs := range sp.CipherSuites {
-			if cs != nil {
-				sslCipherSuites = append(sslCipherSuites, string(*cs))
-			}
-		}
+	if ag.Properties != nil {
+		sslPolicyType, _, sslMinProtocolVersion, sslCipherSuites = azureAppGatewaySSLPolicyFields(ag.Properties.SSLPolicy)
 	}
 
 	// Build frontend-port lookup so listeners can resolve their bound port,
-	// and ssl-cert name lookup so listeners can resolve the cert reference.
+	// and cert/profile name lookups so listeners and settings can resolve
+	// their references.
 	frontendPorts := map[string]int64{}
 	sslCertNames := map[string]string{}
+	sslProfileNames := map[string]string{}
+	trustedRootCertNames := map[string]string{}
+	trustedClientCertNames := map[string]string{}
 	if ag.Properties != nil {
 		for _, fp := range ag.Properties.FrontendPorts {
 			if fp == nil || fp.ID == nil || fp.Properties == nil || fp.Properties.Port == nil {
@@ -3433,6 +3426,24 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 				continue
 			}
 			sslCertNames[*c.ID] = *c.Name
+		}
+		for _, p := range ag.Properties.SSLProfiles {
+			if p == nil || p.ID == nil || p.Name == nil {
+				continue
+			}
+			sslProfileNames[*p.ID] = *p.Name
+		}
+		for _, c := range ag.Properties.TrustedRootCertificates {
+			if c == nil || c.ID == nil || c.Name == nil {
+				continue
+			}
+			trustedRootCertNames[*c.ID] = *c.Name
+		}
+		for _, c := range ag.Properties.TrustedClientCertificates {
+			if c == nil || c.ID == nil || c.Name == nil {
+				continue
+			}
+			trustedClientCertNames[*c.ID] = *c.Name
 		}
 	}
 
@@ -3456,7 +3467,7 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 			if l == nil {
 				continue
 			}
-			mqlListener, err := azureAppGatewayListenerToMql(runtime, l, frontendPorts, sslCertNames)
+			mqlListener, err := azureAppGatewayListenerToMql(runtime, l, frontendPorts, sslCertNames, sslProfileNames)
 			if err != nil {
 				return nil, err
 			}
@@ -3478,6 +3489,53 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		}
 	}
 
+	backendHttpSettings := []any{}
+	sslProfiles := []any{}
+	trustedRootCertificates := []any{}
+	trustedClientCertificates := []any{}
+	if ag.Properties != nil {
+		for _, s := range ag.Properties.BackendHTTPSettingsCollection {
+			if s == nil {
+				continue
+			}
+			mqlSettings, err := azureAppGatewayBackendHttpSettingsToMql(runtime, s, trustedRootCertNames)
+			if err != nil {
+				return nil, err
+			}
+			backendHttpSettings = append(backendHttpSettings, mqlSettings)
+		}
+		for _, p := range ag.Properties.SSLProfiles {
+			if p == nil {
+				continue
+			}
+			mqlProfile, err := azureAppGatewaySSLProfileToMql(runtime, p, trustedClientCertNames)
+			if err != nil {
+				return nil, err
+			}
+			sslProfiles = append(sslProfiles, mqlProfile)
+		}
+		for _, c := range ag.Properties.TrustedRootCertificates {
+			if c == nil {
+				continue
+			}
+			mqlCert, err := azureAppGatewayTrustedRootCertToMql(runtime, c)
+			if err != nil {
+				return nil, err
+			}
+			trustedRootCertificates = append(trustedRootCertificates, mqlCert)
+		}
+		for _, c := range ag.Properties.TrustedClientCertificates {
+			if c == nil {
+				continue
+			}
+			mqlCert, err := azureAppGatewayTrustedClientCertToMql(runtime, c)
+			if err != nil {
+				return nil, err
+			}
+			trustedClientCertificates = append(trustedClientCertificates, mqlCert)
+		}
+	}
+
 	// The gateway's managed identity lives on the top-level ag.Identity, not in
 	// ag.Properties, so it is captured separately here.
 	var principalId, tenantId, identityType *string
@@ -3490,22 +3548,26 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	}
 
 	args := map[string]*llx.RawData{
-		"id":                    llx.StringDataPtr(ag.ID),
-		"name":                  llx.StringDataPtr(ag.Name),
-		"type":                  llx.StringDataPtr(ag.Type),
-		"location":              llx.StringDataPtr(ag.Location),
-		"tags":                  llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
-		"etag":                  llx.StringDataPtr(ag.Etag),
-		"properties":            llx.DictData(props),
-		"sslPolicyType":         llx.StringData(sslPolicyType),
-		"sslMinProtocolVersion": llx.StringData(sslMinProtocolVersion),
-		"sslCipherSuites":       llx.ArrayData(sslCipherSuites, types.String),
-		"listeners":             llx.ArrayData(listeners, types.Resource("azure.subscription.networkService.applicationGateway.listener")),
-		"sslCertificates":       llx.ArrayData(sslCertificates, types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")),
-		"frontendIpConfigs":     llx.ArrayData(frontendIpConfigs, types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")),
-		"principalId":           llx.StringDataPtr(principalId),
-		"tenantId":              llx.StringDataPtr(tenantId),
-		"identityType":          llx.StringDataPtr(identityType),
+		"id":                        llx.StringDataPtr(ag.ID),
+		"name":                      llx.StringDataPtr(ag.Name),
+		"type":                      llx.StringDataPtr(ag.Type),
+		"location":                  llx.StringDataPtr(ag.Location),
+		"tags":                      llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
+		"etag":                      llx.StringDataPtr(ag.Etag),
+		"properties":                llx.DictData(props),
+		"sslPolicyType":             llx.StringData(sslPolicyType),
+		"sslMinProtocolVersion":     llx.StringData(sslMinProtocolVersion),
+		"sslCipherSuites":           llx.ArrayData(sslCipherSuites, types.String),
+		"listeners":                 llx.ArrayData(listeners, types.Resource("azure.subscription.networkService.applicationGateway.listener")),
+		"sslCertificates":           llx.ArrayData(sslCertificates, types.Resource("azure.subscription.networkService.applicationGateway.sslCertificate")),
+		"frontendIpConfigs":         llx.ArrayData(frontendIpConfigs, types.Resource("azure.subscription.networkService.applicationGateway.frontendIpConfig")),
+		"backendHttpSettings":       llx.ArrayData(backendHttpSettings, types.Resource("azure.subscription.networkService.applicationGateway.backendHttpSettings")),
+		"sslProfiles":               llx.ArrayData(sslProfiles, types.Resource("azure.subscription.networkService.applicationGateway.sslProfile")),
+		"trustedRootCertificates":   llx.ArrayData(trustedRootCertificates, types.Resource("azure.subscription.networkService.applicationGateway.trustedRootCertificate")),
+		"trustedClientCertificates": llx.ArrayData(trustedClientCertificates, types.Resource("azure.subscription.networkService.applicationGateway.trustedClientCertificate")),
+		"principalId":               llx.StringDataPtr(principalId),
+		"tenantId":                  llx.StringDataPtr(tenantId),
+		"identityType":              llx.StringDataPtr(identityType),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -3594,7 +3656,7 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayGatewayIpConfig) su
 	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
-func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.ApplicationGatewayHTTPListener, frontendPorts map[string]int64, sslCertNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener, error) {
+func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.ApplicationGatewayHTTPListener, frontendPorts map[string]int64, sslCertNames map[string]string, sslProfileNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayListener, error) {
 	id := ""
 	if l.ID != nil {
 		id = *l.ID
@@ -3611,6 +3673,8 @@ func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.Applicatio
 	provisioningState := ""
 	sslCertID := ""
 	sslCertName := ""
+	sslProfileID := ""
+	sslProfileName := ""
 	if l.Properties != nil {
 		if l.Properties.Protocol != nil {
 			protocol = string(*l.Properties.Protocol)
@@ -3636,6 +3700,10 @@ func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.Applicatio
 			sslCertID = *l.Properties.SSLCertificate.ID
 			sslCertName = sslCertNames[sslCertID]
 		}
+		if l.Properties.SSLProfile != nil && l.Properties.SSLProfile.ID != nil {
+			sslProfileID = *l.Properties.SSLProfile.ID
+			sslProfileName = sslProfileNames[sslProfileID]
+		}
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.listener", map[string]*llx.RawData{
@@ -3648,6 +3716,8 @@ func azureAppGatewayListenerToMql(runtime *plugin.Runtime, l *network.Applicatio
 		"requireServerNameIndication": llx.BoolData(requireSNI),
 		"sslCertificateId":            llx.StringData(sslCertID),
 		"sslCertificateName":          llx.StringData(sslCertName),
+		"sslProfileId":                llx.StringData(sslProfileID),
+		"sslProfileName":              llx.StringData(sslProfileName),
 		"provisioningState":           llx.StringData(provisioningState),
 	})
 	if err != nil {
@@ -3720,6 +3790,257 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslCertificate) hsm
 		return nil, nil
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheHsmKeyId)
+}
+
+// azureAppGatewaySSLPolicyFields flattens an application gateway SSL policy into
+// its scalar fields. Returns an empty cipher-suite slice when the policy is nil.
+func azureAppGatewaySSLPolicyFields(sp *network.ApplicationGatewaySSLPolicy) (policyType, policyName, minProto string, ciphers []any) {
+	ciphers = []any{}
+	if sp == nil {
+		return
+	}
+	if sp.PolicyType != nil {
+		policyType = string(*sp.PolicyType)
+	}
+	if sp.PolicyName != nil {
+		policyName = string(*sp.PolicyName)
+	}
+	if sp.MinProtocolVersion != nil {
+		minProto = string(*sp.MinProtocolVersion)
+	}
+	for _, cs := range sp.CipherSuites {
+		if cs != nil {
+			ciphers = append(ciphers, string(*cs))
+		}
+	}
+	return
+}
+
+func azureAppGatewayBackendHttpSettingsToMql(runtime *plugin.Runtime, s *network.ApplicationGatewayBackendHTTPSettings, trustedRootCertNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings, error) {
+	protocol := ""
+	hostName := ""
+	sniName := ""
+	cookieBasedAffinity := ""
+	provisioningState := ""
+	pickHostName := false
+	validateCertChainAndExpiry := false
+	validateSNI := false
+	var port, requestTimeout int64
+	trustedRootCertIds := []any{}
+	trustedRootCertNamesList := []any{}
+	if s.Properties != nil {
+		p := s.Properties
+		if p.Protocol != nil {
+			protocol = string(*p.Protocol)
+		}
+		if p.Port != nil {
+			port = int64(*p.Port)
+		}
+		if p.HostName != nil {
+			hostName = *p.HostName
+		}
+		if p.PickHostNameFromBackendAddress != nil {
+			pickHostName = *p.PickHostNameFromBackendAddress
+		}
+		if p.SniName != nil {
+			sniName = *p.SniName
+		}
+		if p.ValidateCertChainAndExpiry != nil {
+			validateCertChainAndExpiry = *p.ValidateCertChainAndExpiry
+		}
+		if p.ValidateSNI != nil {
+			validateSNI = *p.ValidateSNI
+		}
+		if p.CookieBasedAffinity != nil {
+			cookieBasedAffinity = string(*p.CookieBasedAffinity)
+		}
+		if p.RequestTimeout != nil {
+			requestTimeout = int64(*p.RequestTimeout)
+		}
+		if p.ProvisioningState != nil {
+			provisioningState = string(*p.ProvisioningState)
+		}
+		for _, c := range p.TrustedRootCertificates {
+			if c == nil || c.ID == nil {
+				continue
+			}
+			trustedRootCertIds = append(trustedRootCertIds, *c.ID)
+			if name, ok := trustedRootCertNames[*c.ID]; ok {
+				trustedRootCertNamesList = append(trustedRootCertNamesList, name)
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.backendHttpSettings", map[string]*llx.RawData{
+		"id":                             llx.StringData(convert.ToValue(s.ID)),
+		"name":                           llx.StringData(convert.ToValue(s.Name)),
+		"protocol":                       llx.StringData(protocol),
+		"port":                           llx.IntData(port),
+		"hostName":                       llx.StringData(hostName),
+		"pickHostNameFromBackendAddress": llx.BoolData(pickHostName),
+		"sniName":                        llx.StringData(sniName),
+		"validateCertChainAndExpiry":     llx.BoolData(validateCertChainAndExpiry),
+		"validateSNI":                    llx.BoolData(validateSNI),
+		"trustedRootCertificateNames":    llx.ArrayData(trustedRootCertNamesList, types.String),
+		"trustedRootCertificateIds":      llx.ArrayData(trustedRootCertIds, types.String),
+		"cookieBasedAffinity":            llx.StringData(cookieBasedAffinity),
+		"requestTimeout":                 llx.IntData(requestTimeout),
+		"provisioningState":              llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayBackendHttpSettings) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func azureAppGatewaySSLProfileToMql(runtime *plugin.Runtime, p *network.ApplicationGatewaySSLProfile, trustedClientCertNames map[string]string) (*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile, error) {
+	provisioningState := ""
+	verifyClientAuthMode := ""
+	verifyClientRevocation := ""
+	verifyClientCertIssuerDN := false
+	policyType, policyName, minProto, ciphers := "", "", "", []any{}
+	trustedClientCertIds := []any{}
+	trustedClientCertNamesList := []any{}
+	if p.Properties != nil {
+		props := p.Properties
+		policyType, policyName, minProto, ciphers = azureAppGatewaySSLPolicyFields(props.SSLPolicy)
+		if props.ClientAuthConfiguration != nil {
+			cac := props.ClientAuthConfiguration
+			if cac.VerifyClientAuthMode != nil {
+				verifyClientAuthMode = string(*cac.VerifyClientAuthMode)
+			}
+			if cac.VerifyClientCertIssuerDN != nil {
+				verifyClientCertIssuerDN = *cac.VerifyClientCertIssuerDN
+			}
+			if cac.VerifyClientRevocation != nil {
+				verifyClientRevocation = string(*cac.VerifyClientRevocation)
+			}
+		}
+		if props.ProvisioningState != nil {
+			provisioningState = string(*props.ProvisioningState)
+		}
+		for _, c := range props.TrustedClientCertificates {
+			if c == nil || c.ID == nil {
+				continue
+			}
+			trustedClientCertIds = append(trustedClientCertIds, *c.ID)
+			if name, ok := trustedClientCertNames[*c.ID]; ok {
+				trustedClientCertNamesList = append(trustedClientCertNamesList, name)
+			}
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.sslProfile", map[string]*llx.RawData{
+		"id":                            llx.StringData(convert.ToValue(p.ID)),
+		"name":                          llx.StringData(convert.ToValue(p.Name)),
+		"sslPolicyType":                 llx.StringData(policyType),
+		"sslPolicyName":                 llx.StringData(policyName),
+		"sslMinProtocolVersion":         llx.StringData(minProto),
+		"sslCipherSuites":               llx.ArrayData(ciphers, types.String),
+		"verifyClientAuthMode":          llx.StringData(verifyClientAuthMode),
+		"verifyClientCertIssuerDN":      llx.BoolData(verifyClientCertIssuerDN),
+		"verifyClientRevocation":        llx.StringData(verifyClientRevocation),
+		"trustedClientCertificateNames": llx.ArrayData(trustedClientCertNamesList, types.String),
+		"trustedClientCertificateIds":   llx.ArrayData(trustedClientCertIds, types.String),
+		"provisioningState":             llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewaySslProfile) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func azureAppGatewayTrustedRootCertToMql(runtime *plugin.Runtime, c *network.ApplicationGatewayTrustedRootCertificate) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate, error) {
+	data := ""
+	keyVaultSecretId := ""
+	provisioningState := ""
+	if c.Properties != nil {
+		if c.Properties.Data != nil {
+			data = *c.Properties.Data
+		}
+		if c.Properties.KeyVaultSecretID != nil {
+			keyVaultSecretId = *c.Properties.KeyVaultSecretID
+		}
+		if c.Properties.ProvisioningState != nil {
+			provisioningState = string(*c.Properties.ProvisioningState)
+		}
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.trustedRootCertificate", map[string]*llx.RawData{
+		"id":                llx.StringData(convert.ToValue(c.ID)),
+		"name":              llx.StringData(convert.ToValue(c.Name)),
+		"data":              llx.StringData(data),
+		"provisioningState": llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cert := res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate)
+	cert.cacheKeyVaultSecretId = keyVaultSecretId
+	return cert, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificateInternal struct {
+	cacheKeyVaultSecretId string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// keyVaultSecret resolves the typed Key Vault secret backing this trusted root
+// certificate from its secret URI. Returns null for certificates uploaded
+// directly.
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate) keyVaultSecret() (*mqlAzureSubscriptionKeyVaultServiceSecret, error) {
+	if a.cacheKeyVaultSecretId == "" {
+		a.KeyVaultSecret.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newKeyVaultSecretResource(a.MqlRuntime, a.cacheKeyVaultSecretId)
+}
+
+func azureAppGatewayTrustedClientCertToMql(runtime *plugin.Runtime, c *network.ApplicationGatewayTrustedClientCertificate) (*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate, error) {
+	data := ""
+	clientCertIssuerDN := ""
+	validatedCertData := ""
+	provisioningState := ""
+	if c.Properties != nil {
+		if c.Properties.Data != nil {
+			data = *c.Properties.Data
+		}
+		if c.Properties.ClientCertIssuerDN != nil {
+			clientCertIssuerDN = *c.Properties.ClientCertIssuerDN
+		}
+		if c.Properties.ValidatedCertData != nil {
+			validatedCertData = *c.Properties.ValidatedCertData
+		}
+		if c.Properties.ProvisioningState != nil {
+			provisioningState = string(*c.Properties.ProvisioningState)
+		}
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway.trustedClientCertificate", map[string]*llx.RawData{
+		"id":                 llx.StringData(convert.ToValue(c.ID)),
+		"name":               llx.StringData(convert.ToValue(c.Name)),
+		"data":               llx.StringData(data),
+		"clientCertIssuerDN": llx.StringData(clientCertIssuerDN),
+		"validatedCertData":  llx.StringData(validatedCertData),
+		"provisioningState":  llx.StringData(provisioningState),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceApplicationGatewayListener) id() (string, error) {
@@ -5713,6 +6034,44 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) ipse
 		}
 		mqlPolicy, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy", map[string]*llx.RawData{
 			"id":                  llx.StringData(fmt.Sprintf("%s/ipsecPolicies/%d", a.Id.Data, i)),
+			"ikeEncryption":       llx.StringDataPtr((*string)(policy.IkeEncryption)),
+			"ikeIntegrity":        llx.StringDataPtr((*string)(policy.IkeIntegrity)),
+			"ipsecEncryption":     llx.StringDataPtr((*string)(policy.IPSecEncryption)),
+			"ipsecIntegrity":      llx.StringDataPtr((*string)(policy.IPSecIntegrity)),
+			"dhGroup":             llx.StringDataPtr((*string)(policy.DhGroup)),
+			"pfsGroup":            llx.StringDataPtr((*string)(policy.PfsGroup)),
+			"saLifeTimeSeconds":   llx.IntData(saLifeTimeSeconds),
+			"saDataSizeKilobytes": llx.IntData(saDataSizeKilobytes),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPolicy)
+	}
+	return res, nil
+}
+
+// vpnClientIpsecPolicies maps the custom IPsec/IKE policies negotiated for
+// point-to-site VPN clients. Returns an empty list when the gateway has no
+// point-to-site configuration or uses Azure default cryptography.
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) vpnClientIpsecPolicies() ([]any, error) {
+	res := []any{}
+	if a.cacheProperties == nil || a.cacheProperties.VPNClientConfiguration == nil {
+		return res, nil
+	}
+	for i, policy := range a.cacheProperties.VPNClientConfiguration.VPNClientIPSecPolicies {
+		if policy == nil {
+			continue
+		}
+		var saLifeTimeSeconds, saDataSizeKilobytes int64
+		if policy.SaLifeTimeSeconds != nil {
+			saLifeTimeSeconds = int64(*policy.SaLifeTimeSeconds)
+		}
+		if policy.SaDataSizeKilobytes != nil {
+			saDataSizeKilobytes = int64(*policy.SaDataSizeKilobytes)
+		}
+		mqlPolicy, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy", map[string]*llx.RawData{
+			"id":                  llx.StringData(fmt.Sprintf("%s/vpnClientIpsecPolicies/%d", a.Id.Data, i)),
 			"ikeEncryption":       llx.StringDataPtr((*string)(policy.IkeEncryption)),
 			"ikeIntegrity":        llx.StringDataPtr((*string)(policy.IkeIntegrity)),
 			"ipsecEncryption":     llx.StringDataPtr((*string)(policy.IPSecEncryption)),

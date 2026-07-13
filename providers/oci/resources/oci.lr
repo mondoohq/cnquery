@@ -1566,6 +1566,17 @@ private oci.kms.key @defaults("name") {
   vault() oci.kms.vault
   // Key algorithm (AES, RSA, ECDSA)
   algorithm string
+  // Key length in bits
+  //
+  // For example 2048 or 4096 for RSA keys and 256 for AES keys. For
+  // ECDSA keys this is the key's byte length expressed in bits; use
+  // `curveId` for the exact curve.
+  length() int
+  // Elliptic curve for ECDSA keys
+  //
+  // One of NIST_P256, NIST_P384, or NIST_P521. Empty for non-ECDSA
+  // (AES, RSA) keys.
+  curveId() string
   // Protection mode (HSM, SOFTWARE, EXTERNAL)
   protectionMode string
   // Lifecycle state
@@ -2445,6 +2456,74 @@ private oci.networkFirewall.policy @defaults("name") {
   // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
+  // SSL/TLS decryption profiles
+  //
+  // Decryption profiles bound to the policy's decryption rules, which
+  // control the SSL/TLS sessions the firewall blocks during inspection
+  // (unsupported protocol versions, weak cipher suites, expired or
+  // untrusted certificates). Audit these to confirm that legacy TLS and
+  // non-compliant ciphers are refused in transit.
+  decryptionProfiles() []oci.networkFirewall.policy.decryptionProfile
+}
+
+// Oracle Cloud Infrastructure (OCI) network firewall decryption profile
+//
+// Examine a single SSL/TLS decryption profile bound to a network
+// firewall policy. The `name` field selects the profile within its
+// policy. `type` distinguishes SSL_FORWARD_PROXY (outbound inspection,
+// which validates the server certificate) from SSL_INBOUND_INSPECTION.
+// The boolean fields report which sessions the firewall blocks:
+// unsupported TLS versions, unsupported cipher suites, and out-of-capacity
+// conditions apply to both types, while the certificate-validation
+// controls apply only to forward-proxy profiles.
+private oci.networkFirewall.policy.decryptionProfile @defaults("name type isUnsupportedVersionBlocked isUnsupportedCipherBlocked") {
+  // Unique name of the decryption profile within its policy
+  name string
+  // Inspection type
+  //
+  // One of SSL_FORWARD_PROXY (outbound forward-proxy inspection) or
+  // SSL_INBOUND_INSPECTION (inbound inspection).
+  type string
+  // Description of the decryption profile
+  description string
+  // Whether sessions are blocked when the SSL/TLS version is not supported
+  //
+  // Applies to both forward-proxy and inbound-inspection profiles.
+  isUnsupportedVersionBlocked bool
+  // Whether sessions are blocked when the SSL/TLS cipher suite is not supported
+  //
+  // Applies to both forward-proxy and inbound-inspection profiles.
+  isUnsupportedCipherBlocked bool
+  // Whether sessions are blocked when the firewall is temporarily unable to decrypt their traffic
+  //
+  // Applies to both forward-proxy and inbound-inspection profiles.
+  isOutOfCapacityBlocked bool
+  // Whether sessions are blocked when the server certificate is expired
+  //
+  // Forward-proxy profiles only; null for inbound-inspection profiles.
+  isExpiredCertificateBlocked bool
+  // Whether sessions are blocked when the server certificate is issued by an untrusted certificate authority
+  //
+  // Forward-proxy profiles only; null for inbound-inspection profiles.
+  isUntrustedIssuerBlocked bool
+  // Whether sessions are blocked when the certificate revocation status check times out
+  //
+  // Forward-proxy profiles only; null for inbound-inspection profiles.
+  isRevocationStatusTimeoutBlocked bool
+  // Whether sessions are blocked when the certificate revocation status is unknown
+  //
+  // Forward-proxy profiles only; null for inbound-inspection profiles.
+  isUnknownRevocationStatusBlocked bool
+  // Whether sessions are blocked when the server certificate uses restricted extensions
+  //
+  // Blocks certificates using extensions other than key usage and
+  // extended key usage. Forward-proxy profiles only; null for
+  // inbound-inspection profiles.
+  areCertificateExtensionsRestricted bool
+  // Whether a Subject Alternative Name is appended to the impersonating certificate when the server certificate is missing one
+  //
+  // Forward-proxy profiles only; null for inbound-inspection profiles.
+  isAutoIncludeAltName bool
 }
 
 // Oracle Cloud Infrastructure (OCI) Container Engine for Kubernetes

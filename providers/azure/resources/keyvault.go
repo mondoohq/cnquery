@@ -30,7 +30,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
 )
 
-var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.vault\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
+var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.(?:vault|managedhsm)\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
 
 type keyvaultid struct {
 	BaseUrl string
@@ -1644,6 +1644,64 @@ type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
 
 func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
+}
+
+// keys enumerates the cryptographic keys held in the Managed HSM pool. Reading
+// keys requires data-plane access to the HSM (a Managed HSM local RBAC role),
+// which is distinct from the management-plane permission that lists the pool;
+// when that access is missing the HSM returns 401/403 and this gracefully
+// degrades to the keys resolved so far.
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) keys() ([]any, error) {
+	res := []any{}
+	hsmUri := a.GetHsmUri()
+	if hsmUri.Error != nil {
+		return nil, hsmUri.Error
+	}
+	if hsmUri.Data == "" {
+		return res, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	client, err := azkeys.NewClient(hsmUri.Data, token, &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden) {
+				log.Warn().Err(err).Str("hsm", hsmUri.Data).Msg("azure> no data-plane access to list managed HSM keys, returning partial results")
+				return res, nil
+			}
+			return nil, err
+		}
+
+		for _, entry := range page.Value {
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
+				map[string]*llx.RawData{
+					"kid":           llx.StringDataPtr((*string)(entry.KID)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
+					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
+					"created":       llx.TimeDataPtr(entry.Attributes.Created),
+					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
+					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
+					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
+	}
+
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {

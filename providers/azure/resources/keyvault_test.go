@@ -63,6 +63,28 @@ func TestAzureKeyvaultIdParser(t *testing.T) {
 				Name:    "test",
 			},
 		},
+		{
+			// Managed HSM key ID: the host is <name>.managedhsm.azure.net,
+			// not <name>.vault.azure.net. The regex must accept it so the
+			// reused key resource can resolve kty/keySize/curve for HSM keys.
+			url: "https://myhsm.managedhsm.azure.net/keys/hsmkey",
+			expected: keyvaultid{
+				BaseUrl: "https://myhsm.managedhsm.azure.net",
+				Vault:   "myhsm",
+				Type:    "keys",
+				Name:    "hsmkey",
+			},
+		},
+		{
+			url: "https://myhsm.managedhsm.azure.net/keys/hsmkey/9a8b7c6d5e4f",
+			expected: keyvaultid{
+				BaseUrl: "https://myhsm.managedhsm.azure.net",
+				Vault:   "myhsm",
+				Type:    "keys",
+				Name:    "hsmkey",
+				Version: "9a8b7c6d5e4f",
+			},
+		},
 	}
 
 	for i := range testCases {

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -282,10 +283,63 @@ func initOciKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 type mqlOciKmsKeyInternal struct {
 	cacheManagementEndpoint string
+
+	keyShapeOnce sync.Once
+	keyShape     *keymanagement.KeyShape
+	keyShapeErr  error
 }
 
 func (o *mqlOciKmsKey) id() (string, error) {
 	return "oci.kms.key/" + o.Id.Data, nil
+}
+
+// getKeyShape lazily fetches the key's shape, which carries the length and
+// curve that the ListKeys summary omits. The result is cached so length() and
+// curveId() share a single GetKey call.
+func (o *mqlOciKmsKey) getKeyShape() (*keymanagement.KeyShape, error) {
+	o.keyShapeOnce.Do(func() {
+		if o.cacheManagementEndpoint == "" || o.Id.Data == "" {
+			return
+		}
+		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+		svc, err := conn.KmsManagementClient(o.cacheManagementEndpoint)
+		if err != nil {
+			o.keyShapeErr = err
+			return
+		}
+		resp, err := svc.GetKey(context.Background(), keymanagement.GetKeyRequest{
+			KeyId: common.String(o.Id.Data),
+		})
+		if err != nil {
+			o.keyShapeErr = err
+			return
+		}
+		o.keyShape = resp.Key.KeyShape
+	})
+	return o.keyShape, o.keyShapeErr
+}
+
+func (o *mqlOciKmsKey) length() (int64, error) {
+	shape, err := o.getKeyShape()
+	if err != nil {
+		return 0, err
+	}
+	if shape == nil || shape.Length == nil {
+		return 0, nil
+	}
+	// The SDK reports length in bytes; expose bits for legibility.
+	return int64(*shape.Length) * 8, nil
+}
+
+func (o *mqlOciKmsKey) curveId() (string, error) {
+	shape, err := o.getKeyShape()
+	if err != nil {
+		return "", err
+	}
+	if shape == nil {
+		return "", nil
+	}
+	return string(shape.CurveId), nil
 }
 
 func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
