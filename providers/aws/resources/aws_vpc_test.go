@@ -307,6 +307,33 @@ func TestNewMqlVpnConnection(t *testing.T) {
 		assert.Empty(t, t1.Phase1DHGroupNumbers.Data)
 	})
 
+	t.Run("tunnels with empty outside IPs get distinct ids", func(t *testing.T) {
+		// Both tunnels of a Site-to-Site VPN report an empty outside IP while
+		// still provisioning; the __id must stay unique so they don't collide
+		// in the resource cache.
+		vpnConn := ec2types.VpnConnection{
+			VpnConnectionId: aws.String("vpn-provisioning"),
+			Options: &ec2types.VpnConnectionOptions{
+				TunnelOptions: []ec2types.TunnelOption{
+					{},
+					{},
+				},
+			},
+		}
+
+		result, err := newMqlVpnConnection(runtime, "us-east-1", "123456789012", vpnConn)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+
+		tunnels := result.TunnelOptions.Data
+		require.Len(t, tunnels, 2)
+
+		id0 := tunnels[0].(*mqlAwsEc2VpnconnectionTunnelOption).MqlID()
+		id1 := tunnels[1].(*mqlAwsEc2VpnconnectionTunnelOption).MqlID()
+		assert.NotEqual(t, id0, id1)
+		assert.Contains(t, id0, "vpn-provisioning")
+	})
+
 	t.Run("empty tunnel options list", func(t *testing.T) {
 		vpnConn := ec2types.VpnConnection{
 			VpnConnectionId: aws.String("vpn-no-tunnels"),

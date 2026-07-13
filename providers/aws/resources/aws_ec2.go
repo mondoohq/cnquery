@@ -3464,10 +3464,6 @@ func (a *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 	return a.OutsideIpAddress.Data, nil
 }
 
-func (a *mqlAwsEc2VpnconnectionTunnelOption) id() (string, error) {
-	return a.OutsideIpAddress.Data, nil
-}
-
 // listValuesToStrings extracts the Value field from AWS SDK "...ListValue"
 // structs into a []any of strings, guarding nil pointers.
 func listValuesToStrings[T any](values []T, get func(T) *string) []any {
@@ -3530,10 +3526,14 @@ func newMqlVpnConnection(runtime *plugin.Runtime, region string, accountID strin
 		outsideIpType = convert.ToValue(opts.OutsideIpAddressType)
 		tunnelIpVersion = string(opts.TunnelInsideIpVersion)
 
-		for _, tun := range opts.TunnelOptions {
+		vpnConnID := convert.ToValue(vpnConn.VpnConnectionId)
+		for i, tun := range opts.TunnelOptions {
+			outsideIP := convert.ToValue(tun.OutsideIpAddress)
 			mqlTunnelOpt, err := CreateResource(runtime, ResourceAwsEc2VpnconnectionTunnelOption,
 				map[string]*llx.RawData{
-					"outsideIpAddress":           llx.StringData(convert.ToValue(tun.OutsideIpAddress)),
+					// index disambiguates tunnels whose outside IP is still empty during provisioning
+					"__id":                       llx.StringData(fmt.Sprintf("%s/tunnelOption/%d/%s", vpnConnID, i, outsideIP)),
+					"outsideIpAddress":           llx.StringData(outsideIP),
 					"tunnelInsideCidr":           llx.StringData(convert.ToValue(tun.TunnelInsideCidr)),
 					"ikeVersions":                llx.ArrayData(listValuesToStrings(tun.IkeVersions, func(v ec2types.IKEVersionsListValue) *string { return v.Value }), types.String),
 					"phase1EncryptionAlgorithms": llx.ArrayData(listValuesToStrings(tun.Phase1EncryptionAlgorithms, func(v ec2types.Phase1EncryptionAlgorithmsListValue) *string { return v.Value }), types.String),
