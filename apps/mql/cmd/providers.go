@@ -42,6 +42,7 @@ func init() {
 	resourcesProviderCmd.Flags().Bool("json", false, "Output in JSON format")
 	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
+	installProviderCmd.Flags().Bool("schema-only", false, "Install only the provider's config and resource schema, without its binary")
 	deleteProviderCmd.Flags().Bool("yes", false, "Confirm removal of all providers when using the 'all' target")
 }
 
@@ -66,21 +67,34 @@ var listProvidersCmd = &cobra.Command{
 }
 
 var installProviderCmd = &cobra.Command{
-	Use:    "install <NAME[@VERSION]>",
-	Short:  "Install or update a provider",
-	Long:   "",
+	Use:   "install <NAME[@VERSION]>",
+	Short: "Install or update a provider",
+	Long: `Install or update a provider.
+
+With --schema-only, only the provider's config and resource schema are
+installed, skipping the (much larger) binary download. That is enough to
+compile queries against the provider's resources; the binary is fetched
+automatically the first time the provider connects to an asset.`,
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
+		schemaOnly, _ := cmd.Flags().GetBool("schema-only")
+
 		// Explicit installs of files will ignore version recommendations.
 		// So we just take them and roll with it.
 		path, _ := cmd.Flags().GetString("file")
 		if path != "" {
+			if schemaOnly {
+				log.Fatal().Msg("--schema-only is not supported together with --file")
+			}
 			installProviderFile(path)
 			return
 		}
 
 		url, _ := cmd.Flags().GetString("url")
 		if url != "" {
+			if schemaOnly {
+				log.Fatal().Msg("--schema-only is not supported together with --url")
+			}
 			installProviderUrl(url)
 			return
 		}
@@ -90,7 +104,7 @@ var installProviderCmd = &cobra.Command{
 		}
 
 		// if no url or file is specified, we default to installing by name from the default upstream
-		installProviderByName(args[0])
+		installProviderByName(args[0], schemaOnly)
 	},
 }
 
@@ -686,7 +700,13 @@ func updateProviders(binary string, names []string) error {
 			continue
 		}
 
-		installed, err := providers.Install(p.Name, latest)
+		// Schema-only installs stay schema-only when updated; their binary
+		// is only fetched when the provider actually connects to an asset.
+		install := providers.Install
+		if !p.HasBinary {
+			install = providers.InstallSchemaOnly
+		}
+		installed, err := install(p.Name, latest)
 		if err != nil {
 			log.Warn().Err(err).Str("provider", p.Name).Msg("failed to update provider")
 			failed++
@@ -708,7 +728,7 @@ func updateProviders(binary string, names []string) error {
 
 // --- existing functions ---
 
-func installProviderByName(name string) {
+func installProviderByName(name string, schemaOnly bool) {
 	parts := strings.Split(name, "@")
 	if len(parts) > 2 {
 		log.Fatal().Msg("invalid provider name")
@@ -719,7 +739,11 @@ func installProviderByName(name string) {
 		// trim the v prefix, allowing users to specify both 9.0.0 and v9.0.0
 		version = strings.TrimPrefix(parts[1], "v")
 	}
-	installed, err := providers.Install(name, version)
+	install := providers.Install
+	if schemaOnly {
+		install = providers.InstallSchemaOnly
+	}
+	installed, err := install(name, version)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to install")
 	}
@@ -845,6 +869,10 @@ func printProvider(p *providers.Provider) {
 		}
 		maturity = " " + termenv.String("["+strings.ToLower(label)+"]").Foreground(color).String()
 	}
+	schemaOnly := ""
+	if p.Path != "" && !p.HasBinary {
+		schemaOnly = " " + theme.DefaultTheme.Disabled("(schema-only)")
+	}
 
-	fmt.Println("  " + name + " " + p.Version + supports + maturity)
+	fmt.Println("  " + name + " " + p.Version + supports + maturity + schemaOnly)
 }

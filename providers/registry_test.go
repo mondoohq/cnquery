@@ -166,3 +166,39 @@ func TestMondooProviderRegistry_DownloadProvider(t *testing.T) {
 		assert.Contains(t, err.Error(), "cannot find provider")
 	})
 }
+
+func TestMondooProviderRegistry_DownloadProviderMetadata(t *testing.T) {
+	expectedConf := `{"Name":"aws","Version":"1.2.3"}`
+	expectedSchema := `{"resources":{}}`
+
+	// Create a mock server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/aws/1.2.3/provider.json":
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(expectedConf)) // nolint:errcheck
+		case "/aws/1.2.3/schema.json":
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(expectedSchema)) // nolint:errcheck
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	registry := NewMondooProviderRegistry(WithBaseURL(server.URL))
+	ctx := context.Background()
+
+	t.Run("successful download", func(t *testing.T) {
+		conf, schema, err := registry.DownloadProviderMetadata(ctx, "aws", "1.2.3")
+		require.NoError(t, err)
+		assert.Equal(t, expectedConf, string(conf))
+		assert.Equal(t, expectedSchema, string(schema))
+	})
+
+	t.Run("provider not found", func(t *testing.T) {
+		_, _, err := registry.DownloadProviderMetadata(ctx, "nonexistent", "1.0.0")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find provider.json")
+	})
+}

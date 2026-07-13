@@ -532,6 +532,108 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 	return installed[0], nil
 }
 
+// InstallSchemaOnly installs only a provider's config and resource schema,
+// without downloading the provider binary. The result is enough to compile
+// queries against the provider's resources; the binary is fetched on demand
+// the first time the provider is actually connected (see
+// (*coordinator).unsafeStartProvider).
+func InstallSchemaOnly(name string, version string) (*Provider, error) {
+	ctx := context.Background()
+	if version == "" {
+		// if no version is specified, we default to installing the latest one
+		latestVersion, err := registry.GetLatestVersion(ctx, name)
+		if err != nil {
+			return nil, err
+		}
+		version = latestVersion
+	}
+
+	log.Info().
+		Str("version", version).
+		Msg("installing schema for provider '" + name + "'")
+	return installSchemaVersion(ctx, name, version, DefaultPath)
+}
+
+func installSchemaVersion(ctx context.Context, name string, version string, dst string) (*Provider, error) {
+	dstPath := filepath.Join(dst, name)
+
+	// Writing a new schema over a full install would leave a binary from a
+	// different version behind. Keep schema-only installs to schema-only
+	// (or fresh) provider directories.
+	bin := filepath.Join(dstPath, name)
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	if config.ProbeFile(bin) {
+		return nil, errors.New("provider '" + name + "' is already installed with its binary; update it with a regular install or delete it first")
+	}
+
+	confJSON, schemaJSON, err := registry.DownloadProviderMetadata(ctx, name, version)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to install schema for "+name+"-"+version)
+	}
+
+	if err := os.MkdirAll(dstPath, 0o755); err != nil {
+		return nil, err
+	}
+	if err := writeProviderFile(filepath.Join(dstPath, name+".json"), confJSON); err != nil {
+		return nil, err
+	}
+	if err := writeProviderFile(filepath.Join(dstPath, name+".resources.json"), schemaJSON); err != nil {
+		return nil, err
+	}
+	syncDir(dstPath)
+
+	provider, err := readProviderDir(dstPath)
+	if err != nil {
+		return nil, err
+	}
+	if provider == nil {
+		return nil, errors.New("failed to read provider from " + dstPath + " after installing its schema")
+	}
+	if err := provider.LoadJSON(); err != nil {
+		return nil, err
+	}
+	if err := provider.LoadResources(); err != nil {
+		return nil, err
+	}
+	if provider.Version != version {
+		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + provider.Version)
+	}
+
+	// we need to clear out the cache now, because we installed something new,
+	// otherwise it will load old data
+	CachedProviders = nil
+	LastProviderInstall = time.Now().Unix()
+
+	return provider, nil
+}
+
+// writeProviderFile writes data to path via a temporary file, fsync, and
+// rename, so a crash can't leave a half-written (or zeroed, see InstallIO)
+// provider file behind.
+func writeProviderFile(path string, data []byte) error {
+	tmp := path + ".tmp"
+	writer, err := os.Create(tmp)
+	if err != nil {
+		return err
+	}
+	if _, err := writer.Write(data); err != nil {
+		writer.Close()
+		return err
+	}
+	if err := writer.Sync(); err != nil {
+		writer.Close()
+		return err
+	}
+	if err := writer.Close(); err != nil {
+		return err
+	}
+	return osRetry(func() error {
+		return os.Rename(tmp, path)
+	}, maxInstallConfRetries)
+}
+
 // installDependencies ensures all dependencies of a provider are installed
 func installDependencies(provider *Provider, existing Providers) error {
 	// Builtins have no file-backed schema; their Schema is set at init time
