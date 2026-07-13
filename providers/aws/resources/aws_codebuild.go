@@ -278,6 +278,8 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 	var (
 		envType, envImage, envCompute, envCert, envImagePullCreds string
 		envVars                                                   []any
+		envComputeVCpu, envComputeMemory, envComputeDisk          int64
+		envComputeMachineType, envComputeInstanceType             string
 	)
 	if project.Environment != nil {
 		envType = string(project.Environment.Type)
@@ -297,6 +299,13 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 			}
 			envVars = append(envVars, evDict)
 		}
+		if cc := project.Environment.ComputeConfiguration; cc != nil {
+			envComputeVCpu = convert.ToValue(cc.VCpu)
+			envComputeMemory = convert.ToValue(cc.Memory)
+			envComputeDisk = convert.ToValue(cc.Disk)
+			envComputeMachineType = string(cc.MachineType)
+			envComputeInstanceType = convert.ToValue(cc.InstanceType)
+		}
 	}
 	args["environmentType"] = llx.StringData(envType)
 	args["environmentImage"] = llx.StringData(envImage)
@@ -304,6 +313,11 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 	args["environmentCertificate"] = llx.StringData(envCert)
 	args["environmentImagePullCredentialsType"] = llx.StringData(envImagePullCreds)
 	args["environmentVariables"] = llx.ArrayData(envVars, types.Dict)
+	args["environmentComputeVCpu"] = llx.IntData(envComputeVCpu)
+	args["environmentComputeMemory"] = llx.IntData(envComputeMemory)
+	args["environmentComputeDisk"] = llx.IntData(envComputeDisk)
+	args["environmentComputeMachineType"] = llx.StringData(envComputeMachineType)
+	args["environmentComputeInstanceType"] = llx.StringData(envComputeInstanceType)
 
 	// Source scalars
 	var (
@@ -361,6 +375,39 @@ func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConn
 		return nil, err
 	}
 	args["buildBatchConfig"] = llx.MapData(buildBatchDict, types.String)
+
+	args["autoRetryLimit"] = llx.IntDataDefault(project.AutoRetryLimit, 0)
+	args["publicProjectAlias"] = llx.StringDataPtr(project.PublicProjectAlias)
+
+	badgeEnabled := false
+	badgeRequestURL := ""
+	if project.Badge != nil {
+		badgeEnabled = project.Badge.BadgeEnabled
+		badgeRequestURL = convert.ToValue(project.Badge.BadgeRequestUrl)
+	}
+	args["badgeEnabled"] = llx.BoolData(badgeEnabled)
+	args["badgeRequestUrl"] = llx.StringData(badgeRequestURL)
+
+	fsLocations := make([]any, 0, len(project.FileSystemLocations))
+	for _, fs := range project.FileSystemLocations {
+		fsLocations = append(fsLocations, map[string]any{
+			"type":         string(fs.Type),
+			"identifier":   convert.ToValue(fs.Identifier),
+			"location":     convert.ToValue(fs.Location),
+			"mountPoint":   convert.ToValue(fs.MountPoint),
+			"mountOptions": convert.ToValue(fs.MountOptions),
+		})
+	}
+	args["fileSystemLocations"] = llx.ArrayData(fsLocations, types.Dict)
+
+	secSrcVersions := make([]any, 0, len(project.SecondarySourceVersions))
+	for _, sv := range project.SecondarySourceVersions {
+		secSrcVersions = append(secSrcVersions, map[string]any{
+			"sourceIdentifier": convert.ToValue(sv.SourceIdentifier),
+			"sourceVersion":    convert.ToValue(sv.SourceVersion),
+		})
+	}
+	args["secondarySourceVersions"] = llx.ArrayData(secSrcVersions, types.Dict)
 
 	obj, err := CreateResource(runtime, "aws.codebuild.project", args)
 	if err != nil {
@@ -484,6 +531,45 @@ func (a *mqlAwsCodebuildProject) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
+func (a *mqlAwsCodebuildProject) artifactsBucket() (*mqlAwsS3Bucket, error) {
+	return codebuildBucketRef(a.MqlRuntime, a.ArtifactsLocation.Data, &a.ArtifactsBucket)
+}
+
+func (a *mqlAwsCodebuildProject) cacheBucket() (*mqlAwsS3Bucket, error) {
+	return codebuildBucketRef(a.MqlRuntime, a.CacheLocation.Data, &a.CacheBucket)
+}
+
+func (a *mqlAwsCodebuildProject) logsS3Bucket() (*mqlAwsS3Bucket, error) {
+	return codebuildBucketRef(a.MqlRuntime, a.LogsS3Location.Data, &a.LogsS3Bucket)
+}
+
+// codebuildBucketName extracts the S3 bucket name from a CodeBuild location
+// string, which is a bare "bucket" or "bucket/prefix" (and tolerates an
+// optional s3:// scheme). Returns "" when no bucket is present.
+func codebuildBucketName(location string) string {
+	location = strings.TrimPrefix(location, "s3://")
+	if location == "" {
+		return ""
+	}
+	return strings.SplitN(location, "/", 2)[0]
+}
+
+// codebuildBucketRef resolves an S3 location string to a typed aws.s3.bucket,
+// marking the field null when the location holds no bucket.
+func codebuildBucketRef(runtime *plugin.Runtime, location string, tv *plugin.TValue[*mqlAwsS3Bucket]) (*mqlAwsS3Bucket, error) {
+	bucket := codebuildBucketName(location)
+	if bucket == "" {
+		tv.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(bucket)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
 // ===== reportGroups =====
 
 func (a *mqlAwsCodebuild) reportGroups() ([]any, error) {
@@ -563,15 +649,18 @@ func (a *mqlAwsCodebuild) getReportGroups(conn *connection.AwsConnection) []*job
 func newMqlAwsCodebuildReportGroup(runtime *plugin.Runtime, region string, rg cbtypes.ReportGroup) (plugin.Resource, error) {
 	exportType := ""
 	var exportS3 map[string]any
+	var exportBucket, exportEncryptionKey string
 	if rg.ExportConfig != nil {
 		exportType = string(rg.ExportConfig.ExportConfigType)
 		if rg.ExportConfig.S3Destination != nil {
 			s3d := rg.ExportConfig.S3Destination
+			exportBucket = convert.ToValue(s3d.Bucket)
+			exportEncryptionKey = convert.ToValue(s3d.EncryptionKey)
 			exportS3 = map[string]any{
-				"bucket":             convert.ToValue(s3d.Bucket),
+				"bucket":             exportBucket,
 				"bucketOwner":        convert.ToValue(s3d.BucketOwner),
 				"encryptionDisabled": s3d.EncryptionDisabled != nil && *s3d.EncryptionDisabled,
-				"encryptionKey":      convert.ToValue(s3d.EncryptionKey),
+				"encryptionKey":      exportEncryptionKey,
 				"packaging":          string(s3d.Packaging),
 				"path":               convert.ToValue(s3d.Path),
 			}
@@ -590,11 +679,49 @@ func newMqlAwsCodebuildReportGroup(runtime *plugin.Runtime, region string, rg cb
 		"region":           llx.StringData(region),
 		"tags":             llx.MapData(cbTagsToMap(rg.Tags), types.String),
 	}
-	return CreateResource(runtime, "aws.codebuild.reportGroup", args)
+	obj, err := CreateResource(runtime, "aws.codebuild.reportGroup", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlRg := obj.(*mqlAwsCodebuildReportGroup)
+	mqlRg.cacheExportBucket = exportBucket
+	mqlRg.cacheExportEncryptionKey = exportEncryptionKey
+	return mqlRg, nil
+}
+
+type mqlAwsCodebuildReportGroupInternal struct {
+	cacheExportBucket        string
+	cacheExportEncryptionKey string
 }
 
 func (a *mqlAwsCodebuildReportGroup) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCodebuildReportGroup) exportBucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheExportBucket == "" {
+		a.ExportBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheExportBucket)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsCodebuildReportGroup) exportEncryptionKey() (*mqlAwsKmsKey, error) {
+	if a.cacheExportEncryptionKey == "" {
+		a.ExportEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheExportEncryptionKey)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 // ===== helpers =====

@@ -5891,6 +5891,39 @@ private aws.codebuild.project @defaults("arn name") {
   sourceVersion string
   // IAM role that enables CodeBuild to access resources (such as Amazon EFS) in the customer VPC
   resourceAccessRole() aws.iam.role
+  // Number of automatic retries CodeBuild attempts for a failed build
+  autoRetryLimit int
+  // Public URL alias for the build results of a PUBLIC_READ project
+  publicProjectAlias string
+  // Whether the build badge is enabled for the project
+  badgeEnabled bool
+  // URL of the build badge for the project
+  badgeRequestUrl string
+  // Amazon EFS file system mounts available to builds
+  //
+  // Each entry has `type`, `identifier`, `location`, `mountPoint`, and
+  // `mountOptions`.
+  fileSystemLocations []dict
+  // Number of vCPUs for attribute-based compute build environments
+  environmentComputeVCpu int
+  // Amount of memory in GB for attribute-based compute build environments
+  environmentComputeMemory int
+  // Amount of disk space in GB for attribute-based compute build environments
+  environmentComputeDisk int
+  // Machine type for attribute-based compute build environments: GENERAL or NVME
+  environmentComputeMachineType string
+  // EC2 instance type launched for reserved-capacity build environments
+  environmentComputeInstanceType string
+  // Default source versions for secondary sources
+  //
+  // Each entry has `sourceIdentifier` and `sourceVersion`.
+  secondarySourceVersions []dict
+  // S3 bucket where primary build output artifacts are stored
+  artifactsBucket() aws.s3.bucket
+  // S3 bucket used for the build cache
+  cacheBucket() aws.s3.bucket
+  // S3 bucket where build logs are uploaded
+  logsS3Bucket() aws.s3.bucket
 }
 
 // AWS CodeBuild report group
@@ -5907,6 +5940,10 @@ private aws.codebuild.reportGroup @defaults("arn name type status") {
   exportConfigType string
   // S3 export destination details (`bucket`, `bucketOwner`, `encryptionDisabled`, `encryptionKey`, `packaging`, `path`) when `exportConfigType` is S3
   exportConfigS3 dict
+  // S3 bucket that exported reports are written to
+  exportBucket() aws.s3.bucket
+  // KMS key that encrypts exported reports
+  exportEncryptionKey() aws.kms.key
   // Date the report group was created
   createdAt time
   // Date the report group was last modified

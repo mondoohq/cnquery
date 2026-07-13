@@ -11388,6 +11388,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.codebuild.project.resourceAccessRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildProject).GetResourceAccessRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.codebuild.project.autoRetryLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetAutoRetryLimit()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.publicProjectAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetPublicProjectAlias()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.badgeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetBadgeEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.badgeRequestUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetBadgeRequestUrl()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.fileSystemLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetFileSystemLocations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codebuild.project.environmentComputeVCpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeVCpu()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.environmentComputeMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeMemory()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.environmentComputeDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeDisk()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.environmentComputeMachineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeMachineType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentComputeInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeInstanceType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.secondarySourceVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSecondarySourceVersions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codebuild.project.artifactsBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.codebuild.project.cacheBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetCacheBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.codebuild.project.logsS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
 	"aws.codebuild.reportGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildReportGroup).GetArn()).ToDataRes(types.String)
 	},
@@ -11405,6 +11447,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.codebuild.reportGroup.exportConfigS3": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildReportGroup).GetExportConfigS3()).ToDataRes(types.Dict)
+	},
+	"aws.codebuild.reportGroup.exportBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetExportBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.codebuild.reportGroup.exportEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetExportEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.codebuild.reportGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildReportGroup).GetCreatedAt()).ToDataRes(types.Time)
@@ -43886,6 +43934,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCodebuildProject).ResourceAccessRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
+	"aws.codebuild.project.autoRetryLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).AutoRetryLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.publicProjectAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).PublicProjectAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.badgeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).BadgeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.badgeRequestUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).BadgeRequestUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.fileSystemLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).FileSystemLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeVCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeVCpu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeMemory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeDisk, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeMachineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeMachineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.secondarySourceVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SecondarySourceVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.cacheBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).CacheBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsS3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
 	"aws.codebuild.reportGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodebuildReportGroup).__id, ok = v.Value.(string)
 		return
@@ -43912,6 +44016,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.codebuild.reportGroup.exportConfigS3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodebuildReportGroup).ExportConfigS3, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.exportBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).ExportBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.exportEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).ExportEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.reportGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -102576,6 +102688,20 @@ type mqlAwsCodebuildProject struct {
 	ConcurrentBuildLimit                plugin.TValue[int64]
 	SourceVersion                       plugin.TValue[string]
 	ResourceAccessRole                  plugin.TValue[*mqlAwsIamRole]
+	AutoRetryLimit                      plugin.TValue[int64]
+	PublicProjectAlias                  plugin.TValue[string]
+	BadgeEnabled                        plugin.TValue[bool]
+	BadgeRequestUrl                     plugin.TValue[string]
+	FileSystemLocations                 plugin.TValue[[]any]
+	EnvironmentComputeVCpu              plugin.TValue[int64]
+	EnvironmentComputeMemory            plugin.TValue[int64]
+	EnvironmentComputeDisk              plugin.TValue[int64]
+	EnvironmentComputeMachineType       plugin.TValue[string]
+	EnvironmentComputeInstanceType      plugin.TValue[string]
+	SecondarySourceVersions             plugin.TValue[[]any]
+	ArtifactsBucket                     plugin.TValue[*mqlAwsS3Bucket]
+	CacheBucket                         plugin.TValue[*mqlAwsS3Bucket]
+	LogsS3Bucket                        plugin.TValue[*mqlAwsS3Bucket]
 }
 
 // createAwsCodebuildProject creates a new instance of this resource
@@ -102947,21 +103073,115 @@ func (c *mqlAwsCodebuildProject) GetResourceAccessRole() *plugin.TValue[*mqlAwsI
 	})
 }
 
+func (c *mqlAwsCodebuildProject) GetAutoRetryLimit() *plugin.TValue[int64] {
+	return &c.AutoRetryLimit
+}
+
+func (c *mqlAwsCodebuildProject) GetPublicProjectAlias() *plugin.TValue[string] {
+	return &c.PublicProjectAlias
+}
+
+func (c *mqlAwsCodebuildProject) GetBadgeEnabled() *plugin.TValue[bool] {
+	return &c.BadgeEnabled
+}
+
+func (c *mqlAwsCodebuildProject) GetBadgeRequestUrl() *plugin.TValue[string] {
+	return &c.BadgeRequestUrl
+}
+
+func (c *mqlAwsCodebuildProject) GetFileSystemLocations() *plugin.TValue[[]any] {
+	return &c.FileSystemLocations
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeVCpu() *plugin.TValue[int64] {
+	return &c.EnvironmentComputeVCpu
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeMemory() *plugin.TValue[int64] {
+	return &c.EnvironmentComputeMemory
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeDisk() *plugin.TValue[int64] {
+	return &c.EnvironmentComputeDisk
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeMachineType() *plugin.TValue[string] {
+	return &c.EnvironmentComputeMachineType
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeInstanceType() *plugin.TValue[string] {
+	return &c.EnvironmentComputeInstanceType
+}
+
+func (c *mqlAwsCodebuildProject) GetSecondarySourceVersions() *plugin.TValue[[]any] {
+	return &c.SecondarySourceVersions
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.ArtifactsBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "artifactsBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.artifactsBucket()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetCacheBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.CacheBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "cacheBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.cacheBucket()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.LogsS3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "logsS3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.logsS3Bucket()
+	})
+}
+
 // mqlAwsCodebuildReportGroup for the aws.codebuild.reportGroup resource
 type mqlAwsCodebuildReportGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsCodebuildReportGroupInternal it will be used here
-	Arn              plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Type             plugin.TValue[string]
-	Status           plugin.TValue[string]
-	ExportConfigType plugin.TValue[string]
-	ExportConfigS3   plugin.TValue[any]
-	CreatedAt        plugin.TValue[*time.Time]
-	ModifiedAt       plugin.TValue[*time.Time]
-	Region           plugin.TValue[string]
-	Tags             plugin.TValue[map[string]any]
+	mqlAwsCodebuildReportGroupInternal
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Type                plugin.TValue[string]
+	Status              plugin.TValue[string]
+	ExportConfigType    plugin.TValue[string]
+	ExportConfigS3      plugin.TValue[any]
+	ExportBucket        plugin.TValue[*mqlAwsS3Bucket]
+	ExportEncryptionKey plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt           plugin.TValue[*time.Time]
+	ModifiedAt          plugin.TValue[*time.Time]
+	Region              plugin.TValue[string]
+	Tags                plugin.TValue[map[string]any]
 }
 
 // createAwsCodebuildReportGroup creates a new instance of this resource
@@ -103023,6 +103243,38 @@ func (c *mqlAwsCodebuildReportGroup) GetExportConfigType() *plugin.TValue[string
 
 func (c *mqlAwsCodebuildReportGroup) GetExportConfigS3() *plugin.TValue[any] {
 	return &c.ExportConfigS3
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetExportBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.ExportBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.reportGroup", c.__id, "exportBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.exportBucket()
+	})
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetExportEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.ExportEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.reportGroup", c.__id, "exportEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.exportEncryptionKey()
+	})
 }
 
 func (c *mqlAwsCodebuildReportGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
