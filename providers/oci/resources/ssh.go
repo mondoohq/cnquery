@@ -4,12 +4,9 @@
 package resources
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
 	"strings"
 
-	"golang.org/x/crypto/ssh"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
 )
 
 // parseAuthorizedKeys turns a newline-separated list of OpenSSH public keys
@@ -23,23 +20,12 @@ func parseAuthorizedKeys(raw string) []any {
 		if line == "" {
 			continue
 		}
-		pub, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(line))
-		if err != nil || pub == nil {
+		algorithm, bits, comment, ok := sshutil.ParseAuthorizedKey(line)
+		if !ok {
 			continue
 		}
-		var bits int64
-		if ck, ok := pub.(ssh.CryptoPublicKey); ok {
-			switch k := ck.CryptoPublicKey().(type) {
-			case *rsa.PublicKey:
-				bits = int64(k.N.BitLen())
-			case *ecdsa.PublicKey:
-				bits = int64(k.Curve.Params().BitSize)
-			case ed25519.PublicKey:
-				bits = 256
-			}
-		}
 		out = append(out, map[string]any{
-			"algorithm": pub.Type(),
+			"algorithm": algorithm,
 			"bits":      bits,
 			"publicKey": line,
 			"comment":   comment,

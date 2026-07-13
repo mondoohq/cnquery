@@ -4,36 +4,10 @@
 package resources
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
 	"strings"
 
-	"golang.org/x/crypto/ssh"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
 )
-
-// parseAuthorizedKey extracts the algorithm, size in bits, and trailing
-// comment from a single OpenSSH-format public key line. ok is false when the
-// line cannot be parsed so weak-key audits can distinguish "unparseable" from
-// a known algorithm.
-func parseAuthorizedKey(line string) (algorithm string, bits int64, comment string, ok bool) {
-	pub, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(line))
-	if err != nil || pub == nil {
-		return "", 0, "", false
-	}
-	algorithm = pub.Type()
-	if ck, isCrypto := pub.(ssh.CryptoPublicKey); isCrypto {
-		switch k := ck.CryptoPublicKey().(type) {
-		case *rsa.PublicKey:
-			bits = int64(k.N.BitLen())
-		case *ecdsa.PublicKey:
-			bits = int64(k.Curve.Params().BitSize)
-		case ed25519.PublicKey:
-			bits = 256
-		}
-	}
-	return algorithm, bits, comment, true
-}
 
 // parseInstanceSSHKeys turns the GCE instance metadata `ssh-keys` value into
 // one dict per configured key. Each metadata line has the form
@@ -53,7 +27,7 @@ func parseInstanceSSHKeys(raw string) []any {
 		if !found {
 			username, keyPart = "", line
 		}
-		algorithm, bits, comment, ok := parseAuthorizedKey(keyPart)
+		algorithm, bits, comment, ok := sshutil.ParseAuthorizedKey(keyPart)
 		if !ok {
 			continue
 		}

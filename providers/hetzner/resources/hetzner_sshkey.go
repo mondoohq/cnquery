@@ -4,40 +4,13 @@
 package resources
 
 import (
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
 	"fmt"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"golang.org/x/crypto/ssh"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
 )
-
-// parseSSHPublicKey extracts the key algorithm and size in bits from an
-// OpenSSH-format public key. It returns ("", 0) when the key cannot be parsed
-// so weak-key audits can distinguish "unparseable" from a known algorithm.
-func parseSSHPublicKey(publicKey string) (algorithm string, bits int64) {
-	pub, _, _, _, err := ssh.ParseAuthorizedKey([]byte(publicKey))
-	if err != nil || pub == nil {
-		return "", 0
-	}
-	algorithm = pub.Type()
-	ck, ok := pub.(ssh.CryptoPublicKey)
-	if !ok {
-		return algorithm, 0
-	}
-	switch k := ck.CryptoPublicKey().(type) {
-	case *rsa.PublicKey:
-		bits = int64(k.N.BitLen())
-	case *ecdsa.PublicKey:
-		bits = int64(k.Curve.Params().BitSize)
-	case ed25519.PublicKey:
-		bits = 256
-	}
-	return algorithm, bits
-}
 
 func (r *mqlHetznerSshKey) id() (string, error) {
 	return fmt.Sprintf("hetzner.sshKey/%d", r.Id.Data), nil
@@ -63,7 +36,7 @@ func (h *mqlHetzner) sshKeys() ([]any, error) {
 }
 
 func newMqlHetznerSshKey(runtime *plugin.Runtime, k *hcloud.SSHKey) (*mqlHetznerSshKey, error) {
-	algorithm, bits := parseSSHPublicKey(k.PublicKey)
+	algorithm, bits := sshutil.ParsePublicKey(k.PublicKey)
 	res, err := CreateResource(runtime, "hetzner.sshKey", map[string]*llx.RawData{
 		"__id":        llx.StringData(fmt.Sprintf("hetzner.sshKey/%d", k.ID)),
 		"id":          llx.IntData(k.ID),
