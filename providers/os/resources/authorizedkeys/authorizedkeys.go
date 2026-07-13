@@ -5,7 +5,7 @@ package authorizedkeys
 
 import (
 	"bufio"
-	"crypto/dsa"
+	"crypto/dsa" //nolint:staticcheck // DSA is deprecated, but we still detect legacy DSA keys for crypto-posture auditing
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
