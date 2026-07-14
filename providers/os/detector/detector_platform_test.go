@@ -1286,6 +1286,19 @@ func TestGenericLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+// PRETTY_NAME is not used to derive a name, since it carries the version and
+// would mint a new platform name for every release. Without an ID or a NAME the
+// system falls back to generic-linux, keeping PRETTY_NAME as the title only.
+func TestOSReleaseWithPrettyNameOnlyDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-linux-prettyname-only.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "generic-linux", di.Name, "os name should not be derived from PRETTY_NAME")
+	assert.Equal(t, "Some Vendor Linux 1.2.3", di.Title, "os title should be identified")
+	assert.Equal(t, "1.2.3", di.Version, "os version should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestSlugifyPlatformName(t *testing.T) {
 	test := []struct {
 		Val      string
@@ -1294,11 +1307,38 @@ func TestSlugifyPlatformName(t *testing.T) {
 		{Val: "FRITZ!OS", Expected: "fritzos"},
 		{Val: "Buildroot", Expected: "buildroot"},
 		{Val: "Generic Vendor Linux", Expected: "generic-vendor-linux"},
-		{Val: "Wind River Linux 7.0.0.2", Expected: "wind-river-linux-7.0.0.2"},
+		{Val: "Debian GNU/Linux", Expected: "debian-gnulinux"},
 		{Val: "", Expected: ""},
 	}
 
 	for i := range test {
 		assert.Equal(t, test[i].Expected, slugifyPlatformName(test[i].Val), test[i].Val)
+	}
+}
+
+// container images we cannot identify are reported as "scratch". The check keys
+// off the resolver that matched, not the platform name, because a resolver does
+// not always emit the name it is registered under.
+func TestIsUnidentifiedPlatform(t *testing.T) {
+	test := []struct {
+		Name     string
+		Leaf     *PlatformResolver
+		Expected bool
+	}{
+		{Name: "", Leaf: nil, Expected: true},
+		{Name: "generic-linux", Leaf: defaultLinux, Expected: true},
+		// a name derived from os-release NAME still means we could not identify
+		// the distribution, so container images stay "scratch"
+		{Name: "fritzos", Leaf: defaultLinux, Expected: true},
+		{Name: "ubuntu", Leaf: ubuntu, Expected: false},
+		// the oracle resolver emits "oraclelinux", a name it is not registered
+		// under. It must not be mistaken for an unidentified platform.
+		{Name: "oraclelinux", Leaf: oracle, Expected: false},
+		{Name: "alpine", Leaf: alpine, Expected: false},
+	}
+
+	for i := range test {
+		pf := &inventory.Platform{Name: test[i].Name}
+		assert.Equal(t, test[i].Expected, isUnidentifiedPlatform(pf, test[i].Leaf), test[i].Name)
 	}
 }

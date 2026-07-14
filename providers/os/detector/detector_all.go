@@ -1342,18 +1342,17 @@ var linuxFamily = &PlatformResolver{
 				// Deprecated: remove in 12.0
 				pf.Labels[LabelDistroID] = osr["ID"]
 				pf.Metadata[LabelDistroID] = osr["ID"]
-			} else {
+			} else if name := slugifyPlatformName(osr["NAME"]); name != "" {
 				// ID is optional per the os-release spec and vendor firmware
 				// (e.g. FRITZ!OS) often ships without it. Derive the name from
-				// the human-readable fields instead, otherwise the platform
-				// stays unnamed and is reported as "unknown" downstream.
-				// NAME is preferred over PRETTY_NAME because PRETTY_NAME
-				// usually carries the version too.
-				if name := slugifyPlatformName(osr["NAME"]); name != "" {
-					pf.Name = name
-				} else if name := slugifyPlatformName(osr["PRETTY_NAME"]); name != "" {
-					pf.Name = name
-				}
+				// NAME instead, otherwise the platform stays unnamed and is
+				// reported as "unknown" downstream.
+				//
+				// PRETTY_NAME is deliberately not used as a further fallback: it
+				// usually carries the version too, which would mint a new
+				// platform name for every release. Without a NAME we fall
+				// through to generic-linux.
+				pf.Name = name
 			}
 			if len(osr["PRETTY_NAME"]) > 0 {
 				pf.Title = osr["PRETTY_NAME"]
