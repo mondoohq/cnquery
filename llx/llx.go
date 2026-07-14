@@ -167,6 +167,14 @@ func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, c
 		blockExecutors: []*blockExecutor{},
 	}
 
+	// A malformed (typeless) primitive baked into the code is an upstream
+	// compiler bug (see mqlc.addValueFieldChunks). At runtime it silently
+	// coerces to null and only surfaces as an anonymous "primitive with no
+	// type information" flood — one line per data element, per asset, with no
+	// way to tell which asset or query is at fault. Here we still have the full
+	// code and the asset, so report it once, actionably, up front.
+	reportMalformedPrimitives(code, runtime.AssetMRN())
+
 	exec, err := res._newBlockExecutor(1<<32, callback, nil)
 	if err != nil {
 		return nil, err
@@ -175,6 +183,77 @@ func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, c
 	res.blockExecutors = append(res.blockExecutors, exec)
 
 	return res, nil
+}
+
+// primitiveHasNoType reports whether p — or, recursively, any element of an
+// array/map primitive — carries no type information. A genuine null is
+// types.Nil (a 1-byte type), so an empty Type string is never legitimate: it
+// only appears when an upstream layer emits a broken primitive.
+func primitiveHasNoType(p *Primitive) bool {
+	if p == nil {
+		return false
+	}
+	if len(p.Type) == 0 {
+		return true
+	}
+	for _, e := range p.Array {
+		if primitiveHasNoType(e) {
+			return true
+		}
+	}
+	for _, e := range p.Map {
+		if primitiveHasNoType(e) {
+			return true
+		}
+	}
+	return false
+}
+
+// reportMalformedPrimitives scans compiled code for typeless primitives and
+// logs an actionable diagnostic for each offending chunk: the asset, the query
+// (code) checksum, and the chunk (its id — usually the field/function name —
+// plus its ref and checksum). It runs once per executor, so a broken query
+// reports one line per asset instead of one line per data element, and every
+// line points straight at the asset+query+field to fix. It never changes
+// execution: the runtime still coerces the value to null as before.
+func reportMalformedPrimitives(code *CodeV2, assetMRN string) {
+	if code == nil {
+		return
+	}
+
+	for blockIdx, block := range code.Blocks {
+		if block == nil {
+			continue
+		}
+		blockRef := uint64(blockIdx+1) << 32
+		for chunkIdx, chunk := range block.Chunks {
+			if chunk == nil {
+				continue
+			}
+
+			malformed := primitiveHasNoType(chunk.Primitive)
+			if !malformed && chunk.Function != nil {
+				for _, arg := range chunk.Function.Args {
+					if primitiveHasNoType(arg) {
+						malformed = true
+						break
+					}
+				}
+			}
+			if !malformed {
+				continue
+			}
+
+			ref := blockRef | uint64(chunkIdx+1)
+			log.Error().
+				Str("asset", assetMRN).
+				Str("query", code.GetId()).
+				Str("field", chunk.Id).
+				Uint64("ref", ref).
+				Str("chunk-checksum", code.Checksums[ref]).
+				Msg("llx: malformed primitive (no type information) baked into compiled code; it will coerce to null at runtime. This is an upstream/compiler bug (see mqlc.addValueFieldChunks) — the asset, query, and field above identify where to look.")
+		}
+	}
 }
 
 func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallback, parent *blockExecutor) (*blockExecutor, error) {
