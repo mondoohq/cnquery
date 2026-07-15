@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.28.0",
-  "generated_at": "2026-07-09T21:23:22-07:00",
+  "version": "13.30.0",
+  "generated_at": "2026-07-15T13:57:13+02:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -205,6 +205,7 @@
     "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
     "Microsoft.RecoveryServices/Vaults/backupconfig/read",
+    "Microsoft.RecoveryServices/deletedVaults/read",
     "Microsoft.RecoveryServices/vaults/read",
     "Microsoft.Resources/deployments/read",
     "Microsoft.Resources/resources/read",
@@ -1548,6 +1549,12 @@
       "source_file": "recoveryservices.go"
     },
     {
+      "permission": "Microsoft.RecoveryServices/deletedVaults/read",
+      "service": "Microsoft.RecoveryServices",
+      "action": "NewListBySubscriptionIDPager",
+      "source_file": "recoveryservices.go"
+    },
+    {
       "permission": "Microsoft.RecoveryServices/vaults/read",
       "service": "Microsoft.RecoveryServices",
       "action": "Get",
@@ -1576,6 +1583,12 @@
       "service": "Microsoft.Resources",
       "action": "NewListPager",
       "source_file": "client_subscriptions.go"
+    },
+    {
+      "permission": "Microsoft.Resources/subscriptions/read",
+      "service": "Microsoft.Resources",
+      "action": "NewListLocationsPager",
+      "source_file": "recoveryservices.go"
     },
     {
       "permission": "Microsoft.Resources/subscriptions/read",

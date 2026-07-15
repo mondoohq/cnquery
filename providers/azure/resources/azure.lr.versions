@@ -4452,6 +4452,16 @@ azure.subscription.purviewService.accounts 13.11.2
 azure.subscription.purviewService.subscriptionId 13.11.2
 azure.subscription.recoveryServices 13.3.3
 azure.subscription.recoveryServicesService 13.3.3
+azure.subscription.recoveryServicesService.deletedVault 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.id 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.location 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.name 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.purgeAt 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.systemMetadata 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.type 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.vaultDeletionTime 13.30.1
+azure.subscription.recoveryServicesService.deletedVault.vaultResourceId 13.30.1
+azure.subscription.recoveryServicesService.deletedVaults 13.30.1
 azure.subscription.recoveryServicesService.subscriptionId 13.3.3
 azure.subscription.recoveryServicesService.vault 13.3.3
 azure.subscription.recoveryServicesService.vault.backupConfig 13.3.3
@@ -4468,6 +4478,7 @@ azure.subscription.recoveryServicesService.vault.backupPolicy.name 13.3.3
 azure.subscription.recoveryServicesService.vault.backupPolicy.properties 13.3.3
 azure.subscription.recoveryServicesService.vault.backupPolicy.type 13.3.3
 azure.subscription.recoveryServicesService.vault.backupStorageVersion 13.3.3
+azure.subscription.recoveryServicesService.vault.costManagementGranularityLevel 13.30.1
 azure.subscription.recoveryServicesService.vault.encryption 13.3.3
 azure.subscription.recoveryServicesService.vault.encryption.id 13.3.3
 azure.subscription.recoveryServicesService.vault.encryption.infrastructureEncryption 13.3.3

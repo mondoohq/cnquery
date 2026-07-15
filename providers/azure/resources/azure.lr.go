@@ -355,6 +355,7 @@ const (
 	ResourceAzureSubscriptionMonitorServiceQueryPackQuery                                             string = "azure.subscription.monitorService.queryPack.query"
 	ResourceAzureSubscriptionRecoveryServicesService                                                  string = "azure.subscription.recoveryServicesService"
 	ResourceAzureSubscriptionRecoveryServicesServiceVault                                             string = "azure.subscription.recoveryServicesService.vault"
+	ResourceAzureSubscriptionRecoveryServicesServiceDeletedVault                                      string = "azure.subscription.recoveryServicesService.deletedVault"
 	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                             string = "azure.subscription.recoveryServicesService.vault.securitySettings"
 	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                                   string = "azure.subscription.recoveryServicesService.vault.encryption"
 	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                           string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
@@ -1826,6 +1827,10 @@ func init() {
 		"azure.subscription.recoveryServicesService.vault": {
 			Init:   initAzureSubscriptionRecoveryServicesServiceVault,
 			Create: createAzureSubscriptionRecoveryServicesServiceVault,
+		},
+		"azure.subscription.recoveryServicesService.deletedVault": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceDeletedVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceDeletedVault,
 		},
 		"azure.subscription.recoveryServicesService.vault.securitySettings": {
 			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -14443,6 +14448,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.recoveryServicesService.vaults": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesService).GetVaults()).ToDataRes(types.Array(types.Resource("azure.subscription.recoveryServicesService.vault")))
 	},
+	"azure.subscription.recoveryServicesService.deletedVaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesService).GetDeletedVaults()).ToDataRes(types.Array(types.Resource("azure.subscription.recoveryServicesService.deletedVault")))
+	},
 	"azure.subscription.recoveryServicesService.vault.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetId()).ToDataRes(types.String)
 	},
@@ -14485,6 +14493,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.recoveryServicesService.vault.secureScore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSecureScore()).ToDataRes(types.String)
 	},
+	"azure.subscription.recoveryServicesService.vault.costManagementGranularityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetCostManagementGranularityLevel()).ToDataRes(types.String)
+	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSecuritySettings()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.securitySettings"))
 	},
@@ -14511,6 +14522,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.recoveryServicesService.vault.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.vaultResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetVaultResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.vaultDeletionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetVaultDeletionTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.purgeAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetPurgeAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetId()).ToDataRes(types.String)
@@ -35514,6 +35549,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionRecoveryServicesService).Vaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.recoveryServicesService.deletedVaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesService).DeletedVaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.recoveryServicesService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).__id, ok = v.Value.(string)
 		return
@@ -35574,6 +35613,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SecureScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.recoveryServicesService.vault.costManagementGranularityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).CostManagementGranularityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SecuritySettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings](v.Value, v.Error)
 		return
@@ -35608,6 +35651,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.recoveryServicesService.vault.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.vaultResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).VaultResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.vaultDeletionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).VaultDeletionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.purgeAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).PurgeAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.deletedVault.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceDeletedVault).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83148,6 +83227,7 @@ type mqlAzureSubscriptionRecoveryServicesService struct {
 	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
 	Vaults         plugin.TValue[[]any]
+	DeletedVaults  plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionRecoveryServicesService creates a new instance of this resource
@@ -83207,6 +83287,22 @@ func (c *mqlAzureSubscriptionRecoveryServicesService) GetVaults() *plugin.TValue
 	})
 }
 
+func (c *mqlAzureSubscriptionRecoveryServicesService) GetDeletedVaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeletedVaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService", c.__id, "deletedVaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deletedVaults()
+	})
+}
+
 // mqlAzureSubscriptionRecoveryServicesServiceVault for the azure.subscription.recoveryServicesService.vault resource
 type mqlAzureSubscriptionRecoveryServicesServiceVault struct {
 	MqlRuntime *plugin.Runtime
@@ -83226,6 +83322,7 @@ type mqlAzureSubscriptionRecoveryServicesServiceVault struct {
 	PrivateEndpointStateForBackup       plugin.TValue[string]
 	PrivateEndpointStateForSiteRecovery plugin.TValue[string]
 	SecureScore                         plugin.TValue[string]
+	CostManagementGranularityLevel      plugin.TValue[string]
 	SecuritySettings                    plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings]
 	Encryption                          plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption]
 	MonitoringSettings                  plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings]
@@ -83340,6 +83437,10 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetPrivateEndpointSta
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSecureScore() *plugin.TValue[string] {
 	return &c.SecureScore
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetCostManagementGranularityLevel() *plugin.TValue[string] {
+	return &c.CostManagementGranularityLevel
 }
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSecuritySettings() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings] {
@@ -83474,6 +83575,102 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSystemMetadata() *
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceDeletedVault for the azure.subscription.recoveryServicesService.deletedVault resource
+type mqlAzureSubscriptionRecoveryServicesServiceDeletedVault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionRecoveryServicesServiceDeletedVaultInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Type              plugin.TValue[string]
+	VaultResourceId   plugin.TValue[string]
+	VaultDeletionTime plugin.TValue[*time.Time]
+	PurgeAt           plugin.TValue[*time.Time]
+	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceDeletedVault creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceDeletedVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceDeletedVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.deletedVault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) MqlName() string {
+	return "azure.subscription.recoveryServicesService.deletedVault"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetVaultResourceId() *plugin.TValue[string] {
+	return &c.VaultResourceId
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetVaultDeletionTime() *plugin.TValue[*time.Time] {
+	return &c.VaultDeletionTime
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetPurgeAt() *plugin.TValue[*time.Time] {
+	return &c.PurgeAt
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.deletedVault", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}

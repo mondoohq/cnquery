@@ -10824,6 +10824,8 @@ private azure.subscription.recoveryServicesService {
   subscriptionId string
   // List of recovery services vaults
   vaults() []azure.subscription.recoveryServicesService.vault
+  // Soft-deleted recovery services vaults awaiting permanent purge
+  deletedVaults() []azure.subscription.recoveryServicesService.deletedVault
 }
 
 // Azure Recovery Services vault
@@ -10865,6 +10867,8 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   privateEndpointStateForSiteRecovery string
   // Secure score ("Adequate", "Maximum", "Minimum", or "None")
   secureScore string
+  // Cost management report granularity ("ProtectedItemLevel", "ProtectedItemWithParentTag", or "VaultLevel"); empty when unset
+  costManagementGranularityLevel string
   // Security settings (soft delete, immutability, enhanced security)
   securitySettings() azure.subscription.recoveryServicesService.vault.securitySettings
   // Encryption settings
@@ -10881,6 +10885,33 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   backupPolicies() []azure.subscription.recoveryServicesService.vault.backupPolicy
   // Protected (backed-up) items
   protectedItems() []azure.subscription.recoveryServicesService.vault.protectedItem
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Soft-deleted Azure Recovery Services vault
+//
+// Recovery Services vault that has been deleted but is retained in a
+// soft-deleted state until Azure permanently purges it. Surfaces the time
+// the vault was deleted, the scheduled purge time, and the resource ID of
+// the original vault, so an auditor can review the recovery window and
+// undelete opportunities before data is lost. Deleted vaults are enumerated
+// per Azure region.
+private azure.subscription.recoveryServicesService.deletedVault @defaults("name vaultDeletionTime purgeAt") {
+  // Deleted vault resource ID
+  id string
+  // Deleted vault name
+  name string
+  // Azure region the vault was deleted in
+  location string
+  // Resource type
+  type string
+  // Resource ID of the original vault that was deleted
+  vaultResourceId string
+  // Time the vault was deleted (UTC)
+  vaultDeletionTime time
+  // Time the vault will be permanently purged (UTC)
+  purgeAt time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
