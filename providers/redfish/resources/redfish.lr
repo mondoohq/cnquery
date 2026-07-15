@@ -243,3 +243,16 @@ redfish.dell @defaults("generation") {
   // Release date of the installed BIOS
   biosReleaseDate() string
 }
+
+// Supermicro BMC extensions
+//
+// Supermicro-specific management data exposed by the controller, including the
+// activated node-management licenses that unlock Redfish capabilities and
+// whether BMC system lockdown mode is engaged. Populated when the connected
+// server is Supermicro hardware and empty otherwise.
+redfish.supermicro @defaults("systemLockdownEnabled") {
+  // Activated license keys, such as SFT-DCMS-Single
+  licenses() []string
+  // Whether BMC system lockdown mode is enabled
+  systemLockdownEnabled() bool
+}

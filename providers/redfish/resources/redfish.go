@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"github.com/stmcginnis/gofish/oem/smc"
 	"github.com/stmcginnis/gofish/schemas"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -450,4 +451,63 @@ func (r *mqlRedfishDell) systemID() (int64, error) {
 func (r *mqlRedfishDell) biosReleaseDate() (string, error) {
 	r.load()
 	return r.cachedBiosReleaseDate, nil
+}
+
+// mqlRedfishSupermicroInternal caches the Supermicro OEM data, which lives in
+// linked sub-resources (license manager, system lockdown) rather than inline
+// in the manager's OEM block.
+type mqlRedfishSupermicroInternal struct {
+	once           sync.Once
+	cachedLicenses []any
+	cachedLockdown bool
+}
+
+func (r *mqlRedfishSupermicro) id() (string, error) {
+	return "redfish.supermicro", nil
+}
+
+func (r *mqlRedfishSupermicro) load() {
+	r.once.Do(func() {
+		svc := redfishConn(r.MqlRuntime).Client().Service
+		managers, err := svc.Managers()
+		if err != nil {
+			log.Warn().Err(err).Msg("redfish: could not list managers for Supermicro OEM detection")
+			return
+		}
+		for _, m := range managers {
+			smcManager, err := smc.FromManager(m)
+			if err != nil {
+				continue
+			}
+
+			found := false
+			if lm, err := smcManager.LicenseManager(); err == nil && lm != nil {
+				if ql, err := lm.QueryLicense(); err == nil && ql != nil {
+					licenses := make([]any, 0, len(ql.Licenses))
+					for _, license := range ql.Licenses {
+						licenses = append(licenses, license)
+					}
+					r.cachedLicenses = licenses
+					found = true
+				}
+			}
+			if sl, err := smcManager.SysLockdown(); err == nil && sl != nil {
+				r.cachedLockdown = sl.Enabled
+				found = true
+			}
+			if found {
+				return
+			}
+		}
+	})
+}
+
+func (r *mqlRedfishSupermicro) licenses() ([]any, error) {
+	r.load()
+	return r.cachedLicenses, nil
+}
+
+func (r *mqlRedfishSupermicro) systemLockdownEnabled() (bool, error) {
+	r.load()
+	return r.cachedLockdown, nil
 }

@@ -69,6 +69,9 @@ redfish.softwareInventory.releaseDate 13.0.0
 redfish.softwareInventory.softwareId 13.0.0
 redfish.softwareInventory.updateable 13.0.0
 redfish.softwareInventory.version 13.0.0
+redfish.supermicro 13.0.0
+redfish.supermicro.licenses 13.0.0
+redfish.supermicro.systemLockdownEnabled 13.0.0
 redfish.system 13.0.0
 redfish.system.biosVersion 13.0.0
 redfish.system.ethernetInterfaces 13.0.0

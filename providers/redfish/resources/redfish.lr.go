@@ -26,6 +26,7 @@ const (
 	ResourceRedfishSoftwareInventory string = "redfish.softwareInventory"
 	ResourceRedfishHpe               string = "redfish.hpe"
 	ResourceRedfishDell              string = "redfish.dell"
+	ResourceRedfishSupermicro        string = "redfish.supermicro"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -75,6 +76,10 @@ func init() {
 		"redfish.dell": {
 			// to override args, implement: initRedfishDell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRedfishDell,
+		},
+		"redfish.supermicro": {
+			// to override args, implement: initRedfishSupermicro(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRedfishSupermicro,
 		},
 	}
 }
@@ -365,6 +370,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"redfish.dell.biosReleaseDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishDell).GetBiosReleaseDate()).ToDataRes(types.String)
+	},
+	"redfish.supermicro.licenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"redfish.supermicro.systemLockdownEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetSystemLockdownEnabled()).ToDataRes(types.Bool)
 	},
 }
 
@@ -712,6 +723,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"redfish.dell.biosReleaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRedfishDell).BiosReleaseDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).__id, ok = v.Value.(string)
+		return
+	},
+	"redfish.supermicro.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).Licenses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.systemLockdownEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).SystemLockdownEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -1652,5 +1675,63 @@ func (c *mqlRedfishDell) GetSystemID() *plugin.TValue[int64] {
 func (c *mqlRedfishDell) GetBiosReleaseDate() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.BiosReleaseDate, func() (string, error) {
 		return c.biosReleaseDate()
+	})
+}
+
+// mqlRedfishSupermicro for the redfish.supermicro resource
+type mqlRedfishSupermicro struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRedfishSupermicroInternal
+	Licenses              plugin.TValue[[]any]
+	SystemLockdownEnabled plugin.TValue[bool]
+}
+
+// createRedfishSupermicro creates a new instance of this resource
+func createRedfishSupermicro(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRedfishSupermicro{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("redfish.supermicro", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRedfishSupermicro) MqlName() string {
+	return "redfish.supermicro"
+}
+
+func (c *mqlRedfishSupermicro) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRedfishSupermicro) GetLicenses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Licenses, func() ([]any, error) {
+		return c.licenses()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetSystemLockdownEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SystemLockdownEnabled, func() (bool, error) {
+		return c.systemLockdownEnabled()
 	})
 }

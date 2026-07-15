@@ -28,6 +28,7 @@ type Vendor struct {
 var vendors = []Vendor{
 	{Name: "HPE iLO", Platform: "bmc-hp-ilo", match: []string{"hpe", "hewlett"}},
 	{Name: "Dell iDRAC", Platform: "bmc-dell-idrac", match: []string{"dell"}},
+	{Name: "Supermicro", Platform: "bmc-supermicro", match: []string{"supermicro", "super micro"}},
 }
 
 // genericVendor is the fallback for any Redfish service we don't specifically
