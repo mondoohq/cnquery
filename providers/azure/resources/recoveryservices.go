@@ -16,6 +16,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -191,9 +192,14 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, er
 		return nil, err
 	}
 
+	// Each deleted vault is paired with the region it was queried from, since
+	// the DeletedVault payload itself carries no location.
+	type deletedVaultEntry struct {
+		vault    *armrecoveryservices.DeletedVault
+		location string
+	}
 	var mu sync.Mutex
-	var deleted []*armrecoveryservices.DeletedVault
-	locationByID := map[string]string{}
+	var deleted []deletedVaultEntry
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
 	for _, location := range locations {
@@ -202,8 +208,9 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, er
 			for pager.More() {
 				page, err := pager.NextPage(gctx)
 				if err != nil {
-					// A region the subscription cannot reach shouldn't fail the
-					// whole listing; skip it and continue with the rest.
+					// One unreachable or access-denied region shouldn't fail the
+					// whole listing; log it and continue with the rest.
+					log.Warn().Err(err).Str("location", location).Msg("could not list deleted recovery services vaults in region")
 					return nil
 				}
 				mu.Lock()
@@ -211,10 +218,7 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, er
 					if dv == nil {
 						continue
 					}
-					deleted = append(deleted, dv)
-					if dv.ID != nil {
-						locationByID[*dv.ID] = location
-					}
+					deleted = append(deleted, deletedVaultEntry{vault: dv, location: location})
 				}
 				mu.Unlock()
 			}
@@ -226,12 +230,8 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, er
 	}
 
 	var res []any
-	for _, dv := range deleted {
-		location := ""
-		if dv.ID != nil {
-			location = locationByID[*dv.ID]
-		}
-		mqlDeletedVault, err := createDeletedVaultResource(a.MqlRuntime, dv, location)
+	for _, entry := range deleted {
+		mqlDeletedVault, err := createDeletedVaultResource(a.MqlRuntime, entry.vault, entry.location)
 		if err != nil {
 			return nil, err
 		}

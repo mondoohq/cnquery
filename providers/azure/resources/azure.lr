@@ -10906,7 +10906,10 @@ private azure.subscription.recoveryServicesService.deletedVault @defaults("name 
   location string
   // Resource type
   type string
-  // Resource ID of the original vault that was deleted
+  // Resource ID of the deleted vault
+  //
+  // Identifies the original vault that was deleted. The vault no longer
+  // exists as a live resource, so only its resource ID is retained.
   vaultResourceId string
   // Time the vault was deleted (UTC)
   vaultDeletionTime time
