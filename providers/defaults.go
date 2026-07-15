@@ -429,7 +429,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"jamf": {
 		Provider: &plugin.Provider{
 			Name:            "jamf",
-			ID:              "go.mondoo.com/mql/providers/jamf",
+			ID:              "go.mondoo.com/mql/v13/providers/jamf",
 			ConnectionTypes: []string{"jamf"},
 			Connectors: []plugin.Connector{
 				{
