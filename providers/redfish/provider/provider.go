@@ -59,13 +59,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Host = x.Hostname()
 
 		if sPort := x.Port(); sPort != "" {
-			port, err = strconv.Atoi(sPort)
-			if err != nil {
-				return nil, errors.New("port '" + sPort + "' is incorrectly formatted, must be a number")
+			// ParseUint with bitSize 16 bounds the value to [0, 65535], so the
+			// int32 conversion below cannot overflow.
+			parsedPort, err := strconv.ParseUint(sPort, 10, 16)
+			if err != nil || parsedPort == 0 {
+				return nil, errors.New("port '" + sPort + "' is invalid, must be between 1 and 65535")
 			}
-			if port < 1 || port > 65535 {
-				return nil, errors.New("port '" + sPort + "' is out of range, must be between 1 and 65535")
-			}
+			port = int(parsedPort)
 		}
 	}
 
