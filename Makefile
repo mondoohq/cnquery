@@ -243,6 +243,7 @@ PROVIDERS := \
 	os \
 	portainer \
 	proxmox \
+	redfish \
 	shodan \
 	slack \
 	snowflake \

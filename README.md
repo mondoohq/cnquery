@@ -157,6 +157,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |
+| Redfish controller (BMC)      | `redfish`                  | `mql shell redfish USER@HOST --ask-pass --insecure`                                                                                            |
 | Shodan organization           | `shodan`                   | `mql shell shodan`                                                                                                                              |
 | Slack team                    | `slack`                    | `mql shell slack --token TOKEN`                                                                                                                 |
 | Snowflake account             | `snowflake`                | `mql shell snowflake --account ACCOUNT_ID --region REGION --user USER --role ROLE --ask-pass`                                                   |

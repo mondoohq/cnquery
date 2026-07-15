@@ -783,6 +783,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"redfish": {
+		Provider: &plugin.Provider{
+			Name:            "redfish",
+			ID:              "go.mondoo.com/mql/providers/redfish",
+			ConnectionTypes: []string{"redfish"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "redfish",
+					Use:   "redfish USER@HOST",
+					Short: "a Redfish management controller (BMC)",
+				},
+			},
+		},
+	},
+
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",

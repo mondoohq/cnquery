@@ -235,6 +235,7 @@ use (
    ./mql/providers/openstack
    ./mql/providers/portainer
    ./mql/providers/proxmox
+   ./mql/providers/redfish
    ./mql/providers/shodan
    ./mql/providers/slack
    ./mql/providers/snowflake

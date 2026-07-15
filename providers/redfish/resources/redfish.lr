@@ -1,0 +1,245 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/redfish"
+option go_package = "go.mondoo.com/mql/v13/providers/redfish/resources"
+
+// Redfish management service
+//
+// Management service exposed by a server's baseboard management controller
+// (BMC), such as HPE iLO or Dell iDRAC, over the DMTF Redfish REST API.
+// Provides the managed compute systems, management controllers, physical
+// chassis, BMC user accounts, and firmware inventory for out-of-band audits
+// that run independently of the host operating system.
+redfish {
+  // Compute systems managed through the controller
+  systems() []redfish.system
+  // Management controllers (BMCs) for this service
+  managers() []redfish.manager
+  // Physical chassis enclosures
+  chassis() []redfish.chassisEnclosure
+  // Local user accounts on the management controller
+  accounts() []redfish.account
+  // Firmware and software components tracked by the update service
+  firmware() []redfish.softwareInventory
+}
+
+// Managed computer system
+//
+// Compute node managed through the controller. Covers identity such as the
+// UUID, model, and serial number, along with the firmware level, power
+// state, UEFI Secure Boot status, and the installed processors, memory
+// modules, and network interfaces.
+redfish.system @defaults("model powerState") {
+  // Stable UUID of the system
+  uuid string
+  // Display name of the system
+  name string
+  // Hardware manufacturer
+  manufacturer string
+  // Model name
+  model string
+  // Serial number
+  serialNumber string
+  // Stock keeping unit
+  sku string
+  // Installed BIOS or UEFI firmware version
+  biosVersion string
+  // Configured host name
+  hostName string
+  // Current power state, such as On, Off, or PoweringOn
+  powerState string
+  // Kind of system, such as Physical, Virtual, OS, or PhysicallyPartitioned
+  systemType string
+  // Whether UEFI Secure Boot is enabled
+  secureBootEnabled bool
+  // Installed processors
+  processors() []redfish.processor
+  // Installed memory modules
+  memory() []redfish.memory
+  // Network interfaces attached to the system
+  ethernetInterfaces() []redfish.ethernetInterface
+}
+
+// Processor
+//
+// Single processor installed in a managed system. Covers the manufacturer,
+// model, socket, instruction set, and the core and thread counts used to
+// inventory compute capacity.
+redfish.processor @defaults("model totalCores") {
+  // Manufacturer of the processor
+  manufacturer string
+  // Model name
+  model string
+  // Kind of processor, such as CPU, GPU, or FPGA
+  processorType string
+  // Instruction set, such as x86-64 or ARM-A64
+  instructionSet string
+  // Socket the processor occupies
+  socket string
+  // Number of physical cores
+  totalCores int
+  // Number of hardware threads
+  totalThreads int
+  // Maximum clock speed in MHz
+  maxSpeedMHz int
+}
+
+// Memory module
+//
+// Single memory module installed in a managed system. Covers the capacity,
+// device type, operating speed, and manufacturer part and serial numbers
+// used to inventory installed memory.
+redfish.memory @defaults("capacityMiB memoryDeviceType") {
+  // Capacity in mebibytes
+  capacityMiB int
+  // Device type, such as DDR4 or DDR5
+  memoryDeviceType string
+  // Operating speed in MHz
+  operatingSpeedMhz int
+  // Manufacturer of the module
+  manufacturer string
+  // Manufacturer part number
+  partNumber string
+  // Serial number
+  serialNumber string
+  // Number of ranks
+  rankCount int
+  // Data bus width in bits
+  dataWidthBits int
+}
+
+// Network interface
+//
+// Network interface reported by a managed system. Covers the MAC addresses,
+// link speed, duplex, and administrative and link state used to inventory
+// server connectivity.
+redfish.ethernetInterface @defaults("macAddress linkStatus") {
+  // Currently configured MAC address
+  macAddress string
+  // Factory assigned permanent MAC address
+  permanentMACAddress string
+  // Negotiated link speed in Mbps
+  speedMbps int
+  // Whether the link runs in full duplex
+  fullDuplex bool
+  // Link state, such as LinkUp or LinkDown
+  linkStatus string
+  // Whether the interface is administratively enabled
+  interfaceEnabled bool
+}
+
+// Baseboard management controller
+//
+// Out-of-band management controller (the BMC) that operates independently of
+// the host operating system. Covers the controller firmware version, model,
+// power state, and the network services such as SSH, HTTPS, IPMI, SNMP,
+// KVM-IP, and virtual media that it exposes.
+redfish.manager @defaults("model firmwareVersion") {
+  // Stable UUID of the controller
+  uuid string
+  // Manufacturer of the controller
+  manufacturer string
+  // Model name
+  model string
+  // Installed controller firmware version
+  firmwareVersion string
+  // Kind of controller, such as BMC, EnclosureManager, or Service
+  managerType string
+  // Current power state of the controller
+  powerState string
+  // Controller date and time in ISO 8601 format
+  dateTime string
+  // Network management services with their enabled state and ports, keyed by protocol name
+  networkProtocol() dict
+}
+
+// Physical chassis
+//
+// Physical enclosure that houses a managed system. Covers the chassis type,
+// manufacturer, model, serial number, and current power state used to
+// inventory physical hardware.
+redfish.chassisEnclosure @defaults("model chassisType") {
+  // Display name of the chassis
+  name string
+  // Kind of chassis, such as RackMount, Blade, or Enclosure
+  chassisType string
+  // Manufacturer of the chassis
+  manufacturer string
+  // Model name
+  model string
+  // Serial number
+  serialNumber string
+  // Stock keeping unit
+  sku string
+  // Current power state of the chassis
+  powerState string
+}
+
+// Management controller user account
+//
+// Local user account on the management controller. Covers the user name,
+// assigned role, and whether the account is enabled or locked, used to audit
+// who holds administrative access to out-of-band management.
+redfish.account @defaults("userName roleId enabled") {
+  // Login name of the account
+  userName string
+  // Role assigned to the account, such as Administrator, Operator, or ReadOnly
+  roleId string
+  // Whether the account is enabled
+  enabled bool
+  // Whether the account is locked out
+  locked bool
+  // Account categories, such as Redfish, SNMP, or OEM
+  accountTypes []string
+}
+
+// Firmware or software inventory item
+//
+// Firmware or software component tracked by the update service. Covers the
+// component version, manufacturer, release date, and whether it can be
+// updated, used to audit firmware levels against known-vulnerable releases.
+redfish.softwareInventory @defaults("name version") {
+  // Name of the component
+  name string
+  // Installed version
+  version string
+  // Manufacturer of the component
+  manufacturer string
+  // Vendor assigned software identifier
+  softwareId string
+  // Whether the component can be updated through the service
+  updateable bool
+  // Release date of the installed version
+  releaseDate string
+  // Lowest version the component can be downgraded to
+  lowestSupportedVersion string
+}
+
+// HPE iLO extensions
+//
+// HPE-specific management data exposed by HPE Integrated Lights-Out (iLO)
+// controllers, including the installed license edition that governs which
+// management capabilities are available. Populated when the connected server
+// is HPE hardware and empty otherwise.
+redfish.hpe @defaults("licenseLabel licenseType") {
+  // License term, such as Perpetual or Evaluation
+  licenseType() string
+  // License edition name, such as iLO Advanced or iLO Standard
+  licenseLabel() string
+}
+
+// Dell iDRAC extensions
+//
+// Dell-specific management data exposed by Dell Integrated Dell Remote Access
+// Controller (iDRAC) hardware, including the server hardware generation and
+// the BIOS release date. Populated when the connected server is Dell hardware
+// and empty otherwise.
+redfish.dell @defaults("generation") {
+  // Server hardware generation, such as 15G or 16G
+  generation() string
+  // Dell numeric system model identifier
+  systemID() int
+  // Release date of the installed BIOS
+  biosReleaseDate() string
+}
