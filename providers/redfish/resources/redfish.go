@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stmcginnis/gofish/schemas"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -290,6 +291,7 @@ type mqlRedfishManagerInternal struct {
 
 func (r *mqlRedfishManager) networkProtocol() (any, error) {
 	if r.mgr == nil {
+		r.NetworkProtocol.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	np, err := r.mgr.NetworkProtocol()
@@ -297,6 +299,7 @@ func (r *mqlRedfishManager) networkProtocol() (any, error) {
 		return nil, err
 	}
 	if np == nil {
+		r.NetworkProtocol.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
@@ -347,6 +350,7 @@ func (r *mqlRedfishHpe) load() {
 		svc := redfishConn(r.MqlRuntime).Client().Service
 		managers, err := svc.Managers()
 		if err != nil {
+			log.Warn().Err(err).Msg("redfish: could not list managers for HPE OEM detection")
 			return
 		}
 		for _, m := range managers {
@@ -355,6 +359,7 @@ func (r *mqlRedfishHpe) load() {
 			}
 			var oem hpeManagerOem
 			if err := json.Unmarshal(m.OEM, &oem); err != nil {
+				log.Debug().Err(err).Msg("redfish: could not parse HPE manager OEM block")
 				continue
 			}
 			wrap := oem.Hpe
@@ -409,6 +414,7 @@ func (r *mqlRedfishDell) load() {
 		svc := redfishConn(r.MqlRuntime).Client().Service
 		systems, err := svc.Systems()
 		if err != nil {
+			log.Warn().Err(err).Msg("redfish: could not list systems for Dell OEM detection")
 			return
 		}
 		for _, s := range systems {
@@ -417,6 +423,7 @@ func (r *mqlRedfishDell) load() {
 			}
 			var oem dellSystemOem
 			if err := json.Unmarshal(s.OEM, &oem); err != nil {
+				log.Debug().Err(err).Msg("redfish: could not parse Dell system OEM block")
 				continue
 			}
 			if oem.Dell.DellSystem.SystemGeneration == "" && oem.Dell.DellSystem.SystemID == 0 {

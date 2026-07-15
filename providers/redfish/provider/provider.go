@@ -63,6 +63,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			if err != nil {
 				return nil, errors.New("port '" + sPort + "' is incorrectly formatted, must be a number")
 			}
+			if port < 1 || port > 65535 {
+				return nil, errors.New("port '" + sPort + "' is out of range, must be between 1 and 65535")
+			}
 		}
 	}
 

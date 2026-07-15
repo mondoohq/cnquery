@@ -122,6 +122,8 @@ func (c *RedfishConnection) Identifier() (string, error) {
 		uid = c.Conf.Host
 	}
 
+	// c.id is cached after the first call, so the Systems/Managers lookups above
+	// run at most once even when they yield no UUID and we fall back to the host.
 	c.id = "//platformid.api.mondoo.app/runtime/redfish/uuid/" + uid
 	return c.id, nil
 }
