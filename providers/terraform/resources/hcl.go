@@ -817,14 +817,19 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		}
 		return results
 	case *hclsyntax.ConditionalExpr:
-		results := []any{}
-		subVal, err := t.Value(ctx)
-		if err == nil && subVal.Type() == cty.String {
-			results = append(results, subVal.AsString())
-			return results
+		// When the whole ternary resolves to a concrete value (the condition
+		// and chosen branch are statically knowable, e.g. `var.x ? a : b` with
+		// var defaults in ctx), return that value. The previous fast path only
+		// accepted a string result, so a bool/number ternary — the natural
+		// output of `... ? true : false` — fell through to reference-surfacing
+		// and returned the branch list `[cond, true, false]` instead of the
+		// scalar, defeating a `!= true` scalar-equality check.
+		if subVal, diags := t.Value(ctx); !diags.HasErrors() && subVal.IsKnown() && !subVal.IsNull() {
+			return ctyValueToGo(subVal)
 		}
 		// Unbound variables/refs: surface the references in each branch so
 		// policies can still inspect what the conditional depends on.
+		results := []any{}
 		appendCtyResult(&results, getCtyValue(t.Condition, ctx))
 		appendCtyResult(&results, getCtyValue(t.TrueResult, ctx))
 		appendCtyResult(&results, getCtyValue(t.FalseResult, ctx))

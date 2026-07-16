@@ -332,6 +332,28 @@ func TestGetCtyValue_StaticTernaryStillEvaluates(t *testing.T) {
 		"static ternary should evaluate to 'yes', got: %#v", got["pick"])
 }
 
+// TestGetCtyValue_BoolTernary_Resolved is a regression test for #9078: a
+// ternary that resolves to a non-string (the natural `... ? true : false`
+// output) used to fall through to reference-surfacing and return the branch
+// list instead of the scalar, so a `!= true` scalar-equality check never
+// matched. With var defaults in the context it must resolve to the scalar.
+func TestGetCtyValue_BoolTernary_Resolved(t *testing.T) {
+	attrs := parseAttrs(t, `privileged_mode = var.privileged ? true : false`)
+	ctx := resolvingCtx(map[string]cty.Value{"privileged": cty.True}, nil)
+	got, err := hclResolvedAttributesToDict(attrs, ctx)
+	require.NoError(t, err)
+	assert.Equal(t, true, got["privileged_mode"])
+}
+
+// TestGetCtyValue_StaticBoolTernary verifies a statically-knowable bool ternary
+// resolves to the scalar even without any variable context.
+func TestGetCtyValue_StaticBoolTernary(t *testing.T) {
+	attrs := parseAttrs(t, `enabled = true ? false : true`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+	assert.Equal(t, false, got["enabled"])
+}
+
 // TestHclAttributesToDict_NoUnknownTypeWarning regression-tests the customer
 // case: parsing a file with for-expressions, conditionals and index
 // expressions must not panic, must not return nil for any attribute, and
