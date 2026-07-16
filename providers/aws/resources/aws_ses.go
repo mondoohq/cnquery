@@ -341,7 +341,8 @@ func initAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.ses.identity with arn %q not found", args["arn"].Value.(string))
+	arnStr, _ := args["arn"].Value.(string)
+	return nil, nil, fmt.Errorf("aws.ses.identity with arn %q not found", arnStr)
 }
 
 // ---- aws.ses.configurationSet ----
@@ -631,5 +632,6 @@ func initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.Ra
 	// Returning (args, nil, nil) here would let the runtime create a resource
 	// whose fields are all unset, which surfaces as malformed nil data when
 	// those fields are queried.
-	return nil, nil, fmt.Errorf("aws.ses.configurationSet with arn %q not found", args["arn"].Value.(string))
+	arnStr, _ := args["arn"].Value.(string)
+	return nil, nil, fmt.Errorf("aws.ses.configurationSet with arn %q not found", arnStr)
 }

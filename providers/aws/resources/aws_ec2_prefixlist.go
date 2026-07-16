@@ -61,6 +61,13 @@ func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.R
 		PrefixListIds: []string{plId},
 	})
 	if err != nil {
+		// Intentionally an error rather than the old (args, nil, nil)
+		// fallback: a partially-initialized resource surfaces as malformed
+		// nil data when its unset fields are queried. Access-denied gets a
+		// descriptive message instead of the raw SDK error.
+		if Is400AccessDeniedError(err) {
+			return nil, nil, fmt.Errorf("access denied fetching aws.ec2.managedPrefixList with id %q in region %s", plId, region)
+		}
 		return nil, nil, err
 	}
 	// Returning (args, nil, nil) here would let the runtime create a resource
