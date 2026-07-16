@@ -188,7 +188,10 @@ func initAwsCloudfrontPublicKey(runtime *plugin.Runtime, args map[string]*llx.Ra
 			return args, pk, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, errors.Errorf("aws.cloudfront.publicKey with id %q not found", idVal)
 }
 
 // -- Key groups -------------------------------------------------------------

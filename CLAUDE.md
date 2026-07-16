@@ -268,12 +268,13 @@ Multiple computed methods can share the same fetch function to batch-load relate
   ```
   (`return args, nil, nil` is only correct for the early "args are already complete" fast path, e.g. `if len(args) > 2`.)
 
-- **Guard the asset-identifier fallback with a non-empty check.** `getAssetIdentifier` (AWS) returns a non-nil identifier with an **empty** `arn` when the asset has no valid `arn:aws:` platform ID. Injecting that empty string defeats the init's later `args["arn"] == nil` guard and sends it down the empty-lookup path above. Always write:
+- **Resolve discovered assets by ARN, never by asset name.** `getAssetIdentifier` (AWS) returns the asset's validated resource ARN, or `""` when the asset has no parseable `arn:aws:` platform ID (e.g. an account asset). Only inject a non-empty result — an empty `args["arn"]` defeats the init's later `args["arn"] == nil` guard:
   ```go
-  if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
-      args["arn"] = llx.StringData(ids.arn)
+  if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+      args["arn"] = llx.StringData(assetArn)
   }
   ```
+  The asset name is a display name (often a `Name` tag), never a resource key — don't use it for lookups. When an init's underlying API call is name-driven (e.g. IAM `GetUser`), derive the name from the ARN's resource segment instead.
 
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**

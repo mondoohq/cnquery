@@ -53,8 +53,8 @@ func initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
-			if parsed, err := arn.Parse(ids.arn); err == nil {
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			if parsed, err := arn.Parse(assetArn); err == nil {
 				args["directoryId"] = llx.StringData(strings.TrimPrefix(parsed.Resource, "directory/"))
 			}
 		}
@@ -79,7 +79,10 @@ func initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*
 			return args, d, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.directoryservice.directory with id %q not found", wantId)
 }
 
 func (a *mqlAwsDirectoryservice) getDirectories(conn *connection.AwsConnection) []*jobpool.Job {

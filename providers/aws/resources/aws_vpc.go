@@ -1463,8 +1463,8 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 // resolution correct. It may populate args["arn"] from the asset identifier.
 func deriveVpcTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (region, vpcId string) {
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] != nil {

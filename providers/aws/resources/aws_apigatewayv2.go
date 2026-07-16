@@ -152,8 +152,8 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	// Resolve a discovered asset (aws-apigatewayv2-api platform) by its ARN.
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["apiId"] == nil && args["arn"] == nil {

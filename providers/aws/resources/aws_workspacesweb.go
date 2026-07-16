@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -926,8 +927,7 @@ func initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args 
 	wsweb := obj.(*mqlAwsWorkspacesweb)
 	rawSettings := wsweb.GetUserAccessLoggingSettings()
 	if rawSettings.Error != nil {
-		args["__id"] = llx.StringData(arnVal)
-		return args, nil, nil
+		return nil, nil, rawSettings.Error
 	}
 	for _, s := range rawSettings.Data {
 		setting := s.(*mqlAwsWorkspaceswebUserAccessLoggingSetting)
@@ -935,8 +935,10 @@ func initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args 
 			return nil, setting, nil
 		}
 	}
-	args["__id"] = llx.StringData(arnVal)
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.workspacesweb.userAccessLoggingSetting with arn %q not found", arnVal)
 }
 
 // associatedPortalsFromArns returns typed aws.workspacesweb.portal references
@@ -984,9 +986,7 @@ func initAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.Ra
 	wsweb := obj.(*mqlAwsWorkspacesweb)
 	rawPortals := wsweb.GetPortals()
 	if rawPortals.Error != nil {
-		// portals could not be listed — return bare resource
-		args["__id"] = llx.StringData(arnVal)
-		return args, nil, nil
+		return nil, nil, rawPortals.Error
 	}
 	for _, p := range rawPortals.Data {
 		portal := p.(*mqlAwsWorkspaceswebPortal)
@@ -994,7 +994,8 @@ func initAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.Ra
 			return nil, portal, nil
 		}
 	}
-	// no match — return bare resource so the ARN is still queryable
-	args["__id"] = llx.StringData(arnVal)
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.workspacesweb.portal with arn %q not found", arnVal)
 }

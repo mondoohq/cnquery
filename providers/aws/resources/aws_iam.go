@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -1030,9 +1031,20 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
+		}
+	}
+
+	// The lookup is name-driven (GetUser). Derive the user name from the ARN
+	// (arn:aws:iam::<account>:user/<path>/<name>) when only an ARN is given.
+	if args["name"] == nil && args["arn"] != nil {
+		if arnVal, ok := args["arn"].Value.(string); ok {
+			if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "user/") {
+				if idx := strings.LastIndex(parsed.Resource, "/"); idx >= 0 {
+					args["name"] = llx.StringData(parsed.Resource[idx+1:])
+				}
+			}
 		}
 	}
 
@@ -1044,28 +1056,25 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	if args["name"] != nil {
-		if usr, ok := args["name"].Value.(string); ok {
-			username := usr
-			resp, err := svc.GetUser(ctx, &iam.GetUserInput{
-				UserName: &username,
-			})
-			if err != nil {
-				return nil, nil, err
-			}
-
-			usr := resp.User
-			args["arn"] = llx.StringDataPtr(usr.Arn)
-			args["id"] = llx.StringDataPtr(usr.UserId)
-			args["name"] = llx.StringDataPtr(usr.UserName)
-			args["createdAt"] = llx.TimeDataPtr(usr.CreateDate)
-			args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
-			args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
-			args["path"] = llx.StringDataPtr(usr.Path)
-
-			return args, nil, nil
-		}
+	usr, ok := args["name"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("invalid name argument for aws iam user")
 	}
+	resp, err := svc.GetUser(ctx, &iam.GetUserInput{
+		UserName: &usr,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user := resp.User
+	args["arn"] = llx.StringDataPtr(user.Arn)
+	args["id"] = llx.StringDataPtr(user.UserId)
+	args["name"] = llx.StringDataPtr(user.UserName)
+	args["createdAt"] = llx.TimeDataPtr(user.CreateDate)
+	args["passwordLastUsed"] = llx.TimeDataPtr(user.PasswordLastUsed)
+	args["tags"] = llx.MapData(iamTagsToMap(user.Tags), types.String)
+	args["path"] = llx.StringDataPtr(user.Path)
 
 	return args, nil, nil
 }
@@ -1743,7 +1752,10 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, nil
 	}
 
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, errors.New("could not determine role name to fetch aws iam role")
 }
 
 func (a *mqlAwsIamRole) id() (string, error) {
@@ -1935,13 +1947,24 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam group")
+	}
+
+	// The lookup is name-driven (GetGroup). Derive the group name from the ARN
+	// (arn:aws:iam::<account>:group/<path>/<name>) when only an ARN is given.
+	if args["name"] == nil && args["arn"] != nil {
+		if arnVal, ok := args["arn"].Value.(string); ok {
+			if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "group/") {
+				if idx := strings.LastIndex(parsed.Resource, "/"); idx >= 0 {
+					args["name"] = llx.StringData(parsed.Resource[idx+1:])
+				}
+			}
+		}
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
@@ -1985,7 +2008,10 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, g, nil
 	}
 
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.iam.group with arn %q not found", args["arn"].Value)
 }
 
 func (a *mqlAwsIamGroup) id() (string, error) {

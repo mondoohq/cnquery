@@ -259,8 +259,8 @@ func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] == nil {
@@ -281,7 +281,10 @@ func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawD
 			return args, c, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.documentdb.cluster with arn %q not found", arnVal)
 }
 
 func (a *mqlAwsDocumentdbCluster) kmsKey() (*mqlAwsKmsKey, error) {
@@ -733,8 +736,8 @@ func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	if args["arn"] == nil {
@@ -755,7 +758,10 @@ func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.Raw
 			return args, i, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.documentdb.instance with arn %q not found", arnVal)
 }
 
 func docdbInstancePendingModifiedValues(p *docdb_types.PendingModifiedValues) map[string]any {
@@ -1184,7 +1190,10 @@ func initAwsDocumentdbClusterParameterGroup(runtime *plugin.Runtime, args map[st
 			return args, pg, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.documentdb.clusterParameterGroup with arn %q not found", arnVal)
 }
 
 func (a *mqlAwsDocumentdbClusterParameterGroup) parameters() ([]any, error) {
@@ -1326,7 +1335,10 @@ func initAwsDocumentdbGlobalCluster(runtime *plugin.Runtime, args map[string]*ll
 			return args, gc, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.documentdb.globalCluster with arn %q not found", arnVal)
 }
 
 type mqlAwsDocumentdbGlobalClusterInternal struct {
@@ -1623,7 +1635,10 @@ func initAwsDocumentdbElasticCluster(runtime *plugin.Runtime, args map[string]*l
 			return args, c, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.documentdb.elasticCluster with arn %q not found", arnVal)
 }
 
 type mqlAwsDocumentdbElasticClusterInternal struct {

@@ -485,9 +485,8 @@ func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

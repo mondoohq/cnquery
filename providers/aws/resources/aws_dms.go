@@ -243,7 +243,10 @@ func initAwsDmsReplicationInstance(runtime *plugin.Runtime, args map[string]*llx
 			return args, inst, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.dms.replicationInstance with arn %q not found", arnVal)
 }
 
 // ===== aws.dms.endpoint =====
@@ -414,7 +417,10 @@ func initAwsDmsEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 			return args, ep, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.dms.endpoint with arn %q not found", arnVal)
 }
 
 // ===== aws.dms.replicationTask =====
@@ -736,7 +742,10 @@ func initAwsDmsReplicationSubnetGroup(runtime *plugin.Runtime, args map[string]*
 		}
 		return args, sg, nil
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.dms.replicationSubnetGroup with identifier %q not found", idVal)
 }
 
 // ===== shared helpers =====

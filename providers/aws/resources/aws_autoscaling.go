@@ -121,7 +121,10 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		populateAutoscalingGroupInternals(mqlGroup.(*mqlAwsAutoscalingGroup), group, region, conn.AccountId())
 		return args, mqlGroup, nil
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.autoscaling.group with name %q not found", name)
 }
 
 // autoscalingGroupArgs builds the lr-field arg map from an SDK AutoScalingGroup.

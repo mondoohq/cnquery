@@ -93,7 +93,10 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		res.(*mqlAwsEc2Eip).eipCache = add
 		return nil, res, nil
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.ec2.eip with publicIp %q not found", p)
 }
 
 func (a *mqlAwsEc2Eip) id() (string, error) {
@@ -2135,9 +2138,8 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -2505,8 +2507,8 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -2654,8 +2656,8 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 	log.Debug().Msg("init an ec2 instance")
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -2754,8 +2756,8 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

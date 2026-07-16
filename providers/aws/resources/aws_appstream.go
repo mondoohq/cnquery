@@ -209,8 +209,8 @@ func initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	// Resolve a discovered asset (aws-appstream-fleet platform) by its ARN.
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 	region, name, err := parseAppstreamRef(args, "fleet/")

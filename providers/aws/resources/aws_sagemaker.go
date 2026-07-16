@@ -237,9 +237,8 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -2033,13 +2032,10 @@ func initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		}
 	}
 
-	// Fallback: parse domainId from ARN (arn:aws:sagemaker:region:account:domain/domainId)
-	parts := strings.Split(arnVal, "/")
-	if len(parts) >= 2 {
-		domainId := parts[len(parts)-1]
-		args["domainId"] = llx.StringData(domainId)
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.domain with arn %q not found", arnVal)
 }
 
 type mqlAwsSagemakerDomainInternal struct {
@@ -3565,18 +3561,10 @@ func initAwsSagemakerModelPackageGroup(runtime *plugin.Runtime, args map[string]
 		}
 	}
 
-	// Fallback: parse group name from ARN (arn:aws:sagemaker:region:account:model-package-group/name)
-	parts := strings.Split(arnVal, "/")
-	if len(parts) >= 2 {
-		groupName := parts[len(parts)-1]
-		args["name"] = llx.StringData(groupName)
-		// Extract region from ARN (arn:partition:service:region:account:resource)
-		arnParts := strings.Split(arnVal, ":")
-		if len(arnParts) >= 5 {
-			args["region"] = llx.StringData(arnParts[3])
-		}
-	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.sagemaker.modelPackageGroup with arn %q not found", arnVal)
 }
 
 type mqlAwsSagemakerModelPackageGroupInternal struct {
@@ -4228,9 +4216,8 @@ func initAwsSagemakerTrainingjob(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 
@@ -4271,9 +4258,8 @@ func initAwsSagemakerProcessingjob(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["arn"] = llx.StringData(ids.arn)
+		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+			args["arn"] = llx.StringData(assetArn)
 		}
 	}
 

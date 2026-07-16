@@ -33,20 +33,20 @@ func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.R
 
 	arnRaw, hasArn := args["arn"]
 	if !hasArn || arnRaw == nil || arnRaw.Value == nil {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("arn required to fetch ec2 managed prefix list")
 	}
 	arnVal, ok := arnRaw.Value.(string)
 	if !ok || arnVal == "" {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("arn required to fetch ec2 managed prefix list")
 	}
 
 	region, err := GetRegionFromArn(arnVal)
 	if err != nil {
-		return args, nil, nil
+		return nil, nil, err
 	}
 	parts := strings.Split(arnVal, "/")
 	if len(parts) < 2 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("not a valid ec2 managed prefix list ARN '%s'", arnVal)
 	}
 	plId := parts[len(parts)-1]
 
@@ -61,13 +61,13 @@ func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.R
 		PrefixListIds: []string{plId},
 	})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return args, nil, nil
-		}
 		return nil, nil, err
 	}
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
 	if len(resp.PrefixLists) == 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("aws.ec2.managedPrefixList with id %q not found", plId)
 	}
 	pl := resp.PrefixLists[0]
 

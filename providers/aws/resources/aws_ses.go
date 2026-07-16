@@ -338,8 +338,10 @@ func initAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws ses identity that is not in the identities list")
 	}
-	args["__id"] = args["arn"]
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.ses.identity with arn %q not found", args["arn"].Value.(string))
 }
 
 // ---- aws.ses.configurationSet ----
@@ -626,6 +628,8 @@ func initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws ses configuration set that is not in the configuration sets list")
 	}
-	args["__id"] = args["arn"]
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.ses.configurationSet with arn %q not found", args["arn"].Value.(string))
 }

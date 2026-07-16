@@ -141,14 +141,14 @@ func TestInitAwsVpc(t *testing.T) {
 	})
 
 	t.Run("returns error when asset has no valid ARN in platform IDs", func(t *testing.T) {
-		// getAssetIdentifier returns a non-nil result with an empty arn
-		// when the asset has no "arn:aws:" platform ID. The empty-string
-		// arn won't match any VPC.
+		// getAssetIdentifier returns "" when the asset has no valid
+		// "arn:aws:" platform ID, so no arn arg is injected and the init
+		// errors out before any lookup.
 		runtime := testAwsRuntime("some-vpc", []string{"not-an-arn"}, []*mqlAwsVpc{testVpc})
 
 		args := map[string]*llx.RawData{}
 		_, _, err := initAwsVpc(runtime, args)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "vpc does not exist")
+		assert.Contains(t, err.Error(), "arn or id required")
 	})
 }
