@@ -851,6 +851,14 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		appendCtyResult(&results, getCtyValue(t.RHS, ctx))
 		return results
 	case *hclsyntax.UnaryOpExpr:
+		// `-1` and `!true` parse as a unary op wrapping a literal. Evaluate the
+		// whole expression so the operator is actually applied — a bare descent
+		// into t.Val drops the negation and surfaces the positive magnitude
+		// (e.g. the `-1` sentinel becoming `1`). Fall back to the operand's
+		// references when it can't be evaluated statically (e.g. `-var.x`).
+		if val, diags := t.Value(ctx); !diags.HasErrors() {
+			return ctyValueToGo(val)
+		}
 		return getCtyValue(t.Val, ctx)
 	case *hclsyntax.SplatExpr:
 		results := []any{}

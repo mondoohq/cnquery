@@ -185,6 +185,38 @@ func TestGetCtyValue_ConditionalExpr_UnboundVars(t *testing.T) {
 		"result should reference data.aws_ami.shared_image.id, got: %#v", v)
 }
 
+// TestGetCtyValue_NegativeNumber is a regression test for #9080: a negative
+// numeric literal parses as a unary-negate op wrapping a number literal, and
+// must retain its sign instead of collapsing to the positive magnitude (which
+// broke checks comparing against a negative sentinel, e.g. Lambda's `-1`
+// "unreserved" value or a security-group protocol of `-1`).
+func TestGetCtyValue_NegativeNumber(t *testing.T) {
+	attrs := parseAttrs(t, `reserved_concurrent_executions = -1`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+	assert.Equal(t, float64(-1), got["reserved_concurrent_executions"])
+}
+
+// TestGetCtyValue_LogicalNot verifies the other unary operator (`!`) is applied
+// rather than dropped.
+func TestGetCtyValue_LogicalNot(t *testing.T) {
+	attrs := parseAttrs(t, `disabled = !true`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+	assert.Equal(t, false, got["disabled"])
+}
+
+// TestGetCtyValue_UnaryOp_UnboundOperand verifies a unary op over an unbound
+// operand (e.g. `-var.x`) still surfaces the operand's references instead of
+// failing, preserving the reference-surfacing fallback.
+func TestGetCtyValue_UnaryOp_UnboundOperand(t *testing.T) {
+	attrs := parseAttrs(t, `capacity = -var.desired_capacity`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+	assert.True(t, containsString(got["capacity"], "var.desired_capacity"),
+		"result should reference var.desired_capacity, got: %#v", got["capacity"])
+}
+
 // resolvingCtx builds an eval context with resolved var.*/local.* values,
 // mimicking what Connection.VariableEvalContext produces when the
 // TerraformResolveVars feature flag is active.
