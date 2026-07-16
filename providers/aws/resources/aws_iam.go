@@ -1056,6 +1056,9 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if err != nil {
 		return nil, nil, err
 	}
+	if resp.User == nil {
+		return nil, nil, fmt.Errorf("aws.iam.user %q not found", usr)
+	}
 
 	user := resp.User
 	args["arn"] = llx.StringDataPtr(user.Arn)
@@ -1968,6 +1971,9 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 			for _, user := range resp.Users {
 				usernames = append(usernames, convert.ToValue(user.UserName))
 			}
+		}
+		if grp == nil {
+			return nil, nil, fmt.Errorf("aws.iam.group %q not found", groupname)
 		}
 
 		args["arn"] = llx.StringDataPtr(grp.Arn)
