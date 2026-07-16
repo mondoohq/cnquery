@@ -876,6 +876,8 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   rdmaSharedDevicePluginEnabled bool
   // Whether the CoreDNS cluster-proportional autoscaler add-on is enabled; null when unset
   corednsAutoscalerEnabled bool
+  // Whether the peer-to-peer OCI registry add-on is enabled; null when unset
+  p2pOciRegistryEnabled bool
   // UUID of the VPC subnet the cluster's worker nodes are placed in
   workerSubnetUuid string
   // Cluster autoscaler tuning

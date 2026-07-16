@@ -259,6 +259,7 @@ const (
 	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                           string = "azure.subscription.monitorService.activityLog.entry"
 	ResourceAzureSubscriptionMonitorServiceLogprofile                                                 string = "azure.subscription.monitorService.logprofile"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                          string = "azure.subscription.monitorService.diagnosticsetting"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticSettingsCategory                                 string = "azure.subscription.monitorService.diagnosticSettingsCategory"
 	ResourceAzureSubscriptionCloudDefenderService                                                     string = "azure.subscription.cloudDefenderService"
 	ResourceAzureSubscriptionCloudDefenderServiceAlertSuppressionRule                                 string = "azure.subscription.cloudDefenderService.alertSuppressionRule"
 	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                     string = "azure.subscription.cloudDefenderService.workspaceSetting"
@@ -1443,6 +1444,10 @@ func init() {
 		"azure.subscription.monitorService.diagnosticsetting": {
 			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionMonitorServiceDiagnosticsetting,
+		},
+		"azure.subscription.monitorService.diagnosticSettingsCategory": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticSettingsCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceDiagnosticSettingsCategory,
 		},
 		"azure.subscription.cloudDefenderService": {
 			Init:   initAzureSubscriptionCloudDefenderService,
@@ -3852,6 +3857,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.batchService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
 	},
+	"azure.subscription.batchService.account.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
+	},
 	"azure.subscription.batchService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -3947,6 +3955,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.databricksService.workspace.requiredNsgRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetRequiredNsgRules()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.defaultStorageFirewall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetDefaultStorageFirewall()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.complianceSecurityProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetComplianceSecurityProfile()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.complianceStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetComplianceStandards()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.databricksService.workspace.enhancedSecurityMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetEnhancedSecurityMonitoring()).ToDataRes(types.String)
+	},
+	"azure.subscription.databricksService.workspace.automaticClusterUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetAutomaticClusterUpdate()).ToDataRes(types.String)
 	},
 	"azure.subscription.databricksService.workspace.diskEncryptionSetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetDiskEncryptionSetId()).ToDataRes(types.String)
@@ -8415,6 +8438,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
 	},
+	"azure.subscription.webService.appsite.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
+	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
 	},
@@ -8567,6 +8593,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appslot.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.webService.appslot.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
 	},
 	"azure.subscription.webService.appslot.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.function")))
@@ -10425,6 +10454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
 	},
+	"azure.subscription.cosmosDbService.account.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
+	},
 	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase")))
 	},
@@ -10853,6 +10885,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.vault.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.keyVaultService.vault.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
 	},
 	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAutorotation()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key.autorotation")))
@@ -11339,6 +11374,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.diagnosticsetting.metrics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).GetMetrics()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.categoryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).GetCategoryType()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.categoryGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).GetCategoryGroups()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.cloudDefenderService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSubscriptionId()).ToDataRes(types.String)
@@ -13256,6 +13300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.iotService.iotHub.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
+	"azure.subscription.iotService.iotHub.diagnosticSettingsCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetDiagnosticSettingsCategories()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticSettingsCategory")))
 	},
 	"azure.subscription.iotService.iotHub.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -20177,6 +20224,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionBatchServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.batchService.account.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccount).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.batchService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccount).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -20315,6 +20366,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.databricksService.workspace.requiredNsgRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).RequiredNsgRules, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.defaultStorageFirewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).DefaultStorageFirewall, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.complianceSecurityProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).ComplianceSecurityProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.complianceStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).ComplianceStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.enhancedSecurityMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).EnhancedSecurityMonitoring, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.databricksService.workspace.automaticClusterUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).AutomaticClusterUpdate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.databricksService.workspace.diskEncryptionSetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26785,6 +26856,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -27003,6 +27078,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appslot.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppslot).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appslot.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appslot.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29693,6 +29772,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -30303,6 +30386,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.vault.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.vault.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.vault.autorotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31023,6 +31110,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.diagnosticsetting.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).Metrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.categoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).CategoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticSettingsCategory.categoryGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).CategoryGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33807,6 +33910,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.iotService.iotHub.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionIotServiceIotHub).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.iotService.iotHub.diagnosticSettingsCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionIotServiceIotHub).DiagnosticSettingsCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.iotHub.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45548,6 +45655,7 @@ type mqlAzureSubscriptionBatchServiceAccount struct {
 	PrivateEndpointConnections            plugin.TValue[[]any]
 	Pools                                 plugin.TValue[[]any]
 	DiagnosticSettings                    plugin.TValue[[]any]
+	DiagnosticSettingsCategories          plugin.TValue[[]any]
 	SystemMetadata                        plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -45781,6 +45889,22 @@ func (c *mqlAzureSubscriptionBatchServiceAccount) GetDiagnosticSettings() *plugi
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccount) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.batchService.account", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 
@@ -46024,6 +46148,11 @@ type mqlAzureSubscriptionDatabricksServiceWorkspace struct {
 	RequireInfrastructureEncryption plugin.TValue[bool]
 	CustomVirtualNetworkId          plugin.TValue[string]
 	RequiredNsgRules                plugin.TValue[string]
+	DefaultStorageFirewall          plugin.TValue[string]
+	ComplianceSecurityProfile       plugin.TValue[string]
+	ComplianceStandards             plugin.TValue[[]any]
+	EnhancedSecurityMonitoring      plugin.TValue[string]
+	AutomaticClusterUpdate          plugin.TValue[string]
 	DiskEncryptionSetId             plugin.TValue[string]
 	ManagedResourceGroupId          plugin.TValue[string]
 	ProvisioningState               plugin.TValue[string]
@@ -46123,6 +46252,26 @@ func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetCustomVirtualNetwork
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetRequiredNsgRules() *plugin.TValue[string] {
 	return &c.RequiredNsgRules
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetDefaultStorageFirewall() *plugin.TValue[string] {
+	return &c.DefaultStorageFirewall
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetComplianceSecurityProfile() *plugin.TValue[string] {
+	return &c.ComplianceSecurityProfile
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetComplianceStandards() *plugin.TValue[[]any] {
+	return &c.ComplianceStandards
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetEnhancedSecurityMonitoring() *plugin.TValue[string] {
+	return &c.EnhancedSecurityMonitoring
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetAutomaticClusterUpdate() *plugin.TValue[string] {
+	return &c.AutomaticClusterUpdate
 }
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetDiskEncryptionSetId() *plugin.TValue[string] {
@@ -61504,6 +61653,7 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	ConnectionSettings           plugin.TValue[any]
 	Stack                        plugin.TValue[any]
 	DiagnosticSettings           plugin.TValue[[]any]
+	DiagnosticSettingsCategories plugin.TValue[[]any]
 	Functions                    plugin.TValue[[]any]
 	Ftp                          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
 	Scm                          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
@@ -61745,6 +61895,22 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetDiagnosticSettings() *plugin.
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 
@@ -62153,26 +62319,27 @@ type mqlAzureSubscriptionWebServiceAppslot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionWebServiceAppslotInternal
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Kind                   plugin.TValue[string]
-	Location               plugin.TValue[string]
-	Type                   plugin.TValue[string]
-	Tags                   plugin.TValue[map[string]any]
-	Properties             plugin.TValue[any]
-	Identity               plugin.TValue[any]
-	Parent                 plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite]
-	Configuration          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
-	AuthenticationSettings plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
-	Metadata               plugin.TValue[any]
-	ApplicationSettings    plugin.TValue[any]
-	ConnectionSettings     plugin.TValue[any]
-	Stack                  plugin.TValue[any]
-	DiagnosticSettings     plugin.TValue[[]any]
-	Functions              plugin.TValue[[]any]
-	Ftp                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
-	Scm                    plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
-	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Kind                         plugin.TValue[string]
+	Location                     plugin.TValue[string]
+	Type                         plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+	Properties                   plugin.TValue[any]
+	Identity                     plugin.TValue[any]
+	Parent                       plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite]
+	Configuration                plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
+	AuthenticationSettings       plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
+	Metadata                     plugin.TValue[any]
+	ApplicationSettings          plugin.TValue[any]
+	ConnectionSettings           plugin.TValue[any]
+	Stack                        plugin.TValue[any]
+	DiagnosticSettings           plugin.TValue[[]any]
+	DiagnosticSettingsCategories plugin.TValue[[]any]
+	Functions                    plugin.TValue[[]any]
+	Ftp                          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	Scm                          plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
+	SystemMetadata               plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionWebServiceAppslot creates a new instance of this resource
@@ -62329,6 +62496,22 @@ func (c *mqlAzureSubscriptionWebServiceAppslot) GetDiagnosticSettings() *plugin.
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appslot", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 
@@ -68639,6 +68822,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	SqlRoleDefinitions                 plugin.TValue[[]any]
 	SqlRoleAssignments                 plugin.TValue[[]any]
 	DiagnosticSettings                 plugin.TValue[[]any]
+	DiagnosticSettingsCategories       plugin.TValue[[]any]
 	SqlDatabases                       plugin.TValue[[]any]
 	IdentityType                       plugin.TValue[string]
 	PrincipalId                        plugin.TValue[string]
@@ -68856,6 +69040,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetDiagnosticSettings() *pl
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 
@@ -70024,6 +70224,7 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	Certificates                 plugin.TValue[[]any]
 	Secrets                      plugin.TValue[[]any]
 	DiagnosticSettings           plugin.TValue[[]any]
+	DiagnosticSettingsCategories plugin.TValue[[]any]
 	Autorotation                 plugin.TValue[[]any]
 	PrivateEndpointConnections   plugin.TValue[[]any]
 	AccessPolicies               plugin.TValue[[]any]
@@ -70215,6 +70416,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetDiagnosticSettings() *plug
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 
@@ -72147,6 +72364,60 @@ func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetLogs() *plugin.
 
 func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetMetrics() *plugin.TValue[[]any] {
 	return &c.Metrics
+}
+
+// mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory for the azure.subscription.monitorService.diagnosticSettingsCategory resource
+type mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategoryInternal it will be used here
+	Name           plugin.TValue[string]
+	CategoryType   plugin.TValue[string]
+	CategoryGroups plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionMonitorServiceDiagnosticSettingsCategory creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceDiagnosticSettingsCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.diagnosticSettingsCategory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory) MqlName() string {
+	return "azure.subscription.monitorService.diagnosticSettingsCategory"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory) GetCategoryType() *plugin.TValue[string] {
+	return &c.CategoryType
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory) GetCategoryGroups() *plugin.TValue[[]any] {
+	return &c.CategoryGroups
 }
 
 // mqlAzureSubscriptionCloudDefenderService for the azure.subscription.cloudDefenderService resource
@@ -78580,6 +78851,7 @@ type mqlAzureSubscriptionIotServiceIotHub struct {
 	UserAssignedIdentities        plugin.TValue[[]any]
 	PrivateEndpointConnections    plugin.TValue[[]any]
 	DiagnosticSettings            plugin.TValue[[]any]
+	DiagnosticSettingsCategories  plugin.TValue[[]any]
 	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -78749,6 +79021,22 @@ func (c *mqlAzureSubscriptionIotServiceIotHub) GetDiagnosticSettings() *plugin.T
 		}
 
 		return c.diagnosticSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionIotServiceIotHub) GetDiagnosticSettingsCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettingsCategories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.iotService.iotHub", c.__id, "diagnosticSettingsCategories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettingsCategories()
 	})
 }
 

@@ -68,6 +68,11 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 	launchedAt, ok2 := s.GetLaunchedAtOk()
 	updatedAt, ok3 := s.GetUpdatedAtOk()
 
+	vtpmEnabled := false
+	if v, ok := s.GetVtpmOk(); ok {
+		vtpmEnabled = v.GetEnabled()
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                  llx.StringData(s.GetId()),
 		"name":                llx.StringData(s.GetName()),
@@ -80,6 +85,7 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 		"updatedAt":           llx.TimeDataPtr(timeOrNil(updatedAt, ok3)),
 		"errorMessage":        llx.StringData(s.GetErrorMessage()),
 		"configDrive":         llx.BoolData(s.GetConfigDrive()),
+		"vtpmEnabled":         llx.BoolData(vtpmEnabled),
 		"keypairName":         llx.StringData(s.GetKeypairName()),
 		"imageId":             llx.StringData(s.GetImageId()),
 		"volumeIds":           strSliceData(s.GetVolumes()),
@@ -376,14 +382,15 @@ func buildSnapshot(runtime *plugin.Runtime, s *iaas.Snapshot) (plugin.Resource, 
 	createdAt, ok1 := s.GetCreatedAtOk()
 	updatedAt, ok2 := s.GetUpdatedAtOk()
 	args := map[string]*llx.RawData{
-		"id":        llx.StringData(s.GetId()),
-		"name":      llx.StringData(s.GetName()),
-		"status":    llx.StringData(s.GetStatus()),
-		"size":      llx.IntData(int64(s.GetSize())),
-		"volumeId":  llx.StringData(s.GetVolumeId()),
-		"createdAt": llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
-		"updatedAt": llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
-		"labels":    labelData(s.GetLabels()),
+		"id":               llx.StringData(s.GetId()),
+		"name":             llx.StringData(s.GetName()),
+		"status":           llx.StringData(s.GetStatus()),
+		"size":             llx.IntData(int64(s.GetSize())),
+		"availabilityZone": llx.StringData(s.GetAvailabilityZone()),
+		"volumeId":         llx.StringData(s.GetVolumeId()),
+		"createdAt":        llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
+		"updatedAt":        llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
+		"labels":           labelData(s.GetLabels()),
 	}
 	return CreateResource(runtime, "stackit.snapshot", args)
 }

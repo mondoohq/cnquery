@@ -1366,6 +1366,8 @@ azure.subscription.batchService.account @defaults("id name location") {
   pools() []azure.subscription.batchService.account.pool
   // Batch account diagnostic settings
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the Batch account can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1457,6 +1459,18 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   customVirtualNetworkId string
   // Required NSG rules mode ("AllRules", "NoAzureDatabricksRules", or "NoAzureServiceRules")
   requiredNsgRules string
+  // Whether the workspace default storage account is locked behind a firewall ("Enabled" or "Disabled")
+  defaultStorageFirewall string
+  // Compliance Security Profile status ("Enabled" or "Disabled")
+  complianceSecurityProfile string
+  // Compliance standards enforced by the Compliance Security Profile
+  //
+  // For example HIPAA, PCI_DSS, or NONE. Empty when the Compliance Security Profile is disabled.
+  complianceStandards []string
+  // Enhanced Security Monitoring status ("Enabled" or "Disabled")
+  enhancedSecurityMonitoring string
+  // Automatic cluster update status ("Enabled" or "Disabled")
+  automaticClusterUpdate string
   // ARM resource ID of the managed disk encryption set used for managed disks
   diskEncryptionSetId string
   // Managed resource group ARM resource ID
@@ -5663,6 +5677,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   stack() dict
   // Diagnostic settings for the web app site
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the web app site can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // List of functions for the web app site
   functions() []azure.subscription.webService.function
   // FTP publishing method policies
@@ -5783,6 +5799,8 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   stack() dict
   // App slot diagnostic settings
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the app slot can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // List of functions for the app slot
   functions() []azure.subscription.webService.function
   // FTP publishing method policies for the slot
@@ -7321,6 +7339,8 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   sqlRoleAssignments() []azure.subscription.cosmosDbService.account.sqlRoleAssignment
   // Diagnostic settings configured on the Cosmos DB account
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the Cosmos DB account can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // SQL API databases hosted on the account (Core SQL API)
   sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
   // Type of managed identity configured on the account
@@ -7715,6 +7735,8 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   secrets() []azure.subscription.keyVaultService.secret
   // Vault diagnostic settings
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the vault can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // Auto-rotation enabled status for all keys
   autorotation() []azure.subscription.keyVaultService.key.autorotation
   // Private endpoint connections for the vault
@@ -8138,6 +8160,24 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   // Each entry describes one metric stream with its `category`, whether
   // it is `enabled`, and the legacy `retentionPolicy`.
   metrics []dict
+}
+
+// Azure Monitor diagnostic settings category
+//
+// Examine one log or metric category that a resource is capable of
+// emitting through diagnostic settings, independent of whether any
+// diagnostic setting currently collects it. Comparing the available
+// categories against the enabled categories on a resource's
+// `diagnosticSettings` surfaces telemetry a resource could emit but
+// isn't. The `name` field is the category name (for example
+// `AuditEvent` or `AllMetrics`).
+private azure.subscription.monitorService.diagnosticSettingsCategory @defaults("name categoryType") {
+  // Diagnostic category name
+  name string
+  // Category type ("Logs" or "Metrics")
+  categoryType string
+  // Category groups this category belongs to (for example "allLogs" or "audit")
+  categoryGroups []string
 }
 
 // Microsoft Defender for Cloud
@@ -9766,6 +9806,8 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Diagnostic settings configured on the IoT hub (forwarding logs and metrics to Log Analytics, storage, or Event Hub)
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Diagnostic settings categories the IoT hub can emit (available log and metric categories)
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

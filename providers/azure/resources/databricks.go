@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -99,6 +99,8 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 	var publicNetworkAccess, requiredNsgRules, diskEncryptionSetId, managedResourceGroupId, provisioningState, workspaceId string
 	var enableNoPublicIp, requireInfraEnc bool
 	var customVnetId string
+	var defaultStorageFirewall, complianceSecurityProfile, enhancedSecurityMonitoring, automaticClusterUpdate string
+	complianceStandards := []any{}
 	var managedDiskKeySource, managedDiskKeyVaultUri, managedDiskKeyName, managedDiskKeyVersion string
 	var managedServicesKeySource, managedServicesKeyVaultUri, managedServicesKeyName, managedServicesKeyVersion string
 	var creationTime *time.Time
@@ -122,6 +124,28 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		}
 		if props.WorkspaceID != nil {
 			workspaceId = *props.WorkspaceID
+		}
+		if props.DefaultStorageFirewall != nil {
+			defaultStorageFirewall = string(*props.DefaultStorageFirewall)
+		}
+
+		if esc := props.EnhancedSecurityCompliance; esc != nil {
+			if csp := esc.ComplianceSecurityProfile; csp != nil {
+				if csp.Value != nil {
+					complianceSecurityProfile = string(*csp.Value)
+				}
+				for _, std := range csp.ComplianceStandards {
+					if std != nil {
+						complianceStandards = append(complianceStandards, *std)
+					}
+				}
+			}
+			if esm := esc.EnhancedSecurityMonitoring; esm != nil && esm.Value != nil {
+				enhancedSecurityMonitoring = string(*esm.Value)
+			}
+			if acu := esc.AutomaticClusterUpdate; acu != nil && acu.Value != nil {
+				automaticClusterUpdate = string(*acu.Value)
+			}
 		}
 
 		if p := props.Parameters; p != nil {
@@ -201,6 +225,11 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"requireInfrastructureEncryption": llx.BoolData(requireInfraEnc),
 		"customVirtualNetworkId":          llx.StringData(customVnetId),
 		"requiredNsgRules":                llx.StringData(requiredNsgRules),
+		"defaultStorageFirewall":          llx.StringData(defaultStorageFirewall),
+		"complianceSecurityProfile":       llx.StringData(complianceSecurityProfile),
+		"complianceStandards":             llx.ArrayData(complianceStandards, types.String),
+		"enhancedSecurityMonitoring":      llx.StringData(enhancedSecurityMonitoring),
+		"automaticClusterUpdate":          llx.StringData(automaticClusterUpdate),
 		"diskEncryptionSetId":             llx.StringData(diskEncryptionSetId),
 		"managedResourceGroupId":          llx.StringData(managedResourceGroupId),
 		"provisioningState":               llx.StringData(provisioningState),

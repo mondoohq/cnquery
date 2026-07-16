@@ -10307,6 +10307,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.elasticsearchVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetElasticsearchVersion()).ToDataRes(types.String)
 	},
+	"aws.es.domain.engineMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEngineMode()).ToDataRes(types.String)
+	},
+	"aws.es.domain.useCase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetUseCase()).ToDataRes(types.String)
+	},
 	"aws.es.domain.domainId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetDomainId()).ToDataRes(types.String)
 	},
@@ -42576,6 +42582,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.es.domain.elasticsearchVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).ElasticsearchVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.engineMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EngineMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.useCase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).UseCase, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -100187,6 +100201,8 @@ type mqlAwsEsDomain struct {
 	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                          plugin.TValue[string]
 	ElasticsearchVersion               plugin.TValue[string]
+	EngineMode                         plugin.TValue[string]
+	UseCase                            plugin.TValue[string]
 	DomainId                           plugin.TValue[string]
 	DomainName                         plugin.TValue[string]
 	EnforceHTTPS                       plugin.TValue[bool]
@@ -100367,6 +100383,14 @@ func (c *mqlAwsEsDomain) GetManagedBy() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetElasticsearchVersion() *plugin.TValue[string] {
 	return &c.ElasticsearchVersion
+}
+
+func (c *mqlAwsEsDomain) GetEngineMode() *plugin.TValue[string] {
+	return &c.EngineMode
+}
+
+func (c *mqlAwsEsDomain) GetUseCase() *plugin.TValue[string] {
+	return &c.UseCase
 }
 
 func (c *mqlAwsEsDomain) GetDomainId() *plugin.TValue[string] {

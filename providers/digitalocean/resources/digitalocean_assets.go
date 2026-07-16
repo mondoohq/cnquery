@@ -394,7 +394,10 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 	}
 
 	var routingAgentEnabled, amdGpuEnabled, amdGpuMetricsEnabled *bool
-	var nvidiaGpuEnabled, rdmaEnabled, corednsAutoscalerEnabled *bool
+	var nvidiaGpuEnabled, rdmaEnabled, corednsAutoscalerEnabled, p2pOciRegistryEnabled *bool
+	if c.P2pOciRegistryPlugin != nil {
+		p2pOciRegistryEnabled = c.P2pOciRegistryPlugin.Enabled
+	}
 	if c.RoutingAgent != nil {
 		routingAgentEnabled = c.RoutingAgent.Enabled
 	}
@@ -460,6 +463,7 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		"nvidiaGpuDevicePluginEnabled":             llx.BoolDataPtr(nvidiaGpuEnabled),
 		"rdmaSharedDevicePluginEnabled":            llx.BoolDataPtr(rdmaEnabled),
 		"corednsAutoscalerEnabled":                 llx.BoolDataPtr(corednsAutoscalerEnabled),
+		"p2pOciRegistryEnabled":                    llx.BoolDataPtr(p2pOciRegistryEnabled),
 		"workerSubnetUuid":                         llx.StringData(c.WorkerSubnetUUID),
 		"clusterAutoscaler":                        llx.DictData(autoscaler),
 	}

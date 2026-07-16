@@ -570,6 +570,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.server.configDrive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetConfigDrive()).ToDataRes(types.Bool)
 	},
+	"stackit.server.vtpmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetVtpmEnabled()).ToDataRes(types.Bool)
+	},
 	"stackit.server.keypairName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetKeypairName()).ToDataRes(types.String)
 	},
@@ -680,6 +683,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.snapshot.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSnapshot).GetSize()).ToDataRes(types.Int)
+	},
+	"stackit.snapshot.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSnapshot).GetAvailabilityZone()).ToDataRes(types.String)
 	},
 	"stackit.snapshot.volumeId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSnapshot).GetVolumeId()).ToDataRes(types.String)
@@ -2323,6 +2329,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServer).ConfigDrive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"stackit.server.vtpmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).VtpmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.server.keypairName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).KeypairName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2477,6 +2487,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.snapshot.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSnapshot).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.snapshot.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSnapshot).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.snapshot.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5311,6 +5325,7 @@ type mqlStackitServer struct {
 	UpdatedAt           plugin.TValue[*time.Time]
 	ErrorMessage        plugin.TValue[string]
 	ConfigDrive         plugin.TValue[bool]
+	VtpmEnabled         plugin.TValue[bool]
 	KeypairName         plugin.TValue[string]
 	KeyPair             plugin.TValue[*mqlStackitKeyPair]
 	ImageId             plugin.TValue[string]
@@ -5406,6 +5421,10 @@ func (c *mqlStackitServer) GetErrorMessage() *plugin.TValue[string] {
 
 func (c *mqlStackitServer) GetConfigDrive() *plugin.TValue[bool] {
 	return &c.ConfigDrive
+}
+
+func (c *mqlStackitServer) GetVtpmEnabled() *plugin.TValue[bool] {
+	return &c.VtpmEnabled
 }
 
 func (c *mqlStackitServer) GetKeypairName() *plugin.TValue[string] {
@@ -5692,15 +5711,16 @@ type mqlStackitSnapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlStackitSnapshotInternal it will be used here
-	Id        plugin.TValue[string]
-	Name      plugin.TValue[string]
-	Status    plugin.TValue[string]
-	Size      plugin.TValue[int64]
-	VolumeId  plugin.TValue[string]
-	Volume    plugin.TValue[*mqlStackitVolume]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
-	Labels    plugin.TValue[map[string]any]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Size             plugin.TValue[int64]
+	AvailabilityZone plugin.TValue[string]
+	VolumeId         plugin.TValue[string]
+	Volume           plugin.TValue[*mqlStackitVolume]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	Labels           plugin.TValue[map[string]any]
 }
 
 // createStackitSnapshot creates a new instance of this resource
@@ -5754,6 +5774,10 @@ func (c *mqlStackitSnapshot) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlStackitSnapshot) GetSize() *plugin.TValue[int64] {
 	return &c.Size
+}
+
+func (c *mqlStackitSnapshot) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
 }
 
 func (c *mqlStackitSnapshot) GetVolumeId() *plugin.TValue[string] {

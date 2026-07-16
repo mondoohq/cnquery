@@ -549,6 +549,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]any, 
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) privateEndpointConnections() ([]any, error) {
 	vault, err := a.fetchVault()
 	if err != nil {

@@ -6,50 +6,50 @@ go 1.26.4
 
 require (
 	cloud.google.com/go/accessapproval v1.13.0
-	cloud.google.com/go/accesscontextmanager v1.14.0
-	cloud.google.com/go/aiplatform v1.125.0
-	cloud.google.com/go/alloydb v1.27.0
-	cloud.google.com/go/artifactregistry v1.25.0
-	cloud.google.com/go/asset v1.27.0
-	cloud.google.com/go/backupdr v1.14.0
-	cloud.google.com/go/batch v1.19.0
+	cloud.google.com/go/accesscontextmanager v1.15.0
+	cloud.google.com/go/aiplatform v1.126.0
+	cloud.google.com/go/alloydb v1.28.0
+	cloud.google.com/go/artifactregistry v1.26.0
+	cloud.google.com/go/asset v1.28.0
+	cloud.google.com/go/backupdr v1.15.0
+	cloud.google.com/go/batch v1.20.0
 	cloud.google.com/go/bigquery v1.78.0
 	cloud.google.com/go/bigtable v1.50.0
-	cloud.google.com/go/certificatemanager v1.14.0
-	cloud.google.com/go/cloudbuild v1.31.0
+	cloud.google.com/go/certificatemanager v1.15.0
+	cloud.google.com/go/cloudbuild v1.32.0
 	cloud.google.com/go/cloudtasks v1.18.0
 	cloud.google.com/go/compute v1.64.0
 	cloud.google.com/go/container v1.53.0
 	cloud.google.com/go/containeranalysis v0.19.0
-	cloud.google.com/go/datastream v1.20.0
-	cloud.google.com/go/deploy v1.32.0
-	cloud.google.com/go/discoveryengine v1.30.0
+	cloud.google.com/go/datastream v1.21.0
+	cloud.google.com/go/deploy v1.33.0
+	cloud.google.com/go/discoveryengine v1.31.0
 	cloud.google.com/go/dlp v1.36.0
-	cloud.google.com/go/eventarc v1.24.0
-	cloud.google.com/go/filestore v1.15.0
-	cloud.google.com/go/firestore v1.23.0
-	cloud.google.com/go/functions v1.24.0
-	cloud.google.com/go/gkebackup v1.13.0
-	cloud.google.com/go/iam v1.11.0
+	cloud.google.com/go/eventarc v1.25.0
+	cloud.google.com/go/filestore v1.16.0
+	cloud.google.com/go/firestore v1.24.0
+	cloud.google.com/go/functions v1.25.0
+	cloud.google.com/go/gkebackup v1.14.0
+	cloud.google.com/go/iam v1.12.0
 	cloud.google.com/go/iap v1.17.0
-	cloud.google.com/go/ids v1.10.0
-	cloud.google.com/go/kms v1.31.0
-	cloud.google.com/go/logging v1.18.0
+	cloud.google.com/go/ids v1.11.0
+	cloud.google.com/go/kms v1.32.0
+	cloud.google.com/go/logging v1.19.0
 	cloud.google.com/go/longrunning v1.2.0
-	cloud.google.com/go/memcache v1.16.0
-	cloud.google.com/go/memorystore v1.0.0
-	cloud.google.com/go/modelarmor v1.1.0
-	cloud.google.com/go/monitoring v1.29.0
+	cloud.google.com/go/memcache v1.17.0
+	cloud.google.com/go/memorystore v1.1.0
+	cloud.google.com/go/modelarmor v1.2.0
+	cloud.google.com/go/monitoring v1.30.0
 	cloud.google.com/go/orgpolicy v1.20.0
 	cloud.google.com/go/pubsub/v2 v2.6.1
 	cloud.google.com/go/recommender v1.19.0
-	cloud.google.com/go/redis v1.23.0
-	cloud.google.com/go/run v1.21.0
+	cloud.google.com/go/redis v1.24.0
+	cloud.google.com/go/run v1.22.0
 	cloud.google.com/go/scheduler v1.16.0
-	cloud.google.com/go/security v1.25.0
-	cloud.google.com/go/securitycenter v1.44.0
-	cloud.google.com/go/serviceusage v1.14.0
-	cloud.google.com/go/spanner v1.92.0
+	cloud.google.com/go/security v1.26.0
+	cloud.google.com/go/securitycenter v1.45.0
+	cloud.google.com/go/serviceusage v1.15.0
+	cloud.google.com/go/spanner v1.93.0
 	github.com/aws/smithy-go v1.27.3
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/go-containerregistry v0.21.7
@@ -159,7 +159,7 @@ require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.21.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/binaryauthorization v1.15.0
+	cloud.google.com/go/binaryauthorization v1.16.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/secretmanager v1.20.0
 	dario.cat/mergo v1.0.2 // indirect

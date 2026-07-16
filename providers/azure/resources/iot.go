@@ -43,6 +43,11 @@ func (a *mqlAzureSubscriptionIotServiceIotHub) diagnosticSettings() ([]any, erro
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
+func (a *mqlAzureSubscriptionIotServiceIotHub) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func initAzureSubscriptionIotService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil

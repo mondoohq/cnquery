@@ -439,6 +439,11 @@ func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettings() ([]any, e
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
+func (a *mqlAzureSubscriptionBatchServiceAccount) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error) {
 	identityData := llx.NilData
 	if pool.Identity != nil {

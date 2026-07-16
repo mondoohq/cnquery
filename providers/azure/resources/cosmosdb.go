@@ -834,3 +834,8 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettings() ([]any
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettingsCategories() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}

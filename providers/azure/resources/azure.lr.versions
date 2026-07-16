@@ -389,6 +389,7 @@ azure.subscription.batchService.account.dedicatedCoreQuota 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamily 11.4.0
 azure.subscription.batchService.account.dedicatedCoreQuotaPerVmFamilyEnforced 11.4.0
 azure.subscription.batchService.account.diagnosticSettings 11.4.0
+azure.subscription.batchService.account.diagnosticSettingsCategories 13.30.1
 azure.subscription.batchService.account.encryption 11.4.0
 azure.subscription.batchService.account.encryptionKey 13.23.1
 azure.subscription.batchService.account.id 11.4.0
@@ -1733,6 +1734,7 @@ azure.subscription.cosmosDbService.account.corsAllowedOrigins 13.18.1
 azure.subscription.cosmosDbService.account.defaultConsistencyLevel 13.18.1
 azure.subscription.cosmosDbService.account.defaultIdentity 13.1.8
 azure.subscription.cosmosDbService.account.diagnosticSettings 13.8.2
+azure.subscription.cosmosDbService.account.diagnosticSettingsCategories 13.30.1
 azure.subscription.cosmosDbService.account.disableKeyBasedMetadataWriteAccess 11.4.28
 azure.subscription.cosmosDbService.account.disableLocalAuth 11.4.28
 azure.subscription.cosmosDbService.account.enableAutomaticFailover 11.4.28
@@ -1941,10 +1943,15 @@ azure.subscription.databricks 11.4.28
 azure.subscription.databricksService 11.4.25
 azure.subscription.databricksService.subscriptionId 11.4.25
 azure.subscription.databricksService.workspace 11.4.25
+azure.subscription.databricksService.workspace.automaticClusterUpdate 13.30.1
+azure.subscription.databricksService.workspace.complianceSecurityProfile 13.30.1
+azure.subscription.databricksService.workspace.complianceStandards 13.30.1
 azure.subscription.databricksService.workspace.creationTime 13.22.1
 azure.subscription.databricksService.workspace.customVirtualNetworkId 13.5.1
+azure.subscription.databricksService.workspace.defaultStorageFirewall 13.30.1
 azure.subscription.databricksService.workspace.diskEncryptionSetId 13.5.1
 azure.subscription.databricksService.workspace.enableNoPublicIp 13.5.1
+azure.subscription.databricksService.workspace.enhancedSecurityMonitoring 13.30.1
 azure.subscription.databricksService.workspace.id 11.4.25
 azure.subscription.databricksService.workspace.location 11.4.25
 azure.subscription.databricksService.workspace.managedDiskKeyName 13.5.1
@@ -2286,6 +2293,7 @@ azure.subscription.iotService.hubs 11.3.0
 azure.subscription.iotService.iotHub 13.5.1
 azure.subscription.iotService.iotHub.allowedFqdnList 13.5.1
 azure.subscription.iotService.iotHub.diagnosticSettings 13.16.2
+azure.subscription.iotService.iotHub.diagnosticSettingsCategories 13.30.1
 azure.subscription.iotService.iotHub.disableDeviceSAS 13.5.1
 azure.subscription.iotService.iotHub.disableLocalAuth 13.5.1
 azure.subscription.iotService.iotHub.disableModuleSAS 13.5.1
@@ -2423,6 +2431,7 @@ azure.subscription.keyVaultService.vault.accessPolicy.tenantId 11.4.28
 azure.subscription.keyVaultService.vault.autorotation 11.3.1
 azure.subscription.keyVaultService.vault.certificates 9.0.1
 azure.subscription.keyVaultService.vault.diagnosticSettings 9.0.1
+azure.subscription.keyVaultService.vault.diagnosticSettingsCategories 13.30.1
 azure.subscription.keyVaultService.vault.enablePurgeProtection 11.4.28
 azure.subscription.keyVaultService.vault.enableSoftDelete 11.4.28
 azure.subscription.keyVaultService.vault.enabledForDeployment 11.4.28
@@ -2797,6 +2806,10 @@ azure.subscription.monitorService.applicationInsight.workspace 13.3.3
 azure.subscription.monitorService.applicationInsight.workspaceResourceId 11.6.1
 azure.subscription.monitorService.applicationInsights 9.0.1
 azure.subscription.monitorService.diagnosticSettings 9.0.1
+azure.subscription.monitorService.diagnosticSettingsCategory 13.30.1
+azure.subscription.monitorService.diagnosticSettingsCategory.categoryGroups 13.30.1
+azure.subscription.monitorService.diagnosticSettingsCategory.categoryType 13.30.1
+azure.subscription.monitorService.diagnosticSettingsCategory.name 13.30.1
 azure.subscription.monitorService.diagnosticsetting 9.0.1
 azure.subscription.monitorService.diagnosticsetting.enabledLogCategories 13.16.2
 azure.subscription.monitorService.diagnosticsetting.enabledMetricCategories 13.16.2
@@ -5428,6 +5441,7 @@ azure.subscription.webService.appsite.configuration 9.0.1
 azure.subscription.webService.appsite.connectionSettings 9.0.1
 azure.subscription.webService.appsite.defaultHostName 13.4.3
 azure.subscription.webService.appsite.diagnosticSettings 11.3.0
+azure.subscription.webService.appsite.diagnosticSettingsCategories 13.30.1
 azure.subscription.webService.appsite.enabled 11.4.28
 azure.subscription.webService.appsite.enabledHostNames 13.4.3
 azure.subscription.webService.appsite.endToEndEncryptionEnabled 11.4.28
@@ -5532,6 +5546,7 @@ azure.subscription.webService.appslot.authenticationSettings 11.3.85
 azure.subscription.webService.appslot.configuration 11.3.85
 azure.subscription.webService.appslot.connectionSettings 11.3.85
 azure.subscription.webService.appslot.diagnosticSettings 11.3.85
+azure.subscription.webService.appslot.diagnosticSettingsCategories 13.30.1
 azure.subscription.webService.appslot.ftp 11.3.85
 azure.subscription.webService.appslot.functions 11.3.85
 azure.subscription.webService.appslot.id 11.3.85

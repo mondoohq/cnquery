@@ -5010,6 +5010,14 @@ private aws.es.domain @defaults("arn name") {
   managedBy() string
   // Version of Elasticsearch running
   elasticsearchVersion string
+  // Engine mode
+  //
+  // One of GENERAL or OPTIMIZED. Empty when the domain predates engine-mode selection.
+  engineMode string
+  // Domain use case
+  //
+  // One of SEARCH, VECTOR, OBSERVABILITY, or MIXED. Empty when unset.
+  useCase string
   // Elasticsearch domain ID
   domainId string
   // Elasticsearch domain name

@@ -114,10 +114,10 @@ private stackit.project @defaults("id name lifecycleState") {
 // Examine a single virtual machine. The server is keyed by its UUID
 // `id` — for example `stackit.server(id: "fa1d2…")` — and exposes the
 // `name`, `status` and `powerStatus`, machine type, availability zone,
-// labels and metadata, attached `volumes()` and `securityGroups()`,
-// network interfaces (`nics`), referenced `image()` and `keyPair()`,
-// associated service account mails, and timestamps for creation,
-// launch, and last update.
+// whether a virtual TPM is attached, labels and metadata, attached
+// `volumes()` and `securityGroups()`, network interfaces (`nics`),
+// referenced `image()` and `keyPair()`, associated service account
+// mails, and timestamps for creation, launch, and last update.
 private stackit.server @defaults("id name status machineType") {
   init(id? string)
   // Server UUID
@@ -142,6 +142,8 @@ private stackit.server @defaults("id name status machineType") {
   errorMessage string
   // Whether a config drive is attached
   configDrive bool
+  // Whether a virtual TPM (vTPM) device is attached for measured boot
+  vtpmEnabled bool
   // SSH key pair name used at boot (empty if none)
   keypairName string
   // SSH key pair used at boot (nullable)
@@ -223,8 +225,8 @@ private stackit.volume @defaults("id name size status") {
 // STACKIT volume snapshot
 //
 // Examine a single volume snapshot. The snapshot is keyed by its UUID
-// `id` and exposes the `name`, `size`, `status`, source volume, and
-// creation timestamp.
+// `id` and exposes the `name`, `size`, `status`, availability zone,
+// source volume, and creation timestamp.
 private stackit.snapshot @defaults("id name status") {
   init(id? string)
   // Snapshot UUID
@@ -235,6 +237,8 @@ private stackit.snapshot @defaults("id name status") {
   status string
   // Size in GiB
   size int
+  // Availability zone
+  availabilityZone string
   // Source volume UUID
   volumeId string
   // Source volume (nullable)

@@ -4727,6 +4727,7 @@ aws.es.domain.encryptionAtRestEnabled 11.15.2
 aws.es.domain.endpoint 11.15.2
 aws.es.domain.endpoints 13.21.4
 aws.es.domain.enforceHTTPS 13.3.0
+aws.es.domain.engineMode 13.47.1
 aws.es.domain.indexSlowLogEnabled 13.21.4
 aws.es.domain.indexSlowLogGroup 13.21.4
 aws.es.domain.instanceCount 13.21.4
@@ -4758,6 +4759,7 @@ aws.es.domain.subnets 13.21.4
 aws.es.domain.tags 11.15.2
 aws.es.domain.tlsSecurityPolicy 13.3.0
 aws.es.domain.upgradeProcessing 13.21.4
+aws.es.domain.useCase 13.47.1
 aws.es.domain.vpc 13.21.4
 aws.es.domain.warmCount 13.21.4
 aws.es.domain.warmEnabled 13.21.4

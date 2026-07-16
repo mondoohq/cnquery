@@ -623,6 +623,7 @@ digitalocean.kubernetes.cluster.maintenancePolicy 13.0.1
 digitalocean.kubernetes.cluster.name 13.0.1
 digitalocean.kubernetes.cluster.nodePools 13.0.1
 digitalocean.kubernetes.cluster.nvidiaGpuDevicePluginEnabled 13.6.2
+digitalocean.kubernetes.cluster.p2pOciRegistryEnabled 13.13.1
 digitalocean.kubernetes.cluster.rdmaSharedDevicePluginEnabled 13.6.2
 digitalocean.kubernetes.cluster.region 13.0.1
 digitalocean.kubernetes.cluster.registryEnabled 13.6.2

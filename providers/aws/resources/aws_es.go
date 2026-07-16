@@ -331,6 +331,8 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"domainId":                           llx.StringDataPtr(status.DomainId),
 		"domainName":                         llx.StringDataPtr(status.DomainName),
 		"elasticsearchVersion":               llx.StringDataPtr(status.ElasticsearchVersion),
+		"engineMode":                         llx.StringData(string(status.EngineMode)),
+		"useCase":                            llx.StringData(string(status.UseCase)),
 		"endpoint":                           llx.StringDataPtr(status.Endpoint),
 		"endpoints":                          llx.MapData(endpointsMap, types.String),
 		"tags":                               llx.MapData(tags, types.String),

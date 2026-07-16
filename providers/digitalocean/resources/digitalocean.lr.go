@@ -1370,6 +1370,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.kubernetes.cluster.corednsAutoscalerEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetCorednsAutoscalerEnabled()).ToDataRes(types.Bool)
 	},
+	"digitalocean.kubernetes.cluster.p2pOciRegistryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetP2pOciRegistryEnabled()).ToDataRes(types.Bool)
+	},
 	"digitalocean.kubernetes.cluster.workerSubnetUuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetWorkerSubnetUuid()).ToDataRes(types.String)
 	},
@@ -4484,6 +4487,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.kubernetes.cluster.corednsAutoscalerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanKubernetesCluster).CorednsAutoscalerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.p2pOciRegistryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).P2pOciRegistryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"digitalocean.kubernetes.cluster.workerSubnetUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10286,6 +10293,7 @@ type mqlDigitaloceanKubernetesCluster struct {
 	NvidiaGpuDevicePluginEnabled             plugin.TValue[bool]
 	RdmaSharedDevicePluginEnabled            plugin.TValue[bool]
 	CorednsAutoscalerEnabled                 plugin.TValue[bool]
+	P2pOciRegistryEnabled                    plugin.TValue[bool]
 	WorkerSubnetUuid                         plugin.TValue[string]
 	ClusterAutoscaler                        plugin.TValue[any]
 	AvailableUpgradeVersions                 plugin.TValue[[]any]
@@ -10467,6 +10475,10 @@ func (c *mqlDigitaloceanKubernetesCluster) GetRdmaSharedDevicePluginEnabled() *p
 
 func (c *mqlDigitaloceanKubernetesCluster) GetCorednsAutoscalerEnabled() *plugin.TValue[bool] {
 	return &c.CorednsAutoscalerEnabled
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetP2pOciRegistryEnabled() *plugin.TValue[bool] {
+	return &c.P2pOciRegistryEnabled
 }
 
 func (c *mqlDigitaloceanKubernetesCluster) GetWorkerSubnetUuid() *plugin.TValue[string] {

@@ -412,6 +412,7 @@ stackit.server.updatedAt 13.0.0
 stackit.server.userData 13.0.0
 stackit.server.volumeIds 13.0.0
 stackit.server.volumes 13.0.0
+stackit.server.vtpmEnabled 13.4.2
 stackit.servers 13.0.0
 stackit.serviceAccount 13.0.0
 stackit.serviceAccount.accessTokens 13.0.0
@@ -524,6 +525,7 @@ stackit.ske.cluster.status 13.0.0
 stackit.ske.cluster.statusDetails 13.0.0
 stackit.ske.clusters 13.0.0
 stackit.snapshot 13.0.0
+stackit.snapshot.availabilityZone 13.4.2
 stackit.snapshot.createdAt 13.0.0
 stackit.snapshot.id 13.0.0
 stackit.snapshot.labels 13.0.0

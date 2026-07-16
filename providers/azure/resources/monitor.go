@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -17,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	azruntime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	appinsights "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 )
@@ -558,132 +556,178 @@ func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
-// diagnosticSettingsResource mirrors the fields of the
-// Microsoft.Insights/diagnosticSettings list response that we surface. armmonitor
-// dropped its typed DiagnosticSettings client in v0.12.0, so we call the REST API
-// directly through the ARM pipeline and decode the relevant fields here.
-type diagnosticSettingsResource struct {
-	ID         *string        `json:"id"`
-	Name       *string        `json:"name"`
-	Type       *string        `json:"type"`
-	Properties map[string]any `json:"properties"`
-}
-
-// diagnosticCategorySettings normalizes a diagnostic-setting logs/metrics array
-// (each entry is a {category|categoryGroup, enabled, retentionPolicy} object)
-// into the raw dict slice plus the list of categories that are enabled.
-func diagnosticCategorySettings(raw any) ([]any, []any) {
+// diagnosticLogSettings normalizes a diagnostic setting's log categories into
+// the raw dict slice plus the list of categories (or category groups) that are
+// enabled, which is what most logging-coverage audits actually check.
+func diagnosticLogSettings(props *monitor.DiagnosticSettings) ([]any, []any) {
 	entries := []any{}
 	enabled := []any{}
-	list, ok := raw.([]any)
-	if !ok {
+	if props == nil {
 		return entries, enabled
 	}
-	for _, item := range list {
-		m, ok := item.(map[string]any)
-		if !ok {
+	for _, l := range props.Logs {
+		if l == nil {
 			continue
 		}
-		entries = append(entries, m)
-		isEnabled, _ := m["enabled"].(bool)
-		if !isEnabled {
+		if d, err := convert.JsonToDict(l); err == nil && d != nil {
+			entries = append(entries, d)
+		}
+		if l.Enabled == nil || !*l.Enabled {
 			continue
 		}
-		if category, ok := m["category"].(string); ok && category != "" {
-			enabled = append(enabled, category)
-		} else if group, ok := m["categoryGroup"].(string); ok && group != "" {
-			enabled = append(enabled, group)
+		if l.Category != nil && *l.Category != "" {
+			enabled = append(enabled, *l.Category)
+		} else if l.CategoryGroup != nil && *l.CategoryGroup != "" {
+			enabled = append(enabled, *l.CategoryGroup)
 		}
 	}
 	return entries, enabled
 }
 
-func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
+// diagnosticMetricSettings mirrors diagnosticLogSettings for metric categories
+// (metric settings carry no category group).
+func diagnosticMetricSettings(props *monitor.DiagnosticSettings) ([]any, []any) {
+	entries := []any{}
+	enabled := []any{}
+	if props == nil {
+		return entries, enabled
+	}
+	for _, m := range props.Metrics {
+		if m == nil {
+			continue
+		}
+		if d, err := convert.JsonToDict(m); err == nil && d != nil {
+			entries = append(entries, d)
+		}
+		if m.Enabled == nil || !*m.Enabled {
+			continue
+		}
+		if m.Category != nil && *m.Category != "" {
+			enabled = append(enabled, *m.Category)
+		}
+	}
+	return entries, enabled
+}
+
+// getDiagnosticSettingsCategories lists the log and metric categories a resource
+// is capable of emitting, independent of which are actively collected. Comparing
+// this against a resource's enabled diagnostic-setting categories reveals
+// telemetry that could be collected but isn't.
+func getDiagnosticSettingsCategories(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
 	ctx := context.Background()
-	client, err := arm.NewClient("azure.subscription.monitorService.diagnosticSettings", "v1.0.0", conn.Token(), &arm.ClientOptions{
+	client, err := monitor.NewDiagnosticSettingsCategoryClient(conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// id is an ARM resource URI (e.g. "/subscriptions/<id>" or a full resource ID
-	// returned by Azure). It is a multi-segment path, so it is joined raw rather than
-	// URL-escaped — escaping would turn the "/" separators into %2F. This matches the
-	// removed armmonitor DiagnosticSettingsClient, which substituted {resourceUri}
-	// without escaping for the same reason.
-	urlPath := azruntime.JoinPaths(client.Endpoint(), id, "/providers/Microsoft.Insights/diagnosticSettings")
-	req, err := azruntime.NewRequest(ctx, http.MethodGet, urlPath)
-	if err != nil {
-		return nil, err
-	}
-	query := req.Raw().URL.Query()
-	query.Set("api-version", "2021-05-01-preview")
-	req.Raw().URL.RawQuery = query.Encode()
-
-	resp, err := client.Pipeline().Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if !azruntime.HasStatusCode(resp, http.StatusOK) {
-		return nil, azruntime.NewResponseError(resp)
-	}
-
-	var result struct {
-		Value []diagnosticSettingsResource `json:"value"`
-	}
-	if err := azruntime.UnmarshalAsJSON(resp, &result); err != nil {
-		return nil, err
-	}
-
+	pager := client.NewListPager(id, nil)
 	res := []any{}
-	for _, entry := range result.Value {
-		properties := entry.Properties
-		if properties == nil {
-			properties = map[string]any{}
-		}
-
-		// "storageAccountId" is the camelCase key defined by the diagnosticSettings
-		// API contract (it was the json tag on the SDK's DiagnosticSettings.StorageAccountID
-		// field). Azure returns response keys with stable casing, so a direct lookup is safe.
-		var storageAccountId *string
-		if v, ok := properties["storageAccountId"].(string); ok {
-			storageAccountId = &v
-		}
-
-		strProp := func(key string) string {
-			if v, ok := properties[key].(string); ok {
-				return v
-			}
-			return ""
-		}
-
-		// logs / metrics are arrays of per-category settings. Surface the raw
-		// entries as dicts and also derive the set of enabled categories, which
-		// is what most logging-coverage audits actually check.
-		logs, enabledLogCategories := diagnosticCategorySettings(properties["logs"])
-		metrics, enabledMetricCategories := diagnosticCategorySettings(properties["metrics"])
-
-		mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
-			map[string]*llx.RawData{
-				"id":                          llx.StringDataPtr(entry.ID),
-				"name":                        llx.StringDataPtr(entry.Name),
-				"type":                        llx.StringDataPtr(entry.Type),
-				"properties":                  llx.DictData(properties),
-				"storageAccountId":            llx.StringDataPtr(storageAccountId),
-				"workspaceId":                 llx.StringData(strProp("workspaceId")),
-				"eventHubName":                llx.StringData(strProp("eventHubName")),
-				"eventHubAuthorizationRuleId": llx.StringData(strProp("eventHubAuthorizationRuleId")),
-				"logAnalyticsDestinationType": llx.StringData(strProp("logAnalyticsDestinationType")),
-				"enabledLogCategories":        llx.ArrayData(enabledLogCategories, types.String),
-				"enabledMetricCategories":     llx.ArrayData(enabledMetricCategories, types.String),
-				"logs":                        llx.ArrayData(logs, types.Dict),
-				"metrics":                     llx.ArrayData(metrics, types.Dict),
-			})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			categoryType := ""
+			groups := []any{}
+			if p := entry.Properties; p != nil {
+				if p.CategoryType != nil {
+					categoryType = string(*p.CategoryType)
+				}
+				for _, g := range p.CategoryGroups {
+					if g != nil {
+						groups = append(groups, *g)
+					}
+				}
+			}
+
+			mqlCategory, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticSettingsCategory",
+				map[string]*llx.RawData{
+					"__id":           llx.StringDataPtr(entry.ID),
+					"name":           llx.StringDataPtr(entry.Name),
+					"categoryType":   llx.StringData(categoryType),
+					"categoryGroups": llx.ArrayData(groups, types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCategory)
+		}
+	}
+
+	return res, nil
+}
+
+func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]any, error) {
+	ctx := context.Background()
+	client, err := monitor.NewDiagnosticSettingsClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// id is an ARM resource URI (e.g. "/subscriptions/<id>" or a full resource ID).
+	// The client substitutes it into the {resourceUri} path segment.
+	pager := client.NewListPager(id, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+
+			properties, err := convert.JsonToDict(entry.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			var storageAccountId, workspaceId, eventHubName, eventHubAuthorizationRuleId, logAnalyticsDestinationType *string
+			if p := entry.Properties; p != nil {
+				storageAccountId = p.StorageAccountID
+				workspaceId = p.WorkspaceID
+				eventHubName = p.EventHubName
+				eventHubAuthorizationRuleId = p.EventHubAuthorizationRuleID
+				logAnalyticsDestinationType = p.LogAnalyticsDestinationType
+			}
+
+			// logs / metrics are arrays of per-category settings. Surface the raw
+			// entries as dicts and also derive the set of enabled categories, which
+			// is what most logging-coverage audits actually check.
+			logs, enabledLogCategories := diagnosticLogSettings(entry.Properties)
+			metrics, enabledMetricCategories := diagnosticMetricSettings(entry.Properties)
+
+			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
+				map[string]*llx.RawData{
+					"id":                          llx.StringDataPtr(entry.ID),
+					"name":                        llx.StringDataPtr(entry.Name),
+					"type":                        llx.StringDataPtr(entry.Type),
+					"properties":                  llx.DictData(properties),
+					"storageAccountId":            llx.StringDataPtr(storageAccountId),
+					"workspaceId":                 llx.StringData(convert.ToValue(workspaceId)),
+					"eventHubName":                llx.StringData(convert.ToValue(eventHubName)),
+					"eventHubAuthorizationRuleId": llx.StringData(convert.ToValue(eventHubAuthorizationRuleId)),
+					"logAnalyticsDestinationType": llx.StringData(convert.ToValue(logAnalyticsDestinationType)),
+					"enabledLogCategories":        llx.ArrayData(enabledLogCategories, types.String),
+					"enabledMetricCategories":     llx.ArrayData(enabledMetricCategories, types.String),
+					"logs":                        llx.ArrayData(logs, types.Dict),
+					"metrics":                     llx.ArrayData(metrics, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil
