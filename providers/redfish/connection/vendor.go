@@ -14,7 +14,7 @@ import (
 type Vendor struct {
 	// Name is the human-readable vendor name (e.g. "HPE iLO", "Dell iDRAC").
 	Name string
-	// Platform is the mql platform name (e.g. "bmc-hp-ilo", "bmc-dell-idrac").
+	// Platform is the mql platform name (e.g. "bmc-hpe-ilo", "bmc-dell-idrac").
 	Platform string
 	// match holds lowercase substrings tested against the reported manufacturer.
 	match []string
@@ -24,7 +24,7 @@ type Vendor struct {
 // single entry here plus a vendor-namespaced OEM resource; existing entries
 // are never modified.
 var vendors = []Vendor{
-	{Name: "HPE iLO", Platform: "bmc-hp-ilo", match: []string{"hpe", "hewlett"}},
+	{Name: "HPE iLO", Platform: "bmc-hpe-ilo", match: []string{"hpe", "hewlett"}},
 	{Name: "Dell iDRAC", Platform: "bmc-dell-idrac", match: []string{"dell"}},
 	{Name: "Supermicro BMC", Platform: "bmc-supermicro", match: []string{"supermicro", "super micro"}},
 }
