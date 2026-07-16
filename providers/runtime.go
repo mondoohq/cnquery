@@ -570,6 +570,22 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 	var raw *llx.RawData
 	if data.Error != "" {
 		raw = &llx.RawData{Error: errors.New(data.Error)}
+	} else if data.Data == nil {
+		// The provider answered with neither data nor an error. This happens
+		// when the requested field's TValue was never set on the resource
+		// (e.g. a resource created from partial init args, or an accessor
+		// returning nil without marking the field null) — TValue.ToDataRes
+		// encodes an unset field as an empty DataRes. Converting the nil
+		// primitive downstream would only produce an anonymous "primitive
+		// with no type information" error, so report it here where we still
+		// know the resource and field, and degrade to null as before.
+		log.Error().
+			Str("provider", provider.Instance.Name).
+			Str("resource", resource).
+			Str("id", resourceID).
+			Str("field", field).
+			Msg("provider returned no data and no error for a field; the field was never set on the resource (provider bug), coercing to null")
+		raw = llx.NilData
 	} else {
 		raw = data.Data.RawData()
 	}

@@ -787,9 +787,10 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 func (p *Primitive) RawData() *RawData {
 	// A primitive with no type information is malformed: it is never produced
 	// deliberately (a genuine null is `NilPrimitive`, with Type == types.Nil).
-	// It only appears when an upstream layer — most often the compiler binding
-	// a predicate's value field to a resource that lacks it (see
-	// mqlc.addValueFieldChunks) — emits a broken primitive.
+	// It only appears when an upstream layer emits a broken primitive — a
+	// provider encoding an unset field (see plugin.TValue.ToDataRes) or the
+	// compiler binding a predicate's value field to a resource that lacks it
+	// (see mqlc.addValueFieldChunks).
 	//
 	// Behavior here is loud-and-narrow:
 	//   - narrow: coerce just this field to null instead of returning an error.
@@ -802,7 +803,7 @@ func (p *Primitive) RawData() *RawData {
 	//     underlying (usually compiler) defect visible even though we degrade
 	//     gracefully for the surrounding data.
 	if p.GetType() == "" {
-		log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (this indicates an upstream/compiler bug producing a malformed primitive)")
+		log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (an upstream layer — a provider or the compiler — produced a malformed primitive)")
 		return &RawData{Type: types.Nil}
 	}
 

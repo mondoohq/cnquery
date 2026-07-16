@@ -152,7 +152,7 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	// Resolve a discovered asset (aws-apigatewayv2-api platform) by its ARN.
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
@@ -185,7 +185,10 @@ func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if wantApiId != "" {
 		return nil, nil, fmt.Errorf("aws.apigatewayv2.api with apiId %q not found", wantApiId)
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.apigatewayv2.api with arn %q not found", wantArn)
 }
 
 // ---------- aws.apigatewayv2.stage ----------

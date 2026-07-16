@@ -614,7 +614,7 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
@@ -638,7 +638,10 @@ func initAwsBatchJobDefinition(runtime *plugin.Runtime, args map[string]*llx.Raw
 			return args, jd, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.batch.jobDefinition with arn %q not found", wantArn)
 }
 
 func (a *mqlAwsBatch) getJobDefinitions(conn *connection.AwsConnection) []*jobpool.Job {

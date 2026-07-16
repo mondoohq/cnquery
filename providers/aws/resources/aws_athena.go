@@ -91,7 +91,7 @@ func initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
@@ -121,7 +121,10 @@ func initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return args, wg, nil
 		}
 	}
-	return args, nil, nil
+	// Returning (args, nil, nil) here would let the runtime create a resource
+	// whose fields are all unset, which surfaces as malformed nil data when
+	// those fields are queried.
+	return nil, nil, fmt.Errorf("aws.athena.workgroup with arn %q or name %q not found", wantArn, wantName)
 }
 
 func newMqlAwsAthenaWorkgroupFromSummary(runtime *plugin.Runtime, region string, accountID string, wg *athena_types.WorkGroupSummary) (*mqlAwsAthenaWorkgroup, error) {

@@ -55,7 +55,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
+		if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
@@ -67,7 +67,10 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	arnVal := args["arn"].Value.(string)
 	region, err := GetRegionFromArn(arnVal)
 	if err != nil {
-		return args, nil, nil
+		// Returning (args, nil, nil) here would let the runtime create a
+		// resource whose fields are all unset, which surfaces as malformed
+		// nil data when those fields are queried.
+		return nil, nil, err
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
