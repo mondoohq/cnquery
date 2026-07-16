@@ -255,6 +255,26 @@ Multiple computed methods can share the same fetch function to batch-load relate
   ```
   This applies to all `return nil, nil` paths: empty/missing IDs, access-denied fallbacks, nil API responses, and unset optional fields (e.g., `!a.Field.IsSet()`). Functions returning slices, maps, or basic types are **not** affected — only singular resource pointer returns.
 
+- **Never let a singular resource's `init` function fall through with `return args, nil, nil` when its lookup found nothing.** Returning no resource and no error tells the runtime to create the resource from whatever partial `args` exist (often just an `arn`), leaving every other field **unset** — not null, unset. Any query touching those fields then crosses the plugin boundary as an empty `DataRes` and surfaces client-side as `llx: encountered a primitive with no type information, coercing to null`, with no attribution. Return a not-found error instead. The same applies to intermediate failures inside the init (e.g., an ARN that fails to parse): return the error, don't fall through to blank-resource creation.
+  ```go
+  // WRONG: no match found — runtime creates a blank resource with unset fields
+  for _, r := range apis.Data {
+      if match(r) { return args, r, nil }
+  }
+  return args, nil, nil
+
+  // CORRECT: report what wasn't found
+  return nil, nil, fmt.Errorf("aws.apigatewayv2.api with arn %q not found", wantArn)
+  ```
+  (`return args, nil, nil` is only correct for the early "args are already complete" fast path, e.g. `if len(args) > 2`.)
+
+- **Guard the asset-identifier fallback with a non-empty check.** `getAssetIdentifier` (AWS) returns a non-nil identifier with an **empty** `arn` when the asset has no valid `arn:aws:` platform ID. Injecting that empty string defeats the init's later `args["arn"] == nil` guard and sends it down the empty-lookup path above. Always write:
+  ```go
+  if ids := getAssetIdentifier(runtime); ids != nil && ids.arn != "" {
+      args["arn"] = llx.StringData(ids.arn)
+  }
+  ```
+
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
 
