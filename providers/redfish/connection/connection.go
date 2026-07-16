@@ -6,8 +6,10 @@ package connection
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/stmcginnis/gofish"
+	"github.com/stmcginnis/gofish/schemas"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -22,6 +24,42 @@ type RedfishConnection struct {
 	client *gofish.APIClient
 	vendor Vendor
 	id     string
+
+	// Systems and managers are immutable for the lifetime of a scan, so they
+	// are fetched once and reused across vendor detection, the platform
+	// identifier, and every resource that navigates from them.
+	systemsOnce  sync.Once
+	systems      []*schemas.ComputerSystem
+	systemsErr   error
+	managersOnce sync.Once
+	managers     []*schemas.Manager
+	managersErr  error
+}
+
+// Systems returns the compute systems exposed by the service, fetched once and
+// cached for the lifetime of the connection.
+func (c *RedfishConnection) Systems() ([]*schemas.ComputerSystem, error) {
+	c.systemsOnce.Do(func() {
+		if c.client == nil || c.client.Service == nil {
+			c.systemsErr = errors.New("no redfish service available")
+			return
+		}
+		c.systems, c.systemsErr = c.client.Service.Systems()
+	})
+	return c.systems, c.systemsErr
+}
+
+// Managers returns the management controllers exposed by the service, fetched
+// once and cached for the lifetime of the connection.
+func (c *RedfishConnection) Managers() ([]*schemas.Manager, error) {
+	c.managersOnce.Do(func() {
+		if c.client == nil || c.client.Service == nil {
+			c.managersErr = errors.New("no redfish service available")
+			return
+		}
+		c.managers, c.managersErr = c.client.Service.Managers()
+	})
+	return c.managers, c.managersErr
 }
 
 func NewRedfishConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*RedfishConnection, error) {
@@ -61,7 +99,7 @@ func NewRedfishConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	}
 
 	conn.client = client
-	conn.vendor = detectVendorFromService(client)
+	conn.vendor = detectVendorFromService(conn)
 	return conn, nil
 }
 
@@ -98,22 +136,20 @@ func (c *RedfishConnection) Identifier() (string, error) {
 	}
 
 	uid := ""
-	if c.client != nil && c.client.Service != nil {
-		if systems, err := c.client.Service.Systems(); err == nil {
-			for _, s := range systems {
-				if s.UUID != "" {
-					uid = s.UUID
-					break
-				}
+	if systems, err := c.Systems(); err == nil {
+		for _, s := range systems {
+			if s.UUID != "" {
+				uid = s.UUID
+				break
 			}
 		}
-		if uid == "" {
-			if managers, err := c.client.Service.Managers(); err == nil {
-				for _, m := range managers {
-					if m.UUID != "" {
-						uid = m.UUID
-						break
-					}
+	}
+	if uid == "" {
+		if managers, err := c.Managers(); err == nil {
+			for _, m := range managers {
+				if m.UUID != "" {
+					uid = m.UUID
+					break
 				}
 			}
 		}

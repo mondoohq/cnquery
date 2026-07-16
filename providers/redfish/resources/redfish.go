@@ -33,8 +33,7 @@ func (r *mqlRedfish) id() (string, error) {
 }
 
 func (r *mqlRedfish) systems() ([]any, error) {
-	svc := redfishConn(r.MqlRuntime).Client().Service
-	systems, err := svc.Systems()
+	systems, err := redfishConn(r.MqlRuntime).Systems()
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +70,7 @@ func (r *mqlRedfish) systems() ([]any, error) {
 }
 
 func (r *mqlRedfish) managers() ([]any, error) {
-	svc := redfishConn(r.MqlRuntime).Client().Service
-	managers, err := svc.Managers()
+	managers, err := redfishConn(r.MqlRuntime).Managers()
 	if err != nil {
 		return nil, err
 	}
@@ -348,8 +346,7 @@ func (r *mqlRedfishHpe) id() (string, error) {
 
 func (r *mqlRedfishHpe) load() {
 	r.once.Do(func() {
-		svc := redfishConn(r.MqlRuntime).Client().Service
-		managers, err := svc.Managers()
+		managers, err := redfishConn(r.MqlRuntime).Managers()
 		if err != nil {
 			log.Warn().Err(err).Msg("redfish: could not list managers for HPE OEM detection")
 			return
@@ -412,8 +409,7 @@ func (r *mqlRedfishDell) id() (string, error) {
 
 func (r *mqlRedfishDell) load() {
 	r.once.Do(func() {
-		svc := redfishConn(r.MqlRuntime).Client().Service
-		systems, err := svc.Systems()
+		systems, err := redfishConn(r.MqlRuntime).Systems()
 		if err != nil {
 			log.Warn().Err(err).Msg("redfish: could not list systems for Dell OEM detection")
 			return
@@ -468,8 +464,7 @@ func (r *mqlRedfishSupermicro) id() (string, error) {
 
 func (r *mqlRedfishSupermicro) load() {
 	r.once.Do(func() {
-		svc := redfishConn(r.MqlRuntime).Client().Service
-		managers, err := svc.Managers()
+		managers, err := redfishConn(r.MqlRuntime).Managers()
 		if err != nil {
 			log.Warn().Err(err).Msg("redfish: could not list managers for Supermicro OEM detection")
 			return

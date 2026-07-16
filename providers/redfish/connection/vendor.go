@@ -5,8 +5,6 @@ package connection
 
 import (
 	"strings"
-
-	"github.com/stmcginnis/gofish"
 )
 
 // Vendor identifies the hardware vendor behind a Redfish service and the
@@ -14,9 +12,9 @@ import (
 // neutral; vendor-specific OEM data is surfaced under vendor-namespaced
 // resources (redfish.hpe.*, redfish.dell.*).
 type Vendor struct {
-	// Name is the human-readable vendor name (e.g. "HPE", "Dell").
+	// Name is the human-readable vendor name (e.g. "HPE iLO", "Dell iDRAC").
 	Name string
-	// Platform is the mql platform name (e.g. "redfish-hpe").
+	// Platform is the mql platform name (e.g. "bmc-hp-ilo", "bmc-dell-idrac").
 	Platform string
 	// match holds lowercase substrings tested against the reported manufacturer.
 	match []string
@@ -50,12 +48,8 @@ func DetectVendor(manufacturer string) Vendor {
 
 // detectVendorFromService inspects the managers and systems of a connected
 // service to determine the hardware vendor.
-func detectVendorFromService(client *gofish.APIClient) Vendor {
-	if client == nil || client.Service == nil {
-		return genericVendor
-	}
-
-	if managers, err := client.Service.Managers(); err == nil {
+func detectVendorFromService(c *RedfishConnection) Vendor {
+	if managers, err := c.Managers(); err == nil {
 		for _, m := range managers {
 			if m.Manufacturer != "" {
 				return DetectVendor(m.Manufacturer)
@@ -63,7 +57,7 @@ func detectVendorFromService(client *gofish.APIClient) Vendor {
 		}
 	}
 
-	if systems, err := client.Service.Systems(); err == nil {
+	if systems, err := c.Systems(); err == nil {
 		for _, s := range systems {
 			if s.Manufacturer != "" {
 				return DetectVendor(s.Manufacturer)

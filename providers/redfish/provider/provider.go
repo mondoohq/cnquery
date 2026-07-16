@@ -73,8 +73,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Port = int32(port)
 	}
 
-	if x, ok := flags["insecure"]; ok && len(x.Value) != 0 && string(x.Value) != "false" {
-		conf.Options["insecure"] = "true"
+	if x, ok := flags["insecure"]; ok {
+		if v, ok := x.RawData().Value.(bool); ok && v {
+			conf.Options["insecure"] = "true"
+		}
 	}
 
 	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
@@ -155,10 +157,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.RedfishConnection) error {
 	vendor := conn.Vendor()
 
+	// Host is required and validated in NewRedfishConnection, so it is always set here.
 	asset.Name = conn.Conf.Host
-	if asset.Name == "" {
-		asset.Name = vendor.Name
-	}
 
 	asset.Platform = &inventory.Platform{
 		Name:                  vendor.Platform,
