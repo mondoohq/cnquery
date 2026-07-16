@@ -308,7 +308,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Family:                []string{"google"},
 					TechnologyUrlSegments: []string{"gcp", gcpProject.Id.Data, "project"},
 				},
-				Labels:      map[string]string{},
+				Labels:      mapStrInterfaceToMapStrStr(gcpProject.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
