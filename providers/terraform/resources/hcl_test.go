@@ -167,6 +167,39 @@ subnet_id_by_az_suffix = {
 		"result should reference data.aws_subnet.ec2, got: %#v", v)
 }
 
+// TestGetCtyValue_JsonencodeList is a regression test for #9079: a top-level
+// `jsonencode([...])` list argument decoded into a map[string]any, which fails
+// for a JSON array, leaving the argument empty so a check iterating the encoded
+// list passed vacuously. The encoded list must surface as an iterable list.
+func TestGetCtyValue_JsonencodeList(t *testing.T) {
+	attrs := parseAttrs(t, `container_definitions = jsonencode([{ name = "app", image = "x", privileged = true }])`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+
+	list, ok := got["container_definitions"].([]any)
+	require.True(t, ok, "expected a list, got: %#v", got["container_definitions"])
+	require.Len(t, list, 1)
+	elem, ok := list[0].(map[string]any)
+	require.True(t, ok, "expected a map element, got: %#v", list[0])
+	assert.Equal(t, "app", elem["name"])
+	assert.Equal(t, true, elem["privileged"])
+}
+
+// TestGetCtyValue_JsonencodeMap verifies the object form still resolves
+// (list-wrapped, indexable via `.first`) after the list fix.
+func TestGetCtyValue_JsonencodeMap(t *testing.T) {
+	attrs := parseAttrs(t, `policy = jsonencode({ Version = "2012-10-17", Effect = "Allow" })`)
+	got, err := hclResolvedAttributesToDict(attrs, nil)
+	require.NoError(t, err)
+
+	list, ok := got["policy"].([]any)
+	require.True(t, ok, "expected a list-wrapped map, got: %#v", got["policy"])
+	require.Len(t, list, 1)
+	elem, ok := list[0].(map[string]any)
+	require.True(t, ok, "expected a map element, got: %#v", list[0])
+	assert.Equal(t, "Allow", elem["Effect"])
+}
+
 // TestGetCtyValue_ConditionalExpr_UnboundVars verifies that ternaries
 // involving unbound variables return the references in the branches instead
 // of an empty list.

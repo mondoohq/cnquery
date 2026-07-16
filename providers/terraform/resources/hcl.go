@@ -806,10 +806,16 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		subVal, err := t.Value(ctx)
 		if err == nil && subVal.Type() == cty.String {
 			if t.Name == "jsonencode" {
-				res := map[string]any{}
-				err := json.Unmarshal([]byte(subVal.AsString()), &res)
-				if err == nil {
-					results = append(results, res)
+				// Decode into `any` so both a JSON object (`jsonencode({...})`)
+				// and a JSON array (`jsonencode([...])`) resolve. Unmarshalling
+				// into a map[string]any silently failed for a top-level array,
+				// leaving the argument empty so a check iterating the encoded
+				// list saw nothing and passed vacuously. appendCtyResult keeps
+				// the object case list-wrapped while flattening a decoded list
+				// into the result so it stays iterable.
+				var res any
+				if err := json.Unmarshal([]byte(subVal.AsString()), &res); err == nil {
+					appendCtyResult(&results, res)
 				}
 			} else {
 				results = append(results, subVal.AsString())
