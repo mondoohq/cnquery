@@ -1049,13 +1049,21 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody any, file *hcl.File) ([]any,
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
 		for i := range body.Blocks {
-			mqlBlock, err := newMqlHclBlock(runtime, body.Blocks[i].AsHCLBlock(), file)
-			if err != nil {
-				return nil, err
+			for _, hb := range normalizeHclSyntaxBlock(body.Blocks[i]) {
+				mqlBlock, err := newMqlHclBlock(runtime, hb, file)
+				if err != nil {
+					return nil, err
+				}
+				mqlHclBlocks = append(mqlHclBlocks, mqlBlock)
 			}
-			mqlHclBlocks = append(mqlHclBlocks, mqlBlock)
 		}
 	case hcl.Body:
+		// Native-syntax .tf files (where `dynamic "x" {}` blocks are written)
+		// always parse to *hclsyntax.Body above, so normalizeHclSyntaxBlock only
+		// needs to run there. This branch handles JSON-syntax HCL and plan/state
+		// bodies, which do not carry native `dynamic` blocks (JSON encodes them
+		// differently and PartialContent's typed schema would not surface them),
+		// so no normalization is applied here.
 		content, _, _ := body.PartialContent(connection.TerraformSchema_1)
 		for i := range content.Blocks {
 			mqlBlock, err := newMqlHclBlock(runtime, content.Blocks[i], file)
@@ -1069,6 +1077,36 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody any, file *hcl.File) ([]any,
 	}
 
 	return mqlHclBlocks, nil
+}
+
+// normalizeHclSyntaxBlock expands a `dynamic "X"` block into the `content { ... }`
+// sub-blocks it generates, retyped as `X`, so `blocks.where(type == "X")` sees
+// them the same as a statically written `X { ... }` block. A dynamic block's
+// real fields live one level deeper inside `content`, and the block itself
+// parses as type=="dynamic"/nameLabel=="X" — without this normalization every
+// block-iterating check is blind to the (extremely common) dynamic form, so a
+// violation-detection check passes vacuously and a presence check false-fails.
+// Any non-dynamic block is returned unchanged; a malformed dynamic block with
+// no `content` sub-block falls back to itself rather than being dropped.
+func normalizeHclSyntaxBlock(block *hclsyntax.Block) []*hcl.Block {
+	if block.Type != "dynamic" || len(block.Labels) != 1 {
+		return []*hcl.Block{block.AsHCLBlock()}
+	}
+
+	var out []*hcl.Block
+	for _, inner := range block.Body.Blocks {
+		if inner.Type != "content" {
+			continue
+		}
+		hb := inner.AsHCLBlock()
+		hb.Type = block.Labels[0]
+		hb.Labels = nil
+		out = append(out, hb)
+	}
+	if len(out) == 0 {
+		return []*hcl.Block{block.AsHCLBlock()}
+	}
+	return out
 }
 
 func (g *mqlTerraformBlock) related() ([]any, error) {
@@ -1301,6 +1339,12 @@ func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
 			}
 		}
 	case hcl.Body:
+		// Native-syntax .tf files (where `dynamic "x" {}` blocks are written)
+		// always parse to *hclsyntax.Body above, so normalizeHclSyntaxBlock only
+		// needs to run there. This branch handles JSON-syntax HCL and plan/state
+		// bodies, which do not carry native `dynamic` blocks (JSON encodes them
+		// differently and PartialContent's typed schema would not surface them),
+		// so no normalization is applied here.
 		content, _, _ := body.PartialContent(connection.TerraformSchema_1)
 		for i := range content.Blocks {
 			b := content.Blocks[i]
