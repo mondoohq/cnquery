@@ -1372,9 +1372,24 @@ func parseBicepObject(body string) map[string]any {
 		if !ok {
 			continue
 		}
-		out[strings.TrimSpace(key)] = parseBicepValue(strings.TrimSpace(value))
+		out[unquoteBicepKey(strings.TrimSpace(key))] = parseBicepValue(strings.TrimSpace(value))
 	}
 	return out
+}
+
+// unquoteBicepKey strips the surrounding quotes from a Bicep object key. Keys
+// that aren't valid bare identifiers must be quoted in Bicep source, so dotted
+// keys such as the API Management `customProperties` entries
+// (`'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10'`)
+// arrive with their quotes attached. Left in place, the quotes become part of
+// the map key and an index lookup written without them
+// (`properties["customProperties"]["Microsoft...Tls10"]`) misses and returns
+// null. Bare-identifier keys carry no quotes and are returned unchanged.
+func unquoteBicepKey(k string) string {
+	if len(k) >= 2 && (k[0] == '\'' || k[0] == '"') && k[len(k)-1] == k[0] {
+		return k[1 : len(k)-1]
+	}
+	return k
 }
 
 func parseBicepValue(v string) any {
