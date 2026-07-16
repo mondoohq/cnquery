@@ -101,7 +101,7 @@ private stackit.project @defaults("id name lifecycleState") {
   name string
   // Parent container ID (organization or folder)
   parent string
-  // Lifecycle state (ACTIVE, CREATING, DELETING, INACTIVE, FAILED)
+  // Lifecycle state (CREATING, ACTIVE, DELETING, INACTIVE)
   lifecycleState string
   // Creation timestamp
   creationTime time
@@ -455,7 +455,7 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   externalAddress string
   // Plan ID (sizing tier)
   planId string
-  // Status (READY, PENDING, ERROR, …)
+  // Status (STATUS_READY, STATUS_PENDING, STATUS_ERROR, STATUS_TERMINATING, STATUS_UNSPECIFIED)
   status string
   // Whether the load balancer is reachable *only* from inside the project's private network (no public IP)
   privateNetworkOnly bool
@@ -544,7 +544,9 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   init(name? string)
   // Cluster name
   name string
-  // Aggregated status (HEALTHY, HIBERNATED, UNHEALTHY, RECONCILING, …)
+  // Aggregated status
+  //
+  // One of STATE_HEALTHY, STATE_HIBERNATED, STATE_UNHEALTHY, STATE_RECONCILING, STATE_CREATING, STATE_DELETING, STATE_HIBERNATING, or STATE_WAKINGUP.
   status string
   // Status object (raw): aggregated state, hibernated, errors, credentials rotation, …
   statusDetails dict
@@ -631,7 +633,7 @@ private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum
   maxUnavailable int
   // Worker availability zones
   availabilityZones []string
-  // Container runtime name (containerd, docker, …)
+  // Container runtime name (containerd, …)
   cri string
   // Taints [{key, value, effect}]
   taints []dict
@@ -872,7 +874,7 @@ private stackit.dns.zone @defaults("id dnsName type state") {
   type string
   // Visibility (public, private)
   visibility string
-  // Lifecycle state (CREATING, CREATING_PRIMARY_ZONE, ACTIVE, UPDATING, DELETING, FAILED, …)
+  // Lifecycle state (CREATING, CREATE_SUCCEEDED, CREATE_FAILED, DELETING, DELETE_SUCCEEDED, DELETE_FAILED, UPDATING, UPDATE_SUCCEEDED, UPDATE_FAILED)
   state string
   // Default record TTL (seconds)
   defaultTtl int
@@ -925,7 +927,7 @@ private stackit.dns.recordSet @defaults("name type state") {
   type string
   // Record TTL (seconds)
   ttl int
-  // Lifecycle state (ACTIVE, CREATING, DELETING, FAILED, UPDATING)
+  // Lifecycle state (CREATING, CREATE_SUCCEEDED, CREATE_FAILED, DELETING, DELETE_SUCCEEDED, DELETE_FAILED, UPDATING, UPDATE_SUCCEEDED, UPDATE_FAILED)
   state string
   // Comment
   comment string
@@ -1010,7 +1012,7 @@ private stackit.mongoDbFlex.instance @defaults("id name version status") {
   id string
   // Instance name
   name string
-  // Status (READY, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status (READY, PENDING, PROCESSING, FAILED, UNKNOWN)
   status string
   // Region the instance runs in
   region string
@@ -1107,7 +1109,7 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status ("in progress", "succeeded", "failed")
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1153,7 +1155,7 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status ("in progress", "succeeded", "failed")
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1199,7 +1201,7 @@ private stackit.redis.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status ("in progress", "succeeded", "failed")
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1245,7 +1247,7 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status ("in progress", "succeeded", "failed")
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1291,7 +1293,7 @@ private stackit.logMe.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status ("in progress", "succeeded", "failed")
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1374,7 +1376,7 @@ private stackit.observability.instance @defaults("id name status planName") {
   id string
   // Instance name
   name string
-  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  // Status (CREATING, CREATE_SUCCEEDED, CREATE_FAILED, DELETING, DELETE_SUCCEEDED, DELETE_FAILED, UPDATING, UPDATE_SUCCEEDED, UPDATE_FAILED)
   status string
   // Plan name (sizing/quota tier)
   planName string
@@ -1684,7 +1686,7 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   privateAddress string
   // Plan ID (sizing tier)
   planId string
-  // Status (READY, PENDING, ERROR, …)
+  // Status (STATUS_READY, STATUS_PENDING, STATUS_ERROR, STATUS_TERMINATING, STATUS_UNSPECIFIED)
   status string
   // Region the ALB lives in
   region string
@@ -1734,7 +1736,7 @@ private stackit.kms.keyRing @defaults("id displayName state") {
   displayName string
   // Description (free text)
   description string
-  // Lifecycle state (CREATING, CREATED, DELETING, …)
+  // Lifecycle state (creating, active, deleted)
   state string
   // Creation timestamp
   createdAt time
@@ -1759,17 +1761,17 @@ private stackit.kms.key @defaults("id displayName state purpose") {
   displayName string
   // Description
   description string
-  // Purpose (SYMMETRIC_ENCRYPT_DECRYPT, ASYMMETRIC_DECRYPT, ASYMMETRIC_SIGN_VERIFY, MAC)
+  // Purpose (symmetric_encrypt_decrypt, asymmetric_encrypt_decrypt, message_authentication_code, asymmetric_sign_verify)
   purpose string
-  // Algorithm (e.g., AES_256, RSA_4096_OAEP_SHA256, EC_P256_SHA256)
+  // Algorithm (e.g., aes_256_gcm, rsa_4096_oaep_sha256, ecdsa_p256_sha256)
   algorithm string
-  // Protection level (SOFTWARE, HSM)
+  // Protection level (software)
   protection string
-  // Access scope (PROJECT, …)
+  // Access scope (PUBLIC, SNA)
   accessScope string
   // Whether the key material was imported (cannot be rotated server-side)
   importOnly bool
-  // Lifecycle state (CREATING, CREATED, ENABLED, DISABLED, DELETING, DELETED)
+  // Lifecycle state (active, deleted, not_available, errors_exist, creating, no_version)
   state string
   // Creation timestamp
   createdAt time

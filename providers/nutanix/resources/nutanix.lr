@@ -72,7 +72,7 @@ private nutanix.cluster @defaults("name version nodeCount") {
   // Cluster functions
   //
   // Each entry is one of AOS, ONE_NODE, TWO_NODE, PRISM_CENTRAL,
-  // CLOUD_DATA_GATEWAY, AFS, WITNESS, or ANALYTICS_PLATFORM.
+  // CLOUD_DATA_GATEWAY, AFS, or ANALYTICS_PLATFORM.
   functions []string
   // Hypervisor types running on the cluster
   //
@@ -96,7 +96,7 @@ private nutanix.cluster @defaults("name version nodeCount") {
   encryptionInTransitStatus string
   // Data-at-rest encryption options
   //
-  // Each entry is one of SOFTWARE, HARDWARE, or SED.
+  // Each entry is one of SOFTWARE, HARDWARE, or SOFTWARE_AND_HARDWARE.
   encryptionOptions []string
   // Data-at-rest encryption scopes
   //
@@ -166,7 +166,7 @@ private nutanix.cluster.networkConfig @defaults("externalAddress fqdn") {
   nfsSubnetWhitelist []string
   // Key management server type
   //
-  // One of LOCAL or EXTERNAL.
+  // One of LOCAL, PRISM_CENTRAL, or EXTERNAL.
   keyManagementServerType string
   // SMTP server email (from) address
   smtpEmailAddress string
@@ -188,13 +188,11 @@ private nutanix.cluster.networkConfig @defaults("externalAddress fqdn") {
 private nutanix.cluster.faultToleranceState @defaults("currentClusterFaultTolerance domainAwarenessLevel") {
   // Current cluster fault tolerance
   //
-  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D, or
-  // CFT_2N_AND_2D.
+  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, or CFT_1N_AND_1D.
   currentClusterFaultTolerance string
   // Desired cluster fault tolerance
   //
-  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D, or
-  // CFT_2N_AND_2D.
+  // One of CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, or CFT_1N_AND_1D.
   desiredClusterFaultTolerance string
   // Maximum fault tolerance currently supported
   currentMaxFaultTolerance int
@@ -374,7 +372,7 @@ private nutanix.host.disk @defaults("id storageTier sizeInBytes") {
   sizeInBytes int
   // Storage tier
   //
-  // One of SSD, HDD, or SSD_PCIe.
+  // One of PCIE_SSD, SATA_SSD, or HDD.
   storageTier string
 }
 
@@ -1019,7 +1017,7 @@ private nutanix.storage.container @defaults("name replicationFactor isEncrypted"
   cacheDeduplication string
   // Erasure-coding status
   //
-  // One of NONE, ENABLED, or DISABLED.
+  // One of NONE, OFF, or ON.
   erasureCode string
   // Whether inline erasure coding is enabled
   isInlineEcEnabled bool
@@ -1080,7 +1078,7 @@ private nutanix.storage.volumeGroup @defaults("name sharingStatus enabledAuthent
   protocol string
   // Attachment type
   //
-  // One of DIRECT or FLAT.
+  // One of NONE, DIRECT, or EXTERNAL.
   attachmentType string
   // Client authentication requirement
   //

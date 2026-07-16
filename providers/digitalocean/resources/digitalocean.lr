@@ -818,7 +818,7 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   version string
   // Region slug
   region string
-  // Status (running, provisioning, degraded, error, deleted, upgrading)
+  // Status (running, provisioning, degraded, error, deleted, upgrading, invalid)
   status string
   // Time the resource was created
   createdAt time
@@ -1252,7 +1252,7 @@ private digitalocean.app.deployment @defaults("id phase cause") {
   appId string
   // What triggered the deployment (e.g., a manual action, a git push, an image push)
   cause string
-  // Lifecycle phase (PENDING, BUILDING, DEPLOYING, ACTIVE, SUPERSEDED, ERROR, CANCELED)
+  // Lifecycle phase (UNKNOWN, PENDING_BUILD, BUILDING, PENDING_DEPLOY, DEPLOYING, ACTIVE, SUPERSEDED, ERROR, CANCELED)
   phase string
   // App tier slug active for this deployment
   tierSlug string

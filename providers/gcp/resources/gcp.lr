@@ -1770,7 +1770,7 @@ private gcp.project.computeService.instance.confidentialCompute @defaults("enabl
   enabled bool
   // Confidential VM technology
   //
-  // One of SEV, SEV_SNP, TDX, or CONFIDENTIAL_INSTANCE_TYPE_UNSPECIFIED. Empty when confidential compute is not enabled.
+  // One of SEV, SEV_SNP, TDX, CCA, or CONFIDENTIAL_INSTANCE_TYPE_UNSPECIFIED. Empty when confidential compute is not enabled.
   instanceType string
 }
 
@@ -3708,7 +3708,7 @@ private gcp.project.cloudDomainsService.registration @defaults("domainName state
   // Registration lifecycle state
   //
   // One of REGISTRATION_PENDING, REGISTRATION_FAILED, TRANSFER_PENDING,
-  // TRANSFER_FAILED, ACTIVE, SUSPENDED, EXPORTED, or EXPIRED.
+  // TRANSFER_FAILED, IMPORT_PENDING, ACTIVE, SUSPENDED, EXPORTED, or EXPIRED.
   state string
   // Time at which the registration expires
   expireTime time
@@ -4038,7 +4038,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   binaryAuthorizationEnabled @maturity("deprecated") bool
   // Binary Authorization policy evaluation mode
   //
-  // One of `DISABLED`, `PROJECT_SINGLETON_POLICY_ENFORCE`, or `POLICY_BINDINGS`.
+  // One of `DISABLED` or `PROJECT_SINGLETON_POLICY_ENFORCE`.
   // Replaces the legacy boolean `binaryAuthorization.enabled` flag.
   binaryAuthorizationEvaluationMode string
   // Legacy ABAC authorization configuration
@@ -5331,7 +5331,7 @@ private gcp.project.kmsService.keyring.importJob @defaults("name state importMet
   importMethod string
   // Protection level of the import job
   //
-  // One of SOFTWARE, HSM, EXTERNAL, EXTERNAL_VPC, or PROTECTION_LEVEL_UNSPECIFIED. Must match the protection level of the cryptokey the job will import into.
+  // One of SOFTWARE, HSM, EXTERNAL, EXTERNAL_VPC, HSM_SINGLE_TENANT, or PROTECTION_LEVEL_UNSPECIFIED. Must match the protection level of the cryptokey the job will import into.
   protectionLevel string
   // Lifecycle state
   //
@@ -9573,7 +9573,7 @@ private gcp.project.filestoreService.instance @defaults("name state tier") {
   name string
   // User-assigned description
   description string
-  // The service tier (BASIC_HDD, BASIC_SSD, HIGH_SCALE_SSD, ENTERPRISE, ZONAL, REGIONAL)
+  // The service tier (STANDARD, PREMIUM, BASIC_HDD, BASIC_SSD, HIGH_SCALE_SSD, ENTERPRISE, ZONAL, REGIONAL)
   tier string
   // The current state of the instance (CREATING, READY, REPAIRING, etc.)
   state string
@@ -11973,7 +11973,7 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   displayName string
   // Job state
   //
-  // One of: JOB_STATE_QUEUED, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_SUCCEEDED, JOB_STATE_FAILED, JOB_STATE_CANCELLING, JOB_STATE_CANCELLED, JOB_STATE_PAUSED, JOB_STATE_EXPIRED.
+  // One of: JOB_STATE_QUEUED, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_SUCCEEDED, JOB_STATE_FAILED, JOB_STATE_CANCELLING, JOB_STATE_CANCELLED, JOB_STATE_PAUSED, JOB_STATE_EXPIRED, JOB_STATE_UPDATING, JOB_STATE_PARTIALLY_SUCCEEDED.
   state string
   // Job spec (worker pool specs, scheduling, etc.)
   jobSpec dict
@@ -13518,7 +13518,7 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   tableId string
   // Full resource name of the profiled table
   fullResource string
-  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
   // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
   sensitivityScore dict
@@ -13532,7 +13532,7 @@ private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sen
   otherInfoTypes []dict
   // Encryption status: ENCRYPTION_GOOGLE_MANAGED or ENCRYPTION_CUSTOMER_MANAGED
   encryptionStatus string
-  // How broadly the table is shared: PUBLIC, RESTRICTED, or RESOURCE_VISIBILITY_UNSPECIFIED
+  // How broadly the table is shared: RESOURCE_VISIBILITY_PUBLIC, RESOURCE_VISIBILITY_INCONCLUSIVE, or RESOURCE_VISIBILITY_RESTRICTED
   resourceVisibility string
   // Number of columns successfully profiled
   scannedColumnCount int
@@ -13573,7 +13573,7 @@ private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensi
   tableId string
   // Full resource name of the profiled table
   tableFullResource string
-  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
   // Column-level sensitivity score
   sensitivityScore dict
@@ -13620,9 +13620,9 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
   fullResource string
   // Status of the last profile-generation attempt
   profileStatus dict
-  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  // State of the profile: STATE_UNSPECIFIED, RUNNING, or DONE
   state string
-  // How broadly the bucket is shared: PUBLIC, RESTRICTED, or RESOURCE_VISIBILITY_UNSPECIFIED
+  // How broadly the bucket is shared: RESOURCE_VISIBILITY_PUBLIC, RESOURCE_VISIBILITY_INCONCLUSIVE, or RESOURCE_VISIBILITY_RESTRICTED
   resourceVisibility string
   // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
   sensitivityScore dict
