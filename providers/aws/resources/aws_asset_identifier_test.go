@@ -76,3 +76,21 @@ func TestGetAssetIdentifier(t *testing.T) {
 		assert.Equal(t, second, getAssetIdentifier(testAwsIdentifierRuntime("my-bucket", []string{first, second})))
 	})
 }
+
+func TestGetAssetName(t *testing.T) {
+	t.Run("returns empty when the connection is not an AwsConnection", func(t *testing.T) {
+		assert.Empty(t, getAssetName(&plugin.Runtime{}))
+	})
+
+	t.Run("returns empty when the connection has no asset", func(t *testing.T) {
+		conn := &connection.AwsConnection{
+			Connection: plugin.NewConnection(1, &inventory.Asset{Connections: []*inventory.Config{{}}}),
+		}
+		// no UpdateAsset call, so conn.Asset() returns nil
+		assert.Empty(t, getAssetName(&plugin.Runtime{Connection: conn}))
+	})
+
+	t.Run("returns the asset name", func(t *testing.T) {
+		assert.Equal(t, "my-user", getAssetName(testAwsIdentifierRuntime("my-user", nil)))
+	})
+}

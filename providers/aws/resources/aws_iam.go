@@ -1030,21 +1030,11 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	// The lookup is name-driven (GetUser); discovery sets the asset name to
+	// the IAM user name.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
-	// The lookup is name-driven (GetUser). Derive the user name from the ARN
-	// (arn:aws:iam::<account>:user/<path>/<name>) when only an ARN is given.
-	if args["name"] == nil && args["arn"] != nil {
-		if arnVal, ok := args["arn"].Value.(string); ok {
-			if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "user/") {
-				if idx := strings.LastIndex(parsed.Resource, "/"); idx >= 0 {
-					args["name"] = llx.StringData(parsed.Resource[idx+1:])
-				}
-			}
+		if name := getAssetName(runtime); name != "" {
+			args["name"] = llx.StringData(name)
 		}
 	}
 
@@ -1946,25 +1936,15 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+	// The lookup is name-driven (GetGroup); discovery sets the asset name to
+	// the IAM group name.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
+		if name := getAssetName(runtime); name != "" {
+			args["name"] = llx.StringData(name)
 		}
 	}
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam group")
-	}
-
-	// The lookup is name-driven (GetGroup). Derive the group name from the ARN
-	// (arn:aws:iam::<account>:group/<path>/<name>) when only an ARN is given.
-	if args["name"] == nil && args["arn"] != nil {
-		if arnVal, ok := args["arn"].Value.(string); ok {
-			if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "group/") {
-				if idx := strings.LastIndex(parsed.Resource, "/"); idx >= 0 {
-					args["name"] = llx.StringData(parsed.Resource[idx+1:])
-				}
-			}
-		}
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)

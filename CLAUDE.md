@@ -274,7 +274,7 @@ Multiple computed methods can share the same fetch function to batch-load relate
       args["arn"] = llx.StringData(assetArn)
   }
   ```
-  The asset name is a display name (often a `Name` tag), never a resource key — don't use it for lookups. When an init's underlying API call is name-driven (e.g. IAM `GetUser`), derive the name from the ARN's resource segment instead.
+  The asset name is a display name (often a `Name` tag), never a resource key — don't use it for lookups. The one exception: when an init's underlying API call is name-driven (e.g. IAM `GetUser`/`GetGroup`) and discovery sets the asset name to the resource's own name, use `getAssetName(runtime)` to inject `args["name"]` instead.
 
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**

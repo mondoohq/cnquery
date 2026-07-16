@@ -306,6 +306,22 @@ func getAssetIdentifier(runtime *plugin.Runtime) string {
 	return arnStr
 }
 
+// getAssetName returns the discovered asset's name, or "" when the connection
+// has no asset. Use it only for resources whose lookup API is name-driven
+// (e.g. IAM GetUser/GetGroup) and whose discovery sets the asset name to the
+// resource's own name; for everything else resolve by ARN via
+// getAssetIdentifier — the asset name is a display name, not a resource key.
+func getAssetName(runtime *plugin.Runtime) string {
+	var a *inventory.Asset
+	if conn, ok := runtime.Connection.(*connection.AwsConnection); ok {
+		a = conn.Asset()
+	}
+	if a == nil {
+		return ""
+	}
+	return a.Name
+}
+
 func mapStringInterfaceToStringString(m map[string]any) map[string]string {
 	newM := make(map[string]string)
 	for k, v := range m {
