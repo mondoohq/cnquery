@@ -81,3 +81,40 @@ func TestSetImageFiltersExcludeOnly(t *testing.T) {
 	assert.Empty(t, f.include)
 	assert.Equal(t, []string{"quay.io/*"}, f.exclude)
 }
+
+func TestDigestExcludeSet(t *testing.T) {
+	cfg := &inventory.Config{
+		Options: map[string]string{
+			shared.OPTION_DIGESTS_EXCLUDE: "sha256:abc123,sha256:def456",
+		},
+	}
+	set := digestExcludeSet(cfg)
+	assert.Contains(t, set, "sha256:abc123")
+	assert.Contains(t, set, "sha256:def456")
+	assert.NotContains(t, set, "sha256:other")
+}
+
+func TestDigestExcludeSetEmpty(t *testing.T) {
+	cfg := &inventory.Config{
+		Options: map[string]string{},
+	}
+	set := digestExcludeSet(cfg)
+	assert.Nil(t, set)
+}
+
+func TestExtractDigest(t *testing.T) {
+	tests := []struct {
+		name     string
+		imageRef string
+		want     string
+	}{
+		{name: "standard digest ref", imageRef: "docker.io/library/nginx@sha256:abc123", want: "sha256:abc123"},
+		{name: "no digest", imageRef: "docker.io/library/nginx:latest", want: ""},
+		{name: "complex ref with digest", imageRef: "gcr.io/my-project/deep/path/app@sha256:deadbeef", want: "sha256:deadbeef"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, extractDigest(tt.imageRef))
+		})
+	}
+}

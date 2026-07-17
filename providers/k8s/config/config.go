@@ -87,6 +87,12 @@ Examples:
 					Desc:    "Filter out container images matching the given image references during discovery (comma-separated, glob supported)",
 				},
 				{
+					Long:    "digests-exclude",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Filter out container images matching the given digests during discovery (comma-separated)",
+				},
+				{
 					Long:    "kubelogin",
 					Type:    plugin.FlagType_Bool,
 					Default: "false",

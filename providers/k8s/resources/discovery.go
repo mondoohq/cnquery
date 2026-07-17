@@ -124,6 +124,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 	if err != nil {
 		return nil, err
 	}
+	digestExclude := digestExcludeSet(invConfig)
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -167,7 +168,7 @@ func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *
 		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
 
 		// We don't want to discover the namespaces again since we have already done this above
-		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, imgFilter)
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, imgFilter, digestExclude)
 		if err != nil {
 			return nil, err
 		}
@@ -288,6 +289,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	if err != nil {
 		return nil, err
 	}
+	digestExclude := digestExcludeSet(invConfig)
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -307,7 +309,7 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 
 	od := NewPlatformIdOwnershipIndex(namespacePlatformId)
 
-	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od, imgFilter)
+	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od, imgFilter, digestExclude)
 	if err != nil {
 		return nil, err
 	}
@@ -326,6 +328,7 @@ func discoverAssets(
 	resFilters *ResourceFilters,
 	od *PlatformIdOwnershipIndex,
 	imgFilter FilterOpts,
+	digestExclude map[string]struct{},
 ) ([]*inventory.Asset, error) {
 	var assets []*inventory.Asset
 	var err error
@@ -402,7 +405,7 @@ func discoverAssets(
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryContainerImages || target == DiscoveryAll {
-			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter, imgFilter)
+			list, err = discoverContainerImages(conn, runtime, invConfig, k8s, nsFilter, imgFilter, digestExclude)
 			if err != nil {
 				return nil, err
 			}
@@ -1103,7 +1106,7 @@ func discoverNamespaces(
 	return assetList, nil
 }
 
-func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, imgFilter FilterOpts) ([]*inventory.Asset, error) {
+func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, k8s *mqlK8s, nsFilter FilterOpts, imgFilter FilterOpts, digestExclude map[string]struct{}) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -1138,6 +1141,13 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 	for _, i := range runningImages {
 		if imgFilter.skip(i.resolvedImage) {
 			continue
+		}
+		if digestExclude != nil {
+			if digest := extractDigest(i.resolvedImage); digest != "" {
+				if _, excluded := digestExclude[digest]; excluded {
+					continue
+				}
+			}
 		}
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
@@ -1416,6 +1426,26 @@ func setImageFilters(cfg *inventory.Config) (FilterOpts, error) {
 		return FilterOpts{}, fmt.Errorf("--images and --images-exclude are mutually exclusive")
 	}
 	return newFilterOpts(includeVals, excludeVals)
+}
+
+func digestExcludeSet(cfg *inventory.Config) map[string]struct{} {
+	vals := splitFilterValues(cfg.Options[shared.OPTION_DIGESTS_EXCLUDE])
+	if len(vals) == 0 {
+		return nil
+	}
+	set := make(map[string]struct{}, len(vals))
+	for _, v := range vals {
+		set[v] = struct{}{}
+	}
+	return set
+}
+
+func extractDigest(imageRef string) string {
+	idx := strings.LastIndex(imageRef, "@")
+	if idx < 0 {
+		return ""
+	}
+	return imageRef[idx+1:]
 }
 
 func setNamespaceFilters(cfg *inventory.Config) (FilterOpts, error) {
