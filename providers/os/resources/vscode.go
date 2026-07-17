@@ -66,13 +66,17 @@ var validHomePrefixes = []string{
 
 // isSystemHomeDir returns true if home looks like a system-account directory.
 // It uses an allowlist approach: only paths under known user-home prefixes
-// (e.g. /Users/, /home/, /root) are considered real users.
+// (e.g. /Users/, /home/, /root) are considered real users. Comparison is
+// case- and separator-insensitive so Windows homes match regardless of drive
+// case or slash direction (C:\Users\, c:\users\, C:/Users/).
 func isSystemHomeDir(home string) bool {
 	if home == "" {
 		return true
 	}
+	norm := strings.ToLower(strings.ReplaceAll(home, "\\", "/"))
 	for _, p := range validHomePrefixes {
-		if strings.HasPrefix(home, p) || home == strings.TrimSuffix(p, "/") {
+		pp := strings.ToLower(strings.ReplaceAll(p, "\\", "/"))
+		if strings.HasPrefix(norm, pp) || norm == strings.TrimSuffix(pp, "/") {
 			return false
 		}
 	}
@@ -100,26 +104,16 @@ func (c *mqlVscode) paths() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Get all users to find home directories
-	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so extension paths are found for every account.
+	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	userList := usersResource.(*mqlUsers).GetList()
-	if userList.Error != nil {
-		return nil, userList.Error
-	}
-
 	var paths []string
 
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		homeDir := user.GetHome().Data
-
-		if isSystemHomeDir(homeDir) {
-			continue
-		}
+	for _, u := range users {
+		homeDir := u.home
 
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)
@@ -145,27 +139,17 @@ func (c *mqlVscode) extensions() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Get all users to find home directories
-	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so extensions are discovered for every account.
+	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
 		return nil, err
-	}
-
-	userList := usersResource.(*mqlUsers).GetList()
-	if userList.Error != nil {
-		return nil, userList.Error
 	}
 
 	var extensions []any
 	seen := make(map[string]bool)
 
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		homeDir := user.GetHome().Data
-
-		if isSystemHomeDir(homeDir) {
-			continue
-		}
+	for _, u := range users {
+		homeDir := u.home
 
 		for _, editor := range vsCodeEditors {
 			extensionsDir := filepath.Join(homeDir, editor.dir)

@@ -183,19 +183,10 @@ func (c *mqlChrome) fetchAll() ([]any, []any, error) {
 		return c.cachedExtensions, c.cachedContentScripts, nil
 	}
 
-	// Get list of users to find their home directories
-	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
+	// Enumerate all users so extensions are discovered for every account.
+	users, err := targetUserHomes(c.MqlRuntime)
 	if err != nil {
-		log.Debug().Err(err).Msg("could not get users list")
-		c.fetched = true
-		c.cachedExtensions = []any{}
-		c.cachedContentScripts = []any{}
-		return c.cachedExtensions, c.cachedContentScripts, nil
-	}
-	users := usersResource.(*mqlUsers)
-	userList := users.GetList()
-	if userList.Error != nil {
-		log.Debug().Err(userList.Error).Msg("could not retrieve users list")
+		log.Debug().Err(err).Msg("could not retrieve users list")
 		c.fetched = true
 		c.cachedExtensions = []any{}
 		c.cachedContentScripts = []any{}
@@ -209,24 +200,11 @@ func (c *mqlChrome) fetchAll() ([]any, []any, error) {
 	fs := conn.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 
-	log.Debug().Str("platform", platformKey).Int("userCount", len(userList.Data)).Msg("searching for browser extensions")
+	log.Debug().Str("platform", platformKey).Int("userCount", len(users)).Msg("searching for browser extensions")
 
-	for _, u := range userList.Data {
-		user := u.(*mqlUser)
-		home := user.GetHome()
-		if home.Error != nil || home.Data == "" {
-			continue
-		}
-
-		homeDir := home.Data
-		if !isValidUserHome(homeDir, platformKey) {
-			continue
-		}
-
-		uid := int64(0)
-		if uidVal := user.GetUid(); uidVal.Error == nil {
-			uid = uidVal.Data
-		}
+	for _, u := range users {
+		homeDir := u.home
+		uid := u.uid
 
 		for _, browserCfg := range configs {
 			browserDir := filepath.Join(homeDir, browserCfg.relPath)
@@ -736,38 +714,6 @@ func getPlatformKey(pf interface{ IsFamily(string) bool }) string {
 		return "windows"
 	default:
 		return ""
-	}
-}
-
-// isValidUserHome checks if a home directory is a valid user home (not a system account)
-func isValidUserHome(homeDir string, platform string) bool {
-	if homeDir == "" {
-		return false
-	}
-
-	switch platform {
-	case "linux":
-		// Valid homes: /home/*, /root
-		return strings.HasPrefix(homeDir, "/home/") || homeDir == "/root"
-	case "darwin":
-		// Valid homes: /Users/* (excluding /Users/Shared)
-		return strings.HasPrefix(homeDir, "/Users/") && homeDir != "/Users/Shared"
-	case "windows":
-		// Valid homes: C:\Users\* (excluding system accounts)
-		lowerHome := strings.ToLower(homeDir)
-		if !strings.HasPrefix(lowerHome, "c:\\users\\") && !strings.HasPrefix(lowerHome, "c:/users/") {
-			return false
-		}
-		// Exclude known system accounts
-		excludedUsers := []string{"default", "public", "all users", "default user"}
-		for _, excluded := range excludedUsers {
-			if strings.Contains(lowerHome, "\\"+excluded) || strings.Contains(lowerHome, "/"+excluded) {
-				return false
-			}
-		}
-		return true
-	default:
-		return false
 	}
 }
 

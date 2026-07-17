@@ -341,27 +341,6 @@ func TestDiscoverChromeProfiles(t *testing.T) {
 	assert.NotContains(t, profiles, "Crashpad")
 }
 
-func TestIsValidUserHome(t *testing.T) {
-	tests := []struct {
-		homeDir  string
-		platform string
-		valid    bool
-	}{
-		{"/home/user", "linux", true},
-		{"/root", "linux", true},
-		{"/var/lib/nobody", "linux", false},
-		{"/Users/chris", "darwin", true},
-		{"/Users/Shared", "darwin", false},
-		{"", "linux", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.homeDir+"_"+tt.platform, func(t *testing.T) {
-			assert.Equal(t, tt.valid, isValidUserHome(tt.homeDir, tt.platform))
-		})
-	}
-}
-
 func TestResolveChromei18n(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	afs := &afero.Afero{Fs: fs}
