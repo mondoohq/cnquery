@@ -287,7 +287,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	assets = append(assets, genericAssets...)
 
 	if conn.Filters.PropagateSubscriptionTags {
-		applySubscriptionTags(conn, subsWithConfigs, assets)
+		applySubscriptionTags(conn.Filters.SubscriptionTags, subsWithConfigs, assets)
 	}
 
 	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
@@ -680,25 +680,18 @@ func assetsForSubscription(assets []*inventory.Asset, subID string) []*inventory
 
 // applySubscriptionTags merges each subscription's tags into the assets
 // discovered within it. Tags come from the injected override when provided,
-// otherwise from the Azure Subscriptions Get API. A per-subscription fetch
-// failure is logged and skipped so discovery never fails.
-func applySubscriptionTags(conn *connection.AzureConnection, subs []subWithConfig, assets []*inventory.Asset) {
+// otherwise from the subscription record returned by the list pager — which
+// already includes the tags, so no per-subscription API call is needed.
+func applySubscriptionTags(override map[string]string, subs []subWithConfig, assets []*inventory.Asset) {
 	for _, s := range subs {
 		if s.sub.SubscriptionID == nil {
 			continue
 		}
 		subID := *s.sub.SubscriptionID
 
-		tags := conn.Filters.SubscriptionTags
+		tags := override
 		if len(tags) == 0 {
-			fetched, err := connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions()).
-				GetSubscriptionTags(subID)
-			if err != nil {
-				log.Warn().Err(err).Str("subscription", subID).
-					Msg("azure.discovery> failed to fetch subscription tags for propagation")
-				continue
-			}
-			tags = fetched
+			tags = convert.PtrMapStrToStr(s.sub.Tags)
 		}
 		if len(tags) == 0 {
 			continue
