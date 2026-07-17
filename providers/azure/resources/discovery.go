@@ -639,6 +639,40 @@ func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
 	}
 }
 
+// propagateSubscriptionTagsToAssets merges subscriptionTags into every asset in
+// the slice. An asset's own labels take precedence, so subscription tags only
+// fill in keys the asset doesn't already define. Mirrors GCP's
+// propagateProjectLabelsToAssets.
+func propagateSubscriptionTagsToAssets(assets []*inventory.Asset, subscriptionTags map[string]string) {
+	if len(subscriptionTags) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if a == nil {
+			continue
+		}
+		if a.Labels == nil {
+			a.Labels = map[string]string{}
+		}
+		for k, v := range subscriptionTags {
+			if _, exists := a.Labels[k]; !exists {
+				a.Labels[k] = v
+			}
+		}
+	}
+}
+
+// assetsForSubscription returns the assets whose SubscriptionLabel matches subID.
+func assetsForSubscription(assets []*inventory.Asset, subID string) []*inventory.Asset {
+	res := []*inventory.Asset{}
+	for _, a := range assets {
+		if a != nil && a.Labels[SubscriptionLabel] == subID {
+			res = append(res, a)
+		}
+	}
+	return res
+}
+
 // creates a config with filled in subscription and tenant id, this config can be used by the subscription asset
 // or any assets that are discovered within that subscription
 func getSubConfig(rootConf *inventory.Config, sub subscriptions.Subscription) *inventory.Config {

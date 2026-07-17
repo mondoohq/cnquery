@@ -269,3 +269,51 @@ func TestGetInstancesLabels_PropertiesError(t *testing.T) {
 	_, err := getInstancesLabels(vm)
 	require.Error(t, err)
 }
+
+func TestPropagateSubscriptionTagsToAssets(t *testing.T) {
+	t.Run("fills missing keys", func(t *testing.T) {
+		assets := []*inventory.Asset{{Labels: map[string]string{"a": "1"}}}
+		propagateSubscriptionTagsToAssets(assets, map[string]string{"b": "2"})
+		require.Equal(t, map[string]string{"a": "1", "b": "2"}, assets[0].Labels)
+	})
+
+	t.Run("asset label wins on collision", func(t *testing.T) {
+		assets := []*inventory.Asset{{Labels: map[string]string{"env": "dev"}}}
+		propagateSubscriptionTagsToAssets(assets, map[string]string{"env": "prod"})
+		require.Equal(t, "dev", assets[0].Labels["env"])
+	})
+
+	t.Run("nil asset labels are initialized", func(t *testing.T) {
+		assets := []*inventory.Asset{{}}
+		propagateSubscriptionTagsToAssets(assets, map[string]string{"b": "2"})
+		require.Equal(t, map[string]string{"b": "2"}, assets[0].Labels)
+	})
+
+	t.Run("empty tags is a no-op", func(t *testing.T) {
+		assets := []*inventory.Asset{{Labels: map[string]string{"a": "1"}}}
+		propagateSubscriptionTagsToAssets(assets, nil)
+		require.Equal(t, map[string]string{"a": "1"}, assets[0].Labels)
+	})
+
+	t.Run("nil asset in slice is skipped", func(t *testing.T) {
+		assets := []*inventory.Asset{nil, {Labels: map[string]string{}}}
+		require.NotPanics(t, func() {
+			propagateSubscriptionTagsToAssets(assets, map[string]string{"b": "2"})
+		})
+		require.Equal(t, map[string]string{"b": "2"}, assets[1].Labels)
+	})
+}
+
+func TestAssetsForSubscription(t *testing.T) {
+	assets := []*inventory.Asset{
+		{Name: "a", Labels: map[string]string{SubscriptionLabel: "sub-1"}},
+		{Name: "b", Labels: map[string]string{SubscriptionLabel: "sub-2"}},
+		{Name: "c", Labels: map[string]string{SubscriptionLabel: "sub-1"}},
+		nil,
+		{Name: "d", Labels: nil},
+	}
+	got := assetsForSubscription(assets, "sub-1")
+	require.Len(t, got, 2)
+	require.Equal(t, "a", got[0].Name)
+	require.Equal(t, "c", got[1].Name)
+}
