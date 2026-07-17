@@ -10,7 +10,7 @@ import "github.com/rs/zerolog/log"
 // process, no wmic.
 const windowsDetectionCommand = `$cs = Get-CimInstance -ClassName Win32_ComputerSystem; ` +
 	`$bios = Get-CimInstance -ClassName Win32_BIOS; ` +
-	`"$($cs.Model) $($cs.Manufacturer) $($bios.SMBIOSBIOSVersion)"`
+	`"$($cs.Model)|$($cs.Manufacturer)|$($bios.SMBIOSBIOSVersion)"`
 
 // detectWindowsHypervisor detects the hypervisor on Windows.
 func (h *hyper) detectWindowsHypervisor() (string, bool) {
