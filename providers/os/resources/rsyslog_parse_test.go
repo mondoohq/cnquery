@@ -434,6 +434,43 @@ auth,authpriv.none /var/log/quieted
 	assert.Equal(t, ":omusrmsg:*", rules[6].target)
 }
 
+func TestParseRsyslogFile_SeverityPrefixes(t *testing.T) {
+	// rsyslog severity selectors accept `=` (exactly), `!` (all except), and
+	// `!=` (negate-exact) prefixes. Each must still produce a rule entry with
+	// the prefix preserved on the severity token — previously the `!=` form
+	// was dropped entirely, yielding zero rules with no error.
+	content := `mail.info /var/log/mail.log
+mail.=info /var/log/mail.exact.log
+mail.!info /var/log/mail.notinfo.log
+mail.!=info /var/log/mail.notexact.log
+`
+	got := parseRsyslogFile("/etc/rsyslog.conf", content)
+
+	var rules []rsyslogEntry
+	for _, e := range got {
+		if e.kind == rsyslogKindRule {
+			rules = append(rules, e)
+		}
+	}
+	require.Len(t, rules, 4, "each severity prefix form must yield exactly one rule")
+
+	assert.Equal(t, []string{"mail"}, rules[0].facilities)
+	assert.Equal(t, []string{"info"}, rules[0].severities)
+	assert.Equal(t, "/var/log/mail.log", rules[0].target)
+
+	assert.Equal(t, []string{"=info"}, rules[1].severities)
+	assert.Equal(t, "/var/log/mail.exact.log", rules[1].target)
+	assert.False(t, rules[1].negate)
+
+	assert.Equal(t, []string{"!info"}, rules[2].severities)
+	assert.Equal(t, "/var/log/mail.notinfo.log", rules[2].target)
+	assert.False(t, rules[2].negate)
+
+	assert.Equal(t, []string{"!=info"}, rules[3].severities)
+	assert.Equal(t, "/var/log/mail.notexact.log", rules[3].target)
+	assert.False(t, rules[3].negate)
+}
+
 func TestParseRsyslogFile_SourceAttribution(t *testing.T) {
 	// Every emitted entry must carry the file path we passed in. That's
 	// how the typed accessors point findings at the originating fragment

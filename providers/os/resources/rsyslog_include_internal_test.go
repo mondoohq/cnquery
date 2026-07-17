@@ -20,8 +20,15 @@ import (
 // and returns the paths it reports.
 func rsyslogFixtureFiles(t *testing.T) []string {
 	t.Helper()
+	return rsyslogFixtureFilesFrom(t, "testdata/rsyslog_includes.toml")
+}
 
-	fixturePath, err := filepath.Abs("testdata/rsyslog_includes.toml")
+// rsyslogFixtureFilesFrom resolves rsyslog.conf.files against an arbitrary
+// mock fixture and returns the file paths it reports.
+func rsyslogFixtureFilesFrom(t *testing.T, fixture string) []string {
+	t.Helper()
+
+	fixturePath, err := filepath.Abs(fixture)
 	require.NoError(t, err)
 
 	asset := &inventory.Asset{
@@ -95,6 +102,27 @@ func TestRsyslogConf_IncludeExpansion(t *testing.T) {
 			assert.NotContains(t, p, "rsyslog.absent")
 		}
 		assert.Contains(t, paths, "/etc/rsyslog.conf")
+	})
+}
+
+// A wildcard in a non-terminal path segment (`/etc/rsyslog.apps/*/out.conf`)
+// must fan out across every matching subdirectory. Previously the middle glob
+// was handed to the directory search verbatim and matched nothing, so no
+// fragment was ever included.
+func TestRsyslogConf_MidPathIncludeGlob(t *testing.T) {
+	paths := rsyslogFixtureFilesFrom(t, "testdata/rsyslog_midpath_include.toml")
+
+	t.Run("expands the wildcard across every subdirectory", func(t *testing.T) {
+		assert.ElementsMatch(t, []string{
+			"/etc/rsyslog.conf",
+			"/etc/rsyslog.apps/web/out.conf",
+			"/etc/rsyslog.apps/db/out.conf",
+		}, paths)
+	})
+
+	t.Run("applies the basename glob inside each matched subdirectory", func(t *testing.T) {
+		assert.NotContains(t, paths, "/etc/rsyslog.apps/web/other.conf",
+			"other.conf shares the directory but does not match out.conf")
 	})
 }
 

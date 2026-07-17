@@ -176,13 +176,23 @@ var rsyslogModernStmt = regexp.MustCompile(`^(module|input|action|global)\s*\((.
 // The regex is intentionally permissive on the selector half (anything
 // that isn't whitespace until the target) so audits get a typed entry
 // even for forms we don't otherwise model — the rule's `facilities`/
-// `severities` arrays simply reflect what we could parse.
-var rsyslogSelector = regexp.MustCompile(`^([!*A-Za-z0-9_,;.\-]+)\s+(\S.*)$`)
+// `severities` arrays simply reflect what we could parse. `=` is part of
+// the class so severity comparison prefixes (`=info`, `!=info`) don't cut
+// the selector short before the target token.
+var rsyslogSelector = regexp.MustCompile(`^([!*=A-Za-z0-9_,;.\-]+)\s+(\S.*)$`)
 
 // rsyslogFacilitySeverity matches a single "facility.severity" pair where
 // each side may be a list (comma-separated) or `*`. Used inside the
 // per-selector loop, after splitting on `;`.
-var rsyslogFacilitySeverity = regexp.MustCompile(`^([!*A-Za-z0-9_,\-]+)\.([!=]?[*A-Za-z0-9]+)$`)
+//
+// The severity may carry an optional comparison prefix: `=` (exactly this
+// severity), `!` (all except this severity), or `!=` (negate-exact). The
+// `!?=?` prefix accepts “, `=`, `!`, and `!=` — but not the invalid `=!`
+// ordering — so selectors like `mail.info`, `mail.=info`, `mail.!info`, and
+// `mail.!=info` all parse. The prefix is preserved verbatim in the captured
+// severity token; downstream inspection only special-cases the `.none`
+// negation, which is unaffected by these prefixes.
+var rsyslogFacilitySeverity = regexp.MustCompile(`^([!*A-Za-z0-9_,\-]+)\.(!?=?[*A-Za-z0-9]+)$`)
 
 // kvRegexp matches a single key="value" / key='value' / key=bareword pair
 // inside a coalesced modern statement's argument list. `.` is permitted in

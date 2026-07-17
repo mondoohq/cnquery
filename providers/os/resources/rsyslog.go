@@ -313,6 +313,9 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 	return out, nil
 }
 
+// reRsyslogGlob detects filepath glob meta-characters in a path segment.
+var reRsyslogGlob = regexp.MustCompile(`[*?\[]`)
+
 // expandIncludePattern resolves a single include pattern (relative to
 // parentDir if not absolute) into the list of files it matches, using
 // files.find against the asset's filesystem.
@@ -323,15 +326,87 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 // compiles it as a regex matched against the whole path. Matching locally
 // keeps rsyslog's own glob(3) semantics identical on every connection type.
 //
-// depth=1 restricts the search to the immediate directory, matching
-// rsyslog's own glob(3) semantics: `$IncludeConfig /etc/rsyslog.d/*.conf`
-// does not pick up `/etc/rsyslog.d/nested/extra.conf`.
+// A glob may appear in any path segment, not just the basename: rsyslog
+// expands `$IncludeConfig /etc/rsyslog.d/*/out.conf` by matching every
+// immediate subdirectory in turn. The directory portion is resolved
+// segment-by-segment (`resolveIncludeDirs`) so a mid-path glob fans out to
+// the set of concrete directories it names; the basename glob is then
+// matched against the files in each. Each glob segment consumes exactly one
+// level, matching rsyslog's own glob(3) semantics: a `*` does not descend
+// past a single directory boundary.
 func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]string, error) {
 	dir, baseGlob := resolveRsyslogInclude(parentDir, pattern)
 
+	dirs, err := s.resolveIncludeDirs(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var paths []string
+	for _, d := range dirs {
+		files, err := s.findChildren(d, "file")
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range files {
+			if rsyslogIncludeMatches(baseGlob, p) {
+				paths = append(paths, p)
+			}
+		}
+	}
+	return paths, nil
+}
+
+// resolveIncludeDirs turns an absolute directory path that may contain glob
+// segments into the concrete directories it names. Non-glob segments are
+// appended literally (no listing, so a plain directory path collapses to a
+// single result without any filesystem access); a glob segment lists the
+// immediate subdirectories of each current path and keeps the ones whose
+// name matches. Paths naming a directory that doesn't exist simply drop out,
+// mirroring glob(3)'s "no match" behaviour.
+func (s *mqlRsyslogConf) resolveIncludeDirs(dir string) ([]string, error) {
+	paths := []string{"/"}
+	for _, seg := range strings.Split(dir, "/") {
+		if seg == "" {
+			continue
+		}
+		if !reRsyslogGlob.MatchString(seg) {
+			for i := range paths {
+				paths[i] = filepath.Join(paths[i], seg)
+			}
+			continue
+		}
+
+		var next []string
+		for _, p := range paths {
+			subdirs, err := s.findChildren(p, "directory")
+			if err != nil {
+				return nil, err
+			}
+			for _, sd := range subdirs {
+				// `find -maxdepth 1 -type d` also lists the search root
+				// itself; only its children are candidates for the segment.
+				if filepath.Clean(sd) == filepath.Clean(p) {
+					continue
+				}
+				if rsyslogIncludeMatches(seg, sd) {
+					next = append(next, sd)
+				}
+			}
+		}
+		paths = next
+	}
+	return paths, nil
+}
+
+// findChildren lists the immediate children of `dir` of the given find type
+// ("file" or "directory") via files.find with depth=1, returning their
+// paths. A missing directory yields an empty list rather than an error,
+// matching how the command backends report an absent search root.
+func (s *mqlRsyslogConf) findChildren(dir, typ string) ([]string, error) {
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
 		"from":  llx.StringData(dir),
-		"type":  llx.StringData("file"),
+		"type":  llx.StringData(typ),
 		"depth": llx.IntData(1),
 	})
 	if err != nil {
@@ -343,18 +418,13 @@ func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]stri
 		return nil, list.Error
 	}
 
-	paths := make([]string, 0, len(list.Data))
+	out := make([]string, 0, len(list.Data))
 	for _, item := range list.Data {
-		mf, ok := item.(*mqlFile)
-		if !ok {
-			continue
+		if mf, ok := item.(*mqlFile); ok {
+			out = append(out, mf.Path.Data)
 		}
-		if !rsyslogIncludeMatches(baseGlob, mf.Path.Data) {
-			continue
-		}
-		paths = append(paths, mf.Path.Data)
 	}
-	return paths, nil
+	return out, nil
 }
 
 func (s *mqlRsyslogConf) content(files []any) (string, error) {
