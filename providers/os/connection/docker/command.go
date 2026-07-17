@@ -43,6 +43,10 @@ func (c *Command) Exec(command string) (*shared.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The moby SDK requires the caller to close the hijacked response, which
+	// closes the underlying net.Conn to the docker daemon. Without this every
+	// command run against a running container leaks a socket/goroutine.
+	defer resp.Close()
 
 	// TODO: transformHijack breaks for long stdout, but not if we read stdout/stderr in upfront
 	content, err := io.ReadAll(resp.Reader)
