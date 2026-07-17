@@ -6,6 +6,7 @@ package hypervisor
 import (
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -42,8 +43,40 @@ type hyper struct {
 	platform   *inventory.Platform
 }
 
+type hypervisorResult struct {
+	name string
+	ok   bool
+}
+
+// Detection runs at platform-ID time and again on the first os.hypervisor query. On
+// Windows each run is a WMI/CIM sweep, so cache per connection to keep it to one.
+var (
+	hypervisorCache     = map[uint32]hypervisorResult{}
+	hypervisorCacheLock sync.Mutex
+)
+
 // Hypervisor returns the hypervisor of the system.
 func Hypervisor(conn shared.Connection, pf *inventory.Platform) (hypervisor string, ok bool) {
+	key := conn.ID()
+
+	hypervisorCacheLock.Lock()
+	if cached, found := hypervisorCache[key]; found {
+		hypervisorCacheLock.Unlock()
+		return cached.name, cached.ok
+	}
+	hypervisorCacheLock.Unlock()
+
+	hypervisor, ok = detectHypervisor(conn, pf)
+
+	hypervisorCacheLock.Lock()
+	hypervisorCache[key] = hypervisorResult{name: hypervisor, ok: ok}
+	hypervisorCacheLock.Unlock()
+
+	return hypervisor, ok
+}
+
+// detectHypervisor runs the platform-specific detection without caching.
+func detectHypervisor(conn shared.Connection, pf *inventory.Platform) (hypervisor string, ok bool) {
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		log.Debug().Msg("your platform is not supported for hypervisor detection")
 		return

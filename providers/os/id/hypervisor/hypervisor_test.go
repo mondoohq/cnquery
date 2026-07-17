@@ -15,8 +15,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/detector"
 )
 
+// Each test uses a unique connection ID because detection results are cached per
+// connection ID; reusing 0 would leak one test's result into the next.
+
 func TestHypervisorDarwinMachdepCpuFeatures(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_machdep_cpu_features.toml"))
+	conn, err := mock.New(1, &inventory.Asset{}, mock.WithPath("./testdata/macos_machdep_cpu_features.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -28,7 +31,7 @@ func TestHypervisorDarwinMachdepCpuFeatures(t *testing.T) {
 }
 
 func TestHypervisorDarwinKernHvVMMPresent(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_apple_virtualization_like_tart.toml"))
+	conn, err := mock.New(2, &inventory.Asset{}, mock.WithPath("./testdata/macos_apple_virtualization_like_tart.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -40,7 +43,7 @@ func TestHypervisorDarwinKernHvVMMPresent(t *testing.T) {
 }
 
 func TestHypervisorDarwinSystemProfiler(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/macos_system_profiler.toml"))
+	conn, err := mock.New(3, &inventory.Asset{}, mock.WithPath("./testdata/macos_system_profiler.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -51,8 +54,8 @@ func TestHypervisorDarwinSystemProfiler(t *testing.T) {
 	assert.Equal(t, "VirtualBox", hypervisor)
 }
 
-func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_ciminstance_win32_computersystem_manufacturer.toml"))
+func TestHypervisorWindowsVMware(t *testing.T) {
+	conn, err := mock.New(4, &inventory.Asset{}, mock.WithPath("./testdata/windows_vmware.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -63,8 +66,8 @@ func TestHypervisorWindowsWin32Manufacturer(t *testing.T) {
 	assert.Equal(t, "VMware", hypervisor)
 }
 
-func TestHypervisorWindowsWmicGetModel(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_wmic_computersystem_get_model.toml"))
+func TestHypervisorWindowsVirtualBox(t *testing.T) {
+	conn, err := mock.New(5, &inventory.Asset{}, mock.WithPath("./testdata/windows_virtualbox.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -76,7 +79,7 @@ func TestHypervisorWindowsWmicGetModel(t *testing.T) {
 }
 
 func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_serer_2022_running_hyper_v.toml"))
+	conn, err := mock.New(6, &inventory.Asset{}, mock.WithPath("./testdata/windows_hyper_v_smbios.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -88,7 +91,7 @@ func TestHypervisorWindowsServer2022SMBIOSBIOSVersion(t *testing.T) {
 }
 
 func TestHypervisorLinuxDmidecode(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmidecode.toml"))
+	conn, err := mock.New(7, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmidecode.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -100,7 +103,7 @@ func TestHypervisorLinuxDmidecode(t *testing.T) {
 }
 
 func TestHypervisorLinuxSystemdDetectVirt(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_systemd_detect_virt.toml"))
+	conn, err := mock.New(8, &inventory.Asset{}, mock.WithPath("./testdata/linux_systemd_detect_virt.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -112,7 +115,7 @@ func TestHypervisorLinuxSystemdDetectVirt(t *testing.T) {
 }
 
 func TestHypervisorLinuxDMIProductName(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmi_product_name.toml"))
+	conn, err := mock.New(9, &inventory.Asset{}, mock.WithPath("./testdata/linux_dmi_product_name.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -124,7 +127,7 @@ func TestHypervisorLinuxDMIProductName(t *testing.T) {
 }
 
 func TestHypervisorLinuxOpenShiftVirtualization(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_openshift_virtualization.toml"))
+	conn, err := mock.New(10, &inventory.Asset{}, mock.WithPath("./testdata/linux_openshift_virtualization.toml"))
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
