@@ -12,11 +12,6 @@ import (
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 )
 
-type SubscriptionsFilter struct {
-	Exclude []string
-	Include []string
-}
-
 type subscriptionsClient struct {
 	token         azcore.TokenCredential
 	clientOptions policy.ClientOptions

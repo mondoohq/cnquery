@@ -116,6 +116,12 @@ Examples run in the Azure CLI:
 					Default: "",
 					Desc:    "Path to a file containing an OIDC token to exchange via Azure workload identity federation",
 				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter options, e.g., --filters subscriptions=<id1>,<id2> --filters subscriptions-exclude=<id3>",
+				},
 			},
 		},
 	},

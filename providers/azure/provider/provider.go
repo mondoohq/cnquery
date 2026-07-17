@@ -49,9 +49,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	tenantId := flagBytes(flags, "tenant-id")
 	clientId := flagBytes(flags, "client-id")
 	clientSecret := flagBytes(flags, "client-secret")
-	subscriptionId := flagBytes(flags, "subscription")
-	subscriptions := flagBytes(flags, "subscriptions")
-	subscriptionsToExclude := flagBytes(flags, "subscriptions-exclude")
 	certificatePath := flagBytes(flags, "certificate-path")
 	certificateSecret := flagBytes(flags, "certificate-secret")
 	federatedTokenFile := flagBytes(flags, "federated-token-file")
@@ -60,15 +57,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	opts["tenant-id"] = string(tenantId)
 	opts["client-id"] = string(clientId)
-	if len(subscriptionId) > 0 {
-		opts["subscriptions"] = string(subscriptionId)
-	}
-	if len(subscriptions) > 0 {
-		opts["subscriptions"] = string(subscriptions)
-	}
-	if len(subscriptionsToExclude) > 0 {
-		opts["subscriptions-exclude"] = string(subscriptionsToExclude)
-	}
 	if len(federatedTokenFile) > 0 {
 		opts[connection.OptionFederatedTokenFile] = string(federatedTokenFile)
 	}
@@ -86,7 +74,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	config := &inventory.Config{
 		Type:        "azure",
-		Discover:    parseDiscover(flags),
+		Discover:    parseDiscover(flags, parseFlagsToFiltersOpts(flags)),
 		Credentials: creds,
 		Options:     opts,
 	}
@@ -106,7 +94,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
-func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
+func parseDiscover(flags map[string]*llx.Primitive, filterOpts map[string]string) *inventory.Discovery {
 	var targets []string
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
 		targets = make([]string, 0, len(x.Array))
@@ -117,7 +105,40 @@ func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
 	} else {
 		targets = []string{resources.DiscoveryAuto}
 	}
-	return &inventory.Discovery{Targets: targets}
+	return &inventory.Discovery{Targets: targets, Filter: filterOpts}
+}
+
+// parseFlagsToFiltersOpts builds the discovery filter options map from both the
+// --filters key/value flag and the dedicated --subscription* flags, then stores
+// it on inventory.Discovery.Filter (mirroring the AWS provider). The dedicated
+// flags take precedence over their --filters counterparts, and the plural
+// --subscriptions overrides the singular --subscription (preserving the
+// historical precedence). Keys are matched exactly, not by prefix, because
+// "subscriptions" is a prefix of "subscriptions-exclude".
+func parseFlagsToFiltersOpts(flags map[string]*llx.Primitive) map[string]string {
+	o := map[string]string{}
+
+	// base: the --filters key/value flag (allowlisted keys only)
+	if x, ok := flags["filters"]; ok && len(x.Map) != 0 {
+		for k, v := range x.Map {
+			if k == "subscriptions" || k == "subscriptions-exclude" {
+				o[k] = string(v.Value)
+			}
+		}
+	}
+
+	// overlay: dedicated flags win over their --filters counterparts
+	if v := flagBytes(flags, "subscription"); len(v) > 0 {
+		o["subscriptions"] = string(v)
+	}
+	if v := flagBytes(flags, "subscriptions"); len(v) > 0 {
+		o["subscriptions"] = string(v)
+	}
+	if v := flagBytes(flags, "subscriptions-exclude"); len(v) > 0 {
+		o["subscriptions-exclude"] = string(v)
+	}
+
+	return o
 }
 
 func handleAzureComputeSubcommands(args []string, config *inventory.Config) error {

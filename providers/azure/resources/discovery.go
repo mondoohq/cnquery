@@ -225,15 +225,7 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		return nil, errors.New("invalid connection provided, it is not an Azure connection")
 	}
 	assets := []*inventory.Asset{}
-	subsToInclude := rootConf.Options["subscriptions"]
-	subsToExclude := rootConf.Options["subscriptions-exclude"]
-	filter := connection.SubscriptionsFilter{}
-	if len(subsToInclude) > 0 {
-		filter.Include = strings.Split(subsToInclude, ",")
-	}
-	if len(subsToExclude) > 0 {
-		filter.Exclude = strings.Split(subsToExclude, ",")
-	}
+	filter := conn.Filters.Subscriptions
 	// note: we always need the subscriptions, either to return them as assets or discover resources inside the subs
 	subs, err := discoverSubscriptions(conn, filter)
 	if err != nil {

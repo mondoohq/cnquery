@@ -24,6 +24,18 @@ func connOpts(t *testing.T, res *plugin.ParseCLIRes) map[string]string {
 	return res.Asset.Connections[0].Options
 }
 
+// connFilter returns the Discovery.Filter map from the single connection
+// ParseCLI builds. Subscription filters now flow through Discovery.Filter
+// (mirroring the AWS provider), not the Options map.
+func connFilter(t *testing.T, res *plugin.ParseCLIRes) map[string]string {
+	t.Helper()
+	require.NotNil(t, res)
+	require.NotNil(t, res.Asset)
+	require.Len(t, res.Asset.Connections, 1)
+	require.NotNil(t, res.Asset.Connections[0].Discover)
+	return res.Asset.Connections[0].Discover.Filter
+}
+
 // TestParseCLINilFlags is a regression test: the flags map only contains keys
 // the CLI actually registered, so absent keys (notably the legacy singular
 // "subscription", which is never registered) resolve to a nil *llx.Primitive.
@@ -71,7 +83,8 @@ func TestParseCLINilFlags(t *testing.T) {
 
 // TestParseCLISubscriptionFlags checks that both the plural "subscriptions"
 // flag and the legacy singular "subscription" key populate the connection's
-// "subscriptions" option, and that "subscriptions-exclude" flows through.
+// Discovery.Filter "subscriptions" entry, and that "subscriptions-exclude"
+// flows through. These values are no longer written to Options.
 func TestParseCLISubscriptionFlags(t *testing.T) {
 	s := Init()
 
@@ -82,7 +95,9 @@ func TestParseCLISubscriptionFlags(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, "sub-a,sub-b", connOpts(t, res)["subscriptions"])
+		assert.Equal(t, "sub-a,sub-b", connFilter(t, res)["subscriptions"])
+		// no longer duplicated into Options
+		assert.NotContains(t, connOpts(t, res), "subscriptions")
 	})
 
 	t.Run("singular subscription flag still honored", func(t *testing.T) {
@@ -92,7 +107,7 @@ func TestParseCLISubscriptionFlags(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, "sub-single", connOpts(t, res)["subscriptions"])
+		assert.Equal(t, "sub-single", connFilter(t, res)["subscriptions"])
 	})
 
 	t.Run("subscriptions-exclude flows through", func(t *testing.T) {
@@ -102,7 +117,65 @@ func TestParseCLISubscriptionFlags(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assert.Equal(t, "sub-x", connOpts(t, res)["subscriptions-exclude"])
+		assert.Equal(t, "sub-x", connFilter(t, res)["subscriptions-exclude"])
+	})
+}
+
+// TestParseCLIFiltersFlag checks the --filters key/value flag as an equivalent
+// transport for subscription filters, and the precedence rules when both the
+// --filters flag and the dedicated flags are set.
+func TestParseCLIFiltersFlag(t *testing.T) {
+	s := Init()
+
+	t.Run("filters subscriptions populate Discovery.Filter", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"subscriptions":         llx.StringPrimitive("sub-a,sub-b"),
+					"subscriptions-exclude": llx.StringPrimitive("sub-x"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		f := connFilter(t, res)
+		assert.Equal(t, "sub-a,sub-b", f["subscriptions"])
+		assert.Equal(t, "sub-x", f["subscriptions-exclude"])
+	})
+
+	t.Run("unknown filters keys are ignored", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"regions": llx.StringPrimitive("eastus"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		assert.NotContains(t, connFilter(t, res), "regions")
+	})
+
+	t.Run("dedicated flag overrides its --filters counterpart", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"subscriptions": llx.StringPrimitive("dedicated"),
+				"filters": {Map: map[string]*llx.Primitive{
+					"subscriptions": llx.StringPrimitive("from-filters"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "dedicated", connFilter(t, res)["subscriptions"])
+	})
+
+	t.Run("plural subscriptions overrides singular subscription", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"subscription":  llx.StringPrimitive("singular"),
+				"subscriptions": llx.StringPrimitive("plural"),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "plural", connFilter(t, res)["subscriptions"])
 	})
 }
 

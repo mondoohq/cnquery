@@ -36,6 +36,8 @@ type AzureConnection struct {
 	// note: in the future, we might make this optional if we have a tenant-level asset.
 	subscriptionId string
 	clientOptions  policy.ClientOptions
+	// Filters holds the parsed discovery filters (from inventory.Discovery.Filter).
+	Filters DiscoveryFilters
 }
 
 // selectAzureCredential chooses the appropriate Azure token credential based on
@@ -79,6 +81,7 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		clientOptions: policy.ClientOptions{
 			PerCallPolicies: []policy.Policy{&apiTracePolicy{}},
 		},
+		Filters: DiscoveryFiltersFromOpts(conf.GetDiscover().GetFilter()),
 	}, nil
 }
 
