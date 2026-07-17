@@ -10,7 +10,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -100,48 +99,8 @@ func (r *mqlGoose) extensions() ([]interface{}, error) {
 }
 
 func (r *mqlGoose) skills() ([]interface{}, error) {
-	afs := connectionAfs(r.MqlRuntime)
-	// Goose skills live at $XDG_CONFIG_HOME/goose/skills/ (same base as config)
-	skillsDir := filepath.Join(r.ConfigPath.Data, "skills")
-
-	subdirs, err := listSubdirsAfero(afs, skillsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var result []interface{}
-	for _, dir := range subdirs {
-		skillPath := filepath.Join(dir.path, "SKILL.md")
-		data, err := afs.ReadFile(skillPath)
-		if err != nil {
-			continue
-		}
-
-		skill := parseSkillMd(dir.name, skillPath, string(data))
-
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
-		for i, t := range skill.allowedTools {
-			allowedToolsAny[i] = t
-		}
-
-		res, err := NewResource(r.MqlRuntime, "goose.skill", map[string]*llx.RawData{
-			"__id":         llx.StringData("goose.skill/" + dir.name),
-			"name":         llx.StringData(skill.name),
-			"description":  llx.StringData(skill.description),
-			"allowedTools": llx.ArrayData(allowedToolsAny, types.String),
-			"argumentHint": llx.StringData(skill.argumentHint),
-			"source":       llx.StringData(skill.source),
-			"content":      llx.StringData(skill.content),
-		})
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, res)
-	}
-	return result, nil
+	return agentSkills(r.MqlRuntime, "goose.skill", r.ConfigPath.Data, defaultGooseConfigDir,
+		filepath.Join(defaultGooseConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
 // Child resource ID methods
@@ -151,7 +110,7 @@ func (r *mqlGooseExtension) id() (string, error) {
 }
 
 func (r *mqlGooseSkill) id() (string, error) {
-	return "goose.skill/" + r.Name.Data, nil
+	return "goose.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlGooseSkill) sha256() (string, error) {

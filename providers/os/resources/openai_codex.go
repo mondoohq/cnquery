@@ -152,51 +152,68 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
 	afs := r.afs()
 	var result []interface{}
+	seen := map[string]struct{}{}
 
-	// Collect system skills
-	systemSkillsDir := filepath.Join(r.codexDir(), "skills", ".system")
-	if subdirs, err := listSubdirsAfero(afs, systemSkillsDir); err == nil {
-		for _, dir := range subdirs {
-			skillPath := filepath.Join(dir.path, "SKILL.md")
-			data, err := afs.ReadFile(skillPath)
-			if err != nil {
-				continue
-			}
-			skill := parseSkillMd(dir.name, skillPath, string(data))
-			res, err := newCodexSkillResource(r.MqlRuntime, skill, "system")
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, res)
-		}
-	}
-
-	// Collect plugin skills
-	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
-	if pluginDirs, err := listSubdirsAfero(afs, pluginsDir); err == nil {
-		for _, pluginDir := range pluginDirs {
-			skillsDir := filepath.Join(pluginDir.path, "skills")
-			skillDirs, err := listSubdirsAfero(afs, skillsDir)
-			if err != nil {
-				continue
-			}
-			for _, skillDir := range skillDirs {
-				skillPath := filepath.Join(skillDir.path, "SKILL.md")
-				data, err := afs.ReadFile(skillPath)
-				if err != nil {
-					continue
-				}
-				skill := parseSkillMd(skillDir.name, skillPath, string(data))
-				res, err := newCodexSkillResource(r.MqlRuntime, skill, pluginDir.name)
+	for _, codexDir := range r.codexDirs() {
+		// system skills
+		systemSkillsDir := filepath.Join(codexDir, "skills", ".system")
+		if subdirs, err := listSubdirsAfero(afs, systemSkillsDir); err == nil {
+			for _, dir := range subdirs {
+				res, err := r.readCodexSkill(afs, dir.name, dir.path, "system", seen)
 				if err != nil {
 					return nil, err
 				}
-				result = append(result, res)
+				if res != nil {
+					result = append(result, res)
+				}
+			}
+		}
+
+		// plugin skills
+		pluginsDir := filepath.Join(codexDir, ".tmp", "plugins", "plugins")
+		if pluginDirs, err := listSubdirsAfero(afs, pluginsDir); err == nil {
+			for _, pluginDir := range pluginDirs {
+				skillDirs, err := listSubdirsAfero(afs, filepath.Join(pluginDir.path, "skills"))
+				if err != nil {
+					continue
+				}
+				for _, skillDir := range skillDirs {
+					res, err := r.readCodexSkill(afs, skillDir.name, skillDir.path, pluginDir.name, seen)
+					if err != nil {
+						return nil, err
+					}
+					if res != nil {
+						result = append(result, res)
+					}
+				}
 			}
 		}
 	}
 
 	return result, nil
+}
+
+// codexDirs returns the codex config dirs to scan: every user's ~/.codex, or
+// the explicit configPath override when it is not a per-user default.
+func (r *mqlOpenaiCodex) codexDirs() []string {
+	return resolvePerUserDirs(r.MqlRuntime, r.codexDir(), defaultCodexConfigDir, defaultCodexConfigDir, r.codexDir())
+}
+
+// readCodexSkill reads a single SKILL.md, deduping by source path. Returns nil
+// when the file is unreadable or already seen.
+func (r *mqlOpenaiCodex) readCodexSkill(afs *afero.Afero, name, dirPath, plugin string, seen map[string]struct{}) (*mqlOpenaiCodexSkill, error) {
+	skillPath := filepath.Join(dirPath, "SKILL.md")
+	if _, ok := seen[skillPath]; ok {
+		return nil, nil
+	}
+	// Mark seen before reading so an unreadable file isn't retried when the same
+	// path appears under more than one codex dir (matches collectSkillFiles).
+	seen[skillPath] = struct{}{}
+	data, err := afs.ReadFile(skillPath)
+	if err != nil {
+		return nil, nil
+	}
+	return newCodexSkillResource(r.MqlRuntime, parseSkillMd(name, skillPath, string(data)), plugin)
 }
 
 func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
@@ -343,7 +360,7 @@ func (r *mqlOpenaiCodex) loadAuth() (*codexAuthJSON, error) {
 
 func newCodexSkillResource(runtime *plugin.Runtime, skill skillInfo, pluginName string) (*mqlOpenaiCodexSkill, error) {
 	res, err := NewResource(runtime, "openai.codex.skill", map[string]*llx.RawData{
-		"__id":        llx.StringData("openai.codex.skill/" + pluginName + "/" + skill.name),
+		"__id":        llx.StringData("openai.codex.skill/" + skill.source),
 		"name":        llx.StringData(skill.name),
 		"description": llx.StringData(skill.description),
 		"source":      llx.StringData(skill.source),
@@ -363,7 +380,7 @@ func (r *mqlOpenaiCodexPlugin) id() (string, error) {
 }
 
 func (r *mqlOpenaiCodexSkill) id() (string, error) {
-	return "openai.codex.skill/" + r.Plugin.Data + "/" + r.Name.Data, nil
+	return "openai.codex.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlOpenaiCodexSkill) sha256() (string, error) {

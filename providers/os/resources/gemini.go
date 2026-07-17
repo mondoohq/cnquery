@@ -91,47 +91,8 @@ func (r *mqlGemini) mcpServers() ([]interface{}, error) {
 }
 
 func (r *mqlGemini) skills() ([]interface{}, error) {
-	afs := connectionAfs(r.MqlRuntime)
-	skillsDir := filepath.Join(r.ConfigPath.Data, "skills")
-
-	subdirs, err := listSubdirsAfero(afs, skillsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	var result []interface{}
-	for _, dir := range subdirs {
-		skillPath := filepath.Join(dir.path, "SKILL.md")
-		data, err := afs.ReadFile(skillPath)
-		if err != nil {
-			continue
-		}
-
-		skill := parseSkillMd(dir.name, skillPath, string(data))
-
-		allowedToolsAny := make([]interface{}, len(skill.allowedTools))
-		for i, t := range skill.allowedTools {
-			allowedToolsAny[i] = t
-		}
-
-		res, err := NewResource(r.MqlRuntime, "gemini.skill", map[string]*llx.RawData{
-			"__id":         llx.StringData("gemini.skill/" + dir.name),
-			"name":         llx.StringData(skill.name),
-			"description":  llx.StringData(skill.description),
-			"allowedTools": llx.ArrayData(allowedToolsAny, types.String),
-			"argumentHint": llx.StringData(skill.argumentHint),
-			"source":       llx.StringData(skill.source),
-			"content":      llx.StringData(skill.content),
-		})
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, res)
-	}
-	return result, nil
+	return agentSkills(r.MqlRuntime, "gemini.skill", r.ConfigPath.Data, defaultGeminiConfigDir,
+		filepath.Join(defaultGeminiConfigDir, "skills"), filepath.Join(r.ConfigPath.Data, "skills"))
 }
 
 // Child resource ID methods
@@ -141,7 +102,7 @@ func (r *mqlGeminiMcpServer) id() (string, error) {
 }
 
 func (r *mqlGeminiSkill) id() (string, error) {
-	return "gemini.skill/" + r.Name.Data, nil
+	return "gemini.skill/" + r.Source.Data, nil
 }
 
 func (r *mqlGeminiSkill) sha256() (string, error) {
