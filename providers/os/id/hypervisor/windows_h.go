@@ -5,9 +5,7 @@ package hypervisor
 
 import "github.com/rs/zerolog/log"
 
-// Model + manufacturer come from Win32_ComputerSystem, SMBIOS version from Win32_BIOS
-// (the reliable signal on modern Hyper-V where model/manufacturer are generic). One
-// process, no wmic.
+// Model + manufacturer from Win32_ComputerSystem, SMBIOS version from Win32_BIOS.
 const windowsDetectionCommand = `$cs = Get-CimInstance -ClassName Win32_ComputerSystem; ` +
 	`$bios = Get-CimInstance -ClassName Win32_BIOS; ` +
 	`"$($cs.Model)|$($cs.Manufacturer)|$($bios.SMBIOSBIOSVersion)"`
