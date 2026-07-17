@@ -149,20 +149,12 @@ func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
 	}
 
 	// loop-back address [::1]:17223 or *:56863
-	host, port, err := net.SplitHostPort(f.Name)
+	host, localPort, err := splitHostPort(f.Name)
 	if err != nil {
 		return "", 0, "", 0, errors.Wrapf(err, "network name not supported: %s", f.Name)
 	}
 
-	localPort := 0
-	if port != "*" {
-		localPort, err = strconv.Atoi(port)
-		if err != nil {
-			return "", 0, "", 0, errors.New("network name not supported: " + f.Name)
-		}
-	}
-
-	return host, int64(localPort), "", 0, nil
+	return host, localPort, "", 0, nil
 }
 
 // splitHostPort separates a single "host:port" endpoint into its host and
