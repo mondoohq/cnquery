@@ -36,19 +36,22 @@ func (t *processTracker) track(client *plugin.Client, cmd *exec.Cmd) {
 	t.cmd = cmd
 }
 
-// exitState returns the exit state of the tracked plugin subprocess, or nil
-// while it is still running (or if nothing is tracked). A non-nil result is
-// safe to read: Exited() == true means go-plugin's Wait on this cmd returned.
-func (t *processTracker) exitState() *os.ProcessState {
+// exitInfo reports whether the tracked plugin subprocess has been reaped
+// and, if so, its exit state. Exited() == true means go-plugin's Wait on
+// this exact cmd returned, so reading ProcessState is race-free. The tracker
+// is the single source of truth for crash diagnostics: unlike
+// RestartableProvider's client accessor, its lock is only ever held for a
+// field copy, so this never blocks behind an in-flight Reconnect.
+func (t *processTracker) exitInfo() (bool, *os.ProcessState) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if t.client == nil || t.cmd == nil {
-		return nil
+		return false, nil
 	}
 	if !t.client.Exited() {
-		return nil
+		return false, nil
 	}
-	return t.cmd.ProcessState
+	return true, t.cmd.ProcessState
 }
 
 // formatExitStatus renders a process's exit disposition for the crash
@@ -59,6 +62,8 @@ func formatExitStatus(ps *os.ProcessState) string {
 	if ps == nil {
 		return "unknown"
 	}
+	// syscall.WaitStatus exists on every port, including Windows, where
+	// Signaled() is hardwired to false and we fall through to ExitCode().
 	if ws, ok := ps.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
 		return "signal:" + signalName(ws.Signal())
 	}

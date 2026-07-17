@@ -8,6 +8,7 @@ package providers
 import (
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,10 +48,36 @@ func TestMaxRSSBytes(t *testing.T) {
 }
 
 func TestProcessTracker_NoSubprocess(t *testing.T) {
-	// Untracked (builtin providers, tests): no state, no panic.
+	// Untracked (builtin providers, tests): no state, no panic, no wait.
 	tracker := &processTracker{}
-	assert.Nil(t, tracker.exitState())
+	exited, ps := tracker.exitInfo()
+	assert.False(t, exited)
+	assert.Nil(t, ps)
 
 	p := &RunningProvider{}
-	assert.Nil(t, p.exitState())
+	exited, ps = p.awaitExit(time.Second)
+	assert.False(t, exited)
+	assert.Nil(t, ps)
+}
+
+func TestAwaitExit_GraceIsMemoized(t *testing.T) {
+	// A tracker whose subprocess never exits: the first awaitExit pays the
+	// grace period, subsequent calls must return immediately.
+	cmd := exec.Command("sleep", "30")
+	require.NoError(t, cmd.Start())
+	defer func() {
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+	}()
+
+	p := &RunningProvider{proc: &processTracker{}}
+	p.proc.track(nil, cmd) // nil client → exitInfo always reports running
+	_, _ = p.awaitExit(30 * time.Millisecond)
+	require.True(t, p.exitGraceExpired.Load())
+
+	start := time.Now()
+	exited, ps := p.awaitExit(30 * time.Millisecond)
+	assert.False(t, exited)
+	assert.Nil(t, ps)
+	assert.Less(t, time.Since(start), 25*time.Millisecond)
 }

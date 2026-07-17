@@ -346,7 +346,6 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			Logger: pluginLogger,
 			Stderr: crashLog,
 		})
-		procTracker.track(client, pluginCmd)
 
 		// Connect via RPC
 		rpcClient, err := client.Client()
@@ -362,6 +361,12 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			client.Kill()
 			return nil, nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
 		}
+
+		// Track only after the handshake succeeds: a failed reconnect
+		// attempt must not re-point the tracker away from the previous
+		// (crashed) subprocess, whose exit disposition is what crash
+		// diagnostics still need to report.
+		procTracker.track(client, pluginCmd)
 
 		return raw.(pp.ProviderPlugin), client, nil
 	}

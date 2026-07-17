@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-plugin"
@@ -382,6 +383,16 @@ type RunningProvider struct {
 	// exit disposition (exit code vs. signal, peak RSS) after it dies. Nil
 	// for builtin providers and providers constructed without a subprocess.
 	proc *processTracker
+	// exitGraceExpired memoizes that awaitExit already waited a full grace
+	// period without the subprocess exiting, so subsequent crash-diagnostic
+	// builds don't each re-pay the wait for a hung-but-alive provider.
+	// Reset on successful reconnect.
+	exitGraceExpired atomic.Bool
+	// killedSelf records that we sent the kill signal to the subprocess
+	// ourselves (shutdown, heartbeat-triggered or otherwise). It lets crash
+	// diagnostics distinguish our own SIGKILL from an external one — the
+	// latter, with an empty stderr tail, is the OOM-killer fingerprint.
+	killedSelf atomic.Bool
 	// provider errors which are evaluated and printed during shutdown of the provider
 	err          error
 	lock         sync.Mutex
@@ -499,6 +510,8 @@ func (p *RunningProvider) Reconnect() error {
 		}
 		p.isClosed = false
 		p.isShutdown = false
+		p.exitGraceExpired.Store(false)
+		p.killedSelf.Store(false)
 		hbCtx, hbCancelFunc := context.WithCancel(context.Background())
 		if p.hbCancelFunc != nil {
 			p.hbCancelFunc()
@@ -537,6 +550,7 @@ func (p *RunningProvider) Shutdown() error {
 		if rp, ok := p.Plugin.(*RestartableProvider); ok {
 			c := rp.Client()
 			if c != nil {
+				p.killedSelf.Store(true)
 				c.Kill()
 			}
 		}
@@ -557,54 +571,55 @@ func (p *RunningProvider) KillClient() {
 	if rp, ok := p.Plugin.(*RestartableProvider); ok {
 		c := rp.Client()
 		if c != nil {
+			p.killedSelf.Store(true)
 			c.Kill()
 		}
 	}
 }
 
-// hasExited reports whether the underlying plugin subprocess has exited.
-// Returns false if we have no client handle (e.g. for builtin providers).
-func (p *RunningProvider) hasExited() bool {
-	if rp, ok := p.Plugin.(*RestartableProvider); ok {
-		c := rp.Client()
-		if c != nil {
-			return c.Exited()
-		}
-	}
-	return false
-}
-
-// exitState returns the subprocess's exit state once it has died, or nil
-// while it is still running or when no subprocess is tracked (builtin
-// providers, tests). See processTracker.exitState for the safety contract.
-func (p *RunningProvider) exitState() *os.ProcessState {
-	if p.proc == nil {
-		return nil
-	}
-	return p.proc.exitState()
+// wasKilledLocally reports whether we sent the subprocess its kill signal
+// ourselves, so crash diagnostics don't misread our own SIGKILL as the
+// OOM killer's.
+func (p *RunningProvider) wasKilledLocally() bool {
+	return p.killedSelf.Load()
 }
 
 // awaitExit waits up to grace for the plugin subprocess to be reaped,
-// reporting whether it exited. An in-flight RPC fails the instant the
-// child's socket dies — usually before go-plugin's exit-watcher goroutine
-// has waited on the process — so crash diagnostics built immediately would
-// see "still running" and miss the exit disposition. Reaping a dead direct
-// child settles within milliseconds; the grace bound only matters for the
-// true-hang case, where the process really is still running.
-// Returns immediately when no subprocess is tracked.
-func (p *RunningProvider) awaitExit(grace time.Duration) bool {
+// reporting whether it exited and, if so, its exit state. An in-flight RPC
+// fails the instant the child's socket dies — usually before go-plugin's
+// exit-watcher goroutine has waited on the process — so crash diagnostics
+// built immediately would see "still running" and miss the exit
+// disposition. Reaping a dead direct child settles within milliseconds; the
+// grace bound only matters for the true-hang case, where the process really
+// is still running.
+//
+// It reads exclusively from the process tracker: consulting the
+// RestartableProvider's client here would block on its lock, which
+// Reconnect() holds for the full duration of re-establishing every tracked
+// connection. The wait is also memoized — handlePluginError builds
+// diagnostics once per failed RPC, and a hung-but-alive provider must stall
+// the first of them at most, not every one.
+// Returns immediately when no subprocess is tracked (builtin providers).
+func (p *RunningProvider) awaitExit(grace time.Duration) (bool, *os.ProcessState) {
 	if p.proc == nil {
-		return p.hasExited()
+		return false, nil
+	}
+	if exited, ps := p.proc.exitInfo(); exited {
+		return true, ps
+	}
+	if p.exitGraceExpired.Load() {
+		return false, nil
 	}
 	deadline := time.Now().Add(grace)
 	for {
-		if p.hasExited() {
-			return true
+		time.Sleep(25 * time.Millisecond)
+		if exited, ps := p.proc.exitInfo(); exited {
+			return true, ps
 		}
 		if time.Now().After(deadline) {
-			return false
+			p.exitGraceExpired.Store(true)
+			return false, nil
 		}
-		time.Sleep(25 * time.Millisecond)
 	}
 }
 
