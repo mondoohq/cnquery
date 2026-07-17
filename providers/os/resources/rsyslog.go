@@ -191,48 +191,22 @@ func stripRsyslogComment(line string) string {
 }
 
 // resolveRsyslogInclude turns a (possibly relative, possibly globbed) include
-// pattern into a directory + basename-regex pair suitable for passing to
-// files.find. The returned regex is anchored on both ends and matches the
-// basename only. A pattern with no glob meta-characters resolves to a regex
-// that matches that single name exactly.
-func resolveRsyslogInclude(parentDir, pattern string) (dir, nameRegex string) {
+// pattern into the directory to search and the basename glob to match inside
+// it. A pattern with no glob meta-characters yields a glob that matches that
+// single name exactly.
+func resolveRsyslogInclude(parentDir, pattern string) (dir, baseGlob string) {
 	if !filepath.IsAbs(pattern) {
 		pattern = filepath.Join(parentDir, pattern)
 	}
-	dir = filepath.Dir(pattern)
-	base := filepath.Base(pattern)
-	return dir, "^" + globToRegex(base) + "$"
+	return filepath.Dir(pattern), filepath.Base(pattern)
 }
 
-// globToRegex converts a shell glob (the only metas rsyslog needs in
-// practice are `*`, `?`, and character classes) into a regular expression
-// suitable for files.find's `name` parameter, which is compiled as regexp.
-// Glob `*` becomes `[^/]*`, `?` becomes `[^/]`, `[abc]` is passed through.
-// Everything else is regex-escaped.
-func globToRegex(glob string) string {
-	var b strings.Builder
-	b.Grow(len(glob) + 4)
-	inClass := false
-	for i := 0; i < len(glob); i++ {
-		c := glob[i]
-		switch {
-		case inClass:
-			b.WriteByte(c)
-			if c == ']' {
-				inClass = false
-			}
-		case c == '[':
-			b.WriteByte(c)
-			inClass = true
-		case c == '*':
-			b.WriteString(`[^/]*`)
-		case c == '?':
-			b.WriteString(`[^/]`)
-		default:
-			b.WriteString(regexp.QuoteMeta(string(c)))
-		}
-	}
-	return b.String()
+// rsyslogIncludeMatches reports whether a path's basename satisfies an
+// include's glob. A malformed glob matches nothing, mirroring glob(3), which
+// reports no matches rather than failing.
+func rsyslogIncludeMatches(baseGlob, path string) bool {
+	ok, err := filepath.Match(baseGlob, filepath.Base(path))
+	return err == nil && ok
 }
 
 // maxRsyslogIncludeDepth bounds how many levels of nested includes we
@@ -343,16 +317,21 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 // parentDir if not absolute) into the list of files it matches, using
 // files.find against the asset's filesystem.
 //
+// The glob is applied here rather than handed to files.find's `name`, whose
+// meaning differs by backend: the command backends read it as a glob on the
+// basename (`find -name`, PowerShell `-like`), while the native backend
+// compiles it as a regex matched against the whole path. Matching locally
+// keeps rsyslog's own glob(3) semantics identical on every connection type.
+//
 // depth=1 restricts the search to the immediate directory, matching
 // rsyslog's own glob(3) semantics: `$IncludeConfig /etc/rsyslog.d/*.conf`
 // does not pick up `/etc/rsyslog.d/nested/extra.conf`.
 func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]string, error) {
-	dir, nameRegex := resolveRsyslogInclude(parentDir, pattern)
+	dir, baseGlob := resolveRsyslogInclude(parentDir, pattern)
 
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
 		"from":  llx.StringData(dir),
 		"type":  llx.StringData("file"),
-		"name":  llx.StringData(nameRegex),
 		"depth": llx.IntData(1),
 	})
 	if err != nil {
@@ -366,9 +345,14 @@ func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]stri
 
 	paths := make([]string, 0, len(list.Data))
 	for _, item := range list.Data {
-		if mf, ok := item.(*mqlFile); ok {
-			paths = append(paths, mf.Path.Data)
+		mf, ok := item.(*mqlFile)
+		if !ok {
+			continue
 		}
+		if !rsyslogIncludeMatches(baseGlob, mf.Path.Data) {
+			continue
+		}
+		paths = append(paths, mf.Path.Data)
 	}
 	return paths, nil
 }
