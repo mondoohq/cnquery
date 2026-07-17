@@ -1142,11 +1142,9 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 		if imgFilter.skip(i.resolvedImage) {
 			continue
 		}
-		if digestExclude != nil {
-			if digest := extractDigest(i.resolvedImage); digest != "" {
-				if _, excluded := digestExclude[digest]; excluded {
-					continue
-				}
+		if digest := extractDigest(i.resolvedImage); digest != "" {
+			if _, excluded := digestExclude[digest]; excluded {
+				continue
 			}
 		}
 		assetList = append(assetList, &inventory.Asset{

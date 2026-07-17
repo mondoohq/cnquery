@@ -90,7 +90,7 @@ Examples:
 					Long:    "digests-exclude",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Filter out container images matching the given digests during discovery (comma-separated)",
+					Desc:    "Filter out container images matching the given digests during discovery (comma-separated, e.g. sha256:abc123)",
 				},
 				{
 					Long:    "kubelogin",
