@@ -187,6 +187,16 @@ func (f *mqlFirefox) addons() ([]any, error) {
 		for _, browserCfg := range configs {
 			browserDir := filepath.Join(homeDir, browserCfg.relPath)
 
+			// Skip browsers this user doesn't have installed. A recursive search
+			// is expensive on Windows, where files.find has no native backend and
+			// each call spawns a PowerShell process, so the vast majority of
+			// (user x browser) combinations would pay a process start-up just to
+			// learn the directory is absent.
+			// See https://github.com/mondoohq/mql/issues/9104
+			if !firefoxBrowserDirExists(afs, browserDir) {
+				continue
+			}
+
 			// Use files.find to efficiently search for extensions.json files
 			// Standard Firefox: BrowserDir/Profiles/profile_name/extensions.json (depth 3)
 			// Tor/Mullvad: BrowserDir/profile.default/extensions.json (depth 2)
@@ -324,6 +334,18 @@ func (f *mqlFirefox) addons() ([]any, error) {
 	}
 
 	return addons, nil
+}
+
+// firefoxBrowserDirExists reports whether a browser's profile directory is
+// present, treating an unreadable path or a non-directory as absent so the
+// caller skips the search rather than failing the whole resource.
+func firefoxBrowserDirExists(afs *afero.Afero, dir string) bool {
+	exists, err := afs.DirExists(dir)
+	if err != nil {
+		log.Debug().Err(err).Str("path", dir).Msg("could not check browser directory")
+		return false
+	}
+	return exists
 }
 
 // readFirefoxExtensionsJSON reads and parses a Firefox extensions.json file

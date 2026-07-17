@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -165,6 +166,41 @@ func TestFirefoxSystemAddonDetection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.isSystem, isFirefoxSystemAddon(tt.addon))
+		})
+	}
+}
+
+func TestFirefoxBrowserDirExists(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll("/home/user/.mozilla/firefox/Profiles/abc.default", 0o755))
+	require.NoError(t, afero.WriteFile(fs, "/home/user/.librewolf", []byte("not a dir"), 0o644))
+	afs := &afero.Afero{Fs: fs}
+
+	tests := []struct {
+		name   string
+		dir    string
+		exists bool
+	}{
+		{
+			name:   "installed browser",
+			dir:    "/home/user/.mozilla/firefox",
+			exists: true,
+		},
+		{
+			name:   "browser not installed",
+			dir:    "/home/user/.mozilla/firefox-nightly",
+			exists: false,
+		},
+		{
+			name:   "path exists but is a file",
+			dir:    "/home/user/.librewolf",
+			exists: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.exists, firefoxBrowserDirExists(afs, tt.dir))
 		})
 	}
 }
