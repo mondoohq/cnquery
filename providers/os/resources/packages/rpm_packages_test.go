@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 func TestRedhat8Parser(t *testing.T) {
@@ -179,6 +181,61 @@ func TestRedhat8Parser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(pkgFiles), "detected the right amount of package files")
 	assert.Contains(t, pkgFiles, FileRecord{Path: "/var/lib/rpm/rpmdb.sqlite"})
+}
+
+// countingConnection wraps a shared.Connection and counts how often each
+// command string is executed, so a test can assert that a command is issued
+// exactly once regardless of how many callers request it.
+type countingConnection struct {
+	shared.Connection
+	mu     sync.Mutex
+	counts map[string]int
+}
+
+func (c *countingConnection) RunCommand(command string) (*shared.Command, error) {
+	c.mu.Lock()
+	if c.counts == nil {
+		c.counts = map[string]int{}
+	}
+	c.counts[command]++
+	c.mu.Unlock()
+	return c.Connection.RunCommand(command)
+}
+
+func (c *countingConnection) count(command string) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.counts[command]
+}
+
+// TestRpmFilesResolvesDBPathOnce guards the N+1 fix: `rpm -E '%{_dbpath}'`
+// returns the same system-wide constant for every package, so the manager must
+// resolve it once and reuse it, no matter how many packages ask for their files.
+func TestRpmFilesResolvesDBPathOnce(t *testing.T) {
+	base, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_redhat8.toml"))
+	require.NoError(t, err)
+
+	conn := &countingConnection{Connection: base}
+
+	pf := &inventory.Platform{
+		Name:    "redhat",
+		Version: "8.4",
+		Arch:    "x86_64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels:  map[string]string{"distro-id": "rhel"},
+	}
+
+	mgr := &RpmPkgManager{conn: conn, platform: pf}
+
+	const pkgCount = 500
+	for i := 0; i < pkgCount; i++ {
+		files, err := mgr.Files("which", "2.21-12.el8", "x86_64")
+		require.NoError(t, err)
+		require.Equal(t, []FileRecord{{Path: "/var/lib/rpm/rpmdb.sqlite"}}, files)
+	}
+
+	assert.Equal(t, 1, conn.count("rpm -E '%{_dbpath}'"),
+		"rpm database path must be resolved once and reused for every package")
 }
 
 func TestPhoton4ImageParser(t *testing.T) {
