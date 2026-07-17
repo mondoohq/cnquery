@@ -5,6 +5,7 @@ package connection
 
 import (
 	"slices"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
 )
@@ -16,6 +17,15 @@ import (
 // during discovery.
 type DiscoveryFilters struct {
 	Subscriptions SubscriptionsFilter
+	// PropagateSubscriptionTags merges each subscription's tags into every asset
+	// discovered under that subscription (an asset's own labels win on collision).
+	// Off by default. Mirrors the GCP provider's PropagateProjectLabels and the
+	// AWS provider's PropagateAccountTags.
+	PropagateSubscriptionTags bool
+	// SubscriptionTags is an optional injected override. When non-empty it is used
+	// instead of fetching each subscription's tags from the API, and applies to
+	// every discovered subscription. Mirrors the AWS provider's AccountTags.
+	SubscriptionTags map[string]string
 }
 
 // SubscriptionsFilter selects which subscriptions to discover. An empty Include
@@ -48,5 +58,24 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			Include: filteropts.ParseCsvSliceOpt(opts, "subscriptions"),
 			Exclude: filteropts.ParseCsvSliceOpt(opts, "subscriptions-exclude"),
 		},
+		PropagateSubscriptionTags: filteropts.ParseBoolOpt(opts, "propagate-subscription-tags", false),
+		SubscriptionTags:          parseMapOpt(opts, "subscription-tag:"),
 	}
+}
+
+// parseMapOpt collects all opts whose key starts with keyPrefix into a map,
+// trimming the prefix from each key. Empty keys or values are skipped. Returns a
+// non-nil empty map when nothing matches.
+func parseMapOpt(opts map[string]string, keyPrefix string) map[string]string {
+	res := map[string]string{}
+	for k, v := range opts {
+		if k == "" || v == "" {
+			continue
+		}
+		if !strings.HasPrefix(k, keyPrefix) {
+			continue
+		}
+		res[strings.TrimPrefix(k, keyPrefix)] = v
+	}
+	return res
 }

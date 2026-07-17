@@ -49,6 +49,34 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 		assert.Empty(t, f.Subscriptions.Include)
 		assert.Empty(t, f.Subscriptions.Exclude)
 	})
+
+	t.Run("propagate-subscription-tags parses to true", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(map[string]string{
+			"propagate-subscription-tags": "true",
+		})
+		assert.True(t, f.PropagateSubscriptionTags)
+	})
+
+	t.Run("propagate-subscription-tags defaults to false", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(nil)
+		assert.False(t, f.PropagateSubscriptionTags)
+		assert.Empty(t, f.SubscriptionTags)
+	})
+
+	t.Run("subscription-tag: entries parse into the override map", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(map[string]string{
+			"subscription-tag:env":  "prod",
+			"subscription-tag:team": "payments",
+		})
+		assert.Equal(t, map[string]string{"env": "prod", "team": "payments"}, f.SubscriptionTags)
+	})
+
+	t.Run("subscription-tag: skips empty values", func(t *testing.T) {
+		f := DiscoveryFiltersFromOpts(map[string]string{
+			"subscription-tag:env": "",
+		})
+		assert.Empty(t, f.SubscriptionTags)
+	})
 }
 
 func TestSubscriptionsFilter_IsFilteredOut(t *testing.T) {
