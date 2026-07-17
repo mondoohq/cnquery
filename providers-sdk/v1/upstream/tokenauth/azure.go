@@ -17,50 +17,29 @@ import (
 )
 
 const (
-	// envClientID and envTokenAudience are custom environment variables used to
-	// select the identity to mint a token with, and the audience to mint it for:
-	//
-	//	MONDOO_WIF_CLIENT_ID  names one user-assigned identity by its client id, for
-	//	                      environments that expose more than one. Unset selects
-	//	                      the system-assigned identity.
-	//	MONDOO_WIF_AUDIENCE   names the token's aud claim. Azure mints tokens only
-	//	                      for a resource principal registered in the tenant, so
-	//	                      this is an app registration URI (e.g. api://example).
+	// MONDOO_WIF_CLIENT_ID names a user-assigned identity by client id; unset
+	// selects the system-assigned identity. MONDOO_WIF_AUDIENCE names the token's
+	// aud claim (an app registration URI, e.g. api://example).
 	envClientID      = "MONDOO_WIF_CLIENT_ID"
 	envTokenAudience = "MONDOO_WIF_AUDIENCE"
-
-	// Those two environment variables are injected by Azure rather than defined
-	// here. Their presence identifies an App Service, Function or Container
-	// App (incl. jobs): the endpoint is the local token URL, and the header is the
-	// secret that authenticates the caller to it.
-	envIdentityEndpoint = "IDENTITY_ENDPOINT"
-	envIdentityHeader   = "IDENTITY_HEADER"
-
-	// appServiceAPIVersion pins the contract of the App Service token endpoint.
+	// Injected by Azure on App Service, Functions and Container Apps: the local
+	// token endpoint and the secret that authenticates callers to it.
+	envIdentityEndpoint  = "IDENTITY_ENDPOINT"
+	envIdentityHeader    = "IDENTITY_HEADER"
 	appServiceAPIVersion = "2019-08-01"
 
-	// cloudShellTokenURL is fixed rather than read from MSI_ENDPOINT. Cloud Shell's
-	// token endpoint predates IMDS and always listens on this port.
+	// Cloud Shell's token endpoint predates IMDS and always listens here.
 	cloudShellTokenURL = "http://localhost:50342/oauth2/token"
 
 	tokenFetchTimeout = 2 * time.Second
 )
 
 // AzureTokenProvider fetches an Azure AD access token from whichever managed
-// identity endpoint the current compute environment exposes: App Service, which
-// also covers Functions and Container Apps (incl. jobs), and Cloud Shell.
-//
-// Azure VMs and VM scale sets are deliberately not supported. They mint tokens
-// through IMDS, which is unreachable from every environment above.
-//
-// Both endpoints request a resource — the app registration whose URI becomes the
-// token's aud claim. App Service reads it from MONDOO_WIF_AUDIENCE and falls back
-// to the exchange audience, which a working Azure exchange already sets to that
-// same URI; the override matters only when the two must differ. Cloud Shell always
-// mints for the exchange audience directly.
+// identity endpoint the compute environment exposes: App Service (which also
+// covers Functions and Container Apps) or Cloud Shell. VMs and scale sets use
+// IMDS and are not supported.
 type AzureTokenProvider struct {
-	// cloudShellURL overrides the Cloud Shell endpoint. Empty selects
-	// cloudShellTokenURL; only tests set it.
+	// cloudShellURL overrides the Cloud Shell endpoint; only tests set it.
 	cloudShellURL string
 }
 
@@ -90,30 +69,24 @@ func (p *AzureTokenProvider) GetToken(ctx context.Context, audience string) (str
 }
 
 // azureTokenRequest is one managed identity endpoint we know how to ask for a
-// token. Each implementation carries only the parameters its own endpoint needs,
-// and owns the wire format that endpoint expects — the two differ in method, in
-// where the resource travels, and in how the caller authenticates.
-//
-// String labels the endpoint when GetToken aggregates the failures. It must not
-// leak the App Service secret, which travels in X-IDENTITY-HEADER.
+// token. String labels it in aggregated errors and must not leak the secret.
 type azureTokenRequest interface {
 	fmt.Stringer
 	RequestToken(ctx context.Context, client *http.Client) (string, error)
 }
 
-// azureTokenRequests builds the ordered list of endpoints to try. An endpoint is
-// registered only once the environment supplies everything that endpoint needs.
+// azureTokenRequests builds the ordered list of endpoints to try, registering
+// each only once the environment supplies what it needs.
 func azureTokenRequests(audience, cloudShellURL string) ([]azureTokenRequest, error) {
 	reqs := make([]azureTokenRequest, 0, 2)
 
-	// App Service announces itself by injecting the endpoint. Neither of the two
-	// values the request then needs is guessable, and sending an empty one earns a
-	// bodiless 4xx that names nothing, so refuse before the request goes out.
+	// App Service announces itself via IDENTITY_ENDPOINT. The header and a resource
+	// are then both required; refuse early rather than send a request Azure answers
+	// with an opaque 4xx that names nothing.
 	if endpoint := os.Getenv(envIdentityEndpoint); endpoint != "" {
-		// Azure injects the header alongside the endpoint, and the endpoint rejects
-		// any request that arrives without it — the header is what defends the local
-		// token service against SSRF. Its absence means this is not the environment
-		// the endpoint implies, so check it before anything we control.
+		// The header authenticates the caller to the local token service (SSRF
+		// defense). Azure injects it alongside the endpoint, so its absence means
+		// this is not really App Service.
 		header := os.Getenv(envIdentityHeader)
 		if header == "" {
 			return nil, fmt.Errorf(
@@ -121,11 +94,7 @@ func azureTokenRequests(audience, cloudShellURL string) ([]azureTokenRequest, er
 				envIdentityEndpoint, envIdentityHeader)
 		}
 
-		// The resource is the app registration to mint for. MONDOO_WIF_AUDIENCE
-		// overrides it; otherwise it is the exchange audience, which a correctly
-		// configured Azure exchange already sets to the same app registration URI.
-		// Only when both are empty is there nothing to request — send that and Azure
-		// answers with an opaque 400, so refuse before the request goes out.
+		// Resource to mint for: MONDOO_WIF_AUDIENCE, else the exchange audience.
 		resource := os.Getenv(envTokenAudience)
 		if resource == "" {
 			resource = audience
@@ -144,11 +113,9 @@ func azureTokenRequests(audience, cloudShellURL string) ([]azureTokenRequest, er
 		})
 	}
 
-	// Cloud Shell predates the app registration flow and mints for the exchange
-	// audience directly, so it needs nothing from the environment. It is always
-	// tried, with whatever audience the caller passed — this is the exact request
-	// this provider sent before App Service support existed, and an empty audience
-	// is preserved rather than guarded so that behavior stays byte-for-byte intact.
+	// Cloud Shell needs nothing from the environment and is always tried, with the
+	// caller's audience verbatim — the exact request sent before App Service
+	// support, empty audience included, so existing users stay unaffected.
 	reqs = append(reqs, cloudShellTokenRequest{
 		endpoint: cloudShellURL,
 		resource: audience,
@@ -157,18 +124,13 @@ func azureTokenRequests(audience, cloudShellURL string) ([]azureTokenRequest, er
 	return reqs, nil
 }
 
-// appServiceTokenRequest covers App Service, Functions and Container Apps. It
-// takes the resource in the query string and authenticates with the secret App
-// Service injects alongside the endpoint.
+// appServiceTokenRequest covers App Service, Functions and Container Apps: the
+// resource travels in the query string, authenticated by the injected secret.
 type appServiceTokenRequest struct {
 	endpoint string
-	// header is the secret Azure injects alongside the endpoint. It is required:
-	// the endpoint rejects any request that does not carry it.
-	header   string
+	header   string // required secret; the endpoint rejects requests without it
 	resource string
-	// clientID picks one of several user-assigned identities. Empty falls back to
-	// the system-assigned identity.
-	clientID string
+	clientID string // user-assigned identity; empty selects system-assigned
 }
 
 func (r appServiceTokenRequest) String() string {
@@ -196,9 +158,8 @@ func (r appServiceTokenRequest) RequestToken(ctx context.Context, client *http.C
 	return requestAzureToken(client, req)
 }
 
-// cloudShellTokenRequest carries no clientID: Cloud Shell has no user-assigned
-// identities. Its endpoint predates IMDS and wants a form-encoded POST, and its
-// resource is the exchange audience the caller passed.
+// cloudShellTokenRequest mints for the caller's audience via a form-encoded POST.
+// Cloud Shell has no user-assigned identities, so there is no clientID.
 type cloudShellTokenRequest struct {
 	endpoint string
 	resource string
@@ -222,8 +183,8 @@ func (r cloudShellTokenRequest) RequestToken(ctx context.Context, client *http.C
 	return requestAzureToken(client, req)
 }
 
-// requestAzureToken sends a built request and extracts the access token. Both
-// endpoints answer with the same JSON envelope, so they share the response half.
+// requestAzureToken sends a built request and extracts the access token; both
+// endpoints share this JSON response envelope.
 func requestAzureToken(client *http.Client, req *http.Request) (string, error) {
 	resp, err := client.Do(req)
 	if err != nil {
@@ -232,9 +193,8 @@ func requestAzureToken(client *http.Client, req *http.Request) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		// The body carries Azure's actual complaint (invalid resource, no such
-		// identity, ...). Without it a 400 is unactionable. It never contains a
-		// token: an error response has no access_token.
+		// Surface Azure's complaint (invalid resource, no such identity, ...); a
+		// bare status is unactionable. An error response never carries a token.
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		detail := strings.TrimSpace(string(body))
 		if detail == "" {
