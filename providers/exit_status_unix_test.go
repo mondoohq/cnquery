@@ -51,6 +51,6 @@ func TestProcessTracker_NoSubprocess(t *testing.T) {
 	tracker := &processTracker{}
 	assert.Nil(t, tracker.exitState())
 
-	var p *RunningProvider = &RunningProvider{}
+	p := &RunningProvider{}
 	assert.Nil(t, p.exitState())
 }
