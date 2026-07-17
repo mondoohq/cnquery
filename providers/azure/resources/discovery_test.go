@@ -8,9 +8,12 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/azure/connection"
 )
 
 func TestAllResolvedResources(t *testing.T) {
@@ -316,4 +319,40 @@ func TestAssetsForSubscription(t *testing.T) {
 	require.Len(t, got, 2)
 	require.Equal(t, "a", got[0].Name)
 	require.Equal(t, "c", got[1].Name)
+}
+
+func TestSubToAsset_SetsSubscriptionLabel(t *testing.T) {
+	asset := subToAsset(subWithConfig{
+		sub: subscriptions.Subscription{
+			SubscriptionID: to.Ptr("sub-1"),
+			DisplayName:    to.Ptr("My Sub"),
+			TenantID:       to.Ptr("tenant-1"),
+		},
+		conf: &inventory.Config{},
+	})
+	require.Equal(t, "sub-1", asset.Labels[SubscriptionLabel])
+}
+
+func TestApplySubscriptionTags_Override(t *testing.T) {
+	conn := &connection.AzureConnection{
+		Filters: connection.DiscoveryFilters{
+			PropagateSubscriptionTags: true,
+			SubscriptionTags:          map[string]string{"env": "prod"},
+		},
+	}
+	subs := []subWithConfig{
+		{sub: subscriptions.Subscription{SubscriptionID: to.Ptr("sub-1")}},
+		{sub: subscriptions.Subscription{SubscriptionID: to.Ptr("sub-2")}},
+	}
+	assets := []*inventory.Asset{
+		{Name: "vm1", Labels: map[string]string{SubscriptionLabel: "sub-1"}},
+		{Name: "vm2", Labels: map[string]string{SubscriptionLabel: "sub-2", "env": "dev"}},
+		{Name: "orphan", Labels: map[string]string{SubscriptionLabel: "sub-3"}},
+	}
+
+	applySubscriptionTags(conn, subs, assets)
+
+	require.Equal(t, "prod", assets[0].Labels["env"]) // filled from the override
+	require.Equal(t, "dev", assets[1].Labels["env"])  // asset value wins on collision
+	require.NotContains(t, assets[2].Labels, "env")   // sub-3 not in subs list — untouched
 }

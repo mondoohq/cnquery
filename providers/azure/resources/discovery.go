@@ -286,6 +286,10 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	}
 	assets = append(assets, genericAssets...)
 
+	if conn.Filters.PropagateSubscriptionTags {
+		applySubscriptionTags(conn, subsWithConfigs, assets)
+	}
+
 	log.Debug().Int("assets", len(assets)).Msg("azure.discovery> discovery complete")
 	return &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
@@ -636,6 +640,7 @@ func subToAsset(subWithConfig subWithConfig) *inventory.Asset {
 		Name:        fmt.Sprintf("Azure subscription %s", *sub.DisplayName),
 		Connections: []*inventory.Config{copyConf},
 		PlatformIds: []string{platformId},
+		Labels:      map[string]string{SubscriptionLabel: *sub.SubscriptionID},
 	}
 }
 
@@ -671,6 +676,36 @@ func assetsForSubscription(assets []*inventory.Asset, subID string) []*inventory
 		}
 	}
 	return res
+}
+
+// applySubscriptionTags merges each subscription's tags into the assets
+// discovered within it. Tags come from the injected override when provided,
+// otherwise from the Azure Subscriptions Get API. A per-subscription fetch
+// failure is logged and skipped so discovery never fails.
+func applySubscriptionTags(conn *connection.AzureConnection, subs []subWithConfig, assets []*inventory.Asset) {
+	for _, s := range subs {
+		if s.sub.SubscriptionID == nil {
+			continue
+		}
+		subID := *s.sub.SubscriptionID
+
+		tags := conn.Filters.SubscriptionTags
+		if len(tags) == 0 {
+			fetched, err := connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions()).
+				GetSubscriptionTags(subID)
+			if err != nil {
+				log.Warn().Err(err).Str("subscription", subID).
+					Msg("azure.discovery> failed to fetch subscription tags for propagation")
+				continue
+			}
+			tags = fetched
+		}
+		if len(tags) == 0 {
+			continue
+		}
+
+		propagateSubscriptionTagsToAssets(assetsForSubscription(assets, subID), tags)
+	}
 }
 
 // creates a config with filled in subscription and tenant id, this config can be used by the subscription asset
