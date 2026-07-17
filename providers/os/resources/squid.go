@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -91,60 +90,23 @@ func scanBinaryForSquidVersion(fs *afero.Afero, path string) string {
 	}
 	defer f.Close()
 
-	const chunkSize = 64 * 1024
 	tag := squidVersionTag
-	overlap := len(tag) + 32
-	buf := make([]byte, chunkSize+overlap)
-	carry := 0
+	return scanReaderForTag(f, tag, len(tag)+32, isSquidVersionByte)
+}
 
-	versionByte := func(b byte) bool {
-		if b >= '0' && b <= '9' {
-			return true
-		}
-		if b >= 'a' && b <= 'z' {
-			return true
-		}
-		if b >= 'A' && b <= 'Z' {
-			return true
-		}
-		return b == '.' || b == '-' || b == '_' || b == '+'
+// isSquidVersionByte reports whether b belongs to a Squid version literal,
+// whose alphabet is wider than the numeric Apache form (e.g. "5.7-rc1").
+func isSquidVersionByte(b byte) bool {
+	if b >= '0' && b <= '9' {
+		return true
 	}
-
-	for {
-		n, err := f.Read(buf[carry:])
-		if n == 0 && err != nil {
-			break
-		}
-		active := buf[:carry+n]
-
-		idx := bytes.Index(active, tag)
-		if idx >= 0 {
-			start := idx + len(tag)
-			end := start
-			for end < len(active) && versionByte(active[end]) {
-				end++
-			}
-			if end > start {
-				return string(active[start:end])
-			}
-		}
-
-		if len(active) > overlap {
-			copy(buf, active[len(active)-overlap:])
-			carry = overlap
-		} else {
-			// Carry the whole active buffer forward — if the version
-			// tag straddles the boundary of a short final read, this
-			// keeps the prefix bytes available for the next iteration.
-			// `active` aliases `buf[:carry+n]`, so no copy is needed.
-			carry = len(active)
-		}
-
-		if err != nil {
-			break
-		}
+	if b >= 'a' && b <= 'z' {
+		return true
 	}
-	return ""
+	if b >= 'A' && b <= 'Z' {
+		return true
+	}
+	return b == '.' || b == '-' || b == '_' || b == '+'
 }
 
 type mqlSquidConfInternal struct {
