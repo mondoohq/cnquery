@@ -61,15 +61,12 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 }
 
 // processInfo gathers cmdline, status for a process without socket inodes.
+//
+// It does not verify that the pid still exists: callers that enumerate pids
+// from /proc (List) already know the directory exists, so re-stating it here
+// would be a redundant syscall per process. The single-pid entry point
+// (Process) checks existence itself before calling in.
 func (lpm *LinuxProcManager) processInfo(pid int64, pidPath string) (*OSProcess, error) {
-	exists, err := lpm.Exists(pid)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist: " + pidPath)
-	}
-
 	cmdlinef, err := lpm.conn.FileSystem().Open(filepath.Join(pidPath, "cmdline"))
 	if err != nil {
 		return nil, err
@@ -122,6 +119,18 @@ func (lpm *LinuxProcManager) Exists(pid int64) (bool, error) {
 
 func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
+
+	// The caller supplies an arbitrary pid that may not exist, so verify it
+	// before reading. List() skips this check because its pids come straight
+	// from the /proc enumeration.
+	exists, err := lpm.Exists(pid)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist: " + pidPath)
+	}
+
 	proc, err := lpm.processInfo(pid, pidPath)
 	if err != nil {
 		return nil, err
