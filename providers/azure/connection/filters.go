@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"slices"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
 )
 
@@ -22,6 +24,20 @@ type DiscoveryFilters struct {
 type SubscriptionsFilter struct {
 	Exclude []string
 	Include []string
+}
+
+// IsFilteredOut reports whether the subscription with the given ID should be
+// skipped during discovery. A non-empty Include list short-circuits: only
+// subscriptions in it are kept, and Exclude is ignored. When Include is empty,
+// a subscription is skipped only if it appears in Exclude.
+//
+// note: if this function returns `true`, it means that the subscription should
+// be skipped.
+func (f SubscriptionsFilter) IsFilteredOut(subscriptionID string) bool {
+	if len(f.Include) > 0 {
+		return !slices.Contains(f.Include, subscriptionID)
+	}
+	return slices.Contains(f.Exclude, subscriptionID)
 }
 
 // DiscoveryFiltersFromOpts parses the raw --filters key/value options into the

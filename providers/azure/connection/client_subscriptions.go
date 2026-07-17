@@ -40,36 +40,10 @@ func (client *subscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) 
 			return nil, err
 		}
 		for _, s := range page.Value {
-			if !skipSub(s, filter) {
+			if !filter.IsFilteredOut(*s.SubscriptionID) {
 				subs = append(subs, *s)
 			}
 		}
 	}
 	return subs, nil
-}
-
-func skipSub(sub *subscriptions.Subscription, filter SubscriptionsFilter) bool {
-	// anything explicitly specified in the list of includes means accept only from that list
-	if len(filter.Include) > 0 {
-		for _, s := range filter.Include {
-			if s == *sub.SubscriptionID {
-				return false
-			}
-		}
-		// didn't find it, so it must be skipped
-		return true
-	}
-
-	// if nothing explicitly meant to be included, then check whether
-	// it should be excluded
-	if len(filter.Exclude) > 0 {
-		for _, s := range filter.Exclude {
-			if s == *sub.SubscriptionID {
-				return true
-			}
-		}
-
-		return false
-	}
-	return false
 }

@@ -50,3 +50,60 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 		assert.Empty(t, f.Subscriptions.Exclude)
 	})
 }
+
+func TestSubscriptionsFilter_IsFilteredOut(t *testing.T) {
+	tests := []struct {
+		name    string
+		filter  SubscriptionsFilter
+		subID   string
+		skipped bool
+	}{
+		{
+			name:    "no filters keeps everything",
+			filter:  SubscriptionsFilter{},
+			subID:   "sub-a",
+			skipped: false,
+		},
+		{
+			name:    "include list keeps a listed subscription",
+			filter:  SubscriptionsFilter{Include: []string{"sub-a", "sub-b"}},
+			subID:   "sub-a",
+			skipped: false,
+		},
+		{
+			name:    "include list skips an unlisted subscription",
+			filter:  SubscriptionsFilter{Include: []string{"sub-a", "sub-b"}},
+			subID:   "sub-c",
+			skipped: true,
+		},
+		{
+			name:    "exclude list skips a listed subscription",
+			filter:  SubscriptionsFilter{Exclude: []string{"sub-x"}},
+			subID:   "sub-x",
+			skipped: true,
+		},
+		{
+			name:    "exclude list keeps an unlisted subscription",
+			filter:  SubscriptionsFilter{Exclude: []string{"sub-x"}},
+			subID:   "sub-a",
+			skipped: false,
+		},
+		{
+			name:    "include short-circuits: listed sub kept even if also excluded",
+			filter:  SubscriptionsFilter{Include: []string{"sub-a"}, Exclude: []string{"sub-a"}},
+			subID:   "sub-a",
+			skipped: false,
+		},
+		{
+			name:    "include short-circuits: unlisted sub skipped, exclude ignored",
+			filter:  SubscriptionsFilter{Include: []string{"sub-a"}, Exclude: []string{"sub-b"}},
+			subID:   "sub-b",
+			skipped: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.skipped, tt.filter.IsFilteredOut(tt.subID))
+		})
+	}
+}
