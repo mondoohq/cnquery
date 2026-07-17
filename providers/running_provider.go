@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -377,6 +378,10 @@ type RunningProvider struct {
 	// we can include the most recent stderr (typically a runtime fatal or
 	// panic stack trace) in the error attached to Runtime.CriticalErrors.
 	crashLog *crashLogBuffer
+	// proc tracks the plugin subprocess so crash diagnostics can report its
+	// exit disposition (exit code vs. signal, peak RSS) after it dies. Nil
+	// for builtin providers and providers constructed without a subprocess.
+	proc *processTracker
 	// provider errors which are evaluated and printed during shutdown of the provider
 	err          error
 	lock         sync.Mutex
@@ -567,6 +572,40 @@ func (p *RunningProvider) hasExited() bool {
 		}
 	}
 	return false
+}
+
+// exitState returns the subprocess's exit state once it has died, or nil
+// while it is still running or when no subprocess is tracked (builtin
+// providers, tests). See processTracker.exitState for the safety contract.
+func (p *RunningProvider) exitState() *os.ProcessState {
+	if p.proc == nil {
+		return nil
+	}
+	return p.proc.exitState()
+}
+
+// awaitExit waits up to grace for the plugin subprocess to be reaped,
+// reporting whether it exited. An in-flight RPC fails the instant the
+// child's socket dies — usually before go-plugin's exit-watcher goroutine
+// has waited on the process — so crash diagnostics built immediately would
+// see "still running" and miss the exit disposition. Reaping a dead direct
+// child settles within milliseconds; the grace bound only matters for the
+// true-hang case, where the process really is still running.
+// Returns immediately when no subprocess is tracked.
+func (p *RunningProvider) awaitExit(grace time.Duration) bool {
+	if p.proc == nil {
+		return p.hasExited()
+	}
+	deadline := time.Now().Add(grace)
+	for {
+		if p.hasExited() {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
 }
 
 // uptime reports how long the provider has been running. Zero if startedAt

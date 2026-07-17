@@ -652,9 +652,10 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 
 // buildCrashDiagnostics returns a multi-line suffix to append to a crash error
 // with whatever extra context we have about the dead/dying provider:
-// version, uptime, whether the subprocess actually exited, whether the
-// shutdown was triggered by a heartbeat probe, and the most recent stderr
-// (panic/fatal trace if one was captured).
+// version, uptime, whether the subprocess actually exited (and if so, its
+// exit code or killing signal plus peak RSS), whether the shutdown was
+// triggered by a heartbeat probe, and the most recent stderr (panic/fatal
+// trace if one was captured).
 //
 // Returns "" when there's nothing useful to report, so the message stays
 // compact for cases where the optional context is unavailable (mostly tests
@@ -671,8 +672,17 @@ func buildCrashDiagnostics(p *RunningProvider) string {
 	if up := p.uptime(); up > 0 {
 		meta = append(meta, "uptime="+up.Round(time.Millisecond).String())
 	}
-	if p.hasExited() {
+	if p.awaitExit(2 * time.Second) {
 		meta = append(meta, "subprocess=exited")
+		// Exit disposition separates the silent-death causes: a SIGKILL with
+		// empty stderr is near-certainly the OOM killer, a regular exit code
+		// points at the plugin terminating itself. Peak RSS (bytes)
+		// corroborates the OOM classification without host access.
+		ps := p.exitState()
+		meta = append(meta, "exit="+formatExitStatus(ps))
+		if rss := maxRSSBytes(ps); rss > 0 {
+			meta = append(meta, "max_rss="+strconv.FormatInt(rss, 10))
+		}
 	} else if p.startedAt.IsZero() {
 		// builtin/in-process — no subprocess to report on
 	} else {
