@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -121,7 +122,10 @@ func parseFlagsToFiltersOpts(flags map[string]*llx.Primitive) map[string]string 
 	// base: the --filters key/value flag (allowlisted keys only)
 	if x, ok := flags["filters"]; ok && len(x.Map) != 0 {
 		for k, v := range x.Map {
-			if k == "subscriptions" || k == "subscriptions-exclude" {
+			switch {
+			case k == "subscriptions" || k == "subscriptions-exclude" || k == "propagate-subscription-tags":
+				o[k] = string(v.Value)
+			case strings.HasPrefix(k, "subscription-tag:"):
 				o[k] = string(v.Value)
 			}
 		}

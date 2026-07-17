@@ -177,6 +177,33 @@ func TestParseCLIFiltersFlag(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "plural", connFilter(t, res)["subscriptions"])
 	})
+
+	t.Run("propagate-subscription-tags passes through --filters", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"propagate-subscription-tags": llx.StringPrimitive("true"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "true", connFilter(t, res)["propagate-subscription-tags"])
+	})
+
+	t.Run("subscription-tag: entries pass through --filters", func(t *testing.T) {
+		res, err := s.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"filters": {Map: map[string]*llx.Primitive{
+					"subscription-tag:env":  llx.StringPrimitive("prod"),
+					"subscription-tag:team": llx.StringPrimitive("payments"),
+				}},
+			},
+		})
+		require.NoError(t, err)
+		f := connFilter(t, res)
+		assert.Equal(t, "prod", f["subscription-tag:env"])
+		assert.Equal(t, "payments", f["subscription-tag:team"])
+	})
 }
 
 // TestParseCLICredentials verifies auth flags produce the expected credential
