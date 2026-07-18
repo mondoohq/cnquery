@@ -166,6 +166,16 @@ private stackit.server @defaults("id name status machineType") {
   serviceAccountMails []string
   // Network interfaces: [{nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}]
   nics []dict
+  // Network interfaces attached to the server
+  networkInterfaces() []stackit.nic
+  // Point-in-time backups taken from the server by the Server Backup service
+  backups() []stackit.server.backup
+  // Recurring backup schedules attached to the server
+  backupSchedules() []stackit.server.backupSchedule
+  // Operating-system update runs applied to the server by the Server Update service
+  updates() []stackit.server.update
+  // Recurring maintenance schedules attached to the server
+  updateSchedules() []stackit.server.updateSchedule
   // User data (base64-encoded cloud-init)
   userData string
   // User-defined labels
@@ -324,6 +334,48 @@ private stackit.network @defaults("id name routed") {
   createdAt time
   // User-defined labels
   labels map[string]string
+  // Network interfaces attached to this network
+  nics() []stackit.nic
+}
+
+// STACKIT network interface
+//
+// Network interface belonging to a network and, when attached, to a
+// server. The interface is keyed by its UUID id and exposes the private
+// ipv4 and ipv6 addresses, MAC address, the network it lives in, the
+// security groups filtering its traffic, allowed address pairs, and
+// whether NIC-level security filtering is active.
+private stackit.nic @defaults("id ipv4 mac status") {
+  // Network interface UUID
+  id string
+  // Interface name
+  name string
+  // Network UUID the interface belongs to
+  networkId string
+  // Network the interface belongs to
+  network() stackit.network
+  // Private IPv4 address
+  ipv4 string
+  // Private IPv6 address
+  ipv6 string
+  // MAC address
+  mac string
+  // Device identifier presented to the guest operating system
+  device string
+  // Interface type
+  nicType string
+  // Whether NIC-level security filtering with security groups is active
+  nicSecurity bool
+  // Security group UUIDs applied to the interface
+  securityGroupIds []string
+  // Security groups applied to the interface
+  securityGroups() []stackit.securityGroup
+  // Additional address pairs the interface may send from and receive on
+  allowedAddresses []string
+  // Interface status
+  status string
+  // User-defined labels
+  labels map[string]string
 }
 
 // STACKIT public IP address
@@ -417,6 +469,114 @@ private stackit.network.exposure @defaults("internetReachable hasPublicIp") {
   securityGroupAllowsIngress bool
   // Security group ingress rules that admit traffic from any address
   openIngressRules []stackit.securityGroup.rule
+}
+
+// STACKIT server backup
+//
+// Point-in-time backup of a server's volumes taken by the Server Backup
+// service. The backup is keyed by its UUID id and exposes the status and
+// size, the per-volume backup entries, the volumes the backup protects,
+// and the creation, expiry, and last-restore timestamps.
+private stackit.server.backup @defaults("id name status size") {
+  // Backup UUID
+  id string
+  // Owning server UUID
+  serverId string
+  // Server the backup was taken from
+  server() stackit.server
+  // Backup name
+  name string
+  // Backup status
+  status string
+  // Total backup size in GiB
+  size int
+  // Creation timestamp
+  createdAt time
+  // Expiry timestamp
+  expireAt time
+  // Timestamp of the most recent restore from this backup (unset if never restored)
+  lastRestoredAt time
+  // Per-volume backup entries [{id, volumeId, size, status, lastRestoredAt, lastRestoredVolumeId}]
+  volumeBackups []dict
+  // Volumes protected by this backup
+  volumes() []stackit.volume
+}
+
+// STACKIT server backup schedule
+//
+// Recurring backup schedule attached to a server by the Server Backup
+// service. The schedule is keyed by its numeric id and exposes whether it
+// is enabled, the iCalendar recurrence rule, the retention period, and
+// the volumes it backs up.
+private stackit.server.backupSchedule @defaults("id name enabled") {
+  // Schedule ID
+  id int
+  // Owning server UUID
+  serverId string
+  // Server the schedule is attached to
+  server() stackit.server
+  // Schedule name
+  name string
+  // Whether the schedule is enabled
+  enabled bool
+  // iCalendar RRULE describing when backups run
+  rrule string
+  // Number of days backups are retained
+  retentionPeriod int
+  // Volume UUIDs the schedule backs up
+  volumeIds []string
+  // Volumes the schedule backs up
+  volumes() []stackit.volume
+}
+
+// STACKIT server update run
+//
+// Operating-system update run applied to a server by the Server Update
+// service. The run is keyed by its numeric id and exposes the status,
+// start and end timestamps, the counts of installed and failed updates,
+// and the failure reason when the run did not succeed.
+private stackit.server.update @defaults("id status startDate") {
+  // Update run ID
+  id int
+  // Owning server UUID
+  serverId string
+  // Server the update ran on
+  server() stackit.server
+  // Update run status
+  status string
+  // Start timestamp
+  startDate time
+  // End timestamp
+  endDate time
+  // Number of updates installed by the run
+  installedUpdates int
+  // Number of updates that failed during the run
+  failedUpdates int
+  // Failure reason (empty when the run succeeded)
+  failReason string
+}
+
+// STACKIT server update schedule
+//
+// Recurring maintenance schedule attached to a server by the Server
+// Update service. The schedule is keyed by its numeric id and exposes
+// whether it is enabled, the iCalendar recurrence rule, and the
+// maintenance window start hour.
+private stackit.server.updateSchedule @defaults("id name enabled") {
+  // Schedule ID
+  id int
+  // Owning server UUID
+  serverId string
+  // Server the schedule is attached to
+  server() stackit.server
+  // Schedule name
+  name string
+  // Whether the schedule is enabled
+  enabled bool
+  // iCalendar RRULE describing when maintenance runs
+  rrule string
+  // Maintenance window start hour (0-23)
+  maintenanceWindow int
 }
 
 // STACKIT SSH key pair

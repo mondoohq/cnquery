@@ -216,3 +216,38 @@ func idArg(args map[string]*llx.RawData, key string) (string, bool) {
 func makeNamespace(runtime *plugin.Runtime, name string) (plugin.Resource, error) {
 	return CreateResource(runtime, name, map[string]*llx.RawData{})
 }
+
+// serverRef resolves a stackit.server by its UUID, marking the given field
+// null when the ID is empty. Shared by the server-scoped sub-resources
+// (backups, schedules, updates) that carry a back-reference to their server.
+func serverRef(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlStackitServer]) (*mqlStackitServer, error) {
+	if id == "" {
+		return markNull[mqlStackitServer](field)
+	}
+	res, err := NewResource(runtime, "stackit.server", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitServer), nil
+}
+
+// volumeRefs resolves a list of stackit.volume resources from their UUIDs,
+// skipping empty IDs.
+func volumeRefs(runtime *plugin.Runtime, ids []string) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		v, err := NewResource(runtime, "stackit.volume", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, v)
+	}
+	return out, nil
+}

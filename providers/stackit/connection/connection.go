@@ -32,6 +32,8 @@ import (
 	"github.com/stackitcloud/stackit-sdk-go/services/redis"
 	"github.com/stackitcloud/stackit-sdk-go/services/resourcemanager"
 	"github.com/stackitcloud/stackit-sdk-go/services/secretsmanager"
+	"github.com/stackitcloud/stackit-sdk-go/services/serverbackup"
+	"github.com/stackitcloud/stackit-sdk-go/services/serverupdate"
 	"github.com/stackitcloud/stackit-sdk-go/services/serviceaccount"
 	"github.com/stackitcloud/stackit-sdk-go/services/sfs"
 	"github.com/stackitcloud/stackit-sdk-go/services/ske"
@@ -145,6 +147,12 @@ type StackitConnection struct {
 	authorizationOnce    sync.Once
 	authorizationClient  *authorization.APIClient
 	authorizationErr     error
+	serverBackupOnce     sync.Once
+	serverBackupClient   *serverbackup.APIClient
+	serverBackupErr      error
+	serverUpdateOnce     sync.Once
+	serverUpdateClient   *serverupdate.APIClient
+	serverUpdateErr      error
 }
 
 func NewStackitConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*StackitConnection, error) {
@@ -455,6 +463,24 @@ func (c *StackitConnection) Authorization() (*authorization.APIClient, error) {
 		c.authorizationClient, c.authorizationErr = authorization.NewAPIClient(c.configOptsGlobal...)
 	})
 	return c.authorizationClient, c.authorizationErr
+}
+
+func (c *StackitConnection) ServerBackup() (*serverbackup.APIClient, error) {
+	c.serverBackupOnce.Do(func() {
+		// Server Backup rejects WithRegion in the client config; every method
+		// passes the region as a per-call function parameter.
+		c.serverBackupClient, c.serverBackupErr = serverbackup.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.serverBackupClient, c.serverBackupErr
+}
+
+func (c *StackitConnection) ServerUpdate() (*serverupdate.APIClient, error) {
+	c.serverUpdateOnce.Do(func() {
+		// Server Update rejects WithRegion in the client config; every method
+		// passes the region as a per-call function parameter.
+		c.serverUpdateClient, c.serverUpdateErr = serverupdate.NewAPIClient(c.configOptsGlobal...)
+	})
+	return c.serverUpdateClient, c.serverUpdateErr
 }
 
 func (c *StackitConnection) Asset() *inventory.Asset { return c.asset }
