@@ -6,10 +6,11 @@ option go_package = "go.mondoo.com/mql/v13/providers/ollama/resources"
 
 // Ollama instance
 //
-// Use the `ollama` resource to examine an Ollama instance, including
-// installed models and currently running models. Supports both local
-// Ollama servers and Ollama Cloud via configurable host and optional
-// API token authentication.
+// Ollama server hosting large language models, exposing the models
+// installed on the instance and the models currently loaded in memory
+// for inference. Works against both a local Ollama server and Ollama
+// Cloud, selected by the configured host and optional API token
+// authentication.
 ollama @defaults("host") {
   // Host address of the Ollama instance
   host() string
@@ -21,9 +22,9 @@ ollama @defaults("host") {
 
 // Ollama model
 //
-// Examine an installed Ollama model including its family, parameter
-// size, quantization level, and license. Use `info` for structured
-// GGUF metadata from the model's configuration and `modelfile` for
+// Installed Ollama model, including its family, parameter size,
+// quantization level, and license. The `info` field exposes structured
+// GGUF metadata from the model's configuration and `modelfile` returns
 // the Modelfile used to create or pull this model.
 ollama.model @defaults("name family parameterSize") {
   // Model name (e.g., "llama3.1:latest")
@@ -74,11 +75,11 @@ ollama.model @defaults("name family parameterSize") {
 
 // Ollama model GGUF metadata
 //
-// Examine structured metadata from the GGUF model file, including
-// architecture details, training datasets, context window size, and
-// layer configuration. Fields are extracted from standardized GGUF
-// keys and normalized across architectures so that `contextLength`
-// works regardless of whether the underlying key is `llama.context_length`
+// Structured metadata from the GGUF model file, including architecture
+// details, training datasets, context window size, and layer
+// configuration. Fields are extracted from standardized GGUF keys and
+// normalized across architectures so that `contextLength` works
+// regardless of whether the underlying key is `llama.context_length`
 // or `qwen2.context_length`.
 private ollama.model.info @defaults("architecture parameterCount sizeLabel") {
   // Model architecture
@@ -133,11 +134,13 @@ private ollama.model.info @defaults("architecture parameterCount sizeLabel") {
   tokenizerModel string
 }
 
-// Ollama running model
+// Ollama model loaded in memory
 //
-// Examine a model currently loaded in memory on the Ollama instance.
-// The `model` field provides a typed reference to the installed
-// `ollama.model` resource for full metadata access including license,
+// Model currently resident on the Ollama instance, along with its
+// VRAM footprint, active context window, and the time it will be
+// unloaded from memory. Useful for auditing which models are live
+// and how much GPU memory they consume. The `model` field resolves
+// to the installed `ollama.model` for full metadata such as license,
 // capabilities, and GGUF info.
 ollama.runningModel @defaults("name") {
   // Model name (e.g., "llama3.1:latest")
