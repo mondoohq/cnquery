@@ -89,6 +89,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/service/personalize"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
@@ -287,6 +288,10 @@ func (t *AwsConnection) StorageGateway(region string) *storagegateway.Client {
 
 func (t *AwsConnection) Firehose(region string) *firehose.Client {
 	return regionalClient(t, "firehose", region, firehose.NewFromConfig)
+}
+
+func (t *AwsConnection) Personalize(region string) *personalize.Client {
+	return regionalClient(t, "personalize", region, personalize.NewFromConfig)
 }
 
 func (t *AwsConnection) Kinesis(region string) *kinesis.Client {

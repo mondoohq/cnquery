@@ -2547,6 +2547,230 @@ private aws.iam.accessAnalyzer.finding @defaults("resourceType region type statu
   analyzerArn string
 }
 
+// Amazon Personalize
+//
+// Use the Personalize namespace to enumerate real-time recommendation
+// infrastructure across all enabled regions: dataset groups and their
+// datasets, trained solutions and the campaigns that serve them, domain
+// recommenders, event trackers, filters, and dataset schemas. Iterate the
+// collection that matches what you want to audit, then traverse each row for
+// encryption keys, IAM service roles, and inference exposure.
+aws.personalize {
+  // Dataset groups in all enabled regions
+  datasetGroups() []aws.personalize.datasetGroup
+  // Dataset schemas registered in the account
+  schemas() []aws.personalize.schema
+}
+
+// Amazon Personalize dataset group
+//
+// Container that holds the datasets, solutions, campaigns, event trackers, and
+// filters for one recommendation workload. Select a dataset group by its ARN,
+// for example aws.personalize.datasetGroups.where(arn == "arn:aws:personalize:us-east-1:123456789012:dataset-group/my-app").
+// Read kmsKey and iamRole to confirm encryption at rest and the assumed service
+// role, or traverse datasets, solutions, and campaigns for the full pipeline.
+private aws.personalize.datasetGroup @defaults("name domain status region") {
+  // ARN of the dataset group
+  arn string
+  // Name of the dataset group
+  name string
+  // Provisioning status
+  //
+  // One of CREATE PENDING, CREATE IN_PROGRESS, ACTIVE, CREATE FAILED, or DELETE IN_PROGRESS.
+  status string
+  // Recommendation domain
+  //
+  // ECOMMERCE or VIDEO_ON_DEMAND for domain dataset groups, empty for custom dataset groups.
+  domain string
+  // Reason the dataset group failed to provision, if any
+  failureReason string
+  // KMS key used to encrypt the datasets in the group
+  kmsKey() aws.kms.key
+  // IAM role Personalize assumes to access the datasets and KMS key
+  iamRole() aws.iam.role
+  // Region in which the dataset group exists
+  region string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+  // Datasets registered in the group
+  datasets() []aws.personalize.dataset
+  // Solutions trained in the group
+  solutions() []aws.personalize.solution
+  // Domain recommenders in the group
+  recommenders() []aws.personalize.recommender
+  // Event trackers that ingest real-time interaction events into the group
+  eventTrackers() []aws.personalize.eventTracker
+  // Filters that constrain recommendations served from the group
+  filters() []aws.personalize.filter
+}
+
+// Amazon Personalize dataset
+//
+// Single dataset within a dataset group, holding interactions, items, users,
+// or action data that solutions train on. Select a dataset by its ARN. The
+// datasetType field distinguishes the data it holds and schema resolves the
+// registered schema that defines its columns.
+private aws.personalize.dataset @defaults("name datasetType status") {
+  // ARN of the dataset
+  arn string
+  // Name of the dataset
+  name string
+  // Data held by the dataset
+  //
+  // One of Interactions, Items, Users, or Actions.
+  datasetType string
+  // Provisioning status of the dataset
+  status string
+  // Schema that defines the dataset columns
+  schema() aws.personalize.schema
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
+// Amazon Personalize solution
+//
+// Training configuration that produces recommendation models from a dataset
+// group's data. Select a solution by its ARN. recipe identifies the algorithm,
+// performAutoML and performHPO reveal whether Personalize chose the recipe or
+// tuned hyperparameters, and campaigns lists the deployed serving endpoints.
+private aws.personalize.solution @defaults("name status") {
+  // ARN of the solution
+  arn string
+  // Name of the solution
+  name string
+  // Provisioning status of the solution
+  status string
+  // ARN of the recipe the solution trains with
+  recipe string
+  // Interaction event type the solution trains on, empty when all events are used
+  eventType string
+  // Whether Personalize automatically selected the recipe
+  performAutoML bool
+  // Whether hyperparameter optimization was performed
+  performHPO bool
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+  // Campaigns that serve this solution's model
+  campaigns() []aws.personalize.campaign
+}
+
+// Amazon Personalize campaign
+//
+// Deployed inference endpoint that serves real-time recommendations from a
+// trained solution version. Select a campaign by its ARN. minProvisionedTPS is
+// the guaranteed transactions-per-second capacity provisioned for the endpoint,
+// and solutionVersion identifies the model version behind it.
+private aws.personalize.campaign @defaults("name status minProvisionedTPS") {
+  // ARN of the campaign
+  arn string
+  // Name of the campaign
+  name string
+  // Provisioning status of the campaign
+  status string
+  // ARN of the solution version the campaign serves
+  solutionVersion string
+  // Guaranteed minimum transactions per second provisioned for the endpoint
+  minProvisionedTPS int
+  // Reason the campaign failed, if any
+  failureReason string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
+// Amazon Personalize domain recommender
+//
+// Pre-configured recommender in a domain dataset group that serves
+// recommendations for a use case without a separately trained solution. Select
+// a recommender by its ARN. recipe identifies the use case it implements.
+private aws.personalize.recommender @defaults("name status") {
+  // ARN of the recommender
+  arn string
+  // Name of the recommender
+  name string
+  // Provisioning status of the recommender
+  status string
+  // ARN of the recipe use case the recommender implements
+  recipe string
+  // Reason the recommender failed, if any
+  failureReason string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
+// Amazon Personalize event tracker
+//
+// Endpoint that ingests real-time interaction events into a dataset group's
+// interactions dataset. Select an event tracker by its ARN. trackingId is the
+// identifier client applications send events with, so treat it as sensitive.
+private aws.personalize.eventTracker @defaults("name status") {
+  // ARN of the event tracker
+  arn string
+  // Name of the event tracker
+  name string
+  // Provisioning status of the event tracker
+  status string
+  // Identifier applications use to send events to the tracker
+  trackingId string
+  // AWS account that owns the event tracker
+  accountId string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
+// Amazon Personalize filter
+//
+// Rule that removes items from recommendations at inference time. Select a
+// filter by its ARN. filterExpression holds the rule logic applied to campaigns
+// and recommenders in the dataset group.
+private aws.personalize.filter @defaults("name status") {
+  // ARN of the filter
+  arn string
+  // Name of the filter
+  name string
+  // Provisioning status of the filter
+  status string
+  // Expression that defines which items the filter removes
+  filterExpression string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
+// Amazon Personalize dataset schema
+//
+// Avro schema that defines the columns of the datasets referencing it. Select a
+// schema by its ARN. schema holds the raw Avro definition and domain indicates
+// the domain use case it belongs to, if any.
+private aws.personalize.schema @defaults("name domain") {
+  // ARN of the schema
+  arn string
+  // Name of the schema
+  name string
+  // Recommendation domain
+  //
+  // ECOMMERCE or VIDEO_ON_DEMAND for domain schemas, empty for custom schemas.
+  domain string
+  // Raw Avro schema definition (JSON)
+  schema string
+  // Creation timestamp
+  createdAt time
+  // Last modification timestamp
+  updatedAt time
+}
+
 // Amazon SageMaker
 //
 // Use the SageMaker namespace to enumerate the building blocks of an

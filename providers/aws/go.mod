@@ -91,6 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.74.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/personalize v1.49.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.38.1

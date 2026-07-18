@@ -111,6 +111,15 @@ const (
 	ResourceAwsIamAccessAnalyzer                                                string = "aws.iam.accessAnalyzer"
 	ResourceAwsIamAccessAnalyzerAnalyzer                                        string = "aws.iam.accessAnalyzer.analyzer"
 	ResourceAwsIamAccessAnalyzerFinding                                         string = "aws.iam.accessAnalyzer.finding"
+	ResourceAwsPersonalize                                                      string = "aws.personalize"
+	ResourceAwsPersonalizeDatasetGroup                                          string = "aws.personalize.datasetGroup"
+	ResourceAwsPersonalizeDataset                                               string = "aws.personalize.dataset"
+	ResourceAwsPersonalizeSolution                                              string = "aws.personalize.solution"
+	ResourceAwsPersonalizeCampaign                                              string = "aws.personalize.campaign"
+	ResourceAwsPersonalizeRecommender                                           string = "aws.personalize.recommender"
+	ResourceAwsPersonalizeEventTracker                                          string = "aws.personalize.eventTracker"
+	ResourceAwsPersonalizeFilter                                                string = "aws.personalize.filter"
+	ResourceAwsPersonalizeSchema                                                string = "aws.personalize.schema"
 	ResourceAwsSagemaker                                                        string = "aws.sagemaker"
 	ResourceAwsSagemakerNotebookinstance                                        string = "aws.sagemaker.notebookinstance"
 	ResourceAwsSagemakerNotebookinstancedetails                                 string = "aws.sagemaker.notebookinstancedetails"
@@ -1320,6 +1329,42 @@ func init() {
 		"aws.iam.accessAnalyzer.finding": {
 			// to override args, implement: initAwsIamAccessAnalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamAccessAnalyzerFinding,
+		},
+		"aws.personalize": {
+			// to override args, implement: initAwsPersonalize(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalize,
+		},
+		"aws.personalize.datasetGroup": {
+			// to override args, implement: initAwsPersonalizeDatasetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeDatasetGroup,
+		},
+		"aws.personalize.dataset": {
+			// to override args, implement: initAwsPersonalizeDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeDataset,
+		},
+		"aws.personalize.solution": {
+			// to override args, implement: initAwsPersonalizeSolution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeSolution,
+		},
+		"aws.personalize.campaign": {
+			// to override args, implement: initAwsPersonalizeCampaign(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeCampaign,
+		},
+		"aws.personalize.recommender": {
+			// to override args, implement: initAwsPersonalizeRecommender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeRecommender,
+		},
+		"aws.personalize.eventTracker": {
+			// to override args, implement: initAwsPersonalizeEventTracker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeEventTracker,
+		},
+		"aws.personalize.filter": {
+			// to override args, implement: initAwsPersonalizeFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeFilter,
+		},
+		"aws.personalize.schema": {
+			// to override args, implement: initAwsPersonalizeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPersonalizeSchema,
 		},
 		"aws.sagemaker": {
 			// to override args, implement: initAwsSagemaker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7336,6 +7381,210 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetAnalyzerArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalize).GetDatasetGroups()).ToDataRes(types.Array(types.Resource("aws.personalize.datasetGroup")))
+	},
+	"aws.personalize.schemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalize).GetSchemas()).ToDataRes(types.Array(types.Resource("aws.personalize.schema")))
+	},
+	"aws.personalize.datasetGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetDomain()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.personalize.datasetGroup.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.personalize.datasetGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.personalize.datasetGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.datasetGroup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.datasetGroup.datasets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetDatasets()).ToDataRes(types.Array(types.Resource("aws.personalize.dataset")))
+	},
+	"aws.personalize.datasetGroup.solutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetSolutions()).ToDataRes(types.Array(types.Resource("aws.personalize.solution")))
+	},
+	"aws.personalize.datasetGroup.recommenders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetRecommenders()).ToDataRes(types.Array(types.Resource("aws.personalize.recommender")))
+	},
+	"aws.personalize.datasetGroup.eventTrackers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetEventTrackers()).ToDataRes(types.Array(types.Resource("aws.personalize.eventTracker")))
+	},
+	"aws.personalize.datasetGroup.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDatasetGroup).GetFilters()).ToDataRes(types.Array(types.Resource("aws.personalize.filter")))
+	},
+	"aws.personalize.dataset.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.dataset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.dataset.datasetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetDatasetType()).ToDataRes(types.String)
+	},
+	"aws.personalize.dataset.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.dataset.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetSchema()).ToDataRes(types.Resource("aws.personalize.schema"))
+	},
+	"aws.personalize.dataset.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.dataset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeDataset).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.solution.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.solution.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.solution.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.solution.recipe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetRecipe()).ToDataRes(types.String)
+	},
+	"aws.personalize.solution.eventType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetEventType()).ToDataRes(types.String)
+	},
+	"aws.personalize.solution.performAutoML": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetPerformAutoML()).ToDataRes(types.Bool)
+	},
+	"aws.personalize.solution.performHPO": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetPerformHPO()).ToDataRes(types.Bool)
+	},
+	"aws.personalize.solution.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.solution.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.solution.campaigns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSolution).GetCampaigns()).ToDataRes(types.Array(types.Resource("aws.personalize.campaign")))
+	},
+	"aws.personalize.campaign.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.campaign.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.campaign.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.campaign.solutionVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetSolutionVersion()).ToDataRes(types.String)
+	},
+	"aws.personalize.campaign.minProvisionedTPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetMinProvisionedTPS()).ToDataRes(types.Int)
+	},
+	"aws.personalize.campaign.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.personalize.campaign.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.campaign.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeCampaign).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.recommender.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.recommender.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.recommender.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.recommender.recipe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetRecipe()).ToDataRes(types.String)
+	},
+	"aws.personalize.recommender.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.personalize.recommender.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.recommender.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeRecommender).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.eventTracker.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.eventTracker.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.eventTracker.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.eventTracker.trackingId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetTrackingId()).ToDataRes(types.String)
+	},
+	"aws.personalize.eventTracker.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.personalize.eventTracker.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.eventTracker.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeEventTracker).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.filter.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.filter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.filter.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.personalize.filter.filterExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetFilterExpression()).ToDataRes(types.String)
+	},
+	"aws.personalize.filter.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.filter.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeFilter).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.schema.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetArn()).ToDataRes(types.String)
+	},
+	"aws.personalize.schema.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetName()).ToDataRes(types.String)
+	},
+	"aws.personalize.schema.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetDomain()).ToDataRes(types.String)
+	},
+	"aws.personalize.schema.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetSchema()).ToDataRes(types.String)
+	},
+	"aws.personalize.schema.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.personalize.schema.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPersonalizeSchema).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.sagemaker.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.sagemaker.endpoint")))
@@ -38226,6 +38475,314 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.accessAnalyzer.finding.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamAccessAnalyzerFinding).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalize).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.datasetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalize).DatasetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalize).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.datasetGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.datasets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Datasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.solutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Solutions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.recommenders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Recommenders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.eventTrackers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).EventTrackers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.datasetGroup.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDatasetGroup).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.dataset.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.datasetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).DatasetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).Schema, ok = plugin.RawToTValue[*mqlAwsPersonalizeSchema](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.dataset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeDataset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.solution.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.recipe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).Recipe, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.eventType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).EventType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.performAutoML": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).PerformAutoML, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.performHPO": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).PerformHPO, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.solution.campaigns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSolution).Campaigns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.campaign.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.solutionVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).SolutionVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.minProvisionedTPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).MinProvisionedTPS, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.campaign.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeCampaign).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.recommender.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.recipe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).Recipe, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.recommender.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeRecommender).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.eventTracker.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.trackingId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).TrackingId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.eventTracker.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeEventTracker).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.filter.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.filterExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).FilterExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.filter.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeFilter).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.personalize.schema.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).Schema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.personalize.schema.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPersonalizeSchema).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -88151,6 +88708,869 @@ func (c *mqlAwsIamAccessAnalyzerFinding) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsIamAccessAnalyzerFinding) GetAnalyzerArn() *plugin.TValue[string] {
 	return &c.AnalyzerArn
+}
+
+// mqlAwsPersonalize for the aws.personalize resource
+type mqlAwsPersonalize struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeInternal it will be used here
+	DatasetGroups plugin.TValue[[]any]
+	Schemas       plugin.TValue[[]any]
+}
+
+// createAwsPersonalize creates a new instance of this resource
+func createAwsPersonalize(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalize{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalize) MqlName() string {
+	return "aws.personalize"
+}
+
+func (c *mqlAwsPersonalize) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalize) GetDatasetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DatasetGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize", c.__id, "datasetGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datasetGroups()
+	})
+}
+
+func (c *mqlAwsPersonalize) GetSchemas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schemas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize", c.__id, "schemas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schemas()
+	})
+}
+
+// mqlAwsPersonalizeDatasetGroup for the aws.personalize.datasetGroup resource
+type mqlAwsPersonalizeDatasetGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsPersonalizeDatasetGroupInternal
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Domain        plugin.TValue[string]
+	FailureReason plugin.TValue[string]
+	KmsKey        plugin.TValue[*mqlAwsKmsKey]
+	IamRole       plugin.TValue[*mqlAwsIamRole]
+	Region        plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	Datasets      plugin.TValue[[]any]
+	Solutions     plugin.TValue[[]any]
+	Recommenders  plugin.TValue[[]any]
+	EventTrackers plugin.TValue[[]any]
+	Filters       plugin.TValue[[]any]
+}
+
+// createAwsPersonalizeDatasetGroup creates a new instance of this resource
+func createAwsPersonalizeDatasetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeDatasetGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.datasetGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) MqlName() string {
+	return "aws.personalize.datasetGroup"
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetDatasets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datasets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "datasets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datasets()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetSolutions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Solutions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "solutions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.solutions()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetRecommenders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Recommenders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "recommenders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.recommenders()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetEventTrackers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventTrackers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "eventTrackers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventTrackers()
+	})
+}
+
+func (c *mqlAwsPersonalizeDatasetGroup) GetFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Filters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.datasetGroup", c.__id, "filters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.filters()
+	})
+}
+
+// mqlAwsPersonalizeDataset for the aws.personalize.dataset resource
+type mqlAwsPersonalizeDataset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsPersonalizeDatasetInternal
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DatasetType plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Schema      plugin.TValue[*mqlAwsPersonalizeSchema]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeDataset creates a new instance of this resource
+func createAwsPersonalizeDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeDataset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.dataset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeDataset) MqlName() string {
+	return "aws.personalize.dataset"
+}
+
+func (c *mqlAwsPersonalizeDataset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeDataset) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeDataset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeDataset) GetDatasetType() *plugin.TValue[string] {
+	return &c.DatasetType
+}
+
+func (c *mqlAwsPersonalizeDataset) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeDataset) GetSchema() *plugin.TValue[*mqlAwsPersonalizeSchema] {
+	return plugin.GetOrCompute[*mqlAwsPersonalizeSchema](&c.Schema, func() (*mqlAwsPersonalizeSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.dataset", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsPersonalizeSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlAwsPersonalizeDataset) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeDataset) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsPersonalizeSolution for the aws.personalize.solution resource
+type mqlAwsPersonalizeSolution struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsPersonalizeSolutionInternal
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Recipe        plugin.TValue[string]
+	EventType     plugin.TValue[string]
+	PerformAutoML plugin.TValue[bool]
+	PerformHPO    plugin.TValue[bool]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	Campaigns     plugin.TValue[[]any]
+}
+
+// createAwsPersonalizeSolution creates a new instance of this resource
+func createAwsPersonalizeSolution(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeSolution{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.solution", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeSolution) MqlName() string {
+	return "aws.personalize.solution"
+}
+
+func (c *mqlAwsPersonalizeSolution) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeSolution) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeSolution) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeSolution) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeSolution) GetRecipe() *plugin.TValue[string] {
+	return &c.Recipe
+}
+
+func (c *mqlAwsPersonalizeSolution) GetEventType() *plugin.TValue[string] {
+	return &c.EventType
+}
+
+func (c *mqlAwsPersonalizeSolution) GetPerformAutoML() *plugin.TValue[bool] {
+	return &c.PerformAutoML
+}
+
+func (c *mqlAwsPersonalizeSolution) GetPerformHPO() *plugin.TValue[bool] {
+	return &c.PerformHPO
+}
+
+func (c *mqlAwsPersonalizeSolution) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeSolution) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsPersonalizeSolution) GetCampaigns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Campaigns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.personalize.solution", c.__id, "campaigns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.campaigns()
+	})
+}
+
+// mqlAwsPersonalizeCampaign for the aws.personalize.campaign resource
+type mqlAwsPersonalizeCampaign struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeCampaignInternal it will be used here
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	SolutionVersion   plugin.TValue[string]
+	MinProvisionedTPS plugin.TValue[int64]
+	FailureReason     plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeCampaign creates a new instance of this resource
+func createAwsPersonalizeCampaign(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeCampaign{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.campaign", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeCampaign) MqlName() string {
+	return "aws.personalize.campaign"
+}
+
+func (c *mqlAwsPersonalizeCampaign) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetSolutionVersion() *plugin.TValue[string] {
+	return &c.SolutionVersion
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetMinProvisionedTPS() *plugin.TValue[int64] {
+	return &c.MinProvisionedTPS
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeCampaign) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsPersonalizeRecommender for the aws.personalize.recommender resource
+type mqlAwsPersonalizeRecommender struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeRecommenderInternal it will be used here
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Status        plugin.TValue[string]
+	Recipe        plugin.TValue[string]
+	FailureReason plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeRecommender creates a new instance of this resource
+func createAwsPersonalizeRecommender(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeRecommender{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.recommender", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeRecommender) MqlName() string {
+	return "aws.personalize.recommender"
+}
+
+func (c *mqlAwsPersonalizeRecommender) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetRecipe() *plugin.TValue[string] {
+	return &c.Recipe
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeRecommender) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsPersonalizeEventTracker for the aws.personalize.eventTracker resource
+type mqlAwsPersonalizeEventTracker struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeEventTrackerInternal it will be used here
+	Arn        plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Status     plugin.TValue[string]
+	TrackingId plugin.TValue[string]
+	AccountId  plugin.TValue[string]
+	CreatedAt  plugin.TValue[*time.Time]
+	UpdatedAt  plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeEventTracker creates a new instance of this resource
+func createAwsPersonalizeEventTracker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeEventTracker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.eventTracker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeEventTracker) MqlName() string {
+	return "aws.personalize.eventTracker"
+}
+
+func (c *mqlAwsPersonalizeEventTracker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetTrackingId() *plugin.TValue[string] {
+	return &c.TrackingId
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeEventTracker) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsPersonalizeFilter for the aws.personalize.filter resource
+type mqlAwsPersonalizeFilter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeFilterInternal it will be used here
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	FilterExpression plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeFilter creates a new instance of this resource
+func createAwsPersonalizeFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeFilter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.filter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeFilter) MqlName() string {
+	return "aws.personalize.filter"
+}
+
+func (c *mqlAwsPersonalizeFilter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeFilter) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeFilter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeFilter) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPersonalizeFilter) GetFilterExpression() *plugin.TValue[string] {
+	return &c.FilterExpression
+}
+
+func (c *mqlAwsPersonalizeFilter) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeFilter) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsPersonalizeSchema for the aws.personalize.schema resource
+type mqlAwsPersonalizeSchema struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPersonalizeSchemaInternal it will be used here
+	Arn       plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Domain    plugin.TValue[string]
+	Schema    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsPersonalizeSchema creates a new instance of this resource
+func createAwsPersonalizeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPersonalizeSchema{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.personalize.schema", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPersonalizeSchema) MqlName() string {
+	return "aws.personalize.schema"
+}
+
+func (c *mqlAwsPersonalizeSchema) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPersonalizeSchema) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPersonalizeSchema) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsPersonalizeSchema) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAwsPersonalizeSchema) GetSchema() *plugin.TValue[string] {
+	return &c.Schema
+}
+
+func (c *mqlAwsPersonalizeSchema) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPersonalizeSchema) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsSagemaker for the aws.sagemaker resource

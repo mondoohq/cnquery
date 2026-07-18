@@ -297,6 +297,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearch v1.74.1 h1:DOJ0btsXfeKiAOVMA/rDn
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.74.1/go.mod h1:ESVhnGt6gZMcitF7aXN5/nTNZfGSy61QV+B0ovHEDxc=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.52.1 h1:FYLkiPCZw0a1foyrXxgAps3vZM3QfOkE20GnKo5Thto=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.52.1/go.mod h1:2ibX1FoyhvTXbIR4TP/Vf6BB6Tc3YW9jWbvNflSOcUM=
+github.com/aws/aws-sdk-go-v2/service/personalize v1.49.1 h1:/nvlg97lAcQugGg+yRZvJJs9z4/BxFpfg5Fl0JOFFyM=
+github.com/aws/aws-sdk-go-v2/service/personalize v1.49.1/go.mod h1:iloNYTqFJIRi5XsVg4cc37/+pWrb8pUE1sdDhqx/G2g=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.25.1 h1:3psoKTtX6Gwyoe9NBi42USYetGr8+eUSQnUNs9OcMzc=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.25.1/go.mod h1:T6IT3J1azXw1d29zHXpzA2MBZaFLjdbgKNApDLw9Cck=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.36.1 h1:gl3mdtkzM1pfdzPMyltxLg+oilJoDEFYYZl80Y/lK2E=

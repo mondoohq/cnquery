@@ -710,6 +710,7 @@ func awsConnectionMethodToService(method string) string {
 		"bedrockagent":             "bedrockagent",
 		"qbusiness":                "qbusiness",
 		"bedrockagentcorecontrol":  "bedrockagentcorecontrol",
+		"personalize":              "personalize",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

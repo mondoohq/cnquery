@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.48.0",
-  "generated_at": "2026-07-16T12:21:09+03:00",
+  "version": "13.48.1",
+  "generated_at": "2026-07-18T06:52:58-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindings",
@@ -622,6 +622,22 @@
     "organizations:ListPoliciesForTarget",
     "organizations:ListRoots",
     "organizations:ListTagsForResource",
+    "personalize:DescribeCampaign",
+    "personalize:DescribeDataset",
+    "personalize:DescribeDatasetGroup",
+    "personalize:DescribeEventTracker",
+    "personalize:DescribeFilter",
+    "personalize:DescribeRecommender",
+    "personalize:DescribeSchema",
+    "personalize:DescribeSolution",
+    "personalize:ListCampaigns",
+    "personalize:ListDatasetGroups",
+    "personalize:ListDatasets",
+    "personalize:ListEventTrackers",
+    "personalize:ListFilters",
+    "personalize:ListRecommenders",
+    "personalize:ListSchemas",
+    "personalize:ListSolutions",
     "pipes:DescribePipe",
     "pipes:ListPipes",
     "qbusiness:GetApplication",
@@ -4740,6 +4756,102 @@
       "service": "organizations",
       "action": "ListTagsForResource",
       "source_file": "aws_account.go"
+    },
+    {
+      "permission": "personalize:DescribeCampaign",
+      "service": "personalize",
+      "action": "DescribeCampaign",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeDataset",
+      "service": "personalize",
+      "action": "DescribeDataset",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeDatasetGroup",
+      "service": "personalize",
+      "action": "DescribeDatasetGroup",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeEventTracker",
+      "service": "personalize",
+      "action": "DescribeEventTracker",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeFilter",
+      "service": "personalize",
+      "action": "DescribeFilter",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeRecommender",
+      "service": "personalize",
+      "action": "DescribeRecommender",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeSchema",
+      "service": "personalize",
+      "action": "DescribeSchema",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:DescribeSolution",
+      "service": "personalize",
+      "action": "DescribeSolution",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListCampaigns",
+      "service": "personalize",
+      "action": "ListCampaigns",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListDatasetGroups",
+      "service": "personalize",
+      "action": "ListDatasetGroups",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListDatasets",
+      "service": "personalize",
+      "action": "ListDatasets",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListEventTrackers",
+      "service": "personalize",
+      "action": "ListEventTrackers",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListFilters",
+      "service": "personalize",
+      "action": "ListFilters",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListRecommenders",
+      "service": "personalize",
+      "action": "ListRecommenders",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListSchemas",
+      "service": "personalize",
+      "action": "ListSchemas",
+      "source_file": "aws_personalize.go"
+    },
+    {
+      "permission": "personalize:ListSolutions",
+      "service": "personalize",
+      "action": "ListSolutions",
+      "source_file": "aws_personalize.go"
     },
     {
       "permission": "pipes:DescribePipe",
