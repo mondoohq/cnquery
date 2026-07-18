@@ -59,25 +59,35 @@ func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]any, error) {
 			return nil, err
 		}
 		for _, r := range page.Value {
+			if r == nil {
+				continue
+			}
 			props, err := convert.JsonToDict(r.Properties)
 			if err != nil {
 				return nil, err
+			}
+			// Properties is a nullable pointer dereferenced throughout the
+			// arg map; normalize to an empty struct to avoid a panic on a
+			// null-properties recommendation (mirrors newMqlRoleAssignment).
+			recProps := r.Properties
+			if recProps == nil {
+				recProps = &advisor.RecommendationProperties{}
 			}
 			args := map[string]*llx.RawData{
 				"id":                   llx.StringDataPtr(r.ID),
 				"name":                 llx.StringDataPtr(r.Name),
 				"type":                 llx.StringDataPtr(r.Type),
-				"category":             llx.StringDataPtr((*string)(r.Properties.Category)),
-				"impact":               llx.StringDataPtr((*string)(r.Properties.Impact)),
-				"risk":                 llx.StringDataPtr((*string)(r.Properties.Risk)),
+				"category":             llx.StringDataPtr((*string)(recProps.Category)),
+				"impact":               llx.StringDataPtr((*string)(recProps.Impact)),
+				"risk":                 llx.StringDataPtr((*string)(recProps.Risk)),
 				"properties":           llx.DictData(props),
-				"impactedResourceType": llx.StringDataPtr(r.Properties.ImpactedField),
-				"impactedResource":     llx.StringDataPtr(r.Properties.ImpactedValue),
+				"impactedResourceType": llx.StringDataPtr(recProps.ImpactedField),
+				"impactedResource":     llx.StringDataPtr(recProps.ImpactedValue),
 			}
-			if r.Properties.ShortDescription != nil {
+			if recProps.ShortDescription != nil {
 				// the 'Description' field in the API response is always empty, use the short description instead
-				args["description"] = llx.StringDataPtr(r.Properties.ShortDescription.Problem)
-				args["remediation"] = llx.StringDataPtr(r.Properties.ShortDescription.Solution)
+				args["description"] = llx.StringDataPtr(recProps.ShortDescription.Problem)
+				args["remediation"] = llx.StringDataPtr(recProps.ShortDescription.Solution)
 			}
 			mqlRecomm, err := CreateResource(a.MqlRuntime, "azure.subscription.advisorService.recommendation", args)
 			if err != nil {

@@ -32,6 +32,17 @@ import (
 
 var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.(?:vault|managedhsm)\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
 
+// isKeyRotateAction reports whether a key rotation policy lifetime action is a
+// "Rotate" action. Both the action wrapper and its inner Type are nullable
+// pointers, so both are guarded to avoid a nil dereference. Per the Key Vault
+// SDK the action value is compared case-insensitively.
+func isKeyRotateAction(action *azkeys.LifetimeActionType) bool {
+	if action == nil || action.Type == nil {
+		return false
+	}
+	return strings.EqualFold(string(*action.Type), string(azkeys.KeyRotationPolicyActionRotate))
+}
+
 type keyvaultid struct {
 	BaseUrl string
 	Vault   string
@@ -427,7 +438,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 					return nil
 				}
 				for _, action := range policyResp.LifetimeActions {
-					if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+					if isKeyRotateAction(action.Action) {
 						mu.Lock()
 						enabledByKid[kid] = true
 						mu.Unlock()
@@ -995,7 +1006,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) rotationPolicy() (*mqlAzureSubs
 			}
 			lifetimeActions = append(lifetimeActions, actionDict)
 
-			if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+			if isKeyRotateAction(action.Action) {
 				rotationEnabled = true
 			}
 		}

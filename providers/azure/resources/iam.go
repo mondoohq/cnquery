@@ -163,9 +163,19 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 			return nil, err
 		}
 		for _, roleDef := range page.Value {
-			roleType := convert.ToValue(roleDef.Properties.RoleType)
+			if roleDef == nil {
+				continue
+			}
+			// Properties is a nullable pointer that is dereferenced throughout
+			// the loop body; normalize to an empty struct to avoid a panic
+			// (mirrors newMqlRoleAssignment below).
+			props := roleDef.Properties
+			if props == nil {
+				props = &authorization.RoleDefinitionProperties{}
+			}
+			roleType := convert.ToValue(props.RoleType)
 			scopes := []any{}
-			for _, s := range roleDef.Properties.AssignableScopes {
+			for _, s := range props.AssignableScopes {
 				if s != nil {
 					scopes = append(scopes, *s)
 				}
@@ -174,8 +184,8 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 				map[string]*llx.RawData{
 					"__id":        llx.StringDataPtr(roleDef.ID),
 					"id":          llx.StringDataPtr(roleDef.ID),
-					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
-					"description": llx.StringDataPtr(roleDef.Properties.Description),
+					"name":        llx.StringDataPtr(props.RoleName),
+					"description": llx.StringDataPtr(props.Description),
 					"type":        llx.StringData(roleType),
 					"scopes":      llx.ArrayData(scopes, types.String),
 				})
@@ -183,7 +193,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 				return nil, err
 			}
 			mqlRole := mqlRoleDefinition.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
-			mqlRole.cachePermissions = roleDef.Properties.Permissions
+			mqlRole.cachePermissions = props.Permissions
 			res = append(res, mqlRole)
 		}
 	}
