@@ -6,11 +6,11 @@ option go_package = "go.mondoo.com/mql/v13/providers/portainer/resources"
 
 // Portainer instance
 //
-// Use the Portainer instance as the entry point for auditing a Portainer
-// container-management control plane. Examine the server version and
-// instance-wide security settings, enumerate the user accounts and teams that
-// make up its RBAC model, and list the environments (Docker hosts, Swarm or
-// Kubernetes clusters, and Edge agents) that the instance manages.
+// Portainer container-management control plane at the root of an audit. The
+// server version and instance-wide security settings describe the control
+// plane itself, the user accounts and teams make up its RBAC model, and the
+// environments (Docker hosts, Swarm or Kubernetes clusters, and Edge agents)
+// are the hosts it manages.
 portainer {
   // Portainer server version
   version() string
@@ -38,14 +38,14 @@ portainer {
 
 // Portainer security settings
 //
-// Examine the instance-wide authentication and container-security posture.
+// Instance-wide authentication and container-security posture.
 // `authenticationMethod` reports whether logins are handled internally or
 // delegated to LDAP or OAuth, and `requiredPasswordLength` is the minimum
 // password length enforced for internal authentication. The
 // `allow*ForRegularUsers` flags govern what non-administrator users are
-// permitted to do when deploying workloads — running privileged containers,
+// permitted to do when deploying workloads (running privileged containers,
 // bind-mounting host paths, mapping host devices, sharing host namespaces,
-// adding Linux capabilities, managing stacks, and browsing volumes — and a
+// adding Linux capabilities, managing stacks, and browsing volumes), and a
 // permissive value on any of them is a privilege-escalation path that the
 // container runtime alone cannot reveal. The `disableKube*` flags and edge
 // trust settings round out the instance hardening picture.
@@ -110,17 +110,17 @@ portainer.settings @defaults("authenticationMethod requiredPasswordLength") {
 
 // Portainer user account
 //
-// Examine a single Portainer user account. The `role` field reports whether
-// the account is a site `administrator` or a `standard` user — a key RBAC
-// audit, since administrators can reach every managed environment. Select a
-// user by its numeric `id`, for example `portainer.users.where(role ==
-// "administrator")`, and traverse `teams` to see which teams it belongs to.
+// User account that authenticates to the Portainer server. The `role` field
+// reports whether the account is a site `administrator` or a `standard` user,
+// a key RBAC audit since administrators can reach every managed environment.
+// Select a user by its numeric `id`, for example `portainer.users.where(role
+// == "administrator")`, and traverse `teams` to see which teams it belongs to.
 portainer.user @defaults("username role") {
   // Numeric user identifier
   id int
   // Login name
   username string
-  // Account role: administrator or standard
+  // Account role: administrator, standard, or unknown
   role string
   // Whether server-side caching is enabled for this user
   useCache bool
@@ -134,10 +134,11 @@ portainer.user @defaults("username role") {
 
 // Portainer team
 //
-// Examine a Portainer team and its membership. Teams group standard users so
-// that environment access policies can be granted in bulk. Select a team by
-// its numeric `id` and traverse `members` to enumerate the users that belong
-// to it.
+// Team and its membership within a Portainer instance. Teams group standard
+// users so that environment access policies can be granted in bulk rather than
+// user by user, so a team's roster is what determines who inherits those
+// grants. Select a team by its numeric `id` and read `members` to enumerate
+// the users that belong to it.
 portainer.team @defaults("name") {
   // Numeric team identifier
   id int
@@ -149,9 +150,9 @@ portainer.team @defaults("name") {
 
 // Portainer environment
 //
-// Examine an environment (endpoint) managed by Portainer — a Docker host, a
-// Docker Swarm or Kubernetes cluster, or an Edge agent. The `type` field
-// reports which of these it is and `status` whether it is currently reachable.
+// Environment (endpoint) managed by Portainer: a Docker host, a Docker Swarm
+// or Kubernetes cluster, or an Edge agent. The `type` field reports which of
+// these it is and `status` whether it is currently reachable.
 // `teamAccessPolicies` and `userAccessPolicies` capture the per-environment
 // RBAC grants (keyed by team and user id), which together with the instance
 // `settings` describe who can deploy workloads where. Select an environment by
@@ -189,15 +190,25 @@ portainer.environment @defaults("name type status") {
   userTrusted bool
   // Whether GPU management is enabled for the environment
   gpuManagementEnabled bool
-  // Per-environment container-security overrides keyed by setting name
+  // Per-environment container-security overrides
+  //
+  // Boolean flags, keyed by setting name, that relax container privileges for
+  // non-admin (regular) users. Keys: allowBindMountsForRegularUsers,
+  // allowContainerCapabilitiesForRegularUsers,
+  // allowDeviceMappingForRegularUsers, allowHostNamespaceForRegularUsers,
+  // allowPrivilegedModeForRegularUsers, allowStackManagementForRegularUsers,
+  // allowSysctlSettingForRegularUsers, allowVolumeBrowserForRegularUsers, and
+  // enableHostManagementFeatures. Any flag set to true widens the container
+  // attack surface available to unprivileged users on this environment.
   securitySettings dict
 }
 
 // Portainer tag
 //
-// Examine a tag defined on the Portainer instance. Tags label environments and
-// environment groups so that Edge groups can target them dynamically. Select a
-// tag by its numeric `id` or `name`.
+// Label applied to environments and environment groups on the Portainer
+// instance so that Edge groups can target them dynamically. Auditing tags
+// reveals how environments are grouped for policy and deployment targeting.
+// Select a tag by its numeric `id` or `name`.
 portainer.tag @defaults("name") {
   // Numeric tag identifier
   id int
@@ -207,10 +218,11 @@ portainer.tag @defaults("name") {
 
 // Portainer environment group
 //
-// Examine an environment group (endpoint group) that bundles environments so
-// access policies and tags can be managed together. `teamAccessPolicies` and
-// `userAccessPolicies` capture the per-group RBAC grants (keyed by team and
-// user id). Select a group by its numeric `id`.
+// Environment group (endpoint group) that bundles environments so access
+// policies and tags can be managed together. `teamAccessPolicies` and
+// `userAccessPolicies` capture the per-group RBAC grants, letting you audit
+// which teams and users hold access to every environment in the group. Select
+// a group by its numeric `id`.
 portainer.environmentGroup @defaults("name") {
   // Numeric environment group identifier
   id int
@@ -228,9 +240,10 @@ portainer.environmentGroup @defaults("name") {
 
 // Portainer edge group
 //
-// Examine an Edge group used to target Edge environments and Edge stacks. When
-// `dynamic` is true membership is derived from tag matches; otherwise it is the
-// static set of `endpoints`. Select an Edge group by its numeric `id`.
+// Edge group used to target Edge environments and Edge stacks. When `dynamic` is
+// true, membership is derived from tag matches; otherwise it is a static set of
+// explicitly assigned environments. Select an Edge group by its numeric `id`,
+// for example `portainer.edgeGroup(id: 3)`.
 portainer.edgeGroup @defaults("name") {
   // Numeric Edge group identifier
   id int
@@ -246,14 +259,17 @@ portainer.edgeGroup @defaults("name") {
 
 // Portainer edge stack
 //
-// Examine an Edge stack — a workload definition deployed to Edge environments
-// through one or more Edge groups. Select an Edge stack by its numeric `id`.
+// Workload definition deployed to Edge environments through one or more Edge
+// groups. Select an Edge stack by its numeric `id`, for example
+// `portainer.edgeStack(id: 3)`. The deploymentType field distinguishes
+// compose from Kubernetes stacks, and numDeployments reports how many
+// environments the stack currently runs on.
 portainer.edgeStack @defaults("name") {
   // Numeric Edge stack identifier
   id int
   // Edge stack name
   name string
-  // Deployment type: compose or kubernetes
+  // Deployment type: compose, kubernetes, or unknown
   deploymentType string
   // Edge groups the stack targets
   edgeGroups() []portainer.edgeGroup
@@ -267,8 +283,11 @@ portainer.edgeStack @defaults("name") {
 
 // Portainer license
 //
-// Examine a license applied to the Portainer instance — the edition, seat
-// count, and expiry that govern which enterprise features are available.
+// License applied to the Portainer instance, covering the company it is
+// issued to, the number of licensed nodes, and the creation and expiry
+// times that govern which enterprise features remain available. Audit
+// this to confirm a valid, unexpired license backs the deployment and to
+// track how many nodes the entitlement permits.
 portainer.license @defaults("company expiresAt") {
   // License identifier
   id string
