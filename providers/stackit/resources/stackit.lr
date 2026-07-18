@@ -81,6 +81,8 @@ stackit {
   certificates() []stackit.certificate
   // Application Load Balancers separate from the legacy loadBalancers product
   albLoadBalancers() []stackit.alb.loadBalancer
+  // Web Application Firewall configurations for Application Load Balancers
+  albWafs() []stackit.alb.waf
   // Key Management Service namespace (key rings + keys)
   kms() stackit.kms
   // Project-level IAM bindings (members) and roles
@@ -1906,6 +1908,125 @@ private stackit.alb.loadBalancer @defaults("name status externalAddress") {
   labels map[string]string
   // Internet-exposure breakdown (public address combined with the access-control allow-list)
   exposure() stackit.network.exposure
+  // Web Application Firewall configurations referenced by the LB's listeners
+  wafs() []stackit.alb.waf
+}
+
+// STACKIT Application Load Balancer WAF configuration
+//
+// Web Application Firewall configuration that a load balancer listener can
+// reference by name to inspect and filter inbound HTTP traffic. The
+// configuration is keyed by its name and binds a managed rule set and a
+// custom rule group, both resolvable as managedRuleSet and customRuleGroup.
+private stackit.alb.waf @defaults("name managedRuleSetName customRuleGroupName") {
+  init(name? string)
+  // WAF configuration name (unique within the project+region)
+  name string
+  // Name of the managed rule set bound to the configuration (empty if none)
+  managedRuleSetName string
+  // Managed rule set bound to the configuration
+  managedRuleSet() stackit.alb.managedRuleSet
+  // Name of the custom rule group bound to the configuration (empty if none)
+  customRuleGroupName string
+  // Custom rule group bound to the configuration
+  customRuleGroup() stackit.alb.customRuleGroup
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT Application Load Balancer managed rule set
+//
+// Provider-maintained set of Web Application Firewall rules, grouped and
+// individually toggled between blocking and detection behavior. The set is
+// keyed by its name and exposes the rule set type and version and the rule
+// groups, each holding the per-rule mode.
+private stackit.alb.managedRuleSet @defaults("name type version") {
+  init(name? string)
+  // Managed rule set name (unique within the project+region)
+  name string
+  // Rule set type
+  type string
+  // Rule set version
+  version string
+  // Rules in the set, each toggled between blocking and detection behavior
+  rules() []stackit.alb.managedRule
+}
+
+// STACKIT Application Load Balancer managed rule
+//
+// Single rule within a managed rule set, identified by its rule name. The
+// mode determines how a matching request is handled: MODE_ENABLED blocks
+// it, MODE_LOG_ONLY only records it, and MODE_DISABLED turns the rule off.
+// Also exposes the rule group the rule belongs to, its severity, and its
+// description.
+private stackit.alb.managedRule @defaults("name groupName mode severity") {
+  // Rule name (identifier within the managed rule set)
+  name string
+  // Name of the rule group the rule belongs to
+  groupName string
+  // Mode applied to the rule (MODE_ENABLED, MODE_DISABLED, MODE_LOG_ONLY, MODE_UNSPECIFIED)
+  mode string
+  // Rule severity (CRITICAL, ERROR, WARNING, INFO)
+  severity string
+  // Rule description
+  description string
+}
+
+// STACKIT Application Load Balancer custom rule group
+//
+// User-defined group of Web Application Firewall rules that match on
+// request attributes and apply a behavior. The group is keyed by its name
+// and exposes the custom rules it contains.
+private stackit.alb.customRuleGroup @defaults("name") {
+  init(name? string)
+  // Custom rule group name (unique within the project+region)
+  name string
+  // Custom rules the group contains
+  rules() []stackit.alb.customRule
+}
+
+// STACKIT Application Load Balancer custom rule
+//
+// User-defined Web Application Firewall rule within a custom rule group,
+// identified by its numeric id. Exposes the match conditions and the
+// behavior applied when they match: the action taken (ACTION_ALLOW,
+// ACTION_DENY, ACTION_PASS), whether the match is logged, the log message,
+// and the severity recorded.
+private stackit.alb.customRule @defaults("id action severity") {
+  // Rule ID (unique within the custom rule group)
+  id int
+  // Rule description
+  description string
+  // Action applied when the conditions match (ACTION_ALLOW, ACTION_DENY, ACTION_PASS, ACTION_UNSPECIFIED)
+  action string
+  // Whether a match is logged
+  log bool
+  // Log message emitted on a match
+  logMsg string
+  // Severity recorded for a match
+  severity string
+  // Match conditions that must hold for the rule to apply
+  conditions() []stackit.alb.customRuleCondition
+}
+
+// STACKIT Application Load Balancer custom rule condition
+//
+// Single match condition of a custom Web Application Firewall rule. The
+// condition tests a request variable against a value using an operator,
+// after applying any transformations. For example variableType
+// REQUEST_HEADERS with variableValue "User-Agent", operatorType CONTAINS
+// with operatorValue "curl", and a LOWERCASE transformation.
+private stackit.alb.customRuleCondition @defaults("variableType operatorType operatorValue") {
+  // Request attribute the condition inspects (for example REQUEST_HEADERS, REQUEST_URI)
+  variableType string
+  // Specifier for the variable, such as a header name (empty when not applicable)
+  variableValue string
+  // Operator applied to the variable (for example CONTAINS, EQUALS, REGEX)
+  operatorType string
+  // Value the operator compares the variable against
+  operatorValue string
+  // Transformations applied to the variable before evaluation (for example LOWERCASE, URL_DECODE)
+  transformations []string
 }
 
 // STACKIT KMS namespace

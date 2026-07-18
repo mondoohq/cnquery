@@ -8,6 +8,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.26.0
 	github.com/stackitcloud/stackit-sdk-go/services/alb v0.16.0
+	github.com/stackitcloud/stackit-sdk-go/services/albwaf v0.10.0
 	github.com/stackitcloud/stackit-sdk-go/services/authorization v0.15.2
 	github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.0
 	github.com/stackitcloud/stackit-sdk-go/services/dns v0.21.0

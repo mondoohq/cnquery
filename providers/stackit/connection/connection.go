@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stackitcloud/stackit-sdk-go/core/config"
 	"github.com/stackitcloud/stackit-sdk-go/services/alb"
+	albwaf "github.com/stackitcloud/stackit-sdk-go/services/albwaf/v1betaapi"
 	"github.com/stackitcloud/stackit-sdk-go/services/authorization"
 	"github.com/stackitcloud/stackit-sdk-go/services/certificates"
 	"github.com/stackitcloud/stackit-sdk-go/services/dns"
@@ -138,6 +139,9 @@ type StackitConnection struct {
 	albOnce              sync.Once
 	albClient            *alb.APIClient
 	albErr               error
+	albWafOnce           sync.Once
+	albWafClient         *albwaf.APIClient
+	albWafErr            error
 	certificatesOnce     sync.Once
 	certificatesClient   *certificates.APIClient
 	certificatesErr      error
@@ -442,6 +446,15 @@ func (c *StackitConnection) ALB() (*alb.APIClient, error) {
 		c.albClient, c.albErr = alb.NewAPIClient(c.configOpts...)
 	})
 	return c.albClient, c.albErr
+}
+
+func (c *StackitConnection) AlbWaf() (*albwaf.APIClient, error) {
+	c.albWafOnce.Do(func() {
+		// Mirrors ALB (same product family): the WAF API is region-scoped via
+		// the client config and also accepts the region as a per-call param.
+		c.albWafClient, c.albWafErr = albwaf.NewAPIClient(c.configOpts...)
+	})
+	return c.albWafClient, c.albWafErr
 }
 
 func (c *StackitConnection) Certificates() (*certificates.APIClient, error) {

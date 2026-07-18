@@ -83,6 +83,12 @@ const (
 	ResourceStackitServiceAccount                string = "stackit.serviceAccount"
 	ResourceStackitCertificate                   string = "stackit.certificate"
 	ResourceStackitAlbLoadBalancer               string = "stackit.alb.loadBalancer"
+	ResourceStackitAlbWaf                        string = "stackit.alb.waf"
+	ResourceStackitAlbManagedRuleSet             string = "stackit.alb.managedRuleSet"
+	ResourceStackitAlbManagedRule                string = "stackit.alb.managedRule"
+	ResourceStackitAlbCustomRuleGroup            string = "stackit.alb.customRuleGroup"
+	ResourceStackitAlbCustomRule                 string = "stackit.alb.customRule"
+	ResourceStackitAlbCustomRuleCondition        string = "stackit.alb.customRuleCondition"
 	ResourceStackitKms                           string = "stackit.kms"
 	ResourceStackitKmsKeyRing                    string = "stackit.kms.keyRing"
 	ResourceStackitKmsKey                        string = "stackit.kms.key"
@@ -363,6 +369,30 @@ func init() {
 			// to override args, implement: initStackitAlbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitAlbLoadBalancer,
 		},
+		"stackit.alb.waf": {
+			Init:   initStackitAlbWaf,
+			Create: createStackitAlbWaf,
+		},
+		"stackit.alb.managedRuleSet": {
+			Init:   initStackitAlbManagedRuleSet,
+			Create: createStackitAlbManagedRuleSet,
+		},
+		"stackit.alb.managedRule": {
+			// to override args, implement: initStackitAlbManagedRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitAlbManagedRule,
+		},
+		"stackit.alb.customRuleGroup": {
+			Init:   initStackitAlbCustomRuleGroup,
+			Create: createStackitAlbCustomRuleGroup,
+		},
+		"stackit.alb.customRule": {
+			// to override args, implement: initStackitAlbCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitAlbCustomRule,
+		},
+		"stackit.alb.customRuleCondition": {
+			// to override args, implement: initStackitAlbCustomRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createStackitAlbCustomRuleCondition,
+		},
 		"stackit.kms": {
 			// to override args, implement: initStackitKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createStackitKms,
@@ -547,6 +577,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.albLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetAlbLoadBalancers()).ToDataRes(types.Array(types.Resource("stackit.alb.loadBalancer")))
+	},
+	"stackit.albWafs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackit).GetAlbWafs()).ToDataRes(types.Array(types.Resource("stackit.alb.waf")))
 	},
 	"stackit.kms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackit).GetKms()).ToDataRes(types.Resource("stackit.kms"))
@@ -2261,6 +2294,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.alb.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitAlbLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
 	},
+	"stackit.alb.loadBalancer.wafs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbLoadBalancer).GetWafs()).ToDataRes(types.Array(types.Resource("stackit.alb.waf")))
+	},
+	"stackit.alb.waf.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetName()).ToDataRes(types.String)
+	},
+	"stackit.alb.waf.managedRuleSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetManagedRuleSetName()).ToDataRes(types.String)
+	},
+	"stackit.alb.waf.managedRuleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetManagedRuleSet()).ToDataRes(types.Resource("stackit.alb.managedRuleSet"))
+	},
+	"stackit.alb.waf.customRuleGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetCustomRuleGroupName()).ToDataRes(types.String)
+	},
+	"stackit.alb.waf.customRuleGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetCustomRuleGroup()).ToDataRes(types.Resource("stackit.alb.customRuleGroup"))
+	},
+	"stackit.alb.waf.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbWaf).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"stackit.alb.managedRuleSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRuleSet).GetName()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRuleSet.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRuleSet).GetType()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRuleSet.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRuleSet).GetVersion()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRuleSet.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRuleSet).GetRules()).ToDataRes(types.Array(types.Resource("stackit.alb.managedRule")))
+	},
+	"stackit.alb.managedRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRule).GetName()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRule.groupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRule).GetGroupName()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRule.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRule).GetMode()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRule.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRule).GetSeverity()).ToDataRes(types.String)
+	},
+	"stackit.alb.managedRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbManagedRule).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleGroup).GetName()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleGroup.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleGroup).GetRules()).ToDataRes(types.Array(types.Resource("stackit.alb.customRule")))
+	},
+	"stackit.alb.customRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetId()).ToDataRes(types.Int)
+	},
+	"stackit.alb.customRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetDescription()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetAction()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRule.log": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetLog()).ToDataRes(types.Bool)
+	},
+	"stackit.alb.customRule.logMsg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetLogMsg()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRule.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetSeverity()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRule.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRule).GetConditions()).ToDataRes(types.Array(types.Resource("stackit.alb.customRuleCondition")))
+	},
+	"stackit.alb.customRuleCondition.variableType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleCondition).GetVariableType()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleCondition.variableValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleCondition).GetVariableValue()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleCondition.operatorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleCondition).GetOperatorType()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleCondition.operatorValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleCondition).GetOperatorValue()).ToDataRes(types.String)
+	},
+	"stackit.alb.customRuleCondition.transformations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitAlbCustomRuleCondition).GetTransformations()).ToDataRes(types.Array(types.String))
+	},
 	"stackit.kms.keyRings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitKms).GetKeyRings()).ToDataRes(types.Array(types.Resource("stackit.kms.keyRing")))
 	},
@@ -2476,6 +2599,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.albLoadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackit).AlbLoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.albWafs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackit).AlbWafs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"stackit.kms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5026,6 +5153,150 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitAlbLoadBalancer).Exposure, ok = plugin.RawToTValue[*mqlStackitNetworkExposure](v.Value, v.Error)
 		return
 	},
+	"stackit.alb.loadBalancer.wafs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbLoadBalancer).Wafs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.waf.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.managedRuleSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).ManagedRuleSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.managedRuleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).ManagedRuleSet, ok = plugin.RawToTValue[*mqlStackitAlbManagedRuleSet](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.customRuleGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).CustomRuleGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.customRuleGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).CustomRuleGroup, ok = plugin.RawToTValue[*mqlStackitAlbCustomRuleGroup](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.waf.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbWaf).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRuleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.managedRuleSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRuleSet.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRuleSet.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRuleSet.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRuleSet).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.managedRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRule.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).GroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRule.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRule.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.managedRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbManagedRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.customRuleGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleGroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.customRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.log": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Log, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.logMsg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).LogMsg, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRule.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRule).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"stackit.alb.customRuleCondition.variableType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).VariableType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleCondition.variableValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).VariableValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleCondition.operatorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).OperatorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleCondition.operatorValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).OperatorValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.alb.customRuleCondition.transformations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitAlbCustomRuleCondition).Transformations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"stackit.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitKms).__id, ok = v.Value.(string)
 		return
@@ -5217,6 +5488,7 @@ type mqlStackit struct {
 	ServiceAccounts  plugin.TValue[[]any]
 	Certificates     plugin.TValue[[]any]
 	AlbLoadBalancers plugin.TValue[[]any]
+	AlbWafs          plugin.TValue[[]any]
 	Kms              plugin.TValue[*mqlStackitKms]
 	Iam              plugin.TValue[*mqlStackitIam]
 }
@@ -5725,6 +5997,22 @@ func (c *mqlStackit) GetAlbLoadBalancers() *plugin.TValue[[]any] {
 		}
 
 		return c.albLoadBalancers()
+	})
+}
+
+func (c *mqlStackit) GetAlbWafs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlbWafs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit", c.__id, "albWafs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.albWafs()
 	})
 }
 
@@ -12152,6 +12440,7 @@ type mqlStackitAlbLoadBalancer struct {
 	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
 	Labels                               plugin.TValue[map[string]any]
 	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
+	Wafs                                 plugin.TValue[[]any]
 }
 
 // createStackitAlbLoadBalancer creates a new instance of this resource
@@ -12265,6 +12554,476 @@ func (c *mqlStackitAlbLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetw
 
 		return c.exposure()
 	})
+}
+
+func (c *mqlStackitAlbLoadBalancer) GetWafs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Wafs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.loadBalancer", c.__id, "wafs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafs()
+	})
+}
+
+// mqlStackitAlbWaf for the stackit.alb.waf resource
+type mqlStackitAlbWaf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitAlbWafInternal it will be used here
+	Name                plugin.TValue[string]
+	ManagedRuleSetName  plugin.TValue[string]
+	ManagedRuleSet      plugin.TValue[*mqlStackitAlbManagedRuleSet]
+	CustomRuleGroupName plugin.TValue[string]
+	CustomRuleGroup     plugin.TValue[*mqlStackitAlbCustomRuleGroup]
+	Labels              plugin.TValue[map[string]any]
+}
+
+// createStackitAlbWaf creates a new instance of this resource
+func createStackitAlbWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbWaf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.waf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbWaf) MqlName() string {
+	return "stackit.alb.waf"
+}
+
+func (c *mqlStackitAlbWaf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbWaf) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitAlbWaf) GetManagedRuleSetName() *plugin.TValue[string] {
+	return &c.ManagedRuleSetName
+}
+
+func (c *mqlStackitAlbWaf) GetManagedRuleSet() *plugin.TValue[*mqlStackitAlbManagedRuleSet] {
+	return plugin.GetOrCompute[*mqlStackitAlbManagedRuleSet](&c.ManagedRuleSet, func() (*mqlStackitAlbManagedRuleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.waf", c.__id, "managedRuleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitAlbManagedRuleSet), nil
+			}
+		}
+
+		return c.managedRuleSet()
+	})
+}
+
+func (c *mqlStackitAlbWaf) GetCustomRuleGroupName() *plugin.TValue[string] {
+	return &c.CustomRuleGroupName
+}
+
+func (c *mqlStackitAlbWaf) GetCustomRuleGroup() *plugin.TValue[*mqlStackitAlbCustomRuleGroup] {
+	return plugin.GetOrCompute[*mqlStackitAlbCustomRuleGroup](&c.CustomRuleGroup, func() (*mqlStackitAlbCustomRuleGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.waf", c.__id, "customRuleGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitAlbCustomRuleGroup), nil
+			}
+		}
+
+		return c.customRuleGroup()
+	})
+}
+
+func (c *mqlStackitAlbWaf) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+// mqlStackitAlbManagedRuleSet for the stackit.alb.managedRuleSet resource
+type mqlStackitAlbManagedRuleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitAlbManagedRuleSetInternal it will be used here
+	Name    plugin.TValue[string]
+	Type    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Rules   plugin.TValue[[]any]
+}
+
+// createStackitAlbManagedRuleSet creates a new instance of this resource
+func createStackitAlbManagedRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbManagedRuleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.managedRuleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbManagedRuleSet) MqlName() string {
+	return "stackit.alb.managedRuleSet"
+}
+
+func (c *mqlStackitAlbManagedRuleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbManagedRuleSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitAlbManagedRuleSet) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlStackitAlbManagedRuleSet) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlStackitAlbManagedRuleSet) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.managedRuleSet", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlStackitAlbManagedRule for the stackit.alb.managedRule resource
+type mqlStackitAlbManagedRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitAlbManagedRuleInternal it will be used here
+	Name        plugin.TValue[string]
+	GroupName   plugin.TValue[string]
+	Mode        plugin.TValue[string]
+	Severity    plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createStackitAlbManagedRule creates a new instance of this resource
+func createStackitAlbManagedRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbManagedRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.managedRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbManagedRule) MqlName() string {
+	return "stackit.alb.managedRule"
+}
+
+func (c *mqlStackitAlbManagedRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbManagedRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitAlbManagedRule) GetGroupName() *plugin.TValue[string] {
+	return &c.GroupName
+}
+
+func (c *mqlStackitAlbManagedRule) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlStackitAlbManagedRule) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlStackitAlbManagedRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlStackitAlbCustomRuleGroup for the stackit.alb.customRuleGroup resource
+type mqlStackitAlbCustomRuleGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitAlbCustomRuleGroupInternal it will be used here
+	Name  plugin.TValue[string]
+	Rules plugin.TValue[[]any]
+}
+
+// createStackitAlbCustomRuleGroup creates a new instance of this resource
+func createStackitAlbCustomRuleGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbCustomRuleGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.customRuleGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbCustomRuleGroup) MqlName() string {
+	return "stackit.alb.customRuleGroup"
+}
+
+func (c *mqlStackitAlbCustomRuleGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbCustomRuleGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlStackitAlbCustomRuleGroup) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.customRuleGroup", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlStackitAlbCustomRule for the stackit.alb.customRule resource
+type mqlStackitAlbCustomRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlStackitAlbCustomRuleInternal
+	Id          plugin.TValue[int64]
+	Description plugin.TValue[string]
+	Action      plugin.TValue[string]
+	Log         plugin.TValue[bool]
+	LogMsg      plugin.TValue[string]
+	Severity    plugin.TValue[string]
+	Conditions  plugin.TValue[[]any]
+}
+
+// createStackitAlbCustomRule creates a new instance of this resource
+func createStackitAlbCustomRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbCustomRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.customRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbCustomRule) MqlName() string {
+	return "stackit.alb.customRule"
+}
+
+func (c *mqlStackitAlbCustomRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbCustomRule) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlStackitAlbCustomRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlStackitAlbCustomRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlStackitAlbCustomRule) GetLog() *plugin.TValue[bool] {
+	return &c.Log
+}
+
+func (c *mqlStackitAlbCustomRule) GetLogMsg() *plugin.TValue[string] {
+	return &c.LogMsg
+}
+
+func (c *mqlStackitAlbCustomRule) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlStackitAlbCustomRule) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.alb.customRule", c.__id, "conditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.conditions()
+	})
+}
+
+// mqlStackitAlbCustomRuleCondition for the stackit.alb.customRuleCondition resource
+type mqlStackitAlbCustomRuleCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlStackitAlbCustomRuleConditionInternal it will be used here
+	VariableType    plugin.TValue[string]
+	VariableValue   plugin.TValue[string]
+	OperatorType    plugin.TValue[string]
+	OperatorValue   plugin.TValue[string]
+	Transformations plugin.TValue[[]any]
+}
+
+// createStackitAlbCustomRuleCondition creates a new instance of this resource
+func createStackitAlbCustomRuleCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlStackitAlbCustomRuleCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("stackit.alb.customRuleCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) MqlName() string {
+	return "stackit.alb.customRuleCondition"
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) GetVariableType() *plugin.TValue[string] {
+	return &c.VariableType
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) GetVariableValue() *plugin.TValue[string] {
+	return &c.VariableValue
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) GetOperatorType() *plugin.TValue[string] {
+	return &c.OperatorType
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) GetOperatorValue() *plugin.TValue[string] {
+	return &c.OperatorValue
+}
+
+func (c *mqlStackitAlbCustomRuleCondition) GetTransformations() *plugin.TValue[[]any] {
+	return &c.Transformations
 }
 
 // mqlStackitKms for the stackit.kms resource
