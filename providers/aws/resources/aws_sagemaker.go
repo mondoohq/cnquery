@@ -16,6 +16,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sagemakerTypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -3848,16 +3849,17 @@ func (a *mqlAwsSagemakerModelPackageGroup) isPublic() (bool, error) {
 }
 
 // isSagemakerNoPolicyError reports whether a GetModelPackageGroupPolicy error
-// indicates the group simply has no resource policy attached (SageMaker returns
-// a ValidationException in that case) rather than a real failure.
+// indicates the group simply has no resource policy attached rather than a real
+// failure. SageMaker returns a ValidationException in that case; matching the
+// error code (like isCodeArtifactValidation) is resilient to SDK message
+// wording changes. The group name always comes from a prior list call, so a
+// ValidationException here reliably means "no policy" rather than a bad name.
 func isSagemakerNoPolicyError(err error) bool {
-	if err == nil {
-		return false
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.ErrorCode() == "ValidationException"
 	}
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "cannot find resource policy") ||
-		strings.Contains(msg, "no policy") ||
-		strings.Contains(msg, "does not have a policy")
+	return false
 }
 
 // ---- Model Cards ----
