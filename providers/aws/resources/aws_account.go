@@ -445,8 +445,18 @@ func (a *mqlAwsOrganizationDelegatedAdministrator) delegatedServices() ([]any, e
 	return res, nil
 }
 
+// delegatedServiceCacheKey builds a stable cache key for a delegated service.
+// DelegationEnabledDate is optional, so guard against a nil time pointer to avoid
+// dereferencing nil (which would panic in a field-resolver goroutine).
+func delegatedServiceCacheKey(servicePrincipal string, date *time.Time) string {
+	if date == nil {
+		return servicePrincipal
+	}
+	return servicePrincipal + "/" + date.String()
+}
+
 func (a *mqlAwsOrganizationDelegatedService) id() (string, error) {
-	return a.ServicePrincipal.Data + "/" + a.DelegationEnabledDate.Data.String(), nil
+	return delegatedServiceCacheKey(a.ServicePrincipal.Data, a.DelegationEnabledDate.Data), nil
 }
 
 func (a *mqlAwsAccount) paths() ([]any, error) {

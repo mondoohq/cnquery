@@ -218,8 +218,16 @@ func (a *mqlAwsVpc) ipv6CidrBlockAssociations() ([]any, error) {
 	return res, nil
 }
 
+// natgatewayAddressCacheKey builds a stable, unique cache key for a NAT gateway
+// address. Private NAT gateways have no AllocationId, so the allocation ID alone
+// collapses every private address onto the same key; the ENI plus private IP are
+// always present and uniquely identify the address.
+func natgatewayAddressCacheKey(networkInterfaceId, privateIp string) string {
+	return networkInterfaceId + "/" + privateIp
+}
+
 func (a *mqlAwsVpcNatgatewayAddress) id() (string, error) {
-	return a.AllocationId.Data, nil
+	return natgatewayAddressCacheKey(a.NetworkInterfaceId.Data, a.PrivateIp.Data), nil
 }
 
 func (a *mqlAwsVpcNatgateway) id() (string, error) {

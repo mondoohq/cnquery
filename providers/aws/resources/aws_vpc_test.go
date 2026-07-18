@@ -622,3 +622,12 @@ func TestRouteNextHopNullState(t *testing.T) {
 		assert.True(t, route.PeeringConnection.IsSet())
 	})
 }
+
+func TestNatgatewayAddressCacheKey(t *testing.T) {
+	// two private NAT gateway addresses without an AllocationId must not collide
+	a := natgatewayAddressCacheKey("eni-0a1b2c3d", "10.0.0.5")
+	b := natgatewayAddressCacheKey("eni-4e5f6a7b", "10.0.0.6")
+	assert.Equal(t, "eni-0a1b2c3d/10.0.0.5", a)
+	assert.Equal(t, "eni-4e5f6a7b/10.0.0.6", b)
+	assert.NotEqual(t, a, b)
+}

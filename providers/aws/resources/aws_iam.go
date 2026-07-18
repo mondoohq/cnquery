@@ -68,7 +68,7 @@ func (a *mqlAwsIam) serverCertificates() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, certs)
+			res = append(res, certs...)
 		}
 	}
 	return res, nil
