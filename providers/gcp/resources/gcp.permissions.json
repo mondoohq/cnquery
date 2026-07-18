@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.31.2",
-  "generated_at": "2026-07-18T07:10:09-07:00",
+  "generated_at": "2026-07-18T07:31:10-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -171,6 +171,7 @@
     "dns.policies.list",
     "dns.resourceRecordSets.list",
     "dns.responsePolicies.list",
+    "documentai.processorVersions.get",
     "documentai.processorVersions.list",
     "documentai.processors.list",
     "domains.registrations.list",
@@ -1329,6 +1330,12 @@
       "service": "dns",
       "action": "ResponsePolicies.List",
       "source_file": "dns.go"
+    },
+    {
+      "permission": "documentai.processorVersions.get",
+      "service": "documentai",
+      "action": "GetProcessorVersion",
+      "source_file": "documentai.go"
     },
     {
       "permission": "documentai.processorVersions.list",

@@ -13242,6 +13242,11 @@ private gcp.project.discoveryEngineService.engine @defaults("displayName solutio
   updatedAt time
 }
 
+// Google Cloud Document AI
+//
+// Document AI processors in the project across the us and eu processing
+// locations, including each processor's model versions, customer-managed
+// encryption keys, and the deprecation status of individual versions.
 private gcp.project.documentaiService {
   // Project ID
   projectId string
@@ -13271,8 +13276,8 @@ private gcp.project.documentaiService.processor @defaults("displayName type stat
   location string
   // Immutable prediction endpoint used to process documents
   processEndpoint string
-  // Resource name of the default processor version
-  defaultProcessorVersion string
+  // Default processor version used when a request does not specify one
+  defaultProcessorVersion() gcp.project.documentaiService.processor.version
   // Whether the processor satisfies data-residency (Physical Zone Separation) requirements
   satisfiesPzs bool
   // Customer-managed encryption key protecting the processor
@@ -13308,8 +13313,8 @@ private gcp.project.documentaiService.processor.version @defaults("displayName s
   deprecated bool
   // Time the version is scheduled to be, or was, deprecated
   deprecationTime time
-  // Resource name of the processor version Google recommends as a replacement
-  replacementVersion string
+  // Processor version Google recommends as a replacement for a deprecated version
+  replacementVersion() gcp.project.documentaiService.processor.version
   // Customer-managed encryption key protecting the version
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation timestamp

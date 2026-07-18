@@ -206,6 +206,7 @@ var validatedGCPPermissions = []string{
 	"dns.policies.list",
 	"dns.resourceRecordSets.list",
 	"dns.responsePolicies.list",
+	"documentai.processorVersions.get",
 	"documentai.processorVersions.list",
 	"documentai.processors.list",
 	// Real and required (Cloud Domains), but customRolesSupportLevel is

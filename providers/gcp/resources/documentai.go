@@ -114,21 +114,22 @@ func (g *mqlGcpProjectDocumentaiService) listProcessorsInLocation(ctx context.Co
 		}
 
 		res, err := CreateResource(g.MqlRuntime, "gcp.project.documentaiService.processor", map[string]*llx.RawData{
-			"name":                    llx.StringData(p.Name),
-			"type":                    llx.StringData(p.Type),
-			"displayName":             llx.StringData(p.DisplayName),
-			"state":                   llx.StringData(p.State.String()),
-			"location":                llx.StringData(location),
-			"processEndpoint":         llx.StringData(p.ProcessEndpoint),
-			"defaultProcessorVersion": llx.StringData(p.DefaultProcessorVersion),
-			"satisfiesPzs":            llx.BoolData(p.SatisfiesPzs),
-			"createdAt":               llx.TimeDataPtr(timestampAsTimePtr(p.CreateTime)),
+			"name":            llx.StringData(p.Name),
+			"type":            llx.StringData(p.Type),
+			"displayName":     llx.StringData(p.DisplayName),
+			"state":           llx.StringData(p.State.String()),
+			"location":        llx.StringData(location),
+			"processEndpoint": llx.StringData(p.ProcessEndpoint),
+			"satisfiesPzs":    llx.BoolData(p.SatisfiesPzs),
+			"createdAt":       llx.TimeDataPtr(timestampAsTimePtr(p.CreateTime)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlGcpProjectDocumentaiServiceProcessor).cacheKmsKeyName = p.KmsKeyName
-		items = append(items, res)
+		mqlProcessor := res.(*mqlGcpProjectDocumentaiServiceProcessor)
+		mqlProcessor.cacheKmsKeyName = p.KmsKeyName
+		mqlProcessor.cacheDefaultProcessorVersion = p.DefaultProcessorVersion
+		items = append(items, mqlProcessor)
 	}
 	return items, nil
 }
@@ -162,11 +163,16 @@ func (g *mqlGcpProjectDocumentaiServiceProcessor) id() (string, error) {
 }
 
 type mqlGcpProjectDocumentaiServiceProcessorInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName              string
+	cacheDefaultProcessorVersion string
 }
 
 func (g *mqlGcpProjectDocumentaiServiceProcessor) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
+}
+
+func (g *mqlGcpProjectDocumentaiServiceProcessor) defaultProcessorVersion() (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+	return documentaiProcessorVersionRef(g.MqlRuntime, &g.DefaultProcessorVersion, g.cacheDefaultProcessorVersion)
 }
 
 func (g *mqlGcpProjectDocumentaiServiceProcessor) versions() ([]any, error) {
@@ -208,34 +214,111 @@ func (g *mqlGcpProjectDocumentaiServiceProcessor) versions() ([]any, error) {
 			}
 			return nil, err
 		}
-
-		deprecated := false
-		deprecationTime := llx.NilData
-		replacementVersion := ""
-		if v.DeprecationInfo != nil {
-			deprecated = true
-			deprecationTime = llx.TimeDataPtr(timestampAsTimePtr(v.DeprecationInfo.DeprecationTime))
-			replacementVersion = v.DeprecationInfo.ReplacementProcessorVersion
-		}
-
-		res, err := CreateResource(g.MqlRuntime, "gcp.project.documentaiService.processor.version", map[string]*llx.RawData{
-			"name":               llx.StringData(v.Name),
-			"displayName":        llx.StringData(v.DisplayName),
-			"state":              llx.StringData(v.State.String()),
-			"googleManaged":      llx.BoolData(v.GoogleManaged),
-			"modelType":          llx.StringData(v.ModelType.String()),
-			"deprecated":         llx.BoolData(deprecated),
-			"deprecationTime":    deprecationTime,
-			"replacementVersion": llx.StringData(replacementVersion),
-			"createdAt":          llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
-		})
+		mqlVersion, err := newMqlDocumentaiProcessorVersion(g.MqlRuntime, v)
 		if err != nil {
 			return nil, err
 		}
-		res.(*mqlGcpProjectDocumentaiServiceProcessorVersion).cacheKmsKeyName = v.KmsKeyName
-		items = append(items, res)
+		items = append(items, mqlVersion)
 	}
 	return items, nil
+}
+
+// newMqlDocumentaiProcessorVersion maps a Document AI ProcessorVersion proto
+// into an MQL resource, caching the KMS key and replacement-version names for
+// the kmsKey and replacementVersion accessors. Shared by the versions() lister
+// and the version init so both paths resolve the same fields.
+func newMqlDocumentaiProcessorVersion(runtime *plugin.Runtime, v *documentaipb.ProcessorVersion) (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+	deprecated := false
+	deprecationTime := llx.TimeDataPtr(nil)
+	replacementVersion := ""
+	if v.DeprecationInfo != nil {
+		deprecated = true
+		deprecationTime = llx.TimeDataPtr(timestampAsTimePtr(v.DeprecationInfo.DeprecationTime))
+		replacementVersion = v.DeprecationInfo.ReplacementProcessorVersion
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.documentaiService.processor.version", map[string]*llx.RawData{
+		"name":            llx.StringData(v.Name),
+		"displayName":     llx.StringData(v.DisplayName),
+		"state":           llx.StringData(v.State.String()),
+		"googleManaged":   llx.BoolData(v.GoogleManaged),
+		"modelType":       llx.StringData(v.ModelType.String()),
+		"deprecated":      llx.BoolData(deprecated),
+		"deprecationTime": deprecationTime,
+		"createdAt":       llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlVersion := res.(*mqlGcpProjectDocumentaiServiceProcessorVersion)
+	mqlVersion.cacheKmsKeyName = v.KmsKeyName
+	mqlVersion.cacheReplacementVersion = replacementVersion
+	return mqlVersion, nil
+}
+
+// initGcpProjectDocumentaiServiceProcessorVersion resolves a processor version
+// by resource name when a typed reference points at one that was not part of a
+// versions() listing. A missing version returns an error rather than a partially
+// populated resource.
+func initGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw, ok := args["name"]
+	if !ok {
+		return nil, nil, errors.New("gcp.project.documentaiService.processor.version requires a name")
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New("gcp.project.documentaiService.processor.version requires a name")
+	}
+	location := documentaiLocationFromName(name)
+	if location == "" {
+		return nil, nil, fmt.Errorf("cannot determine location from processor version name %q", name)
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(documentai.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := documentai.NewDocumentProcessorClient(ctx,
+		option.WithCredentials(creds), connection.GRPCClientTraceOption(),
+		option.WithEndpoint(documentaiEndpoint(location)),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	v, err := client.GetProcessorVersion(ctx, &documentaipb.GetProcessorVersionRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlVersion, err := newMqlDocumentaiProcessorVersion(runtime, v)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlVersion, nil
+}
+
+// documentaiProcessorVersionRef resolves a processor-version resource name to a
+// typed version resource, or marks the field null when the name is empty.
+func documentaiProcessorVersionRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlGcpProjectDocumentaiServiceProcessorVersion], name string) (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "gcp.project.documentaiService.processor.version", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectDocumentaiServiceProcessorVersion), nil
 }
 
 func (g *mqlGcpProjectDocumentaiServiceProcessorVersion) id() (string, error) {
@@ -243,9 +326,14 @@ func (g *mqlGcpProjectDocumentaiServiceProcessorVersion) id() (string, error) {
 }
 
 type mqlGcpProjectDocumentaiServiceProcessorVersionInternal struct {
-	cacheKmsKeyName string
+	cacheKmsKeyName         string
+	cacheReplacementVersion string
 }
 
 func (g *mqlGcpProjectDocumentaiServiceProcessorVersion) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
+}
+
+func (g *mqlGcpProjectDocumentaiServiceProcessorVersion) replacementVersion() (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+	return documentaiProcessorVersionRef(g.MqlRuntime, &g.ReplacementVersion, g.cacheReplacementVersion)
 }

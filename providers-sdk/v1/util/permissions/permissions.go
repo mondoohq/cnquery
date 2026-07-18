@@ -1276,6 +1276,12 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// IAM permission is the plural form (matching aiplatform.endpoints.list).
 		"GetEndpoint": "aiplatform.endpoints.get",
 	},
+	"documentai": {
+		// DocumentProcessorClient.GetProcessorVersion → singular "processorVersion"
+		// by default; the real IAM permission is the plural form (matching
+		// documentai.processorVersions.list).
+		"GetProcessorVersion": "documentai.processorVersions.get",
+	},
 	"pubsub": {
 		// SchemaClient.GetSchema → singular "schema" by default; real IAM
 		// permission is plural.

@@ -1987,7 +1987,7 @@ func init() {
 			Create: createGcpProjectDocumentaiServiceProcessor,
 		},
 		"gcp.project.documentaiService.processor.version": {
-			// to override args, implement: initGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectDocumentaiServiceProcessorVersion,
 			Create: createGcpProjectDocumentaiServiceProcessorVersion,
 		},
 		"gcp.project.eventarcService": {
@@ -15535,7 +15535,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetProcessEndpoint()).ToDataRes(types.String)
 	},
 	"gcp.project.documentaiService.processor.defaultProcessorVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetDefaultProcessorVersion()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetDefaultProcessorVersion()).ToDataRes(types.Resource("gcp.project.documentaiService.processor.version"))
 	},
 	"gcp.project.documentaiService.processor.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDocumentaiServiceProcessor).GetSatisfiesPzs()).ToDataRes(types.Bool)
@@ -15571,7 +15571,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetDeprecationTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.documentaiService.processor.version.replacementVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetReplacementVersion()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetReplacementVersion()).ToDataRes(types.Resource("gcp.project.documentaiService.processor.version"))
 	},
 	"gcp.project.documentaiService.processor.version.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
@@ -36697,7 +36697,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.documentaiService.processor.defaultProcessorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDocumentaiServiceProcessor).DefaultProcessorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectDocumentaiServiceProcessor).DefaultProcessorVersion, ok = plugin.RawToTValue[*mqlGcpProjectDocumentaiServiceProcessorVersion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.documentaiService.processor.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36749,7 +36749,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.documentaiService.processor.version.replacementVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).ReplacementVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectDocumentaiServiceProcessorVersion).ReplacementVersion, ok = plugin.RawToTValue[*mqlGcpProjectDocumentaiServiceProcessorVersion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.documentaiService.processor.version.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85567,7 +85567,7 @@ type mqlGcpProjectDocumentaiServiceProcessor struct {
 	State                   plugin.TValue[string]
 	Location                plugin.TValue[string]
 	ProcessEndpoint         plugin.TValue[string]
-	DefaultProcessorVersion plugin.TValue[string]
+	DefaultProcessorVersion plugin.TValue[*mqlGcpProjectDocumentaiServiceProcessorVersion]
 	SatisfiesPzs            plugin.TValue[bool]
 	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	CreatedAt               plugin.TValue[*time.Time]
@@ -85635,8 +85635,20 @@ func (c *mqlGcpProjectDocumentaiServiceProcessor) GetProcessEndpoint() *plugin.T
 	return &c.ProcessEndpoint
 }
 
-func (c *mqlGcpProjectDocumentaiServiceProcessor) GetDefaultProcessorVersion() *plugin.TValue[string] {
-	return &c.DefaultProcessorVersion
+func (c *mqlGcpProjectDocumentaiServiceProcessor) GetDefaultProcessorVersion() *plugin.TValue[*mqlGcpProjectDocumentaiServiceProcessorVersion] {
+	return plugin.GetOrCompute[*mqlGcpProjectDocumentaiServiceProcessorVersion](&c.DefaultProcessorVersion, func() (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService.processor", c.__id, "defaultProcessorVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDocumentaiServiceProcessorVersion), nil
+			}
+		}
+
+		return c.defaultProcessorVersion()
+	})
 }
 
 func (c *mqlGcpProjectDocumentaiServiceProcessor) GetSatisfiesPzs() *plugin.TValue[bool] {
@@ -85691,7 +85703,7 @@ type mqlGcpProjectDocumentaiServiceProcessorVersion struct {
 	ModelType          plugin.TValue[string]
 	Deprecated         plugin.TValue[bool]
 	DeprecationTime    plugin.TValue[*time.Time]
-	ReplacementVersion plugin.TValue[string]
+	ReplacementVersion plugin.TValue[*mqlGcpProjectDocumentaiServiceProcessorVersion]
 	KmsKey             plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	CreatedAt          plugin.TValue[*time.Time]
 }
@@ -85761,8 +85773,20 @@ func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetDeprecationTime() *p
 	return &c.DeprecationTime
 }
 
-func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetReplacementVersion() *plugin.TValue[string] {
-	return &c.ReplacementVersion
+func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetReplacementVersion() *plugin.TValue[*mqlGcpProjectDocumentaiServiceProcessorVersion] {
+	return plugin.GetOrCompute[*mqlGcpProjectDocumentaiServiceProcessorVersion](&c.ReplacementVersion, func() (*mqlGcpProjectDocumentaiServiceProcessorVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.documentaiService.processor.version", c.__id, "replacementVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDocumentaiServiceProcessorVersion), nil
+			}
+		}
+
+		return c.replacementVersion()
+	})
 }
 
 func (c *mqlGcpProjectDocumentaiServiceProcessorVersion) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
