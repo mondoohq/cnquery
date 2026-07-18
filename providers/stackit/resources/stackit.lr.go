@@ -856,14 +856,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.backup.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitBackup).GetEncrypted()).ToDataRes(types.Bool)
 	},
-	"stackit.backup.volumeId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitBackup).GetVolumeId()).ToDataRes(types.String)
-	},
 	"stackit.backup.volume": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitBackup).GetVolume()).ToDataRes(types.Resource("stackit.volume"))
-	},
-	"stackit.backup.snapshotId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlStackitBackup).GetSnapshotId()).ToDataRes(types.String)
 	},
 	"stackit.backup.snapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitBackup).GetSnapshot()).ToDataRes(types.Resource("stackit.snapshot"))
@@ -3184,16 +3178,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitBackup).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"stackit.backup.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitBackup).VolumeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"stackit.backup.volume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitBackup).Volume, ok = plugin.RawToTValue[*mqlStackitVolume](v.Value, v.Error)
-		return
-	},
-	"stackit.backup.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlStackitBackup).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.backup.snapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7338,7 +7324,7 @@ func (c *mqlStackitSnapshot) GetLabels() *plugin.TValue[map[string]any] {
 type mqlStackitBackup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlStackitBackupInternal it will be used here
+	mqlStackitBackupInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
 	Description      plugin.TValue[string]
@@ -7346,9 +7332,7 @@ type mqlStackitBackup struct {
 	Size             plugin.TValue[int64]
 	AvailabilityZone plugin.TValue[string]
 	Encrypted        plugin.TValue[bool]
-	VolumeId         plugin.TValue[string]
 	Volume           plugin.TValue[*mqlStackitVolume]
-	SnapshotId       plugin.TValue[string]
 	Snapshot         plugin.TValue[*mqlStackitSnapshot]
 	CreatedAt        plugin.TValue[*time.Time]
 	UpdatedAt        plugin.TValue[*time.Time]
@@ -7420,10 +7404,6 @@ func (c *mqlStackitBackup) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
 }
 
-func (c *mqlStackitBackup) GetVolumeId() *plugin.TValue[string] {
-	return &c.VolumeId
-}
-
 func (c *mqlStackitBackup) GetVolume() *plugin.TValue[*mqlStackitVolume] {
 	return plugin.GetOrCompute[*mqlStackitVolume](&c.Volume, func() (*mqlStackitVolume, error) {
 		if c.MqlRuntime.HasRecording {
@@ -7438,10 +7418,6 @@ func (c *mqlStackitBackup) GetVolume() *plugin.TValue[*mqlStackitVolume] {
 
 		return c.volume()
 	})
-}
-
-func (c *mqlStackitBackup) GetSnapshotId() *plugin.TValue[string] {
-	return &c.SnapshotId
 }
 
 func (c *mqlStackitBackup) GetSnapshot() *plugin.TValue[*mqlStackitSnapshot] {

@@ -9,6 +9,14 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
+type mqlStackitBackupInternal struct {
+	// cacheVolumeId/cacheSnapshotId hold the backup's source IDs so volume()
+	// and snapshot() can resolve them. They are not exposed as fields because
+	// those accessors already carry the same information.
+	cacheVolumeId   string
+	cacheSnapshotId string
+}
+
 // ------------------------- volume backups -------------------------
 
 func (r *mqlStackit) backups() ([]any, error) {
@@ -47,13 +55,18 @@ func buildBackup(runtime *plugin.Runtime, b *iaas.Backup) (plugin.Resource, erro
 		"size":             llx.IntData(b.GetSize()),
 		"availabilityZone": llx.StringData(b.GetAvailabilityZone()),
 		"encrypted":        llx.BoolData(b.GetEncrypted()),
-		"volumeId":         llx.StringData(b.GetVolumeId()),
-		"snapshotId":       llx.StringData(b.GetSnapshotId()),
 		"createdAt":        llx.TimeDataPtr(timeOrNil(createdAt, ok1)),
 		"updatedAt":        llx.TimeDataPtr(timeOrNil(updatedAt, ok2)),
 		"labels":           labelData(b.GetLabels()),
 	}
-	return CreateResource(runtime, "stackit.backup", args)
+	res, err := CreateResource(runtime, "stackit.backup", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlBackup := res.(*mqlStackitBackup)
+	mqlBackup.cacheVolumeId = b.GetVolumeId()
+	mqlBackup.cacheSnapshotId = b.GetSnapshotId()
+	return res, nil
 }
 
 func (r *mqlStackitBackup) id() (string, error) {
@@ -82,15 +95,15 @@ func initStackitBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (r *mqlStackitBackup) volume() (*mqlStackitVolume, error) {
-	return volumeRef(r.MqlRuntime, r.VolumeId.Data, &r.Volume)
+	return volumeRef(r.MqlRuntime, r.cacheVolumeId, &r.Volume)
 }
 
 func (r *mqlStackitBackup) snapshot() (*mqlStackitSnapshot, error) {
-	if r.SnapshotId.Data == "" {
+	if r.cacheSnapshotId == "" {
 		return markNull[mqlStackitSnapshot](&r.Snapshot)
 	}
 	res, err := NewResource(r.MqlRuntime, "stackit.snapshot", map[string]*llx.RawData{
-		"id": llx.StringData(r.SnapshotId.Data),
+		"id": llx.StringData(r.cacheSnapshotId),
 	})
 	if err != nil {
 		return nil, err

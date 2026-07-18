@@ -73,11 +73,9 @@ stackit.backup.labels 13.4.2
 stackit.backup.name 13.4.2
 stackit.backup.size 13.4.2
 stackit.backup.snapshot 13.4.2
-stackit.backup.snapshotId 13.4.2
 stackit.backup.status 13.4.2
 stackit.backup.updatedAt 13.4.2
 stackit.backup.volume 13.4.2
-stackit.backup.volumeId 13.4.2
 stackit.backups 13.4.2
 stackit.certificate 13.0.1
 stackit.certificate.dnsNames 13.4.2
